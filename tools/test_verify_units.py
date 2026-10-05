@@ -109,11 +109,19 @@ python3() {
                                 "### Example (REASONED: evidence)\n\n"):
                     units, errors = gate.scan_guide(PREFIX + context
                                                     + "```sh\necho ok\n```\n")
-                    check(label + " inline context needs parser " + context,
-                          units and not units[0][2] and any(
-                              "inline declarations require the pinned parser" in e
-                              for e in errors))
+                    check(label + " legacy inline context survives " + context,
+                          len(units) == 1 and units[0][2] and not errors)
                 guide.write_text(PREFIX + "unmarked prose\n\n```sh\n# " + MARK + "\necho ok\n```\n")
+
+        with patch.object(gate, "gate_parser", side_effect=AssertionError("legacy used parser")):
+            from version_basis import verify_blocks
+            for context in (MARK + "\n\n", "### Check (" + MARK + ")\n\n"):
+                body = PREFIX + context + chr(96) * 3 + "bash\necho ok\n" + chr(96) * 3 + "\n"
+                units, errors = gate.scan_guide(body, with_status=True)
+                check("legacy has no parser dependency " + context,
+                      len(units) == 1 and units[0][2] == "REASONED" and not errors)
+                check("version basis has no parser dependency " + context,
+                      verify_blocks(body) == ["echo ok"])
 
         if parser is None:
             return
@@ -216,19 +224,51 @@ python3() {
              diagnostic="unsupported inline token future_inline",
              use_parser=AlteredParser(unknown_inline))
 
+        def unknown_heading_inline(tokens):
+            inline = next(t for t in tokens if t.type == "inline" and t.content == "Verify")
+            inline.children[0].type = "future_inline"
+
+        scan("unknown root inline fails closed", "plain\n", (0, 0, 0, 0),
+             diagnostic="unsupported inline token future_inline",
+             use_parser=AlteredParser(unknown_heading_inline))
+
+        def missing_heading_map(tokens):
+            heading = next(t for t in tokens if t.type == "heading_open")
+            heading.map = None
+
+        scan("missing heading map fails closed", "plain\n", (0, 0, 0, 0),
+             diagnostic="missing or invalid source map for heading_open",
+             use_parser=AlteredParser(missing_heading_map))
+
+        def missing_inline_children(tokens):
+            inline = next(t for t in tokens if t.type == "inline")
+            inline.children = None
+
+        scan("missing inline children fails closed", "plain\n", (0, 0, 0, 0),
+             diagnostic="inline missing parsed children",
+             use_parser=AlteredParser(missing_inline_children))
+
         # Declarations must survive inline context checks at every attachment site.
         def rejected(name, body, kinds, diagnostic=None):
             guide.write_text(body)
             baseline.write_text("")
             rc, out = cli("--strict")
             check(name + " exit", rc == 1)
+            legacy, _ = gate.scan_guide(body, with_status=True)
             for kind in kinds:
-                check(name + " " + kind + " diagnostic",
-                      (diagnostic or "new/changed/excess " + kind) in out)
+                expected = diagnostic or (
+                    "parser fence declaration" if kind == "fence" and any(u[2] for u in legacy)
+                    else "new/changed/excess " + kind)
+                check(name + " " + kind + " diagnostic", expected in out)
             if diagnostic is None:
                 units, errors = gate.scan_units(body, parser=parser)
-                check(name + " unmarked", not errors and units
-                      and all(u[3] is None for u in units))
+                check(name + " unmarked units", units
+                      and all(u[3] is None for u in units if u[1] != "fence"))
+                check(name + " unchanged legacy fences",
+                      [(u[0], u[2], u[3]) for u in units if u[1] == "fence"] == legacy)
+                expected_errors = sum(bool(u[2]) for u in legacy)
+                check(name + " additive parser findings", len(errors) == expected_errors
+                      and all("parser fence declaration" in e for e in errors))
 
         fence = "```sh\necho ok\n```\n"
         for heading in ("`Example: REASONED: vendor evidence`",
@@ -290,6 +330,94 @@ python3() {
                 malformed = body.rsplit(indent, 1)[0] + indent + row + "\n"
                 rejected("first-line ragged " + prefix + row, malformed, ("table-row",),
                          "ragged table row")
+
+        # Round-2 P1: select roots from parsed headings before interpreting
+        # declarations. Assert every non-fence kind, not merely a failing exit.
+        for title in ("Verify", "Verification checklist", "Quick checks", "3. Verify"):
+            for status in ("REASONED", "DEMONSTRATED"):
+                for label, opaque in (
+                    ("code", chr(96) + status + ": vendor evidence" + chr(96)),
+                    ("link text", "[" + status + ": vendor evidence](https://example.com)"),
+                    ("destination", "[evidence](" + status + ":vendor)"),
+                    ("image", "![" + status + ": vendor evidence](https://example.com/i.png)"),
+                    ("HTML", "<span>" + status + ": vendor evidence</span>"),
+                    ("HTML attribute", '<span title="' + status + ': vendor">evidence</span>'),
+                    ("autolink", "<" + status + ":vendor>"),
+                ):
+                    for suffix in (" (" + opaque + ")", ": " + opaque):
+                        body = "# Guide\n\n## " + title + suffix + "\n\n"
+                        body += "Unmarked check.\n\n- Unmarked item.\n\n" + table
+                        guide.write_text(body)
+                        baseline.write_text("")
+                        rc, out = cli("--strict")
+                        name = "opaque root " + title + status + label + suffix
+                        check(name + " exit", rc == 1)
+                        for kind in gate.KINDS[1:]:
+                            check(name + " " + kind, "new/changed/excess " + kind in out)
+                        units, errors = gate.scan_units(body, parser=parser)
+                        check(name + " selected and unmarked",
+                              Counter(u[1] for u in units) ==
+                              Counter({"prose": 1, "list-item": 1, "table-row": 1})
+                              and all(u[3] is None for u in units))
+                        check(name + " structural diagnostic",
+                              all("unsupported inline token html_inline" in e for e in errors)
+                              and bool(errors) == label.startswith("HTML"))
+                        # Legacy misses this root's fence; the parser must add
+                        # a finding without inserting or changing legacy units.
+                        guide.write_text(body + "\n" + fence)
+                        rc, out = cli("--strict")
+                        check(name + " fence coverage", rc == 1
+                              and "parser fence declaration missing" in out)
+
+        # The delimiter itself may be inside the opaque construct.
+        for label, suffix in (
+            ("code suffix", chr(96) + "(" + MARK + ")" + chr(96)),
+            ("link suffix", "[(" + MARK + ")](https://example.com)"),
+            ("image suffix", "![(" + MARK + ")](https://example.com/i.png)"),
+            ("HTML suffix", "<span>(" + MARK + ")</span>"),
+        ):
+            body = "## Verify " + suffix + "\n\nCheck.\n\n- Item.\n\n" + table
+            guide.write_text(body)
+            baseline.write_text("")
+            rc, out = cli("--strict")
+            check(label + " root retained", rc == 1 and all(
+                  "new/changed/excess " + kind in out for kind in gate.KINDS[1:]))
+            units, errors = gate.scan_units(body, parser=parser)
+            check(label + " no inherited declaration", len(units) == 3
+                  and all(u[3] is None for u in units))
+            check(label + " HTML diagnostic", bool(errors) == label.startswith("HTML")
+                  and all("unsupported inline token html_inline" in e for e in errors))
+
+        for prefix in ("- ", "> ", "- - ", "> - "):
+            body = prefix + "## Verify (" + chr(96) + MARK + chr(96) + ")\n"
+            guide.write_text(body)
+            baseline.write_text("")
+            rc, out = cli("--strict")
+            check("nested opaque root " + prefix, rc == 1
+                  and "[unsupported-container] Verify heading in unsupported container" in out)
+
+        for title in ("**Verify**", chr(96) + "Verify" + chr(96),
+                      "[Verify](https://example.com)"):
+            guide.write_text("## " + title + "\n\nUnmarked check.\n")
+            baseline.write_text("")
+            rc, out = cli("--strict")
+            check("rendered Verify root " + title, rc == 1
+                  and "new/changed/excess prose" in out)
+
+        class OnceParser:
+            def __init__(self):
+                self.calls = 0
+
+            def parse(self, text, env):
+                self.calls += 1
+                check("one document parse", self.calls == 1)
+                return parser.parse(text, env)
+
+        once = OnceParser()
+        body = PREFIX + MARK + "\n\n" + fence + "\n### Child\n\n- unmarked\n"
+        units, errors = gate.scan_units(body, parser=once)
+        check("single token stream", once.calls == 1 and not errors
+              and [u[3] for u in units if u[1] == "list-item"] == [None])
 
         # Fingerprint equality and baseline errors through the actual CLI.
         original = PREFIX + "plain\n"

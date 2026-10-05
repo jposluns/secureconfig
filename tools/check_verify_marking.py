@@ -394,46 +394,6 @@ def declaration(text):
     return match[1].upper(), direction
 
 
-def inline_text(tokens):
-    """Keep declaration text and emphasis; opaque spans cannot supply a marker."""
-    parts, links = [], 0
-    for token in tokens:
-        kind = token.type
-        if kind == "link_open":
-            links += 1
-            parts.append("\0")
-        elif kind == "link_close":
-            links -= 1
-            if links < 0:
-                raise ValueError("unbalanced inline link")
-        elif kind in {"code_inline", "image"}:
-            parts.append("\0")
-            if token.children:
-                inline_text(token.children)
-        elif kind in {"text", "softbreak", "hardbreak", "em_open", "em_close",
-                      "strong_open", "strong_close"}:
-            if not links:
-                parts.append(token.content if kind == "text" else
-                             "\n" if kind in {"softbreak", "hardbreak"} else token.markup)
-        else:
-            raise ValueError("unsupported inline token " + kind)
-    if links:
-        raise ValueError("unbalanced inline link")
-    return "".join(parts)
-
-
-def inline_declaration(tokens, *, heading=False, directional=False):
-    """Apply the declaration grammar only to text outside opaque inline tokens."""
-    text = inline_text(tokens)
-    if heading:
-        _, text, error = heading_parts(text)
-        if error:
-            raise ValueError(error)
-        if text is None:
-            return None
-    return unit_declaration(text, directional=directional)
-
-
 def guide_context(text, in_verify=False, in_quote=False, *, enrolled=False):
     """Share scan_guide's metadata masking, tokens and Verify selection."""
     # Only a document's leading, strictly parsed metadata is opaque. Recursive
@@ -482,24 +442,6 @@ def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
             text, in_verify, in_quote, enrolled=enrolled)
     except ValueError as exc:
         return [], [f"line 1: [unsupported-container] invalid front matter: {exc}"]
-    parser, env = gate_parser(), {}
-    if parser is not None:
-        parser.parse("\n".join(lines), env)
-
-    def prose_mark(text, *, heading=False):
-        # Without the optional parser, never certify a raw Markdown candidate.
-        if parser is None:
-            if heading:
-                _, suffix, error = heading_parts(text)
-                if suffix is None and error is None:
-                    return None
-            elif not DECL.fullmatch(" ".join(text.strip().split("\n"))):
-                return None
-            raise ParserUnavailable("inline declarations require the pinned parser; "
-                                    "install tools/requirements-gates.txt")
-        inline = parser.parseInline(text, env)[0]
-        return inline_declaration(inline.children or [], heading=heading, directional=True)
-
     ancestry, paths = [], {}
     for i, head in enumerate(heads):
         if head:
@@ -563,7 +505,7 @@ def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
                 context.append(neighbor.text if para else "")
                 if not para:
                     continue
-                mark = prose_mark(neighbor.text)
+                mark = declaration(neighbor.text)
                 if mark:
                     other = k + 2 * delta
                     shared = (0 <= other < len(blocks)
@@ -574,9 +516,13 @@ def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
                     if not mark[1] or mark[1] == direction:
                         statuses.append(mark[0])
             heading = paths[token.start][-1][1] if paths[token.start] else ""
-            mark = prose_mark(heading, heading=True)
-            if mark:
-                statuses.append(mark[0])
+            _, suffix, error = heading_parts(heading)
+            if error:
+                raise ValueError(error)
+            if suffix is not None:
+                mark = declaration(suffix)
+                if mark:
+                    statuses.append(mark[0])
             opening = re.search(r"(?:`{3,}|~{3,})([^\n]*)", lines[token.start])
             language = opening[1].strip().lower() if opening else ""
             prefix = "--" if language == "sql" else "#" if language in {
@@ -647,6 +593,54 @@ def gate_parser(*, required=False):
     return MarkdownIt("commonmark").enable("table")
 
 
+def inline_text(tokens, *, title=False):
+    """Project parsed inlines, never raw Markdown.
+
+    Declaration text preserves supported emphasis and replaces opaque spans.
+    The title view renders their visible text for conservative root selection;
+    that view must never be used to authorize a declaration.
+    """
+    parts, links = [], 0
+    for token in tokens:
+        kind = token.type
+        if kind == "link_open":
+            links += 1
+            if not title:
+                parts.append("\0")
+        elif kind == "link_close":
+            links -= 1
+            if links < 0:
+                raise ValueError("unbalanced inline link")
+        elif kind in {"code_inline", "image"}:
+            child_text = inline_text(token.children, title=title) if token.children else ""
+            parts.append((child_text if kind == "image" else token.content) if title else "\0")
+        elif kind == "html_inline" and title:
+            continue  # Tags have no visible text; declarations still reject HTML.
+        elif kind in {"text", "softbreak", "hardbreak", "em_open", "em_close",
+                      "strong_open", "strong_close"}:
+            if not links or title:
+                parts.append(token.content if kind == "text" else
+                             "\n" if kind in {"softbreak", "hardbreak"} else
+                             "" if title else token.markup)
+        else:
+            raise ValueError("unsupported inline token " + kind)
+    if links:
+        raise ValueError("unbalanced inline link")
+    return "".join(parts)
+
+
+def inline_declaration(tokens, *, heading=False, directional=False):
+    """Apply the declaration grammar only to text outside opaque inline tokens."""
+    text = inline_text(tokens)
+    if heading:
+        _, text, error = heading_parts(text)
+        if error:
+            raise ValueError(error)
+        if text is None:
+            return None
+    return unit_declaration(text, directional=directional)
+
+
 @dataclass
 class UnitNode:
     token: object
@@ -673,8 +667,9 @@ def unit_declaration(text, *, directional=False):
 def scan_units(text, *, enrolled=False, parser=None):
     """Return (line, kind, fingerprint, status) units and fail-closed findings.
 
-    All Verify paragraphs, list items and body rows count. The legacy fence API
-    remains authoritative, with parser locations and attachment cross-checked.
+    All Verify paragraphs, list items and body rows count. This adapter combines
+    unchanged legacy fence results with a separate, single-parse unit layer.
+    Parser fence validation can add findings, never alter legacy results.
     Structural findings are never eligible for a baseline exemption.
     """
     fences, errors = scan_guide(text, enrolled=enrolled, with_status=True)
@@ -684,13 +679,19 @@ def scan_units(text, *, enrolled=False, parser=None):
     if parser is None:
         raise ValueError("scan_units requires the pinned parser")
     try:
-        lines, heads, old_tokens, selected = guide_context(text, enrolled=enrolled)
-        masked = list(lines)
-        for token in old_tokens:
-            if token.kind == "summary":
-                masked[token.start:token.end] = [""] * (token.end - token.start)
+        # Front matter is strict JSON metadata, not Markdown. Preserve maps
+        # while masking it; no declaration or heading is selected from source.
+        from version_basis import split, START, END
+        text = text.replace("\r\n", "\n").replace("\r", "\n")
+        try:
+            data, body = split(text)
+        except ValueError as exc:
+            raise ValueError("[unsupported-container] invalid front matter: " + str(exc)) from exc
+        if data is not None:
+            text = "\n" * text[:len(text) - len(body)].count("\n") + body
+        lines = text.split("\n")
         env = {}
-        tokens = parser.parse("\n".join(masked), env)
+        tokens = parser.parse(text, env)
         roots, stack = [], []
         containers = {"heading", "paragraph", "bullet_list", "ordered_list",
                       "list_item", "table", "thead", "tbody", "tr", "th", "td",
@@ -715,6 +716,10 @@ def scan_units(text, *, enrolled=False, parser=None):
                   or any(type(n) is not int for n in token.map)
                   or not 0 <= token.map[0] < token.map[1] <= len(lines)):
                 raise ValueError("missing or invalid source map for " + token.type)
+            if token.type == "inline":
+                if not isinstance(token.children, list) or token.content and not token.children:
+                    raise ValueError("inline missing parsed children")
+                inline_text(token.children, title=True)
             node = UnitNode(token, [])
             (stack[-1].children if stack else roots).append(node)
             if token.nesting == 1:
@@ -722,50 +727,94 @@ def scan_units(text, *, enrolled=False, parser=None):
         if stack:
             raise ValueError("unclosed parser token")
 
-        # Compare section selection independently. A parser disagreement must
-        # never narrow the old scan, even if it happens to reduce baseline debt.
-        parsed_heads = [None] * len(lines)
-        heading_inlines = {}
-        def headings(nodes, nested=False):
-            for node in nodes:
-                t = node.token
-                if t.type == "heading_open":
-                    title = node.children[0].token.content if node.children else ""
-                    if not nested:
-                        heading_inlines[t.map[0]] = node.children[0].token
-                        parsed_heads[t.map[0]] = (int(t.tag[1:]), title_text(title))
-                headings(node.children, nested or t.type not in {"heading_open", "paragraph_open"})
-        headings(roots)
-        parsed_selected = {i for a, b in verify_ranges(parsed_heads) for i in range(a, b)}
-        if parsed_selected != selected:
-            raise ValueError("parser Verify section selection disagrees with fence scanner")
-        paths, ancestry, heading_starts = {}, [], {}
-        current_heading = None
-        for i, head in enumerate(heads):
-            if head:
-                current_heading = i
-                while ancestry and ancestry[-1][0] >= head[0]:
-                    ancestry.pop()
-                ancestry.append(head)
-            paths[i] = list(ancestry)
-            heading_starts[i] = current_heading
-        covered, parsed_fences = set(), []
-        def source(span):
-            return "\n".join(lines[span[0]:span[1]])
-
-        def first_paragraph(node):
-            return next((c for c in node.children if c.token.type == "paragraph_open"), None)
+        # Recognize generated summaries from mapped, top-level HTML tokens.
+        # Excluding these nodes needs no second parse or legacy tokenization.
+        if enrolled:
+            starts = [n for n in roots if n.token.type == "html_block"
+                      and n.token.content == START + "\n"]
+            ends = [n for n in roots if n.token.type == "html_block"
+                    and n.token.content == END + "\n"]
+            if len(starts) == len(ends) == 1:
+                start, end = starts[0].token.map[0], ends[0].token.map[1]
+                first_h2 = next((n.token.map[0] for n in roots
+                                 if n.token.type == "heading_open" and n.token.tag == "h2"),
+                                len(lines))
+                if start < end <= first_h2:
+                    roots = [n for n in roots if not start <= n.token.map[0] < end]
 
         def paragraph_inline(node):
             if len(node.children) != 1 or node.children[0].token.type != "inline":
                 raise ValueError("paragraph missing inline content")
             return node.children[0].token
 
+        # Selection uses only validated inline tokens. A canonical title followed
+        # by ':' or '(' remains a root regardless of the suffix's declaration.
+        # Opaque suffixes therefore cannot hide the section they fail to mark.
+        heads, heading_inlines = {}, {}
+
+        def collect_headings(nodes, nested=False):
+            for node in nodes:
+                t = node.token
+                if t.type == "heading_open":
+                    inline = paragraph_inline(node)
+                    title = inline_text(inline.children or [], title=True)
+                    base = re.split(r"[(:]", title, maxsplit=1)[0].strip()
+                    if not re.fullmatch(r"h[1-6]", t.tag):
+                        raise ValueError("invalid heading level")
+                    is_root = bool(TITLE.fullmatch(base))
+                    if nested and is_root:
+                        raise ValueError(f"line {t.map[0] + 1}: [unsupported-container] "
+                                         "Verify heading in unsupported container")
+                    if not nested:
+                        heads[t.map[0]] = (int(t.tag[1:]), is_root)
+                        heading_inlines[t.map[0]] = inline
+                collect_headings(node.children, True)
+
+        collect_headings(roots)
+        selected, paths, ancestry, heading_starts = set(), {}, [], {}
+        current_heading, root_level = None, None
+        for i in range(len(lines)):
+            head = heads.get(i)
+            if head:
+                level, is_root = head
+                if root_level is not None and level <= root_level:
+                    root_level = None
+                if root_level is None and is_root:
+                    root_level = level
+                current_heading = i
+                while ancestry and ancestry[-1][0] >= level:
+                    ancestry.pop()
+                # Raw inline content is identity only, never a declaration or
+                # selection input. Keep existing unit fingerprints stable.
+                ancestry.append((level, title_text(heading_inlines[i].content)))
+            if root_level is not None:
+                selected.add(i)
+            paths[i] = list(ancestry)
+            heading_starts[i] = current_heading
+        covered, parsed_fence_lines = set(), set()
+        legacy_fences = {line: status for line, _, status in fences}
+        heading_marks = {}
+        def source(span):
+            return "\n".join(lines[span[0]:span[1]])
+
+        def first_paragraph(node):
+            return next((c for c in node.children if c.token.type == "paragraph_open"), None)
+
         def heading_status(start):
             position = heading_starts[start]
             if position is None:
                 return None
-            return inline_declaration(heading_inlines[position].children or [], heading=True)
+            if position not in heading_marks:
+                children = heading_inlines[position].children or []
+                # Inline HTML cannot authorize a declaration. Retain units
+                # below that root as unmarked and report the unsupported syntax.
+                if any(t.type == "html_inline" for t in children):
+                    errors.append(f"line {position + 1}: unit extraction failed: "
+                                  "unsupported inline token html_inline")
+                    heading_marks[position] = None
+                else:
+                    heading_marks[position] = inline_declaration(children, heading=True)
+            return heading_marks[position]
 
         def status_for(start, texts, directional=False):
             marks = [heading_status(start)]
@@ -792,6 +841,7 @@ def scan_units(text, *, enrolled=False, parser=None):
         def cells(line, start):
             # Match the pinned table rule's escaped-pipe convention, including
             # pipes in code spans. No silent padding or truncation is permitted.
+            # Raw source here can only reject structure, never declare a unit.
             from markdown_it.rules_block.table import escapedSplit
             line = line.expandtabs(4).lstrip()
             if start in item_starts:
@@ -827,14 +877,17 @@ def scan_units(text, *, enrolled=False, parser=None):
                 if kind == "inline":
                     inline_text(t.children or [])
                 elif kind == "heading_open":
+                    if in_item or in_cell:
+                        raise ValueError("[unsupported-container] heading in unit container")
+                    if t.markup not in {"#", "##", "###", "####", "#####", "######"}:
+                        raise ValueError("[unsupported-container] Setext heading")
                     heading_status(start)
                     covered.update(range(start, end))
-                    walk(node.children, owners, schema, in_item, in_cell, table_width)
                 elif kind == "hr":
                     covered.update(range(start, end))
                 elif kind == "list_item_open":
                     first = first_paragraph(node)
-                    if not node.children or EMPTY_LIST.fullmatch(lines[start].strip()):
+                    if not node.children:
                         raise ValueError(f"line {start + 1}: [unsupported-container] empty item")
                     if any(c.token.map[0] == start for c in node.children
                            if c.token.type in {"bullet_list_open", "ordered_list_open"}):
@@ -891,15 +944,24 @@ def scan_units(text, *, enrolled=False, parser=None):
                     statuses = {m[0] for m in marks if m}
                     if len(statuses) > 1:
                         raise ValueError("conflicting declarations")
-                    parsed_fences.append((start + 1, next(iter(statuses), None)))
+                    status = next(iter(statuses), None)
+                    line = start + 1
+                    parsed_fence_lines.add(line)
+                    if line not in legacy_fences and status is None:
+                        errors.append(f"line {line}: parser fence declaration missing "
+                                      "in parser-selected Verify section")
+                    elif line in legacy_fences and legacy_fences[line] and status != legacy_fences[line]:
+                        errors.append(f"line {line}: parser fence declaration disagrees "
+                                      "with legacy declaration")
                 elif kind in {"bullet_list_open", "ordered_list_open", "thead_open", "tbody_open"}:
                     walk(node.children, owners, schema, in_item, in_cell, table_width)
                 else:
                     raise ValueError("unhandled block token " + kind)
         walk(roots)
-        if parsed_fences != [(line, status) for line, _, status in fences]:
-            raise ValueError("parser fence locations/statuses disagree with fence scanner")
-        missing = [i + 1 for i in sorted(selected - covered) if masked[i].strip()]
+        if legacy_fences.keys() - parsed_fence_lines:
+            errors.append("parser fence coverage missing legacy lines: "
+                          + repr(sorted(legacy_fences.keys() - parsed_fence_lines)))
+        missing = [i + 1 for i in sorted(selected - covered) if lines[i].strip()]
         if missing:
             raise ValueError(f"uncovered Verify source lines: {missing}")
         # References can disappear into env without producing a block token.

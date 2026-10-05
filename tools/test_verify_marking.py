@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """End-to-end fixtures for the Verify fence ratchet; no corpus files are changed."""
 from pathlib import Path
+import os
 import re
 import shutil
 import subprocess
@@ -30,6 +31,8 @@ def invoke(root, *flags):
     result = subprocess.run(
         [sys.executable, "-I", "-B", str(root / "tools/check_verify_marking.py"), *flags],
         capture_output=True, text=True, encoding="utf-8",
+        # These fixtures exercise local behavior; CI refusal has dedicated cases.
+        env=dict(os.environ, CI=""),
     )
     return result.returncode, result.stdout + result.stderr
 
