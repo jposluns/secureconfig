@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "562e73405aadc7b8981fd70da8260a9f520c3f19b0b3c50dfb28bd2f55f77a91",
+  "body_sha256": "8d8013942ecc4c0abfd6d8f96b9020acaa065ec51666dcaebe93fc93012c2e6c",
   "components": {
     "frp": {
       "name": "frp documentation",
@@ -32,7 +32,11 @@ version_basis: {
         "sba4684b85dea": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/proxy.go#L202-L215",
         "sb5db43210eff": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/net/listener.go#L25-L37",
         "sa3237f5cd553": "https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/xtcp.go#L63",
-        "s9bcd6f277557": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/nathole/controller.go#L125-L139"
+        "s9bcd6f277557": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/nathole/controller.go#L125-L139",
+        "s43d2e3e185b7": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/auth/oidc.go#L281-L287",
+        "sc1e3e11b0618": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L128-L139",
+        "s72151a3006dc": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/auth/token.go#L64-L69",
+        "sc982b975a190": "https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/util/util.go#L50-L56"
       }
     },
     "tls-min": {
@@ -64,13 +68,45 @@ version_basis: {
         "s0fdb398555df": "https://man.openbsd.org/sshd_config#GatewayPorts",
         "s1f80cf6ae7f5": "https://man.openbsd.org/ssh#R"
       }
+    },
+    "autossh-source": {
+      "name": "autossh source",
+      "basis": "90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476",
+      "sources": {
+        "s6398847a2896": "https://github.com/Autossh/autossh/blob/90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476/README#L25-L26"
+      }
+    },
+    "ufw-docs": {
+      "name": "Ubuntu Noble ufw manual",
+      "basis": "unknown",
+      "sources": {
+        "scff3a017f30b": "https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html"
+      }
+    },
+    "iproute2-docs": {
+      "name": "iproute2 manuals",
+      "basis": "v6.12.0",
+      "sources": {
+        "s8aa0d96d25e7": "https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ip-link.8.in",
+        "s5d50117b1a36": "https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ss.8"
+      }
+    },
+    "linux-source": {
+      "name": "Linux source",
+      "basis": "v6.8",
+      "sources": {
+        "sc7cb2448145d": "https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L39-L40",
+        "sdfc1a2d0c3cc": "https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L58-L61",
+        "scd9d50cf72b7": "https://github.com/torvalds/linux/blob/v6.8/drivers/net/wireguard/socket.c#L387-L393",
+        "sb02ea8702b2a": "https://github.com/torvalds/linux/blob/v6.8/net/ipv4/udp_tunnel_core.c#L17-L19"
+      }
     }
   },
   "claims": {
     "frps-port": {"text": "frps bindPort defaults to 7000.", "components": ["frps"], "sources": ["frps:s89885e642b0b"], "status": "REASONED"},
-    "frp-token": {"text": "Token authentication is the default; set the same long random auth.token on frps and every frpc.", "components": ["frp"], "sources": ["frp:seaee50f5c2ba", "frp:s7479bbde986d"], "status": "REASONED"},
-    "frp-empty": {"text": "Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure.", "components": ["frp"], "sources": ["frp:seaee50f5c2ba", "frp:s7479bbde986d"], "status": "REASONED"},
-    "frp-oidc": {"text": "auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation.", "components": ["frp"], "sources": ["frp:s7479bbde986d"], "status": "REASONED"},
+    "frp-token": {"text": "Token authentication is the default; set the same long random auth.token on frps and every frpc.", "components": ["frp", "frps"], "sources": ["frp:seaee50f5c2ba", "frp:s7479bbde986d", "frps:sc1e3e11b0618", "frps:s72151a3006dc"], "status": "REASONED"},
+    "frp-empty": {"text": "Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure.", "components": ["frp", "frps"], "sources": ["frp:seaee50f5c2ba", "frp:s7479bbde986d", "frps:sc1e3e11b0618", "frps:s72151a3006dc", "frps:sc982b975a190"], "status": "REASONED"},
+    "frp-oidc": {"text": "auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:s43d2e3e185b7"], "status": "REASONED"},
     "proxy-bind": {"text": "proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0.", "components": ["frps"], "sources": ["frps:s89885e642b0b"], "status": "REASONED"},
     "proxy-tcp": {"text": "Registered TCP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:s2cbb0ac0ce1d"], "status": "REASONED"},
     "proxy-udp": {"text": "Registered UDP proxies listen on proxyBindAddr.", "components": ["frps"], "sources": ["frps:sf9bd235cd56f"], "status": "REASONED"},
@@ -95,13 +131,13 @@ version_basis: {
     "ssh-yes": {"text": "GatewayPorts yes forces wildcard listening regardless of the requested bind.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df"], "status": "REASONED"},
     "ssh-client": {"text": "GatewayPorts clientspecified honours requested wildcard or loopback binding.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5"], "status": "REASONED"},
     "ssh-auth": {"text": "SSH authenticates the tunnel, not callers; retain GatewayPorts no and front localhost:8080 with authenticated TLS.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5"], "status": "REASONED"},
-    "ssh-persist": {"text": "Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding.", "components": ["ssh"], "sources": ["ssh:s1f80cf6ae7f5"], "status": "REASONED"},
-    "verify-token": {"text": "Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client.", "components": ["frp"], "sources": ["frp:s7479bbde986d"], "status": "REASONED", "verify": [1]},
-    "verify-wg": {"text": "wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface.", "components": ["wg"], "sources": ["wg:sd41c4b487466"], "status": "REASONED", "verify": [1]},
-    "verify-firewall": {"text": "Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection.", "components": ["wg", "nft"], "sources": ["wg:sd41c4b487466", "nft:s0defde7f202b"], "status": "REASONED", "verify": [1]},
+    "ssh-persist": {"text": "Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding.", "components": ["ssh", "autossh-source"], "sources": ["ssh:s1f80cf6ae7f5", "autossh-source:s6398847a2896"], "status": "REASONED"},
+    "verify-token": {"text": "Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:sc1e3e11b0618", "frps:s72151a3006dc", "frps:sc982b975a190"], "status": "REASONED", "verify": [1]},
+    "verify-wg": {"text": "wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface.", "components": ["wg", "iproute2-docs", "linux-source"], "sources": ["wg:sd41c4b487466", "iproute2-docs:s8aa0d96d25e7", "linux-source:sc7cb2448145d", "linux-source:sdfc1a2d0c3cc"], "status": "REASONED", "verify": [1]},
+    "verify-firewall": {"text": "Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection.", "components": ["wg", "nft", "ufw-docs", "iproute2-docs", "linux-source"], "sources": ["wg:sd41c4b487466", "nft:s0defde7f202b", "ufw-docs:scff3a017f30b", "iproute2-docs:s5d50117b1a36", "linux-source:scd9d50cf72b7", "linux-source:sb02ea8702b2a"], "status": "REASONED", "verify": [1]},
     "verify-route": {"text": "An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [1]},
     "verify-counter": {"text": "Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [1]},
-    "verify-ssh": {"text": "On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5"], "status": "REASONED", "verify": [1]}
+    "verify-ssh": {"text": "On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no.", "components": ["ssh", "iproute2-docs"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5", "iproute2-docs:s5d50117b1a36"], "status": "REASONED", "verify": [1]}
   }
 }
 ---
@@ -112,14 +148,14 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | frps-port: frps bindPort defaults to 7000. | frps source v0.71.0 | REASONED |
-| frp-token: Token authentication is the default; set the same long random auth.token on frps and every frpc. | frp documentation unknown | REASONED |
-| frp-empty: Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure. | frp documentation unknown | REASONED |
-| frp-oidc: auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation. | frp documentation unknown | REASONED |
+| frp-token: Token authentication is the default; set the same long random auth.token on frps and every frpc. | frp documentation unknown; frps source v0.71.0 | REASONED |
+| frp-empty: Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure. | frp documentation unknown; frps source v0.71.0 | REASONED |
+| frp-oidc: auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation. | frp documentation unknown; frps source v0.71.0 | REASONED |
 | proxy-bind: proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0. | frps source v0.71.0 | REASONED |
 | proxy-tcp: Registered TCP proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
 | proxy-udp: Registered UDP proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
@@ -144,13 +180,13 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | ssh-yes: GatewayPorts yes forces wildcard listening regardless of the requested bind. | OpenSSH unknown | REASONED |
 | ssh-client: GatewayPorts clientspecified honours requested wildcard or loopback binding. | OpenSSH unknown | REASONED |
 | ssh-auth: SSH authenticates the tunnel, not callers; retain GatewayPorts no and front localhost:8080 with authenticated TLS. | OpenSSH unknown | REASONED |
-| ssh-persist: Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding. | OpenSSH unknown | REASONED |
-| verify-token: Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client. | frp documentation unknown | REASONED |
-| verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown | REASONED |
-| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown | REASONED |
+| ssh-persist: Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding. | OpenSSH unknown; autossh source 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476 | REASONED |
+| verify-token: Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client. | frp documentation unknown; frps source v0.71.0 | REASONED |
+| verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
+| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
 | verify-route: An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause. | WireGuard unknown; nftables unknown | REASONED |
 | verify-counter: Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer. | WireGuard unknown; nftables unknown | REASONED |
-| verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown | REASONED |
+| verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown; iproute2 manuals v6.12.0 | REASONED |
 <!-- version-basis:end -->
 
 All three expose a private host to the internet without a public IP, the same job [cloudflare.md](cloudflare.md) and [tailscale.md](tailscale.md) do, but with no vendor edge: you run and secure both ends yourself, on a host still hardened per [host.md](host.md). frp with a weak or absent token lets anyone bind proxies through your server; WireGuard has no login at all, only key pairs and the traffic scoping you configure; and `ssh -R` forwards a local port through your own SSH login, kept on the server's loopback by default but reachable by anyone if `GatewayPorts` is widened.
@@ -287,3 +323,15 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 - frps HTTP and HTTPS vhost listeners bind `proxyBindAddr` (L303 and L334), sharing the main listener only when `bindAddr` equals `proxyBindAddr` (L229-L235) (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L303-L321, https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L329-L340 and https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L229-L235
 - frps tcpmux HTTP CONNECT listener binds `proxyBindAddr` at `tcpmuxHTTPConnectPort` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L193-L194
 - frps stcp and sudp proxies register an in-process visitor listener (`server/visitor/visitor.go` L49-L57, `NewInternalListener`), and xtcp registers with the NAT-hole controller (`server/proxy/xtcp.go` L63); none opens a socket (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/visitor/visitor.go#L49-L57, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/stcp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/sudp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/proxy.go#L202-L215, https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/net/listener.go#L25-L37, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/xtcp.go#L63 and https://github.com/fatedier/frp/blob/v0.71.0/pkg/nathole/controller.go#L125-L139
+- autossh SSH monitoring and restart (pinned commit 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476, checked October 2026): https://github.com/Autossh/autossh/blob/90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476/README#L25-L26
+- Ubuntu Noble ufw manual, status verbose, show raw and IPv4/IPv6 rule visibility (rolling documentation, checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html
+- iproute2 ip-link manual, "ip link show - display device attributes"; the device name "specifies the network device to show." (pinned tag v6.12.0, checked October 2026): https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ip-link.8.in
+- Linux administrative IFF_UP flag (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L39-L40
+- Linux operational UNKNOWN state (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L58-L61
+- iproute2 ss manual, UDP/TCP listeners (`-l`: "Display only listening sockets"), numeric output (`-n`: "Do not try to resolve service names.") and process display (`-p`: "Show process using socket.") (pinned tag v6.12.0, checked October 2026): https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ss.8
+- Linux WireGuard UDP socket creation (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/drivers/net/wireguard/socket.c#L387-L393
+- Linux UDP tunnel kernel socket creation (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/net/ipv4/udp_tunnel_core.c#L17-L19
+- frps OIDC verifier skips audience checking when Audience is empty (pinned tag v0.71.0, checked October 2026): https://github.com/fatedier/frp/blob/v0.71.0/pkg/auth/oidc.go#L281-L287
+- frps optional token field and default token method (pinned tag v0.71.0, checked October 2026): https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L128-L139
+- frps login auth-key comparison (pinned tag v0.71.0, checked October 2026; empty-token acceptance is REASONED with the configuration and key derivation): https://github.com/fatedier/frp/blob/v0.71.0/pkg/auth/token.go#L64-L69
+- frp auth-key derivation from token and timestamp (pinned tag v0.71.0, checked October 2026; predictable empty-token keys are REASONED from this implementation): https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/util/util.go#L50-L56

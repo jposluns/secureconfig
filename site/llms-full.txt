@@ -750,7 +750,7 @@ Self-signed certificates have no revocation and no third-party accountability, a
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -767,12 +767,12 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | mfa-bypass: When PIN and an IdP coexist, either can be chosen; remove PIN or enforce Access MFA across methods for sensitive apps. | Cloudflare Zero Trust unknown | REASONED |
 | service-token: Machine access needs a service token and Service Auth policy. Read the secret at a hidden prompt in a fresh trusted Bash shell, keep it unexported in a subshell, and pipe Client-Id and Client-Secret headers to curl --header @-; this avoids argv/history exposure but not access by the account owner or root. | Cloudflare Zero Trust unknown; curl manual unknown | REASONED |
 | loopback: Bind the same-host app to 127.0.0.1 so direct public requests cannot bypass Access. | Cloudflare Zero Trust unknown | REASONED |
-| jwt: Validate Cf-Access-Jwt-Assertion signature, issuer and application audience; origin reachability, SSRF and another route can bypass the front door. | Cloudflare Zero Trust unknown | REASONED |
+| jwt: Validate Cf-Access-Jwt-Assertion signature, issuer and application audience; origin reachability, SSRF and another route can bypass the front door. | Cloudflare Zero Trust unknown; Cloudflare documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | route-coverage: Every added tunnel hostname/path needs an Access application and policy, including coverage by a wildcard application. | Cloudflare Zero Trust unknown | REASONED |
 | quick: Quick trycloudflare.com tunnels are unauthenticated and intended only for short-lived tests. | Cloudflare Zero Trust unknown | REASONED |
 | remote-origin: A remote origin needs HTTPS and a firewall allowing only the cloudflared host; TLS alone does not restrict callers. | Cloudflare Zero Trust unknown | REASONED |
-| origin-ca: Use originRequest.caPool for a self-signed origin; noTLSVerify discards server authentication. | Cloudflare Zero Trust unknown | REASONED |
-| full-strict: Full (strict) with an Origin CA certificate authenticates the origin to Cloudflare, not callers; browsers do not trust that certificate directly. | Cloudflare Zero Trust unknown | REASONED |
+| origin-ca: Use originRequest.caPool for a self-signed origin; noTLSVerify discards server authentication. | Cloudflare Zero Trust unknown; Cloudflare documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
+| full-strict: Full (strict) with an Origin CA certificate authenticates the origin to Cloudflare, not callers; browsers do not trust that certificate directly. | Cloudflare Zero Trust unknown; Cloudflare documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | aop: AOP requires origin-side client-certificate enforcement; nginx uses ssl_verify_client on and ssl_client_certificate. | Cloudflare Zero Trust unknown | REASONED |
 | aop-zone: Global AOP proves only Cloudflare network membership; prefer a zone certificate and its issuing CA, removing shared-CA trust. | Cloudflare Zero Trust unknown | REASONED |
 | origin-ports: For a no-tunnel origin, restrict 443 to Cloudflare IP ranges and close 80 or redirect only; mTLS cannot authenticate plaintext HTTP. | Cloudflare Zero Trust unknown | REASONED |
@@ -780,7 +780,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | verify-token: On a route known to serve application content with HTTP 200, send the hidden-prompt service token through curl --header @- and expect http=200 location=. Login redirects, denials and transport errors fail; compare anonymous denial because token success alone does not prove Access enforcement. The probe discards the body, so 200 alone cannot identify content. | Cloudflare Zero Trust unknown; curl manual unknown | REASONED |
 | verify-policy: Inspect loopback binding and effective inbound policy, including existing allows and container NAT; permitted sources depend on topology. | Cloudflare Zero Trust unknown | REASONED |
 | verify-origin: From another host, probe the actual origin port 3000: remote refusal/timeout is expected; any HTTP reply exposes bypass, resolver/local errors are inconclusive. | Cloudflare Zero Trust unknown | REASONED |
-| verify-aop: Trust the origin server CA when probing 443 directly: missing-client-certificate refusal proves AOP; firewall drops and app 401/403 prove different layers. | Cloudflare Zero Trust unknown | REASONED |
+| verify-aop: Trust the origin server CA when probing 443 directly: missing-client-certificate refusal proves AOP; firewall drops and app 401/403 prove different layers. | Cloudflare Zero Trust unknown; Cloudflare documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | verify-http: Separately confirm the no-tunnel origin's port 80 never serves the app. | Cloudflare Zero Trust unknown | REASONED |
 | token-file: cloudflared 2025.4.0 or later supports tunnel run --token-file /absolute/path/to/token; restrict the file to the service account with mode 0600 on Linux/macOS or a restricted Windows ACL. | cloudflared token-file minimum 2025.4.0; Cloudflare Zero Trust unknown | REASONED |
 | token-install-argv: Avoid cloudflared service install &lt;TOKEN&gt;: the token is exposed on the installer argv, even though the cited 2026.9.3 installer runs the service with --token-file. | cloudflared service installer 2026.9.3; cloudflared token-file minimum 2025.4.0 | REASONED |
@@ -968,6 +968,10 @@ Read err, not the number: for a tunnel a refusal or timeout naming your own addr
 - cloudflared run parameters (`--token-file`, requires 2025.4.0 or later): https://developers.cloudflare.com/tunnel/reference/run-parameters/#token-file
 - Tunnel tokens (retrieving the token from the dashboard installation command without running it): https://developers.cloudflare.com/tunnel/reference/tunnel-tokens/
 - cloudflared 2026.9.3 service installer (runs `tunnel run --token-file`): https://github.com/cloudflare/cloudflared/blob/2026.9.3/cmd/cloudflared/common_service.go
+- Cloudflare Access JWT signature, issuer and application audience validation (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json.mdx#L154-L157
+- Cloudflare Tunnel origin caPool trust and noTLSVerify behavior (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L51-L67
+- Cloudflare Full (strict) origin certificate requirements (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/ssl/origin-configuration/ssl-modes/full-strict.mdx#L29-L33
+- Cloudflare Origin CA certificates and direct browser trust (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/ssl/origin-ca-pause-error.mdx#L8
 
 ======================================================================
 ==> tailscale.md
@@ -980,7 +984,7 @@ Read err, not the number: for a tunnel a refusal or timeout naming your own addr
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -998,8 +1002,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | funnel-prerequisites: Funnel requires tailnet HTTPS certificates, a funnel node attribute and MagicDNS. | Tailscale documentation unknown | REASONED |
 | syntax: Serve/Funnel command syntax changed in v1.52; older clients need their own --help. | Tailscale CLI change v1.52 | REASONED |
 | verify-bind: ss sport=:3000 must show 127.0.0.1:3000, not IPv4 or IPv6 wildcard. | ss unknown; Tailscale documentation unknown | REASONED |
-| verify-direct: Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding. | Tailscale documentation unknown | REASONED |
-| verify-allowed: Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy. | Tailscale documentation unknown | REASONED |
+| verify-direct: Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding. | Tailscale documentation unknown; curl option documentation 7.75.0 | REASONED |
+| verify-allowed: Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy. | Tailscale documentation unknown; curl option documentation 7.75.0 | REASONED |
 | verify-policy: Policy tests must accept the intended identity and deny an excluded one; failed assertions reject the policy file. | Tailscale documentation unknown | REASONED |
 | verify-public: From a non-tailnet network Serve is unreachable and Funnel reachable; the funneled app must authenticate every request. | Tailscale documentation unknown | REASONED |
 <!-- version-basis:end -->
@@ -1082,6 +1086,13 @@ An allowed device connects under both the default allow-all policy and a correct
 - Tailscale serve identity headers, that binding the backend to localhost limits tampering to other services on the Serve device (it does not authenticate the calling process): https://tailscale.com/kb/1312/serve
 - Tailscale policy-file `tests`, that a policy file whose assertions fail is rejected: https://tailscale.com/docs/reference/syntax/policy-file#tests
 - ss(8), the `sport` filter expression used above: https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html
+- curl 7.75.0 write-out errormsg and exitcode (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L32-L36
+- curl 7.75.0 write-out http_code (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L48-L51
+- curl 7.75.0 write-out time_connect (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L147-L149
+- curl 7.75.0 HEAD requests (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/head.d#L7-L9
+- curl 7.75.0 first-argument configuration disabling (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/disable.d#L6-L8
+- curl 7.75.0 connection timeout (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/connect-timeout.d#L7-L10
+- curl 7.75.0 total timeout (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/max-time.d#L8-L12
 
 ======================================================================
 ==> tunnels.md
@@ -1094,14 +1105,14 @@ An allowed device connects under both the default allow-all policy and a correct
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | frps-port: frps bindPort defaults to 7000. | frps source v0.71.0 | REASONED |
-| frp-token: Token authentication is the default; set the same long random auth.token on frps and every frpc. | frp documentation unknown | REASONED |
-| frp-empty: Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure. | frp documentation unknown | REASONED |
-| frp-oidc: auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation. | frp documentation unknown | REASONED |
+| frp-token: Token authentication is the default; set the same long random auth.token on frps and every frpc. | frp documentation unknown; frps source v0.71.0 | REASONED |
+| frp-empty: Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure. | frp documentation unknown; frps source v0.71.0 | REASONED |
+| frp-oidc: auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation. | frp documentation unknown; frps source v0.71.0 | REASONED |
 | proxy-bind: proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0. | frps source v0.71.0 | REASONED |
 | proxy-tcp: Registered TCP proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
 | proxy-udp: Registered UDP proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
@@ -1126,13 +1137,13 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | ssh-yes: GatewayPorts yes forces wildcard listening regardless of the requested bind. | OpenSSH unknown | REASONED |
 | ssh-client: GatewayPorts clientspecified honours requested wildcard or loopback binding. | OpenSSH unknown | REASONED |
 | ssh-auth: SSH authenticates the tunnel, not callers; retain GatewayPorts no and front localhost:8080 with authenticated TLS. | OpenSSH unknown | REASONED |
-| ssh-persist: Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding. | OpenSSH unknown | REASONED |
-| verify-token: Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client. | frp documentation unknown | REASONED |
-| verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown | REASONED |
-| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown | REASONED |
+| ssh-persist: Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding. | OpenSSH unknown; autossh source 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476 | REASONED |
+| verify-token: Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client. | frp documentation unknown; frps source v0.71.0 | REASONED |
+| verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
+| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
 | verify-route: An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause. | WireGuard unknown; nftables unknown | REASONED |
 | verify-counter: Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer. | WireGuard unknown; nftables unknown | REASONED |
-| verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown | REASONED |
+| verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown; iproute2 manuals v6.12.0 | REASONED |
 <!-- version-basis:end -->
 
 All three expose a private host to the internet without a public IP, the same job [cloudflare.md](cloudflare.md) and [tailscale.md](tailscale.md) do, but with no vendor edge: you run and secure both ends yourself, on a host still hardened per [host.md](host.md). frp with a weak or absent token lets anyone bind proxies through your server; WireGuard has no login at all, only key pairs and the traffic scoping you configure; and `ssh -R` forwards a local port through your own SSH login, kept on the server's loopback by default but reachable by anyone if `GatewayPorts` is widened.
@@ -1269,6 +1280,18 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 - frps HTTP and HTTPS vhost listeners bind `proxyBindAddr` (L303 and L334), sharing the main listener only when `bindAddr` equals `proxyBindAddr` (L229-L235) (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L303-L321, https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L329-L340 and https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L229-L235
 - frps tcpmux HTTP CONNECT listener binds `proxyBindAddr` at `tcpmuxHTTPConnectPort` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L193-L194
 - frps stcp and sudp proxies register an in-process visitor listener (`server/visitor/visitor.go` L49-L57, `NewInternalListener`), and xtcp registers with the NAT-hole controller (`server/proxy/xtcp.go` L63); none opens a socket (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/visitor/visitor.go#L49-L57, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/stcp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/sudp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/proxy.go#L202-L215, https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/net/listener.go#L25-L37, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/xtcp.go#L63 and https://github.com/fatedier/frp/blob/v0.71.0/pkg/nathole/controller.go#L125-L139
+- autossh SSH monitoring and restart (pinned commit 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476, checked October 2026): https://github.com/Autossh/autossh/blob/90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476/README#L25-L26
+- Ubuntu Noble ufw manual, status verbose, show raw and IPv4/IPv6 rule visibility (rolling documentation, checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html
+- iproute2 ip-link manual, "ip link show - display device attributes"; the device name "specifies the network device to show." (pinned tag v6.12.0, checked October 2026): https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ip-link.8.in
+- Linux administrative IFF_UP flag (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L39-L40
+- Linux operational UNKNOWN state (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L58-L61
+- iproute2 ss manual, UDP/TCP listeners (`-l`: "Display only listening sockets"), numeric output (`-n`: "Do not try to resolve service names.") and process display (`-p`: "Show process using socket.") (pinned tag v6.12.0, checked October 2026): https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ss.8
+- Linux WireGuard UDP socket creation (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/drivers/net/wireguard/socket.c#L387-L393
+- Linux UDP tunnel kernel socket creation (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/net/ipv4/udp_tunnel_core.c#L17-L19
+- frps OIDC verifier skips audience checking when Audience is empty (pinned tag v0.71.0, checked October 2026): https://github.com/fatedier/frp/blob/v0.71.0/pkg/auth/oidc.go#L281-L287
+- frps optional token field and default token method (pinned tag v0.71.0, checked October 2026): https://github.com/fatedier/frp/blob/v0.71.0/pkg/config/v1/server.go#L128-L139
+- frps login auth-key comparison (pinned tag v0.71.0, checked October 2026; empty-token acceptance is REASONED with the configuration and key derivation): https://github.com/fatedier/frp/blob/v0.71.0/pkg/auth/token.go#L64-L69
+- frp auth-key derivation from token and timestamp (pinned tag v0.71.0, checked October 2026; predictable empty-token keys are REASONED from this implementation): https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/util/util.go#L50-L56
 
 ======================================================================
 ==> authentication.md
@@ -3451,7 +3474,7 @@ Negative tests matter more than the happy path:
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -3496,7 +3519,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | ngrok-cli: Use ngrok http 3000 --traffic-policy-file policy.yml; legacy OAuth allow-domain/email flags are deprecated. | ngrok unknown | REASONED |
 | ngrok-origin: Bind the app to 127.0.0.1 so a direct VM address cannot bypass ngrok login. | ngrok unknown | REASONED |
 | vercel-members: Deployment Protection is not end-user login; Vercel Authentication admits members/viewers, approved requesters, share links and automation bypass. | Vercel unknown | REASONED |
-| vercel-scope: Standard Protection excludes production domains; configure All Deployments. The guide records free availability on every plan from September 9, 2026. | Vercel unknown | REASONED |
+| vercel-scope: Standard Protection excludes production domains; configure All Deployments. The guide records free availability on every plan from September 9, 2026. | Vercel unknown; Vercel production-protection announcement 2026-09-09 | REASONED |
 | vercel-exception: A domain Protection Exception disables protection for existing and future deployments; remove unintended exceptions. | Vercel unknown | REASONED |
 | vercel-password: At writing, Password Protection is Enterprise-included or USD 20/month/project on Pro; USD 150 legacy is existing-Pro only; Hobby lacks it. | Vercel unknown | REASONED |
 | vercel-enterprise: Trusted IPs and Passport are Enterprise-only at the time of writing. | Vercel unknown | REASONED |
@@ -3642,6 +3665,7 @@ After logging in, confirm that the app's own identity check reads the signed ass
 - Vercel Authentication: https://vercel.com/docs/deployment-protection/methods-to-protect-deployments/vercel-authentication
 - Vercel Password Protection (pricing): https://vercel.com/docs/deployment-protection/methods-to-protect-deployments/password-protection
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
+- Vercel production protection on every plan (announcement dated 2026-09-09, checked October 2026): https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan
 
 ======================================================================
 ==> machine-auth.md
