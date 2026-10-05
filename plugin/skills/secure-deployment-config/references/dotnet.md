@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-27",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "438cb43ddb3c481a7ae6d4c106e4f0a777c4c7fe798c6f45246583aa454535d8",
+  "body_sha256": "9d0e36ae7a3e5baed014b5e060adef6d2c09c78d38e8b31cf7320d856a4be63a",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -17,7 +17,8 @@ version_basis: {
         "sa3c22a38f4cb": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0",
         "sb6780977fa3f": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy?view=aspnetcore-10.0",
         "s592dc85bb71f": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication?view=aspnetcore-10.0",
-        "s6afc0255098f": "https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator?view=net-10.0"
+        "s6afc0255098f": "https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator?view=net-10.0",
+        "s2d5a930aac35": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/mfa?view=aspnetcore-10.0"
       }
     },
     "rate-min": {
@@ -135,7 +136,7 @@ version_basis: {
     "authorization": {"text": "Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages.", "components": ["docs"], "sources": ["docs:sa3c22a38f4cb"], "status": "REASONED"},
     "login-limit": {"text": "NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing.", "components": ["rate-min"], "sources": ["rate-min:sd3fef8f45066"], "status": "REASONED"},
     "oidc": {"text": "Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json.", "components": ["docs"], "sources": ["docs:s592dc85bb71f"], "status": "REASONED"},
-    "mfa": {"text": "Enforce MFA at the provider or fronting identity layer per linked guides; provider MFA configuration lacks a direct listed source.", "components": ["docs"], "sources": ["docs:s592dc85bb71f"], "status": "REASONED"},
+    "mfa": {"text": "Enforce MFA at the provider or fronting identity layer per linked guides; provider MFA configuration lacks a direct listed source.", "components": ["docs"], "sources": ["docs:s592dc85bb71f", "docs:s2d5a930aac35"], "status": "REASONED"},
     "client-validation": {"text": "Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback.", "components": ["docs"], "sources": ["docs:s6afc0255098f"], "status": "REASONED"},
     "client-ca": {"text": "On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots.", "components": ["runtime", "openssl", "dotnet-rolling"], "sources": ["dotnet-rolling:s640872a17a8a", "runtime:s29ee940c94b9", "openssl:scac6dada5f6a"], "status": "REASONED"},
     "developer-errors": {"text": "Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1", "net10:s61afb89034f8"], "status": "REASONED"},
@@ -197,7 +198,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -717,3 +718,4 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 - .NET 10 OpenAPI documents with Development-only Swagger UI: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-10.0
 - .NET 10 health-check authorization and Host-header spoofing: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-10.0
 - .NET 10 host filtering and AllowedHosts: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/host-filtering?view=aspnetcore-10.0
+- .NET 10 provider-side MFA requirements (checked October 2026): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/mfa?view=aspnetcore-10.0

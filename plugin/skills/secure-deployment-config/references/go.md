@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-27",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "a76b9f18469b8277f3832a03d038c405bf34164e766365e26afc108fc6d1ea35",
+  "body_sha256": "56071029dcaea9130592a7a1948c0413617cbade1d32755202be83629ef24825",
   "components": {
     "http": {
       "name": "Go net/http documentation",
@@ -96,6 +96,13 @@ version_basis: {
       "sources": {
         "sfdeabbeca746": "https://pkg.go.dev/net/http@go1.27.0#Request"
       }
+    },
+    "otp": {
+      "name": "pquerna/otp",
+      "basis": "v1.5.0",
+      "sources": {
+        "scdd6f451714e": "https://github.com/pquerna/otp/blob/v1.5.0/README.md#L9"
+      }
     }
   },
   "claims": {
@@ -111,7 +118,7 @@ version_basis: {
     "login-limit": {"text": "A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits.", "components": ["rate"], "sources": ["rate:s5c3fdae5a0af"], "status": "REASONED"},
     "tokens": {"text": "Load tokens from the environment and generate them per authentication.md; token generation and environment handling lack a listed source.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
     "oidc": {"text": "NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
-    "mfa": {"text": "Use pquerna/otp or a fronting identity layer; TOTP and MFA lack a listed source.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
+    "mfa": {"text": "Use pquerna/otp or a fronting identity layer; TOTP and MFA lack a listed source.", "components": ["oidc", "otp"], "sources": ["oidc:s60cc1d7a8fe6", "otp:scdd6f451714e"], "status": "REASONED"},
     "client-validation": {"text": "InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation.", "components": ["tls"], "sources": ["tls:se2152a9c28fc"], "status": "REASONED"},
     "client-ca": {"text": "Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR.", "components": ["tls", "x509"], "sources": ["tls:se2152a9c28fc", "x509:se65b937f9e1e"], "status": "REASONED"},
     "platform-ca": {"text": "Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set.", "components": ["x509"], "sources": ["x509:se65b937f9e1e"], "status": "REASONED"},
@@ -147,7 +154,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -163,7 +170,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | login-limit: A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits. | Go rate documentation unknown | REASONED |
 | tokens: Load tokens from the environment and generate them per authentication.md; token generation and environment handling lack a listed source. | go-oidc documentation v3 | REASONED |
 | oidc: NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists. | go-oidc documentation v3 | REASONED |
-| mfa: Use pquerna/otp or a fronting identity layer; TOTP and MFA lack a listed source. | go-oidc documentation v3 | REASONED |
+| mfa: Use pquerna/otp or a fronting identity layer; TOTP and MFA lack a listed source. | go-oidc documentation v3; pquerna/otp v1.5.0 | REASONED |
 | client-validation: InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation. | Go crypto/tls documentation unknown | REASONED |
 | client-ca: Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR. | Go crypto/tls documentation unknown; Go certificate-store qualification 1.27 | REASONED |
 | platform-ca: Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set. | Go certificate-store qualification 1.27 | REASONED |
@@ -383,3 +390,4 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 - net/http ResponseController (per-request deadlines) (Go 1.20+): https://pkg.go.dev/net/http#ResponseController
 - expvar (registers /debug/vars on the default mux): https://pkg.go.dev/expvar
 - Linux ip-sysctl, ip_unprivileged_port_start (the privileged-port threshold is configurable): https://docs.kernel.org/networking/ip-sysctl.html#ip-unprivileged-port-start
+- pquerna/otp TOTP support (v1.5.0, checked October 2026): https://github.com/pquerna/otp/blob/v1.5.0/README.md#L9

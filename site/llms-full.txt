@@ -5349,7 +5349,7 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -5367,7 +5367,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | expiry: No cookie maximum age is set by default; set cookie.maxAge. | express-session documentation unknown | REASONED |
 | login-limit: Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls. | express-rate-limit minimum v8 | REASONED |
 | tokens: Load API tokens from process.env and compare with crypto.timingSafeEqual; these APIs are not covered by listed Sources. | Node.js documentation unknown | REASONED |
-| mfa: Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; these cross-references are not covered by listed Sources. | express-session documentation unknown | REASONED |
+| mfa: Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; these cross-references are not covered by listed Sources. | express-session documentation unknown; otplib v12.0.1; qrcode v1.5.4 | REASONED |
 | tls-validation: Never disable validation with NODE_TLS_REJECT_UNAUTHORIZED=0 process-wide or rejectUnauthorized=false per connection/shared agent; the environment-variable rule lacks a listed source. | Node.js documentation unknown | REASONED |
 | client-ca: Use NODE_EXTRA_CA_CERTS for an internal CA; this variable is not covered by listed Sources. | Node.js documentation unknown | REASONED |
 | verify-redirect: HTTP should return 301 with an HTTPS Location. | Node.js documentation unknown | REASONED |
@@ -5514,6 +5514,8 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 - helmet: https://helmet.js.org/
 - express-rate-limit changelog (v8 masks IPv6 clients to a `/56` subnet by default, closing the v7 subnet-rotation bypass; the `limit` option name): https://express-rate-limit.mintlify.app/reference/changelog
 - Node HTTP `message.url` and the caution to validate a client-supplied `Host` header: https://nodejs.org/api/http.html
+- otplib TOTP enrolment and QR-code generation (v12.0.1, checked October 2026): https://github.com/yeojz/otplib/blob/v12.0.1/README.md#L371-L372
+- qrcode enrolment image generation (v1.5.4, checked October 2026): https://github.com/soldair/node-qrcode/blob/v1.5.4/README.md#L125-L129
 
 ======================================================================
 ==> python.md
@@ -5526,7 +5528,7 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -5540,13 +5542,13 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | django-hsts: Begin HSTS at 3600 seconds and include-subdomains false; raise duration and scope only after valid HTTPS is confirmed. | Django documentation 6.1 | REASONED |
 | deploy-check: Run manage.py check --deploy and fix its findings. | Django documentation 6.1 | REASONED |
 | password: Keep Django built-in hashing; Flask/FastAPI require an application user store and argon2-cffi or bcrypt. PasswordHasher.verify raises on mismatch; bcrypt and user-store assertions lack listed sources. | Django documentation 6.1; argon2-cffi documentation unknown | REASONED |
-| secrets: Generate secrets.token_urlsafe(32) and load secrets from the environment; the secrets API is not covered by listed Sources. | Django documentation 6.1 | REASONED |
+| secrets: Generate secrets.token_urlsafe(32) and load secrets from the environment; the secrets API is not covered by listed Sources. | Django documentation 6.1; Python standard library documentation 3.14 | REASONED |
 | credential-extraction: FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry. | FastAPI documentation unknown | REASONED |
 | oidc: OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately. | FastAPI documentation unknown; FastAPI OpenIdConnect source 31bbb380748ccead62fc0f42dbf4273f11dadccf | REASONED |
 | login-limit: Rate-limit login at the proxy or with slowapi; no listed source documents that limiter. | FastAPI documentation unknown | REASONED |
-| mfa: Use pyotp and qrcode, django-otp for Django, or linked MFA guidance; these packages lack listed Sources. | Django documentation 6.1 | REASONED |
-| client-validation: Never ship requests/httpx verify=False or ssl._create_unverified_context; these client APIs lack listed Sources. | Python http.server documentation 3.14.4 | REASONED |
-| client-ca: REQUESTS_CA_BUNDLE selects a requests CA and SSL_CERT_FILE selects an httpx/ssl CA; these variables lack listed Sources. | Python http.server documentation 3.14.4 | REASONED |
+| mfa: Use pyotp and qrcode, django-otp for Django, or linked MFA guidance; these packages lack listed Sources. | Django documentation 6.1; PyOTP v2.9.0; qrcode v8.2; django-otp 1.6.1 | REASONED |
+| client-validation: Never ship requests/httpx verify=False or ssl._create_unverified_context; these client APIs lack listed Sources. | Python http.server documentation 3.14.4; Requests v2.32.3 | REASONED |
+| client-ca: REQUESTS_CA_BUNDLE selects a requests CA and SSL_CERT_FILE selects an httpx/ssl CA; these variables lack listed Sources. | Python http.server documentation 3.14.4; Requests v2.32.3 | REASONED |
 | http-server-bind: As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000. | Python http.server source v3.14.4 | REASONED |
 | http-server-files: http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel. | Python http.server documentation 3.14.4 | REASONED |
 | verify-tls: Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation. | Gunicorn documentation unknown; Uvicorn source 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9 | REASONED |
@@ -5665,6 +5667,13 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 - FastAPI security reference: https://fastapi.tiangolo.com/reference/security/ ; `OpenIdConnect` source (stub warning): https://github.com/fastapi/fastapi/blob/31bbb380748ccead62fc0f42dbf4273f11dadccf/fastapi/security/open_id_connect_url.py
 - `http.server` binds with `bind=None` and `AI_PASSIVE`, the wildcard address (pinned tag v3.14.4): https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1322-L1334
 - `python -m http.server`'s `-b/--bind` has no default value, and its help says "default: all interfaces" (pinned tag v3.14.4): https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1371-L1373
+- Python 3.14 secrets.token_urlsafe (series documentation, checked October 2026): https://docs.python.org/3.14/library/secrets.html
+- Python 3.14 os.getenv environment loading (series documentation, checked October 2026): https://docs.python.org/3.14/library/os.html#os.getenv
+- PyOTP one-time passwords and MFA (v2.9.0, checked October 2026): https://github.com/pyauth/pyotp/blob/v2.9.0/README.rst#L4-L5
+- qrcode enrolment image generation (v8.2, checked October 2026): https://github.com/lincolnloop/python-qrcode/blob/v8.2/README.rst#L41-L44
+- django-otp Django authentication integration (1.6.1, checked October 2026): https://pypi.org/project/django-otp/1.6.1/
+- Requests REQUESTS_CA_BUNDLE trust roots (v2.32.3, checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239
+- Requests verify=False disables certificate verification (v2.32.3, checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L241-L243
 
 ======================================================================
 ==> docker.md
@@ -6293,7 +6302,7 @@ allowed ranges out of the provider's own configuration rather than inferring the
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -6724,6 +6733,11 @@ they were not rechecked online. Missing source implementations are identified ab
 - Flux SOPS/age decryption: https://fluxcd.io/flux/guides/mozilla-sops/
 - Flux OCIRepository and HelmRepository credential references (`.spec.secretRef`): https://fluxcd.io/flux/components/source/ocirepositories/#secret-reference
 - Flux controller permissions (which controllers hold cluster-admin, Secret access): https://fluxcd.io/flux/security/#controller-permissions
+- Argo CD repo-server bind defaults (v3.5.3; commit c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; checked October 2026): https://github.com/argoproj/argo-cd/blob/v3.5.3/common/common.go#L89-L90
+- Argo CD repo-server listener flags and default wiring (v3.5.3; commit c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; checked October 2026): https://github.com/argoproj/argo-cd/blob/v3.5.3/cmd/argocd-repo-server/commands/argocd_repo_server.go#L257-L260
+- Argo CD Redis password initializer command (v3.5.3; commit c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; checked October 2026): https://github.com/argoproj/argo-cd/blob/v3.5.3/cmd/argocd/commands/admin/redis_initial_password.go#L41-L42
+- Argo CD additive default-role enforcement (v3.5.3; commit c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; checked October 2026): https://github.com/argoproj/argo-cd/blob/v3.5.3/util/rbac/rbac.go#L401-L406
+- Argo CD default-role ConfigMap loading (v3.5.3; commit c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; checked October 2026): https://github.com/argoproj/argo-cd/blob/v3.5.3/util/rbac/rbac.go#L540-L541
 
 ======================================================================
 ==> self-hosted-ci-runners.md
@@ -7720,7 +7734,7 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -7736,7 +7750,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | login-limit: A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits. | Go rate documentation unknown | REASONED |
 | tokens: Load tokens from the environment and generate them per authentication.md; token generation and environment handling lack a listed source. | go-oidc documentation v3 | REASONED |
 | oidc: NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists. | go-oidc documentation v3 | REASONED |
-| mfa: Use pquerna/otp or a fronting identity layer; TOTP and MFA lack a listed source. | go-oidc documentation v3 | REASONED |
+| mfa: Use pquerna/otp or a fronting identity layer; TOTP and MFA lack a listed source. | go-oidc documentation v3; pquerna/otp v1.5.0 | REASONED |
 | client-validation: InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation. | Go crypto/tls documentation unknown | REASONED |
 | client-ca: Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR. | Go crypto/tls documentation unknown; Go certificate-store qualification 1.27 | REASONED |
 | platform-ca: Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set. | Go certificate-store qualification 1.27 | REASONED |
@@ -7956,6 +7970,7 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 - net/http ResponseController (per-request deadlines) (Go 1.20+): https://pkg.go.dev/net/http#ResponseController
 - expvar (registers /debug/vars on the default mux): https://pkg.go.dev/expvar
 - Linux ip-sysctl, ip_unprivileged_port_start (the privileged-port threshold is configurable): https://docs.kernel.org/networking/ip-sysctl.html#ip-unprivileged-port-start
+- pquerna/otp TOTP support (v1.5.0, checked October 2026): https://github.com/pquerna/otp/blob/v1.5.0/README.md#L9
 
 ======================================================================
 ==> dotnet.md
@@ -7968,7 +7983,7 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -8488,6 +8503,7 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 - .NET 10 OpenAPI documents with Development-only Swagger UI: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-10.0
 - .NET 10 health-check authorization and Host-header spoofing: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-10.0
 - .NET 10 host filtering and AllowedHosts: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/host-filtering?view=aspnetcore-10.0
+- .NET 10 provider-side MFA requirements (checked October 2026): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/mfa?view=aspnetcore-10.0
 
 ======================================================================
 ==> java.md
