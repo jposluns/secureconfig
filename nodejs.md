@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2979402af8c954d876d58cce26cf5d234970bf89fd110348da3cd4e352c2d2e9",
+  "body_sha256": "9637a374fead62f714c3e9b4dd913cb2c49023ed66708df2f31fb7eddb08b00f",
   "components": {
     "node": {
       "name": "Node.js documentation",
@@ -40,6 +40,20 @@ version_basis: {
       "sources": {
         "s303dcc57a0df": "https://express-rate-limit.mintlify.app/reference/changelog"
       }
+    },
+    "otplib": {
+      "name": "otplib",
+      "basis": "v12.0.1",
+      "sources": {
+        "sdb2cd721be64": "https://github.com/yeojz/otplib/blob/v12.0.1/README.md#L371-L372"
+      }
+    },
+    "qrcode": {
+      "name": "qrcode",
+      "basis": "v1.5.4",
+      "sources": {
+        "sc505636608da": "https://github.com/soldair/node-qrcode/blob/v1.5.4/README.md#L125-L129"
+      }
     }
   },
   "claims": {
@@ -57,7 +71,7 @@ version_basis: {
     "expiry": {"text": "No cookie maximum age is set by default; set cookie.maxAge.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
     "login-limit": {"text": "Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls.", "components": ["rate"], "sources": ["rate:s303dcc57a0df"], "status": "REASONED"},
     "tokens": {"text": "Load API tokens from process.env and compare with crypto.timingSafeEqual; these APIs are not covered by listed Sources.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
-    "mfa": {"text": "Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; these cross-references are not covered by listed Sources.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "mfa": {"text": "Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; these cross-references are not covered by listed Sources.", "components": ["session", "otplib", "qrcode"], "sources": ["session:safd9f9d15304", "otplib:sdb2cd721be64", "qrcode:sc505636608da"], "status": "REASONED"},
     "tls-validation": {"text": "Never disable validation with NODE_TLS_REJECT_UNAUTHORIZED=0 process-wide or rejectUnauthorized=false per connection/shared agent; the environment-variable rule lacks a listed source.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
     "client-ca": {"text": "Use NODE_EXTRA_CA_CERTS for an internal CA; this variable is not covered by listed Sources.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
     "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED", "verify": [1]},
@@ -75,7 +89,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -93,7 +107,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | expiry: No cookie maximum age is set by default; set cookie.maxAge. | express-session documentation unknown | REASONED |
 | login-limit: Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls. | express-rate-limit minimum v8 | REASONED |
 | tokens: Load API tokens from process.env and compare with crypto.timingSafeEqual; these APIs are not covered by listed Sources. | Node.js documentation unknown | REASONED |
-| mfa: Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; these cross-references are not covered by listed Sources. | express-session documentation unknown | REASONED |
+| mfa: Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; these cross-references are not covered by listed Sources. | express-session documentation unknown; otplib v12.0.1; qrcode v1.5.4 | REASONED |
 | tls-validation: Never disable validation with NODE_TLS_REJECT_UNAUTHORIZED=0 process-wide or rejectUnauthorized=false per connection/shared agent; the environment-variable rule lacks a listed source. | Node.js documentation unknown | REASONED |
 | client-ca: Use NODE_EXTRA_CA_CERTS for an internal CA; this variable is not covered by listed Sources. | Node.js documentation unknown | REASONED |
 | verify-redirect: HTTP should return 301 with an HTTPS Location. | Node.js documentation unknown | REASONED |
@@ -240,3 +254,5 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 - helmet: https://helmet.js.org/
 - express-rate-limit changelog (v8 masks IPv6 clients to a `/56` subnet by default, closing the v7 subnet-rotation bypass; the `limit` option name): https://express-rate-limit.mintlify.app/reference/changelog
 - Node HTTP `message.url` and the caution to validate a client-supplied `Host` header: https://nodejs.org/api/http.html
+- otplib TOTP enrolment and QR-code generation (v12.0.1, checked October 2026): https://github.com/yeojz/otplib/blob/v12.0.1/README.md#L371-L372
+- qrcode enrolment image generation (v1.5.4, checked October 2026): https://github.com/soldair/node-qrcode/blob/v1.5.4/README.md#L125-L129

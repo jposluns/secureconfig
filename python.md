@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "41046bb0fcef51ea602f7107db5fe17b7eae9b951f130fee0d4d57ef324b6adb",
+  "body_sha256": "aa419cfcbcfa74f29059cff14b991c8dbe5022558ecf378eb3ce10e8f84d12b6",
   "components": {
     "python": {
       "name": "Python http.server documentation",
@@ -68,6 +68,43 @@ version_basis: {
         "s0038729960a0": "https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1322-L1334",
         "sa3111578d65d": "https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1371-L1373"
       }
+    },
+    "stdlib-docs": {
+      "name": "Python standard library documentation",
+      "basis": "3.14",
+      "sources": {
+        "s971d128efc65": "https://docs.python.org/3.14/library/secrets.html",
+        "sdad376a711c3": "https://docs.python.org/3.14/library/os.html#os.getenv"
+      }
+    },
+    "pyotp": {
+      "name": "PyOTP",
+      "basis": "v2.9.0",
+      "sources": {
+        "sc118b8ed3bdd": "https://github.com/pyauth/pyotp/blob/v2.9.0/README.rst#L4-L5"
+      }
+    },
+    "qrcode": {
+      "name": "qrcode",
+      "basis": "v8.2",
+      "sources": {
+        "s8247ddfed3d3": "https://github.com/lincolnloop/python-qrcode/blob/v8.2/README.rst#L41-L44"
+      }
+    },
+    "django-otp": {
+      "name": "django-otp",
+      "basis": "1.6.1",
+      "sources": {
+        "sa5c0f7097219": "https://pypi.org/project/django-otp/1.6.1/"
+      }
+    },
+    "requests": {
+      "name": "Requests",
+      "basis": "v2.32.3",
+      "sources": {
+        "s21c6be6f6df4": "https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239",
+        "s17c5a0a7ffb2": "https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L241-L243"
+      }
     }
   },
   "claims": {
@@ -81,13 +118,13 @@ version_basis: {
     "django-hsts": {"text": "Begin HSTS at 3600 seconds and include-subdomains false; raise duration and scope only after valid HTTPS is confirmed.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
     "deploy-check": {"text": "Run manage.py check --deploy and fix its findings.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
     "password": {"text": "Keep Django built-in hashing; Flask/FastAPI require an application user store and argon2-cffi or bcrypt. PasswordHasher.verify raises on mismatch; bcrypt and user-store assertions lack listed sources.", "components": ["django", "argon"], "sources": ["django:s7289e1c111ae", "argon:sff2b9a487e67"], "status": "REASONED"},
-    "secrets": {"text": "Generate secrets.token_urlsafe(32) and load secrets from the environment; the secrets API is not covered by listed Sources.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
+    "secrets": {"text": "Generate secrets.token_urlsafe(32) and load secrets from the environment; the secrets API is not covered by listed Sources.", "components": ["django", "stdlib-docs"], "sources": ["django:s7289e1c111ae", "stdlib-docs:s971d128efc65", "stdlib-docs:sdad376a711c3"], "status": "REASONED"},
     "credential-extraction": {"text": "FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry.", "components": ["fastapi"], "sources": ["fastapi:s077aff608a5c"], "status": "REASONED"},
     "oidc": {"text": "OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately.", "components": ["fastapi", "oidc-stub"], "sources": ["fastapi:s077aff608a5c", "oidc-stub:s876e3d51e7ac"], "status": "REASONED"},
     "login-limit": {"text": "Rate-limit login at the proxy or with slowapi; no listed source documents that limiter.", "components": ["fastapi"], "sources": ["fastapi:s077aff608a5c"], "status": "REASONED"},
-    "mfa": {"text": "Use pyotp and qrcode, django-otp for Django, or linked MFA guidance; these packages lack listed Sources.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
-    "client-validation": {"text": "Never ship requests/httpx verify=False or ssl._create_unverified_context; these client APIs lack listed Sources.", "components": ["python"], "sources": ["python:s8fae94406709"], "status": "REASONED"},
-    "client-ca": {"text": "REQUESTS_CA_BUNDLE selects a requests CA and SSL_CERT_FILE selects an httpx/ssl CA; these variables lack listed Sources.", "components": ["python"], "sources": ["python:s8fae94406709"], "status": "REASONED"},
+    "mfa": {"text": "Use pyotp and qrcode, django-otp for Django, or linked MFA guidance; these packages lack listed Sources.", "components": ["django", "pyotp", "qrcode", "django-otp"], "sources": ["django:s7289e1c111ae", "pyotp:sc118b8ed3bdd", "qrcode:s8247ddfed3d3", "django-otp:sa5c0f7097219"], "status": "REASONED"},
+    "client-validation": {"text": "Never ship requests/httpx verify=False or ssl._create_unverified_context; these client APIs lack listed Sources.", "components": ["python", "requests"], "sources": ["python:s8fae94406709", "requests:s17c5a0a7ffb2"], "status": "REASONED"},
+    "client-ca": {"text": "REQUESTS_CA_BUNDLE selects a requests CA and SSL_CERT_FILE selects an httpx/ssl CA; these variables lack listed Sources.", "components": ["python", "requests"], "sources": ["python:s8fae94406709", "requests:s21c6be6f6df4"], "status": "REASONED"},
     "http-server-bind": {"text": "As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000.", "components": ["python-pin"], "sources": ["python-pin:s0038729960a0", "python-pin:sa3111578d65d"], "status": "REASONED"},
     "http-server-files": {"text": "http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel.", "components": ["python"], "sources": ["python:s8fae94406709"], "status": "REASONED"},
     "verify-tls": {"text": "Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation.", "components": ["gunicorn", "uvicorn"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9"], "status": "REASONED", "verify": [1]},
@@ -103,7 +140,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -117,13 +154,13 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | django-hsts: Begin HSTS at 3600 seconds and include-subdomains false; raise duration and scope only after valid HTTPS is confirmed. | Django documentation 6.1 | REASONED |
 | deploy-check: Run manage.py check --deploy and fix its findings. | Django documentation 6.1 | REASONED |
 | password: Keep Django built-in hashing; Flask/FastAPI require an application user store and argon2-cffi or bcrypt. PasswordHasher.verify raises on mismatch; bcrypt and user-store assertions lack listed sources. | Django documentation 6.1; argon2-cffi documentation unknown | REASONED |
-| secrets: Generate secrets.token_urlsafe(32) and load secrets from the environment; the secrets API is not covered by listed Sources. | Django documentation 6.1 | REASONED |
+| secrets: Generate secrets.token_urlsafe(32) and load secrets from the environment; the secrets API is not covered by listed Sources. | Django documentation 6.1; Python standard library documentation 3.14 | REASONED |
 | credential-extraction: FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry. | FastAPI documentation unknown | REASONED |
 | oidc: OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately. | FastAPI documentation unknown; FastAPI OpenIdConnect source 31bbb380748ccead62fc0f42dbf4273f11dadccf | REASONED |
 | login-limit: Rate-limit login at the proxy or with slowapi; no listed source documents that limiter. | FastAPI documentation unknown | REASONED |
-| mfa: Use pyotp and qrcode, django-otp for Django, or linked MFA guidance; these packages lack listed Sources. | Django documentation 6.1 | REASONED |
-| client-validation: Never ship requests/httpx verify=False or ssl._create_unverified_context; these client APIs lack listed Sources. | Python http.server documentation 3.14.4 | REASONED |
-| client-ca: REQUESTS_CA_BUNDLE selects a requests CA and SSL_CERT_FILE selects an httpx/ssl CA; these variables lack listed Sources. | Python http.server documentation 3.14.4 | REASONED |
+| mfa: Use pyotp and qrcode, django-otp for Django, or linked MFA guidance; these packages lack listed Sources. | Django documentation 6.1; PyOTP v2.9.0; qrcode v8.2; django-otp 1.6.1 | REASONED |
+| client-validation: Never ship requests/httpx verify=False or ssl._create_unverified_context; these client APIs lack listed Sources. | Python http.server documentation 3.14.4; Requests v2.32.3 | REASONED |
+| client-ca: REQUESTS_CA_BUNDLE selects a requests CA and SSL_CERT_FILE selects an httpx/ssl CA; these variables lack listed Sources. | Python http.server documentation 3.14.4; Requests v2.32.3 | REASONED |
 | http-server-bind: As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000. | Python http.server source v3.14.4 | REASONED |
 | http-server-files: http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel. | Python http.server documentation 3.14.4 | REASONED |
 | verify-tls: Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation. | Gunicorn documentation unknown; Uvicorn source 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9 | REASONED |
@@ -242,3 +279,10 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 - FastAPI security reference: https://fastapi.tiangolo.com/reference/security/ ; `OpenIdConnect` source (stub warning): https://github.com/fastapi/fastapi/blob/31bbb380748ccead62fc0f42dbf4273f11dadccf/fastapi/security/open_id_connect_url.py
 - `http.server` binds with `bind=None` and `AI_PASSIVE`, the wildcard address (pinned tag v3.14.4): https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1322-L1334
 - `python -m http.server`'s `-b/--bind` has no default value, and its help says "default: all interfaces" (pinned tag v3.14.4): https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1371-L1373
+- Python 3.14 secrets.token_urlsafe (series documentation, checked October 2026): https://docs.python.org/3.14/library/secrets.html
+- Python 3.14 os.getenv environment loading (series documentation, checked October 2026): https://docs.python.org/3.14/library/os.html#os.getenv
+- PyOTP one-time passwords and MFA (v2.9.0, checked October 2026): https://github.com/pyauth/pyotp/blob/v2.9.0/README.rst#L4-L5
+- qrcode enrolment image generation (v8.2, checked October 2026): https://github.com/lincolnloop/python-qrcode/blob/v8.2/README.rst#L41-L44
+- django-otp Django authentication integration (1.6.1, checked October 2026): https://pypi.org/project/django-otp/1.6.1/
+- Requests REQUESTS_CA_BUNDLE trust roots (v2.32.3, checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239
+- Requests verify=False disables certificate verification (v2.32.3, checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L241-L243
