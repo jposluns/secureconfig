@@ -3,13 +3,13 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "01a9f06d61cb31852bbdd65d34c630b63373902bbe82ffc50c3ccafdb3428db7",
+  "body_sha256": "fbd86c9b86b6af48cea40239b9ed334ecabcf8a5429b68b3a2e139b62dcd7d52",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
       "basis": "3.1.8",
       "sources": {
-        "s0ef73a227667": "https://docs.prefect.io/v3/advanced/security-settings"
+        "s12416d1a0d69": "https://github.com/PrefectHQ/prefect/releases/tag/3.1.8"
       }
     },
     "prefect-source": {
@@ -194,7 +194,8 @@ version_basis: {
       "name": "Prefect documentation (rolling)",
       "basis": "unknown",
       "sources": {
-        "sbe64d51110a2": "https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli"
+        "sbe64d51110a2": "https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli",
+        "s0ef73a227667": "https://docs.prefect.io/v3/advanced/security-settings"
       }
     },
     "dagster-rolling": {
@@ -238,9 +239,9 @@ version_basis: {
   },
   "claims": {
     "fronting": {"text": "Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress.", "components": ["airflow", "argo-docs", "temporal-rolling"], "sources": ["airflow:s1d0b86fe4334", "temporal-rolling:s06d4f0dbd0c8", "argo-docs:s6c8e78288632"], "status": "REASONED"},
-    "prefect-auth": {"text": "Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI.", "components": ["prefect"], "sources": ["prefect:s0ef73a227667"], "status": "REASONED"},
-    "prefect-key": {"text": "Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server.", "components": ["prefect"], "sources": ["prefect:s0ef73a227667"], "status": "REASONED"},
-    "prefect-secrets": {"text": "Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials.", "components": ["prefect"], "sources": ["prefect:s0ef73a227667"], "status": "REASONED"},
+    "prefect-auth": {"text": "Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI.", "components": ["prefect", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-rolling:s0ef73a227667"], "status": "REASONED"},
+    "prefect-key": {"text": "Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server.", "components": ["prefect", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-rolling:s0ef73a227667"], "status": "REASONED"},
+    "prefect-secrets": {"text": "Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials.", "components": ["prefect", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-rolling:s0ef73a227667"], "status": "REASONED"},
     "prefect-port": {"text": "The self-hosted Prefect server uses port 4200.", "components": ["prefect-rolling"], "sources": ["prefect-rolling:sbe64d51110a2"], "status": "REASONED"},
     "dagster-bind": {"text": "Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback when the port is unset or 0; explicitly bind the private origin.", "components": ["dagster"], "sources": ["dagster:sab1b42d92f27", "dagster:s6bc57f86dfe1", "dagster:s2455602a504b", "dagster:s3c7d8f17f245", "dagster:s469c458c4a71"], "status": "REASONED"},
     "dagster-helm": {"text": "The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default.", "components": ["dagster"], "sources": ["dagster:s695dfd19dcca", "dagster:sf6f027e96a0d", "dagster:seda3a1b24425"], "status": "REASONED"},
@@ -288,7 +289,7 @@ version_basis: {
     "argo-metrics": {"text": "/metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics.", "components": ["argo-three", "argo-four"], "sources": ["argo-three:s36759aec55fa", "argo-four:sa120f74372eb", "argo-three:s49cdaf0691c0", "argo-three:s2ca4f14c3164", "argo-four:s4613c15c72af", "argo-four:sb284f93cde9c", "argo-three:s64e74b0dbe95", "argo-four:se758d83aaf1f"], "status": "REASONED"},
     "argo-network": {"text": "Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained.", "components": ["argo-docs"], "sources": ["argo-docs:s6c8e78288632"], "status": "REASONED"},
     "verify-inventory": {"text": "ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately.", "components": ["flower", "argo-three", "iproute2", "network-namespaces", "prefect-rolling"], "sources": ["prefect-rolling:sbe64d51110a2", "flower:s25760fae7152", "argo-three:sbddb9f07a301", "iproute2:s6cc7f285a0c7", "network-namespaces:s427c923e346f", "iproute2:s9fa9a260f1de"], "status": "REASONED", "verify": [1]},
-    "verify-prefect": {"text": "Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent.", "components": ["prefect", "prefect-source"], "sources": ["prefect:s0ef73a227667", "prefect-source:sa4574c7ed80f"], "status": "REASONED", "verify": [1]},
+    "verify-prefect": {"text": "Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent.", "components": ["prefect", "prefect-source", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-source:sa4574c7ed80f", "prefect-rolling:s0ef73a227667"], "status": "REASONED", "verify": [1]},
     "verify-dagster": {"text": "A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately.", "components": ["dagster-rolling"], "sources": ["dagster-rolling:s4c04d5da5257"], "status": "REASONED", "verify": [1]},
     "verify-airflow": {"text": "FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth.", "components": ["airflow-two", "airflow-rolling", "fab-rolling"], "sources": ["fab-rolling:s989f09d05161", "airflow-rolling:s39bfd91c507b", "airflow-two:s2d1891641c91"], "status": "REASONED", "verify": [1]},
     "verify-temporal": {"text": "Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8", "temporal-rolling:s12f2c64ad396"], "status": "REASONED", "verify": [1]},
@@ -314,9 +315,9 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | fronting: Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress. | Apache Airflow 3.3.2; Argo Workflows documentation release-3.7; Temporal documentation (rolling) unknown | REASONED |
-| prefect-auth: Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI. | Prefect Basic Auth minimum 3.1.8 | REASONED |
-| prefect-key: Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server. | Prefect Basic Auth minimum 3.1.8 | REASONED |
-| prefect-secrets: Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials. | Prefect Basic Auth minimum 3.1.8 | REASONED |
+| prefect-auth: Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
+| prefect-key: Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
+| prefect-secrets: Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
 | prefect-port: The self-hosted Prefect server uses port 4200. | Prefect documentation (rolling) unknown | REASONED |
 | dagster-bind: Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback when the port is unset or 0; explicitly bind the private origin. | Dagster OSS 1.13.24 | REASONED |
 | dagster-helm: The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default. | Dagster OSS 1.13.24 | REASONED |
@@ -364,7 +365,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | argo-metrics: /metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
 | argo-network: Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained. | Argo Workflows documentation release-3.7 | REASONED |
 | verify-inventory: ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately. | Flower v2.2.0; Argo Workflows v3.7.18; iproute2 ss manual v6.15.0; Linux network namespaces manual man-pages-5.13; Prefect documentation (rolling) unknown | REASONED |
-| verify-prefect: Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent. | Prefect Basic Auth minimum 3.1.8; Prefect server source 9e560c9b6df4e19a5109a66e66d461f9facb538d | REASONED |
+| verify-prefect: Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent. | Prefect Basic Auth minimum 3.1.8; Prefect server source 9e560c9b6df4e19a5109a66e66d461f9facb538d; Prefect documentation (rolling) unknown | REASONED |
 | verify-dagster: A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately. | Dagster documentation (rolling) unknown | REASONED |
 | verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | verify-temporal: Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth. | Temporal documentation (rolling) unknown | REASONED |
@@ -734,7 +735,8 @@ shares the directory.
 These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases. Argo Workflows listener, authentication paths, TLS and manifest settings were checked against tags v3.7.18 (66e32e5cc367f223e2ecf4fbe852b95eaed83034) and v4.1.4 (b5b4d665e9be9b87c115f943584c3e0ae96fe073). The install manifests were traced through their build recipes and Kustomize inputs; their generated YAML files were not present in the supplied trees. SSO setup, API examples and security guidance retain the release-3.7 documentation links.
 
 - Prefect, security settings (`PREFECT_SERVER_API_AUTH_STRING`, `PREFECT_API_AUTH_STRING`, Cloud API keys
-  taking precedence and causing 401) (Prefect 3.1.8 Basic Auth minimum): https://docs.prefect.io/v3/advanced/security-settings
+  taking precedence and causing 401) (rolling documentation, checked September 2026): https://docs.prefect.io/v3/advanced/security-settings
+- Prefect 3.1.8 release announcement, Basic Auth support added to the API and UI: https://github.com/PrefectHQ/prefect/releases/tag/3.1.8
 - Prefect self-hosted server, default port 4200 (rolling documentation, checked September 2026): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
 - Dagster webserver and UI, default local port and no documented built-in auth (rolling documentation, checked September 2026): https://docs.dagster.io/guides/operate/webserver
 - Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its environment-variable routes (`DAGSTER_WEBSERVER_*` through `auto_envvar_prefix`, legacy `DAGIT_*` copied onto them, and the `dagster` CLI's `DAGSTER_CLI` prefix, which Click extends per subcommand, so `dagster dev` reads `DAGSTER_CLI_DEV_*`), and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L81-L96, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/__init__.py#L45-L50, Click's subcommand prefix rule (pinned tag 8.5.0) https://github.com/pallets/click/blob/8.5.0/src/click/core.py#L476-L484, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "88c24e7be9b67be32301fbaf6657192f6848557dff8f7143892df5f907361a13",
+  "body_sha256": "959a9c4e458465ee03ffce9e4663687639b39091f0cb2ad721e6fbeaec3c6397",
   "components": {
     "streamlit": {
       "name": "Streamlit",
@@ -64,7 +64,8 @@ version_basis: {
       "name": "Streamlit release notes",
       "basis": "unknown",
       "sources": {
-        "s6f6f9b0b14c2": "https://docs.streamlit.io/develop/quick-reference/release-notes"
+        "s6f6f9b0b14c2": "https://docs.streamlit.io/develop/quick-reference/release-notes",
+        "se2c98289aac5": "https://docs.streamlit.io/develop/quick-reference/release-notes/2025#version-1420"
       }
     }
   },
@@ -78,7 +79,7 @@ version_basis: {
     "cors": {"text": "enableCORS defaults true; disabling it permits cross-origin WebSockets even with XSRF; use corsAllowedOrigins and allowedHosts, and native auth separately enables both protections.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
     "config": {"text": "Effective precedence is CLI, environment, project config relative to working directory, then global; restart for server changes and restrict deployment writes.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s91c471ec9924"], "status": "REASONED"},
     "toolbar": {"text": "client.toolbarMode affects menu visibility, not authorization.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
-    "oidc-versions": {"text": "st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib>=1.3.2 and httpx>=0.24.1.", "components": ["streamlit", "authlib", "httpx", "streamlit-rolling", "release-notes"], "sources": ["release-notes:s6f6f9b0b14c2", "streamlit-rolling:s1322a5f1d6a0", "streamlit:s9d96cdf36131", "authlib:s9d96cdf36131", "httpx:s9d96cdf36131"], "status": "REASONED"},
+    "oidc-versions": {"text": "st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib>=1.3.2 and httpx>=0.24.1.", "components": ["streamlit", "authlib", "httpx", "streamlit-rolling", "release-notes"], "sources": ["release-notes:s6f6f9b0b14c2", "release-notes:se2c98289aac5", "streamlit-rolling:s1322a5f1d6a0", "streamlit:s9d96cdf36131", "authlib:s9d96cdf36131", "httpx:s9d96cdf36131"], "status": "REASONED"},
     "oidc-dependencies": {"text": "Recorded loopback login with Authlib but without httpx failed; install the complete auth extra.", "components": ["streamlit"], "sources": ["streamlit:s9d96cdf36131"], "status": "DEMONSTRATED", "evidence": "every browser login attempt got `Internal Server Error`, with `ModuleNotFoundError: No module named 'httpx'` in Streamlit's log."},
     "oidc-config": {"text": "secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; st.login authenticates identity, not resource authorization.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s1322a5f1d6a0"], "status": "REASONED"},
     "page-gates": {"text": "Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
@@ -339,7 +340,8 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 - Streamlit's port search: `configured_port + attempt` for up to `MAX_PORT_SEARCH_RETRIES` (100) retries after the configured port, exiting instead on a busy (`EADDRINUSE`) or permission-denied (`EACCES`) port that was set explicitly (a value from `config.toml` counts; `config.py` `is_manually_set`) (pinned tag 1.64.0): https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400, with `MAX_PORT_SEARCH_RETRIES: Final = 100` defined in `starlette_server_config.py`: https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server_config.py#L55-L57
 - Streamlit authentication concepts, st.login, st.logout, st.user, [auth] keys, default scope and stated limitations (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/concepts/connections/authentication
 - Streamlit st.user API reference, claims copied from the ID token and `st.user.email` (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/api-reference/user/st.user
-- Streamlit release notes (1.64.0 current; st.login since the 1.42.0 series): https://docs.streamlit.io/develop/quick-reference/release-notes
+- Streamlit release notes (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/quick-reference/release-notes
+- Streamlit 2025 release notes, st.login and st.logout introduced in 1.42.0: https://docs.streamlit.io/develop/quick-reference/release-notes/2025#version-1420
 - Streamlit st.login reference, OIDC and Authlib 1.3.2+ dependency (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/api-reference/user/st.login
 - Streamlit 1.64.0 package metadata (the `auth` extra requires `Authlib>=1.3.2` and `httpx>=0.24.1`): https://pypi.org/project/streamlit/1.64.0/
 - Streamlit configuration options and precedence, command line over env over project over global; restart on server changes (rolling documentation, checked September 2026): https://docs.streamlit.io/develop/concepts/configuration/options
