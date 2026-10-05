@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "d5c32b0ec2f59b7c2c61c47d9da0f05b93c12e0ef7e9e7c252b383803cc7f759",
+  "body_sha256": "5da935be3e16ec5c813b70304fd06153ce263de13728955a9222f13988d07bdd",
   "components": {
     "ts": {
       "name": "Tailscale documentation",
@@ -29,6 +29,19 @@ version_basis: {
       "sources": {
         "s8ff688d5d940": "https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html"
       }
+    },
+    "curl": {
+      "name": "curl option documentation",
+      "basis": "7.75.0",
+      "sources": {
+        "sc2888bc2b75b": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L32-L36",
+        "sc6f836c27ed8": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L48-L51",
+        "sc4ff20756ddd": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L147-L149",
+        "see8bc6e3acb6": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/head.d#L7-L9",
+        "sb0b300176c5d": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/disable.d#L6-L8",
+        "s72e21eeff9a4": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/connect-timeout.d#L7-L10",
+        "s3b94eb9a9c12": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/max-time.d#L8-L12"
+      }
     }
   },
   "claims": {
@@ -46,8 +59,8 @@ version_basis: {
     "funnel-prerequisites": {"text": "Funnel requires tailnet HTTPS certificates, a funnel node attribute and MagicDNS.", "components": ["ts"], "sources": ["ts:sbe30f8121245"], "status": "REASONED"},
     "syntax": {"text": "Serve/Funnel command syntax changed in v1.52; older clients need their own --help.", "components": ["cli"], "sources": ["cli:s8a8000573b13"], "status": "REASONED"},
     "verify-bind": {"text": "ss sport=:3000 must show 127.0.0.1:3000, not IPv4 or IPv6 wildcard.", "components": ["ss", "ts"], "sources": ["ss:s8ff688d5d940", "ts:se0f0c1dd6af5"], "status": "REASONED", "verify": [1]},
-    "verify-direct": {"text": "Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding.", "components": ["ts"], "sources": ["ts:s8a8000573b13", "ts:se0f0c1dd6af5"], "status": "REASONED", "verify": [2]},
-    "verify-allowed": {"text": "Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy.", "components": ["ts"], "sources": ["ts:s8a8000573b13", "ts:s42e5680f0b20"], "status": "REASONED", "verify": [3]},
+    "verify-direct": {"text": "Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding.", "components": ["ts", "curl"], "sources": ["ts:s8a8000573b13", "ts:se0f0c1dd6af5", "curl:sc2888bc2b75b", "curl:sc6f836c27ed8", "curl:sc4ff20756ddd", "curl:see8bc6e3acb6", "curl:sb0b300176c5d", "curl:s72e21eeff9a4", "curl:s3b94eb9a9c12"], "status": "REASONED", "verify": [2]},
+    "verify-allowed": {"text": "Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy.", "components": ["ts", "curl"], "sources": ["ts:s8a8000573b13", "ts:s42e5680f0b20", "curl:see8bc6e3acb6", "curl:sb0b300176c5d"], "status": "REASONED", "verify": [3]},
     "verify-policy": {"text": "Policy tests must accept the intended identity and deny an excluded one; failed assertions reject the policy file.", "components": ["ts"], "sources": ["ts:se137a82d9873"], "status": "REASONED"},
     "verify-public": {"text": "From a non-tailnet network Serve is unreachable and Funnel reachable; the funneled app must authenticate every request.", "components": ["ts"], "sources": ["ts:s8a8000573b13", "ts:sbe30f8121245"], "status": "REASONED"}
   }
@@ -60,7 +73,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -78,8 +91,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | funnel-prerequisites: Funnel requires tailnet HTTPS certificates, a funnel node attribute and MagicDNS. | Tailscale documentation unknown | REASONED |
 | syntax: Serve/Funnel command syntax changed in v1.52; older clients need their own --help. | Tailscale CLI change v1.52 | REASONED |
 | verify-bind: ss sport=:3000 must show 127.0.0.1:3000, not IPv4 or IPv6 wildcard. | ss unknown; Tailscale documentation unknown | REASONED |
-| verify-direct: Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding. | Tailscale documentation unknown | REASONED |
-| verify-allowed: Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy. | Tailscale documentation unknown | REASONED |
+| verify-direct: Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding. | Tailscale documentation unknown; curl option documentation 7.75.0 | REASONED |
+| verify-allowed: Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy. | Tailscale documentation unknown; curl option documentation 7.75.0 | REASONED |
 | verify-policy: Policy tests must accept the intended identity and deny an excluded one; failed assertions reject the policy file. | Tailscale documentation unknown | REASONED |
 | verify-public: From a non-tailnet network Serve is unreachable and Funnel reachable; the funneled app must authenticate every request. | Tailscale documentation unknown | REASONED |
 <!-- version-basis:end -->
@@ -162,3 +175,10 @@ An allowed device connects under both the default allow-all policy and a correct
 - Tailscale serve identity headers, that binding the backend to localhost limits tampering to other services on the Serve device (it does not authenticate the calling process): https://tailscale.com/kb/1312/serve
 - Tailscale policy-file `tests`, that a policy file whose assertions fail is rejected: https://tailscale.com/docs/reference/syntax/policy-file#tests
 - ss(8), the `sport` filter expression used above: https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html
+- curl 7.75.0 write-out errormsg and exitcode (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L32-L36
+- curl 7.75.0 write-out http_code (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L48-L51
+- curl 7.75.0 write-out time_connect (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L147-L149
+- curl 7.75.0 HEAD requests (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/head.d#L7-L9
+- curl 7.75.0 first-argument configuration disabling (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/disable.d#L6-L8
+- curl 7.75.0 connection timeout (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/connect-timeout.d#L7-L10
+- curl 7.75.0 total timeout (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/max-time.d#L8-L12

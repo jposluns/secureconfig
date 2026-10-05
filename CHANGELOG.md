@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-05
 
+- Add verified pinned Sources and claim mappings for 10 READY facts across 15 claims in Cloudflare, self-hosted tunnels, Tailscale and cloud identity proxies; regenerate version summaries and bundles (row 1.179, batch 4b) (#NNN).
 - Add verified pinned Sources and claim mappings for fifteen READY facts across nineteen claims in authentication, identity providers, and fronting authentication; regenerate version summaries and bundles (row 1.179, batch 3b) (#435).
 
 - Add pinned Sources and claim mappings for twelve READY facts across thirteen claims in headers, Docker, container hardening, realtime webhooks, and realtime voice infrastructure; regenerate version summaries and bundles (row 1.179, batch 2b) (#433).
