@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "4e0320534d6c0e20a0f7044b6dfe3cfdcdd3a35f15a4880858102fce5948fd5a",
+  "body_sha256": "6df83925e94d40bbf04c94e290da75978b5074a5d4097a81e7c43bc8fa5ddf19",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
@@ -13,7 +13,8 @@ version_basis: {
         "s99dcb49d86a4": "https://httpd.apache.org/docs/2.4/howto/auth.html",
         "sc07f97af99e3": "https://httpd.apache.org/docs/2.4/vhosts/name-based.html",
         "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy",
-        "s7c302c734a0d": "https://httpd.apache.org/docs/2.4/vhosts/details.html"
+        "s7c302c734a0d": "https://httpd.apache.org/docs/2.4/vhosts/details.html",
+        "s1dbb2636d050": "https://httpd.apache.org/docs/2.4/mod/mod_headers.html"
       }
     },
     "policy": {
@@ -50,16 +51,26 @@ version_basis: {
       "sources": {
         "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
       }
+    },
+    "certbot": {
+      "name": "Certbot Apache installation",
+      "basis": "v2.3.0",
+      "sources": {
+        "sc74fcd0167d8": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L104-L106",
+        "sa453a66e4130": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L646",
+        "sacf90ffa5a6d": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L674-L677",
+        "s74412ad87016": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/constants.py#L66-L68"
+      }
     }
   },
   "claims": {
-    "certbot": {"text": "The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. Certbot is not in Sources.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED"},
+    "certbot": {"text": "The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. Certbot is not in Sources.", "components": ["apache", "certbot"], "sources": ["apache:sde155f1667f3", "certbot:sc74fcd0167d8", "certbot:sa453a66e4130", "certbot:sacf90ffa5a6d", "certbot:s74412ad87016"], "status": "REASONED"},
     "modules": {"text": "Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; package-command sources are absent.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED"},
     "tls": {"text": "The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only.", "components": ["apache"], "sources": ["apache:sde155f1667f3", "apache:scf804f4940d7"], "status": "REASONED"},
     "tls-version": {"text": "TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1.", "components": ["apache", "tls-min", "openssl"], "sources": ["apache:scf804f4940d7", "tls-min:scf804f4940d7", "openssl:scf804f4940d7"], "status": "REASONED"},
     "vhost-floor": {"text": "Independent per-vhost SSLProtocol needs Apache 2.4.42+, OpenSSL 1.1.1+ and client SNI; older builds also need the floor in global/base config.", "components": ["apache", "sni-min", "openssl"], "sources": ["apache:scf804f4940d7", "apache:s7c302c734a0d", "sni-min:scf804f4940d7", "openssl:scf804f4940d7"], "status": "REASONED"},
     "chain": {"text": "Apache 2.4.8+ permits the chain in SSLCertificateFile; SSLCertificateChainFile is deprecated.", "components": ["apache", "chain-min"], "sources": ["apache:scf804f4940d7", "chain-min:scf804f4940d7"], "status": "REASONED"},
-    "hsts": {"text": "Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere. Sources omit mod_headers.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED"},
+    "hsts": {"text": "Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere. Sources omit mod_headers.", "components": ["apache"], "sources": ["apache:sde155f1667f3", "apache:s1dbb2636d050"], "status": "REASONED"},
     "cipher-policy": {"text": "Generate explicit cipher policy with Mozilla rather than copying old lists.", "components": ["policy"], "sources": ["policy:s529b0eabe2ed"], "status": "REASONED"},
     "redirect": {"text": "The 80 vhost sends a permanent redirect to the canonical HTTPS host; retain only redirects and needed ACME HTTP-01 paths.", "components": ["apache"], "sources": ["apache:sc07f97af99e3", "apache:sde155f1667f3"], "status": "REASONED"},
     "password-file": {"text": "Create a bcrypt htpasswd file with cost 12 and -c only for its first user; paths differ by distribution. Cost defaults and OWASP guidance are not directly cited.", "components": ["apache"], "sources": ["apache:s99dcb49d86a4"], "status": "REASONED"},
@@ -83,11 +94,11 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| certbot: The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. Certbot is not in Sources. | Apache HTTP Server 2.4 | REASONED |
+| certbot: The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. Certbot is not in Sources. | Apache HTTP Server 2.4; Certbot Apache installation v2.3.0 | REASONED |
 | modules: Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; package-command sources are absent. | Apache HTTP Server 2.4 | REASONED |
 | tls: The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only. | Apache HTTP Server 2.4 | REASONED |
 | tls-version: TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1. | Apache HTTP Server 2.4; Apache TLSv1.3 minimum 2.4.36+; OpenSSL qualification 1.1.1+ | REASONED |
@@ -246,3 +257,7 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 - Apache mod_ssl `SSLVHostSNIPolicy`, for the 421 a mismatched SNI and Host pairing can produce (TLSv1.3: Apache 2.4.36+ with OpenSSL 1.1.1+; per-vhost SSLProtocol: Apache 2.4.42+ with OpenSSL 1.1.1+ and client SNI; chain in SSLCertificateFile: Apache 2.4.8+): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy
 - Apache virtual host matching in detail, for SNI selecting the vhost on a TLS connection: https://httpd.apache.org/docs/2.4/vhosts/details.html
 - Mozilla SSL Configuration Generator: https://ssl-config.mozilla.org/
+- Certbot v2.3.0 Apache installation (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L104-L106
+- Certbot v2.3.0 redirect default and enhancement application (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L646 ; https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L674-L677
+- Certbot v2.3.0 redirect and opt-in HSTS defaults (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/constants.py#L66-L68
+- Apache 2.4 `Header always set` response-header handling (checked October 2026): https://httpd.apache.org/docs/2.4/mod/mod_headers.html
