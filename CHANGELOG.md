@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-05
 
-- Close out row 1.179's READY set: 137 facts landed across 49 guides in #430 to #439 and two carry forward; rescope the row to 173 residual facts, with six GitOps residuals retained under row 2.28 (#NNN).
+- Close out row 1.179's READY set: 137 facts landed across 49 guides in #430 to #439 and two carry forward; rescope the row to 173 residual facts, with six GitOps residuals retained under row 2.28 (#442).
 - Add verified pinned Sources and claim mappings for ten READY facts across fifteen claims in Cloudflare, self-hosted tunnels, Tailscale and cloud identity proxies; regenerate version summaries and bundles (row 1.179, batch 4b) (#437).
 - Add verified pinned Sources and claim mappings for nine READY facts across eleven claims in Node.js, Python, Go, .NET, and GitOps controllers; regenerate version summaries and bundles (row 1.179, batch 5b; GitOps residuals remain under row 2.28) (#439).
 - Add verified pinned Sources and claim mappings for twenty READY facts across seventeen claims in machine authentication, secrets, web exposure, admin UIs and DevOps UIs; preserve claim wording and residuals, and regenerate summaries and bundles (row 1.179, batch 4a) (#436).
