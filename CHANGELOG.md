@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-05
+
+- Expand Verify-marking coverage from fences to every list item, table body row and prose paragraph, retaining an initial 1,021 fingerprinted exemptions (163 list items, 149 table rows, 709 prose units) under the baseline ratchet. Row 3.30 remains open for the burn-down (#NNN).
+
 ## 2026-09-27
 
 - Pin or split version-labelled rolling-documentation Sources items in 11 guides (row 1.191, batch b of 3) (#426).
