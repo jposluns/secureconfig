@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
-  "documentation_checked": "2026-09",
-  "body_sha256": "ee5a802e89059d503943e3aee3b1b63692f35a9271c7e59fe4ad445a67b2db38",
+  "checked": "2026-10-05",
+  "documentation_checked": "2026-10",
+  "body_sha256": "c22b274f7193fd37358264d2c71e4df60bb0476cacf003435df72f8cf420f665",
   "components": {
     "docs": {
       "name": "n8n documentation",
@@ -24,7 +24,8 @@ version_basis: {
       "name": "n8n listener source",
       "basis": "n8n@2.40.6",
       "sources": {
-        "sd3ce4e1b39e5": "https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/%40n8n/config/src/index.ts#L164-L171"
+        "sd3ce4e1b39e5": "https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/%40n8n/config/src/index.ts#L164-L171",
+        "s1e4d79276a10": "https://raw.githubusercontent.com/n8n-io/n8n/n8n@2.40.6/packages/cli/BREAKING-CHANGES.md"
       }
     },
     "policy": {
@@ -40,6 +41,13 @@ version_basis: {
       "sources": {
         "s907260f38eee": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/enable-ssrf-protection"
       }
+    },
+    "v2-docs": {
+      "name": "n8n 2.0 breaking changes",
+      "basis": "unknown",
+      "sources": {
+        "s994d1a49cf93": "https://docs.n8n.io/changelog/v20-breaking-changes"
+      }
     }
   },
   "claims": {
@@ -48,7 +56,7 @@ version_basis: {
     "container-bind": {"text": "Host loopback is for a same-host proxy; container loopback blocks sibling/published access, so use a private network without publication or host-loopback 127.0.0.1:5678:5678.", "components": ["docs"], "sources": ["docs:s2f99613ed917", "docs:s695f877f7b28"], "status": "REASONED"},
     "other-ports": {"text": "Keep Postgres and task-runner broker ports unpublished and publish only the HTTPS proxy.", "components": ["docs"], "sources": ["docs:s695f877f7b28", "docs:s290535cad2ea"], "status": "REASONED"},
     "public-url": {"text": "Set N8N_PROTOCOL=https and the full N8N_WEBHOOK_URL; WEBHOOK_URL is deprecated from 2.35.0 but still warns and works.", "components": ["docs"], "sources": ["docs:se9dd39628347"], "status": "REASONED"},
-    "secure-cookie": {"text": "Retain N8N_SECURE_COOKIE=true, its default. Source gap: listed proxy page does not state this default.", "components": ["docs"], "sources": ["docs:se9dd39628347"], "status": "REASONED"},
+    "secure-cookie": {"text": "Retain N8N_SECURE_COOKIE=true, its default. Source gap: listed proxy page does not state this default.", "components": ["docs", "server"], "sources": ["docs:se9dd39628347", "server:s1e4d79276a10"], "status": "REASONED"},
     "proxy-hops": {"text": "Set N8N_PROXY_HOPS to the trusted hop count for forwarded client IPs and rate limiting; public webhooks do not require a public editor.", "components": ["docs"], "sources": ["docs:se9dd39628347"], "status": "REASONED"},
     "native-tls": {"text": "N8N_PROTOCOL=https with N8N_SSL_KEY/N8N_SSL_CERT enables native TLS.", "components": ["docs"], "sources": ["docs:s2f99613ed917", "docs:s695f877f7b28"], "status": "REASONED"},
     "owner": {"text": "Complete first-run owner setup before publication; an unclaimed instance can be claimed by its first visitor. Source gap: listed security-policy page does not document owner setup.", "components": ["docs"], "sources": ["docs:scb2b0578a5a2"], "status": "REASONED"},
@@ -60,7 +68,7 @@ version_basis: {
     "webhook-auth": {"text": "Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
     "auth-boundaries": {"text": "Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries.", "components": ["docs"], "sources": ["docs:s7ce8bf5b35e8", "docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
     "signature": {"text": "A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
-    "code-execution": {"text": "Code executes JavaScript/Python; Execute Command runs shell commands inside the container under Docker and is disabled by default from 2.0. Source gap: listed task-runner page supports Code, not the Execute Command default.", "components": ["docs"], "sources": ["docs:s290535cad2ea"], "status": "REASONED"},
+    "code-execution": {"text": "Code executes JavaScript/Python; Execute Command runs shell commands inside the container under Docker and is disabled by default from 2.0. Source gap: listed task-runner page supports Code, not the Execute Command default.", "components": ["docs", "v2-docs"], "sources": ["docs:s290535cad2ea", "v2-docs:s994d1a49cf93"], "status": "REASONED"},
     "runners": {"text": "Use hardened external task runners; vendor describes internal mode as insecure by design.", "components": ["docs"], "sources": ["docs:s290535cad2ea"], "status": "REASONED"},
     "environment": {"text": "Set N8N_BLOCK_ENV_ACCESS_IN_NODE=true to block node access to the service environment, including encryption material. Source gap: listed task-runner page does not document this variable.", "components": ["docs"], "sources": ["docs:s290535cad2ea"], "status": "REASONED"},
     "js-modules": {"text": "Narrow NODE_FUNCTION_ALLOW_BUILTIN/NODE_FUNCTION_ALLOW_EXTERNAL in external launcher's /etc/n8n-task-runners.json env-overrides; main-container values are overridden.", "components": ["docs"], "sources": ["docs:s290535cad2ea"], "status": "REASONED"},
@@ -82,7 +90,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -91,7 +99,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | container-bind: Host loopback is for a same-host proxy; container loopback blocks sibling/published access, so use a private network without publication or host-loopback 127.0.0.1:5678:5678. | n8n documentation unknown | REASONED |
 | other-ports: Keep Postgres and task-runner broker ports unpublished and publish only the HTTPS proxy. | n8n documentation unknown | REASONED |
 | public-url: Set N8N_PROTOCOL=https and the full N8N_WEBHOOK_URL; WEBHOOK_URL is deprecated from 2.35.0 but still warns and works. | n8n documentation unknown | REASONED |
-| secure-cookie: Retain N8N_SECURE_COOKIE=true, its default. Source gap: listed proxy page does not state this default. | n8n documentation unknown | REASONED |
+| secure-cookie: Retain N8N_SECURE_COOKIE=true, its default. Source gap: listed proxy page does not state this default. | n8n documentation unknown; n8n listener source n8n@2.40.6 | REASONED |
 | proxy-hops: Set N8N_PROXY_HOPS to the trusted hop count for forwarded client IPs and rate limiting; public webhooks do not require a public editor. | n8n documentation unknown | REASONED |
 | native-tls: N8N_PROTOCOL=https with N8N_SSL_KEY/N8N_SSL_CERT enables native TLS. | n8n documentation unknown | REASONED |
 | owner: Complete first-run owner setup before publication; an unclaimed instance can be claimed by its first visitor. Source gap: listed security-policy page does not document owner setup. | n8n documentation unknown | REASONED |
@@ -103,7 +111,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | webhook-auth: Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential. | n8n documentation unknown | REASONED |
 | auth-boundaries: Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries. | n8n documentation unknown | REASONED |
 | signature: A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials. | n8n documentation unknown | REASONED |
-| code-execution: Code executes JavaScript/Python; Execute Command runs shell commands inside the container under Docker and is disabled by default from 2.0. Source gap: listed task-runner page supports Code, not the Execute Command default. | n8n documentation unknown | REASONED |
+| code-execution: Code executes JavaScript/Python; Execute Command runs shell commands inside the container under Docker and is disabled by default from 2.0. Source gap: listed task-runner page supports Code, not the Execute Command default. | n8n documentation unknown; n8n 2.0 breaking changes unknown | REASONED |
 | runners: Use hardened external task runners; vendor describes internal mode as insecure by design. | n8n documentation unknown | REASONED |
 | environment: Set N8N_BLOCK_ENV_ACCESS_IN_NODE=true to block node access to the service environment, including encryption material. Source gap: listed task-runner page does not document this variable. | n8n documentation unknown | REASONED |
 | js-modules: Narrow NODE_FUNCTION_ALLOW_BUILTIN/NODE_FUNCTION_ALLOW_EXTERNAL in external launcher's /etc/n8n-task-runners.json env-overrides; main-container values are overridden. | n8n documentation unknown | REASONED |
@@ -207,7 +215,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 )
 ```
 
-## Sources (checked September 2026)
+## Sources (checked October 2026)
 
 - n8n deployment environment variables (N8N_LISTEN_ADDRESS, N8N_PROTOCOL, N8N_SSL_KEY, N8N_SSL_CERT, defaults): https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/deployment
 - n8n security policies (MFA enforcement 2.18.0+, licensing, SSO exception): https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/manage-security-policies
@@ -220,3 +228,5 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 - n8n Webhook node (Authentication options, production and test URLs, HTTP Method): https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/
 - n8n Webhook credentials (Basic, Header, JWT auth): https://docs.n8n.io/integrations/builtin/credentials/webhook/
 - n8n `N8N_PORT` default `5678` and `N8N_LISTEN_ADDRESS` default `'::'` (pinned tag n8n@2.40.6): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/%40n8n/config/src/index.ts#L164-L171
+- n8n auth cookie Secure default, recorded in the 1.32.0 changes (pinned tag n8n@2.40.6): https://raw.githubusercontent.com/n8n-io/n8n/n8n@2.40.6/packages/cli/BREAKING-CHANGES.md
+- n8n 2.0 changes, ExecuteCommand and LocalFileTrigger disabled by default (rolling documentation, checked October 2026): https://docs.n8n.io/changelog/v20-breaking-changes

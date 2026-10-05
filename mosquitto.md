@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
-  "documentation_checked": "2026-09",
-  "body_sha256": "6f503a9a2bd23ec83bcb692a865e17b3e663bf68ef5d93258cc07c8115c0ead3",
+  "checked": "2026-10-05",
+  "documentation_checked": "2026-10",
+  "body_sha256": "fafeaed3205ece6cf5fff74ed0bc58c9238754d91da8f92f6c9099b4f786af78",
   "components": {
     "docs": {
       "name": "Mosquitto documentation",
@@ -30,7 +30,11 @@ version_basis: {
         "s0705841d4141": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/mosquitto.conf",
         "s1f256b35dde7": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/conf.c",
         "sa4ab07ef74c3": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/handle_publish.c",
-        "se4dab27858b2": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/lib/packet_mosq.c"
+        "se4dab27858b2": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/lib/packet_mosq.c",
+        "s1172d84efc29": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/websockets.c",
+        "saf5cd7c6f12b": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/session_expiry.c",
+        "saff73f3b983e": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/handle_connect.c#L120-L133",
+        "sa116e59b51a4": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/security.c#L691-L693"
       }
     },
     "library": {
@@ -71,7 +75,11 @@ version_basis: {
         "s12077f64a53c": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/man/mosquitto.conf.5.xml#L1663-L1671",
         "sfe6c64ab8f91": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/plugins/acl-file/acl_check.c",
         "sd5c8a4af302f": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/conf.c",
-        "s2ad092f62c47": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/client/sub_client.c"
+        "s2ad092f62c47": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/client/sub_client.c",
+        "s36fbdb22e941": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/websockets.c#L296-L324",
+        "s77ce3e259e2e": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/ChangeLog.txt#L14-L27",
+        "sccb5a918eab8": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_acl_check.c#L149-L151",
+        "sac794dfa8179": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/bridge_topic.c"
       }
     },
     "v16": {
@@ -118,16 +126,16 @@ version_basis: {
     "queue-default": {"text": "max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages.", "components": ["v20", "release-notes"], "sources": ["v20:s0705841d4141", "release-notes:s5529605a6416"], "status": "REASONED"},
     "queue-bytes": {"text": "max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
     "keepalive": {"text": "max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1.", "components": ["v20", "v21"], "sources": ["v20:s1f256b35dde7", "v21:sd5c8a4af302f", "v20:se7823193963b"], "status": "REASONED"},
-    "packet-boundary": {"text": "2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary.", "components": ["v20"], "sources": ["v20:se4dab27858b2", "v20:se7823193963b"], "status": "REASONED"},
+    "packet-boundary": {"text": "2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary.", "components": ["v20", "v21"], "sources": ["v20:se4dab27858b2", "v20:se7823193963b", "v20:s1172d84efc29", "v21:s36fbdb22e941"], "status": "REASONED"},
     "global-limits": {"text": "2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions.", "components": ["docs", "v21", "release-notes"], "sources": ["docs:s1791866ca31b", "release-notes:s0c9ec2d6b65b", "v21:sd5c8a4af302f"], "status": "REASONED"},
-    "session-expiry": {"text": "2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap.", "components": ["v20"], "sources": ["v20:se7823193963b"], "status": "REASONED"},
+    "session-expiry": {"text": "2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap.", "components": ["v20"], "sources": ["v20:se7823193963b", "v20:saf5cd7c6f12b"], "status": "REASONED"},
     "listener-policy": {"text": "2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope.", "components": ["v20"], "sources": ["v20:s1f256b35dde7", "v20:se7823193963b"], "status": "REASONED"},
-    "websockets": {"text": "Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing.", "components": ["v20"], "sources": ["v20:se7823193963b"], "status": "REASONED"},
+    "websockets": {"text": "Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing.", "components": ["v20", "v21"], "sources": ["v20:se7823193963b", "v20:s1172d84efc29", "v21:s77ce3e259e2e"], "status": "REASONED"},
     "persistent-policy": {"text": "Listeners share topic/session namespaces; disconnected persistent clients retain their most recent listener's ACL policy.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
-    "client-id": {"text": "use_username_as_clientid is per-listener and needs restart; globally consistent usernames prevent cross-identity ID takeover, not same-user displacement.", "components": ["v20"], "sources": ["v20:se7823193963b"], "status": "REASONED"},
+    "client-id": {"text": "use_username_as_clientid is per-listener and needs restart; globally consistent usernames prevent cross-identity ID takeover, not same-user displacement.", "components": ["v20"], "sources": ["v20:se7823193963b", "v20:saff73f3b983e"], "status": "REASONED"},
     "migration": {"text": "2.1 listener_allow_anonymous and plugin_load/plugin_use replace listener policy; attach password-file and ACL-file plugins explicitly.", "components": ["docs"], "sources": ["docs:s66b826cab3e9"], "status": "REASONED"},
     "bridge-tls": {"text": "Port 8883 alone enables no bridge TLS; require CA/hostname verification, protected remote password and optional client certificate.", "components": ["v20"], "sources": ["v20:s0705841d4141", "v20:se7823193963b"], "status": "REASONED"},
-    "bridge-topics": {"text": "Bridge contexts bypass local ACLs and 2.1.2 accepts unmatched ingress topics; narrow routes/remote ACLs do not contain malicious upstream.", "components": ["v20", "v21"], "sources": ["v20:s0705841d4141", "v20:s06316e74cf90", "v21:sfe5a6152e92f"], "status": "REASONED"},
+    "bridge-topics": {"text": "Bridge contexts bypass local ACLs and 2.1.2 accepts unmatched ingress topics; narrow routes/remote ACLs do not contain malicious upstream.", "components": ["v20", "v21"], "sources": ["v20:s0705841d4141", "v20:s06316e74cf90", "v21:sfe5a6152e92f", "v20:sa116e59b51a4", "v21:sccb5a918eab8", "v21:sac794dfa8179"], "status": "REASONED"},
     "bridge-options": {"text": "try_private aids bridge handling, not auth; restart_timeout supplies backoff; notifications false suppresses default $SYS status writes.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
     "runtime": {"text": "Dedicated runtime identity needs readable security files and writable protected state/log paths after the early 2.0 privilege drop.", "components": ["docs"], "sources": ["docs:s1791866ca31b", "docs:s4d96861c4f39"], "status": "REASONED"},
     "persistence": {"text": "Persistence defaults false; persistence_location alone does not enable it; protect data, logs, secrets and backups.", "components": ["docs"], "sources": ["docs:s1791866ca31b"], "status": "REASONED"},
@@ -149,7 +157,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -177,11 +185,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | queue-default: max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages. | Mosquitto v2.0.22; Mosquitto release announcements unknown | REASONED |
 | queue-bytes: max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing. | Mosquitto v2.0.22 | REASONED |
 | keepalive: max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
-| packet-boundary: 2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary. | Mosquitto v2.0.22 | REASONED |
+| packet-boundary: 2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
 | global-limits: 2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions. | Mosquitto documentation unknown; Mosquitto v2.1.2; Mosquitto release announcements unknown | REASONED |
 | session-expiry: 2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap. | Mosquitto v2.0.22 | REASONED |
 | listener-policy: 2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope. | Mosquitto v2.0.22 | REASONED |
-| websockets: Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing. | Mosquitto v2.0.22 | REASONED |
+| websockets: Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
 | persistent-policy: Listeners share topic/session namespaces; disconnected persistent clients retain their most recent listener's ACL policy. | Mosquitto v2.0.22 | REASONED |
 | client-id: use_username_as_clientid is per-listener and needs restart; globally consistent usernames prevent cross-identity ID takeover, not same-user displacement. | Mosquitto v2.0.22 | REASONED |
 | migration: 2.1 listener_allow_anonymous and plugin_load/plugin_use replace listener policy; attach password-file and ACL-file plugins explicitly. | Mosquitto documentation unknown | REASONED |
@@ -440,7 +448,7 @@ notifications false
 # bridge_keyfile /etc/mosquitto/tls/bridge-client.key
 ```
 
-`out` forwards local telemetry to the remote broker; `in` brings remote commands into the local broker. Avoid broad `topic # both` forwarding. Require a trusted upstream: locally configured bridge contexts bypass local ACL checks in [2.0.22](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/security_default.c) and [2.1.2](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/plugin_acl_check.c). Bridge topic declarations control routing and subscriptions, not a local ingress ACL; the [2.1.2 incoming remapper](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/bridge_topic.c) returns success for unmatched topics. Neither these declarations nor the remote account's ACL contains a malicious upstream. If upstream trust is insufficient, replace the direct bridge with an independently enforced boundary, such as an isolated gateway that republishes only allowed topics through an ordinary authenticated client subject to the local broker's ACL.
+`out` forwards local telemetry to the remote broker; `in` brings remote commands into the local broker. Avoid broad `topic # both` forwarding. Require a trusted upstream: locally configured bridge contexts bypass local ACL checks in [2.0.22](https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/security.c#L691-L693) and [2.1.2](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/plugin_acl_check.c). Bridge topic declarations control routing and subscriptions, not a local ingress ACL; the [2.1.2 incoming remapper](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/bridge_topic.c) returns success for unmatched topics. Neither these declarations nor the remote account's ACL contains a malicious upstream. If upstream trust is insufficient, replace the direct bridge with an independently enforced boundary, such as an isolated gateway that republishes only allowed topics through an ordinary authenticated client subject to the local broker's ACL.
 
 On the trusted remote broker, give this dedicated username only the matching permissions:
 
@@ -666,7 +674,7 @@ The explicit `$SYS/#` subscription should receive broker telemetry in the expose
 | --- | --- | --- |
 | Service behaviour | REASONED from the cited 2.0.22 and 2.1.2 sources and vendor documentation; broker configuration acceptance and service behaviour not demonstrated | On pinned 2.0.22 and 2.1.2 deployments, load the applicable configurations and reproduce exposed/fixed authentication, TLS/client-certificate, listener, WebSockets, and actual-message ACL comparisons above. Confirm credential reload and termination of revoked connections. Exercise packet and payload limits separately on TCP and each deployed WebSockets implementation, including declared-length probes without the body; instrument allocation to distinguish rejection before allocation from rejection after receipt. Demonstrate the section 4 WebSockets gap and the chosen boundary or replacement implementation's rejection before oversized allocation, with an accepted packet below the limit. Exercise queue loss and inflight bounds with slow clients, keepalive negotiation/refusal, per-listener connection caps, and 2.1 global connection/session caps. For each listener cap N, hold N connections with distinct authorized identities/IDs and attempt N+1; demonstrate the 2.0.22 WebSockets failure without an independent cap and refusal with the chosen enforcement. Release a slot, confirm a replacement connects, refill to N, and repeat the excess attempt across multiple disconnect/reconnect cycles; distinguish cap refusal from authentication or transport failure. Test device-01 credentials with device-02's active ID: the exposed state disconnects device-02; the fixed state rejects or rewrites the claimant's ID and preserves device-02's connection and delivery. Repeat across listeners, and confirm the documented same-identity takeover when username binding is enabled. Run message ACL comparisons with one publishing/subscribing client per identity under that policy. On 2.0, demonstrate persistent-session growth with varying IDs, the chosen ID restriction, and expiration after the configured disconnected interval; do not treat expiration as a population cap. Where bridges exist, demonstrate trusted TLS and hostname rejection, optional client certificates, scoped inbound/outbound delivery, remote ACL denial, and reconnect backoff. Separately use a controlled upstream that sends outside the configured inbound topics despite its account ACL; demonstrate the direct bridge's missing ingress containment and, where required, denial at the independent boundary with matched allowed delivery. Confirm runtime ownership, readable security files, writable protected state/log paths, and persistence only when enabled. Record versions, WebSockets implementations, commands, diagnostics, matched positive controls, and cleanup without credentials. Configuration inspection alone does not demonstrate service behaviour. |
 
-## Sources (checked September 2026)
+## Sources (checked October 2026)
 
 - Official eclipse-mosquitto Docker images: the tag-to-directory map (library file pinned commit 920b00976e6e8335bab0a3fd293b95b6b2404ce3), and at image source pinned commit 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60 the 2.1-alpine build's 2.1.2 release download, configuration and dashboard install and `CMD`, an entrypoint that only sets data-directory ownership, its `mosquitto.conf` (`listener 1883`, `allow_anonymous true`, `listener 9883` with `protocol http_api`), the README's description of it, and the 2.0-openssl and 1.6-openssl builds installing upstream's `mosquitto.conf`: https://github.com/docker-library/official-images/blob/920b00976e6e8335bab0a3fd293b95b6b2404ce3/library/eclipse-mosquitto#L3-L13, https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L30, https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L77-L80, https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L99-L101, https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/mosquitto.conf (identical in the v2.1.2 release it is installed from: https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/docker/2.1-alpine/mosquitto.conf), https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/docker-entrypoint.sh, https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/README.md#L27-L28, https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.0-openssl/Dockerfile#L69 and https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/1.6-openssl/Dockerfile#L66
 - Mosquitto 2.1.2 MQTT listener with no address (a passive `getaddrinfo` over both families, binding each result), the HTTP API listener with no address (libmicrohttpd with `MHD_USE_DUAL_STACK`), the `http_api` endpoints, their JSON and plain-text handlers and their access check, a `listener` line resetting that listener's `allow_anonymous` to unset so the global value applies, anonymous success with no authentication plugin, ACL success with no ACL plugin, and the manual's `http_api` entry (pinned tag v2.1.2): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/net.c#L815-L918, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L449-L545, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L160-L163, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L224, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L251, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L336-L378, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/conf.c#L2001, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/listeners.c#L27-L42, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_basic_auth.c#L56-L113, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_acl_check.c#L141-L201 and https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/man/mosquitto.conf.5.xml#L1663-L1671
@@ -691,3 +699,9 @@ The explicit `$SYS/#` subscription should receive broker telemetry in the expose
 - Mosquitto 2.0.22 packet reader (packet-size enforcement before incoming-body allocation): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/lib/packet_mosq.c
 - Mosquitto 2.0.22 PUBLISH handler (payload-size checks, denied writes, QoS responses): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/handle_publish.c
 - Mosquitto 2.1.2 subscriber implementation (timeout result independent of message receipt): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/client/sub_client.c
+- Mosquitto libwebsockets packet allocation before a packet-size check (pinned tags v2.0.22 and v2.1.2): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/websockets.c, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/websockets.c#L296-L324
+- Mosquitto libwebsockets connection-cap implementation (v2.0.22) and fix recorded under 2.1.1 in the v2.1.2 ChangeLog: https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/websockets.c, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/ChangeLog.txt#L14-L27
+- Mosquitto disconnected-session expiry scheduling and timed cleanup (pinned tag v2.0.22): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/session_expiry.c
+- Mosquitto authenticated duplicate client-ID displacement (pinned tag v2.0.22): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/handle_connect.c#L120-L133
+- Mosquitto local bridge contexts bypassing ACL checks (pinned tags v2.0.22 and v2.1.2): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/security.c#L691-L693, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_acl_check.c#L149-L151
+- Mosquitto incoming topic remapping returning success after unmatched topics (pinned tag v2.1.2): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/bridge_topic.c
