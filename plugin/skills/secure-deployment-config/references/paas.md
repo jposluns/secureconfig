@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "7a0dd035a903f96ba717ae3d7ba16d963882ced1b646ddcf32b67711a79f9fde",
+  "body_sha256": "9c6cb4a8558e1a26dc6b9fe4b0e89d88607057ef0b2ee3b2adf88c2c862981b0",
   "components": {
     "render": {
       "name": "Render documentation",
@@ -36,6 +36,34 @@ version_basis: {
         "sda0c810c053d": "https://huggingface.co/docs/hub/spaces-overview",
         "sd5ec2b2772e0": "https://huggingface.co/docs/hub/spaces-config-reference"
       }
+    },
+    "nextjs": {
+      "name": "Next.js environment variables",
+      "basis": "15",
+      "sources": {
+        "s22e4b70dab8b": "https://nextjs.org/docs/15/app/guides/environment-variables"
+      }
+    },
+    "express": {
+      "name": "Express request protocol",
+      "basis": "5.x",
+      "sources": {
+        "s5bc62e66824b": "https://expressjs.com/en/5x/api/request/#req.protocol"
+      }
+    },
+    "django": {
+      "name": "Django proxy security setting",
+      "basis": "6.1",
+      "sources": {
+        "sb5e26f65fd91": "https://docs.djangoproject.com/en/6.1/ref/settings/#secure-proxy-ssl-header"
+      }
+    },
+    "mysql-client": {
+      "name": "MySQL client connection options",
+      "basis": "8.4",
+      "sources": {
+        "s823c0bfaaafa": "https://dev.mysql.com/doc/refman/8.4/en/connection-options.html#option_general_ssl-mode"
+      }
     }
   },
   "claims": {
@@ -44,11 +72,11 @@ version_basis: {
     "vercel-login": {"text": "Vercel login can gate preview/deployment URLs on every plan and production domains with All Deployments; the 9 September 2026 change made that scope free including Hobby.", "components": ["vercel"], "sources": ["vercel:se6089d5c4e96", "vercel:s7836e043434a"], "status": "REASONED"},
     "vercel-password": {"text": "At the recorded documentation date, Password Protection is unavailable on Hobby, a paid per-project add-on on Pro and included on Enterprise.", "components": ["vercel"], "sources": ["vercel:se6089d5c4e96"], "status": "REASONED"},
     "secret-store": {"text": "Use platform environment/secret configuration, not committed .env files; rotate credentials exposed in repositories, build logs or client bundles.", "components": ["render", "fly", "vercel"], "sources": ["render:s213783ba6209", "fly:s1b202c527f2e", "vercel:s2b470a6bc853"], "status": "REASONED"},
-    "public-env": {"text": "Only public values belong in browser-compiled environment variables such as NEXT_PUBLIC_; the guide records no specific frontend compiler source here.", "components": ["vercel"], "sources": ["vercel:s2b470a6bc853"], "status": "REASONED"},
+    "public-env": {"text": "Only public values belong in browser-compiled environment variables such as NEXT_PUBLIC_; the guide records no specific frontend compiler source here.", "components": ["vercel", "nextjs"], "sources": ["vercel:s2b470a6bc853", "nextjs:s22e4b70dab8b"], "status": "REASONED"},
     "https-redirect": {"text": "Redirect HTTP to HTTPS with the platform toggle or application logic using the forwarded-protocol header; exact platform toggles are not supplied.", "components": ["render", "fly", "vercel"], "sources": ["render:s213783ba6209", "fly:s1b202c527f2e", "vercel:s2b470a6bc853"], "status": "REASONED"},
-    "proxy-awareness": {"text": "Configure Express trust proxy or Django SECURE_PROXY_SSL_HEADER so secure cookies and redirects work behind the platform; framework vendor sources are not recorded here.", "components": ["render", "fly", "vercel"], "sources": ["render:s213783ba6209", "fly:s1b202c527f2e", "vercel:s2b470a6bc853"], "status": "REASONED"},
+    "proxy-awareness": {"text": "Configure Express trust proxy or Django SECURE_PROXY_SSL_HEADER so secure cookies and redirects work behind the platform; framework vendor sources are not recorded here.", "components": ["render", "fly", "vercel", "express", "django"], "sources": ["render:s213783ba6209", "fly:s1b202c527f2e", "vercel:s2b470a6bc853", "express:s5bc62e66824b", "django:sb5e26f65fd91"], "status": "REASONED"},
     "listener-port": {"text": "Bind only the platform-injected port, commonly PORT, and avoid extra listeners; exact platform binding requirements are not cited beyond documentation roots.", "components": ["render", "fly", "vercel"], "sources": ["render:s213783ba6209", "fly:s1b202c527f2e", "vercel:s2b470a6bc853"], "status": "REASONED"},
-    "database-identity": {"text": "Where supported, require TLS certificate/hostname verification with PostgreSQL sslmode=verify-full or MySQL --ssl-mode=VERIFY_IDENTITY; MySQL client syntax lacks a source here.", "components": ["render"], "sources": ["render:se240afec8d2d"], "status": "REASONED"},
+    "database-identity": {"text": "Where supported, require TLS certificate/hostname verification with PostgreSQL sslmode=verify-full or MySQL --ssl-mode=VERIFY_IDENTITY; MySQL client syntax lacks a source here.", "components": ["render", "mysql-client"], "sources": ["render:se240afec8d2d", "mysql-client:s823c0bfaaafa"], "status": "REASONED"},
     "render-internal-tls": {"text": "Render internal PostgreSQL TLS is optional and supports neither verify-ca nor verify-full; sslmode=require prevents plaintext fallback but is not identity verification.", "components": ["render"], "sources": ["render:se240afec8d2d"], "status": "REASONED"},
     "database-network": {"text": "Render Postgres external access is open to any IP by default; prefer private connectivity and disable or source-restrict external access. Keep database credentials in the secret store.", "components": ["render"], "sources": ["render:se240afec8d2d"], "status": "REASONED"},
     "spaces-creation": {"text": "Explicitly select and verify Space visibility: creation path and organization policy affect defaults and duplication defaults private. The organization private-by-default policy lacks a direct citation here.", "components": ["spaces"], "sources": ["spaces:sda0c810c053d"], "status": "REASONED"},
@@ -71,7 +99,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -80,11 +108,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | vercel-login: Vercel login can gate preview/deployment URLs on every plan and production domains with All Deployments; the 9 September 2026 change made that scope free including Hobby. | Vercel documentation unknown | REASONED |
 | vercel-password: At the recorded documentation date, Password Protection is unavailable on Hobby, a paid per-project add-on on Pro and included on Enterprise. | Vercel documentation unknown | REASONED |
 | secret-store: Use platform environment/secret configuration, not committed .env files; rotate credentials exposed in repositories, build logs or client bundles. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
-| public-env: Only public values belong in browser-compiled environment variables such as NEXT_PUBLIC_; the guide records no specific frontend compiler source here. | Vercel documentation unknown | REASONED |
+| public-env: Only public values belong in browser-compiled environment variables such as NEXT_PUBLIC_; the guide records no specific frontend compiler source here. | Vercel documentation unknown; Next.js environment variables 15 | REASONED |
 | https-redirect: Redirect HTTP to HTTPS with the platform toggle or application logic using the forwarded-protocol header; exact platform toggles are not supplied. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
-| proxy-awareness: Configure Express trust proxy or Django SECURE_PROXY_SSL_HEADER so secure cookies and redirects work behind the platform; framework vendor sources are not recorded here. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
+| proxy-awareness: Configure Express trust proxy or Django SECURE_PROXY_SSL_HEADER so secure cookies and redirects work behind the platform; framework vendor sources are not recorded here. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown; Express request protocol 5.x; Django proxy security setting 6.1 | REASONED |
 | listener-port: Bind only the platform-injected port, commonly PORT, and avoid extra listeners; exact platform binding requirements are not cited beyond documentation roots. | Render documentation unknown; Fly.io documentation unknown; Vercel documentation unknown | REASONED |
-| database-identity: Where supported, require TLS certificate/hostname verification with PostgreSQL sslmode=verify-full or MySQL --ssl-mode=VERIFY_IDENTITY; MySQL client syntax lacks a source here. | Render documentation unknown | REASONED |
+| database-identity: Where supported, require TLS certificate/hostname verification with PostgreSQL sslmode=verify-full or MySQL --ssl-mode=VERIFY_IDENTITY; MySQL client syntax lacks a source here. | Render documentation unknown; MySQL client connection options 8.4 | REASONED |
 | render-internal-tls: Render internal PostgreSQL TLS is optional and supports neither verify-ca nor verify-full; sslmode=require prevents plaintext fallback but is not identity verification. | Render documentation unknown | REASONED |
 | database-network: Render Postgres external access is open to any IP by default; prefer private connectivity and disable or source-restrict external access. Keep database credentials in the secret store. | Render documentation unknown | REASONED |
 | spaces-creation: Explicitly select and verify Space visibility: creation path and organization policy affect defaults and duplication defaults private. The organization private-by-default policy lacks a direct citation here. | Hugging Face Spaces documentation unknown | REASONED |
@@ -149,3 +177,7 @@ curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.ex
 - Vercel changelog, protect production deployments for free on every plan (9 September 2026): https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan
 - Hugging Face Spaces: https://huggingface.co/docs/hub/spaces-overview and https://huggingface.co/docs/hub/spaces-config-reference
 - Render managed PostgreSQL (external access is open by default and can be restricted; internal connections do not support `sslmode=verify-ca`/`verify-full`): https://render.com/docs/postgresql-creating-connecting
+- Next.js 15 environment variables (checked October 2026; `NEXT_PUBLIC_` values in browser JavaScript): https://nextjs.org/docs/15/app/guides/environment-variables
+- Express 5.x request protocol (checked October 2026; `trust proxy` and `X-Forwarded-Proto`): https://expressjs.com/en/5x/api/request/#req.protocol
+- Django 6.1 settings (checked October 2026; `SECURE_PROXY_SSL_HEADER` and trusted proxy requirements): https://docs.djangoproject.com/en/6.1/ref/settings/#secure-proxy-ssl-header
+- MySQL 8.4 client connection options (checked October 2026; `--ssl-mode=VERIFY_IDENTITY` certificate and hostname verification): https://dev.mysql.com/doc/refman/8.4/en/connection-options.html#option_general_ssl-mode
