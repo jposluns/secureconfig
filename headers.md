@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "dc4314bb3d2cc1f37964cd7c5ebc24f09c20f21cd4cbc57fa6a294e286807c84",
+  "body_sha256": "8cbdb22d5f1ba40e85a22dcccef2b9713ad84fddcdaa83ecdecd65c188390288",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",
@@ -21,10 +21,24 @@ version_basis: {
       "sources": {
         "s7a94d0fcb6ad": "https://securityheaders.com/"
       }
+    },
+    "helmet": {
+      "name": "Helmet",
+      "basis": "v8.1.0",
+      "sources": {
+        "sf42121cfc014": "https://github.com/helmetjs/helmet/blob/v8.1.0/README.md#L3"
+      }
+    },
+    "django": {
+      "name": "Django",
+      "basis": "5.2",
+      "sources": {
+        "se79954c08919": "https://docs.djangoproject.com/en/5.2/ref/middleware/#module-django.middleware.security"
+      }
     }
   },
   "claims": {
-    "placement": {"text": "Set response headers at a proxy, in application middleware or in a static host's _headers file; stack-specific Sources entries and versions are not recorded.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED"},
+    "placement": {"text": "Set response headers at a proxy, in application middleware or in a static host's _headers file; stack-specific Sources entries and versions are not recorded.", "components": ["mdn", "helmet", "django"], "sources": ["mdn:s40155272e6bf", "helmet:sf42121cfc014", "django:se79954c08919"], "status": "REASONED"},
     "hsts": {"text": "Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
     "hsts-preload": {"text": "Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED"},
     "csp": {"text": "Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
@@ -58,11 +72,11 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| placement: Set response headers at a proxy, in application middleware or in a static host's _headers file; stack-specific Sources entries and versions are not recorded. | MDN HTTP documentation unknown | REASONED |
+| placement: Set response headers at a proxy, in application middleware or in a static host's _headers file; stack-specific Sources entries and versions are not recorded. | MDN HTTP documentation unknown; Helmet v8.1.0; Django 5.2 | REASONED |
 | hsts: Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS. | MDN HTTP documentation unknown | REASONED |
 | hsts-preload: Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates. | MDN HTTP documentation unknown | REASONED |
 | csp: Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy. | MDN HTTP documentation unknown | REASONED |
@@ -153,3 +167,5 @@ In a real browser, log in, open an authenticated page, then log out and press th
 - MDN Clear-Site-Data (the `cache` directive clears the browser cache and, depending on the browser, the back/forward cache; the logout example): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Clear-Site-Data
 - MDN back/forward cache (a history navigation restores a snapshot without revalidating): https://developer.mozilla.org/en-US/docs/Glossary/bfcache
 - Security header scanner: https://securityheaders.com/
+- Helmet v8.1.0 response-header middleware (checked October 2026): https://github.com/helmetjs/helmet/blob/v8.1.0/README.md#L3
+- Django 5.2 SecurityMiddleware (checked October 2026): https://docs.djangoproject.com/en/5.2/ref/middleware/#module-django.middleware.security

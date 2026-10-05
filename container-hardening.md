@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "cb43ffffcc50fcf02b7be97c0948ab13cc5e36e7d0f948f4f5ac458d73684563",
+  "body_sha256": "336c00ab59d7c648d568af5bdbb3917d0fd5917c75319728a79e42e146202288",
   "components": {
     "docker": {
       "name": "Docker documentation",
@@ -22,6 +22,14 @@ version_basis: {
         "s1a2d717974c7": "https://kubernetes.io/docs/concepts/security/pod-security-standards/",
         "s953450b4076f": "https://kubernetes.io/docs/concepts/services-networking/network-policies/"
       }
+    },
+    "kubernetes-134": {
+      "name": "Kubernetes Pod Security Admission",
+      "basis": "1.34",
+      "sources": {
+        "s9b9aaf5067e2": "https://v1-34.docs.kubernetes.io/docs/concepts/security/pod-security-admission/",
+        "sa25682f200f0": "https://v1-34.docs.kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/"
+      }
     }
   },
   "claims": {
@@ -35,8 +43,8 @@ version_basis: {
     "kube-escalation": {"text": "Set allowPrivilegeEscalation: false in the container securityContext.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
     "kube-capabilities": {"text": "Drop ALL capabilities in the container securityContext.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
     "kube-seccomp": {"text": "RuntimeDefault selects the runtime syscall filter instead of Unconfined.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
-    "admission": {"text": "Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp.", "components": ["kubernetes"], "sources": ["kubernetes:s1a2d717974c7"], "status": "REASONED"},
-    "existing-pods": {"text": "Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads. Admission transition details lack a direct Sources entry.", "components": ["kubernetes"], "sources": ["kubernetes:s1a2d717974c7"], "status": "REASONED"},
+    "admission": {"text": "Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp.", "components": ["kubernetes", "kubernetes-134"], "sources": ["kubernetes:s1a2d717974c7", "kubernetes-134:s9b9aaf5067e2"], "status": "REASONED"},
+    "existing-pods": {"text": "Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads. Admission transition details lack a direct Sources entry.", "components": ["kubernetes", "kubernetes-134"], "sources": ["kubernetes:s1a2d717974c7", "kubernetes-134:sa25682f200f0"], "status": "REASONED"},
     "policy-semantics": {"text": "NetworkPolicies are additive and require an enforcing CNI; both source egress and destination ingress must allow a connection.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
     "default-deny": {"text": "The empty podSelector with Ingress and Egress isolates all pods selected in the namespace before narrow allowances.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
     "dns": {"text": "The app egress rule permits UDP/TCP 53 to all kube-system pods, not just CoreDNS; narrow it to the actual resolver.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
@@ -57,7 +65,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -71,8 +79,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | kube-escalation: Set allowPrivilegeEscalation: false in the container securityContext. | Kubernetes documentation unknown | REASONED |
 | kube-capabilities: Drop ALL capabilities in the container securityContext. | Kubernetes documentation unknown | REASONED |
 | kube-seccomp: RuntimeDefault selects the runtime syscall filter instead of Unconfined. | Kubernetes documentation unknown | REASONED |
-| admission: Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp. | Kubernetes documentation unknown | REASONED |
-| existing-pods: Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads. Admission transition details lack a direct Sources entry. | Kubernetes documentation unknown | REASONED |
+| admission: Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp. | Kubernetes documentation unknown; Kubernetes Pod Security Admission 1.34 | REASONED |
+| existing-pods: Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads. Admission transition details lack a direct Sources entry. | Kubernetes documentation unknown; Kubernetes Pod Security Admission 1.34 | REASONED |
 | policy-semantics: NetworkPolicies are additive and require an enforcing CNI; both source egress and destination ingress must allow a connection. | Kubernetes documentation unknown | REASONED |
 | default-deny: The empty podSelector with Ingress and Egress isolates all pods selected in the namespace before narrow allowances. | Kubernetes documentation unknown | REASONED |
 | dns: The app egress rule permits UDP/TCP 53 to all kube-system pods, not just CoreDNS; narrow it to the actual resolver. | Kubernetes documentation unknown | REASONED |
@@ -245,3 +253,5 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
 - Kubernetes: Configure a security context for a Pod or Container: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 - Kubernetes: Pod Security Standards (`restricted` level, Pod Security Admission labels): https://kubernetes.io/docs/concepts/security/pod-security-standards/
 - Kubernetes: Network Policies: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+- Kubernetes 1.34 Pod Security Admission enforcement (checked October 2026): https://v1-34.docs.kubernetes.io/docs/concepts/security/pod-security-admission/
+- Kubernetes 1.34 namespace labels and warnings for existing Pods (checked October 2026): https://v1-34.docs.kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/
