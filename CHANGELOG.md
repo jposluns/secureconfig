@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-05
 
-- Replace the dead Appwrite database permissions link in `pocketbase.md`, refresh its rolling-source check and generated bundles (row 1.192), and record weekly link-check false positives for follow-up (row 3.40) (#NNN).
+- Replace the dead Appwrite database permissions link in `pocketbase.md`, refresh its rolling-source check and generated bundles (row 1.192), and record weekly link-check false positives for follow-up (row 3.40) (#428).
 
 ## 2026-09-27
 
