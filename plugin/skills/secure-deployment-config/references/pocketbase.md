@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "4f8acce7adad3c21b7820a689e70d64afa1184a7460f4f014eb719e18ac8e534",
+  "body_sha256": "13c76b6fb4096c3045847d6efa86fa6c2ba9a2110d2a3f274cb9f17f6c0a11ae",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -21,7 +21,8 @@ version_basis: {
         "sa5e571f8d473": "https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/file.go",
         "sfd2f779e8e11": "https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/realtime.go",
         "s31a5adccd695": "https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/backup.go",
-        "sf6ffdca4dd39": "https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/middlewares_rate_limit.go"
+        "sf6ffdca4dd39": "https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/middlewares_rate_limit.go",
+        "s1b04c2cd16ec": "https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L234-L239"
       }
     },
     "appwrite": {
@@ -65,6 +66,15 @@ version_basis: {
         "s256ef73f7b85": "https://appwrite.io/docs/advanced/self-hosting/production/backups",
         "s221c6aaef8df": "https://appwrite.io/docs/advanced/security/mfa"
       }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s5e1383feef7d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79",
+        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md",
+        "s82a34ee18632": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md"
+      }
     }
   },
   "claims": {
@@ -75,7 +85,7 @@ version_basis: {
     "pb-bind": {"text": "Without a domain serve defaults to 127.0.0.1:8090; with a domain it uses 0.0.0.0:80/443. Behind a local proxy omit the domain and set --http loopback.", "components": ["pb"], "sources": ["pb:s4b155ef30262"], "status": "REASONED"},
     "pb-origins": {"text": "--origins defaults * and accepts comma-separated allowed origins; CORS does not authorize records.", "components": ["pb"], "sources": ["pb:s4b155ef30262"], "status": "REASONED"},
     "pb-proxy": {"text": "Trust only headers the proxy overwrites, review useLeftmostIP ordering and block direct backend access to protect IP/rate controls.", "components": ["pb"], "sources": ["pb:s03dd7dd84c2a"], "status": "REASONED"},
-    "pb-dev": {"text": "--dev adds diagnostics including SQL on stderr, not an auth bypass; its flag default remains unverified.", "components": ["pb"], "sources": ["pb:seb56d3763223"], "status": "REASONED"},
+    "pb-dev": {"text": "--dev adds diagnostics including SQL on stderr, not an auth bypass; its flag default remains unverified.", "components": ["pb"], "sources": ["pb:seb56d3763223", "pb:s1b04c2cd16ec"], "status": "REASONED"},
     "pb-rules": {"text": "Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:saedbdfbdfc48", "pb:s04ae861b5709"], "status": "REASONED"},
     "pb-manage": {"text": "Top-level manageRule defaults null and permits privileged auth-record changes alongside create/update rules; its validator rejects empty-string rules.", "components": ["pb"], "sources": ["pb:sce114368c2ad"], "status": "REASONED"},
     "pb-files": {"text": "File fields default unprotected despite locked record rules; Protected plus an authorized viewRule gates downloads, while a public viewRule still permits public access.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sf711b6345643", "pb:sa5e571f8d473"], "status": "REASONED"},
@@ -118,7 +128,7 @@ version_basis: {
     "appwrite-size": {"text": "Encryption/scanning skip files above 20000000 bytes; cap maximumFileSize at that threshold when either is mandatory and test the boundary.", "components": ["appwrite"], "sources": ["appwrite:se9480e5807b3", "appwrite:s4ab95ecbf6b5"], "status": "REASONED"},
     "appwrite-functions": {"text": "Function execute roles and execution-key scopes default empty; grant narrowly. Disabled functions still admit authorized Server SDK API keys.", "components": ["appwrite"], "sources": ["appwrite:s655a0abb9ef0"], "status": "REASONED"},
     "appwrite-executor": {"text": "Keep executor/orchestrator private, protect Docker-socket authority and replace _APP_EXECUTOR_SECRET; container execution is not demonstrated hostile-tenant isolation.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s8e5272615f2e", "appwrite-docs:s2bf9a4746d28"], "status": "REASONED"},
-    "verify-pb-records": {"text": "Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls.", "components": ["pb-docs"], "sources": ["pb-docs:saedbdfbdfc48"], "status": "REASONED", "verify": [1]},
+    "verify-pb-records": {"text": "Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls.", "components": ["pb-docs", "curl"], "sources": ["pb-docs:saedbdfbdfc48", "curl:s5e1383feef7d", "curl:s3db522258e44", "curl:s82a34ee18632"], "status": "REASONED", "verify": [1]},
     "verify-appwrite-records": {"text": "Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s58ad28816c5d", "appwrite-docs:sa0bd132f7968"], "status": "REASONED", "verify": [1]},
     "verify-appwrite-keys": {"text": "A correctly scoped server key reads despite empty permissions, while a key without scope fails; neither substitutes for an ordinary-user control.", "components": ["appwrite"], "sources": ["appwrite:s193bfa5c6e22"], "status": "REASONED", "verify": [1]},
     "verify-registration": {"text": "On disposable Appwrite fixtures compare open signup 201 with root-only account-limit failure and independent email/IP restrictions; retain login/invitation controls.", "components": ["appwrite"], "sources": ["appwrite:s2bb21218c5ee"], "status": "REASONED", "verify": [2]},
@@ -204,7 +214,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | appwrite-size: Encryption/scanning skip files above 20000000 bytes; cap maximumFileSize at that threshold when either is mandatory and test the boundary. | Appwrite 2.2.0 | REASONED |
 | appwrite-functions: Function execute roles and execution-key scopes default empty; grant narrowly. Disabled functions still admit authorized Server SDK API keys. | Appwrite 2.2.0 | REASONED |
 | appwrite-executor: Keep executor/orchestrator private, protect Docker-socket authority and replace _APP_EXECUTOR_SECRET; container execution is not demonstrated hostile-tenant isolation. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
-| verify-pb-records: Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls. | PocketBase documentation (rolling) unknown | REASONED |
+| verify-pb-records: Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls. | PocketBase documentation (rolling) unknown; curl curl-8_14_1 | REASONED |
 | verify-appwrite-records: Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults. | Appwrite documentation (rolling) unknown | REASONED |
 | verify-appwrite-keys: A correctly scoped server key reads despite empty permissions, while a key without scope fails; neither substitutes for an ordinary-user control. | Appwrite 2.2.0 | REASONED |
 | verify-registration: On disposable Appwrite fixtures compare open signup 201 with root-only account-limit failure and independent email/IP restrictions; retain login/invitation controls. | Appwrite 2.2.0 | REASONED |
@@ -842,3 +852,7 @@ service result or deployed-bundle scan is claimed.
 - [Appwrite 2.2.0 function execute roles, execution-key scopes, and enablement](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Platform/Modules/Functions/Http/Functions/Create.php).
 - [Appwrite 2.2.0 storage thresholds and release constant](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/init/constants.php).
 - [Appwrite 2.2.0 Compose console path, persistent volumes, and Docker socket mounts](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/docker-compose.yml).
+- [PocketBase v0.40.4 CLI wrapper and development flag wiring (checked October 2026)](https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L234-L239).
+- [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
+- [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
+- [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).

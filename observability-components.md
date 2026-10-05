@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "815e886cda5a96f28a4469599150e9db5f0ed2cc6f81896caa92f47d4165a426",
+  "body_sha256": "26bc0ac862fda2f8afbda8a39f1e5f7194b23a154858b079a99b19bf4f8e9081",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -105,7 +105,8 @@ version_basis: {
         "s970473c2dcdb": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1130-L1138",
         "s6b2f01173a97": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1241-L1262",
         "s44e7547da37d": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2532-L2561",
-        "s33f320afa73a": "https://github.com/grafana/loki/blob/v3.7.8/go.mod#L55"
+        "s33f320afa73a": "https://github.com/grafana/loki/blob/v3.7.8/go.mod#L55",
+        "s7786b9105acc": "https://raw.githubusercontent.com/grafana/loki/v3.7.8/pkg/util/fakeauth/fake_auth.go"
       }
     },
     "dskit": {
@@ -139,6 +140,15 @@ version_basis: {
       "sources": {
         "sd3b3c1c431ec": "https://pkg.go.dev/crypto/tls#ClientAuthType",
         "s37204ff1b27c": "https://pkg.go.dev/net#Listen"
+      }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s5e1383feef7d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79",
+        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md",
+        "s82a34ee18632": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md"
       }
     }
   },
@@ -184,7 +194,7 @@ version_basis: {
     "memberlist-policy": {"text": "Keep tls-insecure-skip-verify false, set expected server name as needed, bind privately and restrict trusted peers even with TLS.", "components": ["dskit"], "sources": ["dskit:s675104c4819c", "dskit:s99e7e34182f1"], "status": "REASONED"},
     "memberlist-advertise": {"text": "Advertise address/port affect discovery, not bind; absent overrides derive an address from the first bind and actual port.", "components": ["dskit"], "sources": ["dskit:s251174df8783", "dskit:s052e8107edad"], "status": "REASONED"},
     "loki-tenants": {"text": "auth_enabled defaults true and requires tenant headers, not credentials; false uses fake, and tenant validation checks syntax/length only.", "components": ["loki", "dskit"], "sources": ["loki:sd13fa86b20d0", "loki:sb5e56f0d6348", "dskit:s3634557bb838", "dskit:s1ca109a7a016"], "status": "REASONED"},
-    "loki-grpc-auth": {"text": "Default dskit interceptors lack credentials; Loki has tenant exemptions, and the supplied subset omits full auth-helper implementation.", "components": ["dskit", "loki"], "sources": ["dskit:s38beab6892ea", "dskit:saf57a4cbc682", "loki:s057e686b00bb"], "status": "REASONED"},
+    "loki-grpc-auth": {"text": "Default dskit interceptors lack credentials; Loki has tenant exemptions, and the supplied subset omits full auth-helper implementation.", "components": ["dskit", "loki"], "sources": ["dskit:s38beab6892ea", "dskit:saf57a4cbc682", "loki:s057e686b00bb", "loki:s7786b9105acc"], "status": "REASONED"},
     "loki-push-query": {"text": "Reachable clients can push/query without credentials subject to tenant headers and ingest/query policies.", "components": ["loki"], "sources": ["loki:s9f316e1a5fef", "loki:s39c270ed878c"], "status": "REASONED"},
     "loki-config": {"text": "GET /config exposes configuration without a tenant-auth wrapper.", "components": ["loki"], "sources": ["loki:sbe0aa939a44d"], "status": "REASONED"},
     "loki-diagnostics": {"text": "Metrics and pprof routes are registered by default without a tenant-auth wrapper.", "components": ["dskit"], "sources": ["dskit:s761b46738198"], "status": "REASONED"},
@@ -201,7 +211,7 @@ version_basis: {
     "verify-loki": {"text": "A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs.", "components": ["loki"], "sources": ["loki:s70975c2655fa", "loki:s057e686b00bb"], "status": "REASONED", "verify": [2]},
     "verify-basic": {"text": "Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200.", "components": ["node", "push", "alert", "jaeger", "toolkit"], "sources": ["node:s896899f5a500", "push:s5c9f9745f42d", "alert:s120d6ecf3fcd", "jaeger:sc6f47d82b947", "toolkit:sbb86207a38e5"], "status": "DEMONSTRATED", "evidence": "The loopback runs gave exactly that pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager `/api/v2/status` and Jaeger `/api/v3/services`.", "verify": [3]},
     "verify-loki-mtls": {"text": "Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred.", "components": ["loki", "dskit"], "sources": ["loki:s70975c2655fa", "dskit:sd35a28be4391"], "status": "REASONED"},
-    "verify-secret": {"text": "Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation.", "components": ["toolkit"], "sources": ["toolkit:sbb86207a38e5"], "status": "REASONED"}
+    "verify-secret": {"text": "Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation.", "components": ["toolkit", "curl"], "sources": ["toolkit:sbb86207a38e5", "curl:s5e1383feef7d", "curl:s3db522258e44", "curl:s82a34ee18632"], "status": "REASONED"}
   }
 }
 ---
@@ -274,7 +284,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-loki: A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs. | Loki v3.7.8 | REASONED |
 | verify-basic: Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200. | node_exporter v1.12.1; Pushgateway v1.11.3; Alertmanager v0.34.1; Jaeger v2.21.0; Exporter toolkit v0.17.1 | DEMONSTRATED |
 | verify-loki-mtls: Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
-| verify-secret: Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation. | Exporter toolkit v0.17.1 | REASONED |
+| verify-secret: Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation. | Exporter toolkit v0.17.1; curl curl-8_14_1 | REASONED |
 <!-- version-basis:end -->
 
 The Prometheus server has its own section in [admin-uis.md](admin-uis.md). This guide covers the pieces
@@ -712,3 +722,7 @@ channel only. The password can still reach shell history or `set -x` output.
 - dskit pinned incoming KV updates and propagation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1383-L1470
 - dskit pinned remote-state merging and codec validation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1577-L1672
 - Go `net.Listen` (an empty host listens on all addresses): https://pkg.go.dev/net#Listen
+- [Loki v3.7.8 tenant middleware, fake tenant, and gRPC exemptions (checked October 2026)](https://raw.githubusercontent.com/grafana/loki/v3.7.8/pkg/util/fakeauth/fake_auth.go).
+- [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
+- [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
+- [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
