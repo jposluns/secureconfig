@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "9cfacf0aa0f2ba9e9e792949dcee8ba0c153c1c6882b5624b61f5d07c6e64c33",
+  "body_sha256": "8d8013942ecc4c0abfd6d8f96b9020acaa065ec51666dcaebe93fc93012c2e6c",
   "components": {
     "frp": {
       "name": "frp documentation",
@@ -78,17 +78,17 @@ version_basis: {
     },
     "ufw-docs": {
       "name": "Ubuntu Noble ufw manual",
-      "basis": "0.36.2-6",
+      "basis": "unknown",
       "sources": {
         "scff3a017f30b": "https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html"
       }
     },
     "iproute2-docs": {
-      "name": "Ubuntu Noble iproute2 manuals",
-      "basis": "6.1.0-1ubuntu6.4",
+      "name": "iproute2 manuals",
+      "basis": "v6.12.0",
       "sources": {
-        "sca3e5cd7ce4e": "https://manpages.ubuntu.com/manpages/noble/man8/ip-link.8.html",
-        "s1b4e67e38127": "https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html"
+        "s8aa0d96d25e7": "https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ip-link.8.in",
+        "s5d50117b1a36": "https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ss.8"
       }
     },
     "linux-source": {
@@ -133,11 +133,11 @@ version_basis: {
     "ssh-auth": {"text": "SSH authenticates the tunnel, not callers; retain GatewayPorts no and front localhost:8080 with authenticated TLS.", "components": ["ssh"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5"], "status": "REASONED"},
     "ssh-persist": {"text": "Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding.", "components": ["ssh", "autossh-source"], "sources": ["ssh:s1f80cf6ae7f5", "autossh-source:s6398847a2896"], "status": "REASONED"},
     "verify-token": {"text": "Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:sc1e3e11b0618", "frps:s72151a3006dc", "frps:sc982b975a190"], "status": "REASONED", "verify": [1]},
-    "verify-wg": {"text": "wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface.", "components": ["wg", "iproute2-docs", "linux-source"], "sources": ["wg:sd41c4b487466", "iproute2-docs:sca3e5cd7ce4e", "linux-source:sc7cb2448145d", "linux-source:sdfc1a2d0c3cc"], "status": "REASONED", "verify": [1]},
-    "verify-firewall": {"text": "Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection.", "components": ["wg", "nft", "ufw-docs", "iproute2-docs", "linux-source"], "sources": ["wg:sd41c4b487466", "nft:s0defde7f202b", "ufw-docs:scff3a017f30b", "iproute2-docs:s1b4e67e38127", "linux-source:scd9d50cf72b7", "linux-source:sb02ea8702b2a"], "status": "REASONED", "verify": [1]},
+    "verify-wg": {"text": "wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface.", "components": ["wg", "iproute2-docs", "linux-source"], "sources": ["wg:sd41c4b487466", "iproute2-docs:s8aa0d96d25e7", "linux-source:sc7cb2448145d", "linux-source:sdfc1a2d0c3cc"], "status": "REASONED", "verify": [1]},
+    "verify-firewall": {"text": "Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection.", "components": ["wg", "nft", "ufw-docs", "iproute2-docs", "linux-source"], "sources": ["wg:sd41c4b487466", "nft:s0defde7f202b", "ufw-docs:scff3a017f30b", "iproute2-docs:s5d50117b1a36", "linux-source:scd9d50cf72b7", "linux-source:sb02ea8702b2a"], "status": "REASONED", "verify": [1]},
     "verify-route": {"text": "An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [1]},
     "verify-counter": {"text": "Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [1]},
-    "verify-ssh": {"text": "On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no.", "components": ["ssh", "iproute2-docs"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5", "iproute2-docs:s1b4e67e38127"], "status": "REASONED", "verify": [1]}
+    "verify-ssh": {"text": "On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no.", "components": ["ssh", "iproute2-docs"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5", "iproute2-docs:s5d50117b1a36"], "status": "REASONED", "verify": [1]}
   }
 }
 ---
@@ -182,11 +182,11 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | ssh-auth: SSH authenticates the tunnel, not callers; retain GatewayPorts no and front localhost:8080 with authenticated TLS. | OpenSSH unknown | REASONED |
 | ssh-persist: Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding. | OpenSSH unknown; autossh source 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476 | REASONED |
 | verify-token: Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client. | frp documentation unknown; frps source v0.71.0 | REASONED |
-| verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown; Ubuntu Noble iproute2 manuals 6.1.0-1ubuntu6.4; Linux source v6.8 | REASONED |
-| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual 0.36.2-6; Ubuntu Noble iproute2 manuals 6.1.0-1ubuntu6.4; Linux source v6.8 | REASONED |
+| verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
+| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
 | verify-route: An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause. | WireGuard unknown; nftables unknown | REASONED |
 | verify-counter: Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer. | WireGuard unknown; nftables unknown | REASONED |
-| verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown; Ubuntu Noble iproute2 manuals 6.1.0-1ubuntu6.4 | REASONED |
+| verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown; iproute2 manuals v6.12.0 | REASONED |
 <!-- version-basis:end -->
 
 All three expose a private host to the internet without a public IP, the same job [cloudflare.md](cloudflare.md) and [tailscale.md](tailscale.md) do, but with no vendor edge: you run and secure both ends yourself, on a host still hardened per [host.md](host.md). frp with a weak or absent token lets anyone bind proxies through your server; WireGuard has no login at all, only key pairs and the traffic scoping you configure; and `ssh -R` forwards a local port through your own SSH login, kept on the server's loopback by default but reachable by anyone if `GatewayPorts` is widened.
@@ -324,11 +324,11 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 - frps tcpmux HTTP CONNECT listener binds `proxyBindAddr` at `tcpmuxHTTPConnectPort` (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/service.go#L193-L194
 - frps stcp and sudp proxies register an in-process visitor listener (`server/visitor/visitor.go` L49-L57, `NewInternalListener`), and xtcp registers with the NAT-hole controller (`server/proxy/xtcp.go` L63); none opens a socket (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/visitor/visitor.go#L49-L57, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/stcp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/sudp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/proxy.go#L202-L215, https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/net/listener.go#L25-L37, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/xtcp.go#L63 and https://github.com/fatedier/frp/blob/v0.71.0/pkg/nathole/controller.go#L125-L139
 - autossh SSH monitoring and restart (pinned commit 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476, checked October 2026): https://github.com/Autossh/autossh/blob/90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476/README#L25-L26
-- Ubuntu Noble ufw 0.36.2-6 manual, status verbose, show raw and IPv4/IPv6 rule visibility (checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html
-- Ubuntu Noble iproute2 6.1.0-1ubuntu6.4 ip-link manual, show device attributes (checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/ip-link.8.html
+- Ubuntu Noble ufw manual, status verbose, show raw and IPv4/IPv6 rule visibility (rolling documentation, checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html
+- iproute2 ip-link manual, "ip link show - display device attributes"; the device name "specifies the network device to show." (pinned tag v6.12.0, checked October 2026): https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ip-link.8.in
 - Linux administrative IFF_UP flag (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L39-L40
 - Linux operational UNKNOWN state (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L58-L61
-- Ubuntu Noble iproute2 6.1.0-1ubuntu6.4 ss manual, UDP/TCP listeners, numeric output and process display (checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html
+- iproute2 ss manual, UDP/TCP listeners (`-l`: "Display only listening sockets"), numeric output (`-n`: "Do not try to resolve service names.") and process display (`-p`: "Show process using socket.") (pinned tag v6.12.0, checked October 2026): https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ss.8
 - Linux WireGuard UDP socket creation (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/drivers/net/wireguard/socket.c#L387-L393
 - Linux UDP tunnel kernel socket creation (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/net/ipv4/udp_tunnel_core.c#L17-L19
 - frps OIDC verifier skips audience checking when Audience is empty (pinned tag v0.71.0, checked October 2026): https://github.com/fatedier/frp/blob/v0.71.0/pkg/auth/oidc.go#L281-L287
