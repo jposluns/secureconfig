@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "46f3a1b83b88df28c1c163b25a13c70a1ba4c2422f9d1a8abd4a940f6287fb8c",
+  "body_sha256": "752a44893e83ad3a397a63d587492db4e173218c6eb1a3fc9efb99b081d58a5c",
   "components": {
     "ray": {
       "name": "Ray pinned source",
@@ -69,7 +69,8 @@ version_basis: {
         "sa5873642c8a2": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_manager.py#L421-L463",
         "s2d562f0e7567": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_manager.py#L565-L609",
         "s3a079f7e3d82": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/prometheus_exporter.py#L10",
-        "sefae1a66c0dd": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L102-L114"
+        "sefae1a66c0dd": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L102-L114",
+        "scc7af6be456e": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/config.py#L955-L963"
       }
     },
     "docs": {
@@ -186,7 +187,7 @@ version_basis: {
     "serve-bind": {"text": "Serve HTTP defaults port 8000, Python host 127.0.0.1 but config-file host 0.0.0.0; EveryNode puts proxies on nodes with replicas.", "components": ["docs"], "sources": ["docs:scd3f7d8a9b02", "docs:s15aa6ec80fb8", "docs:s045d75fbdecc"], "status": "REASONED"},
     "serve-auth": {"text": "Serve apps have no built-in application auth and are outside cluster token mode; restrict origins and add proxy or FastAPI authentication.", "components": ["docs"], "sources": ["docs:sa5e2c2d58c12", "docs:sc98a37c2b157"], "status": "REASONED"},
     "serve-tls": {"text": "Serve ssl_keyfile/ssl_certfile/ssl_ca_certs default None; supplying a CA does not itself require client certificates.", "components": ["docs"], "sources": ["docs:scd3f7d8a9b02"], "status": "REASONED"},
-    "serve-grpc": {"text": "Optional Serve gRPC uses 9000 only with configured servicer functions; its dedicated gRPC option reference is not cited.", "components": ["docs"], "sources": ["docs:s045d75fbdecc"], "status": "REASONED"},
+    "serve-grpc": {"text": "Optional Serve gRPC uses 9000 only with configured servicer functions; its dedicated gRPC option reference is not cited.", "components": ["docs", "ray"], "sources": ["docs:s045d75fbdecc", "ray:scc7af6be456e"], "status": "REASONED"},
     "image-privilege": {"text": "Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation.", "components": ["ray"], "sources": ["ray:s08d31327265a"], "status": "REASONED"},
     "pod-security": {"text": "KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp.", "components": ["kuberay", "kubernetes"], "sources": ["kuberay:s76e45858aa01", "kubernetes:sb78ea91d0308"], "status": "REASONED"},
     "verify-inventory": {"text": "Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available.", "components": ["ray"], "sources": ["ray:s9a060fe08a53", "ray:s6f5310eb313d", "ray:s532a98227d6d", "ray:s7f27125f73b7", "ray:s434c7b4364dc"], "status": "REASONED", "verify": [1]},
@@ -246,7 +247,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | serve-bind: Serve HTTP defaults port 8000, Python host 127.0.0.1 but config-file host 0.0.0.0; EveryNode puts proxies on nodes with replicas. | Ray documentation unknown | REASONED |
 | serve-auth: Serve apps have no built-in application auth and are outside cluster token mode; restrict origins and add proxy or FastAPI authentication. | Ray documentation unknown | REASONED |
 | serve-tls: Serve ssl_keyfile/ssl_certfile/ssl_ca_certs default None; supplying a CA does not itself require client certificates. | Ray documentation unknown | REASONED |
-| serve-grpc: Optional Serve gRPC uses 9000 only with configured servicer functions; its dedicated gRPC option reference is not cited. | Ray documentation unknown | REASONED |
+| serve-grpc: Optional Serve gRPC uses 9000 only with configured servicer functions; its dedicated gRPC option reference is not cited. | Ray documentation unknown; Ray pinned source ray-2.58.0 | REASONED |
 | image-privilege: Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation. | Ray pinned source ray-2.58.0 | REASONED |
 | pod-security: KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp. | KubeRay chart v1.7.0; Kubernetes security contexts unknown | REASONED |
 | verify-inventory: Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available. | Ray pinned source ray-2.58.0 | REASONED |
@@ -546,3 +547,4 @@ Service behaviour is not demonstrated here. A watcher stopped each of four loopb
 - Ray direct `/logs/` Verify discriminator: static directory index inside the agent middleware, disabled token bypass, 401 for missing credentials, valid-token access and exact health exemptions (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L245-L249, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L20-L23, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L102-L114 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/authentication/http_token_authentication.py#L28-L80
 - Kubernetes security contexts (runAsNonRoot, drop capabilities, seccomp): https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 - KubeRay ray-cluster Helm chart values (head/worker podSecurityContext and securityContext, default {}): https://github.com/ray-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml
+- [Ray ray-2.58.0 Serve gRPC default port and servicer-function requirement (checked October 2026)](https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/config.py#L955-L963).
