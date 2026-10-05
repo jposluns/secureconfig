@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "bee88ebed8ff15b0977612b54c9d11304e34b3944a8d11da4a51832e96b0ec54",
+  "body_sha256": "1f34829067917bbb8be0c81435823e06c7dd156ee13aaf414222ed96e642439a",
   "components": {
     "es": {
       "name": "Elasticsearch documentation",
@@ -862,12 +862,14 @@ For either UI, loopback binding suits a proxy in the same network namespace. For
 
 REASONED: verification scope from the recorded authoring limitations; no target cluster, container runtime, node access or audit collector is available. All deployment checks below are **REASONED, not demonstrated**: the authoring environment has no target cluster or Docker/Podman runtime, and no access to the target node or audit collector; the authoring host forbids opening listeners without an isolated network namespace, and has none. Expected outcomes follow the cited vendor behavior; no deployment result is claimed.
 
-REASONED: preparation for the cited cluster API checks; no target cluster, credentials or deployed CA is available. Before running:
+DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. The initial cluster guard rejected a placeholder host, missing CA and nonnumeric port with exit 1; valid values reached the first curl call. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results.
 
-- REASONED: target preparation from the cited TLS references; no deployed endpoint or CA is available. Substitute your actual hostname, HTTP port, and CA path inside the single quotes on the `set --` line. Paste the whole block. Use a TLS hostname covered by the deployed certificate.
+REASONED: introduction to the deployment prerequisites for the cited cluster API checks; local preparation observations are recorded above, while cluster identities and deployed trust remain unavailable. Before running:
+
+- Substitute your actual hostname, HTTP port, and CA path inside the single quotes on the `set --` line. Paste the whole block. Use a TLS hostname covered by the deployed certificate.
 - REASONED: CA selection from the cited product TLS references; no deployed cluster CA or administrator identity is available. Elasticsearch automatic setup supplies `http_ca.crt`. For OpenSearch, use the **deployed production HTTP CA**, such as `/path/production-ca.pem`, and your production administrator's header file. Do not verify production against the demo CA.
 - REASONED: fixture control from the cited privilege and document APIs; no seeded target cluster is available. Have an administrator confirm that `app-data` and `other-data` each contain a readable document with ID `rbac-probe`. A missing document is not an RBAC-denial result.
-- REASONED: failed-login preparation from the cited audit references; no target cluster or collector is available. Prepare `/path/audit-probe.header` with a Basic authentication header for a confirmed nonexistent user named `audit_probe` and a deliberately wrong password. Keep all credentials in header files.
+- Prepare `/path/audit-probe.header` with a Basic authentication header for a confirmed nonexistent user named `audit_probe` and a deliberately wrong password. Keep all credentials in header files.
 - REASONED: identity comparisons from the cited role and API-key references; no target users or keys are available. Run the RBAC requests once with `/path/app-user.header`, then again with `/path/app-key.header`. On OpenSearch before 3.7, only the internal-user check applies.
 
 REASONED: comparison criteria from the cited authorization, CORS and audit references; no target cluster or runtime is available. The expected distinctions are:
@@ -991,7 +993,7 @@ REASONED: following block; cluster authorization, TLS, CORS and audit expectatio
 )
 ```
 
-REASONED: TLS response interpretation from the cited HTTP TLS references; no target HTTPS cluster is available. The administrative HTTPS control must return `200` and cluster JSON before interpreting the plaintext probe. With HTTP TLS enforced, plaintext must receive no HTTP response. Elasticsearch closes a plaintext connection to its HTTPS listener; OpenSearch's enabled REST TLS allows only HTTPS. Expect `http=000` with a reset or empty reply after connection. DNS failures, timeouts, or an unreachable service are inconclusive. Any actual HTTP status, including `401`, means that endpoint answered over plaintext and is a finding. See [Elasticsearch HTTP TLS settings](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/security-settings) and [OpenSearch REST TLS](https://docs.opensearch.org/latest/security/configuration/tls/).
+REASONED: preceding block; TLS, RBAC, anonymous-access, CORS and audit comparisons follow the cited Elasticsearch and OpenSearch HTTP TLS, privileges, anonymous authentication, CORS, audit settings and event references. No target cluster, effective node configuration, audit collector or eligible Elasticsearch audit licence is available. Local shell checks are recorded above. The administrative HTTPS control must return `200` and cluster JSON before interpreting the plaintext probe. With HTTP TLS enforced, plaintext must receive no HTTP response. Elasticsearch closes a plaintext connection to its HTTPS listener; OpenSearch's enabled REST TLS allows only HTTPS. Expect `http=000` with a reset or empty reply after connection. DNS failures, timeouts, or an unreachable service are inconclusive. Any actual HTTP status, including `401`, means that endpoint answered over plaintext and is a finding. See [Elasticsearch HTTP TLS settings](https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/security-settings) and [OpenSearch REST TLS](https://docs.opensearch.org/latest/security/configuration/tls/).
 
 REASONED: event attribution from the cited audit-event references; no target cluster or audit collector is available. For the audit check, expect `401` and require a matching NEW REST-layer Elasticsearch `authentication_failed` or OpenSearch `FAILED_LOGIN` event. Inspect the receiving node's new `CLUSTERNAME_audit.json` entries or the corresponding OpenSearch audit index and separately collected copy. Match the recorded time interval, `audit_probe` identity, POST method, and `/app-data/_search` path. Run probes separately so each event can be attributed to its request.
 
@@ -1011,9 +1013,9 @@ ss -tlnp 'sport = :9300'
 
 REASONED: listener interpretation from the cited port defaults and Docker configuration; target-node and container-runtime access are unavailable. These use `ss`'s own port filter, avoiding accidental PID matches. For Elasticsearch 8.19.22 and 9.5.4, the source defaults are `9200-9300` for HTTP and `9300-9399` for transport; each binds an available port. The transport upper bound is 9399, not 9400. See the pinned `HttpTransportSettings` and `TransportSettings` Sources below. Inspect the actual ports used by either product. Expect loopback or deliberate private listeners. The exception is an official Docker container on a bridge or user-defined network (not host networking): its bundled `network.host: 0.0.0.0` makes wildcard listeners inside the container the default unless it was overridden, so check instead that 9200 is reachable only from intended clients and 9300 only from cluster peers. With host networking, a wildcard listener is a finding like any other. An unexpected public or wildcard listener is a finding to review against the network controls; no output is inconclusive until the running process and its actual ports are located.
 
-### Residual-control checks (REASONED: fixture preparation and response interpretation from the cited product APIs; no target cluster, eligible Elasticsearch licence, storage, repository or UI fixture is available)
+### Residual-control checks
 
-These additional deployment checks are **REASONED, not demonstrated**. No target Elasticsearch/OpenSearch cluster, eligible Elasticsearch FLS/DLS licence, target storage, provider repository access, or running UI with deployed certificates is available in the authoring environment. Expected outcomes rest on the cited vendor documentation and pinned source readings.
+REASONED: deployment scope from the cited product APIs; no target cluster, eligible Elasticsearch licence, storage, repository or UI fixture is available. These additional deployment checks are **REASONED, not demonstrated**. No target Elasticsearch/OpenSearch cluster, eligible Elasticsearch FLS/DLS licence, target storage, provider repository access, or running UI with deployed certificates is available in the authoring environment. Expected outcomes rest on the cited vendor documentation and pinned source readings.
 
 Use isolated test deployments for exposed-state fixtures. Substitute values inside single quotes and paste whole shell blocks. Values containing a literal apostrophe need proper shell quoting. Keep credentials in the protected header files described above, with tracing disabled. The following blocks assume the shell's normal builtins.
 
@@ -1045,7 +1047,7 @@ REASONED: following block; REST fixture comparisons follow the cited product API
 )
 ```
 
-Judge the HTTP status and response contents, not the shell's final status alone. A transport failure or `401` is not evidence of correct field/document restrictions.
+REASONED: preceding block; REST request and response comparisons follow the cited product APIs and restriction rules; no target cluster, eligible Elasticsearch licence or repository access is available. Local file and argument checks are recorded above. Judge the HTTP status and response contents, not the shell's final status alone. A transport failure or `401` is not evidence of correct field/document restrictions.
 
 ### Verify field and document restrictions (REASONED: retrieval and aggregation comparisons from the cited Elasticsearch and OpenSearch FLS, DLS and API references; no live clusters or eligible Elasticsearch FLS/DLS licence are available)
 
