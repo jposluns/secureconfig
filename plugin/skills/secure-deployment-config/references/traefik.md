@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "deff4f4f1dff6d9c98ed7588cd4a5b0ffe10c6934c317595883d43e109812945",
+  "body_sha256": "e4e5ed854883e8bbfa1b96b876b1208964bf24fae160626b66ec649ec9ccc532",
   "components": {
     "traefik-docs": {
       "name": "Traefik documentation (rolling)",
@@ -41,22 +41,41 @@ version_basis: {
       "sources": {
         "s2b2686afaf41": "https://curl.se/docs/manpage.html"
       }
+    },
+    "traefik-v3": {
+      "name": "Traefik v3 documentation",
+      "basis": "v3.5",
+      "sources": {
+        "sd6ad276040b7": "https://doc.traefik.io/traefik/v3.5/reference/install-configuration/entrypoints/",
+        "s418a6b1ad09b": "https://doc.traefik.io/traefik/v3.5/reference/install-configuration/tls/certificate-resolvers/acme/",
+        "s25d849b2d428": "https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/tls/tls-options/",
+        "s3acb3f5b1778": "https://doc.traefik.io/traefik/v3.5/reference/install-configuration/providers/others/file/",
+        "s5d7a6940f1dd": "https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/basicauth/",
+        "s3cf7d994a56a": "https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/forwardauth/"
+      }
+    },
+    "traefik-source": {
+      "name": "Traefik ACME storage source",
+      "basis": "v3.5.0",
+      "sources": {
+        "s0e08b0bdcb35": "https://github.com/traefik/traefik/blob/v3.5.0/pkg/provider/acme/local_store.go#L125"
+      }
     }
   },
   "claims": {
-    "entrypoints": {"text": "For Traefik v2/v3, web :80 redirects to HTTPS websecure :443 and an ACME resolver obtains/renews certificates.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED"},
-    "acme-storage": {"text": "Persist acme.json across restarts with mode 600 to retain certificates and avoid repeated issuance/rate limits.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED"},
-    "acme-challenges": {"text": "TLS-ALPN requires inbound 443; HTTP-01 uses 80, while DNS supports wildcards without inbound ports.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED"},
+    "entrypoints": {"text": "For Traefik v2/v3, web :80 redirects to HTTPS websecure :443 and an ACME resolver obtains/renews certificates.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:sd6ad276040b7", "traefik-v3:s418a6b1ad09b"], "status": "REASONED"},
+    "acme-storage": {"text": "Persist acme.json across restarts with mode 600 to retain certificates and avoid repeated issuance/rate limits.", "components": ["traefik-docs", "traefik-v3", "traefik-source"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s418a6b1ad09b", "traefik-source:s0e08b0bdcb35"], "status": "REASONED"},
+    "acme-challenges": {"text": "TLS-ALPN requires inbound 443; HTTP-01 uses 80, while DNS supports wildcards without inbound ports.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s418a6b1ad09b"], "status": "REASONED"},
     "docker-default": {"text": "Docker discovery defaults exposedByDefault to true; set false and opt each intended container in with traefik.enable=true.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED"},
     "docker-scope": {"text": "Discovery is daemon-wide, not Compose-project scoped; eligible unlabelled containers get routers unless excluded. Missing usable ports skip service creation.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED"},
     "docker-socket": {"text": "The Docker socket gives daemon control despite :ro; use a restricted socket proxy to limit API access.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED"},
-    "tls-floor": {"text": "Dynamic default TLS options set minVersion VersionTLS12.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED"},
+    "tls-floor": {"text": "Dynamic default TLS options set minVersion VersionTLS12.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s25d849b2d428"], "status": "REASONED"},
     "route": {"text": "Docker labels select the app host, websecure, letsencrypt resolver and backend port 3000.", "components": ["traefik-docs", "docker"], "sources": ["traefik-docs:scbc0f2135c78", "docker:se23fe4fe79fa"], "status": "REASONED"},
     "backend-isolation": {"text": "Publish only Traefik 80/443, not the app's 3000, to prevent middleware/TLS bypass.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED"},
-    "basic": {"text": "Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED"},
-    "compose-hash": {"text": "Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED"},
-    "file-provider": {"text": "Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED"},
-    "mfa": {"text": "Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED"},
+    "basic": {"text": "Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s5d7a6940f1dd"], "status": "REASONED"},
+    "compose-hash": {"text": "Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s5d7a6940f1dd"], "status": "REASONED"},
+    "file-provider": {"text": "Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s3acb3f5b1778"], "status": "REASONED"},
+    "mfa": {"text": "Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s3cf7d994a56a"], "status": "REASONED"},
     "body-limit": {"text": "Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size.", "components": ["middleware"], "sources": ["middleware:sd987195d64dd"], "status": "REASONED"},
     "buffer-storage": {"text": "memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size.", "components": ["middleware"], "sources": ["middleware:sd987195d64dd"], "status": "REASONED"},
     "rate-limit": {"text": "average=10 and burst=20 configure a rate cap, per source by default.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d"], "status": "REASONED"},
@@ -84,23 +103,23 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| entrypoints: For Traefik v2/v3, web :80 redirects to HTTPS websecure :443 and an ACME resolver obtains/renews certificates. | Traefik documentation (rolling) unknown | REASONED |
-| acme-storage: Persist acme.json across restarts with mode 600 to retain certificates and avoid repeated issuance/rate limits. | Traefik documentation (rolling) unknown | REASONED |
-| acme-challenges: TLS-ALPN requires inbound 443; HTTP-01 uses 80, while DNS supports wildcards without inbound ports. | Traefik documentation (rolling) unknown | REASONED |
+| entrypoints: For Traefik v2/v3, web :80 redirects to HTTPS websecure :443 and an ACME resolver obtains/renews certificates. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| acme-storage: Persist acme.json across restarts with mode 600 to retain certificates and avoid repeated issuance/rate limits. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Traefik ACME storage source v3.5.0 | REASONED |
+| acme-challenges: TLS-ALPN requires inbound 443; HTTP-01 uses 80, while DNS supports wildcards without inbound ports. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | docker-default: Docker discovery defaults exposedByDefault to true; set false and opt each intended container in with traefik.enable=true. | Traefik Docker provider unknown | REASONED |
 | docker-scope: Discovery is daemon-wide, not Compose-project scoped; eligible unlabelled containers get routers unless excluded. Missing usable ports skip service creation. | Traefik Docker provider unknown | REASONED |
 | docker-socket: The Docker socket gives daemon control despite :ro; use a restricted socket proxy to limit API access. | Traefik Docker provider unknown | REASONED |
-| tls-floor: Dynamic default TLS options set minVersion VersionTLS12. | Traefik documentation (rolling) unknown | REASONED |
+| tls-floor: Dynamic default TLS options set minVersion VersionTLS12. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | route: Docker labels select the app host, websecure, letsencrypt resolver and backend port 3000. | Traefik documentation (rolling) unknown; Traefik Docker provider unknown | REASONED |
 | backend-isolation: Publish only Traefik 80/443, not the app's 3000, to prevent middleware/TLS bypass. | Traefik Docker provider unknown | REASONED |
-| basic: Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here. | Traefik documentation (rolling) unknown | REASONED |
-| compose-hash: Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping. | Traefik documentation (rolling) unknown | REASONED |
-| file-provider: Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file. | Traefik documentation (rolling) unknown | REASONED |
-| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA. | Traefik documentation (rolling) unknown | REASONED |
+| basic: Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| compose-hash: Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| file-provider: Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | body-limit: Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size. | Traefik middleware documentation unknown | REASONED |
 | buffer-storage: memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size. | Traefik middleware documentation unknown | REASONED |
 | rate-limit: average=10 and burst=20 configure a rate cap, per source by default. | Traefik middleware documentation unknown | REASONED |
@@ -352,3 +371,10 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 - Buffering middleware (`maxRequestBodyBytes`, `memRequestBodyBytes`): https://doc.traefik.io/traefik/middlewares/http/buffering/
 - InFlightReq middleware (`amount`): https://doc.traefik.io/traefik/middlewares/http/inflightreq/
 - RateLimit middleware (`average`, `burst`, `period`): https://doc.traefik.io/traefik/middlewares/http/ratelimit/
+- Traefik v3.5 entry-point HTTPS redirection (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/entrypoints/
+- Traefik v3.5 ACME renewal, challenges and certificate storage (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/tls/certificate-resolvers/acme/
+- Traefik v3.5.0 ACME storage file creation with mode 600 (checked October 2026): https://github.com/traefik/traefik/blob/v3.5.0/pkg/provider/acme/local_store.go#L125
+- Traefik v3.5 minimum TLS version (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/tls/tls-options/
+- Traefik v3.5 file-provider configuration (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/providers/others/file/
+- Traefik v3.5 BasicAuth and Compose dollar-sign escaping (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/basicauth/
+- Traefik v3.5 ForwardAuth delegation (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/forwardauth/

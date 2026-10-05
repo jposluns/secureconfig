@@ -442,13 +442,13 @@ maintaining a private assessment indefinitely.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | public-trust: ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; prefer these for public DNS names, including private hosts using DNS-01. | Let's Encrypt documentation unknown; ZeroSSL unknown | REASONED |
 | http-challenge: HTTP-01 needs a public A/AAAA or CNAME pointing to the server and inbound internet access to port 80. | Let's Encrypt documentation unknown | REASONED |
-| alpn-challenge: TLS-ALPN-01 needs a public DNS record and inbound port 443; the guide names Caddy and Traefik without direct vendor Sources entries. | Let's Encrypt documentation unknown | REASONED |
+| alpn-challenge: TLS-ALPN-01 needs a public DNS record and inbound port 443; the guide names Caddy and Traefik without direct vendor Sources entries. | Let's Encrypt documentation unknown; Traefik ACME documentation v3.5 | REASONED |
 | dns-challenge: DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards; provider API access and a DNS plugin apply to automated issuance and renewal, while manual DNS-01 is possible. | Let's Encrypt documentation unknown; Certbot documentation unknown | REASONED |
 | certbot-install: Install Certbot and nginx/Apache plugins from the distribution, or the classic snap with /usr/bin/certbot pointing to /snap/bin/certbot. | Certbot documentation unknown | REASONED |
 | server-plugins: certbot --nginx or --apache issues and installs certificates for the supplied domain names when the server is supported. | Certbot documentation unknown | REASONED |
@@ -469,11 +469,11 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | zerossl-eab: ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials. | ZeroSSL unknown | REASONED |
 | acme-default: acme.sh registers with ZeroSSL by default. | acme.sh unknown | REASONED |
 | acme-install: acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell. | acme.sh unknown | REASONED |
-| server-automation: The guide recommends Caddy or Traefik for built-in issuance and renewal without an external client; direct vendor Sources entries are absent. | Let's Encrypt documentation unknown | REASONED |
+| server-automation: The guide recommends Caddy or Traefik for built-in issuance and renewal without an external client; direct vendor Sources entries are absent. | Let's Encrypt documentation unknown; Caddy automatic HTTPS v2.11.4; Traefik ACME documentation v3.5 | REASONED |
 | origin-certificates: The guide describes Cloudflare origin certificates as free, long-lived and trusted only by Cloudflare's edge behind its proxy; a Cloudflare Sources entry is absent. | Let's Encrypt documentation unknown | REASONED |
 | verify-inventory: certbot certificates lists issued certificates and their expiry dates. | Certbot documentation unknown | REASONED |
-| verify-https: Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. A curl source and version are not recorded. | Let's Encrypt documentation unknown | REASONED |
-| verify-certificate: The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates; an OpenSSL source and version are not recorded. | Let's Encrypt documentation unknown | REASONED |
+| verify-https: Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. A curl source and version are not recorded. | Let's Encrypt documentation unknown; curl command documentation curl-8_12_1 | REASONED |
+| verify-certificate: The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates; an OpenSSL source and version are not recorded. | Let's Encrypt documentation unknown; OpenSSL certificate commands 3.0 | REASONED |
 | authentication: A certificate alone is insufficient protection; continue with server controls and authentication. | Let's Encrypt documentation unknown | REASONED |
 | dns-automation: For automated DNS-01 issuance and renewal, use a provider DNS plugin and least-privilege API credentials; manual TXT entry is a separate path. | Certbot documentation unknown | REASONED |
 | dns-manual: certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; these certificates do not auto-renew without a --manual-auth-hook that automates the challenge. | Certbot documentation unknown | REASONED |
@@ -591,6 +591,12 @@ A certificate alone does not protect anything: continue with the server guide fo
 - Let's Encrypt lifetime reduction schedule: https://letsencrypt.org/2025/12/02/from-90-to-45
 - Let's Encrypt OCSP end of life: https://letsencrypt.org/2025/08/06/ocsp-service-has-reached-end-of-life
 - Let's Encrypt CAA requirements: https://letsencrypt.org/docs/caa/
+- Caddy v2.11.4 automatic certificate acquisition and renewal (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L63
+- Traefik v3.5 ACME renewal and challenges (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/tls/certificate-resolvers/acme/
+- OpenSSL 3.0 `s_client` connection and certificate verification (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
+- OpenSSL 3.0 `x509` issuer and validity dates (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-x509/
+- curl curl-8_12_1 HEAD requests (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/head.md#L21-L22
+- curl curl-8_12_1 normal certificate verification and `--insecure` (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/insecure.md#L21-L28
 
 ======================================================================
 ==> self-signed.md
@@ -603,7 +609,7 @@ A certificate alone does not protect anything: continue with the server guide fo
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -616,20 +622,20 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | unencrypted-key: -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions. | OpenSSL documentation (rolling) unknown | REASONED |
 | expiry: Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves. | OpenSSL documentation (rolling) unknown | REASONED |
 | key-permissions: chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
-| key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. Git-specific sources are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
+| key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. Git-specific sources are not recorded. | OpenSSL documentation (rolling) unknown; Git ignore documentation v2.43.0 | REASONED |
 | mkcert: mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs. | mkcert unknown | REASONED |
 | mkcert-custody: Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users. | mkcert unknown | REASONED |
 | debian-trust: Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian/Ubuntu; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
 | rhel-trust: Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust on RHEL/Fedora; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
-| curl-trust: curl --cacert server.crt supplies explicit trust for app.internal; a curl source and version are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
-| requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests; a requests Sources entry and version are absent. | OpenSSL documentation (rolling) unknown | REASONED |
-| node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js; its version is unrecorded. | mkcert unknown | REASONED |
-| verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but tool-specific Sources entries are absent. | OpenSSL documentation (rolling) unknown | REASONED |
+| curl-trust: curl --cacert server.crt supplies explicit trust for app.internal; a curl source and version are not recorded. | OpenSSL documentation (rolling) unknown; curl command documentation curl-8_12_1 | REASONED |
+| requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests; a requests Sources entry and version are absent. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3 | REASONED |
+| node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js; its version is unrecorded. | mkcert unknown; Node.js extra CA certificates v22.19.0 | REASONED |
+| verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but tool-specific Sources entries are absent. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3; curl command documentation curl-8_12_1 | REASONED |
 | verify-extensions: Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN. | OpenSSL documentation (rolling) unknown | REASONED |
 | verify-tls: The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0. | OpenSSL documentation (rolling) unknown | REASONED |
 | verify-failures: Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62. | OpenSSL documentation (rolling) unknown | REASONED |
 | verify-identity: Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks. | OpenSSL documentation (rolling) unknown | REASONED |
-| verify-store: Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
+| verify-store: Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after. | OpenSSL documentation (rolling) unknown; mkcert unknown; curl command documentation curl-8_12_1 | REASONED |
 | trust-limits: Self-signed certificates have no revocation or third-party accountability and need manual trust distribution; move beyond them as the audience grows and retain authentication. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
 <!-- version-basis:end -->
 
@@ -726,6 +732,12 @@ Self-signed certificates have no revocation and no third-party accountability, a
 
 - OpenSSL documentation (rolling documentation, checked September 2026): https://docs.openssl.org/ ; `openssl s_client` (`-servername`, `-verify_return_error`): https://docs.openssl.org/master/man1/openssl-s_client/ ; verification options (`-verify_hostname`): https://docs.openssl.org/master/man1/openssl-verification-options/
 - mkcert: https://github.com/FiloSottile/mkcert
+- Requests v2.32.3 CA-bundle environment variables (checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239
+- Requests v2.32.3 disabled certificate verification (checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L246-L250
+- Git v2.43.0 ignore rules and already tracked files (checked October 2026): https://github.com/git/git/blob/v2.43.0/Documentation/gitignore.txt#L15-L18
+- curl curl-8_12_1 explicit CA trust (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/cacert.md#L21-L24
+- curl curl-8_12_1 normal certificate verification and `--insecure` (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/insecure.md#L21-L28
+- Node.js v22.19.0 extra trusted CA certificates (checked October 2026): https://github.com/nodejs/node/blob/v22.19.0/doc/api/cli.md#L3234-L3238
 
 ======================================================================
 ==> cloudflare.md
@@ -1269,7 +1281,7 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -1280,8 +1292,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | htpasswd-cost: htpasswd -B -C 12 selects bcrypt cost 12; bare -B defaults to 5, below the OWASP minimum of 10. | Apache htpasswd unknown; OWASP authentication and password storage unknown | REASONED |
 | federation: Prefer supported SSO/OIDC and enable MFA wherever available. | OWASP authentication and password storage unknown; OpenID Connect Core 1.0 | REASONED |
 | machine-tokens: Use separate least-privilege API tokens, exercise rotation and set expiry where supported. | OAuth security BCP RFC 9700 | REASONED |
-| session-identity: Use unpredictable session identifiers and regenerate on login or privilege change, invalidating the old identifier. | OWASP authentication and password storage unknown | REASONED |
-| session-revocation: Invalidate sessions server-side on logout and password change. | OWASP authentication and password storage unknown | REASONED |
+| session-identity: Use unpredictable session identifiers and regenerate on login or privilege change, invalidating the old identifier. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| session-revocation: Invalidate sessions server-side on logout and password change. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | login-throttling: Rate-limit authentication with account-aware and aggregate controls alongside source limits; lock or delay failures without enabling denial of access. | OWASP authentication and password storage unknown | REASONED |
 | enumeration: Keep login, registration and reset responses uniform in message and timing. | OWASP authentication and password storage unknown | REASONED |
 | auth-logging: Log authentication successes and failures with account and source address; retain logs for investigation. | OWASP authentication and password storage unknown | REASONED |
@@ -1303,20 +1315,20 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-token-rejection: Negative tests reject missing, expired, wrong-issuer and wrong-audience tokens. | OpenID Connect Core 1.0; OAuth security BCP RFC 9700 | REASONED |
 | default-deny: Require authentication on every endpoint not deliberately public, including APIs, health dashboards, admin panels, metrics and message queues; publish an explicit public-path list. General authentication source; no dedicated endpoint-inventory reference in Sources. | OWASP authentication and password storage unknown | REASONED |
 | individual-credentials: Change or disable vendor default accounts before exposure; give each human an individual account and each service its own credential, and never ship credentials in code, containers or documentation. General authentication source; no product-specific default-account references. | OWASP authentication and password storage unknown | REASONED |
-| secret-generation: Generate random secrets with openssl rand -base64 32 or Python secrets.token_urlsafe(32). General authentication source; Sources has no OpenSSL or Python reference for these commands. | OWASP authentication and password storage unknown | REASONED |
-| secret-storage: Load secrets from environment variables or a secret manager; ignore .env before the first commit and scan for leaks before pushing. Rotate secrets exposed in a public repository, chat or log; deletion does not unpublish them. General authentication source; no pinned storage or scanner reference. | OWASP authentication and password storage unknown | REASONED |
-| session-cookies: Mark session cookies Secure, HttpOnly and SameSite Lax or Strict, and sign them with a strong random secret. General authentication source; no dedicated session-cookie reference in Sources. | OWASP authentication and password storage unknown | REASONED |
-| session-timeouts: Enforce both idle and absolute session timeouts server-side; cookie expiry alone does not prevent replay. General authentication source; no dedicated session-timeout reference in Sources. | OWASP authentication and password storage unknown | REASONED |
-| session-unissued: Reject session identifiers the server never issued to prevent session fixation. General authentication source; no dedicated session-management reference in Sources. | OWASP authentication and password storage unknown | REASONED |
-| csrf: SameSite alone is not a complete CSRF defense: Lax permits a top-level state-changing GET and sibling subdomains can be same-site. Cookie-authenticated state changes need an anti-CSRF token or strict Origin/Sec-Fetch-Site check, and must not use safe methods such as GET. General authentication source; no dedicated CSRF reference in Sources. | OWASP authentication and password storage unknown | REASONED |
-| expensive-endpoint-limits: Bound inference, uploads and job submission with request-size, concurrency and timeout limits in addition to per-client rate limits; apply these limits to streaming and webhook transports too. General authentication source; no dedicated resource-limit reference in Sources. | OWASP authentication and password storage unknown | REASONED |
+| secret-generation: Generate random secrets with openssl rand -base64 32 or Python secrets.token_urlsafe(32). General authentication source; Sources has no OpenSSL or Python reference for these commands. | OWASP authentication and password storage unknown; OpenSSL rand 3.5; Python secrets 3.13 | REASONED |
+| secret-storage: Load secrets from environment variables or a secret manager; ignore .env before the first commit and scan for leaks before pushing. Rotate secrets exposed in a public repository, chat or log; deletion does not unpublish them. General authentication source; no pinned storage or scanner reference. | OWASP authentication and password storage unknown; Gitleaks scanning modes b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b; Git ignore rules v2.49.0; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| session-cookies: Mark session cookies Secure, HttpOnly and SameSite Lax or Strict, and sign them with a strong random secret. General authentication source; no dedicated session-cookie reference in Sources. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| session-timeouts: Enforce both idle and absolute session timeouts server-side; cookie expiry alone does not prevent replay. General authentication source; no dedicated session-timeout reference in Sources. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| session-unissued: Reject session identifiers the server never issued to prevent session fixation. General authentication source; no dedicated session-management reference in Sources. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| csrf: SameSite alone is not a complete CSRF defense: Lax permits a top-level state-changing GET and sibling subdomains can be same-site. Cookie-authenticated state changes need an anti-CSRF token or strict Origin/Sec-Fetch-Site check, and must not use safe methods such as GET. General authentication source; no dedicated CSRF reference in Sources. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| expensive-endpoint-limits: Bound inference, uploads and job submission with request-size, concurrency and timeout limits in addition to per-client rate limits; apply these limits to streaming and webhook transports too. General authentication source; no dedicated resource-limit reference in Sources. | OWASP authentication and password storage unknown; OWASP API Security 2023; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | fail2ban: The body identifies fail2ban as a low-effort control for SSH and login panels on Linux hosts. General authentication source; no fail2ban vendor reference in Sources. | OWASP authentication and password storage unknown | REASONED |
 | federated-allowlist: Allowlist tenants, verified hosted-domain claims, organization or group membership, or explicit users after federated login; any Google account is not staff, and Microsoft common requires issuer and tenant validation. General OIDC source; no Google or Microsoft vendor reference in Sources. | OpenID Connect Core 1.0 | REASONED |
-| browser-session: Prefer a server-side session in an HttpOnly cookie to tokens in browser storage. General authentication source; no dedicated browser-storage reference in Sources. | OWASP authentication and password storage unknown | REASONED |
+| browser-session: Prefer a server-side session in an HttpOnly cookie to tokens in browser storage. General authentication source; no dedicated browser-storage reference in Sources. | OWASP authentication and password storage unknown; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | transport-authentication: Authenticate WebSockets, SSE, GraphQL, gRPC, webhooks, inference and management APIs separately; HTML login does not protect them. Verify webhook sender signatures and reject replays. General authentication source; no transport-specific vendor references in Sources. | OWASP authentication and password storage unknown | REASONED |
-| offboarding: Promptly revoke provider membership, proxy sessions, application sessions and personal tokens when a person leaves; measure and shrink each system's maximum time-to-revoke where immediate revocation is unavailable. General authentication and OAuth sources; no product-specific revocation reference. | OWASP authentication and password storage unknown; OAuth security BCP RFC 9700 | REASONED |
+| offboarding: Promptly revoke provider membership, proxy sessions, application sessions and personal tokens when a person leaves; measure and shrink each system's maximum time-to-revoke where immediate revocation is unavailable. General authentication and OAuth sources; no product-specific revocation reference. | OWASP authentication and password storage unknown; OAuth security BCP RFC 9700; OWASP security guidance 668ba7db3d0da5868b8a0305c259f7f6914a6ecd; Microsoft Entra revocation model 231747abc59ae3d50c74e215c1cdd592eb980723 | REASONED |
 | verify-transports: Use real protocol clients against every non-public path and transport: HTTP returns 401, 403 or a login redirect; gRPC returns UNAUTHENTICATED; SSE is refused; WebSockets reject the upgrade or reject protected operations, disclose no protected data and close on first-message authentication failure. A bare curl GET does not test non-HTTP transports. General authentication source; no protocol-specific reference in Sources. | OWASP authentication and password storage unknown | REASONED |
-| verify-secret-scan: A secret scanner must find no leaks in the working tree, staged changes and full history; git log -p with a password/secret/API-key grep is supplementary and misses uncommitted files, some refs and secrets without those words. General authentication source; no scanner reference in Sources. | OWASP authentication and password storage unknown | REASONED |
+| verify-secret-scan: A secret scanner must find no leaks in the working tree, staged changes and full history; git log -p with a password/secret/API-key grep is supplementary and misses uncommitted files, some refs and secrets without those words. General authentication source; no scanner reference in Sources. | OWASP authentication and password storage unknown; Gitleaks scanning modes b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b | REASONED |
 | verify-default-accounts: Check that the user store has no admin, test or demo account with a known or empty password. General authentication source; no product-specific default-account reference. | OWASP authentication and password storage unknown | REASONED |
 | verify-wrong-tenant: Reject a wrong-tenant token in negative tests. General OIDC source; no tenant-specific vendor reference in Sources. | OpenID Connect Core 1.0 | REASONED |
 | verify-cross-user: Verify that user A cannot read user B's resources. General authentication source; no dedicated authorization reference in Sources. | OWASP authentication and password storage unknown | REASONED |
@@ -1370,6 +1382,25 @@ TLS without authentication leaves a service open to the whole internet over an e
 - NIST SP 800-63B-4 (password length, section 3.1.1.2): https://pages.nist.gov/800-63-4/sp800-63b.html
 - Apache htpasswd (bcrypt `-B`; cost `-C`, default 5): https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 - pyca/bcrypt changelog (5.0.0 rejects input over 72 bytes): https://github.com/pyca/bcrypt/blob/2b4ba9ac84df972e8e81311d09559af8dc82ef33/CHANGELOG.rst
+- OpenSSL 3.5 rand and base64 output (checked October 2026): https://docs.openssl.org/3.5/man1/openssl-rand/
+- Python 3.13 secrets.token_urlsafe (checked October 2026): https://docs.python.org/3.13/library/secrets.html#secrets.token_urlsafe
+- Gitleaks git, directory and stdin scanning (pinned commit b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b, checked October 2026): https://github.com/gitleaks/gitleaks/blob/b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b/README.md#L172-L189
+- Git v2.49.0 ignore rules exclude untracked files (checked October 2026): https://github.com/git/git/blob/v2.49.0/Documentation/gitignore.adoc#L15-L18
+- OWASP compromised credentials and secret revocation (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Secrets_Management_Cheat_Sheet.md#L214-L218
+- OWASP session-cookie attributes (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L163
+- OWASP random session IDs and strict verification (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L265-L267
+- OWASP session-ID renewal and invalidation after privilege changes (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L275
+- OWASP server-side session invalidation on logout (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L317
+- OWASP server-side idle and absolute session timeouts (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L323-L331
+- OWASP browser storage and session identifiers (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/HTML5_Security_Cheat_Sheet.md#L53
+- OWASP SameSite limitations (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L149
+- OWASP CSRF tokens, origin checks and safe methods (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md#L17-L26
+- OWASP Fetch Metadata cross-site policy (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md#L197
+- OWASP Fetch Metadata sibling-domain trust (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md#L226
+- OWASP API4:2023 resource and spending limits (checked October 2026): https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption/
+- OWASP request-size limits (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Denial_of_Service_Cheat_Sheet.md#L80
+- OWASP connection timeouts and concurrent resource limits (pinned commit 668ba7db3d0da5868b8a0305c259f7f6914a6ecd, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Denial_of_Service_Cheat_Sheet.md#L110-L113
+- Microsoft Entra application-session revocation (pinned commit 231747abc59ae3d50c74e215c1cdd592eb980723, checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/users/users-revoke-access.md#L62
 
 ======================================================================
 ==> mfa.md
@@ -1382,7 +1413,7 @@ TLS without authentication leaves a service open to the whole internet over an e
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -1397,28 +1428,28 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | webauthn-verification: Store the credential public key and sign count; require and verify UV server-side when a passkey stands alone. | WebAuthn standard unknown | REASONED |
 | webauthn-counter: Treat sign count as advisory, not a hard clone-block; many synced passkeys report zero. | WebAuthn standard unknown | REASONED |
 | verify-secret-storage: Check that no TOTP secret appears in the repository or its history. | TOTP standard unknown | REASONED |
-| mfa-enforcement: Give every exposed human-facing login a second factor where viable; prefer native or IdP-enforced MFA, then an identity layer whose own or upstream policy requires MFA, app-level TOTP, then a hosted MFA service. Enrollment alone is not enforcement. General TOTP source; no provider-policy reference in Sources. | TOTP standard unknown | REASONED |
-| push-matching: Prefer WebAuthn/passkeys over TOTP or push, and those over email or SMS codes. TOTP and push are not phishing-resistant; push must use number matching or verified push, never bare approve/deny, to resist prompt-bombing. WebAuthn and general Duo pricing sources; no pinned push-policy reference in Sources. | WebAuthn standard unknown; Duo editions unknown | REASONED |
-| totp-activation: Verify one valid TOTP code before activating the factor. General TOTP source; no pinned implementation reference. | TOTP standard unknown | REASONED |
-| recovery-codes: Issue single-use recovery codes and store hashes rather than the code values; Verify checks both storage and refusal on reuse. General TOTP source; no recovery-code storage or lifecycle reference in Sources. | TOTP standard unknown | REASONED |
-| factor-changes: Require re-verification of the existing factor before disabling or replacing it or minting new recovery codes, so a password-only or stolen session cannot remove MFA. General TOTP source; no factor-change policy reference in Sources. | TOTP standard unknown | REASONED |
+| mfa-enforcement: Give every exposed human-facing login a second factor where viable; prefer native or IdP-enforced MFA, then an identity layer whose own or upstream policy requires MFA, app-level TOTP, then a hosted MFA service. Enrollment alone is not enforcement. General TOTP source; no provider-policy reference in Sources. | TOTP standard unknown; Microsoft Entra documentation 231747abc59ae3d50c74e215c1cdd592eb980723; Auth0 archived documentation 5258d17ede3eea0ed0e330d15f8921a542564f68; Auth0 MFA documentation unknown; Amazon Cognito API source 2ba0e39015ddf9c91c6c378f8a4fb79dcb4353da; Clerk documentation 26ef3ace7508d46d6242c377e830a7791b0a2fdb; Supabase documentation 10c7379c970ae4d2f30f3158194061cf5ffb8fc5 | REASONED |
+| push-matching: Prefer WebAuthn/passkeys over TOTP or push, and those over email or SMS codes. TOTP and push are not phishing-resistant; push must use number matching or verified push, never bare approve/deny, to resist prompt-bombing. WebAuthn and general Duo pricing sources; no pinned push-policy reference in Sources. | WebAuthn standard unknown; Duo editions unknown; Microsoft Entra documentation 231747abc59ae3d50c74e215c1cdd592eb980723 | REASONED |
+| totp-activation: Verify one valid TOTP code before activating the factor. General TOTP source; no pinned implementation reference. | TOTP standard unknown; pquerna/otp source 617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870 | REASONED |
+| recovery-codes: Issue single-use recovery codes and store hashes rather than the code values; Verify checks both storage and refusal on reuse. General TOTP source; no recovery-code storage or lifecycle reference in Sources. | TOTP standard unknown; NIST digital identity guidelines SP 800-63B-4; OWASP cheat sheets 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| factor-changes: Require re-verification of the existing factor before disabling or replacing it or minting new recovery codes, so a password-only or stolen session cannot remove MFA. General TOTP source; no factor-change policy reference in Sources. | TOTP standard unknown; OWASP cheat sheets 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | admin-factors: Give administrators a phishing-resistant passkey or FIDO2 key wherever offered; TOTP is the floor and SMS is unacceptable for administrator accounts. General WebAuthn source; no administrator-policy reference in Sources. | WebAuthn standard unknown | REASONED |
-| authelia-factors: The body lists TOTP, WebAuthn/passkeys and mobile push for Authelia. General proxy support matrix only; no pinned factor-support reference in Sources. | Authelia proxy support unknown | REASONED |
+| authelia-factors: The body lists TOTP, WebAuthn/passkeys and mobile push for Authelia. General proxy support matrix only; no pinned factor-support reference in Sources. | Authelia proxy support unknown; Authelia source v4.39.28 | REASONED |
 | identity-layer-factors: The body lists authentik OIDC/SAML with TOTP and WebAuthn, Keycloak OIDC/SAML with built-in OTP enrollment, and oauth2-proxy with MFA inherited from its upstream provider's enforcement. General TOTP/WebAuthn standards only; Sources has no vendor references for these product capabilities. | authentik, Keycloak and oauth2-proxy MFA (citation gap) unknown | REASONED |
-| totp-libraries: The body lists pyotp with qrcode and django-otp, Node otplib with qrcode, and pquerna/otp with QR generation as RFC 6238 implementation options. General TOTP source only; Sources has no library-specific references. | TOTP standard unknown | REASONED |
-| ssh-pam-enforcement: Make SSH PAM MFA mandatory with UsePAM yes, KbdInteractiveAuthentication yes and AuthenticationMethods publickey,keyboard-interactive:pam; :pam pins the second step to PAM and the public-key-first sequence still runs it for key-based login. General TOTP standard only; Sources has no sshd or PAM vendor reference. | SSH and PAM MFA (citation gap) unknown | REASONED |
+| totp-libraries: The body lists pyotp with qrcode and django-otp, Node otplib with qrcode, and pquerna/otp with QR generation as RFC 6238 implementation options. General TOTP source only; Sources has no library-specific references. | TOTP standard unknown; PyOTP source cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1; Python qrcode source f92c007498d796e4825638b7d50c14ea51e5457a; django-otp source 88cf4970423b11f29d6840311f53378d007a3d63; otplib source c5c11be2a50fd864b587854bff6d97c5f8aa9c84; Node qrcode source 3848ed2c17de5bcdead487417dbf14c5dd017f8d; pquerna/otp source 617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870 | REASONED |
+| ssh-pam-enforcement: Make SSH PAM MFA mandatory with UsePAM yes, KbdInteractiveAuthentication yes and AuthenticationMethods publickey,keyboard-interactive:pam; :pam pins the second step to PAM and the public-key-first sequence still runs it for key-based login. General TOTP standard only; Sources has no sshd or PAM vendor reference. | SSH and PAM MFA (citation gap) unknown; OpenSSH portable source V_9_9_P2 | REASONED |
 | ssh-nullok: Remove nullok after rollout so unenrolled users are denied; the body identifies google-authenticator-libpam as per-user TOTP for SSH and console login with terminal QR enrollment. General TOTP standard only; Sources has no PAM-module vendor reference. | SSH and PAM MFA (citation gap) unknown | REASONED |
-| duo-unix-failmode: Duo Unix pam_duo adds SSH push MFA; set failmode=secure for mandatory MFA because default safe grants access when Duo is unreachable, and keep a separately controlled emergency path. General Duo pricing source; Sources has no Duo Unix configuration reference. | Duo editions unknown | REASONED |
-| supabase-assurance: Supabase admits an aal1 session unless app and database policies require aal2; enrollment or enabling a factor is not enforcement, so inspect and test the effective policy. General TOTP standard only; Sources has no Supabase vendor reference. | Supabase Auth MFA (citation gap) unknown | REASONED |
+| duo-unix-failmode: Duo Unix pam_duo adds SSH push MFA; set failmode=secure for mandatory MFA because default safe grants access when Duo is unreachable, and keep a separately controlled emergency path. General Duo pricing source; Sources has no Duo Unix configuration reference. | Duo editions unknown; Duo Unix source 91e3c987f256afdb166b26be777cef6e1ab2af11 | REASONED |
+| supabase-assurance: Supabase admits an aal1 session unless app and database policies require aal2; enrollment or enabling a factor is not enforcement, so inspect and test the effective policy. General TOTP standard only; Sources has no Supabase vendor reference. | Supabase Auth MFA (citation gap) unknown; Supabase documentation 10c7379c970ae4d2f30f3158194061cf5ffb8fc5 | REASONED |
 | duo-proxy: Duo Authentication Proxy speaks RADIUS and LDAP to retrofit MFA onto VPNs and services with RADIUS support. General Duo pricing source; Sources has no Authentication Proxy reference. | Duo editions unknown | REASONED |
-| access-mfa: An Access emailed one-time PIN proves mailbox control only; require MFA at the connected IdP for this login or Access independent MFA with TOTP or a WebAuthn key. General TOTP/WebAuthn standards only; Sources has no Cloudflare vendor reference. | Cloudflare Access MFA (citation gap) unknown | REASONED |
+| access-mfa: An Access emailed one-time PIN proves mailbox control only; require MFA at the connected IdP for this login or Access independent MFA with TOTP or a WebAuthn key. General TOTP/WebAuthn standards only; Sources has no Cloudflare vendor reference. | Cloudflare Access MFA (citation gap) unknown; Cloudflare documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | webauthn-library: Use a maintained WebAuthn library rather than hand-parsing attestation. General WebAuthn standard; no library-specific reference in Sources. | WebAuthn standard unknown | REASONED |
-| webauthn-recovery: Keep a second key or single-use recovery codes to avoid lost-key lockout; for administrators on phishing-resistant keys, prefer a second hardware key because printed codes are phishable, and rate-limit and alert on recovery-code use. General WebAuthn source; no recovery-policy reference in Sources. | WebAuthn standard unknown | REASONED |
+| webauthn-recovery: Keep a second key or single-use recovery codes to avoid lost-key lockout; for administrators on phishing-resistant keys, prefer a second hardware key because printed codes are phishable, and rate-limit and alert on recovery-code use. General WebAuthn source; no recovery-policy reference in Sources. | WebAuthn standard unknown; NIST digital identity guidelines SP 800-63B-4; OWASP cheat sheets 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | mysql-factors: The body states that MySQL 8 supports up to three factors for interactive human login and its server-side WebAuthn plugin requires Enterprise Edition. General WebAuthn standard only; Sources has no MySQL vendor reference supporting the version, factor count or edition requirement. | MySQL interactive MFA (citation gap) unknown | REASONED |
 | unattended-mtls: Unattended database and model-server API connections have no interactive second-factor dialogue; use mutual TLS client certificates as the service's possession factor and MFA on human paths through SSH, bastions and admin panels. General MFA standards only; Sources has no mTLS deployment reference. | TOTP standard unknown; WebAuthn standard unknown | REASONED |
-| verify-mfa-operation: After enrollment and enforcement, a password-only attempt at an MFA-protected operation must fail and completing the second factor must allow it. Opening an aal1 session alone is not a failure when enforcement occurs at the operation. General TOTP source; no provider or app-policy reference in Sources. | TOTP standard unknown | REASONED |
+| verify-mfa-operation: After enrollment and enforcement, a password-only attempt at an MFA-protected operation must fail and completing the second factor must allow it. Opening an aal1 session alone is not a failure when enforcement occurs at the operation. General TOTP source; no provider or app-policy reference in Sources. | TOTP standard unknown; Supabase documentation 10c7379c970ae4d2f30f3158194061cf5ffb8fc5 | REASONED |
 | verify-recovery-history: Verify that no recovery code appears in the repository or its history. General TOTP source; no recovery-code scanning reference in Sources. | TOTP standard unknown | REASONED |
-| verify-offboarding: Verify that a departed user's second factor, active sessions and app-level access are revoked; changing only the password is insufficient. General TOTP source; no offboarding or session-revocation reference in Sources. | TOTP standard unknown | REASONED |
+| verify-offboarding: Verify that a departed user's second factor, active sessions and app-level access are revoked; changing only the password is insufficient. General TOTP source; no offboarding or session-revocation reference in Sources. | TOTP standard unknown; Microsoft Entra documentation 231747abc59ae3d50c74e215c1cdd592eb980723; OWASP cheat sheets 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 <!-- version-basis:end -->
 
 Passwords fail through phishing, reuse, and credential stuffing; a second factor keeps a stolen password from becoming access. This guide names the options and the references; it deliberately stops short of per-product walkthroughs, because an AI assistant that knows which option fits can implement it from the linked project documentation. The per-tool guides in this repository state what is viable for each stack.
@@ -1489,6 +1520,32 @@ Unattended machine connections (service-to-service database and model-server API
 - WebAuthn: https://www.w3.org/TR/webauthn-2/
 - Authelia proxy support matrix (Caddy 2.5.1 and later): https://www.authelia.com/integration/proxies/support/
 - Duo editions and pricing: https://duo.com/editions-and-pricing
+- Microsoft Entra documentation `231747abc59ae3d50c74e215c1cdd592eb980723`, application session revocation (checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/users/users-revoke-access.md#L58-L62
+- OWASP cheat sheets `668ba7db3d0da5868b8a0305c259f7f6914a6ecd`, revocation of unneeded or compromised secrets (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Secrets_Management_Cheat_Sheet.md#L218
+- pquerna/otp source `617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870`, TOTP enrollment validation (checked October 2026): https://github.com/pquerna/otp/blob/617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870/README.md#L27-L30
+- OWASP cheat sheets `668ba7db3d0da5868b8a0305c259f7f6914a6ecd`, reauthentication before factor changes (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Multifactor_Authentication_Cheat_Sheet.md#L154-L155
+- NIST digital identity guidelines `SP 800-63B-4`, single-use look-up secrets and hashed storage (checked October 2026): https://pages.nist.gov/800-63-4/sp800-63b/authenticators/#look-up-secrets
+- OWASP cheat sheets `668ba7db3d0da5868b8a0305c259f7f6914a6ecd`, recovery codes and alternate factors (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Multifactor_Authentication_Cheat_Sheet.md#L142-L143
+- Authelia source `v4.39.28`, TOTP, WebAuthn security keys and Duo push factors (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/introduction.md#L21-L31
+- PyOTP source `cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1`, OTP generation, verification and RFC 6238 support (checked October 2026): https://github.com/pyauth/pyotp/blob/cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1/README.rst#L4-L9
+- Python qrcode source `f92c007498d796e4825638b7d50c14ea51e5457a`, QR code generation (checked October 2026): https://github.com/lincolnloop/python-qrcode/blob/f92c007498d796e4825638b7d50c14ea51e5457a/README.rst#L5-L8
+- django-otp source `88cf4970423b11f29d6840311f53378d007a3d63`, Django integration and HOTP/TOTP implementations (checked October 2026): https://github.com/django-otp/django-otp/blob/88cf4970423b11f29d6840311f53378d007a3d63/README.rst#L16-L28
+- otplib source `c5c11be2a50fd864b587854bff6d97c5f8aa9c84`, HOTP/TOTP and Node support (checked October 2026): https://github.com/yeojz/otplib/blob/c5c11be2a50fd864b587854bff6d97c5f8aa9c84/README.md#L13
+- Node qrcode source `3848ed2c17de5bcdead487417dbf14c5dd017f8d`, QR code generation (checked October 2026): https://github.com/soldair/node-qrcode/blob/3848ed2c17de5bcdead487417dbf14c5dd017f8d/README.md#L2
+- pquerna/otp source `617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870`, TOTP/HOTP generation, validation and QR images (checked October 2026): https://github.com/pquerna/otp/blob/617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870/README.md#L15-L18
+- OpenSSH portable source `V_9_9_P2`, ordered authentication methods and the PAM device (checked October 2026): https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshd_config.5#L197-L211
+- OpenSSH portable source `V_9_9_P2`, UsePAM and keyboard-interactive authentication (checked October 2026): https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshd_config.5#L2017-L2026
+- Duo Unix source `91e3c987f256afdb166b26be777cef6e1ab2af11`, pam_duo failmode and push approval (checked October 2026): https://github.com/duosecurity/duo_unix/blob/91e3c987f256afdb166b26be777cef6e1ab2af11/pam_duo/pam_duo.8#L44-L53
+- Microsoft Entra documentation `231747abc59ae3d50c74e215c1cdd592eb980723`, Conditional Access MFA authentication-strength requirement (checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/conditional-access/policy-all-users-mfa-strength.md#L56-L57
+- Microsoft Entra documentation `231747abc59ae3d50c74e215c1cdd592eb980723`, Authenticator push number matching (checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/authentication/how-to-mfa-number-match.md#L12
+- Auth0 archived documentation `5258d17ede3eea0ed0e330d15f8921a542564f68`, factor enablement and separate MFA enforcement choice (checked October 2026): https://github.com/auth0/docs/blob/5258d17ede3eea0ed0e330d15f8921a542564f68/articles/mfa/guides/enable-mfa.md#L12
+- Auth0 MFA documentation, current factor and enforcement policy documentation (rolling documentation, checked October 2026): https://auth0.com/docs/secure/multi-factor-authentication/enable-mfa
+- Amazon Cognito API source `2ba0e39015ddf9c91c6c378f8a4fb79dcb4353da`, required versus optional MFA (checked October 2026): https://github.com/aws/aws-sdk-go-v2/blob/2ba0e39015ddf9c91c6c378f8a4fb79dcb4353da/service/cognitoidentityprovider/api_op_SetUserPoolMfaConfig.go#L67-L76
+- Clerk documentation `26ef3ace7508d46d6242c377e830a7791b0a2fdb`, application-wide versus user-selected MFA (checked October 2026): https://github.com/clerk/clerk-docs/blob/26ef3ace7508d46d6242c377e830a7791b0a2fdb/docs/guides/configure/auth-strategies/sign-up-sign-in-options.mdx#L168-L171
+- Supabase documentation `10c7379c970ae4d2f30f3158194061cf5ffb8fc5`, server-side MFA enforcement beyond enrollment UI (checked October 2026): https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/auth/auth-mfa.mdx#L94-L96
+- Supabase documentation `10c7379c970ae4d2f30f3158194061cf5ffb8fc5`, restrictive RLS requiring aal2 (checked October 2026): https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/auth/auth-mfa.mdx#L192-L200
+- Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, email one-time PIN login (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/integrations/identity-providers/one-time-pin.mdx#L15
+- Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, independent MFA with TOTP and WebAuthn security keys (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24
 
 ======================================================================
 ==> secrets.md
@@ -2710,7 +2767,7 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -2744,16 +2801,16 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-allowlist: An authenticated outside account must be denied while an allowed account reaches the application. | GitHub OAuth apps unknown; AWS IAM Identity Center and ALB unknown | REASONED |
 | verify-logs: Correlate provider sign-in records with application authorization decisions; Entra Sign-in logs record logins and Audit logs record configuration changes. A sign-in alone proves no enforcement. | Microsoft Entra documentation unknown | REASONED |
 | google-org-mfa: Google Workspace or Cloud Identity administrators can enforce 2-Step Verification for the whole organization in the admin console; Sign in with Google OIDC has no per-app charge as recorded in September 2026. General Cloud Identity pricing source; no pinned enforcement or OIDC-pricing reference. | Google Cloud Identity pricing unknown | REASONED |
-| okta-verify-factors: Okta Verify supports push, TOTP and FastPass. General Okta pricing source; no pinned authenticator-capability reference in Sources. | Okta pricing unknown | REASONED |
+| okta-verify-factors: Okta Verify supports push, TOTP and FastPass. General Okta pricing source; no pinned authenticator-capability reference in Sources. | Okta pricing unknown; Okta Verify documentation a4f65eea34b89af7f2f543e43a74a0dfbc709cd0 | REASONED |
 | auth0-passkey-policy: Auth0 Free passkeys with verified user verification are phishing-resistant multifactor, but enabling passkeys does not disable password sign-in or provide the separately licensed enforced-factor and step-up MFA policy. General Auth0 pricing source; no pinned passkey or password-disablement reference. | Auth0 documentation unknown | REASONED |
-| supabase-aal2: Require aal2 in Supabase authorization policies; TOTP enrollment alone does not enforce MFA. General Supabase pricing source; no pinned assurance-policy reference in Sources. | Supabase pricing unknown | REASONED |
+| supabase-aal2: Require aal2 in Supabase authorization policies; TOTP enrollment alone does not enforce MFA. General Supabase pricing source; no pinned assurance-policy reference in Sources. | Supabase pricing unknown; Supabase MFA documentation 10c7379c970ae4d2f30f3158194061cf5ffb8fc5 | REASONED |
 | entra-every-signin: Entra P1 Conditional Access is how the body requires MFA for everyone on every sign-in, unlike security defaults' conditional prompting for non-admin users. General pricing and security-defaults sources; no dedicated Conditional Access configuration reference in Sources. | Microsoft Entra documentation unknown | REASONED |
 | application-allowlist: After provider login, the application or fronting layer must check a tenant, hosted-domain, group or explicit-user allowlist; accepting every Google or Microsoft account as staff is not authorization. General GitHub OAuth and ALB authentication sources; no Google or Microsoft allowlist reference in Sources. | GitHub OAuth apps unknown; AWS IAM Identity Center and ALB unknown | REASONED |
 | firebase-data-policy: Firebase rules and Supabase RLS still decide data access after authentication. General Firebase authentication and Supabase pricing sources; no dedicated rules or RLS reference in Sources. | Firebase documentation unknown; Supabase pricing unknown | REASONED |
-| github-proxy-workloads: oauth2-proxy's GitHub provider can restrict organizations and teams; GitHub Actions OIDC is a separate workload mechanism, not this human OAuth login. General GitHub OAuth-apps source; no oauth2-proxy or Actions OIDC reference in Sources. | GitHub OAuth apps unknown | REASONED |
-| provider-authenticators: The body lists Microsoft Authenticator, Okta Verify and Google prompts as provider-native authenticators, and any RFC 6238 app where TOTP is offered. General Entra security-defaults and Okta/Google pricing sources; no pinned authenticator-compatibility reference. | Microsoft Entra documentation unknown; Okta pricing unknown; Google Cloud Identity pricing unknown | REASONED |
+| github-proxy-workloads: oauth2-proxy's GitHub provider can restrict organizations and teams; GitHub Actions OIDC is a separate workload mechanism, not this human OAuth login. General GitHub OAuth-apps source; no oauth2-proxy or Actions OIDC reference in Sources. | GitHub OAuth apps unknown; oauth2-proxy v7.15.4 | REASONED |
+| provider-authenticators: The body lists Microsoft Authenticator, Okta Verify and Google prompts as provider-native authenticators, and any RFC 6238 app where TOTP is offered. General Entra security-defaults and Okta/Google pricing sources; no pinned authenticator-compatibility reference. | Microsoft Entra documentation unknown; Okta pricing unknown; Google Cloud Identity pricing unknown; Okta Verify documentation a4f65eea34b89af7f2f543e43a74a0dfbc709cd0; Microsoft Authenticator documentation 231747abc59ae3d50c74e215c1cdd592eb980723 | REASONED |
 | admin-passkeys: Require phishing-resistant hardware keys or platform passkeys for administrators and check each provider's tier before relying on availability. General Entra security-defaults source; no provider-specific passkey-tier or WebAuthn reference in Sources. | Microsoft Entra documentation unknown | REASONED |
-| self-hosted-mfa: The body lists Keycloak, authentik, Zitadel, Ory and Authelia as self-hosted OIDC and MFA options; running them entails patching, backups and availability because compromise or outage affects every dependent app. General identity-policy source only; Sources has no vendor references for these self-hosted products. | Microsoft Entra documentation unknown | REASONED |
+| self-hosted-mfa: The body lists Keycloak, authentik, Zitadel, Ory and Authelia as self-hosted OIDC and MFA options; running them entails patching, backups and availability because compromise or outage affects every dependent app. General identity-policy source only; Sources has no vendor references for these self-hosted products. | Microsoft Entra documentation unknown; Authelia v4.39.28; Zitadel documentation ab3b44cd743709649e46f7708da2f6a6a70bc227 | REASONED |
 <!-- version-basis:end -->
 
 [authentication.md](authentication.md) says to prefer SSO or OIDC over local accounts and to enforce MFA at the identity provider. This guide names the providers, states what their free tiers include, and says who each fits. Wiring instructions live in [oidc-integration.md](oidc-integration.md); login placed in front of an app without code changes lives in [cloud-identity-proxies.md](cloud-identity-proxies.md) and [cloudflare.md](cloudflare.md).
@@ -2836,6 +2893,15 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 - Duo Authentication Proxy reference (`failmode` default `safe`): https://duo.com/docs/authproxy-reference
 - Auth0 Adaptive MFA (requires an Enterprise plan plus the add-on): https://auth0.com/docs/secure/multi-factor-authentication/adaptive-mfa
 - Microsoft Entra sign-in logs (sign-ins live in Sign-in logs; Audit logs record configuration changes): https://learn.microsoft.com/en-us/entra/identity/monitoring-health/concept-sign-ins
+- Authelia v4.39.28 second factors (TOTP, WebAuthn and Duo push; checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/introduction.md#L23-L31
+- Authelia v4.39.28 OpenID Connect provider (open beta; checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/identity-providers/openid-connect/provider.md#L25-L28
+- Supabase MFA enforcement (pinned commit 10c7379c970ae4d2f30f3158194061cf5ffb8fc5, checked October 2026): https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/auth/auth-mfa.mdx#L96
+- Supabase `aal2` authorization policy (pinned commit 10c7379c970ae4d2f30f3158194061cf5ffb8fc5, checked October 2026): https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/auth/auth-mfa.mdx#L192-L196
+- Okta Verify TOTP, push and FastPass (pinned commit a4f65eea34b89af7f2f543e43a74a0dfbc709cd0, checked October 2026): https://github.com/okta/okta-developer-docs/blob/a4f65eea34b89af7f2f543e43a74a0dfbc709cd0/packages/@okta/vuepress-site/docs/guides/authenticators-okta-verify/main/index.md#L29
+- oauth2-proxy v7.15.4 GitHub organization/team restrictions and username exception (checked October 2026): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/providers/github.md#L10-L14
+- Zitadel OIDC and MFA capabilities (pinned commit ab3b44cd743709649e46f7708da2f6a6a70bc227, checked October 2026): https://github.com/zitadel/zitadel/blob/ab3b44cd743709649e46f7708da2f6a6a70bc227/README.md#L121-L123
+- Zitadel MFA methods (pinned commit ab3b44cd743709649e46f7708da2f6a6a70bc227, checked October 2026): https://github.com/zitadel/zitadel/blob/ab3b44cd743709649e46f7708da2f6a6a70bc227/apps/docs/content/guides/integrate/login-ui/mfa.mdx#L15-L19
+- Microsoft Authenticator passkey, passwordless and MFA support (pinned commit 231747abc59ae3d50c74e215c1cdd592eb980723, checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/authentication/concept-authentication-authenticator-app.md#L14
 
 ======================================================================
 ==> self-hosted-idp.md
@@ -2848,7 +2914,7 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -2898,7 +2964,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | authentik-mfa: authentik supports TOTP and WebAuthn; enroll a phishing-resistant administrator factor before connecting the first app and require it through a stage bound to the authentication flow. A registered device alone does not enforce MFA. General installation source; no pinned MFA-stage reference in Sources. | authentik operational documentation unknown | REASONED |
 | authentik-admin-boundary: authentik has no equivalent to hostname-admin or separate administration listener: its administration interface shares the process and port with other traffic and relies on its permission model. General installation source; no dedicated or pinned administration-boundary reference in Sources. | authentik operational documentation unknown | REASONED |
 | authentik-admin-proxy: Build any network boundary around authentik administration with proxy path restrictions and maintain the path list against a UI not designed around this separation. General installation source; no dedicated or pinned admin-path restriction reference in Sources. | authentik operational documentation unknown | REASONED |
-| verify-mfa-password: For both providers, open a fresh session with only the administrator password and confirm access is refused after factor enforcement; enrollment alone is insufficient. Keycloak administration and general authentik installation sources; no pinned authentik MFA-stage reference. | Keycloak documentation unknown; authentik operational documentation unknown | REASONED |
+| verify-mfa-password: For both providers, open a fresh session with only the administrator password and confirm access is refused after factor enforcement; enrollment alone is insufficient. Keycloak administration and general authentik installation sources; no pinned authentik MFA-stage reference. | Keycloak documentation unknown; authentik operational documentation unknown; authentik source version/2026.8.3 | REASONED |
 | management-auth-default: In this plain-HTTP Keycloak topology no HTTP client authentication is configured, so inherited management client authentication is usually none; required needs management TLS credentials and trust first. | Keycloak documentation unknown | REASONED |
 | docker-socket-scope: A worker mounting an ordinary rootful Docker daemon socket has host-root-equivalent control; with a rootless daemon the blast radius is that user. Check the daemon type. General authentik installation warning; no Docker privilege-model reference in Sources. | authentik operational documentation unknown | REASONED |
 | outpost-boundaries: authentik has an embedded server outpost and may deploy outposts on other hosts; each is another listener requiring its own exposure checks, none demonstrated by this guide's Verify probes. General installation source; no pinned outpost-listener reference in Sources. | authentik operational documentation unknown | REASONED |
@@ -3188,6 +3254,7 @@ One name is not one address, and one address is not one origin. Repeat steps 2 t
 - nginx `location` selection and the `return` directive: https://nginx.org/en/docs/http/ngx_http_core_module.html#location , https://nginx.org/en/docs/http/ngx_http_rewrite_module.html#return
 - Keycloak configuring distributed caches, including the default cache ports 7800 (`cache-embedded-network-bind-port`, unicast data transmission) and 57800 (`jgroups.fd.port-offset`, failure detection), and that "Encryption using TLS is enabled by default for TCP-based transport stacks": https://www.keycloak.org/server/caching
 - authentik 2025.10 release notes, removing the Redis dependency ("authentik no longer uses Redis at all"): https://docs.goauthentik.io/releases/2025.10/
+- authentik source `version/2026.8.3`, MFA response validation (including empty-response rejection), successful-validation continuation and remembered-MFA cookie handling (checked October 2026): https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/stages/authenticator_validate/stage.py#L67-L166 , https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/stages/authenticator_validate/stage.py#L368-L443
 
 ======================================================================
 ==> oidc-integration.md
@@ -3200,7 +3267,7 @@ One name is not one address, and one address is not one origin. Repeat steps 2 t
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -3215,7 +3282,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | token-leaks: Keep codes and tokens out of logs, traces and analytics; set callback Referrer-Policy: no-referrer and redirect to a clean URL. | OAuth security BCP and PKCE unknown | REASONED |
 | refresh-tokens: No offline access is requested, but provider-specific refresh tokens must remain server-side secrets, go only to the token endpoint and be revoked on offboarding. | OAuth security BCP and PKCE unknown | REASONED |
 | account-linking: Link by issuer and sub, not mutable or non-unique email, phone_number or preferred_username. | OpenID Connect Core 1.0; Google identity documentation unknown; Microsoft Entra documentation unknown | REASONED |
-| logout: Destroy the server session and cookie; where advertised, redirect to end_session_endpoint with id_token_hint and registered post_logout_redirect_uri; Entra uses /oauth2/v2.0/logout. | OpenID Connect RP-Initiated Logout 1.0; Microsoft Entra documentation unknown | REASONED |
+| logout: Destroy the server session and cookie; where advertised, redirect to end_session_endpoint with id_token_hint and registered post_logout_redirect_uri; Entra uses /oauth2/v2.0/logout. | OpenID Connect RP-Initiated Logout 1.0; Microsoft Entra documentation unknown; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | discovery: Fetch issuer/.well-known/openid-configuration for endpoints and jwks_uri; tenant-specific issuer must match, with Entra common/organizations handled separately. | OpenID Connect Discovery 1.0; Microsoft Entra documentation unknown | REASONED |
 | google-allowlist: Require verified ID-token hd to equal the Workspace domain; absent hd is rejection and the request parameter is not access control. | Google identity documentation unknown | REASONED |
 | entra-allowlist: Require allowed tid and tenant-specific iss; prefer Single tenant only. organizations accepts any Entra tenant, common also personal accounts; key identity by oid or sub plus tid. | Microsoft Entra documentation unknown | REASONED |
@@ -3244,9 +3311,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-redirect: Changing redirect_uri host or adding a path segment must cause a provider error without redirection. | OAuth security BCP and PKCE unknown | REASONED |
 | verify-state: A changed callback state must be rejected. | OAuth security BCP and PKCE unknown | REASONED |
 | verify-token: Accept a valid ID-token control and reject one-property fixtures for expiry beyond skew, wrong aud/azp and broken signature in the token-validation path, not the code callback. | OpenID Connect Core 1.0 | REASONED |
-| verify-logout: After logout a protected page returns to login and a copied old cookie stops authorizing; JWT sessions need database replacement or a revocation check. | Auth.js unknown; OpenID Connect RP-Initiated Logout 1.0 | REASONED |
-| server-session: After token validation and allowlist authorization, create a server-side session and give the browser only a session cookie marked Secure, HttpOnly and SameSite. Auth.js session-strategies is the nearest general session source; no dedicated reference for the complete cookie policy in Sources. | Auth.js unknown | REASONED |
-| browser-token-storage: Do not store ID or access tokens in localStorage or script-readable cookies; this server-side login recipe has no browser need for them. General OAuth security source; no dedicated browser-storage reference in Sources. | OAuth security BCP and PKCE unknown | REASONED |
+| verify-logout: After logout a protected page returns to login and a copied old cookie stops authorizing; JWT sessions need database replacement or a revocation check. | Auth.js unknown; OpenID Connect RP-Initiated Logout 1.0; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| server-session: After token validation and allowlist authorization, create a server-side session and give the browser only a session cookie marked Secure, HttpOnly and SameSite. Auth.js session-strategies is the nearest general session source; no dedicated reference for the complete cookie policy in Sources. | Auth.js unknown; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| browser-token-storage: Do not store ID or access tokens in localStorage or script-readable cookies; this server-side login recipe has no browser need for them. General OAuth security source; no dedicated browser-storage reference in Sources. | OAuth security BCP and PKCE unknown; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | client-secret-storage: Keep the client secret in an environment variable or secret manager, never a repository or image. General OAuth security source; no dedicated secret-storage reference in Sources. | OAuth security BCP and PKCE unknown | REASONED |
 | github-org-mfa: GitHub OAuth has no ID token, so MFA depends on what the organization requires of its members. OAuth authorization and organization-membership references only; Sources has no GitHub organization-MFA-policy reference. | GitHub OAuth and REST documentation unknown | REASONED |
 | authjs-session-storage: Auth.js stores an encrypted JWT or database session ID in an HttpOnly cookie; use database sessions or a server blocklist when copied-cookie revocation is required. | Auth.js unknown | REASONED |
@@ -3364,6 +3431,10 @@ Negative tests matter more than the happy path:
 - Auth.js (installation, providers): https://authjs.dev/ ; session strategies (a JWT cannot be expired early without a blocklist): https://authjs.dev/concepts/session-strategies
 - Authlib Flask client: https://docs.authlib.org/en/stable/oauth2/client/web/flask.html
 - go-oidc: https://pkg.go.dev/github.com/coreos/go-oidc/v3/oidc
+- OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd: session cookie attributes (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L163
+- OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd: server-side session invalidation (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L317
+- OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd: browser token storage (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L201
+- OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd: local storage and HttpOnly cookies (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/HTML5_Security_Cheat_Sheet.md#L53
 
 ======================================================================
 ==> cloud-identity-proxies.md
@@ -3714,7 +3785,7 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -3740,10 +3811,10 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | authelia-identity: nginx copies verified Remote-User/Groups/Name/Email and uses the auth Location for 401 redirection; trusted client headers must be overwritten. | Authelia documentation (rolling) unknown | REASONED |
 | authelia-traefik: Traefik calls authelia:9091/api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia documentation (rolling) unknown | REASONED |
 | authelia-caddy: Caddy forward_auth calls authelia:9091 with /api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia documentation (rolling) unknown | REASONED |
-| authelia-session: Authelia needs a random session secret and path access rules selecting one_factor or two_factor. | Authelia documentation (rolling) unknown | REASONED |
+| authelia-session: Authelia needs a random session secret and path access rules selecting one_factor or two_factor. | Authelia documentation (rolling) unknown; Authelia v4.39.28 | REASONED |
 | authelia-mfa: Authelia enforces TOTP, WebAuthn/passkeys or Duo push itself. | Authelia documentation (rolling) unknown | REASONED |
 | pomerium-idp: Pomerium combines routing, TLS and access control; configure idp_provider, idp_provider_url, idp_client_id and idp_client_secret. | Pomerium unknown | REASONED |
-| pomerium-policy: Each Pomerium route carries policy restricting users, domains or claims. | Pomerium unknown | REASONED |
+| pomerium-policy: Each Pomerium route carries policy restricting users, domains or claims. | Pomerium unknown; Pomerium policy documentation 691714e2f0ae74fab47412275e8b64b68acdc0d3 | REASONED |
 | idp-mfa: oauth2-proxy and Pomerium rely on MFA enforced by their identity provider. | oauth2-proxy v7.15.4; Pomerium unknown | REASONED |
 | verify-listeners: Inspect every listener: app 3000, oauth2-proxy 4180 and Authelia 9091 must be reachable only by the proxy. | oauth2-proxy v7.15.4; Authelia v4.39.28 | REASONED |
 | verify-direct: From another host, all three ports must refuse/time out at the actual address; HTTP proves exposure and local/resolver failures are inconclusive. | curl minimum write-out version 7.75.0; oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
@@ -3931,6 +4002,12 @@ After a real login through the proxy, confirm a session reaches the app and the 
 - Authelia listens with `net.Listen(a.Network(), a.NetworkAddress())` (`types_addresses_nix.go` L37), where `NetworkAddress()` returns the URL's host and port, `:9091` for the default (`types_address.go` L480) (pinned tag v4.39.28): https://github.com/authelia/authelia/blob/v4.39.28/internal/configuration/schema/types_addresses_nix.go#L37
 - Go `net.Listen` with an empty host listens on all available unicast and anycast addresses of the local system: https://pkg.go.dev/net#Listen
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
+- Authelia v4.39.28 random session secret (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/session/introduction.md#L78-L82
+- Authelia v4.39.28 path-matching resources (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/security/access-control.md#L102
+- Authelia v4.39.28 one_factor and two_factor policies (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/security/access-control.md#L527-L537
+- Pomerium route authorization policy (pinned commit 691714e2f0ae74fab47412275e8b64b68acdc0d3, checked October 2026): https://github.com/pomerium/documentation/blob/691714e2f0ae74fab47412275e8b64b68acdc0d3/content/docs/reference/routes/policy.mdx#L20
+- Pomerium domain and user policy examples (pinned commit 691714e2f0ae74fab47412275e8b64b68acdc0d3, checked October 2026): https://github.com/pomerium/documentation/blob/691714e2f0ae74fab47412275e8b64b68acdc0d3/content/docs/internals/ppl.mdx#L50-L52
+- Pomerium domain and group-claim policy (pinned commit 691714e2f0ae74fab47412275e8b64b68acdc0d3, checked October 2026): https://github.com/pomerium/documentation/blob/691714e2f0ae74fab47412275e8b64b68acdc0d3/content/docs/internals/ppl.mdx#L90
 
 ======================================================================
 ==> apache.md
@@ -3943,11 +4020,11 @@ After a real login through the proxy, confirm a session reaches the app and the 
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| certbot: The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. Certbot is not in Sources. | Apache HTTP Server 2.4 | REASONED |
+| certbot: The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. Certbot is not in Sources. | Apache HTTP Server 2.4; Certbot Apache installation v2.3.0 | REASONED |
 | modules: Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; package-command sources are absent. | Apache HTTP Server 2.4 | REASONED |
 | tls: The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only. | Apache HTTP Server 2.4 | REASONED |
 | tls-version: TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1. | Apache HTTP Server 2.4; Apache TLSv1.3 minimum 2.4.36+; OpenSSL qualification 1.1.1+ | REASONED |
@@ -4106,6 +4183,10 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 - Apache mod_ssl `SSLVHostSNIPolicy`, for the 421 a mismatched SNI and Host pairing can produce (TLSv1.3: Apache 2.4.36+ with OpenSSL 1.1.1+; per-vhost SSLProtocol: Apache 2.4.42+ with OpenSSL 1.1.1+ and client SNI; chain in SSLCertificateFile: Apache 2.4.8+): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy
 - Apache virtual host matching in detail, for SNI selecting the vhost on a TLS connection: https://httpd.apache.org/docs/2.4/vhosts/details.html
 - Mozilla SSL Configuration Generator: https://ssl-config.mozilla.org/
+- Certbot v2.3.0 Apache installation (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L104-L106
+- Certbot v2.3.0 redirect default and enhancement application (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L646 ; https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L674-L677
+- Certbot v2.3.0 redirect and opt-in HSTS defaults (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/constants.py#L66-L68
+- Apache 2.4 `Header always set` response-header handling (checked October 2026): https://httpd.apache.org/docs/2.4/mod/mod_headers.html
 
 ======================================================================
 ==> nginx.md
@@ -4118,15 +4199,15 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot. | nginx documentation unknown | REASONED |
+| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot. | nginx documentation unknown; Certbot nginx configurator v2.3.0 | REASONED |
 | tls: 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off. | nginx documentation unknown | REASONED |
 | http2: http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed. | nginx documentation unknown | REASONED |
 | tokens: server_tokens off suppresses nginx version in headers and error pages. | nginx documentation unknown | REASONED |
-| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. Sources omit the headers module. | nginx documentation unknown | REASONED |
+| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. Sources omit the headers module. | nginx documentation unknown; HSTS specification RFC 6797; nginx header-filter source release-1.26.3 | REASONED |
 | hsts-inheritance: A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. Sources omit the headers module. | nginx documentation unknown | REASONED |
 | proxy: Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host. | nginx documentation unknown | REASONED |
 | forwarded-host: Overwrite X-Forwarded-Host: client-set values otherwise pass upstream. | nginx documentation unknown | REASONED |
@@ -4346,6 +4427,9 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 - ngx_http_auth_basic_module: https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html
 - Real IP module (`set_real_ip_from`, `real_ip_header`) for nginx behind a CDN or proxy: https://nginx.org/en/docs/http/ngx_http_realip_module.html
 - Mozilla SSL Configuration Generator: https://ssl-config.mozilla.org/
+- Certbot v2.3.0 nginx server-block installation (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot-nginx/certbot_nginx/_internal/configurator.py#L711
+- RFC 6797 HSTS policy lifetime and subdomains (checked October 2026): https://www.rfc-editor.org/rfc/rfc6797.html#section-6.1.2
+- nginx release-1.26.3 header-filter `always` handling (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218
 
 ======================================================================
 ==> lighttpd.md
@@ -4734,7 +4818,7 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -4748,7 +4832,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | hsts: http-after-response (HAProxy 2.2+) covers generated 401/413 responses that http-response misses; includeSubDomains requires HTTPS on every affected subdomain. | HAProxy 3.0; HAProxy http-after-response minimum 2.2+ | REASONED |
 | backend: Example backend is plaintext 127.0.0.1:3000 with health checks; keep it private. | HAProxy 3.0 | REASONED |
 | remote-backend: Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name. | HAProxy 3.0 | REASONED |
-| basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. Sources omit openssl passwd -6. | HAProxy 3.0 | REASONED |
+| basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. Sources omit openssl passwd -6. | HAProxy 3.0; OpenSSL password command 3.0 | REASONED |
 | mtls: For machine access, bind verify required with ca-file requires trusted client certificates. | HAProxy 3.0 | REASONED |
 | mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or use Cloudflare Access for human MFA. | Supporting documentation unknown | REASONED |
 | maxconn: Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend. | HAProxy 3.0 | REASONED |
@@ -4996,6 +5080,7 @@ sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorize
 - HAProxy statistics dashboard (`stats enable`/`auth`/`admin` capabilities): https://www.haproxy.com/documentation/haproxy-configuration-tutorials/alerts-and-monitoring/statistics/
 - Authelia HAProxy integration (MFA portal): https://www.authelia.com/integration/proxies/haproxy/
 - Mozilla SSL Configuration Generator (TLS policy, not HAProxy syntax): https://ssl-config.mozilla.org/
+- OpenSSL 3.0 `passwd -6` SHA-512 crypt and terminal prompting (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-passwd/
 
 ======================================================================
 ==> traefik.md
@@ -5008,23 +5093,23 @@ sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorize
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| entrypoints: For Traefik v2/v3, web :80 redirects to HTTPS websecure :443 and an ACME resolver obtains/renews certificates. | Traefik documentation (rolling) unknown | REASONED |
-| acme-storage: Persist acme.json across restarts with mode 600 to retain certificates and avoid repeated issuance/rate limits. | Traefik documentation (rolling) unknown | REASONED |
-| acme-challenges: TLS-ALPN requires inbound 443; HTTP-01 uses 80, while DNS supports wildcards without inbound ports. | Traefik documentation (rolling) unknown | REASONED |
+| entrypoints: For Traefik v2/v3, web :80 redirects to HTTPS websecure :443 and an ACME resolver obtains/renews certificates. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| acme-storage: Persist acme.json across restarts with mode 600 to retain certificates and avoid repeated issuance/rate limits. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Traefik ACME storage source v3.5.0 | REASONED |
+| acme-challenges: TLS-ALPN requires inbound 443; HTTP-01 uses 80, while DNS supports wildcards without inbound ports. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | docker-default: Docker discovery defaults exposedByDefault to true; set false and opt each intended container in with traefik.enable=true. | Traefik Docker provider unknown | REASONED |
 | docker-scope: Discovery is daemon-wide, not Compose-project scoped; eligible unlabelled containers get routers unless excluded. Missing usable ports skip service creation. | Traefik Docker provider unknown | REASONED |
 | docker-socket: The Docker socket gives daemon control despite :ro; use a restricted socket proxy to limit API access. | Traefik Docker provider unknown | REASONED |
-| tls-floor: Dynamic default TLS options set minVersion VersionTLS12. | Traefik documentation (rolling) unknown | REASONED |
+| tls-floor: Dynamic default TLS options set minVersion VersionTLS12. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | route: Docker labels select the app host, websecure, letsencrypt resolver and backend port 3000. | Traefik documentation (rolling) unknown; Traefik Docker provider unknown | REASONED |
 | backend-isolation: Publish only Traefik 80/443, not the app's 3000, to prevent middleware/TLS bypass. | Traefik Docker provider unknown | REASONED |
-| basic: Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here. | Traefik documentation (rolling) unknown | REASONED |
-| compose-hash: Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping. | Traefik documentation (rolling) unknown | REASONED |
-| file-provider: Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file. | Traefik documentation (rolling) unknown | REASONED |
-| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA. | Traefik documentation (rolling) unknown | REASONED |
+| basic: Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| compose-hash: Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| file-provider: Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | body-limit: Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size. | Traefik middleware documentation unknown | REASONED |
 | buffer-storage: memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size. | Traefik middleware documentation unknown | REASONED |
 | rate-limit: average=10 and burst=20 configure a rate cap, per source by default. | Traefik middleware documentation unknown | REASONED |
@@ -5276,6 +5361,13 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 - Buffering middleware (`maxRequestBodyBytes`, `memRequestBodyBytes`): https://doc.traefik.io/traefik/middlewares/http/buffering/
 - InFlightReq middleware (`amount`): https://doc.traefik.io/traefik/middlewares/http/inflightreq/
 - RateLimit middleware (`average`, `burst`, `period`): https://doc.traefik.io/traefik/middlewares/http/ratelimit/
+- Traefik v3.5 entry-point HTTPS redirection (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/entrypoints/
+- Traefik v3.5 ACME renewal, challenges and certificate storage (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/tls/certificate-resolvers/acme/
+- Traefik v3.5.0 ACME storage file creation with mode 600 (checked October 2026): https://github.com/traefik/traefik/blob/v3.5.0/pkg/provider/acme/local_store.go#L125
+- Traefik v3.5 minimum TLS version (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/tls/tls-options/
+- Traefik v3.5 file-provider configuration (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/providers/others/file/
+- Traefik v3.5 BasicAuth and Compose dollar-sign escaping (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/basicauth/
+- Traefik v3.5 ForwardAuth delegation (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/forwardauth/
 
 ======================================================================
 ==> nodejs.md
@@ -5616,13 +5708,13 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | publish: Omitting the host address publishes 3000:3000 on 0.0.0.0 and [::]. | Docker Engine networking unknown | REASONED |
 | host-firewall: Docker programs firewall rules directly; UFW or firewalld blocking a host port does not establish published-port isolation. | Docker Engine networking unknown | REASONED |
-| private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed. | Compose networking unknown | REASONED |
+| private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed. | Compose networking unknown; PostgreSQL 17 | REASONED |
 | loopback: Publish local access as 127.0.0.1:3000:3000; check the running server version. Engine 28.0 is the minimum boundary, with 28.3.3 or later required where firewalld is used. | Docker Engine networking unknown; Docker Engine minimum boundary 28.0; Docker firewalld reload fix 28.3.3; Docker firewalld reload advisory unknown | REASONED |
 | old-loopback: Before 28.0, same-L2 neighbours could reach loopback publications under the default bridge configuration. | Docker Engine minimum boundary 28.0 | REASONED |
 | old-host-bind: Before 28.0, remote hosts could reach published container ports despite the host-IP binding. | Docker Engine minimum boundary 28.0 | REASONED |
@@ -5633,7 +5725,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | ipv6: Native IPv6 forwarding needs ip6tables; the IPv6-to-IPv4 userland-proxy path terminates on host INPUT and bypasses DOCKER-USER. | Docker Engine networking unknown | REASONED |
 | proxy-path: Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. | Docker Engine networking unknown | REASONED |
 | persistence: Guide recommends persisting only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves; startup-unit details lack a direct source. | Docker Engine networking unknown | REASONED |
-| tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates; no Caddy source is listed. | Compose networking unknown | REASONED |
+| tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates; no Caddy source is listed. | Compose networking unknown; Caddy image fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Caddy v2.11.4 | REASONED |
 | alternate-entry: Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed. | Compose networking unknown | REASONED |
 | auth: Proxy authentication and human MFA supplement application login; no authentication-provider source is listed. | Compose networking unknown | REASONED |
 | secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and avoid image ENV/build-argument secrets; no direct secret-handling source is listed. | Compose networking unknown | REASONED |
@@ -5752,6 +5844,9 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 - Moby 28.3.3 (pinned tag v28.3.3), `reapplyPerPortIptables` restores endpoint rules after firewalld reload: https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go
 - Compose networking: https://docs.docker.com/compose/how-tos/networking/
 - Docker port publishing (with no host address, "the Docker daemon publishes ports to all host addresses (0.0.0.0 and [::])"): https://docs.docker.com/engine/network/port-publishing/
+- PostgreSQL 17 connection settings and default TCP port (checked October 2026): https://www.postgresql.org/docs/17/runtime-config-connection.html
+- Caddy image fba2853501d36e8a72f946ac8cb7ff64d07e48f2 data/config paths, exposed ports and Caddyfile command (checked October 2026): https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L44-L45, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L56-L59, https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L63
+- Caddy v2.11.4 automatic certificate management and reverse_proxy syntax (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L67, https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L60
 
 ======================================================================
 ==> kubernetes.md
@@ -7166,7 +7261,7 @@ Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use a
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -7180,8 +7275,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | kube-escalation: Set allowPrivilegeEscalation: false in the container securityContext. | Kubernetes documentation unknown | REASONED |
 | kube-capabilities: Drop ALL capabilities in the container securityContext. | Kubernetes documentation unknown | REASONED |
 | kube-seccomp: RuntimeDefault selects the runtime syscall filter instead of Unconfined. | Kubernetes documentation unknown | REASONED |
-| admission: Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp. | Kubernetes documentation unknown | REASONED |
-| existing-pods: Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads. Admission transition details lack a direct Sources entry. | Kubernetes documentation unknown | REASONED |
+| admission: Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp. | Kubernetes documentation unknown; Kubernetes Pod Security Admission 1.34 | REASONED |
+| existing-pods: Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads. Admission transition details lack a direct Sources entry. | Kubernetes documentation unknown; Kubernetes Pod Security Admission 1.34 | REASONED |
 | policy-semantics: NetworkPolicies are additive and require an enforcing CNI; both source egress and destination ingress must allow a connection. | Kubernetes documentation unknown | REASONED |
 | default-deny: The empty podSelector with Ingress and Egress isolates all pods selected in the namespace before narrow allowances. | Kubernetes documentation unknown | REASONED |
 | dns: The app egress rule permits UDP/TCP 53 to all kube-system pods, not just CoreDNS; narrow it to the actual resolver. | Kubernetes documentation unknown | REASONED |
@@ -7354,6 +7449,8 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
 - Kubernetes: Configure a security context for a Pod or Container: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 - Kubernetes: Pod Security Standards (`restricted` level, Pod Security Admission labels): https://kubernetes.io/docs/concepts/security/pod-security-standards/
 - Kubernetes: Network Policies: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+- Kubernetes 1.34 Pod Security Admission enforcement (checked October 2026): https://v1-34.docs.kubernetes.io/docs/concepts/security/pod-security-admission/
+- Kubernetes 1.34 namespace labels and warnings for existing Pods (checked October 2026): https://v1-34.docs.kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/
 
 ======================================================================
 ==> nextjs.md
@@ -16424,7 +16521,7 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -16452,11 +16549,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | queue-default: max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages. | Mosquitto v2.0.22; Mosquitto release announcements unknown | REASONED |
 | queue-bytes: max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing. | Mosquitto v2.0.22 | REASONED |
 | keepalive: max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
-| packet-boundary: 2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary. | Mosquitto v2.0.22 | REASONED |
+| packet-boundary: 2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
 | global-limits: 2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions. | Mosquitto documentation unknown; Mosquitto v2.1.2; Mosquitto release announcements unknown | REASONED |
 | session-expiry: 2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap. | Mosquitto v2.0.22 | REASONED |
 | listener-policy: 2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope. | Mosquitto v2.0.22 | REASONED |
-| websockets: Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing. | Mosquitto v2.0.22 | REASONED |
+| websockets: Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
 | persistent-policy: Listeners share topic/session namespaces; disconnected persistent clients retain their most recent listener's ACL policy. | Mosquitto v2.0.22 | REASONED |
 | client-id: use_username_as_clientid is per-listener and needs restart; globally consistent usernames prevent cross-identity ID takeover, not same-user displacement. | Mosquitto v2.0.22 | REASONED |
 | migration: 2.1 listener_allow_anonymous and plugin_load/plugin_use replace listener policy; attach password-file and ACL-file plugins explicitly. | Mosquitto documentation unknown | REASONED |
@@ -16715,7 +16812,7 @@ notifications false
 # bridge_keyfile /etc/mosquitto/tls/bridge-client.key
 ```
 
-`out` forwards local telemetry to the remote broker; `in` brings remote commands into the local broker. Avoid broad `topic # both` forwarding. Require a trusted upstream: locally configured bridge contexts bypass local ACL checks in [2.0.22](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/security_default.c) and [2.1.2](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/plugin_acl_check.c). Bridge topic declarations control routing and subscriptions, not a local ingress ACL; the [2.1.2 incoming remapper](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/bridge_topic.c) returns success for unmatched topics. Neither these declarations nor the remote account's ACL contains a malicious upstream. If upstream trust is insufficient, replace the direct bridge with an independently enforced boundary, such as an isolated gateway that republishes only allowed topics through an ordinary authenticated client subject to the local broker's ACL.
+`out` forwards local telemetry to the remote broker; `in` brings remote commands into the local broker. Avoid broad `topic # both` forwarding. Require a trusted upstream: locally configured bridge contexts bypass local ACL checks in [2.0.22](https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/security.c#L691-L693) and [2.1.2](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/plugin_acl_check.c). Bridge topic declarations control routing and subscriptions, not a local ingress ACL; the [2.1.2 incoming remapper](https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/bridge_topic.c) returns success for unmatched topics. Neither these declarations nor the remote account's ACL contains a malicious upstream. If upstream trust is insufficient, replace the direct bridge with an independently enforced boundary, such as an isolated gateway that republishes only allowed topics through an ordinary authenticated client subject to the local broker's ACL.
 
 On the trusted remote broker, give this dedicated username only the matching permissions:
 
@@ -16941,7 +17038,7 @@ The explicit `$SYS/#` subscription should receive broker telemetry in the expose
 | --- | --- | --- |
 | Service behaviour | REASONED from the cited 2.0.22 and 2.1.2 sources and vendor documentation; broker configuration acceptance and service behaviour not demonstrated | On pinned 2.0.22 and 2.1.2 deployments, load the applicable configurations and reproduce exposed/fixed authentication, TLS/client-certificate, listener, WebSockets, and actual-message ACL comparisons above. Confirm credential reload and termination of revoked connections. Exercise packet and payload limits separately on TCP and each deployed WebSockets implementation, including declared-length probes without the body; instrument allocation to distinguish rejection before allocation from rejection after receipt. Demonstrate the section 4 WebSockets gap and the chosen boundary or replacement implementation's rejection before oversized allocation, with an accepted packet below the limit. Exercise queue loss and inflight bounds with slow clients, keepalive negotiation/refusal, per-listener connection caps, and 2.1 global connection/session caps. For each listener cap N, hold N connections with distinct authorized identities/IDs and attempt N+1; demonstrate the 2.0.22 WebSockets failure without an independent cap and refusal with the chosen enforcement. Release a slot, confirm a replacement connects, refill to N, and repeat the excess attempt across multiple disconnect/reconnect cycles; distinguish cap refusal from authentication or transport failure. Test device-01 credentials with device-02's active ID: the exposed state disconnects device-02; the fixed state rejects or rewrites the claimant's ID and preserves device-02's connection and delivery. Repeat across listeners, and confirm the documented same-identity takeover when username binding is enabled. Run message ACL comparisons with one publishing/subscribing client per identity under that policy. On 2.0, demonstrate persistent-session growth with varying IDs, the chosen ID restriction, and expiration after the configured disconnected interval; do not treat expiration as a population cap. Where bridges exist, demonstrate trusted TLS and hostname rejection, optional client certificates, scoped inbound/outbound delivery, remote ACL denial, and reconnect backoff. Separately use a controlled upstream that sends outside the configured inbound topics despite its account ACL; demonstrate the direct bridge's missing ingress containment and, where required, denial at the independent boundary with matched allowed delivery. Confirm runtime ownership, readable security files, writable protected state/log paths, and persistence only when enabled. Record versions, WebSockets implementations, commands, diagnostics, matched positive controls, and cleanup without credentials. Configuration inspection alone does not demonstrate service behaviour. |
 
-## Sources (checked September 2026)
+## Sources (checked October 2026)
 
 - Official eclipse-mosquitto Docker images: the tag-to-directory map (library file pinned commit 920b00976e6e8335bab0a3fd293b95b6b2404ce3), and at image source pinned commit 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60 the 2.1-alpine build's 2.1.2 release download, configuration and dashboard install and `CMD`, an entrypoint that only sets data-directory ownership, its `mosquitto.conf` (`listener 1883`, `allow_anonymous true`, `listener 9883` with `protocol http_api`), the README's description of it, and the 2.0-openssl and 1.6-openssl builds installing upstream's `mosquitto.conf`: https://github.com/docker-library/official-images/blob/920b00976e6e8335bab0a3fd293b95b6b2404ce3/library/eclipse-mosquitto#L3-L13, https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L30, https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L77-L80, https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L99-L101, https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/mosquitto.conf (identical in the v2.1.2 release it is installed from: https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/docker/2.1-alpine/mosquitto.conf), https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/docker-entrypoint.sh, https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/README.md#L27-L28, https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.0-openssl/Dockerfile#L69 and https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/1.6-openssl/Dockerfile#L66
 - Mosquitto 2.1.2 MQTT listener with no address (a passive `getaddrinfo` over both families, binding each result), the HTTP API listener with no address (libmicrohttpd with `MHD_USE_DUAL_STACK`), the `http_api` endpoints, their JSON and plain-text handlers and their access check, a `listener` line resetting that listener's `allow_anonymous` to unset so the global value applies, anonymous success with no authentication plugin, ACL success with no ACL plugin, and the manual's `http_api` entry (pinned tag v2.1.2): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/net.c#L815-L918, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L449-L545, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L160-L163, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L224, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L251, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L336-L378, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/conf.c#L2001, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/listeners.c#L27-L42, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_basic_auth.c#L56-L113, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_acl_check.c#L141-L201 and https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/man/mosquitto.conf.5.xml#L1663-L1671
@@ -16966,6 +17063,12 @@ The explicit `$SYS/#` subscription should receive broker telemetry in the expose
 - Mosquitto 2.0.22 packet reader (packet-size enforcement before incoming-body allocation): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/lib/packet_mosq.c
 - Mosquitto 2.0.22 PUBLISH handler (payload-size checks, denied writes, QoS responses): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/handle_publish.c
 - Mosquitto 2.1.2 subscriber implementation (timeout result independent of message receipt): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/client/sub_client.c
+- Mosquitto libwebsockets packet allocation before a packet-size check (pinned tags v2.0.22 and v2.1.2): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/websockets.c, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/websockets.c#L296-L324
+- Mosquitto libwebsockets connection-cap implementation (v2.0.22) and fix recorded under 2.1.1 in the v2.1.2 ChangeLog: https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/websockets.c, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/ChangeLog.txt#L14-L27
+- Mosquitto disconnected-session expiry scheduling and timed cleanup (pinned tag v2.0.22): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/session_expiry.c
+- Mosquitto authenticated duplicate client-ID displacement (pinned tag v2.0.22): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/handle_connect.c#L120-L133
+- Mosquitto local bridge contexts bypassing ACL checks (pinned tags v2.0.22 and v2.1.2): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/security.c#L691-L693, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_acl_check.c#L149-L151
+- Mosquitto incoming topic remapping returning success after unmatched topics (pinned tag v2.1.2): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/bridge_topic.c
 
 ======================================================================
 ==> kafka.md
@@ -21798,7 +21901,7 @@ The whole-corpus gate suite was not run for this drop-in generation. Shell check
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -21827,7 +21930,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | verify-rotation: Disclosed Typesense operational key succeeded before deletion, failed after deletion, and its replacement succeeded. | Typesense 30.2 | DEMONSTRATED |
 | verify-tenant: Tenant token and scoped-key filters resisted other-tenant overrides while parent controls returned both fixtures. | Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown | DEMONSTRATED |
 | verify-join: Collection-scoped key leaked a joined billing field; an embedded exclude_fields restriction removed it. | Typesense documentation (rolling) unknown | DEMONSTRATED |
-| verify-proxy: Recorded same-host Caddy TLS proxy preserved anonymous/keyed auth distinctions for both engines; no external isolation is established. | Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown | DEMONSTRATED |
+| verify-proxy: Recorded same-host Caddy TLS proxy preserved anonymous/keyed auth distinctions for both engines; no external isolation is established. | Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown; Caddy v2.11.4 | DEMONSTRATED |
 | verify-request: Paired requests require Bash, curl 7.75.0+, verified HTTPS and identical origin/method/path/body; inspect engine JSON, not status alone. | curl minimum 7.75.0; Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown | REASONED |
 | verify-external: Inventory actual listeners, publications and IPv4/IPv6 rules; external TCP success fails, while refusal/timeout needs live private controls and policy evidence. | Meilisearch release reference v1.53.2; Typesense 30.2; OpenBSD-compatible netcat unknown | REASONED |
 | verify-local-tcp: Recorded netcat loopback reachable/refused shapes returned FAIL/exit 1 and INCONCLUSIVE/exit 2 respectively; external reachability remains unobserved. | OpenBSD-compatible netcat unknown | DEMONSTRATED |
@@ -22030,7 +22133,7 @@ admin/master/bootstrap key; it should never appear outside the server-side secre
 - Putting the Typesense bootstrap key or Meilisearch admin key straight into front-end JavaScript instead of minting a scoped search key.
 - A scoped key with no `filter_by` or `collections` restriction, which searches everything the admin key can see.
 
-## Sources (checked September 2026)
+## Sources (checked October 2026)
 
 Version scope: Typesense 30.2; Meilisearch current unversioned documentation checked 2026-09-18, with v1.53.2 as the release reference. The first release containing all four default keys and their exact permissions remains to be confirmed against the deployed release, so inspect `GET /keys`. The Verify commands require Bash, curl 7.75.0 or later, and OpenBSD-compatible netcat.
 
@@ -22054,6 +22157,7 @@ Version scope: Typesense 30.2; Meilisearch current unversioned documentation che
 - Meilisearch document-editing functions (Rhai; disabled unless enabled; rolling documentation, checked September 2026): https://www.meilisearch.com/docs/capabilities/indexing/how_to/edit_documents_with_functions
 - curl options (write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 - OpenBSD netcat reference: https://man.openbsd.org/nc
+- Caddy bind, certificate files, automatic HTTPS and admin options, and reverse-proxy configuration (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88, https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L347-L381, https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L459-L476, https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go
 
 ======================================================================
 ==> sqlite.md
@@ -26615,7 +26719,7 @@ The checks below remain REASONED from the cited Gradio 6.28.0 source and documen
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -26632,8 +26736,8 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | oidc-dependencies: Recorded loopback login with Authlib but without httpx failed; install the complete auth extra. | Streamlit 1.64.0 | DEMONSTRATED |
 | oidc-config: secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; st.login authenticates identity, not resource authorization. | Streamlit documentation (rolling) unknown | REASONED |
 | page-gates: Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks. | Streamlit documentation (rolling) unknown | REASONED |
-| native-gate: In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
-| email-gate: Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| native-gate: In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users. | Streamlit documentation (rolling) unknown; Keycloak 26.7.4 | DEMONSTRATED |
+| email-gate: Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users. | Streamlit documentation (rolling) unknown; Keycloak 26.7.4 | DEMONSTRATED |
 | claims: st.user contains ID-token claims; Google hd identifies Workspace/Cloud accounts and is absent for consumer accounts; explicit address allowlisting is an alternative. | Streamlit documentation (rolling) unknown | REASONED |
 | cookie: Native identity cookie lasts 30 days and the lifetime is not configurable. | Streamlit documentation (rolling) unknown | REASONED |
 | secrets: Keep secrets.toml out of Git, build contexts and served directories; restrict access, never render/log st.secrets, and rotate exposed client/cookie secrets. | Streamlit documentation (rolling) unknown | REASONED |
@@ -26645,10 +26749,10 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | static-test: Recorded static serving bypassed st.stop; enabled returned marker text and disabled returned app HTML, both 200, so inspect the body. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
 | execution-egress: TLS/login do not sandbox Python; use least privilege and minimal credentials, avoid executing inputs, and restrict URL-fetch egress including metadata/internal networks. | OWASP SSRF guidance unknown; Streamlit documentation (rolling) unknown | REASONED |
 | verify-tls: Recorded native TLS returned 200 with the trusted test CA and failed trust with exit 60; never use -k. | curl minimum write-out version 7.75.0; Streamlit documentation (rolling) unknown | DEMONSTRATED |
-| verify-proxy: Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
-| verify-oidc-proxy: Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| verify-proxy: Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary. | Streamlit documentation (rolling) unknown; Caddy v2.11.4 | DEMONSTRATED |
+| verify-oidc-proxy: Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403. | Streamlit documentation (rolling) unknown; oauth2-proxy v7.15.4; Keycloak 26.7.4 | DEMONSTRATED |
 | verify-native-browser: Native anonymous index is intentionally 200; browser comparisons must check protected content, valid users, domain/email denial and MFA rather than index status. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
-| verify-mfa: Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| verify-mfa: Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google. | Streamlit documentation (rolling) unknown; Keycloak 26.7.4 | DEMONSTRATED |
 | verify-external: From another host any direct 8501 HTTP response is an exposure; refusal/no-route is not proof and DNS/local errors/timeouts are inconclusive; second-host vantage was unavailable. | Streamlit 1.64.0; curl minimum write-out version 7.75.0; Streamlit documentation (rolling) unknown | REASONED |
 | verify-local-reachability: Recorded same-host probe distinguished a listening address from another loopback address; it does not demonstrate the external scenario. | curl minimum write-out version 7.75.0; Streamlit documentation (rolling) unknown | DEMONSTRATED |
 | verify-pages: Test every protected page and operation with anonymous, allowed and disallowed users, restoring an isolated exposed canary comparison; broken WebSockets or blank pages are not positive controls. | Streamlit documentation (rolling) unknown | REASONED |
@@ -26829,7 +26933,7 @@ REASONED from the cited Streamlit 1.64.0 source and the recorded loopback observ
 - an external vantage for block 3, since there was one host with no second network;
 - the default wildcard bind, since the host forbids binding every interface.
 
-## Sources (checked September 2026)
+## Sources (checked October 2026)
 
 Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at the time of writing; `server.address` defaults to unset (all interfaces) and `server.port` to `8501`, and the explicit loopback setting above is required for the fronting-proxy pattern. `st.login()` has been available since the 1.42.0 series.
 
@@ -26852,6 +26956,10 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 - Streamlit app health endpoint, /_stcore/health without authentication (rolling documentation, checked September 2026): https://docs.streamlit.io/deploy/tutorials/docker
 - OWASP SSRF Prevention Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
 - curl manual (write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
+- Caddy bind, certificate files, and reverse-proxy configuration (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88, https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go
+- Caddy basic_auth configuration and default bcrypt hashing (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/caddyauth/caddyfile.go#L29-L36
+- oauth2-proxy email-domain restriction and wildcard configuration (pinned tag v7.15.4): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/options.go#L141
+- Keycloak TOTP policy and user-attribute-to-token-claim mapper used by the recorded fixture (pinned tag 26.7.4): https://raw.githubusercontent.com/keycloak/keycloak/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc, https://github.com/keycloak/keycloak/blob/26.7.4/services/src/main/java/org/keycloak/protocol/oidc/mappers/UserAttributeMapper.java#L96-L104
 
 ======================================================================
 ==> n8n.md
@@ -26864,7 +26972,7 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -26873,7 +26981,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | container-bind: Host loopback is for a same-host proxy; container loopback blocks sibling/published access, so use a private network without publication or host-loopback 127.0.0.1:5678:5678. | n8n documentation unknown | REASONED |
 | other-ports: Keep Postgres and task-runner broker ports unpublished and publish only the HTTPS proxy. | n8n documentation unknown | REASONED |
 | public-url: Set N8N_PROTOCOL=https and the full N8N_WEBHOOK_URL; WEBHOOK_URL is deprecated from 2.35.0 but still warns and works. | n8n documentation unknown | REASONED |
-| secure-cookie: Retain N8N_SECURE_COOKIE=true, its default. Source gap: listed proxy page does not state this default. | n8n documentation unknown | REASONED |
+| secure-cookie: Retain N8N_SECURE_COOKIE=true, its default. Source gap: listed proxy page does not state this default. | n8n documentation unknown; n8n listener source n8n@2.40.6 | REASONED |
 | proxy-hops: Set N8N_PROXY_HOPS to the trusted hop count for forwarded client IPs and rate limiting; public webhooks do not require a public editor. | n8n documentation unknown | REASONED |
 | native-tls: N8N_PROTOCOL=https with N8N_SSL_KEY/N8N_SSL_CERT enables native TLS. | n8n documentation unknown | REASONED |
 | owner: Complete first-run owner setup before publication; an unclaimed instance can be claimed by its first visitor. Source gap: listed security-policy page does not document owner setup. | n8n documentation unknown | REASONED |
@@ -26885,7 +26993,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | webhook-auth: Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential. | n8n documentation unknown | REASONED |
 | auth-boundaries: Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries. | n8n documentation unknown | REASONED |
 | signature: A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials. | n8n documentation unknown | REASONED |
-| code-execution: Code executes JavaScript/Python; Execute Command runs shell commands inside the container under Docker and is disabled by default from 2.0. Source gap: listed task-runner page supports Code, not the Execute Command default. | n8n documentation unknown | REASONED |
+| code-execution: Code executes JavaScript/Python; Execute Command runs shell commands inside the container under Docker and is disabled by default from 2.0. Source gap: listed task-runner page supports Code, not the Execute Command default. | n8n documentation unknown; n8n 2.0 breaking changes unknown | REASONED |
 | runners: Use hardened external task runners; vendor describes internal mode as insecure by design. | n8n documentation unknown | REASONED |
 | environment: Set N8N_BLOCK_ENV_ACCESS_IN_NODE=true to block node access to the service environment, including encryption material. Source gap: listed task-runner page does not document this variable. | n8n documentation unknown | REASONED |
 | js-modules: Narrow NODE_FUNCTION_ALLOW_BUILTIN/NODE_FUNCTION_ALLOW_EXTERNAL in external launcher's /etc/n8n-task-runners.json env-overrides; main-container values are overridden. | n8n documentation unknown | REASONED |
@@ -26989,7 +27097,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 )
 ```
 
-## Sources (checked September 2026)
+## Sources (checked October 2026)
 
 - n8n deployment environment variables (N8N_LISTEN_ADDRESS, N8N_PROTOCOL, N8N_SSL_KEY, N8N_SSL_CERT, defaults): https://docs.n8n.io/deploy/host-n8n/configure-n8n/basic-configuration/use-environment-variables/deployment
 - n8n security policies (MFA enforcement 2.18.0+, licensing, SSO exception): https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/manage-security-policies
@@ -27002,6 +27110,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 - n8n Webhook node (Authentication options, production and test URLs, HTTP Method): https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook/
 - n8n Webhook credentials (Basic, Header, JWT auth): https://docs.n8n.io/integrations/builtin/credentials/webhook/
 - n8n `N8N_PORT` default `5678` and `N8N_LISTEN_ADDRESS` default `'::'` (pinned tag n8n@2.40.6): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/%40n8n/config/src/index.ts#L164-L171
+- n8n auth cookie Secure default, recorded in the 1.32.0 changes (pinned tag n8n@2.40.6): https://raw.githubusercontent.com/n8n-io/n8n/n8n@2.40.6/packages/cli/BREAKING-CHANGES.md
+- n8n 2.0 changes, ExecuteCommand and LocalFileTrigger disabled by default (rolling documentation, checked October 2026): https://docs.n8n.io/changelog/v20-breaking-changes
 
 ======================================================================
 ==> code-server.md
@@ -27303,6 +27413,9 @@ Point that block at Sentry's `http://tracker.example.com:9000/`: because the bun
 - Sentry DSN explainer (a DSN is public and allows only event submission, not read access): https://docs.sentry.io/concepts/key-terms/dsn-explainer/
 - GlitchTip installation (port `8000`, `ENABLE_USER_REGISTRATION` default and behavior): https://glitchtip.com/documentation/install
 - GlitchTip two-factor authentication (available since v1.8): https://glitchtip.com/blog/2021-09-17-glitchtip-1-8/
+- [Sentry 26.8.0 secret-key generator command (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/runner/commands/config.py).
+- [Sentry self-hosted 26.8.0 bundled nginx forwarded scheme (checked October 2026)](https://github.com/getsentry/self-hosted/blob/26.8.0/nginx.conf#L63).
+- [Sentry 26.8.0 registration and single-organization membership (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/web/frontend/auth_login.py).
 
 ======================================================================
 ==> vector-databases.md
@@ -28206,7 +28319,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | serve-bind: Serve HTTP defaults port 8000, Python host 127.0.0.1 but config-file host 0.0.0.0; EveryNode puts proxies on nodes with replicas. | Ray documentation unknown | REASONED |
 | serve-auth: Serve apps have no built-in application auth and are outside cluster token mode; restrict origins and add proxy or FastAPI authentication. | Ray documentation unknown | REASONED |
 | serve-tls: Serve ssl_keyfile/ssl_certfile/ssl_ca_certs default None; supplying a CA does not itself require client certificates. | Ray documentation unknown | REASONED |
-| serve-grpc: Optional Serve gRPC uses 9000 only with configured servicer functions; its dedicated gRPC option reference is not cited. | Ray documentation unknown | REASONED |
+| serve-grpc: Optional Serve gRPC uses 9000 only with configured servicer functions; its dedicated gRPC option reference is not cited. | Ray documentation unknown; Ray pinned source ray-2.58.0 | REASONED |
 | image-privilege: Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation. | Ray pinned source ray-2.58.0 | REASONED |
 | pod-security: KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp. | KubeRay chart v1.7.0; Kubernetes security contexts unknown | REASONED |
 | verify-inventory: Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available. | Ray pinned source ray-2.58.0 | REASONED |
@@ -28506,6 +28619,7 @@ Service behaviour is not demonstrated here. A watcher stopped each of four loopb
 - Ray direct `/logs/` Verify discriminator: static directory index inside the agent middleware, disabled token bypass, 401 for missing credentials, valid-token access and exact health exemptions (pinned tag): https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L245-L249, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L20-L23, https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L102-L114 and https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/authentication/http_token_authentication.py#L28-L80
 - Kubernetes security contexts (runAsNonRoot, drop capabilities, seccomp): https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 - KubeRay ray-cluster Helm chart values (head/worker podSecurityContext and securityContext, default {}): https://github.com/ray-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml
+- [Ray ray-2.58.0 Serve gRPC default port and servicer-function requirement (checked October 2026)](https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/config.py#L955-L963).
 
 ======================================================================
 ==> mlflow.md
@@ -29590,7 +29704,7 @@ The service facts come from the maintainer's vendor-source verification record d
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -29603,7 +29717,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | livekit-length: Outside development, secrets shorter than 32 characters only log an error; generate long random secrets. | LiveKit v1.13.7 | REASONED |
 | livekit-grants: canPublish and canSubscribe default true; signing secrets mint any grant, so deliberately scope issued tokens. | LiveKit documentation unknown | REASONED |
 | livekit-keyfile: Use key_file with service-owned mode 0600; world permissions reject startup, but group-readable 0640 passes the server check. | LiveKit v1.13.7 | REASONED |
-| livekit-tls: Front signaling with TLS/WSS; the guide describes no native signaling TLS and calls Serve, but the server implementation is not cited. | LiveKit documentation unknown | REASONED |
+| livekit-tls: Front signaling with TLS/WSS; the guide describes no native signaling TLS and calls Serve, but the server implementation is not cited. | LiveKit documentation unknown; LiveKit v1.13.7 | REASONED |
 | livekit-metrics: Enabled metrics are unauthenticated unless prometheus.username/password are set. | LiveKit v1.13.7 | REASONED |
 | livekit-debug: Debug/pprof, goroutine and room routes lack grant checks and can use debug_handler.port; route implementations are not cited. | LiveKit v1.13.7 | REASONED |
 | livekit-turn-secret: Embedded TURN derives credentials from the API secret; the derivation implementation is not cited. | LiveKit v1.13.7 | REASONED |
@@ -29630,7 +29744,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | coturn-permissions: Do not enable server-relay, which removes relay permission checks. | coturn 4.18.0 | REASONED |
 | turn-plaintext: Plain TURN hides the long-term password itself but exposes usernames/metadata and enables offline guesses against weak passwords. | coturn 4.18.0 | REASONED |
 | verify-listeners: Inventory TCP/UDP and actual allocations: media/TURN may be public, signaling/admin/metrics must be restricted; separately test off-host reachability. | LiveKit documentation unknown; LiveKit v1.13.7; coturn 4.18.0 | REASONED |
-| verify-livekit: Unauthenticated rtc/validate 401 only tests token requirement, not removal of a known signing key; its handler is not cited. | LiveKit documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
+| verify-livekit: Unauthenticated rtc/validate 401 only tests token requirement, not removal of a known signing key; its handler is not cited. | LiveKit documentation unknown; curl minimum write-out version 7.75.0; LiveKit v1.13.7 | REASONED |
 | verify-rotation: Accept an old-key token on an isolated fixture, reject that same unexpired correctly scoped token after rotation, and accept a new-key token. | LiveKit documentation unknown; livekit-cli v2.18.2 | REASONED |
 | verify-extra: Separately probe metrics, debug routes/port and embedded TURN from untrusted networks; a healthy root path proves no protection. | LiveKit v1.13.7; LiveKit documentation unknown | REASONED |
 | verify-allocation: Anonymous Allocate must challenge with no relay address; valid throwaway credentials on a private plaintext fixture must allocate. Read output, not exit status. | coturn 4.18.0 | REASONED |
@@ -29640,7 +29754,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | lk-inputs: lk reads argv or environment credentials, not stdin; explicit project/subdomain outrank environment, which outranks local/default projects. | livekit-cli v2.18.2 | REASONED |
 | lk-storage: Saved projects retain plaintext api_secret in ~/.livekit/cli-config.yaml, written 0600. | livekit-cli v2.18.2 | REASONED |
 | lk-mint: Prompt and prefix environment assignments keep secrets out of argv/history but expose them to same-account/root environment readers; printed short-lived tokens are secrets. | livekit-cli v2.18.2 | REASONED |
-| verify-tls: Fatal hostname/CA verification tests only TURN certificate/handshake; separately test plaintext rejection on 3478 and 5349. OpenSSL syntax is not cited. | coturn 4.18.0 | REASONED |
+| verify-tls: Fatal hostname/CA verification tests only TURN certificate/handshake; separately test plaintext rejection on 3478 and 5349. OpenSSL syntax is not cited. | coturn 4.18.0; OpenSSL CLI 3.0 | REASONED |
 <!-- version-basis:end -->
 
 AI voice agents run on self-hosted realtime backends that carry live media, and two of them sit at the network edge: LiveKit, a WebRTC SFU that routes participants' audio, video, and data, and coturn, a TURN/STUN server that relays media when a direct peer path cannot be found. The relay is the sharp edge. A TURN server proxies traffic on a client's behalf, so an unauthenticated or misconfigured one is an *open relay*: an attacker uses it to launder traffic, to reach services on the host's own loopback and private network, and to reflect and amplify UDP toward a victim. LiveKit's edge is different: it will not start without API keys, so the danger is not an anonymous join but a *known or weak* signing secret, which lets anyone mint a token and enter any room to eavesdrop or inject media. LiveKit terminates no TLS on its signaling, so [fronting-auth.md](fronting-auth.md) is the reverse-proxy pattern it needs for `wss://`; coturn terminates TLS and DTLS natively from its own certificate. [secrets.md](secrets.md) covers generating and holding the signing material. Values below are illustrative; replace them.
@@ -29884,6 +29998,13 @@ That proves the certificate and handshake only, not TURN authentication, peer po
 - coturn 4.18.0 `turnutils_uclient` option parser (`-w` and `-W` copy `optarg`, lines 380-381 and 456-458; no stdin, file or environment input for the password): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/apps/uclient/mainuclient.c
 - coturn 4.18.0 `turnutils_uclient` password-buffer trace (`g_upwd` is declared in `uclient.h` line 132, written only in `mainuclient.c` lines 381 and 553-554, and read only in `uclient.c` lines 3109 and 3132; `startuclient.c`, `startuclient.h` and `session.h` do not reference it; the build target's files are listed in `CMakeLists.txt`): https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/uclient.h#L132 , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/mainuclient.c#L553-L554 , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/uclient.c#L3109 , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/uclient.c#L3132 , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/mainuclient.c#L381 , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/startuclient.c , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/startuclient.h , https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/session.h and https://github.com/coturn/coturn/blob/4.18.0/src/apps/uclient/CMakeLists.txt
 - coturn 4.18.0 `turnutils_uclient` options (`-h` hangs on indefinitely after the last sent packet, line 95): https://raw.githubusercontent.com/coturn/coturn/4.18.0/README.turnutils
+- LiveKit v1.13.7 signaling HTTP Serve call (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L319
+- LiveKit v1.13.7 metrics credential gate (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L165-L170
+- LiveKit v1.13.7 debug routes, separate server and listener (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L181-L193, https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L261-L266
+- LiveKit v1.13.7 embedded TURN password derivation from the API secret (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/turn.go#L315-L325
+- LiveKit v1.13.7 missing-grants HTTP 401 branch (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/rtcservice.go#L147-L149
+- coturn 4.18.0 Docker configuration enables lt-cred-mech (checked October 2026): https://github.com/coturn/coturn/blob/4.18.0/docker/coturn/turnserver.conf#L184
+- OpenSSL 3.0 s_client hostname, CA and fatal verification options (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
 
 ======================================================================
 ==> image-gen-uis.md
@@ -30814,7 +30935,7 @@ that accepts spans with no credential at all.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -30827,16 +30948,16 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | dagster-helm: The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default. | Dagster OSS 1.13.24 | REASONED |
 | dagster-auth: OSS webserver has no built-in login or access control; protect all routes with an authenticating proxy. | Dagster documentation (rolling) unknown | REASONED |
 | airflow-boundary: Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private. | Apache Airflow 3.3.2 | REASONED |
-| airflow-two-api: Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all. | Apache Airflow historical configuration unknown; Apache Airflow historical default unknown | REASONED |
+| airflow-two-api: Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all. | Apache Airflow historical configuration 2.11.0; Apache Airflow historical default 2.2.5 | REASONED |
 | airflow-simple: Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied. | Apache Airflow 3.3.2 | REASONED |
 | airflow-fab: For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | airflow-api: Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | airflow-all-admins: Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin. | Apache Airflow 3.3.2 | REASONED |
 | fab-public-role: Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors. | Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
-| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
-| airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow documentation (rolling) unknown | REASONED |
-| airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
-| airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
+| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
+| airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
+| airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
+| airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
 | airflow-fernet: Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets. | Apache Airflow documentation (rolling) unknown | REASONED |
 | airflow-port: Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer. | Apache Airflow documentation (rolling) unknown | REASONED |
 | temporal-authorizer: Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience. | Temporal documentation (rolling) unknown | REASONED |
@@ -30871,7 +30992,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | verify-inventory: ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately. | Flower v2.2.0; Argo Workflows v3.7.18; iproute2 ss manual v6.15.0; Linux network namespaces manual man-pages-5.13; Prefect documentation (rolling) unknown | REASONED |
 | verify-prefect: Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent. | Prefect Basic Auth minimum 3.1.8; Prefect server source 9e560c9b6df4e19a5109a66e66d461f9facb538d; Prefect documentation (rolling) unknown | REASONED |
 | verify-dagster: A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately. | Dagster documentation (rolling) unknown | REASONED |
-| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
+| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | verify-temporal: Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth. | Temporal documentation (rolling) unknown | REASONED |
 | verify-flower: Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected. | Flower documentation (rolling) unknown | REASONED |
 | verify-socket: Directory/socket permissions, outsider denial, reboot persistence and container numeric IDs remain reasoned; no socket or Flower process ran. | Flower v2.2.0; Linux permissions and tools unknown | REASONED |
@@ -31234,7 +31355,7 @@ shares the directory.
   authorization. Temporal client-side payload encryption adds a separate boundary: decoding requires the key or
   access to an authorized Codec Server.
 
-## Sources (checked September 2026)
+## Sources (checked October 2026)
 
 These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases. Argo Workflows listener, authentication paths, TLS and manifest settings were checked against tags v3.7.18 (66e32e5cc367f223e2ecf4fbe852b95eaed83034) and v4.1.4 (b5b4d665e9be9b87c115f943584c3e0ae96fe073). The install manifests were traced through their build recipes and Kustomize inputs; their generated YAML files were not present in the supplied trees. SSO setup, API examples and security guidance retain the release-3.7 documentation links.
 
@@ -31287,6 +31408,13 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Argo Workflows, [SSO and RBAC](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-sso/),
   [workflow-list API](https://argo-workflows.readthedocs.io/en/release-3.7/rest-examples/), and
   [security model](https://argo-workflows.readthedocs.io/en/release-3.7/security/).
+- Apache Airflow API authentication setting and default (2.11.0 documentation): https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#auth-backends
+- Apache Airflow singular API authentication setting and deny-all default (2.2.5 documentation): https://airflow.apache.org/docs/apache-airflow/2.2.5/configurations-ref.html#auth-backend
+- Apache Airflow Simple Auth Manager all-admin authentication bypass (3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#simple-auth-manager-all-admins
+- Apache Airflow public API JWT authentication (3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/security/api.html
+- Apache Airflow development Compose FAB selection, administrator credentials and JWT fallback secret (pinned tag 3.3.2): https://raw.githubusercontent.com/apache/airflow/3.3.2/airflow-core/docs/howto/docker-compose/docker-compose.yaml
+- Apache Airflow webserver secret_key and EXPOSE_CONFIG settings (2.11.0 documentation): https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#secret-key, https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#expose-config
+- Apache Airflow API secret_key and EXPOSE_CONFIG settings (3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#secret-key, https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#expose-config
 
 ======================================================================
 ==> admin-uis.md
@@ -31488,10 +31616,10 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | loki-proxy: An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki. | Loki v3.7.8 | REASONED |
 | verify-inventory: Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed. | node_exporter v1.12.1; Alertmanager v0.34.1; Pushgateway v1.11.3; Jaeger v2.21.0; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | verify-external: External 200 exposes unauthenticated HTTP; HTTPS 401 shows auth, not isolation. Confirm connection failures and a permitted positive control. | Prometheus security model a0d29881382ad1ea20597d34fc4229984b326576; Exporter toolkit v0.17.1; Jaeger documentation 4d150659ee4ed3ccc69253ec77c368392f59e625 | REASONED |
-| verify-loki: A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs. | Loki v3.7.8 | REASONED |
+| verify-loki: A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs. | Loki v3.7.8; curl curl-8_14_1 | REASONED |
 | verify-basic: Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200. | node_exporter v1.12.1; Pushgateway v1.11.3; Alertmanager v0.34.1; Jaeger v2.21.0; Exporter toolkit v0.17.1 | DEMONSTRATED |
 | verify-loki-mtls: Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
-| verify-secret: Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation. | Exporter toolkit v0.17.1 | REASONED |
+| verify-secret: Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation. | Exporter toolkit v0.17.1; curl curl-8_14_1 | REASONED |
 <!-- version-basis:end -->
 
 The Prometheus server has its own section in [admin-uis.md](admin-uis.md). This guide covers the pieces
@@ -31929,6 +32057,10 @@ channel only. The password can still reach shell history or `set -x` output.
 - dskit pinned incoming KV updates and propagation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1383-L1470
 - dskit pinned remote-state merging and codec validation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1577-L1672
 - Go `net.Listen` (an empty host listens on all addresses): https://pkg.go.dev/net#Listen
+- [Loki v3.7.8 tenant middleware, fake tenant, and gRPC exemptions (checked October 2026)](https://raw.githubusercontent.com/grafana/loki/v3.7.8/pkg/util/fakeauth/fake_auth.go).
+- [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
+- [curl curl-8_14_1 custom headers (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
+- [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
 
 ======================================================================
 ==> devops-uis.md
@@ -32277,11 +32409,11 @@ curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://ap
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| placement: Set response headers at a proxy, in application middleware or in a static host's _headers file; stack-specific Sources entries and versions are not recorded. | MDN HTTP documentation unknown | REASONED |
+| placement: Set response headers at a proxy, in application middleware or in a static host's _headers file; stack-specific Sources entries and versions are not recorded. | MDN HTTP documentation unknown; Helmet v8.1.0; Django 5.2 | REASONED |
 | hsts: Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS. | MDN HTTP documentation unknown | REASONED |
 | hsts-preload: Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates. | MDN HTTP documentation unknown | REASONED |
 | csp: Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy. | MDN HTTP documentation unknown | REASONED |
@@ -32372,6 +32504,8 @@ In a real browser, log in, open an authenticated page, then log out and press th
 - MDN Clear-Site-Data (the `cache` directive clears the browser cache and, depending on the browser, the back/forward cache; the logout example): https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Clear-Site-Data
 - MDN back/forward cache (a history navigation restores a snapshot without revalidating): https://developer.mozilla.org/en-US/docs/Glossary/bfcache
 - Security header scanner: https://securityheaders.com/
+- Helmet v8.1.0 response-header middleware (checked October 2026): https://github.com/helmetjs/helmet/blob/v8.1.0/README.md#L3
+- Django 5.2 SecurityMiddleware (checked October 2026): https://docs.djangoproject.com/en/5.2/ref/middleware/#module-django.middleware.security
 
 ======================================================================
 ==> firebase-supabase.md
@@ -32437,7 +32571,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-rtdb: Compare unsigned/A/B reads/writes to seeded RTDB owner paths; ancestor grants expose them while ownership rules deny unauthorized callers. | Firebase documentation unknown | REASONED |
 | verify-firebase-storage: Compare unsigned/A/B object reads and uploads; ownership rules must deny unrelated callers while owner operations succeed. | Firebase documentation unknown | REASONED |
 | verify-download-token: Same sessionless download URL works after Rules tightening but must lose bytes after token revocation; owner getBytes remains successful and network/CORS failures are inconclusive. | Firebase documentation unknown | REASONED |
-| verify-tables: Pair unsigned/A/B profiles GETs against seeded rows, using ordinary credentials and required MFA; test intended writes and persisted effects separately. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
+| verify-tables: Pair unsigned/A/B profiles GETs against seeded rows, using ordinary credentials and required MFA; test intended writes and persisted effects separately. | Supabase documentation unknown; PostgreSQL documentation unknown; curl curl-8_14_1 | REASONED |
 | verify-views: Compare view reads with table boundaries; owner-privileged exposure must close under invoker/revoked access while intended reads or deliberate removal are confirmed. | PostgreSQL documentation unknown | REASONED |
 | verify-rpc: Test every API function overload with valid harmless arguments as unsigned/A/B; unauthorized data or operations must be denied while the intended caller succeeds. | Supabase documentation unknown | REASONED |
 | verify-http: Probe HTTP wrappers with a controlled collector and marker; unauthorized fixed calls must emit no request. Commit pg_net fixture transactions before expecting delivery. | Supabase documentation unknown | REASONED |
@@ -33402,6 +33536,8 @@ was not installed in the repository, and no whole-corpus gate result is claimed.
 - [Firebase Storage Admin shareable download URLs](https://firebase.google.com/docs/storage/admin/start).
 - [Firebase StorageReference download-token revocation](https://firebase.google.com/docs/reference/kotlin/com/google/firebase/storage/StorageReference).
 - [Firebase Storage SDK direct downloads and browser CORS](https://firebase.google.com/docs/storage/web/download-files).
+- [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
+- [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 
 ======================================================================
 ==> supabase-self-hosted.md
@@ -33441,10 +33577,10 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | signup: DISABLE_SIGNUP=false ships registration open; ENABLE_PHONE_SIGNUP and ENABLE_PHONE_AUTOCONFIRM=true permit self-confirmed phone signup. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
 | mfa: Application-user TOTP needs assurance-level enforcement; it adds no factor to Studio Basic auth, which needs a private or MFA-enforcing administrative boundary. | Supabase documentation unknown | REASONED |
 | verify-isolation: Any external HTTP/database response proves publication; refusal is vantage-specific and timeout inconclusive. Corroborate with mappings and a live allowed control. | Supabase documentation unknown; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
-| verify-function: Known unauthenticated canary responds to both requests with JWT checking off; with it on, missing Bearer gets 401 and current legacy anon JWT returns the known response. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
-| verify-api-keys: Compare shipped and current API keys at /auth/v1/settings; current key must return settings JSON. This tests gateway acceptance, not signing-key retirement. | Supabase documentation unknown | REASONED |
-| verify-signing: Compare equivalent unexpired service_role JWTs signed by current versus demo secret against one REST canary, retaining a valid apikey; require JWT signature rejection. | Supabase documentation unknown | REASONED |
-| verify-dashboard: Default Basic credentials must fail with 401 after replacement, while a current credential retrieves a known Studio response. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801 | REASONED |
+| verify-function: Known unauthenticated canary responds to both requests with JWT checking off; with it on, missing Bearer gets 401 and current legacy anon JWT returns the known response. | Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76; curl curl-8_14_1 | REASONED |
+| verify-api-keys: Compare shipped and current API keys at /auth/v1/settings; current key must return settings JSON. This tests gateway acceptance, not signing-key retirement. | Supabase documentation unknown; curl curl-8_14_1 | REASONED |
+| verify-signing: Compare equivalent unexpired service_role JWTs signed by current versus demo secret against one REST canary, retaining a valid apikey; require JWT signature rejection. | Supabase documentation unknown; curl curl-8_14_1 | REASONED |
+| verify-dashboard: Default Basic credentials must fail with 401 after replacement, while a current credential retrieves a known Studio response. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; curl curl-8_14_1 | REASONED |
 | verify-database: Check pooler 5432/6543 as postgres.your-tenant-id against postgres using SELECT current_user, current_database(); require demo-password authentication failure and a working control. | Supabase documentation unknown; Supabase environment source eabe06be5b36cf57f2b158bd5093b396606bf801; Supabase Compose source e693f206f5050b0004a86e12e533bb75ba2a9c76 | REASONED |
 <!-- version-basis:end -->
 
@@ -33615,6 +33751,9 @@ At the time of writing these deployment defaults are checked against `self-hoste
 - Supabase Row Level Security (a table without RLS is unprotected): https://supabase.com/docs/guides/database/postgres/row-level-security
 - Supabase docker .env.example (default secrets, keys, FUNCTIONS_VERIFY_JWT, signup and S3 defaults): https://github.com/supabase/supabase/blob/eabe06be5b36cf57f2b158bd5093b396606bf801/docker/.env.example
 - Supabase docker-compose.yml (published ports for the gateway and pooler): https://github.com/supabase/supabase/blob/e693f206f5050b0004a86e12e533bb75ba2a9c76/docker/docker-compose.yml
+- [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
+- [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
+- [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
 
 ======================================================================
 ==> web-exposure.md
@@ -33892,7 +34031,7 @@ done
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -33921,7 +34060,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | webhook-secret: Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs. | GitHub webhooks documentation unknown; OWASP guidance unknown | REASONED |
 | stripe-secrets: Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ. | Stripe webhooks documentation unknown | REASONED |
 | sender-ip: Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain. | GitHub webhooks documentation unknown | REASONED |
-| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown | REASONED |
+| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown; nginx source release-1.26.3; HAProxy 3.0 | REASONED |
 | message-limits: After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs. | OWASP guidance unknown | REASONED |
 | ssrf: Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials. | OWASP guidance unknown | REASONED |
 | verify-handshake: Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
@@ -34165,6 +34304,9 @@ Scope and revisions: browser behavior follows RFC 6455 and the HTML and Fetch li
 - nginx `proxy_read_timeout`: https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout
 - curl manual (`--connect-to`, `--noproxy`, write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 - Python `os.fdopen`, for reading and closing the secret pipe: https://docs.python.org/3/library/os.html#os.fdopen
+- nginx release-1.26.3 body-size, connection-limit and request-rate directives (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L348-L353, https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_limit_conn_module.c#L100-L105, https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_limit_req_module.c#L113-L118
+- Traefik v3.5 buffering, in-flight request limits and rate limits (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/buffering/, https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/inflightreq/, https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/ratelimit/
+- HAProxy 3.0 configuration: timeouts, aggregate maxconn and req.body_size advertised-length semantics (checked October 2026): https://docs.haproxy.org/3.0/configuration.html#7.3.6-req.body_size
 
 ======================================================================
 ==> transactional-email-posture.md
@@ -35756,14 +35898,14 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | appwrite-size: Encryption/scanning skip files above 20000000 bytes; cap maximumFileSize at that threshold when either is mandatory and test the boundary. | Appwrite 2.2.0 | REASONED |
 | appwrite-functions: Function execute roles and execution-key scopes default empty; grant narrowly. Disabled functions still admit authorized Server SDK API keys. | Appwrite 2.2.0 | REASONED |
 | appwrite-executor: Keep executor/orchestrator private, protect Docker-socket authority and replace _APP_EXECUTOR_SECRET; container execution is not demonstrated hostile-tenant isolation. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
-| verify-pb-records: Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls. | PocketBase documentation (rolling) unknown | REASONED |
+| verify-pb-records: Public rules allow guest reads; locked rules deny with 403, unsatisfied list filters can return empty 200 and view rules 404. Retain owner and separate superuser controls. | PocketBase documentation (rolling) unknown; curl curl-8_14_1 | REASONED |
 | verify-appwrite-records: Broad collection grants defeat document restrictions; removing them must deny unrelated users while document grantees succeed. Compare client/server creation defaults. | Appwrite documentation (rolling) unknown | REASONED |
 | verify-appwrite-keys: A correctly scoped server key reads despite empty permissions, while a key without scope fails; neither substitutes for an ordinary-user control. | Appwrite 2.2.0 | REASONED |
 | verify-registration: On disposable Appwrite fixtures compare open signup 201 with root-only account-limit failure and independent email/IP restrictions; retain login/invitation controls. | Appwrite 2.2.0 | REASONED |
 | verify-pb-bootstrap: Guest and ordinary-user _superusers record creation must fail while a valid installer token creates the private operator; static dashboard assets prove no admin access. | PocketBase v0.40.4 | REASONED |
 | verify-appwrite-mfa: Console account GET succeeds without MFA, fails with user_more_factors_required for a fresh password-only MFA session, and succeeds after TOTP completion. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | verify-pb-writes: Compare intended/unauthorized POST/PATCH/DELETE and privileged auth-record management; locked manageRule grants no management and empty-string configuration must fail. | PocketBase v0.40.4 | REASONED |
-| verify-pb-files: Before protection unsigned file GET works; Protected plus private viewRule rejects guests/unrelated-user file tokens with 404 while permitted-user bytes still arrive. | PocketBase v0.40.4 | REASONED |
+| verify-pb-files: Before protection unsigned file GET works; Protected plus private viewRule rejects guests/unrelated-user file tokens with 404 while permitted-user bytes still arrive. | PocketBase v0.40.4; curl curl-8_14_1 | REASONED |
 | verify-pb-realtime: Mutate a fixture while comparing collection and record subscriptions; deny unauthorized event delivery, retaining authorized delivery. PB_CONNECT/acknowledgment alone is insufficient. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | verify-pb-mfa: Compare password-only completion with password-plus-OTP MFA and verified/unverified authRule logins; clearing authStore must not revoke a retained valid token. | PocketBase documentation (rolling) unknown | REASONED |
 | verify-pb-ips: Compare allowed/excluded superuser sources and forged forwarded headers; excluded sources must get 403 and direct backend access must fail with a working proxy control. | PocketBase v0.40.4 | REASONED |
@@ -36394,6 +36536,10 @@ service result or deployed-bundle scan is claimed.
 - [Appwrite 2.2.0 function execute roles, execution-key scopes, and enablement](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Platform/Modules/Functions/Http/Functions/Create.php).
 - [Appwrite 2.2.0 storage thresholds and release constant](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/init/constants.php).
 - [Appwrite 2.2.0 Compose console path, persistent volumes, and Docker socket mounts](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/docker-compose.yml).
+- [PocketBase v0.40.4 CLI wrapper and development flag wiring (checked October 2026)](https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L234-L239).
+- [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
+- [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
+- [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
 
 ======================================================================
 ==> headless-browser-services.md
@@ -36406,7 +36552,7 @@ service result or deployed-bundle scan is claimed.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -36432,14 +36578,14 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | browserless-token: Use a randomized TOKEN, protect token-bearing connection URLs and logs, and terminate TLS at the fronting layer. | browserless unknown | REASONED |
 | browserless-file: Require browserless 2.51.0 or later containing the pinned Playwright fix, keep ALLOW_FILE_PROTOCOL=false, and run the file-protocol check. | browserless unknown; browserless Playwright file-protocol fix 2.51.0 | REASONED |
 | playwright-auth: Playwright server has no password/user model; reachable endpoints grant OS-user control, so bind 127.0.0.1 and protect endpoint URLs. | Playwright unknown | REASONED |
-| playwright-discovery: Guide records run-server path / and launchServer random paths discoverable through GET /json; a secret path is not an access boundary. | Playwright unknown | REASONED |
+| playwright-discovery: Guide records run-server path / and launchServer random paths discoverable through GET /json; a secret path is not an access boundary. | Playwright unknown; Playwright source v1.58.2 | REASONED |
 | playwright-tls: Authenticate WebSocket upgrades and discovery at a wss proxy; connect accepts custom headers and the server supplies no native TLS. | Playwright unknown | REASONED |
 | debug-bypass: A separately forwarded Chromium debug endpoint bypasses front-tool authentication; keep 9222 unpublished and restrict browser egress. | Chrome DevTools Protocol unknown; Selenium Grid unknown; browserless unknown; Playwright unknown | REASONED |
 | verify-listeners: Inventory every listener, including distributed Grid and configured Playwright ports, and require intended loopback/private addresses. | Chromium 154.0.8037.57; Selenium Grid unknown; Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b; browserless unknown; Playwright unknown | REASONED |
-| verify-cdp: External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive. | Chromium 154.0.8037.57 | REASONED |
-| verify-grid: Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately. | Selenium Grid unknown | REASONED |
-| verify-browserless: For open-source 2.56.7, expect /pressure load JSON without a configured TOKEN; with a nonempty TOKEN, expect 401 for missing/wrong tokens and JSON for a correct-token control. | browserless (open source) 2.56.7; browserless documentation (rolling) unknown | REASONED |
-| verify-playwright: Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port. | Playwright unknown | REASONED |
+| verify-cdp: External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive. | Chromium 154.0.8037.57; curl documentation curl-8_14_1 | REASONED |
+| verify-grid: Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately. | Selenium Grid unknown; curl documentation curl-8_14_1 | REASONED |
+| verify-browserless: For open-source 2.56.7, expect /pressure load JSON without a configured TOKEN; with a nonempty TOKEN, expect 401 for missing/wrong tokens and JSON for a correct-token control. | browserless (open source) 2.56.7; browserless documentation (rolling) unknown; curl documentation curl-8_14_1 | REASONED |
+| verify-playwright: Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port. | Playwright unknown; Playwright source v1.58.2 | REASONED |
 | browserless-file-cve: CVE-2026-92811 describes authenticated Playwright file reads despite ALLOW_FILE_PROTOCOL=false; its affected range 1.44.0 through 2.56.7 conflicts with the vendor 2.51.0 fix. | browserless Playwright file-protocol fix 2.51.0; CVE-2026-92811 record unknown | REASONED |
 | verify-browserless-file: With a valid token on every enabled Playwright WebSocket route, confirm HTTP navigation first, then attempt a readable container canary: exposed returns contents; fixed refuses with a blocked-URL policy reason. | browserless Playwright file-protocol fix 2.51.0; CVE-2026-92811 record unknown | REASONED |
 <!-- version-basis:end -->
@@ -36665,7 +36811,7 @@ refuses the navigation and closes the session with a blocked-URL policy reason. 
 missing files, authentication failures, connection failures, and timeouts are inconclusive. Passing
 `/pressure` or a CDP-only check does not establish Playwright enforcement.
 
-## Sources (checked September 2026)
+## Sources (checked October 2026)
 
 - Chromium 154.0.8037.57 browser loopback factories and approval-mode port fallback: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L69-L158
 - Chromium 154.0.8037.57 browser branding/profile and policy checks; approval-mode startup, with the `kDefaultDevToolsPort` 9222 fallback: https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L160-L282 and https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.h#L26
@@ -36697,6 +36843,9 @@ missing files, authentication failures, connection failures, and timeouts are in
 - browserless pressure API request and response (rolling documentation, checked September 2026): https://docs.browserless.io/enterprise/utility-functions/pressure
 - Playwright BrowserType.launchServer and connect: https://playwright.dev/docs/api/class-browsertype
 - Playwright Docker (run-server remote connection): https://playwright.dev/docs/docker
+- Browserless ALLOW_FILE_PROTOCOL configuration and false default (pinned tag v2.51.0; version basis 2.51.0): https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/config.ts
+- Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2): https://github.com/microsoft/playwright/blob/v1.58.2/packages/playwright-core/src/cli/program.ts#L292-L307, https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/browserServerImpl.ts, https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/remote/playwrightServer.ts
+- curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1): https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79, https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md
 
 ======================================================================
 ==> headless-cms-instant-api.md

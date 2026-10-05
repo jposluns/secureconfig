@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "93dc3b887f323f2b32d821093d730abc3fb81d735e97a927af070af1728d1066",
+  "body_sha256": "a1da5fc6a90c3d0b5aa30b66777d6b0349855d6e21a1274190d85aa3e96de7dc",
   "components": {
     "keycloak": {
       "name": "Keycloak documentation",
@@ -34,7 +34,9 @@ version_basis: {
         "sb6abd20b147e": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/lib/default.yml#L36-L48",
         "s1703fbdd4af2": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/blueprints/default/flow-oobe.yaml#L8-L194",
         "safa24c359f2d": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/internal/web/metrics.go#L22-L52",
-        "s20f8787bddf2": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/lifecycle/container/compose.yml#L1-L67"
+        "s20f8787bddf2": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/lifecycle/container/compose.yml#L1-L67",
+        "s6b4af3243161": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/stages/authenticator_validate/stage.py#L67-L166",
+        "s4ce54a5b84c8": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/stages/authenticator_validate/stage.py#L368-L443"
       }
     },
     "authentik-docs": {
@@ -108,7 +110,7 @@ version_basis: {
     "authentik-mfa": {"text": "authentik supports TOTP and WebAuthn; enroll a phishing-resistant administrator factor before connecting the first app and require it through a stage bound to the authentication flow. A registered device alone does not enforce MFA. General installation source; no pinned MFA-stage reference in Sources.", "components": ["authentik-docs"], "sources": ["authentik-docs:sb44156cde339"], "status": "REASONED"},
     "authentik-admin-boundary": {"text": "authentik has no equivalent to hostname-admin or separate administration listener: its administration interface shares the process and port with other traffic and relies on its permission model. General installation source; no dedicated or pinned administration-boundary reference in Sources.", "components": ["authentik-docs"], "sources": ["authentik-docs:sb44156cde339"], "status": "REASONED"},
     "authentik-admin-proxy": {"text": "Build any network boundary around authentik administration with proxy path restrictions and maintain the path list against a UI not designed around this separation. General installation source; no dedicated or pinned admin-path restriction reference in Sources.", "components": ["authentik-docs"], "sources": ["authentik-docs:sb44156cde339"], "status": "REASONED"},
-    "verify-mfa-password": {"text": "For both providers, open a fresh session with only the administrator password and confirm access is refused after factor enforcement; enrollment alone is insufficient. Keycloak administration and general authentik installation sources; no pinned authentik MFA-stage reference.", "components": ["keycloak", "authentik-docs"], "sources": ["keycloak:sefec90245fa1", "authentik-docs:sb44156cde339"], "status": "REASONED"},
+    "verify-mfa-password": {"text": "For both providers, open a fresh session with only the administrator password and confirm access is refused after factor enforcement; enrollment alone is insufficient. Keycloak administration and general authentik installation sources; no pinned authentik MFA-stage reference.", "components": ["keycloak", "authentik-docs", "authentik"], "sources": ["keycloak:sefec90245fa1", "authentik-docs:sb44156cde339", "authentik:s6b4af3243161", "authentik:s4ce54a5b84c8"], "status": "REASONED"},
     "management-auth-default": {"text": "In this plain-HTTP Keycloak topology no HTTP client authentication is configured, so inherited management client authentication is usually none; required needs management TLS credentials and trust first.", "components": ["keycloak"], "sources": ["keycloak:s4b5df6f4ef2e"], "status": "REASONED"},
     "docker-socket-scope": {"text": "A worker mounting an ordinary rootful Docker daemon socket has host-root-equivalent control; with a rootless daemon the blast radius is that user. Check the daemon type. General authentik installation warning; no Docker privilege-model reference in Sources.", "components": ["authentik-docs"], "sources": ["authentik-docs:sb44156cde339"], "status": "REASONED"},
     "outpost-boundaries": {"text": "authentik has an embedded server outpost and may deploy outposts on other hosts; each is another listener requiring its own exposure checks, none demonstrated by this guide's Verify probes. General installation source; no pinned outpost-listener reference in Sources.", "components": ["authentik-docs"], "sources": ["authentik-docs:sb44156cde339"], "status": "REASONED"},
@@ -127,7 +129,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -177,7 +179,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | authentik-mfa: authentik supports TOTP and WebAuthn; enroll a phishing-resistant administrator factor before connecting the first app and require it through a stage bound to the authentication flow. A registered device alone does not enforce MFA. General installation source; no pinned MFA-stage reference in Sources. | authentik operational documentation unknown | REASONED |
 | authentik-admin-boundary: authentik has no equivalent to hostname-admin or separate administration listener: its administration interface shares the process and port with other traffic and relies on its permission model. General installation source; no dedicated or pinned administration-boundary reference in Sources. | authentik operational documentation unknown | REASONED |
 | authentik-admin-proxy: Build any network boundary around authentik administration with proxy path restrictions and maintain the path list against a UI not designed around this separation. General installation source; no dedicated or pinned admin-path restriction reference in Sources. | authentik operational documentation unknown | REASONED |
-| verify-mfa-password: For both providers, open a fresh session with only the administrator password and confirm access is refused after factor enforcement; enrollment alone is insufficient. Keycloak administration and general authentik installation sources; no pinned authentik MFA-stage reference. | Keycloak documentation unknown; authentik operational documentation unknown | REASONED |
+| verify-mfa-password: For both providers, open a fresh session with only the administrator password and confirm access is refused after factor enforcement; enrollment alone is insufficient. Keycloak administration and general authentik installation sources; no pinned authentik MFA-stage reference. | Keycloak documentation unknown; authentik operational documentation unknown; authentik source version/2026.8.3 | REASONED |
 | management-auth-default: In this plain-HTTP Keycloak topology no HTTP client authentication is configured, so inherited management client authentication is usually none; required needs management TLS credentials and trust first. | Keycloak documentation unknown | REASONED |
 | docker-socket-scope: A worker mounting an ordinary rootful Docker daemon socket has host-root-equivalent control; with a rootless daemon the blast radius is that user. Check the daemon type. General authentik installation warning; no Docker privilege-model reference in Sources. | authentik operational documentation unknown | REASONED |
 | outpost-boundaries: authentik has an embedded server outpost and may deploy outposts on other hosts; each is another listener requiring its own exposure checks, none demonstrated by this guide's Verify probes. General installation source; no pinned outpost-listener reference in Sources. | authentik operational documentation unknown | REASONED |
@@ -467,3 +469,4 @@ One name is not one address, and one address is not one origin. Repeat steps 2 t
 - nginx `location` selection and the `return` directive: https://nginx.org/en/docs/http/ngx_http_core_module.html#location , https://nginx.org/en/docs/http/ngx_http_rewrite_module.html#return
 - Keycloak configuring distributed caches, including the default cache ports 7800 (`cache-embedded-network-bind-port`, unicast data transmission) and 57800 (`jgroups.fd.port-offset`, failure detection), and that "Encryption using TLS is enabled by default for TCP-based transport stacks": https://www.keycloak.org/server/caching
 - authentik 2025.10 release notes, removing the Redis dependency ("authentik no longer uses Redis at all"): https://docs.goauthentik.io/releases/2025.10/
+- authentik source `version/2026.8.3`, MFA response validation (including empty-response rejection), successful-validation continuation and remembered-MFA cookie handling (checked October 2026): https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/stages/authenticator_validate/stage.py#L67-L166 , https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/stages/authenticator_validate/stage.py#L368-L443

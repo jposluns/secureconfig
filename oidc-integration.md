@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "bc6054af62e1eec12490adf436d8afb8e4a89b05233e83dbff3ed3e3049b7489",
+  "body_sha256": "0fbdb26cd9543b1a76a5e56447edb35e4b10ea2d54b0d7016c2448c3ce59f2fc",
   "components": {
     "oauth": {
       "name": "OAuth security BCP and PKCE",
@@ -104,6 +104,16 @@ version_basis: {
       "sources": {
         "s60cc1d7a8fe6": "https://pkg.go.dev/github.com/coreos/go-oidc/v3/oidc"
       }
+    },
+    "owasp-docs": {
+      "name": "OWASP Cheat Sheet Series",
+      "basis": "668ba7db3d0da5868b8a0305c259f7f6914a6ecd",
+      "sources": {
+        "s0562e4dc23f2": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L163",
+        "sa5f6e96a876c": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L317",
+        "s41cb2204a4e2": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L201",
+        "s4f0aa80b1ef6": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/HTML5_Security_Cheat_Sheet.md#L53"
+      }
     }
   },
   "claims": {
@@ -118,7 +128,7 @@ version_basis: {
     "token-leaks": {"text": "Keep codes and tokens out of logs, traces and analytics; set callback Referrer-Policy: no-referrer and redirect to a clean URL.", "components": ["oauth"], "sources": ["oauth:sde329701b60c"], "status": "REASONED"},
     "refresh-tokens": {"text": "No offline access is requested, but provider-specific refresh tokens must remain server-side secrets, go only to the token endpoint and be revoked on offboarding.", "components": ["oauth"], "sources": ["oauth:sde329701b60c"], "status": "REASONED"},
     "account-linking": {"text": "Link by issuer and sub, not mutable or non-unique email, phone_number or preferred_username.", "components": ["core", "google", "entra"], "sources": ["core:scfd2790a544c", "google:s4f815acc2976", "entra:sc592f9f58893"], "status": "REASONED"},
-    "logout": {"text": "Destroy the server session and cookie; where advertised, redirect to end_session_endpoint with id_token_hint and registered post_logout_redirect_uri; Entra uses /oauth2/v2.0/logout.", "components": ["logout", "entra"], "sources": ["logout:s9cbf9365b369", "entra:s21141e7818fc"], "status": "REASONED"},
+    "logout": {"text": "Destroy the server session and cookie; where advertised, redirect to end_session_endpoint with id_token_hint and registered post_logout_redirect_uri; Entra uses /oauth2/v2.0/logout.", "components": ["logout", "entra", "owasp-docs"], "sources": ["logout:s9cbf9365b369", "entra:s21141e7818fc", "owasp-docs:sa5f6e96a876c"], "status": "REASONED"},
     "discovery": {"text": "Fetch issuer/.well-known/openid-configuration for endpoints and jwks_uri; tenant-specific issuer must match, with Entra common/organizations handled separately.", "components": ["discovery", "entra"], "sources": ["discovery:s85a922f6cf28", "entra:s024236a981bf"], "status": "REASONED"},
     "google-allowlist": {"text": "Require verified ID-token hd to equal the Workspace domain; absent hd is rejection and the request parameter is not access control.", "components": ["google"], "sources": ["google:s4f815acc2976"], "status": "REASONED"},
     "entra-allowlist": {"text": "Require allowed tid and tenant-specific iss; prefer Single tenant only. organizations accepts any Entra tenant, common also personal accounts; key identity by oid or sub plus tid.", "components": ["entra"], "sources": ["entra:sc592f9f58893", "entra:s6bed41a98a09", "entra:s21141e7818fc"], "status": "REASONED"},
@@ -147,9 +157,9 @@ version_basis: {
     "verify-redirect": {"text": "Changing redirect_uri host or adding a path segment must cause a provider error without redirection.", "components": ["oauth"], "sources": ["oauth:sde329701b60c"], "status": "REASONED"},
     "verify-state": {"text": "A changed callback state must be rejected.", "components": ["oauth"], "sources": ["oauth:sde329701b60c"], "status": "REASONED"},
     "verify-token": {"text": "Accept a valid ID-token control and reject one-property fixtures for expiry beyond skew, wrong aud/azp and broken signature in the token-validation path, not the code callback.", "components": ["core"], "sources": ["core:scfd2790a544c"], "status": "REASONED"},
-    "verify-logout": {"text": "After logout a protected page returns to login and a copied old cookie stops authorizing; JWT sessions need database replacement or a revocation check.", "components": ["authjs", "logout"], "sources": ["authjs:s57969fbce700", "logout:s9cbf9365b369"], "status": "REASONED"},
-    "server-session": {"text": "After token validation and allowlist authorization, create a server-side session and give the browser only a session cookie marked Secure, HttpOnly and SameSite. Auth.js session-strategies is the nearest general session source; no dedicated reference for the complete cookie policy in Sources.", "components": ["authjs"], "sources": ["authjs:s57969fbce700"], "status": "REASONED"},
-    "browser-token-storage": {"text": "Do not store ID or access tokens in localStorage or script-readable cookies; this server-side login recipe has no browser need for them. General OAuth security source; no dedicated browser-storage reference in Sources.", "components": ["oauth"], "sources": ["oauth:sde329701b60c"], "status": "REASONED"},
+    "verify-logout": {"text": "After logout a protected page returns to login and a copied old cookie stops authorizing; JWT sessions need database replacement or a revocation check.", "components": ["authjs", "logout", "owasp-docs"], "sources": ["authjs:s57969fbce700", "logout:s9cbf9365b369", "owasp-docs:sa5f6e96a876c"], "status": "REASONED"},
+    "server-session": {"text": "After token validation and allowlist authorization, create a server-side session and give the browser only a session cookie marked Secure, HttpOnly and SameSite. Auth.js session-strategies is the nearest general session source; no dedicated reference for the complete cookie policy in Sources.", "components": ["authjs", "owasp-docs"], "sources": ["authjs:s57969fbce700", "owasp-docs:s0562e4dc23f2"], "status": "REASONED"},
+    "browser-token-storage": {"text": "Do not store ID or access tokens in localStorage or script-readable cookies; this server-side login recipe has no browser need for them. General OAuth security source; no dedicated browser-storage reference in Sources.", "components": ["oauth", "owasp-docs"], "sources": ["oauth:sde329701b60c", "owasp-docs:s41cb2204a4e2", "owasp-docs:s4f0aa80b1ef6"], "status": "REASONED"},
     "client-secret-storage": {"text": "Keep the client secret in an environment variable or secret manager, never a repository or image. General OAuth security source; no dedicated secret-storage reference in Sources.", "components": ["oauth"], "sources": ["oauth:sde329701b60c"], "status": "REASONED"},
     "github-org-mfa": {"text": "GitHub OAuth has no ID token, so MFA depends on what the organization requires of its members. OAuth authorization and organization-membership references only; Sources has no GitHub organization-MFA-policy reference.", "components": ["github"], "sources": ["github:sce29d52054f5", "github:s06cab1763f65"], "status": "REASONED"},
     "authjs-session-storage": {"text": "Auth.js stores an encrypted JWT or database session ID in an HttpOnly cookie; use database sessions or a server blocklist when copied-cookie revocation is required.", "components": ["authjs"], "sources": ["authjs:s57969fbce700"], "status": "REASONED"},
@@ -164,7 +174,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -179,7 +189,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | token-leaks: Keep codes and tokens out of logs, traces and analytics; set callback Referrer-Policy: no-referrer and redirect to a clean URL. | OAuth security BCP and PKCE unknown | REASONED |
 | refresh-tokens: No offline access is requested, but provider-specific refresh tokens must remain server-side secrets, go only to the token endpoint and be revoked on offboarding. | OAuth security BCP and PKCE unknown | REASONED |
 | account-linking: Link by issuer and sub, not mutable or non-unique email, phone_number or preferred_username. | OpenID Connect Core 1.0; Google identity documentation unknown; Microsoft Entra documentation unknown | REASONED |
-| logout: Destroy the server session and cookie; where advertised, redirect to end_session_endpoint with id_token_hint and registered post_logout_redirect_uri; Entra uses /oauth2/v2.0/logout. | OpenID Connect RP-Initiated Logout 1.0; Microsoft Entra documentation unknown | REASONED |
+| logout: Destroy the server session and cookie; where advertised, redirect to end_session_endpoint with id_token_hint and registered post_logout_redirect_uri; Entra uses /oauth2/v2.0/logout. | OpenID Connect RP-Initiated Logout 1.0; Microsoft Entra documentation unknown; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | discovery: Fetch issuer/.well-known/openid-configuration for endpoints and jwks_uri; tenant-specific issuer must match, with Entra common/organizations handled separately. | OpenID Connect Discovery 1.0; Microsoft Entra documentation unknown | REASONED |
 | google-allowlist: Require verified ID-token hd to equal the Workspace domain; absent hd is rejection and the request parameter is not access control. | Google identity documentation unknown | REASONED |
 | entra-allowlist: Require allowed tid and tenant-specific iss; prefer Single tenant only. organizations accepts any Entra tenant, common also personal accounts; key identity by oid or sub plus tid. | Microsoft Entra documentation unknown | REASONED |
@@ -208,9 +218,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-redirect: Changing redirect_uri host or adding a path segment must cause a provider error without redirection. | OAuth security BCP and PKCE unknown | REASONED |
 | verify-state: A changed callback state must be rejected. | OAuth security BCP and PKCE unknown | REASONED |
 | verify-token: Accept a valid ID-token control and reject one-property fixtures for expiry beyond skew, wrong aud/azp and broken signature in the token-validation path, not the code callback. | OpenID Connect Core 1.0 | REASONED |
-| verify-logout: After logout a protected page returns to login and a copied old cookie stops authorizing; JWT sessions need database replacement or a revocation check. | Auth.js unknown; OpenID Connect RP-Initiated Logout 1.0 | REASONED |
-| server-session: After token validation and allowlist authorization, create a server-side session and give the browser only a session cookie marked Secure, HttpOnly and SameSite. Auth.js session-strategies is the nearest general session source; no dedicated reference for the complete cookie policy in Sources. | Auth.js unknown | REASONED |
-| browser-token-storage: Do not store ID or access tokens in localStorage or script-readable cookies; this server-side login recipe has no browser need for them. General OAuth security source; no dedicated browser-storage reference in Sources. | OAuth security BCP and PKCE unknown | REASONED |
+| verify-logout: After logout a protected page returns to login and a copied old cookie stops authorizing; JWT sessions need database replacement or a revocation check. | Auth.js unknown; OpenID Connect RP-Initiated Logout 1.0; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| server-session: After token validation and allowlist authorization, create a server-side session and give the browser only a session cookie marked Secure, HttpOnly and SameSite. Auth.js session-strategies is the nearest general session source; no dedicated reference for the complete cookie policy in Sources. | Auth.js unknown; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| browser-token-storage: Do not store ID or access tokens in localStorage or script-readable cookies; this server-side login recipe has no browser need for them. General OAuth security source; no dedicated browser-storage reference in Sources. | OAuth security BCP and PKCE unknown; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | client-secret-storage: Keep the client secret in an environment variable or secret manager, never a repository or image. General OAuth security source; no dedicated secret-storage reference in Sources. | OAuth security BCP and PKCE unknown | REASONED |
 | github-org-mfa: GitHub OAuth has no ID token, so MFA depends on what the organization requires of its members. OAuth authorization and organization-membership references only; Sources has no GitHub organization-MFA-policy reference. | GitHub OAuth and REST documentation unknown | REASONED |
 | authjs-session-storage: Auth.js stores an encrypted JWT or database session ID in an HttpOnly cookie; use database sessions or a server blocklist when copied-cookie revocation is required. | Auth.js unknown | REASONED |
@@ -328,3 +338,7 @@ Negative tests matter more than the happy path:
 - Auth.js (installation, providers): https://authjs.dev/ ; session strategies (a JWT cannot be expired early without a blocklist): https://authjs.dev/concepts/session-strategies
 - Authlib Flask client: https://docs.authlib.org/en/stable/oauth2/client/web/flask.html
 - go-oidc: https://pkg.go.dev/github.com/coreos/go-oidc/v3/oidc
+- OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd: session cookie attributes (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L163
+- OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd: server-side session invalidation (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L317
+- OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd: browser token storage (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L201
+- OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd: local storage and HttpOnly cookies (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/HTML5_Security_Cheat_Sheet.md#L53
