@@ -42,7 +42,6 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.191 | F-VERSION-LABEL-ROLLING: Sources items that pair a version label with an unpinned rolling-documentation URL misattribute the page to that version. Audit every such item corpus-wide and apply the 2026-09-27 pin-or-split ruling, keeping labels that state a version fact the page itself documents. Row opened by maintainer ruling 2026-09-28; batches a to c. (M, M) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 
