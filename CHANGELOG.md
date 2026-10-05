@@ -12,6 +12,8 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-05
 
+- Add scoped REASONED Verify declarations across the eight row 3.30 batch 2 guides, clearing 93 units (14 list items, 22 table rows and 57 prose units) by subtraction-only baseline regeneration. Retain eleven SQLite frontend historical-evidence units and one Elasticsearch snapshot/source-audit row; preserve commands, claims and recorded limitations (#NNN).
+
 - Add scoped REASONED Verify declarations in NATS, admin UIs, DevOps UIs, host, HAProxy, lighttpd, Docker and free certificates (row 3.30, batch 1). Remove 96 marking exemptions by regeneration, retaining two NATS historical guard-evidence paragraphs; preserve commands, claims and recorded limitations (#440).
 - Add verified pinned Sources and claim mappings for ten READY facts across fifteen claims in Cloudflare, self-hosted tunnels, Tailscale and cloud identity proxies; regenerate version summaries and bundles (row 1.179, batch 4b) (#437).
 - Add verified pinned Sources and claim mappings for nine READY facts across eleven claims in Node.js, Python, Go, .NET, and GitOps controllers; regenerate version summaries and bundles (row 1.179, batch 5b; GitOps residuals remain under row 2.28) (#439).
