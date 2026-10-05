@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fb98c26ac9667a02b00d5013a92818fe0b02d21fb6289633159193f20443b6a6",
+  "body_sha256": "fb5a7bd91247ee079b7f4e4cb0bda995b85de127be33e595d1b18f4a73ab0c7a",
   "components": {
     "firebase": {
       "name": "Firebase documentation",
@@ -110,8 +110,7 @@ version_basis: {
       "basis": "curl-8_14_1",
       "sources": {
         "s5e1383feef7d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79",
-        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md",
-        "s82a34ee18632": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md"
+        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md"
       }
     }
   },
@@ -165,7 +164,7 @@ version_basis: {
     "verify-rtdb": {"text": "Compare unsigned/A/B reads/writes to seeded RTDB owner paths; ancestor grants expose them while ownership rules deny unauthorized callers.", "components": ["firebase"], "sources": ["firebase:sa6b1c4933e6a"], "status": "REASONED"},
     "verify-firebase-storage": {"text": "Compare unsigned/A/B object reads and uploads; ownership rules must deny unrelated callers while owner operations succeed.", "components": ["firebase"], "sources": ["firebase:s0a7f54463abd"], "status": "REASONED"},
     "verify-download-token": {"text": "Same sessionless download URL works after Rules tightening but must lose bytes after token revocation; owner getBytes remains successful and network/CORS failures are inconclusive.", "components": ["firebase"], "sources": ["firebase:s9b7e57b472c7", "firebase:sa0584b797732", "firebase:sfd1e7412abf6"], "status": "REASONED"},
-    "verify-tables": {"text": "Pair unsigned/A/B profiles GETs against seeded rows, using ordinary credentials and required MFA; test intended writes and persisted effects separately.", "components": ["supabase", "postgres", "curl"], "sources": ["supabase:s92b405dc3c7e", "postgres:se9846041ce1f", "supabase:s741468ff35a9", "curl:s5e1383feef7d", "curl:s3db522258e44", "curl:s82a34ee18632"], "status": "REASONED", "verify": [1]},
+    "verify-tables": {"text": "Pair unsigned/A/B profiles GETs against seeded rows, using ordinary credentials and required MFA; test intended writes and persisted effects separately.", "components": ["supabase", "postgres", "curl"], "sources": ["supabase:s92b405dc3c7e", "postgres:se9846041ce1f", "supabase:s741468ff35a9", "curl:s5e1383feef7d", "curl:s3db522258e44"], "status": "REASONED", "verify": [1]},
     "verify-views": {"text": "Compare view reads with table boundaries; owner-privileged exposure must close under invoker/revoked access while intended reads or deliberate removal are confirmed.", "components": ["postgres"], "sources": ["postgres:s13c54ab9cc6b"], "status": "REASONED"},
     "verify-rpc": {"text": "Test every API function overload with valid harmless arguments as unsigned/A/B; unauthorized data or operations must be denied while the intended caller succeeds.", "components": ["supabase"], "sources": ["supabase:s087c8cf42ab0", "supabase:s8405a9fb4b74"], "status": "REASONED"},
     "verify-http": {"text": "Probe HTTP wrappers with a controlled collector and marker; unauthorized fixed calls must emit no request. Commit pg_net fixture transactions before expecting delivery.", "components": ["supabase"], "sources": ["supabase:s76740bffcb32"], "status": "REASONED"},
@@ -1216,4 +1215,3 @@ was not installed in the repository, and no whole-corpus gate result is claimed.
 - [Firebase Storage SDK direct downloads and browser CORS](https://firebase.google.com/docs/storage/web/download-files).
 - [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
 - [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
-- [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
