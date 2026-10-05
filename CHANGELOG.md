@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-05
 
-- Add verified pinned Sources and claim mappings for nine READY facts across eleven claims in Node.js, Python, Go, .NET, and GitOps controllers; regenerate version summaries and bundles (row 1.179, batch 5b; GitOps residuals remain under row 2.28) (#NNN).
+- Add verified pinned Sources and claim mappings for nine READY facts across eleven claims in Node.js, Python, Go, .NET, and GitOps controllers; regenerate version summaries and bundles (row 1.179, batch 5b; GitOps residuals remain under row 2.28) (#439).
 - Expand Verify-marking coverage from fences to every list item, table body row and prose paragraph, retaining an initial 1,021 fingerprinted exemptions (163 list items, 149 table rows, 709 prose units) under the baseline ratchet. Require plain-text declaration markers and provenance across all attachment sites and accept valid tables on list items' first lines while still rejecting ragged rows. Normalize heading whitespace, reject differences between legacy and parser Verify spans, and validate closure for every parser-selected fence. Row 3.30 remains open for the burn-down (#429).
 - Add verified pinned Sources and claim mappings for the READY MFA, self-hosted IdP and OIDC integration facts (OIDC session cookies, server-side logout and browser token storage); preserve claim text and residuals (row 1.179, batch 3a) (#434).
 - Add verified pinned Sources and claim mappings for fifteen READY facts across nineteen claims in authentication, identity providers, and fronting authentication; regenerate version summaries and bundles (row 1.179, batch 3b) (#435).
