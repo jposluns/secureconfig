@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "3395c5f6a7f20d649bcdf69f2d362c55ab3606bb5df49e4f92d697dfecbd8efa",
+  "body_sha256": "d1e63947c305d41038b5f66d731afc65b69fc4b61b0c05cb43792bfd60fc0f27",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -277,7 +277,7 @@ ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0
            # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
 ```
 
-Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener with
+REASONED: following block; management-surface comparisons from the cited HAProxy stats, runtime API and TLS documentation; no HAProxy runtime or certificate fixtures are available. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener with
 an unauthenticated request (refused) and a valid-credential request (returns the statistics) against that
 listener specifically; the runtime socket by its ownership and mode and an unauthorized local identity
 (permission denied), since `show cli level` reporting `admin` is the authorized level, not proof of access

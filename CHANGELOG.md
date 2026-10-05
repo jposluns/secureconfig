@@ -12,6 +12,8 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-05
 
+- Add scoped REASONED Verify declarations in NATS, admin UIs, DevOps UIs, host, HAProxy, lighttpd, Docker and free certificates (row 3.30, batch 1). Remove 96 marking exemptions by regeneration, retaining two NATS historical guard-evidence paragraphs; preserve commands, claims and recorded limitations.
+
 - Add verified pinned Sources and claim mappings for twenty READY facts across seventeen claims in machine authentication, secrets, web exposure, admin UIs and DevOps UIs; preserve claim wording and residuals, and regenerate summaries and bundles (row 1.179, batch 4a) (#436).
 - Add verified pinned Sources and claim mappings for fourteen READY facts across fifteen claims in deployment lifecycle, GPU clouds, MLflow, PaaS, SQLite, and transactional email posture; regenerate version summaries and bundles (row 1.179, batch 5a) (#438).
 - Expand Verify-marking coverage from fences to every list item, table body row and prose paragraph, retaining an initial 1,021 fingerprinted exemptions (163 list items, 149 table rows, 709 prose units) under the baseline ratchet. Require plain-text declaration markers and provenance across all attachment sites and accept valid tables on list items' first lines while still rejecting ragged rows. Normalize heading whitespace, reject differences between legacy and parser Verify spans, and validate closure for every parser-selected fence. Row 3.30 remains open for the burn-down (#429).

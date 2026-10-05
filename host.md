@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "7ec61a3b662fc5b4bc804bea03d70b2907837b5d7382ece647096b00e5012adb",
+  "body_sha256": "d6d750dd80af8459f9b889630998bb0b267926ff178588b07d541a6dc9954651",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",
@@ -218,7 +218,7 @@ ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@host   
 ssh user@host                     # with PAM MFA: the key is accepted, then a code is required before a shell. Also confirm a wrong or omitted code is REJECTED, that unenrolled users are denied (drop `nullok`), and that Duo fails closed (`failmode=secure`), per mfa.md; otherwise the factor is optional, not mandatory
 ```
 
-Run the SSH test from a second terminal before closing your working session.
+REASONED: session-retention procedure from the safe transition in section 1 and cited SSH guidance; no authorized target host is available. Run the SSH test from a second terminal before closing your working session.
 
 ## Sources (checked September 2026)
 

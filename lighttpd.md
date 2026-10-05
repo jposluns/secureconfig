@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "1af8ee3401d7827e532ae96a905cf473eb5726da3f950e6ab9e6791a20736f67",
+  "body_sha256": "fc329da4579055c92667a236eef7e06f208566fb3acb5ec6a0ec2cb1d38d33c6",
   "components": {
     "tls": {
       "name": "lighttpd TLS minimum",
@@ -152,7 +152,7 @@ Basic authentication is single-factor, and lighttpd is absent from Authelia's su
 
 ## 4. Verify
 
-These are read-and-judge checks: the status code is printed and you compare it.
+REASONED: interpretation procedure from the status-output commands and expected outcomes below; no deployment or protected path was supplied. These are read-and-judge checks: the status code is printed and you compare it.
 
 REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block.
 

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "3dee1b509ea8da8bfd36786a46d03ba4ac6f039c73f2cece679e29f136f958a7",
+  "body_sha256": "8ea23156fdbfedaa8aa39d8d6777c2da755c11a718bcf90974adefd63cda9c82",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -458,7 +458,7 @@ else
 fi
 ```
 
-From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
+REASONED: external panel-access expectations from the cited panel authentication sources; no panel deployment or external test network is available. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
 
 ## Sources (checked September 2026)
 
