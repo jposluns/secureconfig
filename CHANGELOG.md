@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-05
+
+- Add verified pinned sources and claim mappings for Mosquitto, search engines, Streamlit, n8n, headless browser services and workflow orchestrators (row 1.179, batch 1a); retain rolling provenance for the n8n 2.0 change notice (#NNN).
+
 ## 2026-09-27
 
 - Pin or split version-labelled rolling-documentation Sources items in 11 guides (row 1.191, batch b of 3) (#426).

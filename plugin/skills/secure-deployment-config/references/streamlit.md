@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-27",
-  "documentation_checked": "2026-09",
-  "body_sha256": "959a9c4e458465ee03ffce9e4663687639b39091f0cb2ad721e6fbeaec3c6397",
+  "checked": "2026-10-05",
+  "documentation_checked": "2026-10",
+  "body_sha256": "c2657a878fc25df437454b614171c382304ed2ad2b1873e472299d906377da5f",
   "components": {
     "streamlit": {
       "name": "Streamlit",
@@ -67,6 +67,31 @@ version_basis: {
         "s6f6f9b0b14c2": "https://docs.streamlit.io/develop/quick-reference/release-notes",
         "se2c98289aac5": "https://docs.streamlit.io/develop/quick-reference/release-notes/2025#version-1420"
       }
+    },
+    "caddy": {
+      "name": "Caddy",
+      "basis": "v2.11.4",
+      "sources": {
+        "sb0b62262df7b": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88",
+        "sa2f9251701a0": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L347-L476",
+        "s9702adeb8c11": "https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go",
+        "s6b8d900baeb9": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/caddyauth/caddyfile.go#L29-L36"
+      }
+    },
+    "oauth2-proxy": {
+      "name": "oauth2-proxy",
+      "basis": "v7.15.4",
+      "sources": {
+        "s088c1baa445d": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/options.go#L141"
+      }
+    },
+    "keycloak": {
+      "name": "Keycloak",
+      "basis": "26.7.4",
+      "sources": {
+        "sf802dc9c4313": "https://raw.githubusercontent.com/keycloak/keycloak/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc",
+        "se52072c97d20": "https://github.com/keycloak/keycloak/blob/26.7.4/services/src/main/java/org/keycloak/protocol/oidc/mappers/UserAttributeMapper.java#L96-L104"
+      }
     }
   },
   "claims": {
@@ -83,8 +108,8 @@ version_basis: {
     "oidc-dependencies": {"text": "Recorded loopback login with Authlib but without httpx failed; install the complete auth extra.", "components": ["streamlit"], "sources": ["streamlit:s9d96cdf36131"], "status": "DEMONSTRATED", "evidence": "every browser login attempt got `Internal Server Error`, with `ModuleNotFoundError: No module named 'httpx'` in Streamlit's log."},
     "oidc-config": {"text": "secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; st.login authenticates identity, not resource authorization.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s1322a5f1d6a0"], "status": "REASONED"},
     "page-gates": {"text": "Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
-    "native-gate": {"text": "In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s3f8bf05ddb38"], "status": "DEMONSTRATED", "evidence": "The user in another domain, and the user with no `hd` attribute, saw \"This account is not authorized for this app.\""},
-    "email-gate": {"text": "Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s3f8bf05ddb38"], "status": "DEMONSTRATED", "evidence": "The unverified user saw \"This account's email is not verified.\""},
+    "native-gate": {"text": "In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users.", "components": ["streamlit-rolling", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s3f8bf05ddb38", "keycloak:se52072c97d20"], "status": "DEMONSTRATED", "evidence": "The user in another domain, and the user with no `hd` attribute, saw \"This account is not authorized for this app.\""},
+    "email-gate": {"text": "Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users.", "components": ["streamlit-rolling", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s3f8bf05ddb38", "keycloak:se52072c97d20"], "status": "DEMONSTRATED", "evidence": "The unverified user saw \"This account's email is not verified.\""},
     "claims": {"text": "st.user contains ID-token claims; Google hd identifies Workspace/Cloud accounts and is absent for consumer accounts; explicit address allowlisting is an alternative.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s3f8bf05ddb38"], "status": "REASONED"},
     "cookie": {"text": "Native identity cookie lasts 30 days and the lifetime is not configurable.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
     "secrets": {"text": "Keep secrets.toml out of Git, build contexts and served directories; restrict access, never render/log st.secrets, and rotate exposed client/cookie secrets.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s720555b11b6e"], "status": "REASONED"},
@@ -96,10 +121,10 @@ version_basis: {
     "static-test": {"text": "Recorded static serving bypassed st.stop; enabled returned marker text and disabled returned app HTML, both 200, so inspect the body.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s6f8f2b27ef37"], "status": "DEMONSTRATED", "evidence": "with `server.enableStaticServing` on, the script called `st.stop()` at once, yet `/app/static/public.txt` returned the file with `200` and `text/plain`. With it off, the same path returned `200` with the app's HTML page, not the file."},
     "execution-egress": {"text": "TLS/login do not sandbox Python; use least privilege and minimal credentials, avoid executing inputs, and restrict URL-fetch egress including metadata/internal networks.", "components": ["ssrf", "streamlit-rolling"], "sources": ["streamlit-rolling:s720555b11b6e", "ssrf:s7eb820e1e53b"], "status": "REASONED"},
     "verify-tls": {"text": "Recorded native TLS returned 200 with the trusted test CA and failed trust with exit 60; never use -k.", "components": ["curl", "streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9", "curl:s2b2686afaf41"], "status": "DEMONSTRATED", "evidence": "**Block 1 against native TLS:** `tls=200` with the test CA trusted. With curl not trusting the certificate it stopped at `tls=000 exit=60`."},
-    "verify-proxy": {"text": "Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s66e514173b37"], "status": "DEMONSTRATED", "evidence": "Block 1 got `401` on both requests, and a wrong credential also got `401`."},
-    "verify-oidc-proxy": {"text": "Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "DEMONSTRATED", "evidence": "The anonymous health request got a `302`, and an anonymous websocket upgrade was redirected to the provider's authorization endpoint instead of upgraded."},
+    "verify-proxy": {"text": "Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary.", "components": ["streamlit-rolling", "caddy"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s66e514173b37", "caddy:sb0b62262df7b", "caddy:sa2f9251701a0", "caddy:s9702adeb8c11", "caddy:s6b8d900baeb9"], "status": "DEMONSTRATED", "evidence": "Block 1 got `401` on both requests, and a wrong credential also got `401`."},
+    "verify-oidc-proxy": {"text": "Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403.", "components": ["streamlit-rolling", "oauth2-proxy", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "oauth2-proxy:s088c1baa445d", "keycloak:sf802dc9c4313"], "status": "DEMONSTRATED", "evidence": "The anonymous health request got a `302`, and an anonymous websocket upgrade was redirected to the provider's authorization endpoint instead of upgraded."},
     "verify-native-browser": {"text": "Native anonymous index is intentionally 200; browser comparisons must check protected content, valid users, domain/email denial and MFA rather than index status.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "DEMONSTRATED", "evidence": "The anonymous index returned `200` by design, and the anonymous browser was sent to the provider's sign-in page."},
-    "verify-mfa": {"text": "Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "DEMONSTRATED", "evidence": "The allowed user rendered the canary after enrolling and then entering TOTP codes; a wrong code kept them at the one-time-code prompt."},
+    "verify-mfa": {"text": "Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google.", "components": ["streamlit-rolling", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "keycloak:sf802dc9c4313"], "status": "DEMONSTRATED", "evidence": "The allowed user rendered the canary after enrolling and then entering TOTP codes; a wrong code kept them at the one-time-code prompt."},
     "verify-external": {"text": "From another host any direct 8501 HTTP response is an exposure; refusal/no-route is not proof and DNS/local errors/timeouts are inconclusive; second-host vantage was unavailable.", "components": ["streamlit", "curl", "streamlit-rolling"], "sources": ["streamlit:s208ef00c9507", "streamlit:s7e4fdd54875d", "streamlit-rolling:s66e514173b37", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-local-reachability": {"text": "Recorded same-host probe distinguished a listening address from another loopback address; it does not demonstrate the external scenario.", "components": ["curl", "streamlit-rolling"], "sources": ["streamlit-rolling:s66e514173b37", "curl:s2b2686afaf41"], "status": "DEMONSTRATED", "evidence": "**Block 3 from the same host:** `http=200` against the address Streamlit listened on, and `exit=7` against another loopback address."},
     "verify-pages": {"text": "Test every protected page and operation with anonymous, allowed and disallowed users, restoring an isolated exposed canary comparison; broken WebSockets or blank pages are not positive controls.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
@@ -115,7 +140,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -132,8 +157,8 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | oidc-dependencies: Recorded loopback login with Authlib but without httpx failed; install the complete auth extra. | Streamlit 1.64.0 | DEMONSTRATED |
 | oidc-config: secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; st.login authenticates identity, not resource authorization. | Streamlit documentation (rolling) unknown | REASONED |
 | page-gates: Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks. | Streamlit documentation (rolling) unknown | REASONED |
-| native-gate: In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
-| email-gate: Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| native-gate: In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users. | Streamlit documentation (rolling) unknown; Keycloak 26.7.4 | DEMONSTRATED |
+| email-gate: Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users. | Streamlit documentation (rolling) unknown; Keycloak 26.7.4 | DEMONSTRATED |
 | claims: st.user contains ID-token claims; Google hd identifies Workspace/Cloud accounts and is absent for consumer accounts; explicit address allowlisting is an alternative. | Streamlit documentation (rolling) unknown | REASONED |
 | cookie: Native identity cookie lasts 30 days and the lifetime is not configurable. | Streamlit documentation (rolling) unknown | REASONED |
 | secrets: Keep secrets.toml out of Git, build contexts and served directories; restrict access, never render/log st.secrets, and rotate exposed client/cookie secrets. | Streamlit documentation (rolling) unknown | REASONED |
@@ -145,10 +170,10 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | static-test: Recorded static serving bypassed st.stop; enabled returned marker text and disabled returned app HTML, both 200, so inspect the body. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
 | execution-egress: TLS/login do not sandbox Python; use least privilege and minimal credentials, avoid executing inputs, and restrict URL-fetch egress including metadata/internal networks. | OWASP SSRF guidance unknown; Streamlit documentation (rolling) unknown | REASONED |
 | verify-tls: Recorded native TLS returned 200 with the trusted test CA and failed trust with exit 60; never use -k. | curl minimum write-out version 7.75.0; Streamlit documentation (rolling) unknown | DEMONSTRATED |
-| verify-proxy: Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
-| verify-oidc-proxy: Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| verify-proxy: Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary. | Streamlit documentation (rolling) unknown; Caddy v2.11.4 | DEMONSTRATED |
+| verify-oidc-proxy: Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403. | Streamlit documentation (rolling) unknown; oauth2-proxy v7.15.4; Keycloak 26.7.4 | DEMONSTRATED |
 | verify-native-browser: Native anonymous index is intentionally 200; browser comparisons must check protected content, valid users, domain/email denial and MFA rather than index status. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
-| verify-mfa: Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google. | Streamlit documentation (rolling) unknown | DEMONSTRATED |
+| verify-mfa: Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google. | Streamlit documentation (rolling) unknown; Keycloak 26.7.4 | DEMONSTRATED |
 | verify-external: From another host any direct 8501 HTTP response is an exposure; refusal/no-route is not proof and DNS/local errors/timeouts are inconclusive; second-host vantage was unavailable. | Streamlit 1.64.0; curl minimum write-out version 7.75.0; Streamlit documentation (rolling) unknown | REASONED |
 | verify-local-reachability: Recorded same-host probe distinguished a listening address from another loopback address; it does not demonstrate the external scenario. | curl minimum write-out version 7.75.0; Streamlit documentation (rolling) unknown | DEMONSTRATED |
 | verify-pages: Test every protected page and operation with anonymous, allowed and disallowed users, restoring an isolated exposed canary comparison; broken WebSockets or blank pages are not positive controls. | Streamlit documentation (rolling) unknown | REASONED |
@@ -329,7 +354,7 @@ REASONED from the cited Streamlit 1.64.0 source and the recorded loopback observ
 - an external vantage for block 3, since there was one host with no second network;
 - the default wildcard bind, since the host forbids binding every interface.
 
-## Sources (checked September 2026)
+## Sources (checked October 2026)
 
 Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at the time of writing; `server.address` defaults to unset (all interfaces) and `server.port` to `8501`, and the explicit loopback setting above is required for the fronting-proxy pattern. `st.login()` has been available since the 1.42.0 series.
 
@@ -352,3 +377,7 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 - Streamlit app health endpoint, /_stcore/health without authentication (rolling documentation, checked September 2026): https://docs.streamlit.io/deploy/tutorials/docker
 - OWASP SSRF Prevention Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
 - curl manual (write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
+- Caddy bind, certificate files, automatic HTTPS and admin options, and reverse-proxy configuration (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88, https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L347-L476, https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go
+- Caddy basic_auth configuration and default bcrypt hashing (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/caddyauth/caddyfile.go#L29-L36
+- oauth2-proxy email-domain restriction and wildcard configuration (pinned tag v7.15.4): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/options.go#L141
+- Keycloak TOTP policy and user-attribute-to-token-claim mapper used by the recorded fixture (pinned tag 26.7.4): https://raw.githubusercontent.com/keycloak/keycloak/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc, https://github.com/keycloak/keycloak/blob/26.7.4/services/src/main/java/org/keycloak/protocol/oidc/mappers/UserAttributeMapper.java#L96-L104

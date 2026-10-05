@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-27",
-  "documentation_checked": "2026-09",
-  "body_sha256": "1253b4e5bcc9904ff42537bf1266671c55d5254de45156e79b01c074d07075af",
+  "checked": "2026-10-05",
+  "documentation_checked": "2026-10",
+  "body_sha256": "b3aa0f19df599a08a369a362603f8e7f4ee6fd72ce30bcfa5b306a4c54fb7d85",
   "components": {
     "meili": {
       "name": "Meilisearch release reference",
@@ -65,6 +65,15 @@ version_basis: {
       "sources": {
         "sb8b81d3f76ff": "https://www.meilisearch.com/blog/CVE-update-Jan-2026"
       }
+    },
+    "caddy": {
+      "name": "Caddy",
+      "basis": "v2.11.4",
+      "sources": {
+        "sb0b62262df7b": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88",
+        "sa2f9251701a0": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L347-L476",
+        "s9702adeb8c11": "https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go"
+      }
     }
   },
   "claims": {
@@ -93,7 +102,7 @@ version_basis: {
     "verify-rotation": {"text": "Disclosed Typesense operational key succeeded before deletion, failed after deletion, and its replacement succeeded.", "components": ["typesense"], "sources": ["typesense:s2c4b6bcfaf53"], "status": "DEMONSTRATED", "evidence": "A disclosed operational key got `200` before rotation, `401` after it was deleted, and its replacement `200`. A Meilisearch tenant token", "verify": [1]},
     "verify-tenant": {"text": "Tenant token and scoped-key filters resisted other-tenant overrides while parent controls returned both fixtures.", "components": ["meili-docs", "typesense-docs"], "sources": ["meili-docs:s9ea7561d005d", "typesense-docs:s6fb918104d58"], "status": "DEMONSTRATED", "evidence": "A Meilisearch tenant token filtered to one tenant returned only that tenant's fixture, and a request adding a filter for the other tenant returned nothing, while the parent key returned both; a Typesense scoped key embedding `filter_by` behaved the same way under an overriding `filter_by`. For JOINs,", "verify": [1]},
     "verify-join": {"text": "Collection-scoped key leaked a joined billing field; an embedded exclude_fields restriction removed it.", "components": ["typesense-docs"], "sources": ["typesense-docs:s6fb918104d58"], "status": "DEMONSTRATED", "evidence": "For JOINs, a Typesense key scoped to collection `products` was refused a direct search of `companies` with `401`, but a `products` search with `include_fields=$companies(billing)` returned the joined company's billing field: collection scoping alone did not isolate joined data. A scoped key embedding `exclude_fields=$companies(billing)` returned the same query without it.", "verify": [1]},
-    "verify-proxy": {"text": "Recorded same-host Caddy TLS proxy preserved anonymous/keyed auth distinctions for both engines; no external isolation is established.", "components": ["meili-docs", "typesense-docs"], "sources": ["meili-docs:sb0775887509a", "typesense-docs:s6fb918104d58"], "status": "DEMONSTRATED", "evidence": "Behind the same proxy, keyless Meilisearch made the block print `FAIL: unexpected HTTP status` on an anonymous `200`, the exposed state, and Typesense with its plaintext backend on `127.0.0.1:8108` gave `401` anonymously then `200` on a collection-scoped search key.", "verify": [1]},
+    "verify-proxy": {"text": "Recorded same-host Caddy TLS proxy preserved anonymous/keyed auth distinctions for both engines; no external isolation is established.", "components": ["meili-docs", "typesense-docs", "caddy"], "sources": ["meili-docs:sb0775887509a", "typesense-docs:s6fb918104d58", "caddy:sb0b62262df7b", "caddy:sa2f9251701a0", "caddy:s9702adeb8c11"], "status": "DEMONSTRATED", "evidence": "Behind the same proxy, keyless Meilisearch made the block print `FAIL: unexpected HTTP status` on an anonymous `200`, the exposed state, and Typesense with its plaintext backend on `127.0.0.1:8108` gave `401` anonymously then `200` on a collection-scoped search key.", "verify": [1]},
     "verify-request": {"text": "Paired requests require Bash, curl 7.75.0+, verified HTTPS and identical origin/method/path/body; inspect engine JSON, not status alone.", "components": ["curl", "meili-docs", "typesense-docs"], "sources": ["curl:s2b2686afaf41", "meili-docs:sb0775887509a", "typesense-docs:s6fb918104d58"], "status": "REASONED"},
     "verify-external": {"text": "Inventory actual listeners, publications and IPv4/IPv6 rules; external TCP success fails, while refusal/timeout needs live private controls and policy evidence.", "components": ["meili", "typesense", "nc"], "sources": ["meili:sb9cb7736ecb6", "typesense:s9671c6e07c7f", "nc:s096a08149c92"], "status": "REASONED", "verify": [2]},
     "verify-local-tcp": {"text": "Recorded netcat loopback reachable/refused shapes returned FAIL/exit 1 and INCONCLUSIVE/exit 2 respectively; external reachability remains unobserved.", "components": ["nc"], "sources": ["nc:s096a08149c92"], "status": "DEMONSTRATED", "evidence": "The block against 127.0.0.1, where the engines listened, printed `FAIL: TCP 7700 is reachable` (exit `1`), the reachable shape; against 127.0.0.2, where nothing listens, each port's `Connection refused` printed `INCONCLUSIVE` and the block ended with exit `2`, the refused shape."},
@@ -108,7 +117,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -137,7 +146,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | verify-rotation: Disclosed Typesense operational key succeeded before deletion, failed after deletion, and its replacement succeeded. | Typesense 30.2 | DEMONSTRATED |
 | verify-tenant: Tenant token and scoped-key filters resisted other-tenant overrides while parent controls returned both fixtures. | Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown | DEMONSTRATED |
 | verify-join: Collection-scoped key leaked a joined billing field; an embedded exclude_fields restriction removed it. | Typesense documentation (rolling) unknown | DEMONSTRATED |
-| verify-proxy: Recorded same-host Caddy TLS proxy preserved anonymous/keyed auth distinctions for both engines; no external isolation is established. | Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown | DEMONSTRATED |
+| verify-proxy: Recorded same-host Caddy TLS proxy preserved anonymous/keyed auth distinctions for both engines; no external isolation is established. | Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown; Caddy v2.11.4 | DEMONSTRATED |
 | verify-request: Paired requests require Bash, curl 7.75.0+, verified HTTPS and identical origin/method/path/body; inspect engine JSON, not status alone. | curl minimum 7.75.0; Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown | REASONED |
 | verify-external: Inventory actual listeners, publications and IPv4/IPv6 rules; external TCP success fails, while refusal/timeout needs live private controls and policy evidence. | Meilisearch release reference v1.53.2; Typesense 30.2; OpenBSD-compatible netcat unknown | REASONED |
 | verify-local-tcp: Recorded netcat loopback reachable/refused shapes returned FAIL/exit 1 and INCONCLUSIVE/exit 2 respectively; external reachability remains unobserved. | OpenBSD-compatible netcat unknown | DEMONSTRATED |
@@ -340,7 +349,7 @@ admin/master/bootstrap key; it should never appear outside the server-side secre
 - Putting the Typesense bootstrap key or Meilisearch admin key straight into front-end JavaScript instead of minting a scoped search key.
 - A scoped key with no `filter_by` or `collections` restriction, which searches everything the admin key can see.
 
-## Sources (checked September 2026)
+## Sources (checked October 2026)
 
 Version scope: Typesense 30.2; Meilisearch current unversioned documentation checked 2026-09-18, with v1.53.2 as the release reference. The first release containing all four default keys and their exact permissions remains to be confirmed against the deployed release, so inspect `GET /keys`. The Verify commands require Bash, curl 7.75.0 or later, and OpenBSD-compatible netcat.
 
@@ -364,3 +373,4 @@ Version scope: Typesense 30.2; Meilisearch current unversioned documentation che
 - Meilisearch document-editing functions (Rhai; disabled unless enabled; rolling documentation, checked September 2026): https://www.meilisearch.com/docs/capabilities/indexing/how_to/edit_documents_with_functions
 - curl options (write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 - OpenBSD netcat reference: https://man.openbsd.org/nc
+- Caddy bind, certificate files, automatic HTTPS and admin options, and reverse-proxy configuration (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88, https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L347-L476, https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go

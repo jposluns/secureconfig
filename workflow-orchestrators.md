@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-27",
-  "documentation_checked": "2026-09",
-  "body_sha256": "fbd86c9b86b6af48cea40239b9ed334ecabcf8a5429b68b3a2e139b62dcd7d52",
+  "checked": "2026-10-05",
+  "documentation_checked": "2026-10",
+  "body_sha256": "5ac6879ff2987bfda1591c8b8d11aaab1191803428439729d6c8c97edffbc9d6",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -39,21 +39,26 @@ version_basis: {
       "sources": {
         "s1d0b86fe4334": "https://airflow.apache.org/docs/apache-airflow/3.3.2/security/security_model.html",
         "sad02a49561a0": "https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/auth-manager/simple/index.html",
-        "s3be3e4616150": "https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/auth-manager/index.html"
+        "s3be3e4616150": "https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/auth-manager/index.html",
+        "s78c661193a1a": "https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#simple-auth-manager-all-admins",
+        "s963b49f58a13": "https://airflow.apache.org/docs/apache-airflow/3.3.2/security/api.html",
+        "s705f1eb5de00": "https://raw.githubusercontent.com/apache/airflow/3.3.2/airflow-core/docs/howto/docker-compose/docker-compose.yaml",
+        "sdfcfd543928c": "https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#secret-key"
       }
     },
     "airflow-two": {
       "name": "Apache Airflow historical configuration",
-      "basis": "unknown",
+      "basis": "2.11.0",
       "sources": {
-        "s2d1891641c91": "https://airflow.apache.org/docs/apache-airflow/stable/security/"
+        "sb97f3044e215": "https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#auth-backends",
+        "sabb71378ad74": "https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#secret-key"
       }
     },
     "airflow-old": {
       "name": "Apache Airflow historical default",
-      "basis": "unknown",
+      "basis": "2.2.5",
       "sources": {
-        "s2d1891641c91": "https://airflow.apache.org/docs/apache-airflow/stable/security/"
+        "s4e72b1f51038": "https://airflow.apache.org/docs/apache-airflow/2.2.5/configurations-ref.html#auth-backend"
       }
     },
     "flower": {
@@ -247,16 +252,16 @@ version_basis: {
     "dagster-helm": {"text": "The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default.", "components": ["dagster"], "sources": ["dagster:s695dfd19dcca", "dagster:sf6f027e96a0d", "dagster:seda3a1b24425"], "status": "REASONED"},
     "dagster-auth": {"text": "OSS webserver has no built-in login or access control; protect all routes with an authenticating proxy.", "components": ["dagster-rolling"], "sources": ["dagster-rolling:s4c04d5da5257"], "status": "REASONED"},
     "airflow-boundary": {"text": "Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private.", "components": ["airflow"], "sources": ["airflow:s1d0b86fe4334"], "status": "REASONED"},
-    "airflow-two-api": {"text": "Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all.", "components": ["airflow-two", "airflow-old"], "sources": ["airflow-two:s2d1891641c91", "airflow-old:s2d1891641c91"], "status": "REASONED"},
-    "airflow-simple": {"text": "Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied.", "components": ["airflow"], "sources": ["airflow:sad02a49561a0"], "status": "REASONED"},
+    "airflow-two-api": {"text": "Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all.", "components": ["airflow-two", "airflow-old"], "sources": ["airflow-two:sb97f3044e215", "airflow-old:s4e72b1f51038"], "status": "REASONED"},
+    "airflow-simple": {"text": "Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied.", "components": ["airflow"], "sources": ["airflow:sad02a49561a0", "airflow:s3be3e4616150"], "status": "REASONED"},
     "airflow-fab": {"text": "For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA.", "components": ["airflow", "fab-rolling"], "sources": ["airflow:s3be3e4616150", "fab-rolling:s989f09d05161"], "status": "REASONED"},
-    "airflow-api": {"text": "Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager.", "components": ["airflow", "fab-rolling"], "sources": ["airflow:s3be3e4616150", "fab-rolling:s989f09d05161"], "status": "REASONED"},
-    "airflow-all-admins": {"text": "Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin.", "components": ["airflow"], "sources": ["airflow:sad02a49561a0"], "status": "REASONED"},
+    "airflow-api": {"text": "Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager.", "components": ["airflow", "fab-rolling"], "sources": ["airflow:s3be3e4616150", "fab-rolling:s989f09d05161", "airflow:s963b49f58a13"], "status": "REASONED"},
+    "airflow-all-admins": {"text": "Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin.", "components": ["airflow"], "sources": ["airflow:sad02a49561a0", "airflow:s78c661193a1a"], "status": "REASONED"},
     "fab-public-role": {"text": "Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors.", "components": ["fab-rolling"], "sources": ["fab-rolling:s989f09d05161"], "status": "REASONED"},
-    "airflow-compose-account": {"text": "Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately.", "components": ["airflow-rolling", "fab-rolling"], "sources": ["airflow-rolling:s39bfd91c507b", "fab-rolling:s989f09d05161"], "status": "REASONED"},
-    "airflow-jwt": {"text": "Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery.", "components": ["airflow-rolling"], "sources": ["airflow-rolling:s39bfd91c507b"], "status": "REASONED"},
-    "airflow-secret-key": {"text": "Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2.", "components": ["airflow-two", "airflow-rolling"], "sources": ["airflow-rolling:s2d1891641c91", "airflow-two:s2d1891641c91"], "status": "REASONED"},
-    "airflow-config": {"text": "Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2.", "components": ["airflow-two", "airflow-rolling"], "sources": ["airflow-rolling:s2d1891641c91", "airflow-two:s2d1891641c91"], "status": "REASONED"},
+    "airflow-compose-account": {"text": "Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately.", "components": ["airflow-rolling", "fab-rolling", "airflow"], "sources": ["airflow-rolling:s39bfd91c507b", "fab-rolling:s989f09d05161", "airflow:s705f1eb5de00"], "status": "REASONED"},
+    "airflow-jwt": {"text": "Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery.", "components": ["airflow-rolling", "airflow"], "sources": ["airflow-rolling:s39bfd91c507b", "airflow:s705f1eb5de00"], "status": "REASONED"},
+    "airflow-secret-key": {"text": "Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2.", "components": ["airflow-two", "airflow-rolling", "airflow"], "sources": ["airflow-rolling:s2d1891641c91", "airflow-two:sabb71378ad74", "airflow:sdfcfd543928c"], "status": "REASONED"},
+    "airflow-config": {"text": "Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2.", "components": ["airflow-two", "airflow-rolling", "airflow"], "sources": ["airflow-rolling:s2d1891641c91", "airflow-two:sabb71378ad74", "airflow:sdfcfd543928c"], "status": "REASONED"},
     "airflow-fernet": {"text": "Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets.", "components": ["airflow-rolling"], "sources": ["airflow-rolling:s2d1891641c91"], "status": "REASONED"},
     "airflow-port": {"text": "Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer.", "components": ["airflow-rolling"], "sources": ["airflow-rolling:s39bfd91c507b"], "status": "REASONED"},
     "temporal-authorizer": {"text": "Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8"], "status": "REASONED"},
@@ -291,7 +296,7 @@ version_basis: {
     "verify-inventory": {"text": "ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately.", "components": ["flower", "argo-three", "iproute2", "network-namespaces", "prefect-rolling"], "sources": ["prefect-rolling:sbe64d51110a2", "flower:s25760fae7152", "argo-three:sbddb9f07a301", "iproute2:s6cc7f285a0c7", "network-namespaces:s427c923e346f", "iproute2:s9fa9a260f1de"], "status": "REASONED", "verify": [1]},
     "verify-prefect": {"text": "Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent.", "components": ["prefect", "prefect-source", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-source:sa4574c7ed80f", "prefect-rolling:s0ef73a227667"], "status": "REASONED", "verify": [1]},
     "verify-dagster": {"text": "A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately.", "components": ["dagster-rolling"], "sources": ["dagster-rolling:s4c04d5da5257"], "status": "REASONED", "verify": [1]},
-    "verify-airflow": {"text": "FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth.", "components": ["airflow-two", "airflow-rolling", "fab-rolling"], "sources": ["fab-rolling:s989f09d05161", "airflow-rolling:s39bfd91c507b", "airflow-two:s2d1891641c91"], "status": "REASONED", "verify": [1]},
+    "verify-airflow": {"text": "FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth.", "components": ["airflow-two", "airflow-rolling", "fab-rolling"], "sources": ["fab-rolling:s989f09d05161", "airflow-rolling:s39bfd91c507b", "airflow-two:sb97f3044e215"], "status": "REASONED", "verify": [1]},
     "verify-temporal": {"text": "Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8", "temporal-rolling:s12f2c64ad396"], "status": "REASONED", "verify": [1]},
     "verify-flower": {"text": "Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected.", "components": ["flower-rolling"], "sources": ["flower-rolling:sb1ba69f79c9b"], "status": "REASONED", "verify": [1]},
     "verify-socket": {"text": "Directory/socket permissions, outsider denial, reboot persistence and container numeric IDs remain reasoned; no socket or Flower process ran.", "components": ["flower", "linux"], "sources": ["flower:s0fe6c77e9c9d", "linux:s31f41c54750c", "linux:s08902025e5f9", "linux:sa0d3793fabb7"], "status": "REASONED", "verify": [1]},
@@ -310,7 +315,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -323,16 +328,16 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | dagster-helm: The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default. | Dagster OSS 1.13.24 | REASONED |
 | dagster-auth: OSS webserver has no built-in login or access control; protect all routes with an authenticating proxy. | Dagster documentation (rolling) unknown | REASONED |
 | airflow-boundary: Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private. | Apache Airflow 3.3.2 | REASONED |
-| airflow-two-api: Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all. | Apache Airflow historical configuration unknown; Apache Airflow historical default unknown | REASONED |
+| airflow-two-api: Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all. | Apache Airflow historical configuration 2.11.0; Apache Airflow historical default 2.2.5 | REASONED |
 | airflow-simple: Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied. | Apache Airflow 3.3.2 | REASONED |
 | airflow-fab: For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | airflow-api: Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | airflow-all-admins: Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin. | Apache Airflow 3.3.2 | REASONED |
 | fab-public-role: Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors. | Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
-| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
-| airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow documentation (rolling) unknown | REASONED |
-| airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
-| airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown | REASONED |
+| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
+| airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
+| airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
+| airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
 | airflow-fernet: Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets. | Apache Airflow documentation (rolling) unknown | REASONED |
 | airflow-port: Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer. | Apache Airflow documentation (rolling) unknown | REASONED |
 | temporal-authorizer: Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience. | Temporal documentation (rolling) unknown | REASONED |
@@ -367,7 +372,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | verify-inventory: ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately. | Flower v2.2.0; Argo Workflows v3.7.18; iproute2 ss manual v6.15.0; Linux network namespaces manual man-pages-5.13; Prefect documentation (rolling) unknown | REASONED |
 | verify-prefect: Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent. | Prefect Basic Auth minimum 3.1.8; Prefect server source 9e560c9b6df4e19a5109a66e66d461f9facb538d; Prefect documentation (rolling) unknown | REASONED |
 | verify-dagster: A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately. | Dagster documentation (rolling) unknown | REASONED |
-| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Apache Airflow historical configuration unknown; Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
+| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | verify-temporal: Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth. | Temporal documentation (rolling) unknown | REASONED |
 | verify-flower: Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected. | Flower documentation (rolling) unknown | REASONED |
 | verify-socket: Directory/socket permissions, outsider denial, reboot persistence and container numeric IDs remain reasoned; no socket or Flower process ran. | Flower v2.2.0; Linux permissions and tools unknown | REASONED |
@@ -730,7 +735,7 @@ shares the directory.
   authorization. Temporal client-side payload encryption adds a separate boundary: decoding requires the key or
   access to an authorized Codec Server.
 
-## Sources (checked September 2026)
+## Sources (checked October 2026)
 
 These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x, Apache Airflow 3.3.2 with FAB provider 3.9.0 (Airflow 2.11.0 noted where the configuration paths differ), Temporal Server 1.28.x and UI Server 2.34.x, and Flower 2.2.0; confirm your own versions, since several of these settings moved between releases. Argo Workflows listener, authentication paths, TLS and manifest settings were checked against tags v3.7.18 (66e32e5cc367f223e2ecf4fbe852b95eaed83034) and v4.1.4 (b5b4d665e9be9b87c115f943584c3e0ae96fe073). The install manifests were traced through their build recipes and Kustomize inputs; their generated YAML files were not present in the supplied trees. SSO setup, API examples and security guidance retain the release-3.7 documentation links.
 
@@ -783,3 +788,10 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Argo Workflows, [SSO and RBAC](https://argo-workflows.readthedocs.io/en/release-3.7/argo-server-sso/),
   [workflow-list API](https://argo-workflows.readthedocs.io/en/release-3.7/rest-examples/), and
   [security model](https://argo-workflows.readthedocs.io/en/release-3.7/security/).
+- Apache Airflow API authentication setting and default (2.11.0 documentation): https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#auth-backends
+- Apache Airflow singular API authentication setting and deny-all default (2.2.5 documentation): https://airflow.apache.org/docs/apache-airflow/2.2.5/configurations-ref.html#auth-backend
+- Apache Airflow Simple Auth Manager all-admin authentication bypass (3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#simple-auth-manager-all-admins
+- Apache Airflow public API JWT authentication (3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/security/api.html
+- Apache Airflow development Compose FAB selection, administrator credentials and JWT fallback secret (pinned tag 3.3.2): https://raw.githubusercontent.com/apache/airflow/3.3.2/airflow-core/docs/howto/docker-compose/docker-compose.yaml
+- Apache Airflow webserver secret_key and EXPOSE_CONFIG settings (2.11.0 documentation): https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#secret-key
+- Apache Airflow API secret_key and EXPOSE_CONFIG settings (3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#secret-key
