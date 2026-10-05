@@ -84,10 +84,11 @@ BARE_UNDERSCORE_CLOSE = re.compile(legacy._CLOSES_AFTER_UNDERSCORE)
 def bare_urls(text):
     """Return plain-text destinations and findings using legacy URL boundaries.
 
-    The legacy grammar matches a known URL. Test candidate prefixes at its
-    existing URL-like markers, taking the first normalizable closing boundary.
-    This retains its treatment of trailing punctuation. Ambiguous parentheses
-    fail closed instead of guessing a truncated destination.
+    Select the first legacy closing boundary before attempting normalization;
+    validity never chooses the endpoint. Non-ASCII authorities are findings:
+    the legacy lookahead can close inside a Unicode host, so it cannot safely
+    delimit one. Explicit links still use full host normalization. Ambiguous
+    parentheses also fail closed instead of guessing a truncated destination.
     """
     urls, findings = [], []
     consumed = 0
@@ -102,6 +103,14 @@ def bare_urls(text):
         if marker[0].lower() not in {"http://", "https://"} or not BARE_OPEN.match(text, start):
             findings.append(f"unclassified URL-like text {chunk!r}")
             continue
+        # Inspect the entire possible authority before consulting the legacy
+        # closer. Unicode dots, combining marks and compatibility characters
+        # must not leave a valid-looking ASCII prefix with an unchecked tail.
+        authority = re.match(r"[^/?#]*", chunk[len(marker[0]):])[0]
+        if not authority.isascii():
+            findings.append(f"non-ASCII authority in bare URL {chunk!r}")
+            consumed = end
+            continue
         closing = BARE_UNDERSCORE_CLOSE if start and text[start - 1] == "_" else BARE_CLOSE
         for stop in range(marker.end() + 1, end + 1):
             if not closing.match(text, stop):
@@ -109,12 +118,13 @@ def bare_urls(text):
             candidate = text[start:stop]
             try:
                 normalize_url(candidate)
-            except (ValueError, UnicodeError):
-                continue
-            if "(" in candidate or ")" in candidate:
-                findings.append(f"ambiguous parentheses in bare URL {chunk!r}")
+            except (ValueError, UnicodeError) as exc:
+                findings.append(f"invalid bare URL {candidate!r}: {exc}")
             else:
-                urls.append(candidate)
+                if "(" in candidate or ")" in candidate:
+                    findings.append(f"ambiguous parentheses in bare URL {chunk!r}")
+                else:
+                    urls.append(candidate)
             consumed = stop
             break
         else:
