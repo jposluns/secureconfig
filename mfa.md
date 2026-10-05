@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "fae8d4facf3bf1a3c7b0a51f89a9121093c350ae310700d03348f80219501dbc",
+  "body_sha256": "fd5dcbe53a69e2309c275305c08edeedf01fc6d48abefdbd2025da6d32f49074",
   "components": {
     "totp": {
       "name": "TOTP standard",
@@ -90,6 +90,140 @@ version_basis: {
         "s3190460e5d2d": "https://www.rfc-editor.org/info/rfc6238/",
         "sef2c27817118": "https://www.w3.org/TR/webauthn-2/"
       }
+    },
+    "entra-docs": {
+      "name": "Microsoft Entra documentation",
+      "basis": "231747abc59ae3d50c74e215c1cdd592eb980723",
+      "sources": {
+        "s1341b9dbdad1": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/users/users-revoke-access.md#L58-L62",
+        "s2c2f323edbd0": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/conditional-access/policy-all-users-mfa-strength.md#L56-L57",
+        "sda22c238526b": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/authentication/how-to-mfa-number-match.md#L12"
+      }
+    },
+    "owasp-docs": {
+      "name": "OWASP cheat sheets",
+      "basis": "668ba7db3d0da5868b8a0305c259f7f6914a6ecd",
+      "sources": {
+        "se60f5c9f1c55": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Secrets_Management_Cheat_Sheet.md#L218",
+        "s2940f630fb71": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Multifactor_Authentication_Cheat_Sheet.md#L154-L155",
+        "sa72b5658a19b": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Multifactor_Authentication_Cheat_Sheet.md#L142-L143"
+      }
+    },
+    "otp-source": {
+      "name": "pquerna/otp source",
+      "basis": "617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870",
+      "sources": {
+        "s7c4c6d57f705": "https://github.com/pquerna/otp/blob/617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870/README.md#L27-L30",
+        "s9dc96c06d6a0": "https://github.com/pquerna/otp/blob/617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870/README.md#L15-L18"
+      }
+    },
+    "nist": {
+      "name": "NIST digital identity guidelines",
+      "basis": "SP 800-63B-4",
+      "sources": {
+        "s4e1146860142": "https://pages.nist.gov/800-63-4/sp800-63b/authenticators/#look-up-secrets"
+      }
+    },
+    "authelia-source": {
+      "name": "Authelia source",
+      "basis": "v4.39.28",
+      "sources": {
+        "sfeb54a05c30d": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/introduction.md#L21-L31"
+      }
+    },
+    "pyotp-source": {
+      "name": "PyOTP source",
+      "basis": "cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1",
+      "sources": {
+        "sff126dae123b": "https://github.com/pyauth/pyotp/blob/cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1/README.rst#L4-L9"
+      }
+    },
+    "python-qrcode-source": {
+      "name": "Python qrcode source",
+      "basis": "f92c007498d796e4825638b7d50c14ea51e5457a",
+      "sources": {
+        "s9481cd1c5c1c": "https://github.com/lincolnloop/python-qrcode/blob/f92c007498d796e4825638b7d50c14ea51e5457a/README.rst#L5-L8"
+      }
+    },
+    "django-otp-source": {
+      "name": "django-otp source",
+      "basis": "88cf4970423b11f29d6840311f53378d007a3d63",
+      "sources": {
+        "s3b66277026d8": "https://github.com/django-otp/django-otp/blob/88cf4970423b11f29d6840311f53378d007a3d63/README.rst#L16-L28"
+      }
+    },
+    "otplib-source": {
+      "name": "otplib source",
+      "basis": "c5c11be2a50fd864b587854bff6d97c5f8aa9c84",
+      "sources": {
+        "s1cfb4a0cb98d": "https://github.com/yeojz/otplib/blob/c5c11be2a50fd864b587854bff6d97c5f8aa9c84/README.md#L13"
+      }
+    },
+    "node-qrcode-source": {
+      "name": "Node qrcode source",
+      "basis": "3848ed2c17de5bcdead487417dbf14c5dd017f8d",
+      "sources": {
+        "s427c06d742cf": "https://github.com/soldair/node-qrcode/blob/3848ed2c17de5bcdead487417dbf14c5dd017f8d/README.md#L2"
+      }
+    },
+    "openssh-source": {
+      "name": "OpenSSH portable source",
+      "basis": "V_9_9_P2",
+      "sources": {
+        "sf299a4e3603a": "https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshd_config.5#L197-L211",
+        "s862f0df9ce84": "https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshd_config.5#L2017-L2026"
+      }
+    },
+    "duo-unix-source": {
+      "name": "Duo Unix source",
+      "basis": "91e3c987f256afdb166b26be777cef6e1ab2af11",
+      "sources": {
+        "s1ea7669082c6": "https://github.com/duosecurity/duo_unix/blob/91e3c987f256afdb166b26be777cef6e1ab2af11/pam_duo/pam_duo.8#L44-L53"
+      }
+    },
+    "auth0-docs": {
+      "name": "Auth0 archived documentation",
+      "basis": "5258d17ede3eea0ed0e330d15f8921a542564f68",
+      "sources": {
+        "sda6cf0f32c03": "https://github.com/auth0/docs/blob/5258d17ede3eea0ed0e330d15f8921a542564f68/articles/mfa/guides/enable-mfa.md#L12"
+      }
+    },
+    "auth0-rolling": {
+      "name": "Auth0 MFA documentation",
+      "basis": "unknown",
+      "sources": {
+        "s22eb9266f40c": "https://auth0.com/docs/secure/multi-factor-authentication/enable-mfa"
+      }
+    },
+    "cognito-api-source": {
+      "name": "Amazon Cognito API source",
+      "basis": "2ba0e39015ddf9c91c6c378f8a4fb79dcb4353da",
+      "sources": {
+        "s20a38c138333": "https://github.com/aws/aws-sdk-go-v2/blob/2ba0e39015ddf9c91c6c378f8a4fb79dcb4353da/service/cognitoidentityprovider/api_op_SetUserPoolMfaConfig.go#L67-L76"
+      }
+    },
+    "clerk-docs": {
+      "name": "Clerk documentation",
+      "basis": "26ef3ace7508d46d6242c377e830a7791b0a2fdb",
+      "sources": {
+        "s965680da0841": "https://github.com/clerk/clerk-docs/blob/26ef3ace7508d46d6242c377e830a7791b0a2fdb/docs/guides/configure/auth-strategies/sign-up-sign-in-options.mdx#L168-L171"
+      }
+    },
+    "supabase-docs": {
+      "name": "Supabase documentation",
+      "basis": "10c7379c970ae4d2f30f3158194061cf5ffb8fc5",
+      "sources": {
+        "sfae0cdf9b1b6": "https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/auth/auth-mfa.mdx#L94-L96",
+        "s4fe1e36a064b": "https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/auth/auth-mfa.mdx#L192-L200"
+      }
+    },
+    "cf-docs": {
+      "name": "Cloudflare documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "s9f8bead847d2": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/integrations/identity-providers/one-time-pin.mdx#L15",
+        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24"
+      }
     }
   },
   "claims": {
@@ -104,28 +238,28 @@ version_basis: {
     "webauthn-verification": {"text": "Store the credential public key and sign count; require and verify UV server-side when a passkey stands alone.", "components": ["webauthn"], "sources": ["webauthn:sef2c27817118"], "status": "REASONED"},
     "webauthn-counter": {"text": "Treat sign count as advisory, not a hard clone-block; many synced passkeys report zero.", "components": ["webauthn"], "sources": ["webauthn:sef2c27817118"], "status": "REASONED"},
     "verify-secret-storage": {"text": "Check that no TOTP secret appears in the repository or its history.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"},
-    "mfa-enforcement": {"text": "Give every exposed human-facing login a second factor where viable; prefer native or IdP-enforced MFA, then an identity layer whose own or upstream policy requires MFA, app-level TOTP, then a hosted MFA service. Enrollment alone is not enforcement. General TOTP source; no provider-policy reference in Sources.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"},
-    "push-matching": {"text": "Prefer WebAuthn/passkeys over TOTP or push, and those over email or SMS codes. TOTP and push are not phishing-resistant; push must use number matching or verified push, never bare approve/deny, to resist prompt-bombing. WebAuthn and general Duo pricing sources; no pinned push-policy reference in Sources.", "components": ["webauthn", "duo"], "sources": ["webauthn:sef2c27817118", "duo:sb2b87daf72f0"], "status": "REASONED"},
-    "totp-activation": {"text": "Verify one valid TOTP code before activating the factor. General TOTP source; no pinned implementation reference.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"},
-    "recovery-codes": {"text": "Issue single-use recovery codes and store hashes rather than the code values; Verify checks both storage and refusal on reuse. General TOTP source; no recovery-code storage or lifecycle reference in Sources.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"},
-    "factor-changes": {"text": "Require re-verification of the existing factor before disabling or replacing it or minting new recovery codes, so a password-only or stolen session cannot remove MFA. General TOTP source; no factor-change policy reference in Sources.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"},
+    "mfa-enforcement": {"text": "Give every exposed human-facing login a second factor where viable; prefer native or IdP-enforced MFA, then an identity layer whose own or upstream policy requires MFA, app-level TOTP, then a hosted MFA service. Enrollment alone is not enforcement. General TOTP source; no provider-policy reference in Sources.", "components": ["totp", "entra-docs", "auth0-docs", "auth0-rolling", "cognito-api-source", "clerk-docs", "supabase-docs"], "sources": ["totp:s3190460e5d2d", "entra-docs:s2c2f323edbd0", "auth0-docs:sda6cf0f32c03", "auth0-rolling:s22eb9266f40c", "cognito-api-source:s20a38c138333", "clerk-docs:s965680da0841", "supabase-docs:sfae0cdf9b1b6", "supabase-docs:s4fe1e36a064b"], "status": "REASONED"},
+    "push-matching": {"text": "Prefer WebAuthn/passkeys over TOTP or push, and those over email or SMS codes. TOTP and push are not phishing-resistant; push must use number matching or verified push, never bare approve/deny, to resist prompt-bombing. WebAuthn and general Duo pricing sources; no pinned push-policy reference in Sources.", "components": ["webauthn", "duo", "entra-docs"], "sources": ["webauthn:sef2c27817118", "duo:sb2b87daf72f0", "entra-docs:sda22c238526b"], "status": "REASONED"},
+    "totp-activation": {"text": "Verify one valid TOTP code before activating the factor. General TOTP source; no pinned implementation reference.", "components": ["totp", "otp-source"], "sources": ["totp:s3190460e5d2d", "otp-source:s7c4c6d57f705"], "status": "REASONED"},
+    "recovery-codes": {"text": "Issue single-use recovery codes and store hashes rather than the code values; Verify checks both storage and refusal on reuse. General TOTP source; no recovery-code storage or lifecycle reference in Sources.", "components": ["totp", "nist", "owasp-docs"], "sources": ["totp:s3190460e5d2d", "nist:s4e1146860142", "owasp-docs:sa72b5658a19b"], "status": "REASONED"},
+    "factor-changes": {"text": "Require re-verification of the existing factor before disabling or replacing it or minting new recovery codes, so a password-only or stolen session cannot remove MFA. General TOTP source; no factor-change policy reference in Sources.", "components": ["totp", "owasp-docs"], "sources": ["totp:s3190460e5d2d", "owasp-docs:s2940f630fb71"], "status": "REASONED"},
     "admin-factors": {"text": "Give administrators a phishing-resistant passkey or FIDO2 key wherever offered; TOTP is the floor and SMS is unacceptable for administrator accounts. General WebAuthn source; no administrator-policy reference in Sources.", "components": ["webauthn"], "sources": ["webauthn:sef2c27817118"], "status": "REASONED"},
-    "authelia-factors": {"text": "The body lists TOTP, WebAuthn/passkeys and mobile push for Authelia. General proxy support matrix only; no pinned factor-support reference in Sources.", "components": ["authelia"], "sources": ["authelia:s1409ac8fe3d9"], "status": "REASONED"},
+    "authelia-factors": {"text": "The body lists TOTP, WebAuthn/passkeys and mobile push for Authelia. General proxy support matrix only; no pinned factor-support reference in Sources.", "components": ["authelia", "authelia-source"], "sources": ["authelia:s1409ac8fe3d9", "authelia-source:sfeb54a05c30d"], "status": "REASONED"},
     "identity-layer-factors": {"text": "The body lists authentik OIDC/SAML with TOTP and WebAuthn, Keycloak OIDC/SAML with built-in OTP enrollment, and oauth2-proxy with MFA inherited from its upstream provider's enforcement. General TOTP/WebAuthn standards only; Sources has no vendor references for these product capabilities.", "components": ["identity-layers"], "sources": ["identity-layers:s3190460e5d2d", "identity-layers:sef2c27817118"], "status": "REASONED"},
-    "totp-libraries": {"text": "The body lists pyotp with qrcode and django-otp, Node otplib with qrcode, and pquerna/otp with QR generation as RFC 6238 implementation options. General TOTP source only; Sources has no library-specific references.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"},
-    "ssh-pam-enforcement": {"text": "Make SSH PAM MFA mandatory with UsePAM yes, KbdInteractiveAuthentication yes and AuthenticationMethods publickey,keyboard-interactive:pam; :pam pins the second step to PAM and the public-key-first sequence still runs it for key-based login. General TOTP standard only; Sources has no sshd or PAM vendor reference.", "components": ["ssh-pam"], "sources": ["ssh-pam:s3190460e5d2d"], "status": "REASONED"},
+    "totp-libraries": {"text": "The body lists pyotp with qrcode and django-otp, Node otplib with qrcode, and pquerna/otp with QR generation as RFC 6238 implementation options. General TOTP source only; Sources has no library-specific references.", "components": ["totp", "pyotp-source", "python-qrcode-source", "django-otp-source", "otplib-source", "node-qrcode-source", "otp-source"], "sources": ["totp:s3190460e5d2d", "pyotp-source:sff126dae123b", "python-qrcode-source:s9481cd1c5c1c", "django-otp-source:s3b66277026d8", "otplib-source:s1cfb4a0cb98d", "node-qrcode-source:s427c06d742cf", "otp-source:s9dc96c06d6a0"], "status": "REASONED"},
+    "ssh-pam-enforcement": {"text": "Make SSH PAM MFA mandatory with UsePAM yes, KbdInteractiveAuthentication yes and AuthenticationMethods publickey,keyboard-interactive:pam; :pam pins the second step to PAM and the public-key-first sequence still runs it for key-based login. General TOTP standard only; Sources has no sshd or PAM vendor reference.", "components": ["ssh-pam", "openssh-source"], "sources": ["ssh-pam:s3190460e5d2d", "openssh-source:sf299a4e3603a", "openssh-source:s862f0df9ce84"], "status": "REASONED"},
     "ssh-nullok": {"text": "Remove nullok after rollout so unenrolled users are denied; the body identifies google-authenticator-libpam as per-user TOTP for SSH and console login with terminal QR enrollment. General TOTP standard only; Sources has no PAM-module vendor reference.", "components": ["ssh-pam"], "sources": ["ssh-pam:s3190460e5d2d"], "status": "REASONED"},
-    "duo-unix-failmode": {"text": "Duo Unix pam_duo adds SSH push MFA; set failmode=secure for mandatory MFA because default safe grants access when Duo is unreachable, and keep a separately controlled emergency path. General Duo pricing source; Sources has no Duo Unix configuration reference.", "components": ["duo"], "sources": ["duo:sb2b87daf72f0"], "status": "REASONED"},
-    "supabase-assurance": {"text": "Supabase admits an aal1 session unless app and database policies require aal2; enrollment or enabling a factor is not enforcement, so inspect and test the effective policy. General TOTP standard only; Sources has no Supabase vendor reference.", "components": ["supabase"], "sources": ["supabase:s3190460e5d2d"], "status": "REASONED"},
+    "duo-unix-failmode": {"text": "Duo Unix pam_duo adds SSH push MFA; set failmode=secure for mandatory MFA because default safe grants access when Duo is unreachable, and keep a separately controlled emergency path. General Duo pricing source; Sources has no Duo Unix configuration reference.", "components": ["duo", "duo-unix-source"], "sources": ["duo:sb2b87daf72f0", "duo-unix-source:s1ea7669082c6"], "status": "REASONED"},
+    "supabase-assurance": {"text": "Supabase admits an aal1 session unless app and database policies require aal2; enrollment or enabling a factor is not enforcement, so inspect and test the effective policy. General TOTP standard only; Sources has no Supabase vendor reference.", "components": ["supabase", "supabase-docs"], "sources": ["supabase:s3190460e5d2d", "supabase-docs:sfae0cdf9b1b6", "supabase-docs:s4fe1e36a064b"], "status": "REASONED"},
     "duo-proxy": {"text": "Duo Authentication Proxy speaks RADIUS and LDAP to retrofit MFA onto VPNs and services with RADIUS support. General Duo pricing source; Sources has no Authentication Proxy reference.", "components": ["duo"], "sources": ["duo:sb2b87daf72f0"], "status": "REASONED"},
-    "access-mfa": {"text": "An Access emailed one-time PIN proves mailbox control only; require MFA at the connected IdP for this login or Access independent MFA with TOTP or a WebAuthn key. General TOTP/WebAuthn standards only; Sources has no Cloudflare vendor reference.", "components": ["access"], "sources": ["access:s3190460e5d2d", "access:sef2c27817118"], "status": "REASONED"},
+    "access-mfa": {"text": "An Access emailed one-time PIN proves mailbox control only; require MFA at the connected IdP for this login or Access independent MFA with TOTP or a WebAuthn key. General TOTP/WebAuthn standards only; Sources has no Cloudflare vendor reference.", "components": ["access", "cf-docs"], "sources": ["access:s3190460e5d2d", "access:sef2c27817118", "cf-docs:s9f8bead847d2", "cf-docs:s7e793d13cf31"], "status": "REASONED"},
     "webauthn-library": {"text": "Use a maintained WebAuthn library rather than hand-parsing attestation. General WebAuthn standard; no library-specific reference in Sources.", "components": ["webauthn"], "sources": ["webauthn:sef2c27817118"], "status": "REASONED"},
-    "webauthn-recovery": {"text": "Keep a second key or single-use recovery codes to avoid lost-key lockout; for administrators on phishing-resistant keys, prefer a second hardware key because printed codes are phishable, and rate-limit and alert on recovery-code use. General WebAuthn source; no recovery-policy reference in Sources.", "components": ["webauthn"], "sources": ["webauthn:sef2c27817118"], "status": "REASONED"},
+    "webauthn-recovery": {"text": "Keep a second key or single-use recovery codes to avoid lost-key lockout; for administrators on phishing-resistant keys, prefer a second hardware key because printed codes are phishable, and rate-limit and alert on recovery-code use. General WebAuthn source; no recovery-policy reference in Sources.", "components": ["webauthn", "nist", "owasp-docs"], "sources": ["webauthn:sef2c27817118", "nist:s4e1146860142", "owasp-docs:sa72b5658a19b"], "status": "REASONED"},
     "mysql-factors": {"text": "The body states that MySQL 8 supports up to three factors for interactive human login and its server-side WebAuthn plugin requires Enterprise Edition. General WebAuthn standard only; Sources has no MySQL vendor reference supporting the version, factor count or edition requirement.", "components": ["mysql"], "sources": ["mysql:sef2c27817118"], "status": "REASONED"},
     "unattended-mtls": {"text": "Unattended database and model-server API connections have no interactive second-factor dialogue; use mutual TLS client certificates as the service's possession factor and MFA on human paths through SSH, bastions and admin panels. General MFA standards only; Sources has no mTLS deployment reference.", "components": ["totp", "webauthn"], "sources": ["totp:s3190460e5d2d", "webauthn:sef2c27817118"], "status": "REASONED"},
-    "verify-mfa-operation": {"text": "After enrollment and enforcement, a password-only attempt at an MFA-protected operation must fail and completing the second factor must allow it. Opening an aal1 session alone is not a failure when enforcement occurs at the operation. General TOTP source; no provider or app-policy reference in Sources.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"},
+    "verify-mfa-operation": {"text": "After enrollment and enforcement, a password-only attempt at an MFA-protected operation must fail and completing the second factor must allow it. Opening an aal1 session alone is not a failure when enforcement occurs at the operation. General TOTP source; no provider or app-policy reference in Sources.", "components": ["totp", "supabase-docs"], "sources": ["totp:s3190460e5d2d", "supabase-docs:sfae0cdf9b1b6", "supabase-docs:s4fe1e36a064b"], "status": "REASONED"},
     "verify-recovery-history": {"text": "Verify that no recovery code appears in the repository or its history. General TOTP source; no recovery-code scanning reference in Sources.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"},
-    "verify-offboarding": {"text": "Verify that a departed user's second factor, active sessions and app-level access are revoked; changing only the password is insufficient. General TOTP source; no offboarding or session-revocation reference in Sources.", "components": ["totp"], "sources": ["totp:s3190460e5d2d"], "status": "REASONED"}
+    "verify-offboarding": {"text": "Verify that a departed user's second factor, active sessions and app-level access are revoked; changing only the password is insufficient. General TOTP source; no offboarding or session-revocation reference in Sources.", "components": ["totp", "entra-docs", "owasp-docs"], "sources": ["totp:s3190460e5d2d", "entra-docs:s1341b9dbdad1", "owasp-docs:se60f5c9f1c55"], "status": "REASONED"}
   }
 }
 ---
@@ -136,7 +270,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -151,28 +285,28 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | webauthn-verification: Store the credential public key and sign count; require and verify UV server-side when a passkey stands alone. | WebAuthn standard unknown | REASONED |
 | webauthn-counter: Treat sign count as advisory, not a hard clone-block; many synced passkeys report zero. | WebAuthn standard unknown | REASONED |
 | verify-secret-storage: Check that no TOTP secret appears in the repository or its history. | TOTP standard unknown | REASONED |
-| mfa-enforcement: Give every exposed human-facing login a second factor where viable; prefer native or IdP-enforced MFA, then an identity layer whose own or upstream policy requires MFA, app-level TOTP, then a hosted MFA service. Enrollment alone is not enforcement. General TOTP source; no provider-policy reference in Sources. | TOTP standard unknown | REASONED |
-| push-matching: Prefer WebAuthn/passkeys over TOTP or push, and those over email or SMS codes. TOTP and push are not phishing-resistant; push must use number matching or verified push, never bare approve/deny, to resist prompt-bombing. WebAuthn and general Duo pricing sources; no pinned push-policy reference in Sources. | WebAuthn standard unknown; Duo editions unknown | REASONED |
-| totp-activation: Verify one valid TOTP code before activating the factor. General TOTP source; no pinned implementation reference. | TOTP standard unknown | REASONED |
-| recovery-codes: Issue single-use recovery codes and store hashes rather than the code values; Verify checks both storage and refusal on reuse. General TOTP source; no recovery-code storage or lifecycle reference in Sources. | TOTP standard unknown | REASONED |
-| factor-changes: Require re-verification of the existing factor before disabling or replacing it or minting new recovery codes, so a password-only or stolen session cannot remove MFA. General TOTP source; no factor-change policy reference in Sources. | TOTP standard unknown | REASONED |
+| mfa-enforcement: Give every exposed human-facing login a second factor where viable; prefer native or IdP-enforced MFA, then an identity layer whose own or upstream policy requires MFA, app-level TOTP, then a hosted MFA service. Enrollment alone is not enforcement. General TOTP source; no provider-policy reference in Sources. | TOTP standard unknown; Microsoft Entra documentation 231747abc59ae3d50c74e215c1cdd592eb980723; Auth0 archived documentation 5258d17ede3eea0ed0e330d15f8921a542564f68; Auth0 MFA documentation unknown; Amazon Cognito API source 2ba0e39015ddf9c91c6c378f8a4fb79dcb4353da; Clerk documentation 26ef3ace7508d46d6242c377e830a7791b0a2fdb; Supabase documentation 10c7379c970ae4d2f30f3158194061cf5ffb8fc5 | REASONED |
+| push-matching: Prefer WebAuthn/passkeys over TOTP or push, and those over email or SMS codes. TOTP and push are not phishing-resistant; push must use number matching or verified push, never bare approve/deny, to resist prompt-bombing. WebAuthn and general Duo pricing sources; no pinned push-policy reference in Sources. | WebAuthn standard unknown; Duo editions unknown; Microsoft Entra documentation 231747abc59ae3d50c74e215c1cdd592eb980723 | REASONED |
+| totp-activation: Verify one valid TOTP code before activating the factor. General TOTP source; no pinned implementation reference. | TOTP standard unknown; pquerna/otp source 617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870 | REASONED |
+| recovery-codes: Issue single-use recovery codes and store hashes rather than the code values; Verify checks both storage and refusal on reuse. General TOTP source; no recovery-code storage or lifecycle reference in Sources. | TOTP standard unknown; NIST digital identity guidelines SP 800-63B-4; OWASP cheat sheets 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
+| factor-changes: Require re-verification of the existing factor before disabling or replacing it or minting new recovery codes, so a password-only or stolen session cannot remove MFA. General TOTP source; no factor-change policy reference in Sources. | TOTP standard unknown; OWASP cheat sheets 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | admin-factors: Give administrators a phishing-resistant passkey or FIDO2 key wherever offered; TOTP is the floor and SMS is unacceptable for administrator accounts. General WebAuthn source; no administrator-policy reference in Sources. | WebAuthn standard unknown | REASONED |
-| authelia-factors: The body lists TOTP, WebAuthn/passkeys and mobile push for Authelia. General proxy support matrix only; no pinned factor-support reference in Sources. | Authelia proxy support unknown | REASONED |
+| authelia-factors: The body lists TOTP, WebAuthn/passkeys and mobile push for Authelia. General proxy support matrix only; no pinned factor-support reference in Sources. | Authelia proxy support unknown; Authelia source v4.39.28 | REASONED |
 | identity-layer-factors: The body lists authentik OIDC/SAML with TOTP and WebAuthn, Keycloak OIDC/SAML with built-in OTP enrollment, and oauth2-proxy with MFA inherited from its upstream provider's enforcement. General TOTP/WebAuthn standards only; Sources has no vendor references for these product capabilities. | authentik, Keycloak and oauth2-proxy MFA (citation gap) unknown | REASONED |
-| totp-libraries: The body lists pyotp with qrcode and django-otp, Node otplib with qrcode, and pquerna/otp with QR generation as RFC 6238 implementation options. General TOTP source only; Sources has no library-specific references. | TOTP standard unknown | REASONED |
-| ssh-pam-enforcement: Make SSH PAM MFA mandatory with UsePAM yes, KbdInteractiveAuthentication yes and AuthenticationMethods publickey,keyboard-interactive:pam; :pam pins the second step to PAM and the public-key-first sequence still runs it for key-based login. General TOTP standard only; Sources has no sshd or PAM vendor reference. | SSH and PAM MFA (citation gap) unknown | REASONED |
+| totp-libraries: The body lists pyotp with qrcode and django-otp, Node otplib with qrcode, and pquerna/otp with QR generation as RFC 6238 implementation options. General TOTP source only; Sources has no library-specific references. | TOTP standard unknown; PyOTP source cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1; Python qrcode source f92c007498d796e4825638b7d50c14ea51e5457a; django-otp source 88cf4970423b11f29d6840311f53378d007a3d63; otplib source c5c11be2a50fd864b587854bff6d97c5f8aa9c84; Node qrcode source 3848ed2c17de5bcdead487417dbf14c5dd017f8d; pquerna/otp source 617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870 | REASONED |
+| ssh-pam-enforcement: Make SSH PAM MFA mandatory with UsePAM yes, KbdInteractiveAuthentication yes and AuthenticationMethods publickey,keyboard-interactive:pam; :pam pins the second step to PAM and the public-key-first sequence still runs it for key-based login. General TOTP standard only; Sources has no sshd or PAM vendor reference. | SSH and PAM MFA (citation gap) unknown; OpenSSH portable source V_9_9_P2 | REASONED |
 | ssh-nullok: Remove nullok after rollout so unenrolled users are denied; the body identifies google-authenticator-libpam as per-user TOTP for SSH and console login with terminal QR enrollment. General TOTP standard only; Sources has no PAM-module vendor reference. | SSH and PAM MFA (citation gap) unknown | REASONED |
-| duo-unix-failmode: Duo Unix pam_duo adds SSH push MFA; set failmode=secure for mandatory MFA because default safe grants access when Duo is unreachable, and keep a separately controlled emergency path. General Duo pricing source; Sources has no Duo Unix configuration reference. | Duo editions unknown | REASONED |
-| supabase-assurance: Supabase admits an aal1 session unless app and database policies require aal2; enrollment or enabling a factor is not enforcement, so inspect and test the effective policy. General TOTP standard only; Sources has no Supabase vendor reference. | Supabase Auth MFA (citation gap) unknown | REASONED |
+| duo-unix-failmode: Duo Unix pam_duo adds SSH push MFA; set failmode=secure for mandatory MFA because default safe grants access when Duo is unreachable, and keep a separately controlled emergency path. General Duo pricing source; Sources has no Duo Unix configuration reference. | Duo editions unknown; Duo Unix source 91e3c987f256afdb166b26be777cef6e1ab2af11 | REASONED |
+| supabase-assurance: Supabase admits an aal1 session unless app and database policies require aal2; enrollment or enabling a factor is not enforcement, so inspect and test the effective policy. General TOTP standard only; Sources has no Supabase vendor reference. | Supabase Auth MFA (citation gap) unknown; Supabase documentation 10c7379c970ae4d2f30f3158194061cf5ffb8fc5 | REASONED |
 | duo-proxy: Duo Authentication Proxy speaks RADIUS and LDAP to retrofit MFA onto VPNs and services with RADIUS support. General Duo pricing source; Sources has no Authentication Proxy reference. | Duo editions unknown | REASONED |
-| access-mfa: An Access emailed one-time PIN proves mailbox control only; require MFA at the connected IdP for this login or Access independent MFA with TOTP or a WebAuthn key. General TOTP/WebAuthn standards only; Sources has no Cloudflare vendor reference. | Cloudflare Access MFA (citation gap) unknown | REASONED |
+| access-mfa: An Access emailed one-time PIN proves mailbox control only; require MFA at the connected IdP for this login or Access independent MFA with TOTP or a WebAuthn key. General TOTP/WebAuthn standards only; Sources has no Cloudflare vendor reference. | Cloudflare Access MFA (citation gap) unknown; Cloudflare documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | webauthn-library: Use a maintained WebAuthn library rather than hand-parsing attestation. General WebAuthn standard; no library-specific reference in Sources. | WebAuthn standard unknown | REASONED |
-| webauthn-recovery: Keep a second key or single-use recovery codes to avoid lost-key lockout; for administrators on phishing-resistant keys, prefer a second hardware key because printed codes are phishable, and rate-limit and alert on recovery-code use. General WebAuthn source; no recovery-policy reference in Sources. | WebAuthn standard unknown | REASONED |
+| webauthn-recovery: Keep a second key or single-use recovery codes to avoid lost-key lockout; for administrators on phishing-resistant keys, prefer a second hardware key because printed codes are phishable, and rate-limit and alert on recovery-code use. General WebAuthn source; no recovery-policy reference in Sources. | WebAuthn standard unknown; NIST digital identity guidelines SP 800-63B-4; OWASP cheat sheets 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | mysql-factors: The body states that MySQL 8 supports up to three factors for interactive human login and its server-side WebAuthn plugin requires Enterprise Edition. General WebAuthn standard only; Sources has no MySQL vendor reference supporting the version, factor count or edition requirement. | MySQL interactive MFA (citation gap) unknown | REASONED |
 | unattended-mtls: Unattended database and model-server API connections have no interactive second-factor dialogue; use mutual TLS client certificates as the service's possession factor and MFA on human paths through SSH, bastions and admin panels. General MFA standards only; Sources has no mTLS deployment reference. | TOTP standard unknown; WebAuthn standard unknown | REASONED |
-| verify-mfa-operation: After enrollment and enforcement, a password-only attempt at an MFA-protected operation must fail and completing the second factor must allow it. Opening an aal1 session alone is not a failure when enforcement occurs at the operation. General TOTP source; no provider or app-policy reference in Sources. | TOTP standard unknown | REASONED |
+| verify-mfa-operation: After enrollment and enforcement, a password-only attempt at an MFA-protected operation must fail and completing the second factor must allow it. Opening an aal1 session alone is not a failure when enforcement occurs at the operation. General TOTP source; no provider or app-policy reference in Sources. | TOTP standard unknown; Supabase documentation 10c7379c970ae4d2f30f3158194061cf5ffb8fc5 | REASONED |
 | verify-recovery-history: Verify that no recovery code appears in the repository or its history. General TOTP source; no recovery-code scanning reference in Sources. | TOTP standard unknown | REASONED |
-| verify-offboarding: Verify that a departed user's second factor, active sessions and app-level access are revoked; changing only the password is insufficient. General TOTP source; no offboarding or session-revocation reference in Sources. | TOTP standard unknown | REASONED |
+| verify-offboarding: Verify that a departed user's second factor, active sessions and app-level access are revoked; changing only the password is insufficient. General TOTP source; no offboarding or session-revocation reference in Sources. | TOTP standard unknown; Microsoft Entra documentation 231747abc59ae3d50c74e215c1cdd592eb980723; OWASP cheat sheets 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 <!-- version-basis:end -->
 
 Passwords fail through phishing, reuse, and credential stuffing; a second factor keeps a stolen password from becoming access. This guide names the options and the references; it deliberately stops short of per-product walkthroughs, because an AI assistant that knows which option fits can implement it from the linked project documentation. The per-tool guides in this repository state what is viable for each stack.
@@ -243,3 +377,29 @@ Unattended machine connections (service-to-service database and model-server API
 - WebAuthn: https://www.w3.org/TR/webauthn-2/
 - Authelia proxy support matrix (Caddy 2.5.1 and later): https://www.authelia.com/integration/proxies/support/
 - Duo editions and pricing: https://duo.com/editions-and-pricing
+- Microsoft Entra documentation `231747abc59ae3d50c74e215c1cdd592eb980723`, application session revocation (checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/users/users-revoke-access.md#L58-L62
+- OWASP cheat sheets `668ba7db3d0da5868b8a0305c259f7f6914a6ecd`, revocation of unneeded or compromised secrets (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Secrets_Management_Cheat_Sheet.md#L218
+- pquerna/otp source `617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870`, TOTP enrollment validation (checked October 2026): https://github.com/pquerna/otp/blob/617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870/README.md#L27-L30
+- OWASP cheat sheets `668ba7db3d0da5868b8a0305c259f7f6914a6ecd`, reauthentication before factor changes (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Multifactor_Authentication_Cheat_Sheet.md#L154-L155
+- NIST digital identity guidelines `SP 800-63B-4`, single-use look-up secrets and hashed storage (checked October 2026): https://pages.nist.gov/800-63-4/sp800-63b/authenticators/#look-up-secrets
+- OWASP cheat sheets `668ba7db3d0da5868b8a0305c259f7f6914a6ecd`, recovery codes and alternate factors (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Multifactor_Authentication_Cheat_Sheet.md#L142-L143
+- Authelia source `v4.39.28`, TOTP, WebAuthn security keys and Duo push factors (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/introduction.md#L21-L31
+- PyOTP source `cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1`, OTP generation, verification and RFC 6238 support (checked October 2026): https://github.com/pyauth/pyotp/blob/cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1/README.rst#L4-L9
+- Python qrcode source `f92c007498d796e4825638b7d50c14ea51e5457a`, QR code generation (checked October 2026): https://github.com/lincolnloop/python-qrcode/blob/f92c007498d796e4825638b7d50c14ea51e5457a/README.rst#L5-L8
+- django-otp source `88cf4970423b11f29d6840311f53378d007a3d63`, Django integration and HOTP/TOTP implementations (checked October 2026): https://github.com/django-otp/django-otp/blob/88cf4970423b11f29d6840311f53378d007a3d63/README.rst#L16-L28
+- otplib source `c5c11be2a50fd864b587854bff6d97c5f8aa9c84`, HOTP/TOTP and Node support (checked October 2026): https://github.com/yeojz/otplib/blob/c5c11be2a50fd864b587854bff6d97c5f8aa9c84/README.md#L13
+- Node qrcode source `3848ed2c17de5bcdead487417dbf14c5dd017f8d`, QR code generation (checked October 2026): https://github.com/soldair/node-qrcode/blob/3848ed2c17de5bcdead487417dbf14c5dd017f8d/README.md#L2
+- pquerna/otp source `617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870`, TOTP/HOTP generation, validation and QR images (checked October 2026): https://github.com/pquerna/otp/blob/617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870/README.md#L15-L18
+- OpenSSH portable source `V_9_9_P2`, ordered authentication methods and the PAM device (checked October 2026): https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshd_config.5#L197-L211
+- OpenSSH portable source `V_9_9_P2`, UsePAM and keyboard-interactive authentication (checked October 2026): https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshd_config.5#L2017-L2026
+- Duo Unix source `91e3c987f256afdb166b26be777cef6e1ab2af11`, pam_duo failmode and push approval (checked October 2026): https://github.com/duosecurity/duo_unix/blob/91e3c987f256afdb166b26be777cef6e1ab2af11/pam_duo/pam_duo.8#L44-L53
+- Microsoft Entra documentation `231747abc59ae3d50c74e215c1cdd592eb980723`, Conditional Access MFA authentication-strength requirement (checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/conditional-access/policy-all-users-mfa-strength.md#L56-L57
+- Microsoft Entra documentation `231747abc59ae3d50c74e215c1cdd592eb980723`, Authenticator push number matching (checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/authentication/how-to-mfa-number-match.md#L12
+- Auth0 archived documentation `5258d17ede3eea0ed0e330d15f8921a542564f68`, factor enablement and separate MFA enforcement choice (checked October 2026): https://github.com/auth0/docs/blob/5258d17ede3eea0ed0e330d15f8921a542564f68/articles/mfa/guides/enable-mfa.md#L12
+- Auth0 MFA documentation, current factor and enforcement policy documentation (rolling documentation, checked October 2026): https://auth0.com/docs/secure/multi-factor-authentication/enable-mfa
+- Amazon Cognito API source `2ba0e39015ddf9c91c6c378f8a4fb79dcb4353da`, required versus optional MFA (checked October 2026): https://github.com/aws/aws-sdk-go-v2/blob/2ba0e39015ddf9c91c6c378f8a4fb79dcb4353da/service/cognitoidentityprovider/api_op_SetUserPoolMfaConfig.go#L67-L76
+- Clerk documentation `26ef3ace7508d46d6242c377e830a7791b0a2fdb`, application-wide versus user-selected MFA (checked October 2026): https://github.com/clerk/clerk-docs/blob/26ef3ace7508d46d6242c377e830a7791b0a2fdb/docs/guides/configure/auth-strategies/sign-up-sign-in-options.mdx#L168-L171
+- Supabase documentation `10c7379c970ae4d2f30f3158194061cf5ffb8fc5`, server-side MFA enforcement beyond enrollment UI (checked October 2026): https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/auth/auth-mfa.mdx#L94-L96
+- Supabase documentation `10c7379c970ae4d2f30f3158194061cf5ffb8fc5`, restrictive RLS requiring aal2 (checked October 2026): https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/auth/auth-mfa.mdx#L192-L200
+- Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, email one-time PIN login (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/integrations/identity-providers/one-time-pin.mdx#L15
+- Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, independent MFA with TOTP and WebAuthn security keys (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24
