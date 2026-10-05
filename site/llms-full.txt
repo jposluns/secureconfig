@@ -442,13 +442,13 @@ maintaining a private assessment indefinitely.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | public-trust: ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; prefer these for public DNS names, including private hosts using DNS-01. | Let's Encrypt documentation unknown; ZeroSSL unknown | REASONED |
 | http-challenge: HTTP-01 needs a public A/AAAA or CNAME pointing to the server and inbound internet access to port 80. | Let's Encrypt documentation unknown | REASONED |
-| alpn-challenge: TLS-ALPN-01 needs a public DNS record and inbound port 443; the guide names Caddy and Traefik without direct vendor Sources entries. | Let's Encrypt documentation unknown | REASONED |
+| alpn-challenge: TLS-ALPN-01 needs a public DNS record and inbound port 443; the guide names Caddy and Traefik without direct vendor Sources entries. | Let's Encrypt documentation unknown; Traefik ACME documentation v3.5 | REASONED |
 | dns-challenge: DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards; provider API access and a DNS plugin apply to automated issuance and renewal, while manual DNS-01 is possible. | Let's Encrypt documentation unknown; Certbot documentation unknown | REASONED |
 | certbot-install: Install Certbot and nginx/Apache plugins from the distribution, or the classic snap with /usr/bin/certbot pointing to /snap/bin/certbot. | Certbot documentation unknown | REASONED |
 | server-plugins: certbot --nginx or --apache issues and installs certificates for the supplied domain names when the server is supported. | Certbot documentation unknown | REASONED |
@@ -469,11 +469,11 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | zerossl-eab: ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials. | ZeroSSL unknown | REASONED |
 | acme-default: acme.sh registers with ZeroSSL by default. | acme.sh unknown | REASONED |
 | acme-install: acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell. | acme.sh unknown | REASONED |
-| server-automation: The guide recommends Caddy or Traefik for built-in issuance and renewal without an external client; direct vendor Sources entries are absent. | Let's Encrypt documentation unknown | REASONED |
+| server-automation: The guide recommends Caddy or Traefik for built-in issuance and renewal without an external client; direct vendor Sources entries are absent. | Let's Encrypt documentation unknown; Caddy automatic HTTPS v2.11.4; Traefik ACME documentation v3.5 | REASONED |
 | origin-certificates: The guide describes Cloudflare origin certificates as free, long-lived and trusted only by Cloudflare's edge behind its proxy; a Cloudflare Sources entry is absent. | Let's Encrypt documentation unknown | REASONED |
 | verify-inventory: certbot certificates lists issued certificates and their expiry dates. | Certbot documentation unknown | REASONED |
-| verify-https: Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. A curl source and version are not recorded. | Let's Encrypt documentation unknown | REASONED |
-| verify-certificate: The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates; an OpenSSL source and version are not recorded. | Let's Encrypt documentation unknown | REASONED |
+| verify-https: Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. A curl source and version are not recorded. | Let's Encrypt documentation unknown; curl command documentation curl-8_12_1 | REASONED |
+| verify-certificate: The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates; an OpenSSL source and version are not recorded. | Let's Encrypt documentation unknown; OpenSSL certificate commands 3.0 | REASONED |
 | authentication: A certificate alone is insufficient protection; continue with server controls and authentication. | Let's Encrypt documentation unknown | REASONED |
 | dns-automation: For automated DNS-01 issuance and renewal, use a provider DNS plugin and least-privilege API credentials; manual TXT entry is a separate path. | Certbot documentation unknown | REASONED |
 | dns-manual: certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; these certificates do not auto-renew without a --manual-auth-hook that automates the challenge. | Certbot documentation unknown | REASONED |
@@ -591,6 +591,12 @@ A certificate alone does not protect anything: continue with the server guide fo
 - Let's Encrypt lifetime reduction schedule: https://letsencrypt.org/2025/12/02/from-90-to-45
 - Let's Encrypt OCSP end of life: https://letsencrypt.org/2025/08/06/ocsp-service-has-reached-end-of-life
 - Let's Encrypt CAA requirements: https://letsencrypt.org/docs/caa/
+- Caddy v2.11.4 automatic certificate acquisition and renewal (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L63
+- Traefik v3.5 ACME renewal and challenges (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/tls/certificate-resolvers/acme/
+- OpenSSL 3.0 `s_client` connection and certificate verification (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
+- OpenSSL 3.0 `x509` issuer and validity dates (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-x509/
+- curl curl-8_12_1 HEAD requests (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/head.md#L21-L22
+- curl curl-8_12_1 normal certificate verification and `--insecure` (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/insecure.md#L21-L28
 
 ======================================================================
 ==> self-signed.md
@@ -603,7 +609,7 @@ A certificate alone does not protect anything: continue with the server guide fo
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -616,20 +622,20 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | unencrypted-key: -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions. | OpenSSL documentation (rolling) unknown | REASONED |
 | expiry: Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves. | OpenSSL documentation (rolling) unknown | REASONED |
 | key-permissions: chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
-| key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. Git-specific sources are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
+| key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. Git-specific sources are not recorded. | OpenSSL documentation (rolling) unknown; Git ignore documentation v2.43.0 | REASONED |
 | mkcert: mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs. | mkcert unknown | REASONED |
 | mkcert-custody: Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users. | mkcert unknown | REASONED |
 | debian-trust: Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian/Ubuntu; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
 | rhel-trust: Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust on RHEL/Fedora; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
-| curl-trust: curl --cacert server.crt supplies explicit trust for app.internal; a curl source and version are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
-| requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests; a requests Sources entry and version are absent. | OpenSSL documentation (rolling) unknown | REASONED |
-| node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js; its version is unrecorded. | mkcert unknown | REASONED |
-| verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but tool-specific Sources entries are absent. | OpenSSL documentation (rolling) unknown | REASONED |
+| curl-trust: curl --cacert server.crt supplies explicit trust for app.internal; a curl source and version are not recorded. | OpenSSL documentation (rolling) unknown; curl command documentation curl-8_12_1 | REASONED |
+| requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests; a requests Sources entry and version are absent. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3 | REASONED |
+| node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js; its version is unrecorded. | mkcert unknown; Node.js extra CA certificates v22.19.0 | REASONED |
+| verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but tool-specific Sources entries are absent. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3; curl command documentation curl-8_12_1 | REASONED |
 | verify-extensions: Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN. | OpenSSL documentation (rolling) unknown | REASONED |
 | verify-tls: The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0. | OpenSSL documentation (rolling) unknown | REASONED |
 | verify-failures: Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62. | OpenSSL documentation (rolling) unknown | REASONED |
 | verify-identity: Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks. | OpenSSL documentation (rolling) unknown | REASONED |
-| verify-store: Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
+| verify-store: Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after. | OpenSSL documentation (rolling) unknown; mkcert unknown; curl command documentation curl-8_12_1 | REASONED |
 | trust-limits: Self-signed certificates have no revocation or third-party accountability and need manual trust distribution; move beyond them as the audience grows and retain authentication. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
 <!-- version-basis:end -->
 
@@ -726,6 +732,12 @@ Self-signed certificates have no revocation and no third-party accountability, a
 
 - OpenSSL documentation (rolling documentation, checked September 2026): https://docs.openssl.org/ ; `openssl s_client` (`-servername`, `-verify_return_error`): https://docs.openssl.org/master/man1/openssl-s_client/ ; verification options (`-verify_hostname`): https://docs.openssl.org/master/man1/openssl-verification-options/
 - mkcert: https://github.com/FiloSottile/mkcert
+- Requests v2.32.3 CA-bundle environment variables (checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239
+- Requests v2.32.3 disabled certificate verification (checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L246-L250
+- Git v2.43.0 ignore rules and already tracked files (checked October 2026): https://github.com/git/git/blob/v2.43.0/Documentation/gitignore.txt#L15-L18
+- curl curl-8_12_1 explicit CA trust (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/cacert.md#L21-L24
+- curl curl-8_12_1 normal certificate verification and `--insecure` (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/insecure.md#L21-L28
+- Node.js v22.19.0 extra trusted CA certificates (checked October 2026): https://github.com/nodejs/node/blob/v22.19.0/doc/api/cli.md#L3234-L3238
 
 ======================================================================
 ==> cloudflare.md
@@ -3943,11 +3955,11 @@ After a real login through the proxy, confirm a session reaches the app and the 
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| certbot: The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. Certbot is not in Sources. | Apache HTTP Server 2.4 | REASONED |
+| certbot: The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. Certbot is not in Sources. | Apache HTTP Server 2.4; Certbot Apache installation v2.3.0 | REASONED |
 | modules: Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; package-command sources are absent. | Apache HTTP Server 2.4 | REASONED |
 | tls: The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only. | Apache HTTP Server 2.4 | REASONED |
 | tls-version: TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1. | Apache HTTP Server 2.4; Apache TLSv1.3 minimum 2.4.36+; OpenSSL qualification 1.1.1+ | REASONED |
@@ -4106,6 +4118,10 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 - Apache mod_ssl `SSLVHostSNIPolicy`, for the 421 a mismatched SNI and Host pairing can produce (TLSv1.3: Apache 2.4.36+ with OpenSSL 1.1.1+; per-vhost SSLProtocol: Apache 2.4.42+ with OpenSSL 1.1.1+ and client SNI; chain in SSLCertificateFile: Apache 2.4.8+): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy
 - Apache virtual host matching in detail, for SNI selecting the vhost on a TLS connection: https://httpd.apache.org/docs/2.4/vhosts/details.html
 - Mozilla SSL Configuration Generator: https://ssl-config.mozilla.org/
+- Certbot v2.3.0 Apache installation (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L104-L106
+- Certbot v2.3.0 redirect default and enhancement application (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L646 ; https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L674-L677
+- Certbot v2.3.0 redirect and opt-in HSTS defaults (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/constants.py#L66-L68
+- Apache 2.4 `Header always set` response-header handling (checked October 2026): https://httpd.apache.org/docs/2.4/mod/mod_headers.html
 
 ======================================================================
 ==> nginx.md
@@ -4118,15 +4134,15 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot. | nginx documentation unknown | REASONED |
+| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot. | nginx documentation unknown; Certbot nginx configurator v2.3.0 | REASONED |
 | tls: 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off. | nginx documentation unknown | REASONED |
 | http2: http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed. | nginx documentation unknown | REASONED |
 | tokens: server_tokens off suppresses nginx version in headers and error pages. | nginx documentation unknown | REASONED |
-| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. Sources omit the headers module. | nginx documentation unknown | REASONED |
+| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. Sources omit the headers module. | nginx documentation unknown; HSTS specification RFC 6797; nginx header-filter source release-1.26.3 | REASONED |
 | hsts-inheritance: A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. Sources omit the headers module. | nginx documentation unknown | REASONED |
 | proxy: Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host. | nginx documentation unknown | REASONED |
 | forwarded-host: Overwrite X-Forwarded-Host: client-set values otherwise pass upstream. | nginx documentation unknown | REASONED |
@@ -4346,6 +4362,9 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 - ngx_http_auth_basic_module: https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html
 - Real IP module (`set_real_ip_from`, `real_ip_header`) for nginx behind a CDN or proxy: https://nginx.org/en/docs/http/ngx_http_realip_module.html
 - Mozilla SSL Configuration Generator: https://ssl-config.mozilla.org/
+- Certbot v2.3.0 nginx server-block installation (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot-nginx/certbot_nginx/_internal/configurator.py#L711
+- RFC 6797 HSTS policy lifetime and subdomains (checked October 2026): https://www.rfc-editor.org/rfc/rfc6797.html#section-6.1.2
+- nginx release-1.26.3 header-filter `always` handling (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218
 
 ======================================================================
 ==> lighttpd.md
@@ -4734,7 +4753,7 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -4748,7 +4767,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | hsts: http-after-response (HAProxy 2.2+) covers generated 401/413 responses that http-response misses; includeSubDomains requires HTTPS on every affected subdomain. | HAProxy 3.0; HAProxy http-after-response minimum 2.2+ | REASONED |
 | backend: Example backend is plaintext 127.0.0.1:3000 with health checks; keep it private. | HAProxy 3.0 | REASONED |
 | remote-backend: Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name. | HAProxy 3.0 | REASONED |
-| basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. Sources omit openssl passwd -6. | HAProxy 3.0 | REASONED |
+| basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. Sources omit openssl passwd -6. | HAProxy 3.0; OpenSSL password command 3.0 | REASONED |
 | mtls: For machine access, bind verify required with ca-file requires trusted client certificates. | HAProxy 3.0 | REASONED |
 | mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or use Cloudflare Access for human MFA. | Supporting documentation unknown | REASONED |
 | maxconn: Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend. | HAProxy 3.0 | REASONED |
@@ -4996,6 +5015,7 @@ sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorize
 - HAProxy statistics dashboard (`stats enable`/`auth`/`admin` capabilities): https://www.haproxy.com/documentation/haproxy-configuration-tutorials/alerts-and-monitoring/statistics/
 - Authelia HAProxy integration (MFA portal): https://www.authelia.com/integration/proxies/haproxy/
 - Mozilla SSL Configuration Generator (TLS policy, not HAProxy syntax): https://ssl-config.mozilla.org/
+- OpenSSL 3.0 `passwd -6` SHA-512 crypt and terminal prompting (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-passwd/
 
 ======================================================================
 ==> traefik.md
@@ -5008,23 +5028,23 @@ sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorize
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| entrypoints: For Traefik v2/v3, web :80 redirects to HTTPS websecure :443 and an ACME resolver obtains/renews certificates. | Traefik documentation (rolling) unknown | REASONED |
-| acme-storage: Persist acme.json across restarts with mode 600 to retain certificates and avoid repeated issuance/rate limits. | Traefik documentation (rolling) unknown | REASONED |
-| acme-challenges: TLS-ALPN requires inbound 443; HTTP-01 uses 80, while DNS supports wildcards without inbound ports. | Traefik documentation (rolling) unknown | REASONED |
+| entrypoints: For Traefik v2/v3, web :80 redirects to HTTPS websecure :443 and an ACME resolver obtains/renews certificates. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| acme-storage: Persist acme.json across restarts with mode 600 to retain certificates and avoid repeated issuance/rate limits. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Traefik ACME storage source v3.5.0 | REASONED |
+| acme-challenges: TLS-ALPN requires inbound 443; HTTP-01 uses 80, while DNS supports wildcards without inbound ports. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | docker-default: Docker discovery defaults exposedByDefault to true; set false and opt each intended container in with traefik.enable=true. | Traefik Docker provider unknown | REASONED |
 | docker-scope: Discovery is daemon-wide, not Compose-project scoped; eligible unlabelled containers get routers unless excluded. Missing usable ports skip service creation. | Traefik Docker provider unknown | REASONED |
 | docker-socket: The Docker socket gives daemon control despite :ro; use a restricted socket proxy to limit API access. | Traefik Docker provider unknown | REASONED |
-| tls-floor: Dynamic default TLS options set minVersion VersionTLS12. | Traefik documentation (rolling) unknown | REASONED |
+| tls-floor: Dynamic default TLS options set minVersion VersionTLS12. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | route: Docker labels select the app host, websecure, letsencrypt resolver and backend port 3000. | Traefik documentation (rolling) unknown; Traefik Docker provider unknown | REASONED |
 | backend-isolation: Publish only Traefik 80/443, not the app's 3000, to prevent middleware/TLS bypass. | Traefik Docker provider unknown | REASONED |
-| basic: Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here. | Traefik documentation (rolling) unknown | REASONED |
-| compose-hash: Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping. | Traefik documentation (rolling) unknown | REASONED |
-| file-provider: Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file. | Traefik documentation (rolling) unknown | REASONED |
-| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA. | Traefik documentation (rolling) unknown | REASONED |
+| basic: Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| compose-hash: Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| file-provider: Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | body-limit: Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size. | Traefik middleware documentation unknown | REASONED |
 | buffer-storage: memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size. | Traefik middleware documentation unknown | REASONED |
 | rate-limit: average=10 and burst=20 configure a rate cap, per source by default. | Traefik middleware documentation unknown | REASONED |
@@ -5276,6 +5296,13 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 - Buffering middleware (`maxRequestBodyBytes`, `memRequestBodyBytes`): https://doc.traefik.io/traefik/middlewares/http/buffering/
 - InFlightReq middleware (`amount`): https://doc.traefik.io/traefik/middlewares/http/inflightreq/
 - RateLimit middleware (`average`, `burst`, `period`): https://doc.traefik.io/traefik/middlewares/http/ratelimit/
+- Traefik v3.5 entry-point HTTPS redirection (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/entrypoints/
+- Traefik v3.5 ACME renewal, challenges and certificate storage (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/tls/certificate-resolvers/acme/
+- Traefik v3.5.0 ACME storage file creation with mode 600 (checked October 2026): https://github.com/traefik/traefik/blob/v3.5.0/pkg/provider/acme/local_store.go#L125
+- Traefik v3.5 minimum TLS version (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/tls/tls-options/
+- Traefik v3.5 file-provider configuration (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/providers/others/file/
+- Traefik v3.5 BasicAuth and Compose dollar-sign escaping (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/basicauth/
+- Traefik v3.5 ForwardAuth delegation (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/forwardauth/
 
 ======================================================================
 ==> nodejs.md
