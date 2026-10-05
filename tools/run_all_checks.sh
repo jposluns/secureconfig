@@ -36,6 +36,31 @@ echo "== version basis =="
 python3 tools/test_version_basis.py || bad "version-basis self-test"
 python3 tools/version_basis.py --check || bad "version-basis metadata or summary"
 
+echo "== rendered Sources shadow comparison =="
+# D1 findings are advisory. Dependency/invocation failures remain errors.
+if sr_tests=$(python3 -I -B tools/test_sources_render.py 2>&1); then
+  printf '%s\n' "$sr_tests"
+  if grep -qE '^(FAILED|FAIL:|ERROR:|  FAIL  )' <<< "$sr_tests" ||
+     ! grep -qE '^OK([[:space:]]|$)' <<< "$sr_tests"; then
+    bad "rendered Sources self-test exited 0 without a clean result"
+  fi
+else
+  printf '%s\n' "$sr_tests"
+  bad "rendered Sources self-test"
+fi
+if sr=$(python3 -I -B tools/sources_render.py --compare --summary 2>&1); then
+  printf '%s\n' "$sr"
+  if grep -q '^  FAIL  ' <<< "$sr" ||
+     ! grep -qE '^  ADVISORY  rendered Sources: [0-9]+/[0-9]+ guides disagree;|^  SKIP  rendered Sources comparison:' <<< "$sr"; then
+    bad "rendered Sources comparison exited 0 without a report"
+  elif [ -n "${CI:-}" ] && grep -q '^  SKIP  ' <<< "$sr"; then
+    bad "rendered Sources parser required in CI"
+  fi
+else
+  printf '%s\n' "$sr"
+  bad "rendered Sources comparison could not run"
+fi
+
 echo "== llms-full.txt is current =="
 orig=$(mktemp)
 cp site/llms-full.txt "$orig"
