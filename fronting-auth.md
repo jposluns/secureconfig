@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-27",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "8f982007c825bfe550710fa6931ad65e909cb45a316c22769329974aa96c47bf",
+  "body_sha256": "2f79547305b04d417c866285ca1f9e15f9b13b618baaa1a8883fe18f8f26ba69",
   "components": {
     "oauth": {
       "name": "oauth2-proxy",
@@ -19,7 +19,10 @@ version_basis: {
       "basis": "v4.39.28",
       "sources": {
         "s064d1e72c1e8": "https://github.com/authelia/authelia/blob/v4.39.28/internal/configuration/schema/server.go#L90-L92",
-        "sbec86d37ea1c": "https://github.com/authelia/authelia/blob/v4.39.28/internal/configuration/schema/types_addresses_nix.go#L37"
+        "sbec86d37ea1c": "https://github.com/authelia/authelia/blob/v4.39.28/internal/configuration/schema/types_addresses_nix.go#L37",
+        "sec3688bec026": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/session/introduction.md#L78-L82",
+        "s91886e5dca2c": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/security/access-control.md#L102",
+        "sf170ee48ce0d": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/security/access-control.md#L527-L537"
       }
     },
     "traefik": {
@@ -69,6 +72,15 @@ version_basis: {
         "sd5437cbc4328": "https://www.authelia.com/integration/proxies/caddy/",
         "scd46ff77c737": "https://www.authelia.com/configuration/second-factor/introduction/"
       }
+    },
+    "pomerium-docs": {
+      "name": "Pomerium policy documentation",
+      "basis": "691714e2f0ae74fab47412275e8b64b68acdc0d3",
+      "sources": {
+        "s18dd6f6efcc6": "https://github.com/pomerium/documentation/blob/691714e2f0ae74fab47412275e8b64b68acdc0d3/content/docs/reference/routes/policy.mdx#L20",
+        "s69a7e15c61ca": "https://github.com/pomerium/documentation/blob/691714e2f0ae74fab47412275e8b64b68acdc0d3/content/docs/internals/ppl.mdx#L50-L52",
+        "s84633400030e": "https://github.com/pomerium/documentation/blob/691714e2f0ae74fab47412275e8b64b68acdc0d3/content/docs/internals/ppl.mdx#L90"
+      }
     }
   },
   "claims": {
@@ -94,10 +106,10 @@ version_basis: {
     "authelia-identity": {"text": "nginx copies verified Remote-User/Groups/Name/Email and uses the auth Location for 401 redirection; trusted client headers must be overwritten.", "components": ["authelia-rolling"], "sources": ["authelia-rolling:s4af41b2fed9f"], "status": "REASONED"},
     "authelia-traefik": {"text": "Traefik calls authelia:9091/api/authz/forward-auth and copies the four Remote-* identity headers.", "components": ["authelia-rolling"], "sources": ["authelia-rolling:sfb8ce161d56a"], "status": "REASONED"},
     "authelia-caddy": {"text": "Caddy forward_auth calls authelia:9091 with /api/authz/forward-auth and copies the four Remote-* identity headers.", "components": ["authelia-rolling"], "sources": ["authelia-rolling:sd5437cbc4328"], "status": "REASONED"},
-    "authelia-session": {"text": "Authelia needs a random session secret and path access rules selecting one_factor or two_factor.", "components": ["authelia-rolling"], "sources": ["authelia-rolling:s0cb4f49871b5", "authelia-rolling:s4af41b2fed9f"], "status": "REASONED"},
+    "authelia-session": {"text": "Authelia needs a random session secret and path access rules selecting one_factor or two_factor.", "components": ["authelia-rolling", "authelia"], "sources": ["authelia-rolling:s0cb4f49871b5", "authelia-rolling:s4af41b2fed9f", "authelia:sec3688bec026", "authelia:s91886e5dca2c", "authelia:sf170ee48ce0d"], "status": "REASONED"},
     "authelia-mfa": {"text": "Authelia enforces TOTP, WebAuthn/passkeys or Duo push itself.", "components": ["authelia-rolling"], "sources": ["authelia-rolling:scd46ff77c737"], "status": "REASONED"},
     "pomerium-idp": {"text": "Pomerium combines routing, TLS and access control; configure idp_provider, idp_provider_url, idp_client_id and idp_client_secret.", "components": ["pomerium"], "sources": ["pomerium:s181907d16ed1", "pomerium:s4ed306cb118e"], "status": "REASONED"},
-    "pomerium-policy": {"text": "Each Pomerium route carries policy restricting users, domains or claims.", "components": ["pomerium"], "sources": ["pomerium:s4ed306cb118e"], "status": "REASONED"},
+    "pomerium-policy": {"text": "Each Pomerium route carries policy restricting users, domains or claims.", "components": ["pomerium", "pomerium-docs"], "sources": ["pomerium:s4ed306cb118e", "pomerium-docs:s18dd6f6efcc6", "pomerium-docs:s69a7e15c61ca", "pomerium-docs:s84633400030e"], "status": "REASONED"},
     "idp-mfa": {"text": "oauth2-proxy and Pomerium rely on MFA enforced by their identity provider.", "components": ["oauth", "pomerium"], "sources": ["oauth:sb098baafd79a", "pomerium:s181907d16ed1"], "status": "REASONED"},
     "verify-listeners": {"text": "Inspect every listener: app 3000, oauth2-proxy 4180 and Authelia 9091 must be reachable only by the proxy.", "components": ["oauth", "authelia"], "sources": ["oauth:sa987fae1c9ef", "authelia:s064d1e72c1e8", "authelia:sbec86d37ea1c"], "status": "REASONED", "verify": [1]},
     "verify-direct": {"text": "From another host, all three ports must refuse/time out at the actual address; HTTP proves exposure and local/resolver failures are inconclusive.", "components": ["curl", "oauth-rolling", "authelia-rolling"], "sources": ["oauth-rolling:sdcd74a9cd9c6", "authelia-rolling:s0cb4f49871b5", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
@@ -114,7 +126,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -140,10 +152,10 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | authelia-identity: nginx copies verified Remote-User/Groups/Name/Email and uses the auth Location for 401 redirection; trusted client headers must be overwritten. | Authelia documentation (rolling) unknown | REASONED |
 | authelia-traefik: Traefik calls authelia:9091/api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia documentation (rolling) unknown | REASONED |
 | authelia-caddy: Caddy forward_auth calls authelia:9091 with /api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia documentation (rolling) unknown | REASONED |
-| authelia-session: Authelia needs a random session secret and path access rules selecting one_factor or two_factor. | Authelia documentation (rolling) unknown | REASONED |
+| authelia-session: Authelia needs a random session secret and path access rules selecting one_factor or two_factor. | Authelia documentation (rolling) unknown; Authelia v4.39.28 | REASONED |
 | authelia-mfa: Authelia enforces TOTP, WebAuthn/passkeys or Duo push itself. | Authelia documentation (rolling) unknown | REASONED |
 | pomerium-idp: Pomerium combines routing, TLS and access control; configure idp_provider, idp_provider_url, idp_client_id and idp_client_secret. | Pomerium unknown | REASONED |
-| pomerium-policy: Each Pomerium route carries policy restricting users, domains or claims. | Pomerium unknown | REASONED |
+| pomerium-policy: Each Pomerium route carries policy restricting users, domains or claims. | Pomerium unknown; Pomerium policy documentation 691714e2f0ae74fab47412275e8b64b68acdc0d3 | REASONED |
 | idp-mfa: oauth2-proxy and Pomerium rely on MFA enforced by their identity provider. | oauth2-proxy v7.15.4; Pomerium unknown | REASONED |
 | verify-listeners: Inspect every listener: app 3000, oauth2-proxy 4180 and Authelia 9091 must be reachable only by the proxy. | oauth2-proxy v7.15.4; Authelia v4.39.28 | REASONED |
 | verify-direct: From another host, all three ports must refuse/time out at the actual address; HTTP proves exposure and local/resolver failures are inconclusive. | curl minimum write-out version 7.75.0; oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
@@ -331,3 +343,9 @@ After a real login through the proxy, confirm a session reaches the app and the 
 - Authelia listens with `net.Listen(a.Network(), a.NetworkAddress())` (`types_addresses_nix.go` L37), where `NetworkAddress()` returns the URL's host and port, `:9091` for the default (`types_address.go` L480) (pinned tag v4.39.28): https://github.com/authelia/authelia/blob/v4.39.28/internal/configuration/schema/types_addresses_nix.go#L37
 - Go `net.Listen` with an empty host listens on all available unicast and anycast addresses of the local system: https://pkg.go.dev/net#Listen
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
+- Authelia v4.39.28 random session secret (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/session/introduction.md#L78-L82
+- Authelia v4.39.28 path-matching resources (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/security/access-control.md#L102
+- Authelia v4.39.28 one_factor and two_factor policies (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/security/access-control.md#L527-L537
+- Pomerium route authorization policy (pinned commit 691714e2f0ae74fab47412275e8b64b68acdc0d3, checked October 2026): https://github.com/pomerium/documentation/blob/691714e2f0ae74fab47412275e8b64b68acdc0d3/content/docs/reference/routes/policy.mdx#L20
+- Pomerium domain and user policy examples (pinned commit 691714e2f0ae74fab47412275e8b64b68acdc0d3, checked October 2026): https://github.com/pomerium/documentation/blob/691714e2f0ae74fab47412275e8b64b68acdc0d3/content/docs/internals/ppl.mdx#L50-L52
+- Pomerium domain and group-claim policy (pinned commit 691714e2f0ae74fab47412275e8b64b68acdc0d3, checked October 2026): https://github.com/pomerium/documentation/blob/691714e2f0ae74fab47412275e8b64b68acdc0d3/content/docs/internals/ppl.mdx#L90
