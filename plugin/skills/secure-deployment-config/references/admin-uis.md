@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "62daadfa5bcf41caa24a460cee2a7f93f4a452b926f9c48e4b2845329f94ab42",
+  "body_sha256": "b3ebcd2ac5937c56de180cfaa7f41f19a76cc56b02403ac30f1fc8f70e2d84fc",
   "components": {
     "mongo": {
       "name": "mongo-express",
@@ -71,6 +71,13 @@ version_basis: {
       "sources": {
         "s37204ff1b27c": "https://pkg.go.dev/net#Listen"
       }
+    },
+    "htpasswd": {
+      "name": "Apache htpasswd",
+      "basis": "2.4",
+      "sources": {
+        "scde9004bb967": "https://httpd.apache.org/docs/2.4/programs/htpasswd.html"
+      }
     }
   },
   "claims": {
@@ -84,7 +91,7 @@ version_basis: {
     "grafana-bind": {"text": "Empty http_addr joins the port and binds all interfaces; set 127.0.0.1.", "components": ["grafana-pin", "go"], "sources": ["grafana-pin:s4c6ff3174e7e", "grafana-pin:sb00e234d0ddd", "grafana-pin:sf14b29976adb", "go:s37204ff1b27c"], "status": "REASONED"},
     "grafana-tls": {"text": "Native HTTPS uses server protocol=https, cert_file and cert_key.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5", "grafana:sc241e0772095"], "status": "REASONED"},
     "prometheus-auth": {"text": "Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes.", "components": ["prometheus"], "sources": ["prometheus:scce074c47e9c"], "status": "REASONED"},
-    "prometheus-bcrypt": {"text": "Use htpasswd -nB -C 12; the guide's bare -B cost 5 versus OWASP minimum 10 lacks an OWASP citation here.", "components": ["prometheus"], "sources": ["prometheus:scce074c47e9c"], "status": "REASONED"},
+    "prometheus-bcrypt": {"text": "Use htpasswd -nB -C 12; the guide's bare -B cost 5 versus OWASP minimum 10 lacks an OWASP citation here.", "components": ["prometheus", "htpasswd"], "sources": ["prometheus:scce074c47e9c", "htpasswd:scde9004bb967"], "status": "REASONED"},
     "prometheus-bind": {"text": "Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090.", "components": ["prometheus-pin"], "sources": ["prometheus-pin:s6d5f308b02a2"], "status": "REASONED"},
     "prometheus-tls": {"text": "web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config.", "components": ["prometheus"], "sources": ["prometheus:sc48b506cc29a"], "status": "REASONED"},
     "database-panels": {"text": "Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated.", "components": ["phpmyadmin", "pgadmin"], "sources": ["phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435"], "status": "REASONED"},
@@ -104,7 +111,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -118,7 +125,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | grafana-bind: Empty http_addr joins the port and binds all interfaces; set 127.0.0.1. | Grafana v13.2.2; Go net unknown | REASONED |
 | grafana-tls: Native HTTPS uses server protocol=https, cert_file and cert_key. | Grafana docs unknown | REASONED |
 | prometheus-auth: Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes. | Prometheus docs unknown | REASONED |
-| prometheus-bcrypt: Use htpasswd -nB -C 12; the guide's bare -B cost 5 versus OWASP minimum 10 lacks an OWASP citation here. | Prometheus docs unknown | REASONED |
+| prometheus-bcrypt: Use htpasswd -nB -C 12; the guide's bare -B cost 5 versus OWASP minimum 10 lacks an OWASP citation here. | Prometheus docs unknown; Apache htpasswd 2.4 | REASONED |
 | prometheus-bind: Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090. | Prometheus v3.14.0 | REASONED |
 | prometheus-tls: web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config. | Prometheus docs unknown | REASONED |
 | database-panels: Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated. | phpMyAdmin unknown; pgAdmin unknown | REASONED |
@@ -222,3 +229,4 @@ Run these from a second network against each panel's real hostname; a 200 that r
 - Grafana joins `http_addr` with the port into the server address (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L467-L469
 - Grafana listens on that address with `net.Listen("tcp", ...)` (pinned tag v13.2.2): https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L568
 - Go `net.Listen` with an empty host listens on all available unicast and anycast addresses of the local system: https://pkg.go.dev/net#Listen
+- Apache 2.4 `htpasswd` bcrypt default cost and `-C` override (checked October 2026): https://httpd.apache.org/docs/2.4/programs/htpasswd.html
