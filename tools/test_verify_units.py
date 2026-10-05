@@ -464,6 +464,67 @@ python3() {
                         check(status + " " + site + " mixed provenance", rc == 0
                               and "0 findings" in out)
 
+        # Round 4: decoded whitespace, formatting and opaque content cannot
+        # supply provenance at any declaration site, including fence comments.
+        sites = (
+            ("paragraph", "{mark}\n"),
+            ("item", "- {mark}\n"),
+            ("row", "| A | B |\n| --- | --- |\n| x | {mark} |\n"),
+            ("heading alone", "### Check ({mark})\n"),
+            ("inherited prose", "### Check ({mark})\n\nCheck.\n"),
+            ("inherited item", "### Check: {mark}\n\n- Check.\n"),
+            ("inherited row", "### Check ({mark})\n\n" + table),
+            ("inherited fence", "### Check: {mark}\n\n" + fence),
+            ("root", "## Verify ({mark})\n\nCheck.\n"),
+            ("before fence", "{mark}\n\n" + fence),
+            ("after fence", fence + "\n{mark}\n"),
+            ("preceding", fence + "\n{mark}\n\n"
+             + "~~~sh\n# " + MARK + "\necho ok\n~~~\n"),
+            ("following", "~~~sh\n# " + MARK + "\necho ok\n~~~\n\n"
+             + "{mark}\n\n" + fence),
+            ("shell comment", "~~~sh\n# {mark}\necho ok\n~~~\n"),
+            ("Python comment", "~~~python\n# {mark}\nprint(1)\n~~~\n"),
+            ("SQL comment", "~~~sql\n-- {mark}\nSELECT 1;\n~~~\n"),
+        )
+        empty_evidence = (
+            "**[]()&nbsp;[]()**", "**[]()&emsp;[]()**",
+            "**[]()&#x3000;[]()**", "**[]()&zwj;[]()**",
+            "\u00a0", "\u2003", "\u3000", "\u200d", "...!?;", "**...!?;**",
+            "**[]()&nbsp;[vendor](https://example.com) `9.4`**",
+        )
+        real_evidence = ("vendor docs", "9.4", "vendor docs `9.4`", "\u6587\u6863")
+        for status in ("REASONED", "DEMONSTRATED"):
+            for site, template in sites:
+                direction = site + " block; " if site in {"preceding", "following"} else ""
+                for evidence in empty_evidence + real_evidence:
+                    body = PREFIX + template.format(mark=status + ": " + direction + evidence)
+                    guide.write_text(body)
+                    baseline.write_text("")
+                    rc, out = cli("--strict", "--require-parser", ci="1")
+                    name = "provenance content " + status + " " + site + " " + repr(evidence)
+                    valid = evidence in real_evidence
+                    diagnostic = "unit extraction failed: declaration needs scope and provenance"
+                    check(name + " result", rc == (0 if valid else 1)
+                          and ("0 findings" in out if valid else diagnostic in out))
+                    units, errors = gate.scan_units(body, parser=parser)
+                    legacy, legacy_errors = gate.scan_guide(body, with_status=True)
+                    check(name + " unchanged fences",
+                          [(u[0], u[2], u[3]) for u in units if u[1] == "fence"] == legacy)
+                    check(name + " unit diagnostic", not errors if valid
+                          else diagnostic in errors)
+                    if not valid:
+                        rc, out = cli("--seed-baseline", "--require-parser")
+                        check(name + " cannot seed", rc == 1 and diagnostic in out
+                              and baseline.read_text() == "")
+                    if evidence == empty_evidence[0] and "comment" in site:
+                        check(name + " legacy accepts reproduction", not legacy_errors
+                              and legacy and all(u[2] == status for u in legacy))
+                        with patch.object(gate, "gate_parser",
+                                          side_effect=gate.ParserUnavailable("parser absent")):
+                            rc, out = cli("--strict")
+                        check(name + " local legacy fallback", rc == 0
+                              and out.count("  SKIP  ") == 1 and "0 findings" in out)
+
         # Exact parser-only EOF reproduction, with closed and empty-body controls.
         for tail in ("", "\n", "\n```\n"):
             body = "## Verify (notes)\n\n```sh\n# " + MARK + "\necho probe" + tail

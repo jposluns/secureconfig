@@ -593,10 +593,11 @@ def gate_parser(*, required=False):
     return MarkdownIt("commonmark").enable("table")
 
 
-def inline_text(tokens, *, title=False):
+def inline_text(tokens, *, title=False, plain=False):
     """Project parsed inlines, never raw Markdown.
 
     Declaration text preserves supported emphasis and replaces opaque spans.
+    The plain view keeps only text content for the provenance-content check.
     The title view renders their visible text for conservative root selection;
     that view must never be used to authorize a declaration.
     """
@@ -606,14 +607,15 @@ def inline_text(tokens, *, title=False):
         if kind == "link_open":
             links += 1
             if not title:
-                parts.append("\0")
+                parts.append("" if plain else "\0")
         elif kind == "link_close":
             links -= 1
             if links < 0:
                 raise ValueError("unbalanced inline link")
         elif kind in {"code_inline", "image"}:
             child_text = inline_text(token.children, title=title) if token.children else ""
-            parts.append((child_text if kind == "image" else token.content) if title else "\0")
+            parts.append((child_text if kind == "image" else token.content) if title
+                         else "" if plain else "\0")
         elif kind == "html_inline" and title:
             continue  # Tags have no visible text; declarations still reject HTML.
         elif kind in {"text", "softbreak", "hardbreak", "em_open", "em_close",
@@ -621,7 +623,7 @@ def inline_text(tokens, *, title=False):
             if not links or title:
                 parts.append(token.content if kind == "text" else
                              "\n" if kind in {"softbreak", "hardbreak"} else
-                             "" if title else token.markup)
+                             "" if title or plain else token.markup)
         else:
             raise ValueError("unsupported inline token " + kind)
     if links:
@@ -638,7 +640,27 @@ def inline_declaration(tokens, *, heading=False, directional=False):
             raise ValueError(error)
         if text is None:
             return None
-    return unit_declaration(text, directional=directional)
+    mark = unit_declaration(text, directional=directional)
+    if mark:
+        plain = inline_text(tokens, plain=True)
+        if heading:
+            _, plain, _ = heading_parts(plain)
+        if not has_provenance_content(plain or ""):
+            raise ValueError("declaration needs scope and provenance")
+    return mark
+
+
+def has_provenance_content(text):
+    """Require a Unicode letter or digit in the plain scope/provenance text."""
+    match = DECL.fullmatch(" ".join(text.strip().split("\n")))
+    if not match:
+        return False
+    detail = match[2].strip()
+    for name in ("preceding", "following"):
+        prefix = name + " block;"
+        if detail.lower().startswith(prefix):
+            detail = detail[len(prefix):].strip()
+    return any(ch.isalnum() for ch in detail)
 
 
 @dataclass
@@ -650,10 +672,6 @@ class UnitNode:
 def unit_declaration(text, *, directional=False):
     """Validate the existing declaration spellings without accepting broken emphasis."""
     mark = declaration(text)
-    if mark:
-        # Opaque spans project to NUL; only text tokens can supply provenance.
-        # Emphasis markup is discounted by the legacy declaration grammar.
-        declaration(text.replace("\0", ""))
     if not mark and re.match(r"(?i)^[*_]*(?:DEMONSTRATED|REASONED)[*_ \t]*:", text.strip()):
         raise ValueError("malformed declaration emphasis")
     if mark:
