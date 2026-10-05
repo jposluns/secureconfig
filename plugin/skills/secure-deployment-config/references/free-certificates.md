@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "b51ec27f466c36ee4ef7835693931adf31c57625be3d3b22815805e948ca2ee5",
+  "body_sha256": "da7932b91942db259cf5ccb9528f64bd58a1bcf0a69f49165255fb86122c4047",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -253,7 +253,7 @@ openssl s_client -connect "$host:443" -servername "$host" \
   | openssl x509 -noout -issuer -dates
 ```
 
-A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
+REASONED: protection-scope reminder from this guide and the linked authentication guidance; certificate inspection does not exercise application access controls. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
 
 ## Sources (checked September 2026)
 

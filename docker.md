@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "930f100fa471929891621811265528183a69f23d42778d1babef4489e2176295",
+  "body_sha256": "db772eb2d70f2a32d360aa9001321d1f824232a4b098da1e5484057ed6f19c14",
   "components": {
     "engine": {
       "name": "Docker Engine networking",
@@ -228,7 +228,7 @@ curl -q -sI http://app.example.com/      # expect a redirect to https://
 curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/api  # unauthenticated: expect 401 or 403, never 200 (then confirm an authorized request succeeds)
 ```
 
-Test from a second machine on a different network where possible; the UFW bypass means testing the firewall from the host itself proves nothing about published ports. The `curl` checks above exercise the proxy's redirect and auth, not the backend, so also probe each restricted host address and published port directly (for example port 3000) from an allowed and a disallowed source, IPv4 and IPv6 separately: a loopback-bound or firewalled backend must show unreachable while the proxy stays reachable.
+REASONED: external isolation comparisons from the cited Docker packet-filtering and port-publishing sources; no Docker runtime or external probe hosts are available. Test from a second machine on a different network where possible; the UFW bypass means testing the firewall from the host itself proves nothing about published ports. The `curl` checks above exercise the proxy's redirect and auth, not the backend, so also probe each restricted host address and published port directly (for example port 3000) from an allowed and a disallowed source, IPv4 and IPv6 separately: a loopback-bound or firewalled backend must show unreachable while the proxy stays reachable.
 
 REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4gw3-53p4 and the pinned v28.3.3 rule-restoration source. It has not been demonstrated here because the authoring environment has no Docker runtime, firewalld or external test host. For a loopback-published HTTP backend using default NAT bridge filtering, confirm that the backend answers locally. From a second host with a route through the Docker host to the bridge subnet, run `curl -q -g --noproxy '*' --connect-timeout 3 --max-time 5 -v http://172.17.0.2:3000/`, replacing the address and port with the actual container address and container port. Repeat with a fresh connection after running `sudo firewall-cmd --reload` on the Docker host. Without another control masking the regression, an affected host changes from blocked to connectable; a fixed host remains blocked. Any successful TCP connection, including an HTTP 401 or 403 response, demonstrates reachability. A failed probe alone does not establish that the Engine is patched: confirm the route, target and backend health. Repeat for configured IPv6 addresses and the restricted host-address publications, and confirm that the TLS proxy remains reachable.
 

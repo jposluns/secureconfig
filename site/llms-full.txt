@@ -576,7 +576,7 @@ openssl s_client -connect "$host:443" -servername "$host" \
   | openssl x509 -noout -issuer -dates
 ```
 
-A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
+REASONED: protection-scope reminder from this guide and the linked authentication guidance; certificate inspection does not exercise application access controls. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
 
 ## Sources (checked September 2026)
 
@@ -4570,7 +4570,7 @@ Basic authentication is single-factor, and lighttpd is absent from Authelia's su
 
 ## 4. Verify
 
-These are read-and-judge checks: the status code is printed and you compare it.
+REASONED: interpretation procedure from the status-output commands and expected outcomes below; no deployment or protected path was supplied. These are read-and-judge checks: the status code is printed and you compare it.
 
 REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block.
 
@@ -5055,7 +5055,7 @@ ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0
            # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
 ```
 
-Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener with
+REASONED: following block; management-surface comparisons from the cited HAProxy stats, runtime API and TLS documentation; no HAProxy runtime or certificate fixtures are available. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener with
 an unauthenticated request (refused) and a valid-credential request (returns the statistics) against that
 listener specifically; the runtime socket by its ownership and mode and an unauthorized local identity
 (permission denied), since `show cli level` reporting `admin` is the authorized level, not proof of access
@@ -5879,7 +5879,7 @@ curl -q -sI http://app.example.com/      # expect a redirect to https://
 curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/api  # unauthenticated: expect 401 or 403, never 200 (then confirm an authorized request succeeds)
 ```
 
-Test from a second machine on a different network where possible; the UFW bypass means testing the firewall from the host itself proves nothing about published ports. The `curl` checks above exercise the proxy's redirect and auth, not the backend, so also probe each restricted host address and published port directly (for example port 3000) from an allowed and a disallowed source, IPv4 and IPv6 separately: a loopback-bound or firewalled backend must show unreachable while the proxy stays reachable.
+REASONED: external isolation comparisons from the cited Docker packet-filtering and port-publishing sources; no Docker runtime or external probe hosts are available. Test from a second machine on a different network where possible; the UFW bypass means testing the firewall from the host itself proves nothing about published ports. The `curl` checks above exercise the proxy's redirect and auth, not the backend, so also probe each restricted host address and published port directly (for example port 3000) from an allowed and a disallowed source, IPv4 and IPv6 separately: a loopback-bound or firewalled backend must show unreachable while the proxy stays reachable.
 
 REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4gw3-53p4 and the pinned v28.3.3 rule-restoration source. It has not been demonstrated here because the authoring environment has no Docker runtime, firewalld or external test host. For a loopback-published HTTP backend using default NAT bridge filtering, confirm that the backend answers locally. From a second host with a route through the Docker host to the bridge subnet, run `curl -q -g --noproxy '*' --connect-timeout 3 --max-time 5 -v http://172.17.0.2:3000/`, replacing the address and port with the actual container address and container port. Repeat with a fresh connection after running `sudo firewall-cmd --reload` on the Docker host. Without another control masking the regression, an affected host changes from blocked to connectable; a fixed host remains blocked. Any successful TCP connection, including an HTTP 401 or 403 response, demonstrates reachability. A failed probe alone does not establish that the Engine is patched: confirm the route, target and backend health. Repeat for configured IPv6 addresses and the restricted host-address publications, and confirm that the TLS proxy remains reachable.
 
@@ -9763,7 +9763,7 @@ ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@host   
 ssh user@host                     # with PAM MFA: the key is accepted, then a code is required before a shell. Also confirm a wrong or omitted code is REJECTED, that unenrolled users are denied (drop `nullok`), and that Duo fails closed (`failmode=secure`), per mfa.md; otherwise the factor is optional, not mandatory
 ```
 
-Run the SSH test from a second terminal before closing your working session.
+REASONED: session-retention procedure from the safe transition in section 1 and cited SSH guidance; no authorized target host is available. Run the SSH test from a second terminal before closing your working session.
 
 ## Sources (checked September 2026)
 
@@ -21503,9 +21503,9 @@ system_account: SYS
 
 ## Verify
 
-Service behaviour has **not** been demonstrated here. `nats-server`, `nats`, `nk`, `nsc`, Docker, and Podman are unavailable on the authoring environment's `PATH`; no live broker, certificate fixtures, authentication service, or external peer environment was supplied. The filesystem restrictions prohibit provisioning binaries and writable credential fixtures. The live comparisons below are **REASONED** from the cited documentation and pinned sources.
+REASONED: verification scope from the recorded authoring limitations and cited sources. Service behaviour has **not** been demonstrated here. `nats-server`, `nats`, `nk`, `nsc`, Docker, and Podman are unavailable on the authoring environment's `PATH`; no live broker, certificate fixtures, authentication service, or external peer environment was supplied. The filesystem restrictions prohibit provisioning binaries and writable credential fixtures. The live comparisons below are **REASONED** from the cited documentation and pinned sources.
 
-Run exposed-state comparisons only in an authorized isolated fixture. Keep the target, identity, payload, and observation window matched while changing the control under test. Record diagnostics and positive controls without secrets. DNS failures, generic timeouts, and local fixture errors are inconclusive.
+REASONED: comparison procedure from the paired controls below; no live broker or external test fixture is available. Run exposed-state comparisons only in an authorized isolated fixture. Keep the target, identity, payload, and observation window matched while changing the control under test. Record diagnostics and positive controls without secrets. DNS failures, generic timeouts, and local fixture errors are inconclusive.
 
 ### V0. Offline checks and their limits
 
@@ -21513,13 +21513,13 @@ Run exposed-state comparisons only in an authorized isolated fixture. Keep the t
 
 The prior guide's reported 14 invalid guard cases and two positive controls concerned its earlier fragments; they are not evidence that the replacement service checks ran.
 
-**Offline-capable, not demonstrated here: native parsing.** With the pinned server and readable certificate, JWT, and include fixtures, run `timeout 10s nats-server -t -c selected.conf`. Repeat for every complete conditional configuration actually selected. Pair each valid fixture with a deliberately malformed configuration or unknown-field negative control. Successful parsing does not establish reachability, authorization, or secure placeholder replacement. See [v2.14.7 configuration-test handling](https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/opts.go).
+REASONED: native-parsing procedure from the linked v2.14.7 configuration-test source; the pinned server and certificate, JWT and include fixtures are unavailable. **Offline-capable, not demonstrated here: native parsing.** With the pinned server and readable certificate, JWT, and include fixtures, run `timeout 10s nats-server -t -c selected.conf`. Repeat for every complete conditional configuration actually selected. Pair each valid fixture with a deliberately malformed configuration or unknown-field negative control. Successful parsing does not establish reachability, authorization, or secure placeholder replacement. See [v2.14.7 configuration-test handling](https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/opts.go).
 
-**Offline-capable, not demonstrated here: credential generation.** The NKey commands in section 1 and operator/account/user generation require installed pinned tools and a private writable store. Generation and local inspection need no broker; publication to a resolver and broker acceptance do.
+REASONED: generation procedure from the cited NATS key and JWT documentation; pinned tools and credential fixtures are unavailable. **Offline-capable, not demonstrated here: credential generation.** The NKey commands in section 1 and operator/account/user generation require installed pinned tools and a private writable store. Generation and local inspection need no broker; publication to a resolver and broker acceptance do.
 
-**Separate deployment-file check required:** scan the selected configuration, every included file, and referenced secret inputs for unresolved `REPLACE_WITH_` values and documentation addresses. Inspect generated key/JWT types and references with the appropriate tooling. A password such as `REPLACE_WITH_LONG_RANDOM_PASSWORD` can be syntactically valid, so `-t` is not a placeholder validator. An absence of placeholder text does not establish password strength or key ownership.
+REASONED: file-review scope from the configuration and credential recipes above; no selected deployment files or generated credentials were supplied. **Separate deployment-file check required:** scan the selected configuration, every included file, and referenced secret inputs for unresolved `REPLACE_WITH_` values and documentation addresses. Inspect generated key/JWT types and references with the appropriate tooling. A password such as `REPLACE_WITH_LONG_RANDOM_PASSWORD` can be syntactically valid, so `-t` is not a placeholder validator. An absence of placeholder text does not establish password strength or key ownership.
 
-### V1. Running identity, effective configuration, and listeners
+### V1. Running identity, effective configuration, and listeners (REASONED: inventory and isolation expectations from the linked hardening and configuration references; no running service or deployment namespace)
 
 **REASONED: no running NATS service, service manager fixture, or deployment network namespace is available.**
 
@@ -21531,7 +21531,7 @@ Exposed versus fixed: root execution, broadly readable secrets, unintended writa
 
 Inventory 4222, 8222, and every enabled peer or protocol listener, including 6222, 7422, 7222, MQTT, and WebSockets. Use the actual configured ports. See [hardening](https://docs.nats.io/learn/deployment/hardening) and [configuration](https://docs.nats.io/reference/config).
 
-### V2. Authentication, TLS, and out-of-scope subjects
+### V2. Authentication, TLS, and out-of-scope subjects (REASONED: authentication, TLS and subject-permission comparisons from the cited NATS and pinned CLI sources; no broker, CLI or certificate fixtures)
 
 **REASONED: no pinned CLI/server, trusted client/server certificates, or broker logs are available.**
 
@@ -21597,7 +21597,7 @@ If using `verify_and_map` instead, the positive control is a correctly mapped ce
 
 See [authentication](https://docs.nats.io/learn/security/authentication-basics), [TLS](https://docs.nats.io/reference/config/tls/), [authorization](https://docs.nats.io/learn/security/authorization), and [pinned CLI credential handling](https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/util.go).
 
-### V3. Actual delivery, queue restrictions, and bounded replies
+### V3. Actual delivery, queue restrictions, and bounded replies (REASONED: delivery, queue, reply and request-helper procedures from the cited permissions and pinned CLI sources; no broker or client fixtures)
 
 **REASONED: no broker, pinned CLI, two authenticated clients, or response-test client is available.**
 
@@ -21736,7 +21736,7 @@ In an exposed broad-publish configuration, extra, expired, and unrelated publica
 
 See [subscription permissions](https://docs.nats.io/reference/config/authorization/users/permissions/subscribe/), [response permissions](https://docs.nats.io/reference/config/authorization/users/permissions/allow_responses/), [pinned CLI subscription flags](https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/sub_command.go), and [server enforcement](https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/client.go).
 
-### V4. Accounts, approved sharing, and system requests
+### V4. Accounts, approved sharing, and system requests (REASONED: account isolation, sharing and system-request comparisons from the cited account and CLI sources; no multi-account broker or client fixtures)
 
 **REASONED: no multi-account broker, system credential, or concurrent client fixture is available.**
 
@@ -21750,7 +21750,7 @@ If validating private-export restrictions, add an isolated third test account wi
 
 See [accounts](https://docs.nats.io/learn/security/accounts-and-multitenancy) and [cross-account sharing](https://docs.nats.io/learn/security/cross-account).
 
-### V5. JetStream authority and effective limits
+### V5. JetStream authority and effective limits (REASONED: JetStream authority and limit comparisons from the cited account, consumer and API sources; no server, CLI or disposable store)
 
 **REASONED: no JetStream server, pinned CLI, or disposable persistence fixture is available. Conditional on JetStream being enabled.**
 
@@ -21778,7 +21778,7 @@ Use a 30-second bound per isolated load-test batch and finite message/object cou
 
 See [account limits and reload caveats](https://docs.nats.io/reference/config/accounts/jetstream/), [consumer enforcement](https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/consumer.go), and [API subjects](https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/jetstream_api.go).
 
-### V6. Encryption and recovery
+### V6. Encryption and recovery (REASONED: encrypted-store recovery comparisons from the linked encryption and rotation references; no runtime, stores or recovery keys)
 
 **REASONED: no JetStream runtime, disposable encrypted stores, recovery keys, or writable fixtures are available. Conditional on encryption being selected.**
 
@@ -21792,7 +21792,7 @@ Exposed versus fixed: a copied plaintext store discloses data; the encrypted sto
 
 See [encryption and rotation](https://docs.nats.io/learn/security/encryption) and [previous-key configuration](https://docs.nats.io/reference/config/jetstream/prev_encryption_key).
 
-### V7. Actual cluster, gateway, and leaf peers
+### V7. Actual cluster, gateway, and leaf peers (REASONED: peer admission and delivery comparisons from the linked cluster, gateway and leaf references; no peer servers, certificates or test networks)
 
 **REASONED: no peer servers, peer certificate fixtures, or allowed/disallowed peer networks are available. Conditional on each enabled link.**
 
@@ -21808,7 +21808,7 @@ If known-URL certificate checking is selected, compare a permitted peer certific
 
 A client-port test, TCP connection alone, or successful TLS handshake without message routing cannot substitute for these comparisons. See the [cluster](https://docs.nats.io/reference/config/cluster/), [gateway](https://docs.nats.io/reference/config/gateway/), and [leaf](https://docs.nats.io/reference/config/leafnodes/) references.
 
-### V8. Monitoring reachability and proxy bypass
+### V8. Monitoring reachability and proxy bypass (REASONED: collector, observer and proxy-bypass comparisons from the linked monitoring and hardening references; no service, observer or proxy fixtures)
 
 **REASONED: no monitoring service, intended collector, external observer, or authenticating proxy fixture is available.**
 
@@ -21839,7 +21839,7 @@ Any actual HTTP response from the direct backend proves reachability, even if it
 
 See [monitoring endpoints](https://docs.nats.io/learn/monitoring/monitoring-endpoints) and [hardening](https://docs.nats.io/learn/deployment/hardening).
 
-### V9. Enabled MQTT, WebSockets, and auth callout
+### V9. Enabled MQTT, WebSockets, and auth callout (REASONED: optional-protocol comparisons from the linked MQTT, WebSocket and auth-callout references; no clients, listeners or authentication fixture)
 
 **REASONED: no optional-protocol clients, listeners, browser fixture, or authentication service are available. Run only the applicable comparisons.**
 
@@ -21856,7 +21856,7 @@ For callout encryption, verify that the service can process exchanges with the m
 
 See [MQTT authentication](https://docs.nats.io/learn/mqtt/auth-and-clustering), [WebSocket configuration](https://docs.nats.io/reference/config/websocket/), and [auth callout](https://docs.nats.io/learn/security/auth-callout).
 
-### V10. Connection pressure and slow consumers
+### V10. Connection pressure and slow consumers (REASONED: bounded capacity comparisons from the linked runtime, account and request-queue references; no load client, isolated broker or diagnostics)
 
 **REASONED: no load client, isolated broker, or matching runtime diagnostics are available.**
 
@@ -21876,12 +21876,12 @@ See [runtime limits](https://docs.nats.io/reference/config), [account limits](ht
 
 ### Verification scope and local work
 
-The whole-corpus gate suite was not run for this drop-in generation. Shell checks do not demonstrate NATS configuration parsing or service behaviour.
+REASONED: scope of the original authoring record and its shell-only evidence. The whole-corpus gate suite was not run for this drop-in generation. Shell checks do not demonstrate NATS configuration parsing or service behaviour.
 
 | Check scope | Status | Procedure and prerequisites |
 | --- | --- | --- |
-| Service behaviour | REASONED from the cited NATS Server v2.14.7 and natscli v0.4.0 sources and vendor documentation; not demonstrated | On an authorized deployment pinned to NATS Server v2.14.7 and natscli v0.4.0, run V0-V10 and every applicable conditional comparison against isolated exposed and fixed states. Record server/client/tool versions, complete substituted configurations, commands or protocol requests, responses, matching server logs, effective limits, positive controls, and cleanup without secrets. Configuration inspection or successful `-t` alone does not demonstrate service behaviour. |
-| Native parsing and key generation | Outstanding in this environment; retained local work | Run the offline-capable checks above with the pinned tools and readable certificate, JWT, include, and credential fixtures. |
+| REASONED: service-comparison scope from the cited NATS sources and V0-V10 prerequisites; no broker fixtures. Service behaviour | REASONED from the cited NATS Server v2.14.7 and natscli v0.4.0 sources and vendor documentation; not demonstrated | On an authorized deployment pinned to NATS Server v2.14.7 and natscli v0.4.0, run V0-V10 and every applicable conditional comparison against isolated exposed and fixed states. Record server/client/tool versions, complete substituted configurations, commands or protocol requests, responses, matching server logs, effective limits, positive controls, and cleanup without secrets. Configuration inspection or successful `-t` alone does not demonstrate service behaviour. |
+| REASONED: local-work scope from V0 and its cited sources; pinned tools and credential fixtures are unavailable. Native parsing and key generation | Outstanding in this environment; retained local work | Run the offline-capable checks above with the pinned tools and readable certificate, JWT, include, and credential fixtures. |
 
 ## Common mistakes
 
@@ -31599,7 +31599,7 @@ curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/REPLACE_WITH_PROTECTE
 #   unsubstituted placeholder is inconclusive, not a pass.
 ```
 
-Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
+REASONED: external panel-response interpretation from the cited panel sources; no panel deployment or second test network is available. Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
 
 ## Sources (checked September 2026)
 
@@ -32357,7 +32357,7 @@ else
 fi
 ```
 
-From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
+REASONED: external panel-access expectations from the cited panel authentication sources; no panel deployment or external test network is available. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
 
 ## Sources (checked September 2026)
 
