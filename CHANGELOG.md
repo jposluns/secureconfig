@@ -13,6 +13,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 ## 2026-10-05
 
 - Add verified pinned sources and claim mappings for Mosquitto, search engines, Streamlit, n8n, headless browser services and workflow orchestrators (row 1.179, batch 1a); retain rolling provenance for the n8n 2.0 change notice (#431).
+- Add pinned Sources and claim mappings for ten READY facts in PocketBase, observability components, self-hosted Supabase, Firebase/Supabase, self-hosted error trackers, and Ray; regenerate version summaries and bundles (row 1.179, batch 1b) (#430).
 - Replace the dead Appwrite database permissions link in `pocketbase.md` with the legacy collection/document permissions page, refresh its rolling-source check and generated bundles (row 1.192), and record weekly link-check false positives for follow-up (row 3.40) (#428).
 
 ## 2026-09-27
