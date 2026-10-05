@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "7d647297dab9e9fef3508f7f6df980f890f3909ee349755d77f0aa1429302791",
+  "body_sha256": "b31d8cade3b22c723f81016366f9f3ba4699306ed790e51a7e3e56419107ce88",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -457,7 +457,7 @@ From outside the network, every panel URL is unreachable or shows a login; a pag
 - Vaultwarden wiki: admin page and ADMIN_TOKEN https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page , registration https://github.com/dani-garcia/vaultwarden/wiki/Disable-registration-of-new-users , HTTPS https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS , and the `.env.template` https://github.com/dani-garcia/vaultwarden/blob/3347698712d3e99e652ad4394ef2fc0ce2800fdd/.env.template
 - Kubernetes Dashboard (deprecation, port-forward, token login): https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/ ; 2.x arguments: https://github.com/kubernetes-retired/dashboard/blob/v2.7.0/docs/common/dashboard-arguments.md
 - Jenkins security: https://www.jenkins.io/doc/book/security/managing-security/ , https://www.jenkins.io/doc/book/security/access-control/ , https://www.jenkins.io/doc/book/security/csrf-protection/
-- Gitea config cheat sheet and MFA (Gitea 1.24 and later): https://docs.gitea.com/administration/config-cheat-sheet and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
+- Gitea config cheat sheet and MFA (`TWO_FACTOR_AUTH=enforced` requires Gitea 1.24 or later): https://docs.gitea.com/administration/config-cheat-sheet and https://docs.gitea.com/usage/user-setting/multi-factor-authentication/
 - GitLab CE initial root password (Docker install): https://docs.gitlab.com/install/docker/installation/
 - GitLab CE sign-up restrictions: https://docs.gitlab.com/administration/settings/sign_up_restrictions/
 - GitLab CE default visibility and access controls: https://docs.gitlab.com/administration/settings/visibility_and_access_controls/

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "40326050371698490c137f5e726beab74a9ef7bbb04ddd41af00ed0ef0299ee3",
+  "body_sha256": "af67534b412cec41d692c27ec6fd7964d3b9e7a04039b56fc8672259e3a66397",
   "components": {
     "kubernetes": {
       "name": "Kubernetes documentation",
@@ -674,5 +674,5 @@ allowed ranges out of the provider's own configuration rather than inferring the
 - Amazon EKS cluster endpoint access ("[b]y default, this API server endpoint is public to the internet"; private endpoint DNS, "resolved by public DNS servers to a private IP address from the VPC"): https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html
 - GKE control plane network isolation, including how authorized networks work: https://docs.cloud.google.com/kubernetes-engine/docs/concepts/network-isolation#how_authorized_networks_work
 - AKS API server authorized IP ranges: https://learn.microsoft.com/en-us/azure/aks/api-server-authorized-ip-ranges
-- cert-manager Gateway API usage (enabling support, annotations) (cert-manager 1.15 and later): https://cert-manager.io/docs/usage/gateway/ ; ACME HTTP-01 `gatewayHTTPRoute` solver: https://cert-manager.io/docs/configuration/acme/http01/
+- cert-manager Gateway API usage (enabling support, annotations; since cert-manager 1.15, Gateway API support no longer requires a feature gate but still requires explicit enablement): https://cert-manager.io/docs/usage/gateway/ ; ACME HTTP-01 `gatewayHTTPRoute` solver: https://cert-manager.io/docs/configuration/acme/http01/
 - Traefik Kubernetes Gateway API provider: https://doc.traefik.io/traefik/reference/install-configuration/providers/kubernetes/kubernetes-gateway/ ; Cilium Gateway API support: https://docs.cilium.io/en/stable/network/servicemesh/gateway-api/gateway-api/
