@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "d3ad73291ee85310cf3b07fd80dffa268a9024c603f7259878edded551809eb3",
+  "body_sha256": "9a8c03a97cc098158b8f17009b67162a74a20245d3c43022ce751005865918ef",
   "components": {
     "docs": {
       "name": "SurrealDB documentation (rolling)",
@@ -287,7 +287,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
 )
 ```
 
-These server outcomes are reasoned, not demonstrated here (no SurrealDB runtime in the authoring environment);
+REASONED: preceding block; listener inventory, health, anonymous/authenticated database-info queries, public-origin reachability and TLS interpretation follow the cited SurrealDB bind, health, SQL/authentication and TLS documentation. No running deployment, system-user JWT, external test path or deployment certificate is available. These server outcomes are reasoned, not demonstrated here (no SurrealDB runtime in the authoring environment);
 the expected exposed and fixed outcomes follow the cited SurrealDB documentation. Confirm the TLS certificate chain wherever
 TLS terminates with normal validation (a trusted CA for private PKI); never use `-k`.
 

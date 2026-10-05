@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "89f6a105edbe7c40fd10e4397e5c89fb4d84e7e28f3f16ca40f264b6f5d02076",
+  "body_sha256": "f4a4010de1adecc92020c0210e9cf403252a9b96d5a95130e998a98d718dedf3",
   "components": {
     "anything": {
       "name": "AnythingLLM documentation",
@@ -352,7 +352,7 @@ curl -q -sI https://chat.example.com/                      # via the proxy: TLS,
 #   user's existing session)
 ```
 
-For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared assistant over shared documents), verify isolation at the data layer, not only at login. First, as user A, ask a question whose answer lives only in user A's documents or past conversations and confirm A's own document supplies the answer, the positive control that retrieval works at all; then ask the same question as user B and confirm B gets nothing of A's. A retrieval step that searches every user's embeddings without enforcing per-document access hands one user's content into another's session even though each logged in separately; scope retrieval to the requesting user's own documents or workspace, and where the store is pgvector the tenant row-level-security check in [vector-databases.md](vector-databases.md) is the store-side half. A retrieval filter alone does not isolate conversation history, memory, or a shared cache; check each of those the same way. This isolation check is REASONED, not demonstrated: the authoring environment has no live multi-user RAG deployment. Its expected isolation rests on the cited AnythingLLM workspace-role documentation and the pgvector row-level-security guidance linked above.
+REASONED: preceding block; isolation comparison, listener and external-reachability checks, API authentication, proxy TLS/login, LobeChat registration and multi-user isolation follow the cited UI binding/authentication references, LobeChat AUTH_ALLOWED_EMAILS source, AnythingLLM workspace roles and linked pgvector guidance. No live UI/RAG deployment, external test path or paired identities are available. For a multi-user chat or RAG deployment (AnythingLLM workspaces, or a shared assistant over shared documents), verify isolation at the data layer, not only at login. First, as user A, ask a question whose answer lives only in user A's documents or past conversations and confirm A's own document supplies the answer, the positive control that retrieval works at all; then ask the same question as user B and confirm B gets nothing of A's. A retrieval step that searches every user's embeddings without enforcing per-document access hands one user's content into another's session even though each logged in separately; scope retrieval to the requesting user's own documents or workspace, and where the store is pgvector the tenant row-level-security check in [vector-databases.md](vector-databases.md) is the store-side half. A retrieval filter alone does not isolate conversation history, memory, or a shared cache; check each of those the same way. This isolation check is REASONED, not demonstrated: the authoring environment has no live multi-user RAG deployment. Its expected isolation rests on the cited AnythingLLM workspace-role documentation and the pgvector row-level-security guidance linked above.
 
 ## Common mistakes
 

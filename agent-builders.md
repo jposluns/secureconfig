@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "0f9eff25a1850ccb008ceb6dfe028342a335a23d2ef93112e35e3caf8bdee585",
+  "body_sha256": "0cb1768ad9069ae7bbc2147867d2890aa61fa4ac183b096218b7e78f6e5c212b",
   "components": {
     "dify": {
       "name": "Dify documentation",
@@ -402,7 +402,7 @@ authority and contain it at the infrastructure layer, not with login alone:
 
 ## Verify
 
-**REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well.
+REASONED: following block; listener inventory, Dify publication and TCP reachability, editor/setup state, proxy transport and application authentication follow the cited Compose/daemon sources, Dify setup and API-key documentation, Flowise app/chatflow authentication, Langflow authentication and LibreChat authentication references. No container runtime, isolated network namespace, deployed editors, application keys or test identities are available. **REASONED Dify publication and port 5003 checks, not demonstrated:** the authoring host forbids opening listeners without an isolated network namespace, and has none; Docker is unavailable. With the default listener enabled and published, expect a successful outside TCP connection; after the section 1 override and recreation, expect no host publication and a refusal or timeout, with a successful same-host positive control as described below. These outcomes follow the pinned Compose publication and daemon startup condition, Docker [reset semantics](https://docs.docker.com/reference/compose-file/merge/#reset-value), and the [Publishers fields](https://docs.docker.com/reference/cli/docker/compose/ps/). The port 5003 probe tests TCP reachability, not debugging-key authentication. A successful connection proves exposure even if a later handshake would reject a key. Disabling the listener alone also cannot prove that Docker's publication was removed; check the merged Compose model and Publishers entries as well.
 
 ```bash
 # REASONED: listener inventory, Dify publication and TCP checks follow the cited pinned Compose,
