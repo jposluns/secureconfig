@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f2b0e855948c590ae138f7cdf5cfc6fc7b5509f6ab3af6ef188301528a6331bf",
+  "body_sha256": "1ab4078e43ca8a5f60f429011121b3a68578a9252ac5d688dfbcd65f7b1ad6cd",
   "components": {
     "protocol": {
       "name": "MDN CORS documentation",
@@ -115,13 +115,13 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 
 ## Verify
 
-**REASONED:** not demonstrated here: the authoring host forbids opening listeners without an isolated network namespace, and has none, so no deployed API or browser session could be run; this rests on the Fetch Standard and MDN's CORS guide (Sources). An exposed API echoes `https://evil.example` in `Access-Control-Allow-Origin`; the fixed API omits it for that origin and returns only your listed origin, with `Access-Control-Allow-Credentials: true` only where the browser must send credentials.
+**REASONED:** not demonstrated against a deployed API: no Express or FastAPI deployment or browser session is available here, so which origins real CORS middleware echoes rests on the Fetch Standard and MDN's CORS guide (Sources). An exposed API echoes `https://evil.example` in `Access-Control-Allow-Origin`; the fixed API omits it for that origin and returns only your listed origin, with `Access-Control-Allow-Credentials: true` only where the browser must send credentials. For this change both pipelines ran with curl 8.18.0: against a loopback listener answering 200 with the listed origin's headers, each printed the status line with both Access-Control headers and exited 0; against a closed loopback port, each printed `curl: (7) Failed to connect ...` on stderr and its inconclusive line (the same pipelines without the pipefail subshell exited 1 with empty output, and silently under the old `-s`); and against a stub curl that printed `HTTP/1.1 200 OK`, wrote a transfer error to stderr and returned 18, the pipeline without pipefail exited 0 as if it had passed, while the `set -o pipefail` subshell (the convention litellm.md and search-engines.md use) exited 18, so its `|| echo` printed the inconclusive line. These runs record the pipelines' behaviour, not any deployed middleware's CORS decisions.
 
 ```bash
-curl -q -sS -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -iE 'HTTP/|access-control'
-# expect: a status line, and no Access-Control-Allow-Origin echoing the hostile origin; empty output means a transport error, not a pass
-curl -q -sS -o /dev/null -D - https://api.example.com/data -H "Origin: https://app.example.com" | grep -iE 'HTTP/|access-control'
-# expect: a status line, your origin in Access-Control-Allow-Origin, and Allow-Credentials only if the browser must send credentials: cookies, HTTP authentication, or TLS client certificates
+(set -o pipefail; curl -q -sS -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -iE 'HTTP/|access-control') || echo "inconclusive: the transfer failed or printed no status line; not a pass"
+# expect: a 2xx status line matching the own-origin probe below, and no Access-Control-Allow-Origin echoing the hostile origin; any other status, a proxy's lone "HTTP/1.1 200 Connection established" line, the inconclusive line, or empty output is inconclusive, not a pass
+(set -o pipefail; curl -q -sS -o /dev/null -D - https://api.example.com/data -H "Origin: https://app.example.com" | grep -iE 'HTTP/|access-control') || echo "inconclusive: the transfer failed or printed no status line; not a pass"
+# expect: a 2xx status line, your origin in Access-Control-Allow-Origin, and Allow-Credentials only if the browser must send credentials: cookies, HTTP authentication, or TLS client certificates
 ```
 
 ## Sources (checked September 2026)
