@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-27",
+  "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "c9e4424a1260a6712fcb667e0417833b9908151146ee759d6853693c0b2b9c67",
+  "body_sha256": "f36b39a47763fd6a58c439d6d8e5f45b7974603fecd2296695031e0b6ce9d9a9",
   "components": {
     "q": {
       "name": "Qdrant source",
@@ -380,7 +380,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -567,7 +567,7 @@ Keep `standalone.environment`'s `ETCD_ENDPOINTS`, `MINIO_ADDRESS` and `MINIO_REG
 
 In v2.6.24 and v3.0.2, the management/metrics HTTP listener (9091 by default) also serves control routes that check no credentials; `common.security.authorizationEnabled` covers only the proxy's `/api/v1` routes on the same port. The routes named here are representative, not a full list. Every Milvus server process serves `/log/level`, which reads or changes the log level, and, after its components' startup calls return successfully, `/management/stop`, which stops a role running in that process. A process running the proxy adds routes that pause and resume garbage collection, suspend and resume query nodes and balancing, and transfer segments and channels, plus `/management/rootcoord/ez/backup`, which returns a named database's encryption-zone key backup (`ezk`) in its response where a cipher plugin supports it; v3.0.2 adds routes that clear queued reads and commit backfill results from a caller-supplied path. An activated mix coordinator adds its own garbage-collection, balancing, node-suspension and transfer routes, and routes that alter mutable configuration (`/management/config/alter`) and change the WAL backend. A standalone process runs both. With `proxy.http.enablePprof` at its default `true` at startup, the same listener also serves Go's `/debug/pprof/` profiling handlers. The first request to `/eventlog` that successfully creates it starts a further gRPC listener, with no authentication or TLS, on a random port on every interface of the process's network namespace. Setting `proxy.http.enableWebUI: false` before startup omits the UI but leaves every one of these controls, and setting `proxy.http.enablePprof: false` before startup leaves out the profiling handlers while the control routes are still registered. The listener binds every interface in its network namespace, with no bind-address flag, config key or environment variable. `METRICS_PORT` changes only its port: a value `strconv.Atoi` rejects (unset, empty, non-numeric, or an integer too large for it) falls back to 9091, `0` takes a random port, and any other parsed value outside 1 to 65535 makes the listen fail, which Milvus logs without stopping. The standalone Compose files at those tags publish `9091:9091`, which binds every host interface under Docker's default publishing settings (the files select v2.6.23 and v3.0.1 images respectively). Delete that mapping: the in-container `http://localhost:9091/healthz` probe does not need it, and the rule above is to publish only 19530. If an administrator on the Docker host needs the listener, the one exception is a loopback-only mapping, `127.0.0.1:9091:9091`, firewalled from everyone else. If you choose another fixed `METRICS_PORT`, set it under the `standalone` service's `environment:`, since the Compose files do not pass it through from your shell, and adjust the container port in any mapping and in the healthcheck. Retain the network and host isolation above: loopback publication does not isolate the container from same-network peers or local users; see [docker.md](docker.md) for publication and firewall caveats.
 
-REASONED: the Service template in Milvus Helm chart 5.0.30 and the Service code in Milvus Operator v1.3.11 place management/metrics 9091 on the client gRPC Service (19530 by default), selecting standalone pods or cluster proxy pods. Both declare a `ClusterIP` default; the Service's port list carries both ports whatever its type, including `LoadBalancer` or `NodePort`, unless Helm's metrics port is disabled. This does not establish internet reachability or mean a NodePort uses node port 9091.
+REASONED: the Service template in Milvus Helm chart 5.0.30 and the Service code in Milvus Operator v1.3.11 place management/metrics 9091 on the client gRPC Service (19530 by default), selecting standalone pods or cluster proxy pods. Both declare a `ClusterIP` default; the Service's port list carries both ports whatever its type, including `LoadBalancer` or `NodePort`, unless Helm's metrics port is disabled. With `LoadBalancer`, the chart's default `loadBalancerSourceRanges` is `0.0.0.0/0`. This does not establish internet reachability or mean a NodePort uses node port 9091.
 
 Keep the generated Service at `ClusterIP` and retain the network and host isolation above. In the chart's Service template, `metrics.enabled: false` removes 9091 from that Service while leaving the standalone and proxy container port declarations and their TCP liveness and HTTP `/healthz` readiness probes on 9091, so it is not a listener shutdown control. The Operator's Service code at v1.3.11 always adds 9091 and has no field to remove or rename it; `disableMetric` skips PodMonitor reconciliation, not the Service port.
 
