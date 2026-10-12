@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-10",
-  "body_sha256": "29e9acd86674812d9ddace943351219cd07dab5de74a73affb223d24b2729fb7",
+  "body_sha256": "7e88d122105bbf0c1ac09d7df3550d39feae5149fb24c192d5c0739197ca3fda",
   "components": {
     "meili": {
       "name": "Meilisearch release reference",
@@ -376,7 +376,7 @@ REASONED: the tool's three outcomes are FOUND/1 (remove and rotate the credentia
 
 - REASONED: Git grep searches raw output bytes and regular-file blobs in commits from `git rev-list --all --reflog`; it neither decodes gzip/Brotli nor reconstructs encoded, escaped, split or runtime-injected keys.
 - REASONED: Git tree searches omit committed symlink targets, submodule contents and LFS payloads; the output walk refuses symlinks, special/unreadable entries, empty output and any ASCII-case `.git` component.
-- REASONED: Git's commit enumeration omits unreachable objects, expired reflogs, omitted shallow/unfetched history, other-worktree private refs and objects present in no commit tree, including tags directly pointing at blobs.
+- REASONED: Git's commit enumeration omits unreachable objects, expired reflogs, omitted shallow/unfetched history, other-worktree private refs and objects present in no commit tree, including tags directly pointing at blobs; keys present only in commit or tag messages, author, committer or tagger identities, reflog messages, ref names or path names are not searched.
 - REASONED: Git replacement refs and grafts can hide original content or ancestry; only the resulting Git view is searched.
 - REASONED: a concurrent file change can evade the walk; commit lists consume memory and each commit needs a separate Git search, so resource exhaustion can interrupt completion.
 - REASONED: stdin avoids key-bearing child arguments and files; it does not protect process memory or pipes from the same account/root, or compensate for hostile shell startup files or executables.
