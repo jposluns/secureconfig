@@ -29779,7 +29779,7 @@ The service facts come from the maintainer's vendor-source verification record d
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
