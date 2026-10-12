@@ -469,11 +469,11 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | zerossl-eab: ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials. | ZeroSSL unknown | REASONED |
 | acme-default: acme.sh registers with ZeroSSL by default. | acme.sh unknown | REASONED |
 | acme-install: acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell. | acme.sh unknown | REASONED |
-| server-automation: The guide recommends Caddy or Traefik for built-in issuance and renewal without an external client; direct vendor Sources entries are absent. | Let's Encrypt documentation unknown; Caddy automatic HTTPS v2.11.4; Traefik ACME documentation v3.5 | REASONED |
+| server-automation: The guide recommends Caddy or Traefik for built-in issuance and renewal without an external client. | Let's Encrypt documentation unknown; Caddy automatic HTTPS v2.11.4; Traefik ACME documentation v3.5 | REASONED |
 | origin-certificates: The guide describes Cloudflare origin certificates as free, long-lived and trusted only by Cloudflare's edge behind its proxy; a Cloudflare Sources entry is absent. | Let's Encrypt documentation unknown | REASONED |
 | verify-inventory: certbot certificates lists issued certificates and their expiry dates. | Certbot documentation unknown | REASONED |
-| verify-https: Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. A curl source and version are not recorded. | Let's Encrypt documentation unknown; curl command documentation curl-8_12_1 | REASONED |
-| verify-certificate: The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates; an OpenSSL source and version are not recorded. | Let's Encrypt documentation unknown; OpenSSL certificate commands 3.0 | REASONED |
+| verify-https: Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. | Let's Encrypt documentation unknown; curl command documentation curl-8_12_1 | REASONED |
+| verify-certificate: The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates. | Let's Encrypt documentation unknown; OpenSSL certificate commands 3.0 | REASONED |
 | authentication: A certificate alone is insufficient protection; continue with server controls and authentication. | Let's Encrypt documentation unknown | REASONED |
 | dns-automation: For automated DNS-01 issuance and renewal, use a provider DNS plugin and least-privilege API credentials; manual TXT entry is a separate path. | Certbot documentation unknown | REASONED |
 | dns-manual: certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; these certificates do not auto-renew without a --manual-auth-hook that automates the challenge. | Certbot documentation unknown | REASONED |
@@ -565,7 +565,7 @@ A CAA DNS record restricts which certificate authorities may issue for your doma
 
 ## Verify
 
-REASONED: certificate inventory and HTTPS/certificate inspection follow the cited Certbot and Let's Encrypt guidance; curl and OpenSSL command-specific sources are not recorded. No deployment hostname or issued certificate was supplied for live checks, and this guide records no run.
+REASONED: certificate inventory and HTTPS/certificate inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation. No deployment hostname or issued certificate was supplied for live checks, and this guide records no run.
 
 ```bash
 sudo certbot certificates                       # what is issued and when it expires
@@ -576,7 +576,7 @@ openssl s_client -connect "$host:443" -servername "$host" \
   | openssl x509 -noout -issuer -dates
 ```
 
-REASONED: preceding block; certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance; curl and OpenSSL command-specific sources are not recorded, no deployment hostname or issued certificate was supplied, and no live result is recorded. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
+REASONED: preceding block; certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation; no deployment hostname or issued certificate was supplied, and no live result is recorded. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
 
 ## Sources (checked September 2026)
 
@@ -4084,13 +4084,13 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| certbot: The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. Certbot is not in Sources. | Apache HTTP Server 2.4; Certbot Apache installation v2.3.0 | REASONED |
+| certbot: The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. | Apache HTTP Server 2.4; Certbot Apache installation v2.3.0 | REASONED |
 | modules: Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; package-command sources are absent. | Apache HTTP Server 2.4 | REASONED |
 | tls: The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only. | Apache HTTP Server 2.4 | REASONED |
 | tls-version: TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1. | Apache HTTP Server 2.4; Apache TLSv1.3 minimum 2.4.36+; OpenSSL qualification 1.1.1+ | REASONED |
 | vhost-floor: Independent per-vhost SSLProtocol needs Apache 2.4.42+, OpenSSL 1.1.1+ and client SNI; older builds also need the floor in global/base config. | Apache HTTP Server 2.4; Apache per-vhost protocol minimum 2.4.42+; OpenSSL qualification 1.1.1+ | REASONED |
 | chain: Apache 2.4.8+ permits the chain in SSLCertificateFile; SSLCertificateChainFile is deprecated. | Apache HTTP Server 2.4; Apache chain-file minimum 2.4.8 | REASONED |
-| hsts: Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere. Sources omit mod_headers. | Apache HTTP Server 2.4 | REASONED |
+| hsts: Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere. | Apache HTTP Server 2.4 | REASONED |
 | cipher-policy: Generate explicit cipher policy with Mozilla rather than copying old lists. | Mozilla TLS policy unknown | REASONED |
 | redirect: The 80 vhost sends a permanent redirect to the canonical HTTPS host; retain only redirects and needed ACME HTTP-01 paths. | Apache HTTP Server 2.4 | REASONED |
 | password-file: Create a bcrypt htpasswd file with cost 12 and -c only for its first user; paths differ by distribution. Cost defaults and OWASP guidance are not directly cited. | Apache HTTP Server 2.4 | REASONED |
@@ -4263,7 +4263,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot. | nginx documentation unknown; Certbot nginx configurator v2.3.0 | REASONED |
+| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. | nginx documentation unknown; Certbot nginx configurator v2.3.0 | REASONED |
 | tls: 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off. | nginx documentation unknown | REASONED |
 | http2: http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed. | nginx documentation unknown | REASONED |
 | tokens: server_tokens off suppresses nginx version in headers and error pages. | nginx documentation unknown | REASONED |
@@ -4892,7 +4892,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | hsts: http-after-response (HAProxy 2.2+) covers generated 401/413 responses that http-response misses; includeSubDomains requires HTTPS on every affected subdomain. | HAProxy 3.0; HAProxy http-after-response minimum 2.2+ | REASONED |
 | backend: Example backend is plaintext 127.0.0.1:3000 with health checks; keep it private. | HAProxy 3.0 | REASONED |
 | remote-backend: Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name. | HAProxy 3.0 | REASONED |
-| basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. Sources omit openssl passwd -6. | HAProxy 3.0; OpenSSL password command 3.0 | REASONED |
+| basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. | HAProxy 3.0; OpenSSL password command 3.0 | REASONED |
 | mtls: For machine access, bind verify required with ca-file requires trusted client certificates. | HAProxy 3.0 | REASONED |
 | mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or use Cloudflare Access for human MFA. | Supporting documentation unknown | REASONED |
 | maxconn: Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend. | HAProxy 3.0 | REASONED |
@@ -5783,7 +5783,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | --- | --- | --- |
 | publish: Omitting the host address publishes 3000:3000 on 0.0.0.0 and [::]. | Docker Engine networking unknown | REASONED |
 | host-firewall: Docker programs firewall rules directly; UFW or firewalld blocking a host port does not establish published-port isolation. | Docker Engine networking unknown | REASONED |
-| private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432; no PostgreSQL source is listed. | Compose networking unknown; PostgreSQL 17 | REASONED |
+| private-network: Omit app/database ports; Compose peers use service names. The example uses postgres:17 at db:5432. | Compose networking unknown; PostgreSQL 17 | REASONED |
 | loopback: Publish local access as 127.0.0.1:3000:3000; check the running server version. Engine 28.0 is the minimum boundary, with 28.3.3 or later required where firewalld is used. | Docker Engine networking unknown; Docker Engine minimum boundary 28.0; Docker firewalld reload fix 28.3.3; Docker firewalld reload advisory unknown | REASONED |
 | old-loopback: Before 28.0, same-L2 neighbours could reach loopback publications under the default bridge configuration. | Docker Engine minimum boundary 28.0 | REASONED |
 | old-host-bind: Before 28.0, remote hosts could reach published container ports despite the host-IP binding. | Docker Engine minimum boundary 28.0 | REASONED |
@@ -5794,7 +5794,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | ipv6: Native IPv6 forwarding needs ip6tables; the IPv6-to-IPv4 userland-proxy path terminates on host INPUT and bypasses DOCKER-USER. | Docker Engine networking unknown | REASONED |
 | proxy-path: Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. | Docker Engine networking unknown | REASONED |
 | persistence: Guide recommends persisting only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves; startup-unit details lack a direct source. | Docker Engine networking unknown | REASONED |
-| tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates; no Caddy source is listed. | Compose networking unknown; Caddy image fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Caddy v2.11.4 | REASONED |
+| tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates. | Compose networking unknown; Caddy image fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Caddy v2.11.4 | REASONED |
 | alternate-entry: Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed. | Compose networking unknown | REASONED |
 | auth: Proxy authentication and human MFA supplement application login; no authentication-provider source is listed. | Compose networking unknown | REASONED |
 | secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and avoid image ENV/build-argument secrets; no direct secret-handling source is listed. | Compose networking unknown | REASONED |
@@ -32316,7 +32316,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | dozzle-auth: Auth defaults off; generate users.yml with stdin password prompt and set simple auth, or delegate with forward-proxy. | Dozzle unknown | REASONED |
 | dozzle-actions: Leave optional container actions/shell off unless needed; either enables remote command execution. | Dozzle unknown | REASONED |
 | registry-auth: registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution. | Docker Registry documentation (rolling) unknown | REASONED |
-| registry-bcrypt: Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ; OWASP cost minimum lacks a direct source here. | Docker Registry documentation (rolling) unknown; Apache htpasswd 2.4; OWASP password storage 1a3f58ed2714f258a1d713966457f1a0f426e841 | REASONED |
+| registry-bcrypt: Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ. | Docker Registry documentation (rolling) unknown; Apache htpasswd 2.4; OWASP password storage 1a3f58ed2714f258a1d713966457f1a0f426e841 | REASONED |
 | registry-private: Use private networking and tunnels/Access with fronting MFA. | Docker Registry documentation (rolling) unknown | REASONED |
 | filebrowser-admin: Change first-run admin credentials, historically admin/admin. Guide records September 1, 2026 archival and the warning against internet exposure. | Filebrowser unknown | REASONED |
 | filebrowser-private: Keep Filebrowser private through tunnel/tailnet/Access with fronting MFA. | Filebrowser unknown | REASONED |
@@ -33974,7 +33974,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | nginx-listing: nginx autoindex defaults off. | nginx documentation unknown | REASONED |
 | caddy-listing: Guide says Caddy lists only with file_server browse. | Caddy documentation (rolling) unknown; Caddy documentation v2.11.4 | REASONED |
 | caddy-deny: Caddy v2.11.4 matchers return 404 for dot-prefixed segments at any depth outside root /.well-known/*, and case-insensitive .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz suffixes everywhere. Server execution was not run. | Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
-| caddy-acme: ANDed path_regexp and not path matchers exempt the root /.well-known/ subtree only from dotfile denial; suffix denial still applies and .well-known-backup is not exempt. Keep the subtree free of secrets; independent ACME handling lacks a direct Sources citation. | Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
+| caddy-acme: ANDed path_regexp and not path matchers exempt the root /.well-known/ subtree only from dotfile denial; suffix denial still applies and .well-known-backup is not exempt. Keep the subtree free of secrets. | Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | backup-storage: Keep dumps and backups outside the document root or in object storage; filename denies are a backstop and cannot recognize secrets or backups with unmatched names. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | suffix-policy: Suffix denies also block intended public downloads, including release archives; narrow the policy for the site and verify intended downloads remain accessible. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | next-public: NEXT_PUBLIC_ embeds values in browser JavaScript; keep provider keys server-side behind backend routes. | Next.js documentation unknown | REASONED |

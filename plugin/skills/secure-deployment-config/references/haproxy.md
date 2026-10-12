@@ -49,7 +49,7 @@ version_basis: {
     "hsts": {"text": "http-after-response (HAProxy 2.2+) covers generated 401/413 responses that http-response misses; includeSubDomains requires HTTPS on every affected subdomain.", "components": ["haproxy", "hsts"], "sources": ["haproxy:s5792e6ff4990", "hsts:s5792e6ff4990"], "status": "REASONED"},
     "backend": {"text": "Example backend is plaintext 127.0.0.1:3000 with health checks; keep it private.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
     "remote-backend": {"text": "Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
-    "basic": {"text": "Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. Sources omit openssl passwd -6.", "components": ["haproxy", "openssl-cli"], "sources": ["haproxy:s5792e6ff4990", "openssl-cli:s3b2ccc45875a"], "status": "REASONED"},
+    "basic": {"text": "Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext.", "components": ["haproxy", "openssl-cli"], "sources": ["haproxy:s5792e6ff4990", "openssl-cli:s3b2ccc45875a"], "status": "REASONED"},
     "mtls": {"text": "For machine access, bind verify required with ca-file requires trusted client certificates.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
     "mfa": {"text": "Basic is single-factor; Authelia uses its HAProxy Lua integration, or use Cloudflare Access for human MFA.", "components": ["docs"], "sources": ["docs:s192d42dd9feb"], "status": "REASONED"},
     "maxconn": {"text": "Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
@@ -93,7 +93,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | hsts: http-after-response (HAProxy 2.2+) covers generated 401/413 responses that http-response misses; includeSubDomains requires HTTPS on every affected subdomain. | HAProxy 3.0; HAProxy http-after-response minimum 2.2+ | REASONED |
 | backend: Example backend is plaintext 127.0.0.1:3000 with health checks; keep it private. | HAProxy 3.0 | REASONED |
 | remote-backend: Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name. | HAProxy 3.0 | REASONED |
-| basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. Sources omit openssl passwd -6. | HAProxy 3.0; OpenSSL password command 3.0 | REASONED |
+| basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. | HAProxy 3.0; OpenSSL password command 3.0 | REASONED |
 | mtls: For machine access, bind verify required with ca-file requires trusted client certificates. | HAProxy 3.0 | REASONED |
 | mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or use Cloudflare Access for human MFA. | Supporting documentation unknown | REASONED |
 | maxconn: Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend. | HAProxy 3.0 | REASONED |
