@@ -949,6 +949,7 @@ for label, before in [
     ("printf alias", "alias printf=false"), ("read alias", "alias read=false"),
     ("git alias", "alias git=false"), ("exported key", "export key=old"),
     ("nameref key", "declare -n key=other"),
+    ("inherited allexport", "set -a; export SHELLOPTS"),
 ]:
     case("process sampling " + label, "CHECK", lambda f, b=before: memory_channels(f, b))
 
@@ -1192,6 +1193,7 @@ ALLOWED_SKIPS = {
     "process sampling git alias": {"proc-unavailable", "proc-environ-unread"},
     "process sampling exported key": {"proc-unavailable", "proc-environ-unread"},
     "process sampling nameref key": {"proc-unavailable", "proc-environ-unread"},
+    "process sampling inherited allexport": {"proc-unavailable", "proc-environ-unread"},
     "sampling observation required": {"proc-unavailable", "proc-environ-unread"},
 }
 
