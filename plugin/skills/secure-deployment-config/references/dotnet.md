@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "9d0e36ae7a3e5baed014b5e060adef6d2c09c78d38e8b31cf7320d856a4be63a",
+  "body_sha256": "09ed8fa339c93d52b598375b0b2f53cf88e625d564beee30dc8fb147cffe4a20",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -551,7 +551,7 @@ ss -tlnp   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
 
 For the `/api` check, the route must exist, require authorization, and use the app's cookie authentication scheme for challenge and forbid. With the default .NET 10 cookie handler, known API endpoints, including `[ApiController]` endpoints, return `401` for unauthenticated requests and `403` for authenticated users denied access. This changed in .NET 10; ordinary browser-page challenges can still redirect. An OIDC challenge scheme or customized cookie events can also change the response. Confirm that an authorized request reaches the expected API before interpreting a denial.
 
-### Additional deployment checks
+### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response)
 
 **REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. Expected exposed and corrected outcomes rest on the cited .NET 10 documentation. Shell checks do not establish server behavior.
 
