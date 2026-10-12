@@ -41,9 +41,20 @@ preparation_cases = [
     ('unclosed-front-matter', FRONT.removesuffix('---\n'), None, '{b}\n', '{b}\n'),
     ('no-front-matter', 'See {u}\n', None, '{b}\n', '{b}\n'),
     ('quoted-match-required', FRONT.replace('{u}', 'See {u}'), None, '{b}\n', '{b}\n'),
-    ('stop-less-than', FRONT.replace('{u}', '<tag> {u}'), None, '{b}\n', '{b}\n'),
-    ('stop-greater-than', FRONT.replace('{u}', '> {u}'), None, '{b}\n', '{b}\n'),
-    ('stop-backtick', FRONT.replace('{u}', '` {u}'), None, '{b}\n', '{b}\n'),
+    # A stop in one JSON string must protect an eligible URL in a later string.
+    ('stop-less-than', FRONT.replace('  "sources"', '  "text": "<",\n  "sources"'),
+     None, '{b}\n', '{b}\n'),
+    ('stop-greater-than', FRONT.replace('  "sources"', '  "text": ">",\n  "sources"'),
+     None, '{b}\n', '{b}\n'),
+    ('stop-backtick', FRONT.replace('  "sources"', '  "text": "`",\n  "sources"'),
+     None, '{b}\n', '{b}\n'),
+    # Mirrors: an eligible URL before the stop must still be escaped.
+    ('url-before-less-than', FRONT.replace('["{u}"]', '["{u}"],\n  "text": "<"'),
+     ESCAPED.replace('["{e}"]', '["{e}"],\n  "text": "<"'), '{b}\n', '{u}\n'),
+    ('url-before-greater-than', FRONT.replace('["{u}"]', '["{u}"],\n  "text": ">"'),
+     ESCAPED.replace('["{e}"]', '["{e}"],\n  "text": ">"'), '{b}\n', '{u}\n'),
+    ('url-before-backtick', FRONT.replace('["{u}"]', '["{u}"],\n  "text": "`"'),
+     ESCAPED.replace('["{e}"]', '["{e}"],\n  "text": "`"'), '{b}\n', '{u}\n'),
 ]
 body_cases = [
     ('body-whitespace', 'See {u}\n'),

@@ -68,6 +68,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 3.40 | F-LYCHEE-2026-09-28 remainder after #448: six bare body citations in `agent-builders.md` (two), `jupyter.md`, `mlflow.md`, `sqlite-http-frontends.md` and `workflow-orchestrators.md` remain checked in truncated form until written as autolinks (#447). Then confirm with lychee `--dump` that no cited URL is extracted in truncated form, and confirm the first live weekly sweep. (S, S) | `[gap]` |
 
 ## Priority 4: Tooling and process
 
