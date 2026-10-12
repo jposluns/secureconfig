@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e0b311b40e6ea58d7a06f881ad51b260ad36e741b08f3b27c387ebb78e6fb2b3",
+  "body_sha256": "e25847a93aa28dbe5c54a7fa18cfc756beb51ced60fb94f943baa4479a8e5c5d",
   "components": {
     "aws": {
       "name": "AWS security groups and CLI",
@@ -135,7 +135,7 @@ az network nsg rule list \
 # that reads safe here can still be overridden into exposure.
 ```
 
-- From an address outside the range you administer from:
+- REASONED: disallowed-source port probes and their failure interpretation, per the guide's cited AWS security group rules and Azure network security group rule properties. No authorized cloud endpoints or allowed/disallowed probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching nc, while a substituted address reached five nc stubs. Live exposed connections and fixed refusals/timeouts remain unobserved; local errors are inconclusive. From an address outside the range you administer from:
 
   REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
 
@@ -153,7 +153,7 @@ az network nsg rule list \
   ```
 
   Each port must report a refused or timed-out connection; a usage error from `nc` (some netcat variants take one port or a range per invocation) is not a passing result, and neither is exit 1 with no output at all, which is what a denied local socket looks like: in both cases nothing reached the network, so the check is inconclusive rather than passed.
-- The `nc` list above is a non-exhaustive spot-check (it omits RDP 3389 and application ports such as 8080 or 9200), and a refused or timed-out port only means nothing answered from here, not that the cloud firewall denies it (an allowed port with no listener refuses too). The strongest reachability test is a full-range external scan of every public IPv4 and IPv6 address (for example with nmap, against your own infrastructure only) from a disallowed source: distinguish open, closed, and filtered, since a closed or refused port is not proof the firewall denies it (a port with no listener also reads closed). For each restricted service, confirm it is reachable from its allowed source and unreachable from a disallowed one, and correlate that with the effective firewall rules before crediting the block to the cloud firewall.
+- REASONED: complete address/port coverage and allowed/disallowed controls, per the guide's cited AWS security group rules, Google Cloud VPC firewall rules and Azure network security group rule properties. No authorized cloud endpoints or separate source networks are available. The related shell blocks passed bash -n and ShellCheck 0.11.0 without diagnostics; rejected placeholder cases reached no nc stub and a substituted address reached five. No real scan ran. Exposed services answer disallowed sources; fixed services answer only allowed sources, corroborated by effective rules, with unused or failed services remaining inconclusive. The `nc` list above is a non-exhaustive spot-check (it omits RDP 3389 and application ports such as 8080 or 9200), and a refused or timed-out port only means nothing answered from here, not that the cloud firewall denies it (an allowed port with no listener refuses too). The strongest reachability test is a full-range external scan of every public IPv4 and IPv6 address (for example with nmap, against your own infrastructure only) from a disallowed source: distinguish open, closed, and filtered, since a closed or refused port is not proof the firewall denies it (a port with no listener also reads closed). For each restricted service, confirm it is reachable from its allowed source and unreachable from a disallowed one, and correlate that with the effective firewall rules before crediting the block to the cloud firewall.
 
 ## Sources (checked September 2026)
 

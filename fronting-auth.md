@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2f79547305b04d417c866285ca1f9e15f9b13b618baaa1a8883fe18f8f26ba69",
+  "body_sha256": "ff8068b74ce9876e778a42abaf652124980ffc126667119c18b5cf11dc7538fd",
   "components": {
     "oauth": {
       "name": "oauth2-proxy",
@@ -315,7 +315,7 @@ ss -tlnp   # read every listener; app 3000, oauth2-proxy 4180, Authelia 9091 rea
 curl -q -sI https://app.example.com/             # no session: a 401, or a 302 whose Location is the sign-in page (/oauth2/sign_in or the portal); any other 302 is not a pass
 ```
 
-After a real login through the proxy, confirm a session reaches the app and the app-side log shows the identity header the proxy set, not the forged one above. The direct forged header on the probe above is refused at the network level, because the app is reachable only through the proxy. A header sent *through* the proxy is the separate risk: it is defeated only because the proxy overwrites the exact header the app trusts (nginx `X-User`/`X-Email`, the Traefik `authResponseHeaders`, Authelia's `Remote-*`) with its verified value. Confirm that overwrite: with a valid session, replay a request through the proxy that adds the trusted header (`-H 'X-User: admin'` for the nginx example, `-H 'X-Auth-Request-User: admin'` for the Traefik example, `-H 'Remote-User: admin'` for Authelia) and check the app-side log still shows your real identity, not `admin`. If it shows `admin`, the proxy is not overwriting that header and any authenticated user can impersonate anyone.
+REASONED: preceding block; listener isolation, anonymous challenges and direct and through-proxy identity-header checks, per the guide's cited oauth2-proxy nginx integration, oauth2-proxy Traefik integration, Traefik forwardAuth middleware and Authelia nginx integration. No proxy, backend, IdP or external probe host is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; both YAML blocks parsed. Five rejected guard cases printed refusal messages with no curl calls; a substituted address reached four curl stubs. No live outcome is observed: exposed access reaches a backend or trusts admin; fixed access isolates listeners, challenges anonymous users and admits a valid session under its real identity. After a real login through the proxy, confirm a session reaches the app and the app-side log shows the identity header the proxy set, not the forged one above. The direct forged header on the probe above is refused at the network level, because the app is reachable only through the proxy. A header sent *through* the proxy is the separate risk: it is defeated only because the proxy overwrites the exact header the app trusts (nginx `X-User`/`X-Email`, the Traefik `authResponseHeaders`, Authelia's `Remote-*`) with its verified value. Confirm that overwrite: with a valid session, replay a request through the proxy that adds the trusted header (`-H 'X-User: admin'` for the nginx example, `-H 'X-Auth-Request-User: admin'` for the Traefik example, `-H 'Remote-User: admin'` for Authelia) and check the app-side log still shows your real identity, not `admin`. If it shows `admin`, the proxy is not overwriting that header and any authenticated user can impersonate anyone.
 
 ## Common mistakes
 

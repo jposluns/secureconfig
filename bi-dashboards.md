@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "d0b165855f1ed554e85359561c9c472d892060f4ac2e27f2017811270afd4f4f",
+  "body_sha256": "72fb83f126c17a7bf6712bea8620686191699a388b522b41778ca65b8b8c506f",
   "components": {
     "metabase-docs": {
       "name": "Metabase docs",
@@ -225,7 +225,7 @@ only to host loopback.
 
 ## Verify
 
-First, with valid authorization, confirm your chosen protected route returns actual dashboard DATA (a
+REASONED: authorized-data positive control and anonymous comparison, per the guide's cited Metabase data permissions and Superset security. No BI deployment, authorized account or external probe host is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while substituted URLs reached two curl stubs. Live outcomes remain unobserved: exposed access returns dashboard data anonymously; fixed access denies or challenges it while the authorized request still returns actual data. First, with valid authorization, confirm your chosen protected route returns actual dashboard DATA (a
 real data or API route, not the SPA HTML shell or a health endpoint): that is the positive control.
 Then, from OUTSIDE your network with no cookies, tokens, or Access credentials, run the whole block
 (substitute inside the quotes):
@@ -253,7 +253,7 @@ ss -tlnp   # every application AND proxy listener; Metabase/Superset/Redash defa
 )
 ```
 
-Accept an access denial from WHATEVER protects the route (the tool's or the reverse proxy's 401/403,
+REASONED: preceding block; listener and Docker-publication inventory, origin isolation and paired data-route authorization, per the guide's cited Docker port publishing, Metabase data permissions and Superset security. No BI deployment or external probe host is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five rejected guard cases reached no curl stub and substituted URLs reached two. No live outcome is observed: exposed origins answer or anonymous requests disclose dashboard data; fixed origins are isolated and protected data requires authorization, with an authorized data response as the control. Accept an access denial from WHATEVER protects the route (the tool's or the reverse proxy's 401/403,
 a Cloudflare Access challenge, or a verified redirect into that login layer), not only the tool's own
 denial. Read the body, not just the status: a 200 login page or SPA shell proves nothing, and an
 arbitrary redirect is inconclusive; the protected route returning dashboard data with no
@@ -261,7 +261,7 @@ authorization is a fail, and a 404, server error, or DNS/TLS/proxy error is inco
 SSH-forward or tailnet-only deployment the public URL is unreachable by design, so confirm network
 isolation separately and test the tool's own authorization over the permitted private path.
 
-Also confirm no default `admin/admin` or example credentials still work, and that the database
+REASONED: default-credential rejection and effective database privileges, per the guide's cited Superset security, Superset docker-compose.yml and Metabase database users, roles, and privileges. No BI account, database role or disposable database is available; this prose supplies no local command or configuration to execute. Live outcomes remain unobserved: exposed credentials permit login or the data-source role writes beyond its needs; fixed credentials reject defaults and the actual role permits intended reads but denies the disposable write, with any required write-back separately scoped. Also confirm no default `admin/admin` or example credentials still work, and that the database
 principal each data source uses is genuinely least-privilege: identify the actual DB role, inspect
 its EFFECTIVE grants and inherited roles at the database (a role named `readonly` can still hold
 write, ownership, or admin privileges), confirm reads work while writes are denied (test with a

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e8ed589badae861c5523d3f00b9988f385be3eab8cde37fe6c02c2a1387c1aae",
+  "body_sha256": "61afa40371c3be4eb020d413469c8c6970e9a28a27ea6defa3c0ba95cf00df88",
   "components": {
     "spf": {
       "name": "SPF",
@@ -285,7 +285,7 @@ BIMI is optional display metadata that shows a brand logo in supporting clients;
 
 ## Verify
 
-Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state.
+REASONED: following block; DNS publication, submission TLS and plaintext AUTH refusal, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete and RFC 8997 section 3. No controlled DNS zone or SMTP endpoint is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; openssl s_client -help exited 0 and listed -starttls, -verify_hostname, -verify_return_error and -min_protocol. Published records should match the configured policies; exposed submission accepts plaintext AUTH, while fixed submission refuses it and supports validated TLS before authorized AUTH. These live outcomes remain unobserved. Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state.
 
 ```bash
 # REASONED: DNS and TLS expectations follow the cited RFCs; no DNS control, SMTP endpoint, or container runtime is available.
@@ -313,7 +313,7 @@ openssl s_client -connect smtp.example.com:465 \
   -verify_return_error -min_protocol TLSv1.2 </dev/null
 ```
 
-Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
+REASONED: preceding block; DNS/TLS inspection, message alignment and relay discrimination, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete, RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), RFC 8601: Message Header Field for Indicating Message Authentication Status and RFC 2505: Anti-Spam Recommendations for SMTP MTAs. No controlled DNS, SMTP service, sender or recipient is available. Shell syntax and ShellCheck 0.11.0 exited 0 without diagnostics; local s_client help listed the TLS options. Live outcomes remain unobserved: exposed submission accepts plaintext AUTH or unauthorized relay and lacks aligned enforcement; fixed submission validates TLS, shows receiver-trusted alignment and enforcing policy, rejects external relay with 5xx and preserves authorized submission and local delivery. Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
 
 ## Common mistakes
 
