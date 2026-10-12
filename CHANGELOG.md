@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-12
 
-- Remove stale "missing source" caveats from five version-basis claims in the self-signed certificate guide. The Git, curl, Requests and Node.js trust claims no longer say a source or version is unrecorded, because pinned Sources entries for them exist; the verification-bypass claim now names only the Node.js bypass entry as absent. The caveats that remain true (RFC 9525, the filesystem commands and the Debian and RHEL trust stores) are kept. Commands, Verify steps and citations are unchanged (#444).
+- Remove stale "missing source" caveats from five version-basis claims in the self-signed certificate guide. The Git key-handling claim and the curl, Requests and Node.js trust claims no longer say a source or version is unrecorded, because pinned Sources entries for them exist; the verification-bypass claim now names only the Node.js bypass entries as absent. The caveats that remain true (RFC 9525, the filesystem commands and the Debian and RHEL trust stores) are kept, and the metadata review date moves to 2026-10-12. Commands, Verify steps and citations are unchanged (#444).
 
 ## 2026-10-05
 
