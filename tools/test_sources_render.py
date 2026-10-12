@@ -3,6 +3,7 @@
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 import os
+import re
 import string
 import subprocess
 import sys
@@ -26,6 +27,97 @@ UNICODE_BARE_CASES = (
 )
 
 
+def tail_error(tail, chunk):
+    return (f"unclassified bare URL tail {tail!r} in {chunk!r}; "
+            "write it as an explicit link or put whitespace after it")
+
+
+MATRIX_TEMPLATES = {
+    "userinfo": "https://alice{}ops@example.com/p",
+    "host": "https://exam{}ple.com/p",
+    "port": "https://example.com:8{}0/p",
+    "authority/path": "https://example.com{}/p",
+    "authority/end": "https://example.com{}",
+    "path/middle": URL + "{}/more",
+    "path/letter": URL + "{}x",
+    "path/digit": URL + "{}1",
+    "path/end": URL + "{}",
+    "doubled": URL + "{}{}",
+    "wrapped": "{}" + URL + "{}",
+    "query": URL + "?q=a{}b",
+    "fragment": URL + "#part{}x",
+}
+# Named outcomes and exact reasons, specified independently of gate constants.
+# Hard boundaries cannot be internal URL bytes under the legacy line grammar.
+HARD = set("\"'*)<>[\\]^`{|}~")
+SOFT = set("?!.,:;_")
+
+
+def matrix_expectation(char, position, text):
+    chunk = text[1:] if position == "wrapped" and char != "<" else text
+    def finding(reason):
+        return "finding", ([], [reason])
+    def invalid(reason):
+        return finding(f"invalid bare URL {chunk!r}: {reason}")
+    def tail(value):
+        return finding(tail_error(value, chunk))
+    whole = ("whole", ([text], []))
+    nonword = not char.isascii() and not char.isalnum()
+    hard = char in HARD or nonword
+    if position == "wrapped":
+        if char in "/.%?#&=+@$-" or char.isalnum() or char == "<":
+            return finding(f"unclassified URL-like text {chunk!r}")
+        if char == "(":
+            return finding(f"ambiguous parentheses in bare URL {chunk!r}")
+        if char in ",;":
+            # Both commas/semicolons are prose; the prefix is not a destination.
+            return "wrapped", ([URL], [])
+        return tail(char)
+    authority = position in {"userinfo", "host", "port", "authority/path", "authority/end"}
+    if authority and not char.isascii():
+        return finding(f"non-ASCII authority in bare URL {chunk!r}")
+    if position in {"userinfo", "host", "port", "authority/path"}:
+        if hard:
+            return finding(f"closing boundary inside bare URL authority {chunk!r}")
+        if char == "(":
+            return finding(f"ambiguous parentheses in bare URL {chunk!r}")
+        if char == "%":
+            return invalid("malformed percent escape")
+        if position == "userinfo":
+            return invalid("ambiguous userinfo") if char == "@" else whole
+        if char in "/?#":
+            return whole
+        if position == "host":
+            if char in "-.@":
+                return whole
+            return invalid("invalid port" if char == ":" else "invalid DNS host")
+        if position == "port":
+            return whole if char == "@" else invalid("invalid port")
+        if char == ".":
+            return whole
+        return invalid("invalid port" if char == ":" else "invalid DNS host")
+    if char == "(":
+        return finding(f"ambiguous parentheses in bare URL {chunk!r}")
+    if position in {"path/end", "authority/end", "doubled"}:
+        count = 2 if position == "doubled" else 1
+        if hard or char in SOFT:
+            if char in ",;" and count == 1:
+                return "shortened", ([text[:-1]], [])
+            return tail(char * count)
+        if char == "%":
+            return invalid("malformed percent escape")
+        if position == "authority/end" and char in "&=+$-@":
+            return invalid("invalid DNS host")
+        return whole
+    if hard:
+        suffix = {"path/middle": "/more", "path/letter": "x", "path/digit": "1",
+                  "query": "b", "fragment": "x"}[position]
+        return tail(char + suffix)
+    if char == "%":
+        return invalid("malformed percent escape")
+    return whole
+
+
 class Contracts(unittest.TestCase):
     def test_url_identity(self):
         normal = gate.normalize_url
@@ -39,30 +131,25 @@ class Contracts(unittest.TestCase):
                              "https://example.com" + suffix)
         self.assertEqual(normal("https://[2001:DB8::1]:443/p"), "https://[2001:db8::1]:443/p")
         for bad, diagnostic in (
-                ("https://", "destination is not an absolute HTTP"),
-                ("/p", "destination is not an absolute HTTP"),
-                ("//example.com/p", "destination is not an absolute HTTP"),
-                ("mailto:a@example.com", "destination is not an absolute HTTP"),
-                ("https://a..b/p", "label empty"),
-                ("https://xn--a/p", "Invalid character"),
-                ("https://a\uff0fb/p", "host mapping introduces a delimiter"),
-                ("https://a%2eb/p", "URL contains an escape, entity or encoded unreserved"),
+                ("https://", "destination is not an absolute HTTP(S) URL"),
+                ("/p", "destination is not an absolute HTTP(S) URL"),
+                ("//example.com/p", "destination is not an absolute HTTP(S) URL"),
+                ("mailto:a@example.com", "destination is not an absolute HTTP(S) URL"),
+                ("https://a..b/p", "invalid IDNA 2003 host"),
+                ("https://xn--a/p", "invalid IDNA 2003 host"),
+                ("https://a\uff0fb/p", "host mapping introduces a delimiter or unsupported character"),
+                ("https://a%2eb/p", "URL contains an escape, entity or encoded unreserved character"),
                 ("https://a:bad/p", "invalid port"),
                 ("https://a:65536/p", "invalid port"),
-                ("https://example.com/%61", "URL contains an escape, entity or encoded unreserved"),
-                ("https://xn--fa-hia.de/", "IDNA does not round-trip")):
-            with self.subTest(bad=bad), self.assertRaisesRegex(ValueError, diagnostic):
+                ("https://example.com/%61", "URL contains an escape, entity or encoded unreserved character"),
+                ("https://xn--fa-hia.de/", "invalid IDNA 2003 host")):
+            with self.subTest(bad=bad), self.assertRaisesRegex(ValueError, "^" + re.escape(diagnostic) + "$"):
                 normal(bad)
 
     def test_bare_url_grammar(self):
-        for text in (URL, URL + ".", "(" + URL + ")", "_" + URL,
+        for text in (URL, URL + ",", "(" + URL + ")",
                      "prefix: " + URL + "; suffix"):
             with self.subTest(text=text):
-                self.assertEqual(gate.bare_urls(text), ([URL], []))
-                self.assertEqual(gate.legacy.cites(text, URL), 1)
-        for punctuation in ("?", "!", ".", ",", ":", ";", "_", "?!.,:;_"):
-            with self.subTest(punctuation=punctuation):
-                text = URL + punctuation
                 self.assertEqual(gate.bare_urls(text), ([URL], []))
                 self.assertEqual(gate.legacy.cites(text, URL), 1)
         for suffix in ("/v2", "_v2", ".json", "?q=1", "#part"):
@@ -74,10 +161,8 @@ class Contracts(unittest.TestCase):
                 (URL + "(ambiguous)", "ambiguous parentheses in bare URL '" + URL + "(ambiguous)'")):
             with self.subTest(text=text):
                 self.assertEqual(gate.bare_urls(text), ([], [diagnostic]))
-        urls, findings = gate.bare_urls("https://a..b/p")
-        self.assertEqual(urls, [])
-        self.assertEqual(len(findings), 1)
-        self.assertRegex(findings[0], r"^invalid bare URL 'https://a\.\.b/p': .*label empty$")
+        self.assertEqual(gate.bare_urls("https://a..b/p"), ([], [
+            "invalid bare URL 'https://a..b/p': invalid IDNA 2003 host"]))
         self.assertEqual(gate.bare_urls(URL + " " + URL), ([URL, URL], []))
 
     def test_ascii_authority_boundaries(self):
@@ -106,18 +191,22 @@ class Contracts(unittest.TestCase):
             f"invalid bare URL {url!r}: ambiguous userinfo"]))
 
     def test_whole_tail_classification(self):
-        for text in (URL + ".", "(" + URL + ").", "_" + URL,
-                     "https://example.com.",
-                     "(https://example.com)", URL + "?!."):
-            with self.subTest(text=text):
-                expected = "https://example.com" if "/p" not in text else URL
-                self.assertEqual(gate.bare_urls(text), ([expected], []))
+        for opener in ("", "("):
+            for tail in ("", ",", ";", ")", "),", ");", ".", ":", "?", "!", "_",
+                         "'", '"', "]", ">", "}", "~", "*", ",;", "))", "?!.,:;_"):
+                with self.subTest(opener=opener, tail=tail):
+                    chunk = URL + tail
+                    expected = ([URL], []) if tail in ("", ",", ";") or (
+                        opener and tail in (")", "),", ");")) else ([], [tail_error(tail, chunk)])
+                    self.assertEqual(gate.bare_urls(opener + chunk), expected)
+        self.assertEqual(gate.bare_urls("_" + URL), ([], [
+            f"literal underscore opener in bare URL {URL!r}; write it as an explicit link"]))
         for tail in ("~unchecked/path", ")text", "'ops@example.com/p",
                      "**https://elsewhere.example/p", ")www.example.com"):
             with self.subTest(tail=tail):
                 chunk = URL + tail
                 self.assertEqual(gate.bare_urls(chunk), ([], [
-                    f"unclassified bare URL tail {tail!r} in {chunk!r}; write it as an explicit link"]))
+                    f"unclassified bare URL tail {tail!r} in {chunk!r}; write it as an explicit link or put whitespace after it"]))
 
 
     def test_literal_tail_regressions(self):
@@ -130,7 +219,7 @@ class Contracts(unittest.TestCase):
             chunk = URL + tail
             with self.subTest(prefix=prefix, tail=tail):
                 self.assertEqual(gate.bare_urls(prefix + chunk), ([], [
-                    f"unclassified bare URL tail {tail!r} in {chunk!r}; write it as an explicit link"]))
+                    f"unclassified bare URL tail {tail!r} in {chunk!r}; write it as an explicit link or put whitespace after it"]))
 
     def test_rendered_literal_tail_regressions(self):
         parser = self.parser()
@@ -145,7 +234,7 @@ class Contracts(unittest.TestCase):
             tail = tail.split()[0]
             rendered = gate.inline_text(parser.parseInline(raw)[0].children)
             chunk = rendered[rendered.index("https://"):].split()[0]
-            diagnostic = f"body line 5: unclassified bare URL tail {tail!r} in {chunk!r}; write it as an explicit link"
+            diagnostic = f"body line 5: unclassified bare URL tail {tail!r} in {chunk!r}; write it as an explicit link or put whitespace after it"
             with self.subTest(raw=raw):
                 body = ROOT + "- " + raw + "\n"
                 result = gate.scan(body, parser)
@@ -154,29 +243,140 @@ class Contracts(unittest.TestCase):
                 self.assertEqual(gate.compare(data, body, parser)[3], [diagnostic])
 
     def test_punctuation_matrix(self):
-        # The oracle is independent of the implementation's allowlist.
-        trailing = set("?!.,:;_)'\"]>}")
-        templates = {
-            "userinfo": "https://alice{}ops@example.com/p",
-            "host": "https://exam{}ple.com/p",
-            "port": "https://example.com:8{}0/p",
-            "authority/path": "https://example.com{}/p",
-            "path/letter": URL + "{}x",
-            "path/end": URL + "{}",
-        }
-        for char in string.punctuation:
-            for position, template in templates.items():
-                chunk = template.format(char)
+        # Expected classes and reasons come from the independent case table.
+        for char in string.punctuation + "é中ß☃\u0301":
+            for position, template in MATRIX_TEMPLATES.items():
                 with self.subTest(char=char, position=position):
-                    urls, findings = gate.bare_urls(chunk)
-                    if findings:
-                        self.assertEqual(urls, [])
-                    elif urls == [chunk]:
-                        pass
+                    text = template.format(char, char)
+                    outcome, expected = matrix_expectation(char, position, text)
+                    actual = gate.bare_urls(text)
+                    self.assertEqual(actual, expected, outcome)
+                    urls, findings = actual
+                    if outcome == "whole":
+                        self.assertEqual((urls, findings), ([text], []))
+                    elif outcome == "shortened":
+                        prefix = "(" if text.startswith("(") else ""
+                        self.assertEqual(findings, [])
+                        self.assertEqual(len(urls), 1)
+                        tail = text[len(prefix) + len(urls[0]):]
+                        self.assertIn(tail, (",", ";", ")", "),", ");"))
+                        if tail.startswith(")"):
+                            self.assertEqual(prefix, "(")
+                    elif outcome == "wrapped":
+                        self.assertEqual((urls, findings), ([URL], []))
                     else:
-                        self.assertEqual(position, "path/end")
-                        self.assertIn(char, trailing)
-                        self.assertEqual(urls, [URL])
+                        self.assertEqual(urls, [])
+                        self.assertEqual(len(findings), 1)
+
+    def test_round_four_regressions(self):
+        parser = self.parser()
+        data = {"components": {"component": {"sources": {"source": URL}}}}
+        for tail in ("_", "?"):
+            diagnostic = "body line 5: " + tail_error(tail, URL + tail)
+            body = ROOT + "- " + URL + tail + "\n"
+            self.assertEqual(gate.scan(body, parser).findings, [diagnostic])
+            self.assertEqual(gate.compare(data, body, parser),
+                             ([((4,), ("component", "source"), 1, 0)],
+                              False, (1, 1), [diagnostic]))
+        target = "https://example.com"
+        self.assertEqual(gate.bare_urls(target + ":"),
+                         ([], [tail_error(":", target + ":")]))
+        for raw in (URL + "`_`", "`https://`_", "https:`c`//example.com/p"):
+            self.assertEqual(gate.scan(ROOT + "- " + raw + "\n", parser).findings,
+                             ["body line 5: URL-like text touches code_inline"])
+        for raw, destinations in (("(`https://`)", []),
+                                  ("(`wss://`): " + URL, [URL])):
+            result = gate.scan(ROOT + "- " + raw + "\n", parser)
+            self.assertEqual(result.findings, [])
+            self.assertEqual([i.hrefs for i in result.items.values()], [destinations])
+        self.assertEqual(gate.bare_urls("_" + URL + "_"),
+                         ([], [tail_error("_", URL + "_")]))
+        # Whole code URLs are mentions; enrolled URLs still differ in counts.
+        self.assertEqual(gate.compare(data, ROOT + "- `" + URL + "`\n", parser),
+                         ([((4,), ("component", "source"), 1, 0)], False, (1, 1), []))
+
+    def test_interrupted_plain_markers(self):
+        parser = self.parser()
+        for raw in ("https<://example.com/p>", "https:<//example.com/p>",
+                    "https:/</example.com/p>", "https*://example.com/p*",
+                    "https**://example.com/p**"):
+            with self.subTest(raw=raw):
+                children = parser.parseInline(raw)[0].children
+                self.assertEqual([(t.type, t.content) for t in children], [("text", raw)])
+                diagnostic = f"interrupted URL-like marker in {raw!r}"
+                self.assertEqual(gate.bare_urls(raw), ([], [diagnostic]))
+                self.assertEqual(gate.scan(ROOT + "- " + raw + "\n", parser).findings,
+                                 ["body line 5: " + diagnostic])
+        for offset in (5, 6, 7):
+            raw = URL[:offset] + "&amp;" + URL[offset:]
+            rendered = URL[:offset] + "&" + URL[offset:]
+            with self.subTest(entity_offset=offset):
+                result = gate.scan(ROOT + "- " + raw + "\n", parser)
+                self.assertEqual(result.findings,
+                                 [f"body line 5: interrupted URL-like marker in {rendered!r}"])
+                self.assertEqual([i.hrefs for i in result.items.values()], [[]])
+
+    def test_mention_adjacency_matrix(self):
+        parser = self.parser()
+        for marker in ("https://", "wss://"):
+            for char in string.punctuation + "a1é中":
+                for side in ("left", "right"):
+                    raw = char + "`" + marker + "`" if side == "left" else "`" + marker + "`" + char
+                    # Preserve rendered punctuation that would otherwise merge
+                    # with code delimiters or introduce a blockquote.
+                    if char in "`\\>":
+                        encoded = f"&#{ord(char)};"
+                        raw = encoded + "`" + marker + "`" if side == "left" else "`" + marker + "`" + encoded
+                    with self.subTest(marker=marker, char=char, side=side):
+                        result = gate.scan(ROOT + "- " + raw + "\n", parser)
+                        expected = [] if char in "(),;:." else [
+                            "body line 5: URL-like text touches code_inline"]
+                        self.assertEqual(result.findings, expected)
+                        self.assertEqual([i.hrefs for i in result.items.values()], [[]])
+
+    def test_generated_opaque_offsets(self):
+        parser = self.parser()
+        wrappers = {
+            "code_inline": lambda text: "`" + text + "`",
+            "image": lambda text: "![" + text + "](image.png)",
+            "link": lambda text: "[" + text + "](" + URL + ")",
+            "html": lambda text: '<span data-url="' + text + '"></span>',
+        }
+        for kind, wrap in wrappers.items():
+            for offset in range(1, len(URL)):
+                for side in ("prefix", "suffix"):
+                    prefix, suffix = URL[:offset], URL[offset:]
+                    raw = wrap(prefix) + suffix if side == "prefix" else prefix + wrap(suffix)
+                    expected = set()
+                    if kind == "html":
+                        expected.add("body line 5: unclassified raw HTML")
+                    else:
+                        edge = "link_close" if side == "prefix" else "link_open"
+                        expected.add("body line 5: URL-like text touches " + (edge if kind == "link" else kind))
+                    if side == "prefix" and offset < 5:
+                        expected.add(f"body line 5: unclassified URL-like text {suffix!r}")
+                    if side == "suffix" and offset == 8:
+                        expected.add(f"body line 5: unclassified URL-like text {prefix!r}")
+                    if side == "suffix" and offset == 16:
+                        expected.add("body line 5: " + tail_error(".", prefix))
+                    with self.subTest(kind=kind, offset=offset, side=side):
+                        result = gate.scan(ROOT + "- " + raw + "\n", parser)
+                        self.assertEqual(set(result.findings), expected)
+                        self.assertEqual(len(result.findings), len(expected))
+            # Endpoints: the entire URL is opaque, with no adjacent plain text.
+            result = gate.scan(ROOT + "- " + wrap(URL) + "\n", parser)
+            self.assertEqual(result.findings,
+                             ["body line 5: unclassified raw HTML"] if kind == "html" else [])
+            self.assertEqual([i.hrefs for i in result.items.values()],
+                             [[URL] if kind == "link" else []])
+
+    def test_disclosed_opaque_limit(self):
+        # Neither adjacent edge has scheme: or //; no complete marker survives
+        # the visible projection. This remains a documented symmetric blind spot.
+        body = ROOT + "- https:/`c`/example.com/p\n"
+        result = gate.scan(body, self.parser())
+        self.assertEqual(result.findings, [])
+        self.assertEqual([i.hrefs for i in result.items.values()], [[]])
 
     def test_split_scheme_boundaries(self):
         parser = self.parser()
@@ -236,7 +436,7 @@ class Contracts(unittest.TestCase):
                 result = gate.scan(ROOT + "- " + target + "\n", parser)
                 self.assertEqual(result.findings, [
                     f"body line 5: unclassified bare URL tail {tail!r} in {target!r}; "
-                    "write it as an explicit link"])
+                    "write it as an explicit link or put whitespace after it"])
                 self.assertEqual([item.hrefs for item in result.items.values()], [[]])
             for raw in ("[source](" + target + ")", "<" + target + ">"):
                 with self.subTest(raw=raw):
@@ -252,7 +452,7 @@ class Contracts(unittest.TestCase):
         self.assertEqual(result.findings, [])
         self.assertEqual([item.hrefs for item in result.items.values()], [[URL]])
         # Keep this independent of the production trailing-punctuation set.
-        for tail in ("", "):", "?!.,:;_)'\"]>}"):
+        for tail in ("", "):", "(),;:."):
             for end in ("", " " + URL):
                 with self.subTest(tail=tail, end=end):
                     result = gate.scan(ROOT + "- `https://`" + tail + end + "\n", parser)
@@ -268,13 +468,13 @@ class Contracts(unittest.TestCase):
 
     def test_opaque_url_continuations(self):
         parser = self.parser()
-        for suffix in ("example.com/p", "1", "[::1]/p", "%2F", "/p", "@host/p",
+        for suffix in ("_", "~", "example.com/p", "1", "[::1]/p", "%2F", "/p", "@host/p",
                        "é", "):x"):
             with self.subTest(suffix=suffix):
                 result = gate.scan(ROOT + "- `https://`" + suffix + "\n", parser)
                 self.assertEqual(result.findings, ["body line 5: URL-like text touches code_inline"])
                 self.assertEqual([item.hrefs for item in result.items.values()], [[]])
-        for suffix in ("p", "1", "[", "%2F", "/", "@", "é", "):x"):
+        for suffix in ("_", "~", "p", "1", "[", "%2F", "/", "@", "é", "):x"):
             with self.subTest(code_suffix=suffix):
                 result = gate.scan(ROOT + "- " + URL + "`" + suffix + "`\n", parser)
                 self.assertEqual(result.findings, ["body line 5: URL-like text touches code_inline"])
@@ -300,7 +500,7 @@ class Contracts(unittest.TestCase):
         self.assertEqual(gate.bare_urls(chunk), ([chunk], []))
         for tail in ("*https://other.example/p", "~ftp://other.example/p"):
             self.assertEqual(gate.bare_urls(URL + tail), ([], [
-                f"unclassified bare URL tail {tail!r} in {URL + tail!r}; write it as an explicit link"]))
+                f"unclassified bare URL tail {tail!r} in {URL + tail!r}; write it as an explicit link or put whitespace after it"]))
 
     def test_emphasis_token_evidence(self):
         parser = self.parser()
@@ -313,8 +513,8 @@ class Contracts(unittest.TestCase):
 
     def test_rendered_positive_cases(self):
         parser = self.parser()
-        for raw in (URL + ".", "(" + URL + ")", "source:" + URL,
-                    "_" + URL, "_" + URL + "_", "**" + URL + "**"):
+        for raw in (URL + ",", "(" + URL + ")", "source:" + URL,
+                    "_" + URL + "_", "**" + URL + "**"):
             with self.subTest(raw=raw):
                 result = gate.scan(ROOT + "- " + raw + "\n", parser)
                 self.assertEqual(result.findings, [])
@@ -404,7 +604,7 @@ class Contracts(unittest.TestCase):
         for name, url, normalized in UNICODE_BARE_CASES:
             with self.subTest(name=name):
                 if normalized is None:
-                    with self.assertRaisesRegex(ValueError, "IDNA does not round-trip"):
+                    with self.assertRaisesRegex(ValueError, "^invalid IDNA 2003 host$"):
                         gate.normalize_url(url)
                 else:
                     self.assertEqual(gate.normalize_url(url), normalized)

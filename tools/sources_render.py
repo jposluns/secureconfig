@@ -57,15 +57,18 @@ def normalize_url(url):
         host, colon, port = hostport.partition(":")
         port = colon + port
         # Decode A-labels before NFKC, including ones emitted by the parser.
-        labels = re.split(r"[.\u3002\uff0e\uff61]", host)
-        host = ".".join(label.lower().encode("ascii").decode("idna")
-                        if label.lower().startswith("xn--") else label for label in labels)
-        host = unicodedata.normalize("NFKC", host)
-        if any(c in host for c in "/?#@:\\[]%") or any(c.isspace() for c in host):
-            raise ValueError("host mapping introduces a delimiter or unsupported character")
-        host = host.encode("idna").decode("ascii").lower()
-        if host.encode("ascii").decode("idna").encode("idna").decode("ascii").lower() != host:
-            raise ValueError("host does not round-trip through IDNA 2003")
+        try:
+            labels = re.split(r"[.\u3002\uff0e\uff61]", host)
+            host = ".".join(label.lower().encode("ascii").decode("idna")
+                            if label.lower().startswith("xn--") else label for label in labels)
+            host = unicodedata.normalize("NFKC", host)
+            if any(c in host for c in "/?#@:\\[]%") or any(c.isspace() for c in host):
+                raise ValueError("host mapping introduces a delimiter or unsupported character")
+            host = host.encode("idna").decode("ascii").lower()
+            if host.encode("ascii").decode("idna").encode("idna").decode("ascii").lower() != host:
+                raise ValueError("host does not round-trip through IDNA 2003")
+        except UnicodeError as exc:
+            raise ValueError("invalid IDNA 2003 host") from exc
         labels = host[:-1].split(".") if host.endswith(".") else host.split(".")
         if len(host.rstrip(".")) > 253 or any(
                 not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label)
@@ -81,26 +84,56 @@ def normalize_url(url):
 BARE_OPEN = re.compile(legacy._OPENS)
 BARE_CLOSE = re.compile(legacy._CLOSES)
 BARE_UNDERSCORE_CLOSE = re.compile(legacy._CLOSES_AFTER_UNDERSCORE)
-# Only these rendered trailing characters may be discarded. A terminal
-# underscore is prose by the legacy convention; an internal one is not.
-TRAILING_PROSE = frozenset("?!.,:;_)'\"]>}")
+# Define the benign dropped-tail grammar once, including the empty tail.
+BENIGN_TAIL = re.compile(r"\)?[,;]?")
+
+
+def benign_tail(tail, prefix, candidate):
+    """A closing wrapper requires an unmatched opener before a balanced URL."""
+    if not BENIGN_TAIL.fullmatch(tail):
+        return False
+    if not tail.startswith(")"):
+        return True
+    depth = 0
+    for char in prefix:
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth = max(0, depth - 1)
+    balance = 0
+    for char in candidate:
+        balance += (char == "(") - (char == ")")
+        if balance < 0:
+            return False
+    return depth > 0 and balance == 0
 
 
 def bare_urls(text):
-    """Accept the rendered chunk from a URL marker to whitespace only after
-    classifying all of it. The first legacy closing boundary chooses its
-    endpoint; shortening is allowed only for a tail wholly in TRAILING_PROSE.
+    """Classify the complete RENDERED chunk, from marker to whitespace/end.
 
-    Literal stars, tildes and underscores followed by text are never evidence
-    of emphasis. Write literal stars or tildes in paths as explicit links.
-    The parser has already consumed real emphasis before this function runs.
+    Use the existing marker, opener and first closing boundary, then validate
+    the entire authority and candidate with normalize_url. An empty dropped
+    tail, one comma or one semicolon is benign. A single closing parenthesis
+    may precede that comma/semicolon (or stand alone) only when an unmatched
+    opening parenthesis occurs before the URL in this text and the candidate
+    has balanced parentheses. Every other dropped tail is a finding naming
+    the tail and advising an explicit link or whitespace after the URL.
 
-    Terminal punctuation, including terminal underscores, is a prose judgement;
-    explicit links avoid that ambiguity. Authority boundaries, non-ASCII bare
-    authorities and parentheses within destinations fail closed. A marker inside
-    an accepted destination is URL data, not a second independent citation.
+    Literal underscore openers are findings, including _URL_. Only parsed
+    em/strong tokens establish emphasis; /__init__.py renders as /init.py.
+    Authority boundaries, non-ASCII bare authorities and parentheses inside
+    candidates fail closed. A marker inside a candidate is URL data, not a
+    second citation. These rules classify rendered chunks, not written ones.
+
+    Removing markup-like <, >, *, or & from a chunk without a marker must not
+    reveal a marker silently: that is an interrupted-marker finding, never a
+    destination. This uses the existing grammar, not a second URL grammar.
     """
     urls, findings = [], []
+    for part in re.finditer(r"\S+", text):
+        if (not legacy._URL_OR_LINK.search(part[0]) and
+                legacy._URL_OR_LINK.search(part[0].translate(str.maketrans("", "", "<>*&")))):
+            findings.append(f"interrupted URL-like marker in {part[0]!r}")
     consumed = 0
     for marker in legacy._URL_OR_LINK.finditer(text):
         if marker.start() < consumed:
@@ -123,15 +156,17 @@ def bare_urls(text):
                 diagnostic = f"non-ASCII authority in bare URL {chunk!r}"
             elif stop is not None:
                 candidate, tail = text[start:stop], text[stop:end]
-                terminal = all(char in TRAILING_PROSE for char in tail)
                 if (stop < authority_end and
                         (authority_end < end or "@" in text[stop:authority_end]
-                         or not terminal)):
+                         or any(c.isalnum() for c in text[stop:authority_end]))):
                     diagnostic = f"closing boundary inside bare URL authority {chunk!r}"
                 elif "(" in candidate or ")" in candidate:
                     diagnostic = f"ambiguous parentheses in bare URL {chunk!r}"
-                elif not terminal:
+                elif not benign_tail(tail, text[:start], candidate):
                     diagnostic = (f"unclassified bare URL tail {tail!r} in {chunk!r}; "
+                                  "write it as an explicit link or put whitespace after it")
+                elif underscore:
+                    diagnostic = (f"literal underscore opener in bare URL {chunk!r}; "
                                   "write it as an explicit link")
                 else:
                     try:
@@ -178,10 +213,15 @@ def scan(body, parser):
     Raw HTML blocks are refused guide-wide because they can hide headings.
     Opaque inline boundaries alarm only when URL text continues across a join
     in the rendered text: a marker straddles the join, or a complete marker
-    shares a whitespace-free chunk with content on the other side. Strip only
-    TRAILING_PROSE from the chunk's end before testing that continuation.
-    Thus code mentioning a scheme followed only by trailing prose punctuation
-    and whitespace/end is documentation, not a continuation. Code contributes
+    shares a whitespace-free chunk with content on the other side. Only plain
+    text outside opaque tokens may be classified as a benign tail or wrapper.
+    Scheme-only code mentions have the narrow punctuation rule below.
+    Whole URLs inside isolated code spans are mentions, not destinations; the
+    legacy grammar counts them, so enrolled URLs produce count differences.
+    A disclosed detection limit remains: https:/ plus code c plus /example.com/p
+    has neither a complete visible marker nor scheme: or // at an opaque edge.
+    It produces no destination or finding, as does the legacy grammar.
+    Code contributes
     visible text to this alarm-only projection, never destinations. Images
     are checked both with visible alt text and with no textual width (loaded
     image); neither projection contributes destinations.
@@ -232,14 +272,7 @@ def scan(body, parser):
                     projected.append(visible)
                     position += len(visible)
                 projected = "".join(projected)
-                # Only a positively classified terminal prose tail ends a URL
-                # chunk before whitespace. All other joined content alarms.
-                url_chunks = [
-                    (chunk.start(), chunk.start() + len(chunk[0].rstrip("".join(TRAILING_PROSE))))
-                    for chunk in re.finditer(r"\S+", projected)
-                    if legacy._URL_OR_LINK.search(chunk[0])
-                ]
-                projections.append((offsets, url_chunks))
+                projections.append((projected, offsets))
             html_reported = False
 
             def flush():
@@ -264,10 +297,55 @@ def scan(body, parser):
                     # Link labels belong to their destination, not bare text.
                     # Transparent emphasis tokens do not separate visible text.
                     touches = False
-                    for offsets, url_chunks in projections:
+                    for projected, offsets in projections:
+                        begin, finish = offsets[index]
+                        left = re.search(r"\S*$", projected[:begin])[0]
+                        right = re.match(r"\S*", projected[finish:])[0]
+                        # Scheme-only code is a mention only if BOTH adjacent
+                        # plain-text runs contain solely (),;:. up to whitespace
+                        # or end. No token-internal character is trailing prose.
+                        mention = (kind == "code_inline" and
+                                   legacy._URL_OR_LINK.fullmatch(token.content) and
+                                   token.content.endswith("://") and
+                                   all(c in "(),;:." for c in left + right) and
+                                   all(t.type == "text" for t, (a, b) in zip(children, offsets)
+                                       if a < b and (begin - len(left) <= a < begin
+                                                     or finish <= a < finish + len(right))))
+                        if mention:
+                            continue
                         for step in edges:
-                            boundary = offsets[index][0 if step == -1 else 1]
-                            if any(start < boundary < end for start, end in url_chunks):
+                            boundary = begin if step == -1 else finish
+                            for chunk in re.finditer(r"\S+", projected):
+                                if not chunk.start() < boundary < chunk.end():
+                                    continue
+                                marker = legacy._URL_OR_LINK.search(chunk[0])
+                                if marker:
+                                    start, end = chunk.span()
+                                    # A plain opening wrapper is not continuation.
+                                    while (start < begin and projected[start] == "(" and
+                                           any(t.type == "text" and a <= start < b
+                                               for t, (a, b) in zip(children, offsets))):
+                                        start += 1
+                                    # Only a plain terminal run can be prose.
+                                    suffix_start = end
+                                    for t, (a, b) in reversed(list(zip(children, offsets))):
+                                        if a < end <= b and t.type == "text":
+                                            suffix_start = max(a, finish)
+                                            break
+                                    tail = projected[suffix_start:end]
+                                    marker_start = chunk.start() + marker.start()
+                                    if benign_tail(tail, projected[:marker_start],
+                                                   projected[marker_start:suffix_start]):
+                                        end = suffix_start
+                                    if start < boundary < end:
+                                        touches = True
+                            # Expose scheme: or // adjacent to an opaque edge,
+                            # even when visible opaque content breaks the marker.
+                            adjacent_left = re.search(r"\S*$", projected[:boundary])[0]
+                            adjacent_right = re.match(r"\S*", projected[boundary:])[0]
+                            if adjacent_left and adjacent_right and (
+                                    legacy._URL_OR_LINK.fullmatch(adjacent_left.lstrip("(") + "//")
+                                    or adjacent_right.startswith("//")):
                                 touches = True
                     if touches:
                         result.findings.append(
