@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-12
+
+- Weekly link check: remove two kinds of false positive (row 3.40). Before extraction, the workflow now escapes underscores inside URLs in its own disposable checkout, so lychee no longer cuts cited URLs at an underscore: fourteen cited targets that were being checked in a truncated form, including the `__init__.py` sources reported as 404 at their parent directory, are now checked intact. The OpenAI API base URL that open-webui.md gives as a configuration value is excluded by an exact match. A 404 or 410 on a citation still fails the job, and recorded cases cover the preparation step, the exclusion and that failure (#448).
+
 ## 2026-10-05
 
 - Add scoped Verify declarations across the eight row 3.30 batch 2 guides, clearing 88 units (12 list items, 22 table rows and 54 prose units) by subtraction-only regeneration from 0a6b18a. Record disposable local certificate, shell and file-guard demonstrations separately from deployment expectations, and cover adjacent fences in their declarations. Retain eleven SQLite frontend historical-evidence units, four mixed Elasticsearch preparation units, one Elasticsearch snapshot/source-audit row and one mixed certificate-interpretation paragraph; preserve commands, claim text and recorded limitations (#443).

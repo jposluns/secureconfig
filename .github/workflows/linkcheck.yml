@@ -17,6 +17,24 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
           persist-credentials: false
+      - name: Protect URL underscores for Markdown extraction
+        # Only this disposable checkout is changed. Keep metadata URLs in the sweep.
+        # Bare URLs (including version_basis strings) otherwise lose emphasis spans.
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          # Escape Markdown emphasis inside URLs, including version_basis JSON strings.
+          # Autolinks already protect their URLs; escaping inside them changes the target.
+          url = re.compile(r'<https?://[^<>\s]+>|https?://[^\s<>"`]+')
+          for path in Path(".").glob("*.md"):
+              text = path.read_text(encoding="utf-8")
+              text = url.sub(lambda m: m[0] if m[0].startswith("<") else
+                             re.sub(r"(?<!\\)_", r"\\_", m[0]), text)
+              path.write_text(text, encoding="utf-8")
+          PY
+
       - name: Check links
         id: lychee
         continue-on-error: true
@@ -32,12 +50,15 @@ jobs:
           format: json
           output: lychee/out.json
           # Verbose retains success_map and redirect_map, including accepted bot blocks.
+          # This exact URL is a backend configuration value in open-webui.md,
+          # not a citation or GET resource. Keep its child paths and docs checked.
           args: >-
             --no-progress
             --verbose
             --root-dir ${{ github.workspace }}/site
             --accept 200,201,204,301,302,403,429,999
             --exclude '[<>]'
+            --exclude '^https://api\.openai\.com/v1$'
             --exclude '\$'
             --exclude 'example\.(com|test)'
             --exclude 'app\.internal'
