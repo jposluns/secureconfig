@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.194**, **2.48**, **3.41**, **4.12**.
+Next ids: **1.195**, **2.48**, **3.41**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -59,6 +59,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.144 | CONTRIBUTING rule 7's `read` exception and every block that uses it (among them `search-engines.md`, which CONTRIBUTING names as the model block): `read -r` takes only the first line of a paste, so a secret pasted with a newline leaves every later line for the reader's shell to run. Add one warning sentence to the rule (paste the secret alone) and apply it to every read-exception block (from the #356 review, maintainer ruling 2026-09-25). (L, M) | `[gap]` |
 | 1.147 | `model-servers.md` Verify: the vLLM `/invocations` probe's subshell opens with `set -- 'REPLACE_WITH_A_REAL_SERVED_MODEL'`, with neither rule 6's `PASTE_WHOLE_BLOCK` marker nor its value count, so a paste that drops the `set --` line probes with the calling shell's own first argument when it has one. Give it the marker line (`set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_A_REAL_SERVED_MODEL'`), the marker check, `shift` and `[ "$#" -eq 1 ]`, as the key probe above it has (maintainer ruling 2026-09-26T00:27Z). (M, XS) | `[gap]` |
 | 1.193 | `realtime-voice-infra.md`: document a coturn key derivation that keeps the TURN password off the command line. At coturn 4.18.0, in the files reviewed for #451, `turnadmin -k` takes the password only through `-p`/`--password` in argv (REASONED); verify a procedure outside argv, including coturn's input preparation and the exact tool syntax to cite at a pinned source, before the guide recommends it (maintainer ruling 2026-10-12). (M, S) | `[gap]` |
+| 1.194 | `cloud-identity-proxies.md` Verify: the inline command that checks the app's own default platform hostname passes a literal `REPLACE_WITH_YOUR_PLATFORM_URL` to curl with no guard, so a paste without substitution sends the request anyway. Give it rule 6's guard (the `PASTE_WHOLE_BLOCK` marker, the value count and a placeholder refusal) and then declare its Verify unit, which stays in the marking baseline until then (found in #454's batch-4 review). (M, XS) | `[gap]` |
 
 ## Priority 3: Add missing content
 
