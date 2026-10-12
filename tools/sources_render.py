@@ -7,13 +7,15 @@ an HTTP(S) scheme with no prefix except an optional (, and the existing URL
 boundary grammar. The candidate must normalize, have an ASCII authority and
 contain no parentheses. Its tail is an optional single closing wrapper, then
 an optional single comma or semicolon. Both are individually optional. The
-wrapper requires an unmatched opener earlier in the item's top-level text;
+wrapper requires an unmatched opener earlier in the same inline container's top-level text;
 the candidate's own parentheses must be balanced (here, absent).
 B: Explicit links and autolinks contribute hrefs, even in an alarming run.
 C: Mixed runs default to a finding when URL-like material occurs in the full
 visible concatenation or any opaque token's own visible content. Only an isolated link,
-autolink, code span, image or HTML element with top-level (),;:. neighbours is
-quiet. Emphasis is not a bare URL: /__init__.py must not become /init.py.
+autolink, code span or image with top-level (),;:. neighbours can be quiet:
+its own visible content must contain no complete readable URL, except a link
+label URL equal to its own href after normalization. Code blocks are checked too.
+An isolated HTML element produces no mixed-run finding; raw HTML is still reported. Emphasis is not a bare URL: /__init__.py must not become /init.py.
 Runs without URL-like material are quiet. Whitespace and breaks end runs;
 container text never supplies top-level wrappers or sentence punctuation.
 Raw HTML remains independently refused because its destinations are not parsed.
@@ -23,8 +25,10 @@ Other legacy marker shapes retain their unclassified-text diagnostics.
 Escapes and entities retain token provenance before the parser joins text;
 a transformed bare spelling is never silently recorded as its rendered URL.
 Every refused HTTP(S) or mixed run names the run and suggests explicit links,
-autolinks or whitespace. Positions are zero-based body lines after summary
+autolinks or whitespace. Positions are one-based body lines after summary
 and metadata removal. The comparison remains advisory.
+Protocol-relative references are reported without inventing a destination, with
+an absolute-https remedy. Scheme-only opaque mentions without a host stay quiet.
 
 The scope is rendered link destinations and URLs readable in rendered runs.
 Source text that renders as no URL is outside this scope: for example,
@@ -108,10 +112,48 @@ def normalize_url(url):
 BARE_CLOSE = re.compile(legacy._CLOSES)
 BENIGN_TAIL = re.compile(r"\)?[,;]?")
 SCHEME = re.compile(r"https?://", re.I)
-HTTP_LABEL = re.compile(r"\bhttps?:", re.I)
+HTTP_LABEL = re.compile(r"https?:", re.I)
 INTERRUPTED = tuple(re.compile("[<>*&]*".join(scheme), re.I)
                     for scheme in ("http://", "https://"))
 REMEDY = "write the URL as an explicit link or autolink, or separate it with whitespace"
+
+
+# A host must begin with host material, not wrapper punctuation or a port.
+# Keep the rest of the visible non-whitespace spelling for exact label identity.
+READABLE = re.compile(r"(?:https?://|www\.)(?=[^\s/:?#(),;<>\"`])[^\s<>\"`]+", re.I)
+NETWORK = re.compile(r"(?<![^\s(,;:])//(?=[^\s/:?#(),;<>\"`])[^\s<>\"`]+")
+
+
+def readable_urls(text):
+    """Complete readable HTTP(S), www. and network-path spellings, in order."""
+    absolute = list(READABLE.finditer(text))
+    matches = [(m.start(), m[0], False) for m in absolute]
+    for match in NETWORK.finditer(text):
+        if not any(m.start() <= match.start() < m.end() for m in absolute):
+            matches.append((match.start(), match[0], True))
+    return [(value, network) for _, value, network in sorted(matches)]
+
+
+def readable_error(kind, value, network=False):
+    reason = ("protocol-relative reference; write an absolute https URL" if network
+              else "readable URL; " + REMEDY)
+    return f"{kind} {value!r}: {reason}"
+
+
+def opaque_errors(samples):
+    errors = []
+    for kind, text, href in samples:
+        if kind not in {"link", "code_inline", "image", "fence", "code_block"}:
+            continue
+        for value, network in readable_urls(text):
+            if kind == "link" and not network:
+                try:
+                    if normalize_url(value) == normalize_url(href):
+                        continue
+                except (ValueError, UnicodeError):
+                    pass
+            errors.append(readable_error(kind, value, network))
+    return errors
 
 
 def run_error(kind, text):
@@ -139,7 +181,7 @@ def benign_tail(tail, prefix, candidate):
 def bare_urls(text, prefix=""):
     """Accept only rule A's complete plain runs; refuse D before extracting.
 
-    prefix is earlier top-level item text, used only for wrapper balance.
+    prefix is earlier top-level text in the same inline container, used only for wrapper balance.
     Non-HTTP markers keep their previous diagnostics; ordinary prose is ignored.
     """
     urls, findings = [], []
@@ -162,7 +204,7 @@ def bare_urls(text, prefix=""):
                         authority_end < len(run) or "@" in run[stop:authority_end]
                         or any(c.isalnum() for c in run[stop:authority_end]))
                     if (authority.isascii() and not cuts_authority
-                            and "(" not in value and ")" not in value
+                            # BARE_CLOSE excludes (, and benign_tail checks balance.
                             and benign_tail(tail, prefix + text[:part.start() + start], value)):
                         try:
                             normalize_url(value)
@@ -175,6 +217,11 @@ def bare_urls(text, prefix=""):
             else:
                 urls.append(candidate)
         else:
+            network = [readable_error("bare", value, True)
+                       for value, relative in readable_urls(run) if relative]
+            if network and not legacy._URL_OR_LINK.search(run):
+                findings.extend(network)
+                continue
             # Shapes outside A-D retain the head's behaviour, including no
             # finding for an isolated :// or http: without a legacy marker.
             marker = legacy._URL_OR_LINK.search(run)
@@ -207,14 +254,14 @@ def inline_pieces(children):
             if not opened:
                 root_kind = kind[:-5]
                 visible, origins, samples = [], [], []
-            opened.append((kind, len(visible)))
+            opened.append((kind, len(visible), token.attrGet("href")))
         elif kind in {"link_close", "em_close", "strong_close"} and token.nesting == -1:
             if not opened:
                 raise ValueError("unbalanced inline token " + kind)
-            opener, start = opened.pop()
+            opener, start, href = opened.pop()
             if opener.replace("_open", "_close") != kind:
                 raise ValueError("unbalanced inline token " + kind)
-            samples.append("".join(visible[start:]))
+            samples.append((opener[:-5], "".join(visible[start:]), href))
             if not opened:
                 pieces.append(Piece("".join(visible), tuple(origins), root_kind,
                                     index, tuple(samples)))
@@ -224,12 +271,12 @@ def inline_pieces(children):
                 alt = inline_pieces(token.children or [])
                 content = "".join(p.text for p in alt)
                 leaf_origins = tuple(t for p in alt for t in p.origins)
-                own_samples = tuple(t for p in alt for t in p.opaque_texts) + (content,)
+                own_samples = tuple(t for p in alt for t in p.opaque_texts) + ((kind, content, None),)
             else:
                 content = ("\n" if kind in {"softbreak", "hardbreak"}
                            else "" if kind == "html_inline" else token.content)
                 leaf_origins = (token,) * len(content)
-                own_samples = (content,) if kind not in {"text", "softbreak", "hardbreak"} else ()
+                own_samples = ((kind, content, None),) if kind not in {"text", "softbreak", "hardbreak"} else ()
             if opened:
                 visible.extend(content)
                 origins.extend(leaf_origins)
@@ -269,15 +316,21 @@ def classify_run(run, prefix):
     visible = "".join(p.text for p in run)
     if all(p.kind == "text" for p in run):
         return bare_urls(visible, prefix)
-    samples = [visible] + [text for p in run for text in p.opaque_texts]
+    samples = [visible] + [text for p in run for _, text, _ in p.opaque_texts]
     url_like = any(legacy._URL_OR_LINK.search(s) or HTTP_LABEL.search(s) or "://" in s
                    for s in samples)
     opaque = {p.identity for p in run if p.kind != "text"}
     isolated = (len(opaque) == 1 and all(
         all(c in "(),;:." for c in p.text) if p.kind == "text"
         else p.kind in {"link", "code_inline", "image", "html_inline"} for p in run))
-    if not url_like or isolated:
-        return [], []
+    if isolated:
+        samples = list(dict.fromkeys(sample for p in run for sample in p.opaque_texts))
+        return [], opaque_errors(samples)
+    network = list(dict.fromkeys(readable_error("mixed", value, True)
+                                 for sample in samples
+                                 for value, relative in readable_urls(sample) if relative))
+    if not url_like:
+        return [], network
     return [], [run_error("mixed", visible)]
 
 
@@ -339,8 +392,6 @@ def scan(body, parser):
             else:
                 result.outside.append(href)
 
-        item_prefixes = {}
-
         def inlines(children, span, owner, emit=True):
             pieces = inline_pieces(children)
             if not emit:
@@ -350,7 +401,7 @@ def scan(body, parser):
             # Links retain hrefs independently of neighbouring alarms.
             destinations = [(index, token.attrGet("href"))
                             for index, token in enumerate(children) if token.type == "link_open"]
-            prefix = item_prefixes.get(owner, "") if owner else ""
+            prefix = ""  # Each inline token is one paragraph or table cell.
             for run in inline_runs(pieces):
                 urls, errors = classify_run(run, prefix)
                 destinations.extend((run[0].identity, href) for href in urls)
@@ -358,8 +409,6 @@ def scan(body, parser):
                 prefix += "".join(p.text for p in run if p.kind == "text") + " "
             for _, href in sorted(destinations, key=lambda entry: entry[0]):
                 record(href, span, owner)
-            if owner:
-                item_prefixes[owner] = prefix
 
         for token in tokens:
             kind = token.type
@@ -408,6 +457,10 @@ def scan(body, parser):
                         result.findings.append(f"body line {span[0] + 1}: unsupported Sources heading")
                     if span[1] not in {start for start, _ in ranges}:
                         result.findings.append(f"body line {span[0] + 1}: unselected rendered Sources")
+            elif kind in {"fence", "code_block"} and active:
+                result.findings.extend(
+                    f"body line {span[0] + 1}: {error}"
+                    for error in opaque_errors([(kind, token.content, None)]))
             elif kind == "html_block":
                 result.findings.append(f"body line {span[0] + 1}: unclassified raw HTML")
             if token.nesting == 1:

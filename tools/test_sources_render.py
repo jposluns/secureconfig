@@ -33,6 +33,13 @@ def error(kind, visible):
             "write the URL as an explicit link or autolink, or separate it with whitespace")
 
 
+def readable_diagnostic(kind, value, network=False):
+    # R2/R6 contract, independent of implementation helpers.
+    reason = ("protocol-relative reference; write an absolute https URL" if network else
+              "readable URL; write the URL as an explicit link or autolink, or separate it with whitespace")
+    return f"{kind} {value!r}: {reason}"
+
+
 MATRIX_TEMPLATES = {
     "userinfo": "https://alice{}ops@example.com/p",
     "host": "https://exam{}ple.com/p",
@@ -217,7 +224,8 @@ class Contracts(unittest.TestCase):
         with patch.object(parser, "parse", wraps=parser.parse) as parse:
             result = gate.scan(body, parser)
             self.assertEqual(parse.call_count, 1)
-        self.assertEqual(result.findings, [])
+        # R6: the standalone complete URL in code is readable, not a mention.
+        self.assertEqual(result.findings, ["body line 10: " + readable_diagnostic("code_inline", URL)])
         self.assertEqual([item.hrefs for item in result.items.values()],
                          [[URL, URL, URL], [URL], [URL]])
 
@@ -275,10 +283,12 @@ python3() {
                           "body line 7: unselected rendered Sources"])
 
 
-    def check_run(self, raw, visible, kind="mixed", hrefs=(), html=False):
+    def check_run(self, raw, visible, kind="mixed", hrefs=(), html=False, diagnostic=None):
         result = gate.scan(ROOT + "- " + raw + "\n", self.parser())
         expected = ["body line 5: unclassified raw HTML"] if html else []
-        if kind:
+        if diagnostic:
+            expected.append("body line 5: " + diagnostic)
+        elif kind:
             expected.append("body line 5: " + error(kind, visible))
         self.assertEqual(result.findings, expected, raw)
         self.assertEqual([i.hrefs for i in result.items.values()], [list(hrefs)], raw)
@@ -367,8 +377,10 @@ python3() {
         for raw, visible in ((URL + "`_`", URL + "_"), ("`https://`_", "https://_"),
                              ("https:`c`//example.com/p", "https:c//example.com/p")):
             self.check_run(raw, visible)
+        # R6: a complete readable code-span URL must be reported.
         self.assertEqual(gate.compare(data, ROOT + "- `" + URL + "`\n", self.parser()),
-                         ([((4,), ("component", "source"), 1, 0)], False, (1, 1), []))
+                         ([((4,), ("component", "source"), 1, 0)], False, (1, 1),
+                          ["body line 5: " + readable_diagnostic("code_inline", URL)]))
 
     def test_interrupted_plain_markers(self):
         for raw in ("https<://example.com/p>", "https:<//example.com/p>",
@@ -411,17 +423,21 @@ python3() {
                     raw = raw + suffix if side == "prefix" else prefix + raw
                     visible = shown + suffix if side == "prefix" else prefix + shown
                     # Hidden fragments can leave no visible URL, by the ruling.
-                    like = bool(re.search(r"[\w+.-]+://|www\.|\bhttps?:|://", visible, re.I))
+                    like = bool(re.search(r"[\w+.-]+://|www\.|https?:|://", visible, re.I))
                     # CommonMark punctuation flanking leaves these delimiters literal.
                     literal = kind in {"em", "strong"} and (
                         side == "suffix" and prefix[-1].isalnum() and suffix[0] in string.punctuation
                         or side == "prefix" and prefix[-1] in string.punctuation and suffix[0].isalnum())
                     with self.subTest(kind=kind, offset=offset, side=side):
                         self.check_run(raw, raw if literal else visible,
-                                       "bare" if literal else "mixed" if like else None, hrefs, html)
+                                       "bare" if literal else "mixed" if like else None, hrefs, html,
+                                       readable_diagnostic("mixed", "//example.com/p", True)
+                                       if kind in {"empty image", "html"} and side == "prefix" and offset == 6 else None)
             raw, shown, hrefs, html = wrap(URL)
+            # R6: complete readable URLs in isolated code and image alt are findings.
+            diagnostic = readable_diagnostic("code_inline" if kind == "code" else "image", URL) if kind in {"code", "image"} else None
             self.check_run(raw, shown, "mixed" if kind in {"em", "strong", "entity"} else None,
-                           hrefs, html)
+                           hrefs, html, diagnostic)
 
     def test_maintainer_ruling_non_url_split_is_quiet(self):
         # Maintainer scope ruling 2026-10-12: no readable URL remains.
@@ -518,7 +534,9 @@ python3() {
         self.check_run("https://ali[ce](" + URL + ")@example.com/p", "https://alice@example.com/p", hrefs=(URL,))
         self.check_run("[prefix](" + URL + ")" + URL, "prefix" + URL, hrefs=(URL,))
         for label in (URL, URL + "`code`", "![alt](image.png)" + URL):
-            self.check_run("[" + label + "](" + URL + ")", "", None, (URL,))
+            # R6: only an exactly matching readable label URL is exempt.
+            diagnostic = readable_diagnostic("link", URL + "code") if "`code`" in label else None
+            self.check_run("[" + label + "](" + URL + ")", "", None, (URL,), diagnostic=diagnostic)
 
     def test_unicode_bare_authorities(self):
         data = {"components": {"component": {"sources": {"source": URL}}}}
@@ -657,6 +675,215 @@ python3() {
         for suffix in ("_", "~", "example.com/p", "1", "[::1]/p", "%2F", "/p", "@host/p", "é", "):x"):
             self.check_run("`https://`" + suffix, "https://" + suffix)
 
+    def test_round_six_network_path_ledger(self):
+        other = "https://other.example/"
+        for prefix in ("", "(", ",", ";", ":", "prefix: "):
+            self.check_run(prefix + "//example.com/p", "", None,
+                           diagnostic=readable_diagnostic("bare", "//example.com/p", True))
+        self.check_run("h`c`ttps:[,](" + other + ")//example.com/p", "", None, (other,),
+                       diagnostic=readable_diagnostic("mixed", "//example.com/p", True))
+        for spelling in ("`//example.com/p`", "![//example.com/p](image.png)"):
+            kind = "code_inline" if spelling.startswith("`") else "image"
+            self.check_run(spelling, "", None,
+                           diagnostic=readable_diagnostic(kind, "//example.com/p", True))
+
+        for raw, hrefs in (("x`//example.com/p`y", ()),
+                           ("x[//example.com/p](" + other + ")y", (other,)),
+                           ("x![//example.com/p](image.png)y", ()),
+                           ("`x`*//example.com/p*`y`", ()), ("`x`**//example.com/p**`y`", ())):
+            self.check_run(raw, "", None, hrefs,
+                           diagnostic=readable_diagnostic("mixed", "//example.com/p", True))
+
+    def test_round_six_isolated_readable_urls(self):
+        other = "https://other.example/"
+        for value in (URL, "www.example.com/p", "https://-host/p", "https://💩.example/p"):
+            for kind, raw, hrefs in (("code_inline", "`" + value + "`", ()),
+                                      ("image", "![" + value + "](image.png)", ()),
+                                      ("link", "[" + value + "](" + other + ")", (other,))):
+                self.check_run(raw, "", None, hrefs,
+                               diagnostic=readable_diagnostic(kind, value))
+        data = {"components": {"component": {"sources": {"source": other}}}}
+        self.assertEqual(gate.compare(data, ROOT + "- [" + URL + "](" + other + ")\n", self.parser())[3],
+                         ["body line 5: " + readable_diagnostic("link", URL)])
+        for kind, raw in (("fence", "```\n" + URL + "\n```\n"),
+                          ("code_block", "    " + URL + "\n")):
+            self.assertEqual(gate.scan(ROOT + raw, self.parser()).findings,
+                             ["body line 5: " + readable_diagnostic(kind, URL)])
+        for raw in ("[" + URL + "](" + URL + ")", "<" + URL + ">",
+                    "[HTTPS://EXAMPLE.COM/p](" + URL + ")", "[*" + URL + "*](" + URL + ")"):
+            self.check_run(raw, "", None, (URL,))
+        for mention in ("PLAINTEXT://:9092", "SSL://:9093", "SASL_SSL://:9094", "wss://"):
+            self.check_run("`" + mention + "`", "", None)
+
+    def test_round_six_codex_blockquote_wrapper(self):
+        for raw, line in (("- > (\n\n  " + URL + ")\n", 7),
+                          ("- (\n\n  > " + URL + ")\n", 7),
+                          ("- (\n\n  " + URL + ")\n", 7)):
+            self.assertEqual(gate.scan(ROOT + raw, self.parser()).findings,
+                             [f"body line {line}: " + error("bare", URL + ")")])
+        self.check_run("(same paragraph\n  " + URL + ")", "", None, (URL,))
+
+    def test_round_six_codex_table_cell_wrapper(self):
+        for cells in (("(", URL + ")"), (URL + ")", "(")):
+            raw = "- | left | right |\n  | --- | --- |\n  | " + " | ".join(cells) + " |\n"
+            self.assertEqual(gate.scan(ROOT + raw, self.parser()).findings,
+                             ["body line 7: " + error("bare", URL + ")")])
+        raw = "- | source |\n  | --- |\n  | (see " + URL + ") |\n"
+        self.assertEqual(gate.scan(ROOT + raw, self.parser()).findings, [])
+
+    def test_round_six_claude_pairs(self):
+        # Superset of the 16 reported shapes: all six kinds, three first
+        # offsets and both alt-image offsets. Each diagnostic is literal.
+        other = "https://other.example/"
+        for inserted, hrefs in (("`c`", ()), ("![c](y)", ()), ("[c](" + other + ")", (other,)),
+                                ("&#99;", ()), ("*c*", ()), ("**c**", ())):
+            for first in (0, 1, 5):
+                for second in (6, 7):
+                    raw = URL[:first] + inserted + URL[first:second] + "![x](y)" + URL[second:]
+                    visible = URL[:first] + "c" + URL[first:second] + "x" + URL[second:]
+                    # At offsets 1 and 5 the altered scheme leaves no complete
+                    # readable URL; R2 keeps those cases quiet.
+                    kind = "mixed" if first == 0 else None
+                    self.check_run(raw, visible, kind, hrefs)
+
+
+def oracle_visible(children):
+    """Independent projection using only documented parser token content."""
+    parts = []
+    for token in children or []:
+        if token.type == "image":
+            parts.append(oracle_visible(token.children))
+        elif token.type in {"text", "text_special", "code_inline"}:
+            parts.append(token.content)
+        elif token.type in {"softbreak", "hardbreak"}:
+            parts.append(" ")
+    return "".join(parts)
+
+
+def oracle_samples(children):
+    """Project each opaque token separately, including nested label content."""
+    samples, opened = [], []
+    for index, token in enumerate(children or []):
+        if token.type in {"link_open", "em_open", "strong_open"}:
+            opened.append(index)
+        elif token.type in {"link_close", "em_close", "strong_close"}:
+            start = opened.pop()
+            samples.append(oracle_visible(children[start + 1:index]))
+        elif token.type == "code_inline":
+            samples.append(token.content)
+        elif token.type == "image":
+            samples.append(oracle_visible(token.children))
+            samples.extend(oracle_samples(token.children))
+    return samples
+
+
+def oracle_urls(text):
+    """Independent character scanner; no adapter or test predicate is reused."""
+    found = []
+    lower = text.lower()
+    occupied_until = -1
+    for index in range(len(text)):
+        length = next((len(marker) for marker in ("https://", "http://", "www.")
+                       if lower.startswith(marker, index)), 0)
+        if not length and text.startswith("//", index) and (
+                index == 0 or text[index - 1].isspace() or text[index - 1] in "(,;:"):
+            length = 2
+        if not length or index < occupied_until:
+            continue
+        host = index + length
+        if host == len(text) or not (not text[host].isspace() and text[host] not in "/:?#(),;<>\"`"):
+            continue
+        end = host
+        while end < len(text) and not text[end].isspace() and text[end] not in '<>"`':
+            end += 1
+        found.append((index, text[index:end]))
+        occupied_until = end
+    return found
+
+
+def independent_oracle():
+    from markdown_it import MarkdownIt
+    from collections import Counter
+    parser = MarkdownIt("commonmark").enable("table")
+    adapter_parser = gate.gate_parser(required=True)
+    other = "https://other.example/"
+    insertions = ["`c`", "![c](y)", "![](y)", "[c](" + other + ")"]
+    insertions += ["[" + char + "](" + other + ")" for char in "(),;:.~*_[]<>"]
+    insertions += ["<" + other + ">", "<b></b>", "&#99;", r"\*", "*c*", "**c**", "\n", "  \n"]
+    assert len(insertions) == 25
+    counts, violations = Counter(), []
+
+    def check(family, raw):
+        counts[family] += 1
+        body = ROOT + raw
+        tokens = parser.parse(body)
+        visible, destinations = [], []
+        for token in tokens:
+            if token.type == "inline":
+                visible.append(oracle_visible(token.children))
+                visible.extend(oracle_samples(token.children))
+                destinations.extend(child.attrGet("href") for child in token.children or []
+                                    if child.type == "link_open")
+            elif token.type in {"fence", "code_block"}:
+                visible.append(token.content)
+        result = gate.scan(body, adapter_parser)
+        recorded = [href for item in result.items.values() for href in item.hrefs] + result.outside
+        missing = Counter(destinations) - Counter(recorded)
+        if missing:
+            violations.append((family, raw, "unrecorded link destinations", dict(missing)))
+        if result.findings:
+            return
+        for text in visible:
+            for start, url in oracle_urls(text):
+                faithful = url in recorded
+                for href in recorded:
+                    if url.startswith(href):
+                        tail = url[len(href):]
+                        # Rule A's optional closing wrapper then comma/semicolon;
+                        # count only the current inline container's prefix.
+                        depth = 0
+                        for char in text[:start]:
+                            depth = depth + 1 if char == "(" else max(0, depth - 1) if char == ")" else depth
+                        faithful |= tail in ("", ",", ";") or (depth > 0 and tail in (")", "),", ");"))
+                if not faithful:
+                    violations.append((family, raw, "unrecorded readable URL", url))
+
+    for first in range(len(URL) + 1):
+        for second in range(first, len(URL) + 1):
+            for left in insertions:
+                for right in insertions:
+                    check("codex-pairs", "- " + URL[:first] + left + URL[first:second] + right + URL[second:] + "\n")
+    for char in string.punctuation:
+        for offset in range(len(URL) + 1):
+            check("ascii-insertions", "- " + URL[:offset] + char + URL[offset:] + "\n")
+        for offset in range(len(URL)):
+            check("ascii-replacements", "- " + URL[:offset] + char + URL[offset + 1:] + "\n")
+    for left in ("`c`", "![c](y)", "[c](" + other + ")", "&#99;", "*c*", "**c**"):
+        for first in (0, 1, 5):
+            for second in (6, 7):
+                check("claude-pairs", "- " + URL[:first] + left + URL[first:second] + "![x](y)" + URL[second:] + "\n")
+    for opener in ("(", "`(`", "[(](" + other + ")", "![x(](y)"):
+        for raw in ("- > " + opener + "\n\n  " + URL + ")\n",
+                    "- " + opener + "\n\n  > " + URL + ")\n",
+                    "- | a | b |\n  | --- | --- |\n  | " + opener + " | " + URL + ") |\n",
+                    "- | a | b |\n  | --- | --- |\n  | " + URL + ") | " + opener + " |\n"):
+            check("container-wrappers", raw)
+    for value in (URL, "www.example.com/p", "//example.com/p"):
+        for raw in ("- `" + value + "`\n", "```\n" + value + "\n```\n", "    " + value + "\n",
+                    "- [" + value + "](" + other + ")\n", "- ![" + value + "](y)\n",
+                    "- x`" + value + "`y\n", "- x[" + value + "](" + other + ")y\n",
+                    "- x![" + value + "](y)y\n", "- x*" + value + "*y\n",
+                    "- x**" + value + "**y\n"):
+            check("isolated-readable", raw)
+    for family, count in counts.items():
+        print(f"oracle {family}: {count} cases")
+    for violation in violations[:20]:
+        print("VIOLATION", repr(violation))
+    print(f"oracle: {sum(counts.values())} cases, {len(violations)} violations")
+    return int(bool(violations))
+
 
 if __name__ == "__main__":
+    if sys.argv[1:] == ["--oracle"]:
+        sys.exit(independent_oracle())
     unittest.main()
