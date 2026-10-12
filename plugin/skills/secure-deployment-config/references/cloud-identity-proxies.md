@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "ca9143013af6611d82f0a670550cc402cffa541a9edb3add4aa725e7b5b86006",
+  "body_sha256": "dd2ae360f2d811e19f3f6d4d0915338296a085d3501398ca8ff5565e7296ef30",
   "components": {
     "aws": {
       "name": "AWS ALB",
@@ -124,7 +124,7 @@ version_basis: {
     "verify-anonymous": {"text": "Anonymous proxy requests must redirect to the IdP or return 401/403.", "components": ["aws", "azure"], "sources": ["aws:sb1894f4f0139", "azure:s5c4dc1862d97"], "status": "REASONED", "verify": [1]},
     "verify-headers": {"text": "Forged unsigned identity headers through the proxy must still yield a login challenge or denial, never admin identity.", "components": ["aws", "iap", "azure"], "sources": ["aws:sb1894f4f0139", "iap:s4aebf47a7647", "azure:s409d91a5181f"], "status": "REASONED", "verify": [1]},
     "verify-signature": {"text": "At the origin, accept a valid assertion then reject a well-formed changed claim with the original signature; proxy overwrite or malformed JSON proves nothing.", "components": ["aws", "iap", "cf"], "sources": ["aws:sb1894f4f0139", "iap:s4aebf47a7647", "cf:s882e71a17d0e"], "status": "REASONED"},
-    "verify-platform": {"text": "Probe a real route at run.app or the Vercel production domain: require the platform challenge; app content bypasses auth and 404/transport errors are inconclusive.", "components": ["iap", "vercel"], "sources": ["iap:s4033073bd65d", "vercel:se6089d5c4e96", "vercel:se36c5ca2a8db"], "status": "REASONED"},
+    "verify-platform": {"text": "Probe a real route at run.app or the Vercel production domain: require the platform challenge; app content bypasses auth and 404/transport errors are inconclusive.", "components": ["iap", "vercel"], "sources": ["iap:s4033073bd65d", "vercel:se6089d5c4e96", "vercel:se36c5ca2a8db"], "status": "REASONED", "verify": [2]},
     "verify-outage": {"text": "Break authorization and require denial of a fresh unauthenticated request; established-session survival is a separate test.", "components": ["aws", "azure"], "sources": ["aws:sb1894f4f0139", "azure:s5c4dc1862d97"], "status": "REASONED"}
   }
 }
@@ -296,7 +296,23 @@ curl -q -s -H "x-amzn-oidc-identity: admin" \
 
 REASONED: preceding block; origin isolation, anonymous and forged-header denial, plus signed-assertion discrimination, per the guide's cited AWS, Authenticate users using an Application Load Balancer, Google Cloud IAP, securing your app with signed headers, Azure App Service authentication and authorization and Cloudflare Access, validate JWTs. No cloud origin, IdP or valid assertion is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; JSON and YAML parsed, and rejected guards reached no curl stub. A synthetic JSON/base64url claim mutation preserved encoding but mismatched its unchanged HMAC signature; this does not test vendor verifiers. Live exposed bypass or forged-identity acceptance and fixed isolation, anonymous challenge, valid-assertion acceptance and altered-assertion rejection remain unobserved. After logging in, confirm that the app's own identity check reads the signed assertion (`x-amzn-oidc-data`, `x-goog-iap-jwt-assertion`, `Cf-Access-Jwt-Assertion`) and rejects a forged one. Test directly, because the proxy overwrites the header, so a through-proxy test proves nothing: from the origin host, or a host inside the allowed security group, first send a request carrying a valid, unexpired assertion and confirm the app accepts it (the positive control), then send one whose signature is unchanged but a non-authorizing claim is altered while the token stays well formed (valid JSON and base64url), and require rejection: `curl -q -s --noproxy '*' -H 'x-amzn-oidc-data: <valid assertion, one claim changed, signature kept>' http://127.0.0.1:3000/whoami`. Keep the token well formed, because an app that never checks the signature would still reject a token mangled into malformed JSON, which would not prove verification.
 
-- Reach the app's own default platform hostname from outside your cloud network and confirm it does not serve your app. Fetch a real app route (not just `/`) at your Cloud Run `run.app` URL or your Vercel production domain: `curl -q -s --noproxy '*' -D - 'https://REPLACE_WITH_YOUR_PLATFORM_URL/an-app-route'`, and read the status line, headers, and body together. A pass is the platform's own challenge, never your app's content: for Cloud Run a 302 redirect to a Google or IAP sign-in, or a 401 from IAP (IAP returns 401 rather than a 302 when the request does not advertise HTML, i.e. no `Accept: text/html` header); for Vercel the Vercel authentication page. A 200 serving your app's own content means the platform URL bypasses the proxy; a 404 or a transport error is inconclusive, never a pass, because a missing service also returns 404.
+- REASONED: default platform-route isolation, per the guide's cited Google Cloud IAP, enabling IAP for Cloud Run and Vercel Authentication documentation. No authorized Cloud Run or Vercel deployment and external probe host are available; live exposed and fixed responses remain unobserved. Reach the app's own default platform hostname from outside your cloud network and confirm it does not serve your app. Fetch a real app route (not just `/`) at your Cloud Run `run.app` URL or your Vercel production domain: use the following block, and read the status line, headers, and body together. A pass is the platform's own challenge, never your app's content: for Cloud Run a 302 redirect to a Google or IAP sign-in, or a 401 from IAP (IAP returns 401 rather than a 302 when the request does not advertise HTML, i.e. no `Accept: text/html` header); for Vercel the Vercel authentication page. A 200 serving your app's own content means the platform URL bypasses the proxy; a 404 or a transport error is inconclusive, never a pass, because a missing service also returns 404.
+
+  REASONED: default platform-route probe, per the same cited Google Cloud IAP and Vercel Authentication documentation; no authorized deployment and external probe host are available for live exposed/fixed checks. In local Bash and Bash with set -u, the unsubstituted, empty, missing-set-line (with a caller URL), zero-value, two-value and embedded-placeholder cases each printed a refusal without reaching the curl stub; a substituted URL reached it once with the expected arguments. Ten values under IFS=0 with set -u were also refused. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. These local checks do not establish platform behaviour. Substitute the full URL of a real app route inside the quotes, keeping them. This anonymous request carries no secret, so no trap clearing is needed.
+
+  ```bash
+  (                                       # a subshell, so your own script arguments are untouched
+    set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_YOUR_PLATFORM_URL/an-app-route'
+    [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+    shift
+    [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
+    case "$1" in
+      *REPLACE_WITH_*|*YOUR_PLATFORM_URL*|"") echo "substitute your own app route URL on the set -- line above; not probing" ;;
+      *) curl -q -g -s --noproxy '*' -D - "$1" ;;
+    esac
+  )
+  ```
+
 - REASONED: fresh-request denial during an authorization outage, per the guide's cited AWS, Authenticate users using an Application Load Balancer and Azure App Service authentication and authorization. No controlled proxy, authorization service or protected route is available; this prose supplies no local outage command or configuration to execute. No outage was observed. The exposed state passes an unauthenticated request to the app; the fixed state denies it even when authorization is unavailable, without asserting that existing sessions terminate. Stop the authorization service, or break its configuration, and send a fresh, unauthenticated request to a protected route: it must be denied, never passed through to the app. This checks that an undecidable auth state fails closed; it does not test whether an already-established session survives the outage, since a proxy is not required to recheck the identity provider on every request.
 
 ## Common mistakes
