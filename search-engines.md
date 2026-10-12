@@ -1,7 +1,7 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-12",
   "documentation_checked": "2026-10",
   "body_sha256": "2eb0e72b1d7981db96111e722caabed711055977e6682ee39d83c47bc41fb9c4",
   "components": {
@@ -139,7 +139,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-12; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
