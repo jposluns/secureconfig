@@ -1,10 +1,34 @@
 #!/usr/bin/env python3
 """Advisory rendered Sources comparison. The line-grammar gate stays authoritative.
 
-One shared, pinned CommonMark parse (with tables) per guide body resolves
-references document-wide. Bare URLs in text use the existing Sources URL
-boundaries; link labels and image alt text do not add duplicate destinations.
-Positions below are zero-based body lines, after metadata/summary removal.
+One pinned CommonMark parse (with tables, without linkify) resolves references.
+A: A bare destination requires an entirely top-level text run, exactly one ://,
+an HTTP(S) scheme with no prefix except an optional (, and the existing URL
+boundary grammar. The candidate must normalize, have an ASCII authority and
+contain no parentheses. Its tail is an optional single closing wrapper, then
+an optional single comma or semicolon. Both are individually optional. The
+wrapper requires an unmatched opener earlier in the item's top-level text;
+the candidate's own parentheses must be balanced (here, absent).
+B: Explicit links and autolinks contribute hrefs, even in an alarming run.
+C: Mixed runs default to a finding when URL-like material occurs in the full
+visible concatenation or any opaque token's own visible content. Only an isolated link,
+autolink, code span, image or HTML element with top-level (),;:. neighbours is
+quiet. Emphasis is not a bare URL: /__init__.py must not become /init.py.
+Runs without URL-like material are quiet. Whitespace and breaks end runs;
+container text never supplies top-level wrappers or sentence punctuation.
+Raw HTML remains independently refused because its destinations are not parsed.
+D: Multiple :// markers, other prefixes, and markers interrupted by < > * &
+are findings. A www. inside a candidate is URL data, not another marker.
+Other legacy marker shapes retain their unclassified-text diagnostics.
+Escapes and entities retain token provenance before the parser joins text;
+a transformed bare spelling is never silently recorded as its rendered URL.
+Every refused HTTP(S) or mixed run names the run and suggests explicit links,
+autolinks or whitespace. Positions are zero-based body lines after summary
+and metadata removal. The comparison remains advisory.
+
+The scope is rendered link destinations and URLs readable in rendered runs.
+Source text that renders as no URL is outside this scope: for example,
+h`c`ttps:/`c`/example.com/p renders as hcttps:/c/example.com/p and stays quiet.
 
 Host identity uses host-only NFKC and Python's built-in idna codec (IDNA 2003,
 Unicode 3.2 nameprep), NOT full UTS #46 or IDNA 2008. In particular, sharp s
@@ -14,6 +38,7 @@ hosts and invalid A-labels are findings. This is not browser URL canonicalizatio
 """
 import argparse
 from collections import Counter
+from copy import deepcopy
 from dataclasses import dataclass, field
 import ipaddress
 import os
@@ -79,21 +104,24 @@ def normalize_url(url):
     return scheme.lower() + "://" + prefix + host + port + suffix
 
 
-# Reuse the authoritative matcher's grammar, including punctuation and the
-# special underscore opener. No linkifier or second URL grammar is introduced.
-BARE_OPEN = re.compile(legacy._OPENS)
+# The authoritative matcher supplies URL boundaries and URL-like markers.
 BARE_CLOSE = re.compile(legacy._CLOSES)
-BARE_UNDERSCORE_CLOSE = re.compile(legacy._CLOSES_AFTER_UNDERSCORE)
-# Define the benign dropped-tail grammar once, including the empty tail.
 BENIGN_TAIL = re.compile(r"\)?[,;]?")
+SCHEME = re.compile(r"https?://", re.I)
+HTTP_LABEL = re.compile(r"\bhttps?:", re.I)
+INTERRUPTED = tuple(re.compile("[<>*&]*".join(scheme), re.I)
+                    for scheme in ("http://", "https://"))
+REMEDY = "write the URL as an explicit link or autolink, or separate it with whitespace"
+
+
+def run_error(kind, text):
+    return f"unclassified {kind} URL-like run {text!r}; {REMEDY}"
 
 
 def benign_tail(tail, prefix, candidate):
-    """A closing wrapper requires an unmatched opener before a balanced URL."""
+    """Optional ) then optional , or ;, with an unmatched opener and balanced URL."""
     if not BENIGN_TAIL.fullmatch(tail):
         return False
-    if not tail.startswith(")"):
-        return True
     depth = 0
     for char in prefix:
         if char == "(":
@@ -105,79 +133,159 @@ def benign_tail(tail, prefix, candidate):
         balance += (char == "(") - (char == ")")
         if balance < 0:
             return False
-    return depth > 0 and balance == 0
+    return balance == 0 and (not tail.startswith(")") or depth > 0)
 
 
-def bare_urls(text):
-    """Classify the complete RENDERED chunk, from marker to whitespace/end.
+def bare_urls(text, prefix=""):
+    """Accept only rule A's complete plain runs; refuse D before extracting.
 
-    Use the existing marker, opener and first closing boundary, then validate
-    the entire authority and candidate with normalize_url. An empty dropped
-    tail, one comma or one semicolon is benign. A single closing parenthesis
-    may precede that comma/semicolon (or stand alone) only when an unmatched
-    opening parenthesis occurs before the URL in this text and the candidate
-    has balanced parentheses. Every other dropped tail is a finding naming
-    the tail and advising an explicit link or whitespace after the URL.
-
-    Literal underscore openers are findings, including _URL_. Only parsed
-    em/strong tokens establish emphasis; /__init__.py renders as /init.py.
-    Authority boundaries, non-ASCII bare authorities and parentheses inside
-    candidates fail closed. A marker inside a candidate is URL data, not a
-    second citation. These rules classify rendered chunks, not written ones.
-
-    Removing markup-like <, >, *, or & from a chunk without a marker must not
-    reveal a marker silently: that is an interrupted-marker finding, never a
-    destination. This uses the existing grammar, not a second URL grammar.
+    prefix is earlier top-level item text, used only for wrapper balance.
+    Non-HTTP markers keep their previous diagnostics; ordinary prose is ignored.
     """
     urls, findings = [], []
     for part in re.finditer(r"\S+", text):
-        if (not legacy._URL_OR_LINK.search(part[0]) and
-                legacy._URL_OR_LINK.search(part[0].translate(str.maketrans("", "", "<>*&")))):
-            findings.append(f"interrupted URL-like marker in {part[0]!r}")
-    consumed = 0
-    for marker in legacy._URL_OR_LINK.finditer(text):
-        if marker.start() < consumed:
-            continue
-        start = marker.start()
-        end = start
-        while end < len(text) and not text[end].isspace():
-            end += 1
-        chunk = text[start:end]
-        consumed = end
-        diagnostic = f"unclassified URL-like text {chunk!r}"
-        if marker[0].lower() in {"http://", "https://"} and BARE_OPEN.match(text, start):
-            authority = re.match(r"[^/?#]*", chunk[len(marker[0]):])[0]
-            authority_end = marker.end() + len(authority)
-            underscore = start > 0 and text[start - 1] == "_"
-            closing = BARE_UNDERSCORE_CLOSE if underscore else BARE_CLOSE
-            stop = next((n for n in range(marker.end() + 1, end + 1)
-                         if closing.match(text, n)), None)
-            if not authority.isascii():
-                diagnostic = f"non-ASCII authority in bare URL {chunk!r}"
-            elif stop is not None:
-                candidate, tail = text[start:stop], text[stop:end]
-                if (stop < authority_end and
-                        (authority_end < end or "@" in text[stop:authority_end]
-                         or any(c.isalnum() for c in text[stop:authority_end]))):
-                    diagnostic = f"closing boundary inside bare URL authority {chunk!r}"
-                elif "(" in candidate or ")" in candidate:
-                    diagnostic = f"ambiguous parentheses in bare URL {chunk!r}"
-                elif not benign_tail(tail, text[:start], candidate):
-                    diagnostic = (f"unclassified bare URL tail {tail!r} in {chunk!r}; "
-                                  "write it as an explicit link or put whitespace after it")
-                elif underscore:
-                    diagnostic = (f"literal underscore opener in bare URL {chunk!r}; "
-                                  "write it as an explicit link")
-                else:
-                    try:
-                        normalize_url(candidate)
-                    except (ValueError, UnicodeError) as exc:
-                        diagnostic = f"invalid bare URL {candidate!r}: {exc}"
-                    else:
-                        urls.append(candidate)
-                        continue
-        findings.append(diagnostic)
+        run = part[0]
+        marker = SCHEME.search(run)
+        interrupted = any(any(c in match[0] for c in "<>*&")
+                          for pattern in INTERRUPTED for match in pattern.finditer(run))
+        if marker or interrupted or run.count("://") > 1:
+            candidate = None
+            if marker and not interrupted and run.count("://") == 1 and run[:marker.start()] in {"", "("}:
+                start = marker.start()
+                authority = re.match(r"[^/?#]*", run[marker.end():])[0]
+                stop = next((n for n in range(marker.end() + 1, len(run) + 1)
+                             if BARE_CLOSE.match(run, n)), None)
+                if stop is not None:
+                    value, tail = run[start:stop], run[stop:]
+                    authority_end = marker.end() + len(authority)
+                    cuts_authority = stop < authority_end and (
+                        authority_end < len(run) or "@" in run[stop:authority_end]
+                        or any(c.isalnum() for c in run[stop:authority_end]))
+                    if (authority.isascii() and not cuts_authority
+                            and "(" not in value and ")" not in value
+                            and benign_tail(tail, prefix + text[:part.start() + start], value)):
+                        try:
+                            normalize_url(value)
+                        except (ValueError, UnicodeError):
+                            pass
+                        else:
+                            candidate = value
+            if candidate is None:
+                findings.append(run_error("bare", run))
+            else:
+                urls.append(candidate)
+        else:
+            # Shapes outside A-D retain the head's behaviour, including no
+            # finding for an isolated :// or http: without a legacy marker.
+            marker = legacy._URL_OR_LINK.search(run)
+            if marker:
+                findings.append(f"unclassified URL-like text {run[marker.start():]!r}")
+            elif legacy._URL_OR_LINK.search(run.translate(str.maketrans("", "", "<>*&"))):
+                findings.append(f"interrupted URL-like marker in {run!r}")
     return urls, findings
+
+
+@dataclass
+class Piece:
+    text: str
+    origins: tuple
+    kind: str
+    identity: int
+    opaque_texts: tuple = ()
+
+
+def inline_pieces(children):
+    """Retain each character's leaf token and its enclosing opaque container."""
+    if not isinstance(children, list):
+        raise ValueError("inline missing parsed children")
+    pieces, opened = [], []
+    visible, origins, samples = [], [], []
+    root_kind = None
+    for index, token in enumerate(children):
+        kind = token.type
+        if kind in {"link_open", "em_open", "strong_open"} and token.nesting == 1:
+            if not opened:
+                root_kind = kind[:-5]
+                visible, origins, samples = [], [], []
+            opened.append((kind, len(visible)))
+        elif kind in {"link_close", "em_close", "strong_close"} and token.nesting == -1:
+            if not opened:
+                raise ValueError("unbalanced inline token " + kind)
+            opener, start = opened.pop()
+            if opener.replace("_open", "_close") != kind:
+                raise ValueError("unbalanced inline token " + kind)
+            samples.append("".join(visible[start:]))
+            if not opened:
+                pieces.append(Piece("".join(visible), tuple(origins), root_kind,
+                                    index, tuple(samples)))
+        elif kind in {"text", "text_special", "code_inline", "image", "html_inline",
+                      "softbreak", "hardbreak"} and not token.nesting:
+            if kind == "image":
+                alt = inline_pieces(token.children or [])
+                content = "".join(p.text for p in alt)
+                leaf_origins = tuple(t for p in alt for t in p.origins)
+                own_samples = tuple(t for p in alt for t in p.opaque_texts) + (content,)
+            else:
+                content = ("\n" if kind in {"softbreak", "hardbreak"}
+                           else "" if kind == "html_inline" else token.content)
+                leaf_origins = (token,) * len(content)
+                own_samples = (content,) if kind not in {"text", "softbreak", "hardbreak"} else ()
+            if opened:
+                visible.extend(content)
+                origins.extend(leaf_origins)
+                samples.extend(own_samples)
+            else:
+                pieces.append(Piece(content, leaf_origins, kind, index, own_samples))
+        else:
+            raise ValueError("unclassified inline token " + kind)
+    if opened:
+        raise ValueError("unclosed inline token")
+    return pieces
+
+
+def inline_runs(pieces):
+    """Visible whitespace ends runs; each opaque token also keeps its full sample."""
+    run = []
+    for piece in pieces:
+        if not piece.text:
+            # Tags have zero visible width. Adjacent tags are one opaque element.
+            if not (piece.kind == "html_inline" and run and run[-1].kind == "html_inline"):
+                run.append(piece)
+            continue
+        for match in re.finditer(r"\s+|\S+", piece.text):
+            if match[0].isspace():
+                if run:
+                    yield run
+                run = []
+            else:
+                run.append(Piece(match[0], piece.origins[match.start():match.end()],
+                                 piece.kind, piece.identity, piece.opaque_texts))
+    if run:
+        yield run
+
+
+def classify_run(run, prefix):
+    """A is the only bare acceptance path; C's two quiet cases are exhaustive."""
+    visible = "".join(p.text for p in run)
+    if all(p.kind == "text" for p in run):
+        return bare_urls(visible, prefix)
+    samples = [visible] + [text for p in run for text in p.opaque_texts]
+    url_like = any(legacy._URL_OR_LINK.search(s) or HTTP_LABEL.search(s) or "://" in s
+                   for s in samples)
+    opaque = {p.identity for p in run if p.kind != "text"}
+    isolated = (len(opaque) == 1 and all(
+        all(c in "(),;:." for c in p.text) if p.kind == "text"
+        else p.kind in {"link", "code_inline", "image", "html_inline"} for p in run))
+    if not url_like or isolated:
+        return [], []
+    return [], [run_error("mixed", visible)]
+
+
+def remember_inlines(state):
+    """Keep entity/escape provenance before CommonMark's final text join."""
+    for token in state.tokens:
+        if token.type == "inline":
+            token.meta["sources_children"] = deepcopy(token.children)
 
 
 @dataclass
@@ -203,31 +311,7 @@ def source_map(span, size, kind):
 
 
 def scan(body, parser):
-    """Extract nearest-item hrefs; uncertainty is always a finding.
-
-    Keep today's unindented ATX boundaries, including its refusal to use
-    Setext as an end boundary. Reconcile every selected opener and boundary
-    with parsed top-level headings so an opaque/nested root cannot hide work.
-    Cells inherit row maps; inline children inherit their mapped inline block.
-    Closing tokens inherit their opener. These tokens normally have no map.
-    Raw HTML blocks are refused guide-wide because they can hide headings.
-    Opaque inline boundaries alarm only when URL text continues across a join
-    in the rendered text: a marker straddles the join, or a complete marker
-    shares a whitespace-free chunk with content on the other side. Only plain
-    text outside opaque tokens may be classified as a benign tail or wrapper.
-    Scheme-only code mentions have the narrow punctuation rule below.
-    Whole URLs inside isolated code spans are mentions, not destinations; the
-    legacy grammar counts them, so enrolled URLs produce count differences.
-    A disclosed detection limit remains: https:/ plus code c plus /example.com/p
-    has neither a complete visible marker nor scheme: or // at an opaque edge.
-    It produces no destination or finding, as does the legacy grammar.
-    Code contributes
-    visible text to this alarm-only projection, never destinations. Images
-    are checked both with visible alt text and with no textual width (loaded
-    image); neither projection contributes destinations.
-    Inline HTML is refused inside Sources; mapped inline HTML elsewhere cannot
-    hide a selected opener or boundary without the reconciliation failing.
-    """
+    """Compare mapped Sources items using one parse and the closed run rules."""
     result = Rendered()
     try:
         lines = body.splitlines()
@@ -236,6 +320,8 @@ def scan(body, parser):
             raise ValueError("no Sources section")
         selected = {n for start, end in ranges for n in range(start, end)}
         env = {}
+        if "sources_provenance" not in parser.core.ruler.get_all_rules():
+            parser.core.ruler.before("text_join", "sources_provenance", remember_inlines)
         tokens = parser.parse(body, env)  # The only Markdown parse.
         stack, parsed_heads = [], {}
         containers = {"heading", "paragraph", "bullet_list", "ordered_list",
@@ -253,127 +339,27 @@ def scan(body, parser):
             else:
                 result.outside.append(href)
 
+        item_prefixes = {}
+
         def inlines(children, span, owner, emit=True):
-            if not isinstance(children, list):
-                raise ValueError("inline missing parsed children")
-            opened, plain = [], []
-            # Alarm-only projections; never feed them to destination extraction.
-            projections = []
-            image_views = (False, True) if any(t.type == "image" for t in children) else (False,)
-            for show_alt in image_views:
-                projected, offsets = [], []
-                position = 0
-                for child in children:
-                    visible = (child.content if child.type in {"text", "code_inline"}
-                               else inline_text(child.children, title=True)
-                               if child.type == "image" and show_alt
-                               else "\n" if child.type in {"softbreak", "hardbreak"} else "")
-                    offsets.append((position, position + len(visible)))
-                    projected.append(visible)
-                    position += len(visible)
-                projected = "".join(projected)
-                projections.append((projected, offsets))
-            html_reported = False
-
-            def flush():
-                # Emphasis has no visible separator. Join its text tokens so a
-                # path such as /__init__.py is seen as rendered: /init.py.
-                urls, errors = bare_urls("".join(plain))
-                plain.clear()
-                for href in urls:
-                    record(href, span, owner)
+            pieces = inline_pieces(children)
+            if not emit:
+                return
+            if any(t.type == "html_inline" for t in children):
+                result.findings.append(f"body line {span[0] + 1}: unclassified raw HTML")
+            # Links retain hrefs independently of neighbouring alarms.
+            destinations = [(index, token.attrGet("href"))
+                            for index, token in enumerate(children) if token.type == "link_open"]
+            prefix = item_prefixes.get(owner, "") if owner else ""
+            for run in inline_runs(pieces):
+                urls, errors = classify_run(run, prefix)
+                destinations.extend((run[0].identity, href) for href in urls)
                 result.findings.extend(f"body line {span[0] + 1}: {error}" for error in errors)
-
-            for index, token in enumerate(children):
-                kind = token.type
-                edges = ()
-                if kind == "link_open":
-                    edges = (-1,)
-                elif kind == "link_close":
-                    edges = (1,)
-                elif kind in {"code_inline", "image"} and "link_open" not in opened:
-                    edges = (-1, 1)
-                if emit:
-                    # Link labels belong to their destination, not bare text.
-                    # Transparent emphasis tokens do not separate visible text.
-                    touches = False
-                    for projected, offsets in projections:
-                        begin, finish = offsets[index]
-                        left = re.search(r"\S*$", projected[:begin])[0]
-                        right = re.match(r"\S*", projected[finish:])[0]
-                        # Scheme-only code is a mention only if BOTH adjacent
-                        # plain-text runs contain solely (),;:. up to whitespace
-                        # or end. No token-internal character is trailing prose.
-                        mention = (kind == "code_inline" and
-                                   legacy._URL_OR_LINK.fullmatch(token.content) and
-                                   token.content.endswith("://") and
-                                   all(c in "(),;:." for c in left + right) and
-                                   all(t.type == "text" for t, (a, b) in zip(children, offsets)
-                                       if a < b and (begin - len(left) <= a < begin
-                                                     or finish <= a < finish + len(right))))
-                        if mention:
-                            continue
-                        for step in edges:
-                            boundary = begin if step == -1 else finish
-                            for chunk in re.finditer(r"\S+", projected):
-                                if not chunk.start() < boundary < chunk.end():
-                                    continue
-                                marker = legacy._URL_OR_LINK.search(chunk[0])
-                                if marker:
-                                    start, end = chunk.span()
-                                    # A plain opening wrapper is not continuation.
-                                    while (start < begin and projected[start] == "(" and
-                                           any(t.type == "text" and a <= start < b
-                                               for t, (a, b) in zip(children, offsets))):
-                                        start += 1
-                                    # Only a plain terminal run can be prose.
-                                    suffix_start = end
-                                    for t, (a, b) in reversed(list(zip(children, offsets))):
-                                        if a < end <= b and t.type == "text":
-                                            suffix_start = max(a, finish)
-                                            break
-                                    tail = projected[suffix_start:end]
-                                    marker_start = chunk.start() + marker.start()
-                                    if benign_tail(tail, projected[:marker_start],
-                                                   projected[marker_start:suffix_start]):
-                                        end = suffix_start
-                                    if start < boundary < end:
-                                        touches = True
-                            # Expose scheme: or // adjacent to an opaque edge,
-                            # even when visible opaque content breaks the marker.
-                            adjacent_left = re.search(r"\S*$", projected[:boundary])[0]
-                            adjacent_right = re.match(r"\S*", projected[boundary:])[0]
-                            if adjacent_left and adjacent_right and (
-                                    legacy._URL_OR_LINK.fullmatch(adjacent_left.lstrip("(") + "//")
-                                    or adjacent_right.startswith("//")):
-                                touches = True
-                    if touches:
-                        result.findings.append(
-                            f"body line {span[0] + 1}: URL-like text touches {kind}")
-                if kind not in {"text", "em_open", "em_close", "strong_open", "strong_close"}:
-                    flush()
-                if kind in {"link_open", "em_open", "strong_open"} and token.nesting == 1:
-                    opened.append(kind)
-                    if kind == "link_open" and emit:
-                        record(token.attrGet("href"), span, owner)
-                elif kind in {"link_close", "em_close", "strong_close"} and token.nesting == -1:
-                    if not opened or opened.pop().replace("_open", "_close") != kind:
-                        raise ValueError("unbalanced inline token " + kind)
-                elif kind == "text" and token.nesting == 0:
-                    if emit and "link_open" not in opened:
-                        plain.append(token.content)
-                elif kind == "html_inline":
-                    if emit and not html_reported:
-                        result.findings.append(f"body line {span[0] + 1}: unclassified raw HTML")
-                        html_reported = True
-                elif kind == "image" and token.nesting == 0:
-                    # Image alt children do not render anchors; still validate types.
-                    inlines(token.children, span, owner, emit=False)
-                elif kind not in {"text", "code_inline", "softbreak", "hardbreak"} or token.nesting:
-                    raise ValueError("unclassified inline token " + kind)
-            flush()
-            if opened:
-                raise ValueError("unclosed inline token")
+                prefix += "".join(p.text for p in run if p.kind == "text") + " "
+            for _, href in sorted(destinations, key=lambda entry: entry[0]):
+                record(href, span, owner)
+            if owner:
+                item_prefixes[owner] = prefix
 
         for token in tokens:
             kind = token.type
@@ -414,7 +400,7 @@ def scan(body, parser):
                     raise ValueError("inline crosses Sources boundary")
                 if token.content and not token.children:
                     raise ValueError("inline missing parsed children")
-                inlines(token.children, span, owner, emit=active)
+                inlines(token.meta.get("sources_children", token.children), span, owner, emit=active)
                 if (stack and stack[-1][0].type == "heading_open"
                         and SOURCES_RE.match(inline_text(token.children, title=True))):
                     if (len(stack) != 1 or not legacy._SOURCES_HEADING.fullmatch(token.content)
