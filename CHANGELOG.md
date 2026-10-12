@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-12
 
+- Correct eleven Verify declarations added in #440 (row 3.30, batch 1). In admin UIs, DevOps UIs, Docker, free certificates and host, the paragraph declaration attached to a fence now states the scope of that fence's checks. In HAProxy and NATS, declarations record the local checks that were run (shell syntax, input-guard cases with the network command replaced by a local marker, JSON payload parsing and a placeholder scan) together with what those checks do not establish, and stay REASONED for everything that needs a service. Commands, expected outcomes, claims and citations are unchanged, and the marking baseline is unchanged (#445).
 - Remove stale "missing source" caveats from five version-basis claims in the self-signed certificate guide. The Git key-handling claim and the curl, Requests and Node.js trust claims no longer say a source or version is unrecorded, because pinned Sources entries for them exist; the verification-bypass claim now names only the Node.js bypass entries as absent. The caveats that remain true (RFC 9525, the filesystem commands and the Debian and RHEL trust stores) are kept, and the metadata review date moves to 2026-10-12. Commands, Verify steps and citations are unchanged (#444).
 
 ## 2026-10-05
