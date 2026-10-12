@@ -18,21 +18,48 @@ jobs:
         with:
           persist-credentials: false
       - name: Protect URL underscores for Markdown extraction
-        # Only this disposable checkout is changed. Keep metadata URLs in the sweep.
-        # Bare URLs (including version_basis strings) otherwise lose emphasis spans.
+        # Escape quoted URLs only in the known version_basis JSON front matter,
+        # where Markdown extraction can truncate underscores. Body URLs are deliberately
+        # left alone; guides must use autolinks or explicit links for those citations.
         run: |
           python3 - <<'PY'
+          import json
           import re
           from pathlib import Path
 
-          # Escape Markdown emphasis inside URLs, including version_basis JSON strings.
-          # Autolinks already protect their URLs; escaping inside them changes the target.
-          url = re.compile(r'<https?://[^<>\s]+>|https?://[^\s<>"`]+')
-          for path in Path(".").glob("*.md"):
-              text = path.read_text(encoding="utf-8")
-              text = url.sub(lambda m: m[0] if m[0].startswith("<") else
-                             re.sub(r"(?<!\\)_", r"\\_", m[0]), text)
-              path.write_text(text, encoding="utf-8")
+          url = r'https?://[A-Za-z0-9_./:#?@!$&%+=~-]+'
+          quoted = re.compile(r'"(' + url + r')"')
+
+
+          def escape(match):
+              value = match[1]
+              # A final underscore is ambiguous to Markdown extraction; leave it intact.
+              if value.endswith('_'):
+                  return match[0]
+              return match[0].replace(value, value.replace('_', r'\_'), 1)
+
+
+          def prepare(text):
+              if not text.startswith('---\n'):
+                  return text
+              end = re.search(r'^---$', text[4:], re.M)
+              if end is None:
+                  return text
+              metadata = text[4:4 + end.start()]
+              if not metadata.startswith('version_basis: {\n'):
+                  return text
+              try:
+                  json.loads(metadata.removeprefix('version_basis: '))
+              except ValueError:
+                  return text
+              safe = re.split(r'[<>`]', metadata, maxsplit=1)[0]
+              updated = quoted.sub(escape, safe) + metadata[len(safe):]
+              return text[:4] + updated + text[4 + end.start():]
+
+
+          for path in Path('.').glob('*.md'):
+              text = path.read_bytes().decode('utf-8')
+              path.write_bytes(prepare(text).encode('utf-8'))
           PY
 
       - name: Check links

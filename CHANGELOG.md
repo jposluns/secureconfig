@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-12
 
-- Weekly link check: remove two kinds of false positive (row 3.40). Before extraction, the workflow now escapes underscores inside URLs in its own disposable checkout, so lychee no longer cuts cited URLs at an underscore: fourteen cited targets that were being checked in a truncated form, including the `__init__.py` sources reported as 404 at their parent directory, are now checked intact. The OpenAI API base URL that open-webui.md gives as a configuration value is excluded by an exact match. A 404 or 410 on a citation still fails the job, and recorded cases cover the preparation step, the exclusion and that failure (#448).
+- Weekly link check: remove two kinds of false positive (row 3.40). lychee reads each guide's `version_basis` front-matter block as Markdown and cut the source URLs in it at an underscore, so `__init__.py` sources were checked at their parent directory. Before extraction, the workflow now escapes underscores in the quoted URLs of that block, in its own disposable checkout, and leaves the body of every guide untouched. On this commit that restores thirteen occurrences of thirteen cited targets. Six bare body citations with the same problem are deliberately not changed by the workflow: they are rewritten as autolinks separately (#447), and until that lands they are still checked in truncated form. The OpenAI API base URL that open-webui.md gives as a configuration value is excluded by an exact match. A 404 or 410 on a citation still fails the job, and recorded cases cover the preparation step, the exclusion and that failure (#448).
 
 ## 2026-10-05
 
