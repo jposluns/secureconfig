@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-12
 
-- Write six source citations whose path contains `__init__.py` as explicit links, so the double underscore is no longer rendered as emphasis and the link reaches the cited file: two in agent builders and one each in Jupyter, MLflow, SQLite HTTP frontends and workflow orchestrators. Each URL is unchanged character for character; only the link syntax around it changes, and no other citation is touched (#447).
+- Write six source citations whose path contains `__init__.py` as autolinks (the URL in angle brackets), so the double underscore is no longer rendered as emphasis and the link reaches the cited file: two in agent builders and one each in Jupyter, MLflow, SQLite HTTP frontends and workflow orchestrators. Each URL is unchanged character for character; only the angle brackets around it are added, and no other citation is touched (#447).
 
 ## 2026-10-05
 

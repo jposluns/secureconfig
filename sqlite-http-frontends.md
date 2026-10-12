@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "6b01c4cd4fe0d0172bf3814ba32acf5236aab101723f173b4ebe3a7da9bc4937",
+  "body_sha256": "6b61e0d087f2488d7fb8d74aa460d09ed83e8d7181954e895c8090df4e441d1e",
   "components": {
     "ds-container": {
       "name": "Datasette container generator",
@@ -518,7 +518,7 @@ Every URL listed below was fetched during authoring. This list also records the 
 - Datasette Docker installation (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/installation.html
 - Datasette proxy deployment (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/deploying.html
 - Datasette publishing (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/publish.html
-- Datasette container generator: [`datasette/utils/__init__.py`](https://raw.githubusercontent.com/simonw/datasette/caf238aac86ebe370959b25384d6e05f6a1e2359/datasette/utils/__init__.py)
+- Datasette container generator: <https://raw.githubusercontent.com/simonw/datasette/caf238aac86ebe370959b25384d6e05f6a1e2359/datasette/utils/__init__.py>
 - Datasette Cloud Run publisher: https://github.com/simonw/datasette/blob/e889403d3bbe143854262682161c98a57bdb6594/datasette/publish/cloudrun.py
 - Datasette Fly publishing plugin: https://github.com/simonw/datasette-publish-fly
 - Datasette immutable mode and hashed URLs (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/performance.html

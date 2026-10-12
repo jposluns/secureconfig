@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a3757cdeedad06407da1cb72a92df4627dd40171bafa304e4963b165f556b9d5",
+  "body_sha256": "153badf8525208d4a1e33522b7b014475d8a575d25849c2c2dbb896d1ae6694a",
   "components": {
     "server": {
       "name": "Jupyter Server",
@@ -791,7 +791,7 @@ Keep `open_signup` at its default `False`: with it off, a pending account waits 
 - Jupyter Server authentication API (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.auth.html
 - Jupyter Server release history, including endpoint authentication under 2.13.0 and 2.18.0 (rolling documentation, checked September 2026): https://jupyter-server.readthedocs.io/en/stable/other/changelog.html
 - Jupyter Server startup, dynamic defaults, and root refusal implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/9a4d6eea2b16815a493b11fffe0b51b1fe55a81b/jupyter_server/serverapp.py
-- Jupyter Server default port constant: [`jupyter_server/__init__.py`](https://raw.githubusercontent.com/jupyter-server/jupyter_server/c5c452c3d5f3060557e57caaadce8f2fffc1c417/jupyter_server/__init__.py)
+- Jupyter Server default port constant: <https://raw.githubusercontent.com/jupyter-server/jupyter_server/c5c452c3d5f3060557e57caaadce8f2fffc1c417/jupyter_server/__init__.py>
 - Jupyter Server identity provider and token-authenticated origin exception: https://raw.githubusercontent.com/jupyter-server/jupyter_server/3df9a70b8aea53557ad04510a63c95ce9d4c3abc/jupyter_server/auth/identity.py
 - Jupyter Server Host, origin, XSRF, and default authentication implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py
 - Jupyter Server kernel API implementation: https://raw.githubusercontent.com/jupyter-server/jupyter_server/c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac/jupyter_server/services/kernels/handlers.py
