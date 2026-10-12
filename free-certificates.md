@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "da7932b91942db259cf5ccb9528f64bd58a1bcf0a69f49165255fb86122c4047",
+  "body_sha256": "5b4195d2715ae9c36fe5d0b98989740c2af65ddfe3e15f41bec3d119d99a3959",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -253,7 +253,7 @@ openssl s_client -connect "$host:443" -servername "$host" \
   | openssl x509 -noout -issuer -dates
 ```
 
-REASONED: protection-scope reminder from this guide and the linked authentication guidance; certificate inspection does not exercise application access controls. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
+REASONED: preceding block; certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance; curl and OpenSSL command-specific sources are not recorded, no deployment hostname or issued certificate was supplied, and no live result is recorded. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
 
 ## Sources (checked September 2026)
 

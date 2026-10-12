@@ -576,7 +576,7 @@ openssl s_client -connect "$host:443" -servername "$host" \
   | openssl x509 -noout -issuer -dates
 ```
 
-REASONED: protection-scope reminder from this guide and the linked authentication guidance; certificate inspection does not exercise application access controls. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
+REASONED: preceding block; certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance; curl and OpenSSL command-specific sources are not recorded, no deployment hostname or issued certificate was supplied, and no live result is recorded. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
 
 ## Sources (checked September 2026)
 
@@ -609,7 +609,7 @@ REASONED: protection-scope reminder from this guide and the linked authenticatio
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -622,15 +622,15 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | unencrypted-key: -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions. | OpenSSL documentation (rolling) unknown | REASONED |
 | expiry: Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves. | OpenSSL documentation (rolling) unknown | REASONED |
 | key-permissions: chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
-| key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. Git-specific sources are not recorded. | OpenSSL documentation (rolling) unknown; Git ignore documentation v2.43.0 | REASONED |
+| key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. | OpenSSL documentation (rolling) unknown; Git ignore documentation v2.43.0 | REASONED |
 | mkcert: mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs. | mkcert unknown | REASONED |
 | mkcert-custody: Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users. | mkcert unknown | REASONED |
 | debian-trust: Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian/Ubuntu; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
 | rhel-trust: Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust on RHEL/Fedora; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
-| curl-trust: curl --cacert server.crt supplies explicit trust for app.internal; a curl source and version are not recorded. | OpenSSL documentation (rolling) unknown; curl command documentation curl-8_12_1 | REASONED |
-| requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests; a requests Sources entry and version are absent. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3 | REASONED |
-| node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js; its version is unrecorded. | mkcert unknown; Node.js extra CA certificates v22.19.0 | REASONED |
-| verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but tool-specific Sources entries are absent. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3; curl command documentation curl-8_12_1 | REASONED |
+| curl-trust: curl --cacert server.crt supplies explicit trust for app.internal. | OpenSSL documentation (rolling) unknown; curl command documentation curl-8_12_1 | REASONED |
+| requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3 | REASONED |
+| node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js. | mkcert unknown; Node.js extra CA certificates v22.19.0 | REASONED |
+| verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but Node.js bypass-specific Sources entries are absent. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3; curl command documentation curl-8_12_1 | REASONED |
 | verify-extensions: Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN. | OpenSSL documentation (rolling) unknown | DEMONSTRATED |
 | verify-tls: The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0. | OpenSSL documentation (rolling) unknown | REASONED |
 | verify-failures: Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62. | OpenSSL documentation (rolling) unknown | REASONED |
@@ -5060,7 +5060,7 @@ ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0
            # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
 ```
 
-REASONED: following block; management-surface comparisons from the cited HAProxy stats, runtime API and TLS documentation; no HAProxy runtime or certificate fixtures are available. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener with
+REASONED: following block; management-surface comparisons follow the cited HAProxy stats, runtime API and TLS documentation, with no HAProxy runtime or certificate fixtures available; Bash 5.3.9(1)-release passed bash -n on the following fence, and extracted guards with local printf markers rejected empty, placeholder and missing host setup but admitted both proxy.internal and bad host, so hostname syntax is not validated; certificate/key guards skipped placeholders, empty and nonexistent paths with exit 0 and reached the marker for readable plain-text files, proving neither certificate validity nor a successful TLS check; no network command ran. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener with
 an unauthenticated request (refused) and a valid-credential request (returns the statistics) against that
 listener specifically; the runtime socket by its ownership and mode and an unauthorized local identity
 (permission denied), since `show cli level` reporting `admin` is the authorized level, not proof of access
@@ -5884,7 +5884,7 @@ curl -q -sI http://app.example.com/      # expect a redirect to https://
 curl -q -g -sS --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.example.com/api  # unauthenticated: expect 401 or 403, never 200 (then confirm an authorized request succeeds)
 ```
 
-REASONED: external isolation comparisons from the cited Docker packet-filtering and port-publishing sources; no Docker runtime or external probe hosts are available. Test from a second machine on a different network where possible; the UFW bypass means testing the firewall from the host itself proves nothing about published ports. The `curl` checks above exercise the proxy's redirect and auth, not the backend, so also probe each restricted host address and published port directly (for example port 3000) from an allowed and a disallowed source, IPv4 and IPv6 separately: a loopback-bound or firewalled backend must show unreachable while the proxy stays reachable.
+REASONED: preceding block; publication and socket inventory, HTTPS redirect, unauthenticated API rejection and authorized API success follow the cited Docker networking sources and linked proxy guides, as do the external isolation probes this paragraph describes; no Docker runtime or external probe hosts are available, and no exposed/fixed result is recorded. Test from a second machine on a different network where possible; the UFW bypass means testing the firewall from the host itself proves nothing about published ports. The `curl` checks above exercise the proxy's redirect and auth, not the backend, so also probe each restricted host address and published port directly (for example port 3000) from an allowed and a disallowed source, IPv4 and IPv6 separately: a loopback-bound or firewalled backend must show unreachable while the proxy stays reachable.
 
 REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4gw3-53p4 and the pinned v28.3.3 rule-restoration source. It has not been demonstrated here because the authoring environment has no Docker runtime, firewalld or external test host. For a loopback-published HTTP backend using default NAT bridge filtering, confirm that the backend answers locally. From a second host with a route through the Docker host to the bridge subnet, run `curl -q -g --noproxy '*' --connect-timeout 3 --max-time 5 -v http://172.17.0.2:3000/`, replacing the address and port with the actual container address and container port. Repeat with a fresh connection after running `sudo firewall-cmd --reload` on the Docker host. Without another control masking the regression, an affected host changes from blocked to connectable; a fixed host remains blocked. Any successful TCP connection, including an HTTP 401 or 403 response, demonstrates reachability. A failed probe alone does not establish that the Engine is patched: confirm the route, target and backend health. Repeat for configured IPv6 addresses and the restricted host-address publications, and confirm that the TLS proxy remains reachable.
 
@@ -8411,7 +8411,7 @@ ss -tlnp   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
 
 For the `/api` check, the route must exist, require authorization, and use the app's cookie authentication scheme for challenge and forbid. With the default .NET 10 cookie handler, known API endpoints, including `[ApiController]` endpoints, return `401` for unauthenticated requests and `403` for authenticated users denied access. This changed in .NET 10; ordinary browser-page challenges can still redirect. An OIDC challenge scheme or customized cookie events can also change the response. Confirm that an authorized request reaches the expected API before interpreting a denial.
 
-### Additional deployment checks
+### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response; a separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value; the valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing"; those three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; these are shell-guard observations only, not URL validation or deployment comparisons)
 
 **REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. Expected exposed and corrected outcomes rest on the cited .NET 10 documentation. Shell checks do not establish server behavior.
 
@@ -9768,7 +9768,7 @@ ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@host   
 ssh user@host                     # with PAM MFA: the key is accepted, then a code is required before a shell. Also confirm a wrong or omitted code is REJECTED, that unenrolled users are denied (drop `nullok`), and that Duo fails closed (`failmode=secure`), per mfa.md; otherwise the factor is optional, not mandatory
 ```
 
-REASONED: session-retention procedure from the safe transition in section 1 and cited SSH guidance; no authorized target host is available. Run the SSH test from a second terminal before closing your working session.
+REASONED: preceding block; listener and firewall inventory, disallowed-source SSH reachability, key-only login and PAM MFA comparisons follow the cited SSH, firewall and MFA sources; no authorized target host or external probe machine is available, and no exposed/fixed result is recorded. Run the SSH test from a second terminal before closing your working session.
 
 ## Sources (checked September 2026)
 
@@ -21524,7 +21524,7 @@ REASONED: native-parsing procedure from the linked v2.14.7 configuration-test so
 
 REASONED: generation procedure from the cited NATS key and JWT documentation; pinned tools and credential fixtures are unavailable. **Offline-capable, not demonstrated here: credential generation.** The NKey commands in section 1 and operator/account/user generation require installed pinned tools and a private writable store. Generation and local inspection need no broker; publication to a resolver and broker acceptance do.
 
-REASONED: file-review scope from the configuration and credential recipes above; no selected deployment files or generated credentials were supplied. **Separate deployment-file check required:** scan the selected configuration, every included file, and referenced secret inputs for unresolved `REPLACE_WITH_` values and documentation addresses. Inspect generated key/JWT types and references with the appropriate tooling. A password such as `REPLACE_WITH_LONG_RANDOM_PASSWORD` can be syntactically valid, so `-t` is not a placeholder validator. An absence of placeholder text does not establish password strength or key ownership.
+REASONED: deployment-file and credential review from the configuration and credential recipes above; Python 3.14.4 text scanning detected placeholders in a copied section 14 example, found none in a substituted control and detected injected REPLACE_WITH_, documentation-address and example-domain controls; this demonstrates only those text checks, not native parsing or credential validity, and no selected deployment files or generated credentials were supplied. **Separate deployment-file check required:** scan the selected configuration, every included file, and referenced secret inputs for unresolved `REPLACE_WITH_` values and documentation addresses. Inspect generated key/JWT types and references with the appropriate tooling. A password such as `REPLACE_WITH_LONG_RANDOM_PASSWORD` can be syntactically valid, so `-t` is not a placeholder validator. An absence of placeholder text does not establish password strength or key ownership.
 
 ### V1. Running identity, effective configuration, and listeners (REASONED: inventory and isolation expectations from the linked hardening and configuration references; no running service or deployment namespace)
 
@@ -21604,7 +21604,7 @@ If using `verify_and_map` instead, the positive control is a correctly mapped ce
 
 See [authentication](https://docs.nats.io/learn/security/authentication-basics), [TLS](https://docs.nats.io/reference/config/tls/), [authorization](https://docs.nats.io/learn/security/authorization), and [pinned CLI credential handling](https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/util.go).
 
-### V3. Actual delivery, queue restrictions, and bounded replies (REASONED: delivery, queue, reply and request-helper procedures from the cited permissions and pinned CLI sources; no broker or client fixtures)
+### V3. Actual delivery, queue restrictions, and bounded replies (REASONED: delivery, queue, reply and request-helper procedures from the cited permissions and pinned CLI sources; no broker or client fixtures; Python 3.14.4 json.load accepted the request-helper JSON body and rejected 1 truncated control; JSON syntax alone does not establish delivery, queue restrictions or reply permissions)
 
 **REASONED: no broker, pinned CLI, two authenticated clients, or response-test client is available.**
 
@@ -21743,7 +21743,7 @@ In an exposed broad-publish configuration, extra, expired, and unrelated publica
 
 See [subscription permissions](https://docs.nats.io/reference/config/authorization/users/permissions/subscribe/), [response permissions](https://docs.nats.io/reference/config/authorization/users/permissions/allow_responses/), [pinned CLI subscription flags](https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/sub_command.go), and [server enforcement](https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/client.go).
 
-### V4. Accounts, approved sharing, and system requests (REASONED: account isolation, sharing and system-request comparisons from the cited account and CLI sources; no multi-account broker or client fixtures)
+### V4. Accounts, approved sharing, and system requests (REASONED: account isolation, sharing and system-request comparisons from the cited account and CLI sources; no multi-account broker or client fixtures; Python 3.14.4 json.load accepted the system-request JSON body and rejected 1 truncated control; JSON syntax alone does not establish account isolation, sharing or system authorization)
 
 **REASONED: no multi-account broker, system credential, or concurrent client fixture is available.**
 
@@ -21757,7 +21757,7 @@ If validating private-export restrictions, add an isolated third test account wi
 
 See [accounts](https://docs.nats.io/learn/security/accounts-and-multitenancy) and [cross-account sharing](https://docs.nats.io/learn/security/cross-account).
 
-### V5. JetStream authority and effective limits (REASONED: JetStream authority and limit comparisons from the cited account, consumer and API sources; no server, CLI or disposable store)
+### V5. JetStream authority and effective limits (REASONED: JetStream authority and limit comparisons from the cited account, consumer and API sources; no server, CLI or disposable store; Python 3.14.4 json.load accepted all eight literal JSON request bodies in the table and rejected 8 truncated controls; JSON syntax alone does not establish API acceptance, authority or limit enforcement)
 
 **REASONED: no JetStream server, pinned CLI, or disposable persistence fixture is available. Conditional on JetStream being enabled.**
 
@@ -21785,7 +21785,7 @@ Use a 30-second bound per isolated load-test batch and finite message/object cou
 
 See [account limits and reload caveats](https://docs.nats.io/reference/config/accounts/jetstream/), [consumer enforcement](https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/consumer.go), and [API subjects](https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/jetstream_api.go).
 
-### V6. Encryption and recovery (REASONED: encrypted-store recovery comparisons from the linked encryption and rotation references; no runtime, stores or recovery keys)
+### V6. Encryption and recovery (REASONED: encrypted-store recovery comparisons from the linked encryption and rotation references; no runtime, stores or recovery keys; Python 3.14.4 json.load accepted the retrieval JSON body and rejected 1 truncated control; JSON syntax alone does not establish encryption, key rotation or recovery)
 
 **REASONED: no JetStream runtime, disposable encrypted stores, recovery keys, or writable fixtures are available. Conditional on encryption being selected.**
 
@@ -24484,15 +24484,15 @@ Add C4's explicit origin only if required, and remove inherited unwanted origins
 
 ## Verify
 
-All service-behavior checks below are **REASONED, not demonstrated**. The authoring environment has no Ollama, Docker, Podman, nginx, or Caddy executable in `PATH`, no Ollama runtime or GPU, and no supplied authorized deployment, external observer, credentials, or model fixtures. Filesystem and network restrictions prevent provisioning a live comparison here. **Lack of a GPU alone would not prevent listener, API, CORS, or management testing.**
+REASONED: service-comparison scope from the cited v0.34.2 sources; no authorized live deployment or external observer. No service was started or contacted for these checks. All service-behavior checks below are **REASONED, not demonstrated**. The authoring environment has no Ollama, Docker, Podman, nginx, or Caddy executable in `PATH`, no Ollama runtime or GPU, and no supplied authorized deployment, external observer, credentials, or model fixtures. Filesystem and network restrictions prevent provisioning a live comparison here. **Lack of a GPU alone would not prevent listener, API, CORS, or management testing.**
 
-Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
+REASONED: mixed local-validation evidence and unobserved service comparisons from the cited v0.34.2 sources; a fresh local run with Bash 5.3.9 bash -n and ShellCheck 0.11.0 run with -s bash accepted all four Verify shell fences with exit 0 and no output, establishing only syntax and lint results; native proxy parsing and live comparisons remain unobserved without the binaries and an authorized deployment; the following validation account is historical, including its 74-case count, guard-scanner result and drop-in gate statement, and that count was not re-established here. Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
 
-Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
+REASONED: shell preparation and limitations from the printed guards and curl reference. Local Bash 5.3.9 ran bash -n on all four Verify shell fences with exit 0 and no output. For each complete subshell, operational commands were replaced with local printf markers; valid controls were ollama.service/NONE, 192.168.50.7, and https://fixture.internal/api/chat with readable disposable JSON and empty mode-0600 client configuration files, POST and application/json where applicable. Replacing the first value after the marker with an empty string or bad value, keeping the original placeholders, or using set -- without arguments produced no operational marker and exit 1. The valid controls reached their markers; V6 wrote eight LOCAL_CURL status files in a mode-0700 directory. This tests only those shell cases, not address syntax, client configuration acceptance, inference, or deployment isolation. Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
 
-Use isolated exposed and fixed deployments with disposable fixtures. Do not make production public to obtain a baseline. Record binary/image identity, effective configuration, observer location, HTTP results, completed response bodies, upstream observations, state changes, and cleanup without secrets.
+REASONED: comparison procedure from the cited service and proxy sources; isolated exposed/fixed deployments, identities and observers are unavailable. Use isolated exposed and fixed deployments with disposable fixtures. Do not make production public to obtain a baseline. Record binary/image identity, effective configuration, observer location, HTTP results, completed response bodies, upstream observations, state changes, and cleanup without secrets.
 
-### V1. Inspect the listener, identity, and store
+### V1. Inspect the listener, identity, and store (REASONED: listener, systemd/container identity, publication, ownership, ACL and writable-store comparisons, with administrative and inference positive controls, follow C1 and C5; no deployed store, service identity or external observer. Local command-marker tests above do not inspect a deployment)
 
 **REASONED:** no deployed service, container runtime, store, or test identities are available. Run this on the deployment host with enough privilege to inspect processes and sockets. Use `NONE` for a host-only deployment:
 
@@ -24529,7 +24529,7 @@ From an unrelated unprivileged test account, run `test -w /var/lib/ollama/models
 
 Expected behavior follows C1's [Docker publication reference](https://docs.docker.com/engine/network/port-publishing/) and C5's [Linux service instructions](https://github.com/ollama/ollama/blob/v0.34.2/docs/linux.mdx).
 
-### V2. Probe direct-backend bypass from another machine
+### V2. Probe direct-backend bypass from another machine (REASONED: direct-origin reachability and approved-proxy inference comparison follow C1 binding documentation; no live target or external observer. The local address-guard cases above establish no network outcome)
 
 **REASONED:** no deployed target or disallowed external observer is available. Use the actual deployment address, not a documentation address. For IPv6, supply the actual address enclosed in square brackets inside the quotes. Repeat for each deployed address family and publication:
 
@@ -24670,7 +24670,7 @@ A streamed 200 alone does not prove model work succeeded. Inspect the complete r
 
 These comparisons follow C2's [authentication reference](https://docs.ollama.com/api/authentication), [nginx Basic authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html), [client-certificate verification](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_verify_client), and the [curl manual](https://curl.se/docs/manpage.html).
 
-### V4. Exercise management authorization and blob writes
+### V4. Exercise management authorization and blob writes (REASONED: management, account, experimental and blob operations, public denial and private administrative success, cleanup and public-chat controls follow C3 API methods and route registration; no isolated model store, registry, identities or proxy. Python 3.14.4 json.loads accepted the four literal JSON bodies in this table; that is syntax only. sha256sum on a disposable file containing OLLAMA_VERIFY_FIXTURE followed by LF returned 9b18adfd436acae378346d9452646db562690662d43ded1df7adceea38540c95; no blob upload or existence check ran)
 
 **REASONED:** no isolated model store, registry fixtures, administrative identity, or live proxy is available. Use V3's reusable probe against three paths: an isolated exposed catch-all proxy, the fixed public inference proxy, and the private administrative endpoint. Direct loopback requests run on the service host with an empty client configuration.
 
@@ -24696,7 +24696,7 @@ Use proxy upstream-status records or equivalent observation to distinguish a pro
 
 The discriminators are C3's [API methods](https://github.com/ollama/ollama/blob/v0.34.2/docs/api.md), [route registration](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go), and [create validation](https://github.com/ollama/ollama/blob/v0.34.2/server/create.go).
 
-### V5. Compare browser origins and preflights
+### V5. Compare browser origins and preflights (REASONED: required/unrelated/built-in/missing Origin, preflight, actual browser calls and authenticated/anonymous POST comparisons follow C4 AllowedOrigins and C2 proxy policies; no live backend, proxy or browser fixture. The header text was not exercised by a browser)
 
 **REASONED:** no live backend or authorized browser frontend is available. Use V3 with OPTIONS, `/dev/null`, and a client configuration containing these non-secret test headers:
 
@@ -24714,7 +24714,7 @@ For the C2 POST-only proxy, an OPTIONS request is not forwarded; the exact statu
 
 Repeat the actual POST with and without Origin. Removing Origin must not bypass proxy authentication; a non-browser caller with valid credentials is not constrained by CORS. The built-in origins remain as described by C4's [AllowedOrigins implementation](https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go).
 
-### V6. Exercise finite admission and resource budgets
+### V6. Exercise finite admission and resource budgets (REASONED: admission, body size, model loading, expiry, parameter overrides, queue capacity and recovery comparisons follow C6 scheduler/types and nginx limit references; no inference runtime, loaded model, capacity fixture or GPU. Local V6 marker files above demonstrate child completion only, not either limiter or successful inference)
 
 **REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Use only an isolated capacity test with the same small, valid chat fixture as V3:
 
@@ -24783,7 +24783,7 @@ The public four-active-request budget may prevent a single test client from fill
 
 These comparisons follow C6's [scheduler](https://github.com/ollama/ollama/blob/v0.34.2/server/sched.go), [request override types](https://github.com/ollama/ollama/blob/v0.34.2/api/types.go), and nginx [request](https://nginx.org/en/docs/http/ngx_http_limit_req_module.html), [connection](https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html), and [body](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size) limits.
 
-### V7. Check provenance, cloud disablement, and administrative egress
+### V7. Check provenance, cloud disablement, and administrative egress (REASONED: digest approval, private inventory, public mutation denial, allowed/disallowed registry transfers, cloud-enabled/disabled inference and local-model controls follow C7 and C8; no approved artifacts, controlled registries, cloud identity or live server)
 
 **REASONED:** no approved artifact inventory, controlled registry, cloud credentials, or live server is available.
 
@@ -24795,7 +24795,7 @@ For C8, use V3's POST `/api/chat` with a currently authorized cloud-model fixtur
 
 Sources: C7's [model inventory](https://docs.ollama.com/api/tags) and [transfer implementation](https://github.com/ollama/ollama/blob/v0.34.2/server/images.go), and C8's [cloud-disable documentation](https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx).
 
-### V8. Inspect diagnostics, profiling, and prompt captures
+### V8. Inspect diagnostics, profiling, and prompt captures (REASONED: public/private diagnostics, actual profiling availability, public-chat controls and debug-enabled/disabled capture inspection follow C9 router/logger; no running binary, service temporary namespace or diagnostic fixtures. Python 3.14.4 json.loads accepted the literal show-request body; it establishes syntax only)
 
 **REASONED:** no running binary, diagnostic fixtures, or service temporary directory is available.
 
@@ -24819,13 +24819,13 @@ For logging, use an isolated service and a unique non-sensitive prompt. With req
 
 Expected behavior follows C9's [router](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go) and [request logger](https://github.com/ollama/ollama/blob/v0.34.2/server/inference_request_log.go).
 
-### Native proxy parsing
+### Native proxy parsing (REASONED: native acceptance and its limits follow the linked nginx/Caddy command references; neither executable is on PATH and deployment certificate/password files are unavailable. Neither native validation command ran)
 
 Parsing is an offline check, but it was **not demonstrated here** because nginx and Caddy are absent. On the deployment host, run `nginx -t` against the assembled configuration and real referenced certificate/password files before reloading. For the Caddy alternative, run `caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile`.
 
 These commands validate configuration acceptance; they do not prove authentication, management denial, TLS enforcement, or resource behavior. Avoid sharing `nginx -T` output from a bearer configuration because it contains the shared token. See the [nginx command reference](https://nginx.org/en/docs/switches.html) and [Caddy validation reference](https://caddyserver.com/docs/command-line#caddy-validate).
 
-### Verification scope and local work
+### Verification scope and local work (REASONED: service-comparison and native-parsing prerequisites from V1-V8 and the cited sources; no authorized deployment, external observer, service credentials or native proxy binaries. Historical local observations above are not new deployment evidence)
 
 | Check scope | Status | Procedure and prerequisites |
 |---|---|---|
@@ -25691,7 +25691,7 @@ ss -tlnp   # a listener inventory in THIS network namespace, not a firewall/NAT/
 
 The `/v1/models` comparison tests authentication and listing, not successful inference or model authorization. Complete the inference comparisons below too. Inspect IPv4 and IPv6 reachability, published container ports, and any separate metrics listener.
 
-### Protected requests for the comparisons
+### Protected requests for the comparisons (REASONED: protected GET/POST preparation, private responses and input-guard limitations follow the cited endpoint documentation; no live service or credentials. Bash 5.3.9 bash -n accepted both Verify shell fences. With curl replaced by a printf LOCAL_CURL marker, the complete request subshell accepted https://fixture.internal/api/chat, POST, an empty mode-0600 header file and a readable JSON file, printing a private response directory and one marker, exit 0. Empty endpoint, original placeholders, set -- without arguments and bad value as endpoint printed guard diagnostics without a marker, exit 1. These observations establish neither file-content validation nor API acceptance)
 
 **REASONED:** The live deployment and test credentials described above are unavailable. Use this request block for the concrete comparisons below; a successful curl transport alone is never a pass. Inspect its private response body and headers for the specified LiteLLM result.
 
@@ -25743,7 +25743,7 @@ Use `http://127.0.0.1:4000/...` on the backend host, or your actual HTTPS endpoi
 
 This guard checks substituted arguments, not the contents of the input files. Inspect those files before a mutation. Delete the private response directories and test credential files after recording the necessary redacted evidence.
 
-### Model access, limits, expiry, and revocation
+### Model access, limits, expiry, and revocation (REASONED: model authorization, key/team budgets, RPM/TPM/concurrency, expiry, block/unblock/delete and fail-closed dependency/recovery comparisons follow the linked key, users and Redis references; no running proxy, database-backed keys/teams, Redis or provider allowance. Python 3.14.4 json.loads accepted the printed inference JSON; this does not show provider acceptance, accounting or any enforcement)
 
 **REASONED:** These comparisons need a running proxy, disposable database-backed keys and teams, shared Redis, and an approved provider test allowance, none of which is available here. Use the protected POST block with `/v1/chat/completions` and this body, choosing a configured chat model that supports the request:
 
@@ -25774,7 +25774,7 @@ Do not extrapolate the RPM result to TPM or concurrency: each needs its own matc
 
 **REASONED:** Fail-closed testing additionally needs an isolated deployment where Redis/database failures can be injected without affecting production. Repeat the same budgeted inference request with spend verification unavailable and `fail_closed_budget_enforcement` enabled: expect 503 and no provider call. Restore the dependencies and confirm a below-budget request succeeds. Compare the flag-disabled state to identify any admission on unverifiable spend. Test batch and unestimable-cost routes separately; their successful admission does not establish an absolute cap. See [fail-closed enforcement and reservation limitations](https://docs.litellm.ai/docs/proxy/users).
 
-### Administrative routes, public surfaces, destinations, and logs
+### Administrative routes, public surfaces, destinations, and logs (REASONED: application/admin and licence comparisons, docs/health/metrics, ingress, pass-through methods/subpaths, destination overrides, content logs and UI login/cookies follow the linked endpoint and pinned source references; no deployed ingress, licensed fixture, test identities, controlled upstream, log collector or browser login)
 
 **REASONED:** These comparisons require the deployed ingress, installed LiteLLM release, test identities, controlled upstream endpoints, and collected logs, which are unavailable here. Use the protected request block for the GET and POST requests below. Keep any deliberately exposed comparison private and isolated.
 
@@ -25790,7 +25790,7 @@ Do not extrapolate the RPM result to TPM or concurrency: each needs its own matc
 
 **REASONED:** UI testing needs a live UI and configured personal-login or SSO identities. Open the actual HTTPS `/ui` in a fresh browser session: establish that the intended personal login works, then confirm the old environment login is refused after `disable_env_credential_login` and restart. Inspect the session cookie's `Secure` attribute. If the UI is disabled, confirm it no longer serves the admin interface while an authorized inference request still works. See [UI login settings](https://docs.litellm.ai/docs/proxy/ui), [SSO](https://docs.litellm.ai/docs/proxy/admin_ui_sso), and [cookie security](https://docs.litellm.ai/docs/proxy/security_best_practices).
 
-### REASONED service checks
+### REASONED service checks (REASONED: full service comparison inventory and startup-key controls from the cited LiteLLM documentation and pinned sources; no two-worker deployment, database, Redis, provider allowance or second host. No deployment behavior was observed)
 
 The checks below remain REASONED from the cited LiteLLM documentation and pinned sources. Service behavior in this replacement is not demonstrated.
 
@@ -26244,9 +26244,9 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
                                                         # denial. Treat anything ambiguous as inconclusive
 ```
 
-The `pgrep` line counts processes whose visible command line has an argument that is `--api-key`, `--admin-api-key`, `--admin-key`, `--gradio-auth`, `--http-restricted-api` or `--grpc-restricted-protocol` followed by a space or `=`, the forms in which llama-server, vLLM, SGLang, the TGI router, text-generation-webui and Triton take a secret on the command line; it prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against stub processes that opened no listener (`python3` sleeping with the test arguments, procps-ng 4.0.4): `--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`, while `--api-key-file /x`, `--gradio-auth-path /x`, `--config /x`, `notes--api-key x`, `--admin-keys x`, `--http-restricted-api-x y`, `--args-json '{"api_key":["DUMMY_NOT_A_SECRET"]}'`, and the abbreviations `--api-k DUMMY_NOT_A_SECRET` and `--http-restricted=model-repository:k=DUMMY_NOT_A_SECRET` each counted `0`, so the line tells the file-based launch forms from the argv ones, and it misses a key inside a JSON argument or behind an abbreviated option (the pinned text-generation-webui parser keeps argparse's default prefix matching, and Triton's `getopt_long` accepts an unambiguous prefix). No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen.
+REASONED: mixed process-matching evidence and parser/visibility limitations from the printed expression and cited parser sources; the historical stub-process observations below were reproduced locally with Python 3.14.4 sleeping for 20 seconds and procps-ng 4.0.4 running the printed pgrep line against one stub at a time, with all seven listed matching cases printing 1 and exiting 0 and all nine listed non-matching cases printing 0 and exiting 1, no stderr, and each stub stopped afterward; only local expression matching was demonstrated, without a listener or model server, leaving service-parser and process-visibility behavior untested and the preceding mixed service block REASONED. The `pgrep` line counts processes whose visible command line has an argument that is `--api-key`, `--admin-api-key`, `--admin-key`, `--gradio-auth`, `--http-restricted-api` or `--grpc-restricted-protocol` followed by a space or `=`, the forms in which llama-server, vLLM, SGLang, the TGI router, text-generation-webui and Triton take a secret on the command line; it prints a count and never a key, and it excludes itself. A count is a lead, not proof: an empty value, or an argument of unrelated text that contains ` --api-key `, matches too, and `0` means only that no visible process matched at that moment. It was demonstrated on the authoring host against stub processes that opened no listener (`python3` sleeping with the test arguments, procps-ng 4.0.4): `--api-key DUMMY_NOT_A_SECRET`, `--admin-key DUMMY_NOT_A_SECRET`, `--admin-api-key=DUMMY_NOT_A_SECRET`, `--gradio-auth u:DUMMY_NOT_A_SECRET`, `--http-restricted-api=model-repository:admin-key=DUMMY_NOT_A_SECRET`, `--grpc-restricted-protocol=model-repository:admin-key=DUMMY_NOT_A_SECRET` and an empty `--api-key=` each counted `1`, while `--api-key-file /x`, `--gradio-auth-path /x`, `--config /x`, `notes--api-key x`, `--admin-keys x`, `--http-restricted-api-x y`, `--args-json '{"api_key":["DUMMY_NOT_A_SECRET"]}'`, and the abbreviations `--api-k DUMMY_NOT_A_SECRET` and `--http-restricted=model-repository:k=DUMMY_NOT_A_SECRET` each counted `0`, so the line tells the file-based launch forms from the argv ones, and it misses a key inside a JSON argument or behind an abbreviated option (the pinned text-generation-webui parser keeps argparse's default prefix matching, and Triton's `getopt_long` accepts an unambiguous prefix). No model server was run for it. A `hidepid` proc mount limits the count to your own processes, and a process that has scrubbed its own arguments is not seen.
 
-For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
+REASONED: following block; anonymous model-list authentication, direct-listener targeting and transport/Host-error interpretation follow the cited modules/api/script.py; no live text-generation-webui instance or external vantage. Bash 5.3.9 bash -n accepted all four Verify shell fences. The complete following subshell with curl replaced by printf LOCAL_CURL emitted one marker for 192.168.50.7 and for bad value, but none for empty input, the original placeholder or set -- without arguments. All exited 0; this guard does not validate host syntax and a skipped probe is not a pass. For text-generation-webui, ask the API edge for the model list without a key. This step is reasoned, not demonstrated: the authoring environment has no container runtime to stand up a live instance, so the expected `401` is derived from the bearer-token check in `modules/api/script.py` (cited in Sources), not observed. The block prints the `exitcode` and `errormsg` write-out variables, which need curl 7.75.0 or newer. A `200` with a model list means the API is open to anyone; a `401` means the key is enforced. A transfer error is inconclusive: a TLS failure (`exit=35` or `exit=60`) in particular means something did answer, since the API serves plain HTTP unless `--ssl-keyfile`/`--ssl-certfile` are set, so read the `exit` and `err` fields, fix any DNS, TLS, or client cause, and confirm the API listener's own address and port directly from the intended vantage. A `400` carrying `Invalid host header` is the API rejecting the forwarded `Host` (see the reverse-proxy note above), not an authentication result, and a rejection page from your proxy proves only the proxy.
 
 ```bash
 # REASONED: text-generation-webui authentication follows the cited modules/api/script.py; no container runtime is available.
@@ -26263,7 +26263,7 @@ For text-generation-webui, ask the API edge for the model list without a key. Th
 )
 ```
 
-For Triton, this read checks the `logging` restriction directly on the server host. **REASONED, not demonstrated:** no Triton server, container runtime, or GPU is available in the authoring environment. On an isolated instance with logging support, run it before and after applying the restriction above. Before, expect HTTP 200 with settings JSON containing `log_file` and `log_verbose_level`; after, expect HTTP 403 with `This API is restricted, expecting header 'gateway-key'`. These outcomes follow from the [logging handler](https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L2031-L2149) and [restriction check](https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L4939-L4953). Use the same address and port for both runs. This command assumes Triton's HTTP listener is on loopback port 8000 and needs curl 7.75.0 or newer. A connection error, a proxy rejection, 404, or a logging-unsupported response is inconclusive; a failing request alone is not a pass. This checks only logging over HTTP, not the other categories, gRPC, or external listener isolation. The existing `pgrep` check measures argv exposure, not API authorization.
+REASONED: following block; the before/after logging read and all stated inconclusive outcomes follow the linked Triton logging handler and restriction check; no running Triton HTTP listener or isolated logging fixture. Local bash -n checks syntax only, not the expected 200/settings and 403/restriction responses. For Triton, this read checks the `logging` restriction directly on the server host. **REASONED, not demonstrated:** no Triton server, container runtime, or GPU is available in the authoring environment. On an isolated instance with logging support, run it before and after applying the restriction above. Before, expect HTTP 200 with settings JSON containing `log_file` and `log_verbose_level`; after, expect HTTP 403 with `This API is restricted, expecting header 'gateway-key'`. These outcomes follow from the [logging handler](https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L2031-L2149) and [restriction check](https://github.com/triton-inference-server/server/blob/546a78766fb112128aa0b10a70c55f4f39c3b1df/src/http_server.cc#L4939-L4953). Use the same address and port for both runs. This command assumes Triton's HTTP listener is on loopback port 8000 and needs curl 7.75.0 or newer. A connection error, a proxy rejection, 404, or a logging-unsupported response is inconclusive; a failing request alone is not a pass. This checks only logging over HTTP, not the other categories, gRPC, or external listener isolation. The existing `pgrep` check measures argv exposure, not API authorization.
 
 ```bash
 # REASONED: Triton logging restriction follows the pinned logging handler and restriction check; no server, runtime, or GPU is available.
@@ -27432,7 +27432,7 @@ Unverified until checked: the exact host bind in your Compose sample, whether MF
 - **The public DSN misread as a secret.** Rotating a DSN does not protect the tracker; authenticating its web and API does. Do not treat a leaked DSN as the incident.
 - **Plaintext.** Neither serves TLS natively, so an instance reachable without a terminating proxy sends session cookies and the event UI in the clear.
 
-## Verify
+## Verify (REASONED: listener and backing-store inventory, Sentry/GlitchTip registration, redirect handling, disposable signup, off-host backing-port reachability and HTTP-to-HTTPS routing comparisons follow the cited tracker sources; no live tracker, backing stores, authorized signup fixture or external host. Bash 5.3.9 bash -n accepted both Verify fences. With curl replaced by printf LOCAL_CURL in the complete registration subshell, https://fixture.internal/api/chat reached one marker and exit 0; empty input, original placeholders, set -- without arguments and bad value printed guard diagnostics with exit 2 and no marker. This tests those guards only, not registration, protocol reachability, redirects or TLS)
 
 Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed. A redirect to a login page, a 404, or a TLS error is inconclusive, never the fixed state.
 
@@ -28251,7 +28251,7 @@ The controls above are the MCP-specific additions; the client still owes the bas
 - **Resource parameter.** Clients MUST send the RFC 8707 `resource` parameter in both the authorization and token requests, naming the MCP server's canonical URI, which requests an access token scoped to that resource. Preventing cross-resource replay then depends on the authorization server supporting audience binding and issuing an audience-restricted token, and on each resource server validating that it is the intended audience; sending the parameter alone does not guarantee it. See MCP Authorization.
 - **HTTPS everywhere.** Every authorization-server endpoint is contacted over HTTPS, and every redirect URI is `localhost` or HTTPS (MCP Authorization Security Considerations). Bearer and access tokens never travel in a URL query string; they go in the `Authorization` header (MCP Authorization). The authorization code, by contrast, is returned in the registered redirect URI's query by the flow itself (OAuth 2.1 section 4.1.2), so it is protected instead by PKCE and the step 1 `iss` check, and the client keeps callback URLs out of referrer headers (RFC 9700 section 4.2, with referrer suppression at section 4.2.4) and out of stored or logged URLs (RFC 9700 section 3 lists URLs stored or logged by browsers, proxy servers, and operating systems among an attacker's sources).
 
-## Verify
+## Verify (REASONED: issuer/callback, metadata, SSRF, token-storage and registration comparisons follow the cited MCP and RFC passages; no controllable authorization/discovery server, target client or live DCR capture. Local fixture observations below do not demonstrate client integration or protected credential storage)
 
 These checks are client-behaviour checks. Standing up a full malicious-authorization-server harness to drive a specific MCP client is infrastructure this repository's authoring environment does not have, so the behavioural steps below are marked **reasoned**: each names the prerequisite that is unavailable, gives the concrete request or command, and states the exposed and fixed outcomes and the source passage that distinguishes them, per the contributing rule on Verify steps. The locally feasible checks (the SSRF address test and the config grep) are run as written.
 
@@ -28261,7 +28261,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 3. **SSRF destinations are blocked (partially runnable).** The address-classification half is runnable now; the client-integration half is reasoned. Runnable: confirm the deny-list rejects the reserved and internal ranges a discovery URL might target, namely the cloud metadata address, loopback, and RFC 1918 space:
 
-   REASONED: following block; address classification follows RFC 9728 and MCP SSRF guidance; the guide records execution but no observed output.
+   REASONED: following block; address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
 
    ```bash
    (
@@ -28275,7 +28275,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 4. **No refresh token or long-lived bearer token stored in cleartext (runnable, bounded heuristic).** This is a heuristic scan, not a proof: it searches the client's config and log paths for a refresh-token or bearer-token value in the clear, lists only the filenames (never the secret itself), and separates a clean scan from a scan error. Substitute the client's own path for the placeholder, inside the single quotes on the `set --` line:
 
-   REASONED: following block; this bounded token scan follows OAuth 2.1 confidentiality requirements; the guide records execution but no observed output.
+   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n.
 
    ```bash
    (
@@ -28310,7 +28310,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
    Save the actual captured body as `dcr-request.json` and inspect it (this native client checks for `native`; a remotely-hosted browser client checks for `web` instead):
 
-   REASONED: following block; application_type inspection follows MCP Client Registration and OIDC Registration; no live DCR request is available.
+   REASONED: following block; application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
 
    ```bash
    python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("application_type") == "native" else 1)' < dcr-request.json
@@ -28506,7 +28506,7 @@ For a plain `RayCluster`, the containers are at `spec.headGroupSpec.template.spe
 
 ## Verify
 
-**Per-node listener inventory, REASONED:** no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources. Inventory listeners on **every head and worker**, in the network namespace where Ray runs. Use `sudo ss -tlnp` if needed to see their owning processes. Record the dashboard agent HTTP port (default 52365, or the configured `--dashboard-agent-listen-port`) and the actual dashboard agent gRPC, runtime env agent HTTP and metrics export ports from that inventory. The last three are OS-assigned by default, so repeat the inventory after a restart. Attribute each port to its agent process; do not guess from the worker-port range. In minimal mode only runtime env HTTP remains among these four; with metrics collection disabled the metrics exporter is absent. An expected listener missing without an established reason is inconclusive.
+REASONED: following block; the complete listener inventory, all external/agent-port probes, successful token-authenticated job, rejected anonymous job and correct/mismatched-CA gRPC health checks follow the cited Ray sources; no isolated cluster, second host or deployed TLS fixture. Bash 5.3.9 bash -n accepted both Verify fences. Extracted address subshells with curl replaced by printf LOCAL_CURL accepted 192.168.50.7 and bad value; empty input, original placeholders and set -- without arguments skipped. All exited 0; skips are not reachability results. In the token-file subshell, replacing only the home token path with a disposable path and ray with printf LOCAL_RAY rejected absent, empty, directory and symlink fixtures with exit 2; a regular file containing DUMMY_NOT_A_SECRET plus LF reached the marker, exited 0 and changed mode 0644 to 0600. This demonstrates local preparation only, not either job outcome or TLS. **Per-node listener inventory, REASONED:** no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources. Inventory listeners on **every head and worker**, in the network namespace where Ray runs. Use `sudo ss -tlnp` if needed to see their owning processes. Record the dashboard agent HTTP port (default 52365, or the configured `--dashboard-agent-listen-port`) and the actual dashboard agent gRPC, runtime env agent HTTP and metrics export ports from that inventory. The last three are OS-assigned by default, so repeat the inventory after a restart. Attribute each port to its agent process; do not guess from the worker-port range. In minimal mode only runtime env HTTP remains among these four; with metrics collection disabled the metrics exporter is absent. An expected listener missing without an established reason is inconclusive.
 
 ```bash
 # REASONED: Ray listener, job and TLS checks follow the cited 2.58.0 sources; no isolated cluster is available. Earlier ss observations are recorded below.
@@ -28596,11 +28596,11 @@ ray job submit --address http://127.0.0.1:8265 -- python -c "print(1)"   # must 
 # certificate-name mismatch), which must fail verification; a local configuration error is inconclusive.
 ```
 
-**Direct agent token control, REASONED:** no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources. On every non-minimal head and worker, use a trusted path directly to that node's agent HTTP port, not the head dashboard or its proxy. Run on the node against its resolved localhost, or use a dedicated SSH forward to that agent; the step 1 forward for 8265 does not forward 52365. Substitute an origin such as `http://127.0.0.1:52365` (or its actual address and configured port), without a trailing slash. Send a token only over the trusted path.
+REASONED: direct-agent target selection from the cited static-route and token middleware sources; no live head/worker agents or trusted forwarding path. **Direct agent token control, REASONED:** no isolated multi-node Ray cluster in the authoring environment; expected outcomes follow the cited Ray 2.58.0 sources. On every non-minimal head and worker, use a trusted path directly to that node's agent HTTP port, not the head dashboard or its proxy. Run on the node against its resolved localhost, or use a dedicated SSH forward to that agent; the step 1 forward for 8265 does not forward 52365. Substitute an origin such as `http://127.0.0.1:52365` (or its actual address and configured port), without a trailing slash. Send a token only over the trusted path.
 
-In an isolated exposed state with token mode off, select `anonymous`: a non-browser GET to `/logs/` should return 200 and the log directory index. With token mode on, first select `token` and supply the valid cluster token: expect the same access. Then select `anonymous` against that same live agent: expect 401. A connection error, 404, redirect, unexpected body or failed positive control is inconclusive; 403 is not the expected missing-token result. `/api/healthz` and `/api/local_raylet_healthz` are exempt and cannot discriminate token enforcement. These expectations follow the pinned static route and app-wide token middleware cited in Sources.
+REASONED: paired exposed anonymous, fixed authenticated and fixed anonymous expectations from the cited static-route and token middleware sources; no live agent or cluster token. In an isolated exposed state with token mode off, select `anonymous`: a non-browser GET to `/logs/` should return 200 and the log directory index. With token mode on, first select `token` and supply the valid cluster token: expect the same access. Then select `anonymous` against that same live agent: expect 401. A connection error, 404, redirect, unexpected body or failed positive control is inconclusive; 403 is not the expected missing-token result. `/api/healthz` and `/api/local_raylet_healthz` are exempt and cannot discriminate token enforcement. These expectations follow the pinned static route and app-wide token middleware cited in Sources.
 
-This block assumes a clean Bash shell with trusted startup files. The hidden prompt and stdin header keep the token out of curl's argv and the pasted command history; they do not hide it from the account owner or root. Do not put the token in the pasted text.
+REASONED: following block; direct-agent anonymous/token request preparation and the paired /logs/ controls follow the cited Ray sources; no live agent or cluster token. Bash 5.3.9 ran the complete subshell with curl replaced by printf LOCAL_CURL. With origin http://127.0.0.1:52365 and token mode, stdin containing an empty line, REPLACE_WITH_TOKEN or bad plus byte 0x01 plus value printed the token diagnostic without a marker; DUMMY_NOT_A_SECRET plus LF reached one marker. All exited 0. The anonymous branch accepted both that substituted origin and bad value; empty/original-placeholder origins and set -- without arguments skipped. These are local guard observations, not URL validation, HTTP status or authorization evidence. This block assumes a clean Bash shell with trusted startup files. The hidden prompt and stdin header keep the token out of curl's argv and the pasted command history; they do not hide it from the account owner or root. Do not put the token in the pasted text.
 
 ```bash
 # REASONED: direct agent token controls follow the cited Ray 2.58.0 sources; no isolated multi-node cluster is available.
@@ -28634,7 +28634,7 @@ This block assumes a clean Bash shell with trusted startup files. The hidden pro
 )
 ```
 
-Service behaviour is not demonstrated here. A watcher stopped each of four loopback runs of Ray 2.58.0 on recording the GCS listening on every interface (`*:6379`), which the authoring host forbids. No isolated network namespace was available to contain the runs, and no isolated multi-node Ray cluster is available in the authoring environment. The `ss` command was run locally in the earlier attempts; the per-node agent inventory, external-reachability probes (including all four agent listeners), direct `/logs/` token controls, dashboard job-submission controls and gRPC-TLS health-check are **REASONED**, with expected exposed and fixed outcomes derived from the cited Ray 2.58.0 sources and vendor documentation.
+REASONED: mixed historical listener observations and unrun service comparisons from the cited Ray 2.58.0 sources; the four watcher-stopped attempts and local ss observations below are historical, were not repeated here and did not establish exposed/fixed behavior; no isolated cluster is available for the service comparisons. Service behaviour is not demonstrated here. A watcher stopped each of four loopback runs of Ray 2.58.0 on recording the GCS listening on every interface (`*:6379`), which the authoring host forbids. No isolated network namespace was available to contain the runs, and no isolated multi-node Ray cluster is available in the authoring environment. The `ss` command was run locally in the earlier attempts; the per-node agent inventory, external-reachability probes (including all four agent listeners), direct `/logs/` token controls, dashboard job-submission controls and gRPC-TLS health-check are **REASONED**, with expected exposed and fixed outcomes derived from the cited Ray 2.58.0 sources and vendor documentation.
 
 ## Common mistakes
 
@@ -30257,7 +30257,7 @@ Build the image from the pinned checkout and run that local build, not the GHCR 
 
 The image build excludes `auth.json`, so mount it read-only at `/content/app/auth.json`: `-v /srv/fooocus/auth.json:/content/app/auth.json:ro` with `docker run`, or `- /srv/fooocus/auth.json:/content/app/auth.json:ro` under the service's `volumes:` in `docker-compose.yml`. Fooocus runs in the image as its unprivileged `user` account, so the host file must be owned by that account's uid and readable by no other account. Read the uid from the image you built: on the `docker build . -t fooocus` path, `docker run --rm --entrypoint id fooocus -u user` prints it; on the Compose path, run `docker compose build` and then `docker run --rm --entrypoint id ghcr.io/lllyasviel/fooocus -u user`, which reads the local build Compose tagged with that name. Then `sudo chown` the file to that uid and `sudo chmod 0400` it. Read from the source and not observed on a running server (above), an unreadable file should stop Fooocus from starting, and a malformed file or an empty list should start it with no login, so check for the login prompt. Under rootless Docker or user-namespace remapping the host-side owner differs; this guide has not checked that case.
 
-## Verify
+## Verify (REASONED: all listener inventories, IPv4/IPv6 external probes, local positive controls, InvokeAI boards authentication, proxy TLS/browser login and Fooocus host/container comparisons follow the cited sources below; no authorized service, isolated listener namespace, container runtime or external observer. Historical Fooocus parsing is not a live-service result. Python 3.14.4 argparse with the printed listen definition returned 127.0.0.1 for [] and 0.0.0.0 for [--listen]. Bash 5.3.9 bash -n accepted the shell fence. In the extracted port-loop subshell with curl replaced by printf LOCAL_CURL, 192.168.50.7 and bad value each emitted four markers; empty input, the original placeholder and set -- without arguments emitted only guard diagnostics. All exited 0, so neither exit status nor this guard validates an address or service exposure)
 
 None of this guide's live Verify checks has a recorded demonstration. The missing capability is an isolated host or network namespace in which the services and their proxy may open listeners, as described for Fooocus below. The checks remain REASONED from the cited vendor documentation and pinned sources, as detailed below.
 
@@ -31606,7 +31606,7 @@ curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/REPLACE_WITH_PROTECTE
 #   unsubstituted placeholder is inconclusive, not a pass.
 ```
 
-REASONED: external panel-response interpretation from the cited panel sources; no panel deployment or second test network is available. Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
+REASONED: preceding block; listener inventory, published-backend inspection, anonymous front-page/data-route checks and an authenticated data-route positive control follow the cited panel sources; no panel deployment or second test network is available. Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
 
 ## Sources (checked September 2026)
 
@@ -32364,7 +32364,7 @@ else
 fi
 ```
 
-REASONED: external panel-access expectations from the cited panel authentication sources; no panel deployment or external test network is available. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
+REASONED: preceding block; listener and panel-login checks, Docker 2375 refusal and 2376 client-certificate comparisons, and the GitLab initial-password-file check follow the cited panel, Docker daemon and GitLab sources; no deployed panels, certificate fixture or external test network is available, and no live result is recorded. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
 
 ## Sources (checked September 2026)
 

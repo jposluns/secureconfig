@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8f17c627f469ebbbc600ed5d802a56587389bcb15d9fe006839b42735b703f1a",
+  "body_sha256": "4d02eb0465b26bde7264d23ac3eb60a961921d5dc0f58808ebeedd9472f2afac",
   "components": {
     "server": {
       "name": "NATS Server",
@@ -1009,7 +1009,7 @@ REASONED: native-parsing procedure from the linked v2.14.7 configuration-test so
 
 REASONED: generation procedure from the cited NATS key and JWT documentation; pinned tools and credential fixtures are unavailable. **Offline-capable, not demonstrated here: credential generation.** The NKey commands in section 1 and operator/account/user generation require installed pinned tools and a private writable store. Generation and local inspection need no broker; publication to a resolver and broker acceptance do.
 
-REASONED: file-review scope from the configuration and credential recipes above; no selected deployment files or generated credentials were supplied. **Separate deployment-file check required:** scan the selected configuration, every included file, and referenced secret inputs for unresolved `REPLACE_WITH_` values and documentation addresses. Inspect generated key/JWT types and references with the appropriate tooling. A password such as `REPLACE_WITH_LONG_RANDOM_PASSWORD` can be syntactically valid, so `-t` is not a placeholder validator. An absence of placeholder text does not establish password strength or key ownership.
+REASONED: deployment-file and credential review from the configuration and credential recipes above; Python 3.14.4 text scanning detected placeholders in a copied section 14 example, found none in a substituted control and detected injected REPLACE_WITH_, documentation-address and example-domain controls; this demonstrates only those text checks, not native parsing or credential validity, and no selected deployment files or generated credentials were supplied. **Separate deployment-file check required:** scan the selected configuration, every included file, and referenced secret inputs for unresolved `REPLACE_WITH_` values and documentation addresses. Inspect generated key/JWT types and references with the appropriate tooling. A password such as `REPLACE_WITH_LONG_RANDOM_PASSWORD` can be syntactically valid, so `-t` is not a placeholder validator. An absence of placeholder text does not establish password strength or key ownership.
 
 ### V1. Running identity, effective configuration, and listeners (REASONED: inventory and isolation expectations from the linked hardening and configuration references; no running service or deployment namespace)
 
@@ -1089,7 +1089,7 @@ If using `verify_and_map` instead, the positive control is a correctly mapped ce
 
 See [authentication](https://docs.nats.io/learn/security/authentication-basics), [TLS](https://docs.nats.io/reference/config/tls/), [authorization](https://docs.nats.io/learn/security/authorization), and [pinned CLI credential handling](https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/util.go).
 
-### V3. Actual delivery, queue restrictions, and bounded replies (REASONED: delivery, queue, reply and request-helper procedures from the cited permissions and pinned CLI sources; no broker or client fixtures)
+### V3. Actual delivery, queue restrictions, and bounded replies (REASONED: delivery, queue, reply and request-helper procedures from the cited permissions and pinned CLI sources; no broker or client fixtures; Python 3.14.4 json.load accepted the request-helper JSON body and rejected 1 truncated control; JSON syntax alone does not establish delivery, queue restrictions or reply permissions)
 
 **REASONED: no broker, pinned CLI, two authenticated clients, or response-test client is available.**
 
@@ -1228,7 +1228,7 @@ In an exposed broad-publish configuration, extra, expired, and unrelated publica
 
 See [subscription permissions](https://docs.nats.io/reference/config/authorization/users/permissions/subscribe/), [response permissions](https://docs.nats.io/reference/config/authorization/users/permissions/allow_responses/), [pinned CLI subscription flags](https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/sub_command.go), and [server enforcement](https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/client.go).
 
-### V4. Accounts, approved sharing, and system requests (REASONED: account isolation, sharing and system-request comparisons from the cited account and CLI sources; no multi-account broker or client fixtures)
+### V4. Accounts, approved sharing, and system requests (REASONED: account isolation, sharing and system-request comparisons from the cited account and CLI sources; no multi-account broker or client fixtures; Python 3.14.4 json.load accepted the system-request JSON body and rejected 1 truncated control; JSON syntax alone does not establish account isolation, sharing or system authorization)
 
 **REASONED: no multi-account broker, system credential, or concurrent client fixture is available.**
 
@@ -1242,7 +1242,7 @@ If validating private-export restrictions, add an isolated third test account wi
 
 See [accounts](https://docs.nats.io/learn/security/accounts-and-multitenancy) and [cross-account sharing](https://docs.nats.io/learn/security/cross-account).
 
-### V5. JetStream authority and effective limits (REASONED: JetStream authority and limit comparisons from the cited account, consumer and API sources; no server, CLI or disposable store)
+### V5. JetStream authority and effective limits (REASONED: JetStream authority and limit comparisons from the cited account, consumer and API sources; no server, CLI or disposable store; Python 3.14.4 json.load accepted all eight literal JSON request bodies in the table and rejected 8 truncated controls; JSON syntax alone does not establish API acceptance, authority or limit enforcement)
 
 **REASONED: no JetStream server, pinned CLI, or disposable persistence fixture is available. Conditional on JetStream being enabled.**
 
@@ -1270,7 +1270,7 @@ Use a 30-second bound per isolated load-test batch and finite message/object cou
 
 See [account limits and reload caveats](https://docs.nats.io/reference/config/accounts/jetstream/), [consumer enforcement](https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/consumer.go), and [API subjects](https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/jetstream_api.go).
 
-### V6. Encryption and recovery (REASONED: encrypted-store recovery comparisons from the linked encryption and rotation references; no runtime, stores or recovery keys)
+### V6. Encryption and recovery (REASONED: encrypted-store recovery comparisons from the linked encryption and rotation references; no runtime, stores or recovery keys; Python 3.14.4 json.load accepted the retrieval JSON body and rejected 1 truncated control; JSON syntax alone does not establish encryption, key rotation or recovery)
 
 **REASONED: no JetStream runtime, disposable encrypted stores, recovery keys, or writable fixtures are available. Conditional on encryption being selected.**
 
