@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "13e13f7a200ccb110bcfd611bd098dda031d197e169a20d1b3d2518da2633104",
+  "body_sha256": "7814d02ce421a652889e66f9eebb444c61c88883919accc58a32ecdee20891f2",
   "components": {
     "comfy": {
       "name": "ComfyUI",
@@ -344,7 +344,7 @@ Build the image from the pinned checkout and run that local build, not the GHCR 
 
 The image build excludes `auth.json`, so mount it read-only at `/content/app/auth.json`: `-v /srv/fooocus/auth.json:/content/app/auth.json:ro` with `docker run`, or `- /srv/fooocus/auth.json:/content/app/auth.json:ro` under the service's `volumes:` in `docker-compose.yml`. Fooocus runs in the image as its unprivileged `user` account, so the host file must be owned by that account's uid and readable by no other account. Read the uid from the image you built: on the `docker build . -t fooocus` path, `docker run --rm --entrypoint id fooocus -u user` prints it; on the Compose path, run `docker compose build` and then `docker run --rm --entrypoint id ghcr.io/lllyasviel/fooocus -u user`, which reads the local build Compose tagged with that name. Then `sudo chown` the file to that uid and `sudo chmod 0400` it. Read from the source and not observed on a running server (above), an unreadable file should stop Fooocus from starting, and a malformed file or an empty list should start it with no login, so check for the login prompt. Under rootless Docker or user-namespace remapping the host-side owner differs; this guide has not checked that case.
 
-## Verify
+## Verify (REASONED: all listener inventories, IPv4/IPv6 external probes, local positive controls, InvokeAI boards authentication, proxy TLS/browser login and Fooocus host/container comparisons follow the cited sources below; no authorized service, isolated listener namespace, container runtime or external observer. Historical Fooocus parsing is not a live-service result. Python 3.14.4 argparse with the printed listen definition returned 127.0.0.1 for [] and 0.0.0.0 for [--listen]. Bash 5.3.9 bash -n accepted the shell fence. In the extracted port-loop subshell with curl replaced by printf LOCAL_CURL, 192.168.50.7 and bad value each emitted four markers; empty input, the original placeholder and set -- without arguments emitted only guard diagnostics. All exited 0, so neither exit status nor this guard validates an address or service exposure)
 
 None of this guide's live Verify checks has a recorded demonstration. The missing capability is an isolated host or network namespace in which the services and their proxy may open listeners, as described for Fooocus below. The checks remain REASONED from the cited vendor documentation and pinned sources, as detailed below.
 

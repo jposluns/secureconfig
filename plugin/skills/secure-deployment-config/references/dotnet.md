@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "9d0e36ae7a3e5baed014b5e060adef6d2c09c78d38e8b31cf7320d856a4be63a",
+  "body_sha256": "f41362bc0a493432ee704b2a04810990bfa519aabf722dc1cac79bc3b5fd1c89",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -551,7 +551,7 @@ ss -tlnp   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
 
 For the `/api` check, the route must exist, require authorization, and use the app's cookie authentication scheme for challenge and forbid. With the default .NET 10 cookie handler, known API endpoints, including `[ApiController]` endpoints, return `401` for unauthenticated requests and `403` for authenticated users denied access. This changed in .NET 10; ordinary browser-page challenges can still redirect. An OIDC challenge scheme or customized cookie events can also change the response. Confirm that an authorized request reaches the expected API before interpreting a denial.
 
-### Additional deployment checks
+### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response; a separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value; the valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing"; those three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; these are shell-guard observations only, not URL validation or deployment comparisons)
 
 **REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. Expected exposed and corrected outcomes rest on the cited .NET 10 documentation. Shell checks do not establish server behavior.
 
