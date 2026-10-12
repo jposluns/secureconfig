@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "9124892b67ce5e924ce13038c41fdf8343d344426bc81c95e817499342dcc393",
+  "body_sha256": "c2fa089072d698574c4ff3276d093a7efba3220884cc0e096e62b80f4056b371",
   "components": {
     "meili": {
       "name": "Meilisearch release reference",
@@ -75,6 +75,20 @@ version_basis: {
         "sd11645c28457": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L459-L476",
         "s9702adeb8c11": "https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go"
       }
+    },
+    "git-grep": {
+      "name": "Git grep manual",
+      "basis": "2.55.0",
+      "sources": {
+        "se138ed3614b1": "https://git-scm.com/docs/git-grep"
+      }
+    },
+    "git-rev-list": {
+      "name": "Git rev-list manual",
+      "basis": "2.56.0",
+      "sources": {
+        "sa551f03eb541": "https://git-scm.com/docs/git-rev-list"
+      }
     }
   },
   "claims": {
@@ -107,7 +121,7 @@ version_basis: {
     "verify-request": {"text": "Paired requests require Bash, curl 7.75.0+, verified HTTPS and identical origin/method/path/body; inspect engine JSON, not status alone.", "components": ["curl", "meili-docs", "typesense-docs"], "sources": ["curl:s2b2686afaf41", "meili-docs:sb0775887509a", "typesense-docs:s6fb918104d58"], "status": "REASONED"},
     "verify-external": {"text": "Inventory actual listeners, publications and IPv4/IPv6 rules; external TCP success fails, while refusal/timeout needs live private controls and policy evidence.", "components": ["meili", "typesense", "nc"], "sources": ["meili:sb9cb7736ecb6", "typesense:s9671c6e07c7f", "nc:s096a08149c92"], "status": "REASONED", "verify": [2]},
     "verify-local-tcp": {"text": "Recorded netcat loopback reachable/refused shapes returned FAIL/exit 1 and INCONCLUSIVE/exit 2 respectively; external reachability remains unobserved.", "components": ["nc"], "sources": ["nc:s096a08149c92"], "status": "DEMONSTRATED", "evidence": "The block against 127.0.0.1, where the engines listened, printed `FAIL: TCP 7700 is reachable` (exit `1`), the reachable shape; against 127.0.0.2, where nothing listens, each port's `Connection refused` printed `INCONCLUSIVE` and the block ended with exit `2`, the refused shape."},
-    "verify-bundle": {"text": "Credential-safe inspection of the real client bundle and history remains unobserved; use a dummy-credential positive control.", "components": ["meili-docs", "typesense-docs"], "sources": ["meili-docs:sb0775887509a", "typesense-docs:s6fb918104d58"], "status": "REASONED"}
+    "verify-bundle": {"text": "Literal bundle and local-history scan exercised on hand-built fixtures; real-client-build positive and negative controls remain unobserved.", "components": ["meili-docs", "typesense-docs", "git-grep", "git-rev-list"], "sources": ["meili-docs:sb0775887509a", "typesense-docs:s6fb918104d58", "git-grep:se138ed3614b1", "git-rev-list:sa551f03eb541"], "status": "REASONED", "verify": [3]}
   }
 }
 ---
@@ -151,7 +165,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 | verify-request: Paired requests require Bash, curl 7.75.0+, verified HTTPS and identical origin/method/path/body; inspect engine JSON, not status alone. | curl minimum 7.75.0; Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown | REASONED |
 | verify-external: Inventory actual listeners, publications and IPv4/IPv6 rules; external TCP success fails, while refusal/timeout needs live private controls and policy evidence. | Meilisearch release reference v1.53.2; Typesense 30.2; OpenBSD-compatible netcat unknown | REASONED |
 | verify-local-tcp: Recorded netcat loopback reachable/refused shapes returned FAIL/exit 1 and INCONCLUSIVE/exit 2 respectively; external reachability remains unobserved. | OpenBSD-compatible netcat unknown | DEMONSTRATED |
-| verify-bundle: Credential-safe inspection of the real client bundle and history remains unobserved; use a dummy-credential positive control. | Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown | REASONED |
+| verify-bundle: Literal bundle and local-history scan exercised on hand-built fixtures; real-client-build positive and negative controls remain unobserved. | Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown; Git grep manual 2.55.0; Git rev-list manual 2.56.0 | REASONED |
 <!-- version-basis:end -->
 
 Both back RAG pipelines and site search. Meilisearch ships a keyless development mode meant for a laptop and answers unauthenticated until you set a master key; Typesense requires an operator-supplied bootstrap key from the moment it starts, with no keyless mode. Meilisearch's default admin key is full access except key management, and Typesense's bootstrap key is admin over all endpoints and data; ship an unprotected dev-mode instance, or leak either engine's privileged key, and the whole corpus, every document your RAG pipeline embedded, is readable and writable by whoever has it.
@@ -194,7 +208,7 @@ Review outbound requests too. Meilisearch v1.8 through v1.34.0 need upgrading fo
 
 ## Verify
 
-DEMONSTRATED: following block; the checks below were demonstrated on loopback against the Meilisearch v1.53.2 release binary (its SHA-256 matched the digest GitHub publishes for the asset) and the Typesense 30.2 server (its MD5 matched the one in the release tarball), each with native TLS on 127.0.0.1, or behind a Caddy TLS proxy for the proxy checks, with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and every address set before start. The blocks ran as printed with only their `set --` values substituted, and keys were fed to the prompts on stdin. What those runs do not show is marked **REASONED** where it occurs, with its reason. Backlog row 1.117 retains only a concrete, credential-safe scan of a real client bundle and repository history for admin, master or bootstrap keys, with a disposable build containing a known dummy credential as the positive control; the loopback runs had no client bundle. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
+DEMONSTRATED: following block; the checks below were demonstrated on loopback against the Meilisearch v1.53.2 release binary (its SHA-256 matched the digest GitHub publishes for the asset) and the Typesense 30.2 server (its MD5 matched the one in the release tarball), each with native TLS on 127.0.0.1, or behind a Caddy TLS proxy for the proxy checks, with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and every address set before start. The blocks ran as printed with only their `set --` values substituted, and keys were fed to the prompts on stdin. What those runs do not show is marked **REASONED** where it occurs, with its reason. Backlog row 1.117 retains the real-client-build positive and negative controls for the credential scan below; its hand-built fixtures do not supply a real client bundle. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
 
 ```bash
 (
@@ -341,8 +355,29 @@ authentication row got `401` anonymously and `200` on the search key through the
 proxy, keyless Meilisearch made the block print `FAIL: unexpected HTTP status` on an anonymous `200`, the
 exposed state, and Typesense with its plaintext backend on `127.0.0.1:8108` gave `401` anonymously then `200` on a collection-scoped search key.
 
-**REASONED (no client bundle in this review):** grep the client bundle and repository history for the
-admin/master/bootstrap key; it should never appear outside the server-side secret store.
+DEMONSTRATED: hand-built static JavaScript fixtures, not a real application build, exercised this block with Bash 5.3.9 and Git 2.55.0: current and ignored bundles, removed old commits, reflog-only and stash commits, regex metacharacters and a leading hyphen returned FOUND/exit 1; absence and a gzip-only key returned NOT FOUND/exit 0; empty input, missing output, a non-repository and a broken ref returned INCONCLUSIVE/exit 2. Terminal input was not echoed, and fixture output contained none of the dummy keys. The Git grep match, no-match and invalid-tree statuses were 0, 1 and 128 respectively; any status other than 0 or 1 becomes INCONCLUSIVE, which takes precedence over earlier matching names.
+
+REASONED: following block; the cited Git grep and rev-list excerpts describe literal matching and local history traversal, and the engine key references require privileged keys to remain server-side. No real application build is available: in a disposable real build, seed a dummy key and require FOUND/exit 1, then remove it, rebuild and require NOT FOUND/exit 0; retain an old-commit positive control separately. Run from the repository root in a fresh Bash shell with trusted startup files, commands and Git configuration, a finished build and a quiet, complete local repository; change `./dist` to your actual output directory in both places. Paste the whole block, then enter one admin, master or bootstrap key alone on one line at the silent read; repeat for each key. Never paste a key into the command or shell history. Bash process substitution supplies the key through a pipe to `-f`; `-F -a -l` searches literal bytes, including binary files, and prints matching names only. A key embedded in a matching filename can therefore be printed; ref names are not printed because history operands are commit IDs. Same-account and root access to process memory and pipes is not prevented.
+
+```bash
+(
+  trap - DEBUG RETURN ERR
+  set +x +a +e
+  scan_fail() { printf '%s\n' 'INCONCLUSIVE: could not complete scan'; exit 2; }
+  { unset -n key IFS commits commit hit rc && unset -v key commits commit hit rc; } 2>/dev/null || scan_fail
+  [[ -d ./dist ]] || scan_fail; IFS= read -rs key || scan_fail; [[ -n $key && $key != *[[:cntrl:]]* ]] || scan_fail
+  hit=0; commits=$(git rev-list --all --reflog 2>/dev/null) || scan_fail
+  git grep --no-index -F -a -l -f <(printf '%s\n' "$key") -- ./dist 2>/dev/null; rc=$?
+  case $rc in 0) hit=1 ;; 1) ;; *) scan_fail ;; esac
+  while IFS= read -r commit; do
+    [[ -z $commit ]] && continue
+    git grep -F -a -l -f <(printf '%s\n' "$key") "$commit" -- 2>/dev/null; rc=$?; case $rc in 0) hit=1 ;; 1) ;; *) scan_fail ;; esac
+  done <<< "$commits"
+  if (( hit )); then printf '%s\n' 'FOUND: remove and rotate credential'; exit 1; else printf '%s\n' 'NOT FOUND: no literal credential in stated scope'; exit 0; fi
+)
+```
+
+REASONED: only raw file bytes and local commit trees are searched: gzip and Brotli are not decoded, and encoded, escaped or split keys and runtime injection can evade detection. Unreachable objects, expired reflogs, unfetched remote history, submodule contents and LFS payloads are outside scope; inspect those separately. One Git grep invocation per commit avoids an argument-length limit, but stores the commit list in memory and repeats unchanged-tree work on large repositories; no final line after interruption or resource exhaustion means inconclusive.
 
 ## Common mistakes
 
@@ -352,7 +387,7 @@ admin/master/bootstrap key; it should never appear outside the server-side secre
 
 ## Sources (checked October 2026)
 
-Version scope: Typesense 30.2; Meilisearch current unversioned documentation checked 2026-09-18, with v1.53.2 as the release reference. The first release containing all four default keys and their exact permissions remains to be confirmed against the deployed release, so inspect `GET /keys`. The Verify commands require Bash, curl 7.75.0 or later, and OpenBSD-compatible netcat.
+Version scope: Typesense 30.2; Meilisearch current unversioned documentation checked 2026-09-18, with v1.53.2 as the release reference. The first release containing all four default keys and their exact permissions remains to be confirmed against the deployed release, so inspect `GET /keys`. The Verify commands require Bash, curl 7.75.0 or later, OpenBSD-compatible netcat and Git; the credential scan was exercised with Bash 5.3.9 and Git 2.55.0.
 
 - Meilisearch master API keys (MEILI_MASTER_KEY, the four default API keys; rolling documentation, checked September 2026): https://www.meilisearch.com/docs/resources/self_hosting/security/master_api_keys
 - Typesense data access control (bootstrap api-key, /keys, actions, collections, filter_by, include_fields/exclude_fields, expires_at; rolling documentation, checked September 2026): https://typesense.org/docs/guide/data-access-control.html
@@ -375,3 +410,6 @@ Version scope: Typesense 30.2; Meilisearch current unversioned documentation che
 - curl options (write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 - OpenBSD netcat reference: https://man.openbsd.org/nc
 - Caddy bind, certificate files, automatic HTTPS and admin options, and reverse-proxy configuration (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88, https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L347-L381, https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L459-L476, https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go
+
+- Git grep manual (page last updated in 2.55.0; fixed strings, pattern files, binary text, names only, no-index and tree operands; supplied excerpts checked October 2026): https://git-scm.com/docs/git-grep
+- Git rev-list manual (page last updated in 2.56.0; all refs, HEAD and reflogs; supplied excerpts checked October 2026): https://git-scm.com/docs/git-rev-list

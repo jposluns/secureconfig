@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-12
+
+- search-engines.md: the Verify section's credential check is now a command. A 15-line Bash block, using only Git and Bash builtins, reads the admin, master or bootstrap key silently, passes it to `git grep` through a pipe so it is never a command-line argument, and searches the client build output and every commit reachable from local refs, HEAD and reflogs for the literal key, printing matching names only. It reports FOUND, NOT FOUND or INCONCLUSIVE with distinct exit statuses. It was exercised on hand-built fixtures, not a real application build, and its limits are stated: no gzip or Brotli decoding, no encoded or split keys, no unreachable objects, unfetched history, submodules or LFS. One stale Verify-marking baseline entry for the replaced prose is removed. Row 1.117 stays open for the real-build controls (#450).
+
 ## 2026-10-05
 
 - Add scoped Verify declarations across the eight row 3.30 batch 2 guides, clearing 88 units (12 list items, 22 table rows and 54 prose units) by subtraction-only regeneration from 0a6b18a. Record disposable local certificate, shell and file-guard demonstrations separately from deployment expectations, and cover adjacent fences in their declarations. Retain eleven SQLite frontend historical-evidence units, four mixed Elasticsearch preparation units, one Elasticsearch snapshot/source-audit row and one mixed certificate-interpretation paragraph; preserve commands, claim text and recorded limitations (#443).
