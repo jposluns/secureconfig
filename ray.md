@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "04391d7a821e2640433b99d16224feceb9232c05075e6726eebae3ccbf1319e9",
+  "body_sha256": "7d5017d16d46047caa26bccd29eada20568aa14540f725cb1008e580410d234b",
   "components": {
     "ray": {
       "name": "Ray pinned source",
@@ -491,7 +491,7 @@ REASONED: following block; direct-agent anonymous/token request preparation and 
 )
 ```
 
-Service behaviour is not demonstrated here. A watcher stopped each of four loopback runs of Ray 2.58.0 on recording the GCS listening on every interface (`*:6379`), which the authoring host forbids. No isolated network namespace was available to contain the runs, and no isolated multi-node Ray cluster is available in the authoring environment. The `ss` command was run locally in the earlier attempts; the per-node agent inventory, external-reachability probes (including all four agent listeners), direct `/logs/` token controls, dashboard job-submission controls and gRPC-TLS health-check are **REASONED**, with expected exposed and fixed outcomes derived from the cited Ray 2.58.0 sources and vendor documentation.
+REASONED: mixed historical listener observations and unrun service comparisons from the cited Ray 2.58.0 sources; the four watcher-stopped attempts and local ss observations below are historical, were not repeated here and did not establish exposed/fixed behavior; no isolated cluster is available for the service comparisons. Service behaviour is not demonstrated here. A watcher stopped each of four loopback runs of Ray 2.58.0 on recording the GCS listening on every interface (`*:6379`), which the authoring host forbids. No isolated network namespace was available to contain the runs, and no isolated multi-node Ray cluster is available in the authoring environment. The `ss` command was run locally in the earlier attempts; the per-node agent inventory, external-reachability probes (including all four agent listeners), direct `/logs/` token controls, dashboard job-submission controls and gRPC-TLS health-check are **REASONED**, with expected exposed and fixed outcomes derived from the cited Ray 2.58.0 sources and vendor documentation.
 
 ## Common mistakes
 

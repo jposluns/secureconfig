@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-12
 
-- Add scoped REASONED Verify declarations across eight guides (row 3.30, batch 3): Ollama, LiteLLM, MCP clients, image generation UIs, Ray, model servers, self-hosted error trackers and .NET. Remove 96 marking exemptions (5 list items, 34 table rows and 57 prose units) by subtraction-only regeneration, from 837 to 741 retained units. Declarations record the local checks that were run (shell syntax, input-guard cases with operational commands replaced by local markers, JSON parsing and literal-address classification) together with what those checks do not establish. Retain three historical-evidence units, one each in Ollama, Ray and model servers; preserve commands, claims and recorded limitations (#446).
+- Add scoped REASONED Verify declarations across eight guides (row 3.30, batch 3): Ollama, LiteLLM, MCP clients, image generation UIs, Ray, model servers, self-hosted error trackers and .NET. Remove 99 marking exemptions (5 list items, 34 table rows and 60 prose units) by subtraction-only regeneration, from 837 to 738 retained units. Declarations record the local checks that were run (shell syntax and lint, input-guard cases with operational commands replaced by local markers, JSON parsing, literal-address classification, argument-flag parsing, a digest computation and process-argument matching against stub processes) together with what those checks do not establish. Three paragraphs that report earlier local observations are declared REASONED with that history identified as such; preserve commands, claims and recorded limitations (#446).
 
 ## 2026-10-05
 
