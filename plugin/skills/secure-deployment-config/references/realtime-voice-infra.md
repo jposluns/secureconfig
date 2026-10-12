@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "ad4662f4006cf6b50037f7eff13c3e900a1a6bb122631372b6d7f12e14e1723e",
+  "body_sha256": "af044db6e9cae27771456430dea05b811486bbb7a2638b51a1f7d9299c42a107",
   "components": {
     "livekit": {
       "name": "LiveKit",
@@ -42,6 +42,11 @@ version_basis: {
       "name": "coturn",
       "basis": "4.18.0",
       "sources": {
+        "s58d0de8f7391": "https://raw.githubusercontent.com/coturn/coturn/4.18.0/README.turnadmin",
+        "sa6b17658f8ea": "https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/apps/relay/mainrelay.c",
+        "s1f4d6627e0b7": "https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/apps/relay/userdb.c",
+        "sb4bd08fc99f5": "https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/client/ns_turn_msg.c",
+        "sf189fba0e419": "https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/client/ns_turn_msg_defs.h",
         "sc4178412962b": "https://raw.githubusercontent.com/coturn/coturn/4.18.0/examples/etc/turnserver.conf",
         "s5ec265938c96": "https://raw.githubusercontent.com/coturn/coturn/4.18.0/README.turnserver",
         "s0728ef023209": "https://github.com/coturn/coturn/releases/tag/4.18.0",
@@ -105,6 +110,8 @@ version_basis: {
     "coturn-metrics": {"text": "Prometheus 9641 defaults off but binds wildcard without authentication when enabled; set prometheus-address=127.0.0.1.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
     "coturn-anonymous": {"text": "Stock example with no users and no credential mechanism permits anonymous allocation; static users imply long-term auth. The Docker exception lacks its own citation.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:s5ec265938c96", "coturn:s3a76feb6f5e4"], "status": "REASONED"},
     "coturn-longterm": {"text": "Enable lt-cred-mech, a stable realm and generated user credentials; set certificate/key paths for TLS.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:s5ec265938c96"], "status": "REASONED"},
+    "coturn-static-key": {"text": "Static user=NAME:0xKEY keeps the clear password out of the config. Default derivation is unsalted MD5 of prepared user:realm:password; realm binding and offline guessing follow. Protect the stored key as a credential.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:sa6b17658f8ea", "coturn:s1f4d6627e0b7", "coturn:sb4bd08fc99f5", "coturn:sf189fba0e419"], "status": "REASONED"},
+    "coturn-key-argv": {"text": "The reviewed 4.18.0 password-buffer trace for turnadmin -k finds only -p/--password argv input, copied and SASLprep-processed without argument erasure. No alternative input appears in these files; unprovided build files, helpers and libraries are outside the review.", "components": ["coturn"], "sources": ["coturn:s58d0de8f7391", "coturn:sa6b17658f8ea", "coturn:s1f4d6627e0b7", "coturn:sb4bd08fc99f5"], "status": "REASONED"},
     "coturn-secret": {"text": "For timed application credentials use use-auth-secret/static-auth-secret instead of static user lines; never distribute the shared secret.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
     "coturn-realm": {"text": "Missing realm warns rather than preventing startup; set it explicitly for either credential mode.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
     "coturn-encryption": {"text": "TLS availability does not require encryption: plaintext can use 3478 or 5349. no-tcp/no-udp remove plaintext; enable dtls for encrypted UDP clients.", "components": ["coturn", "dtls"], "sources": ["coturn:sc4178412962b", "coturn:s5ec265938c96", "dtls:s24abe2486071"], "status": "REASONED"},
@@ -166,6 +173,8 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | coturn-metrics: Prometheus 9641 defaults off but binds wildcard without authentication when enabled; set prometheus-address=127.0.0.1. | coturn 4.18.0 | REASONED |
 | coturn-anonymous: Stock example with no users and no credential mechanism permits anonymous allocation; static users imply long-term auth. The Docker exception lacks its own citation. | coturn 4.18.0 | REASONED |
 | coturn-longterm: Enable lt-cred-mech, a stable realm and generated user credentials; set certificate/key paths for TLS. | coturn 4.18.0 | REASONED |
+| coturn-static-key: Static user=NAME:0xKEY keeps the clear password out of the config. Default derivation is unsalted MD5 of prepared user:realm:password; realm binding and offline guessing follow. Protect the stored key as a credential. | coturn 4.18.0 | REASONED |
+| coturn-key-argv: The reviewed 4.18.0 password-buffer trace for turnadmin -k finds only -p/--password argv input, copied and SASLprep-processed without argument erasure. No alternative input appears in these files; unprovided build files, helpers and libraries are outside the review. | coturn 4.18.0 | REASONED |
 | coturn-secret: For timed application credentials use use-auth-secret/static-auth-secret instead of static user lines; never distribute the shared secret. | coturn 4.18.0 | REASONED |
 | coturn-realm: Missing realm warns rather than preventing startup; set it explicitly for either credential mode. | coturn 4.18.0 | REASONED |
 | coturn-encryption: TLS availability does not require encryption: plaintext can use 3478 or 5349. no-tcp/no-udp remove plaintext; enable dtls for encrypted UDP clients. | coturn 4.18.0; coturn DTLS opt-in introduction 4.17.0 | REASONED |
@@ -260,6 +269,10 @@ denied-peer-ip=fe80::-febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
 cli=false
 web-admin=false
 ```
+
+REASONED: For static users, coturn 4.18.0's example configuration also accepts `user=REPLACE_WITH_USER:0xREPLACE_WITH_HEX_KEY`; `0x` identifies a key instead of a clear password, which the vendor calls "less secure". This keeps the clear password out of `turnserver.conf`. The cited derivation computes unsalted MD5 of `user:realm:password` after `turnadmin`'s input preparation, including `SASLprep`. It follows that the key is bound to the user and realm, and weak passwords remain guessable offline. Protect the key as a credential: the cited static-account loader stores it directly, and the long-term message-integrity routines generate and check integrity using the key.
+
+REASONED: In the coturn 4.18.0 files cited below, `turnadmin -k` takes the password through `-p`/`--password` in argv. Tracing `main`, every `adminmain` password-buffer reference, `adminuser` and key derivation shows the argument copied into `pwd`, then `SASLprep` applied to the copy without erasing argv. No other option, config file, database, environment, stdin or prompt supplies that buffer in these files: server config loading is bypassed, database options do not populate it, and `-f` reads a separate AES key. This conclusion is limited to the reviewed files; unprovided build files, helper definitions and linked libraries were not audited. Prompting before expanding a password into `-p` still puts it in argv, where local process inspection or command-line auditing can expose it. No production key-generation command is provided here.
 
 For application-generated time-limited credentials, replace the `lt-cred-mech`/`user` lines with `use-auth-secret` and a `static-auth-secret` (plus the same `realm`); keep that shared secret in the server config, never distribute it to clients. A realm is an operational requirement for both modes, not a hard startup gate: omitting it warns rather than refuses, so set it explicitly.
 
@@ -441,3 +454,8 @@ That proves the certificate and handshake only, not TURN authentication, peer po
 - LiveKit v1.13.7 missing-grants HTTP 401 branch (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/rtcservice.go#L147-L149
 - coturn 4.18.0 Docker configuration enables lt-cred-mech (checked October 2026): https://github.com/coturn/coturn/blob/4.18.0/docker/coturn/turnserver.conf#L184
 - OpenSSL 3.0 s_client hostname, CA and fatal verification options (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
+- coturn 4.18.0 turnadmin key/password options and example (checked October 2026; lines 59, 105-110 and 125): https://raw.githubusercontent.com/coturn/coturn/4.18.0/README.turnadmin
+- coturn 4.18.0 turnadmin password-buffer trace (checked October 2026; options 1853-1900, adminmain 2971-3201, main dispatch before server config 3558-3569): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/apps/relay/mainrelay.c
+- coturn 4.18.0 password requirement and key output (checked October 2026; lines 242-248 and 941-1016), static-key loading/storage (785-810) and retrieval (637-647): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/apps/relay/userdb.c
+- coturn 4.18.0 default MD5 derivation (checked October 2026; lines 339-428), SASLprep (1920-1960), key-based integrity generation (1985-2034) and checking (2060-2145): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/client/ns_turn_msg.c
+- coturn 4.18.0 SHATYPE_DEFAULT definition (checked October 2026; lines 190-196): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/client/ns_turn_msg_defs.h

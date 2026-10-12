@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-12
+
+- realtime-voice-infra.md: document coturn's hashed-key alternative to a clear TURN password in `turnserver.conf` (row 1.139). At coturn 4.18.0 a static user may be written `user=NAME:0xKEY`; the key is an unsalted MD5 of `user:realm:password`, so it is bound to the user and realm, a weak password remains guessable offline, and the key must be protected as a credential. The guide also records, from a trace of the pinned source, that `turnadmin -k` takes the password only as the `-p` argument and does not erase it, and that this conclusion is limited to the files reviewed. No key-generation command is given, because the only vendor procedure puts the password on a command line. Five coturn 4.18.0 sources are added (#451).
+
 ## 2026-10-05
 
 - Add scoped Verify declarations across the eight row 3.30 batch 2 guides, clearing 88 units (12 list items, 22 table rows and 54 prose units) by subtraction-only regeneration from 0a6b18a. Record disposable local certificate, shell and file-guard demonstrations separately from deployment expectations, and cover adjacent fences in their declarations. Retain eleven SQLite frontend historical-evidence units, four mixed Elasticsearch preparation units, one Elasticsearch snapshot/source-audit row and one mixed certificate-interpretation paragraph; preserve commands, claim text and recorded limitations (#443).
