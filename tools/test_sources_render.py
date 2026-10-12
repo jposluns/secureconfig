@@ -79,6 +79,109 @@ class Contracts(unittest.TestCase):
         self.assertRegex(findings[0], r"^invalid bare URL 'https://a\.\.b/p': .*label empty$")
         self.assertEqual(gate.bare_urls(URL + " " + URL), ([URL, URL], []))
 
+    def test_ascii_authority_boundaries(self):
+        # ! , ; : are continuations in the legacy grammar. Exercise them both
+        # intact below and before a later hard stop inside the same userinfo.
+        for punctuation in ("~", "*", ")", "(", "!", "'", ",", ";", ":"):
+            url = "https://alice" + punctuation + "ops@example.com/p"
+            if punctuation == "(":
+                diagnostic = f"ambiguous parentheses in bare URL {url!r}"
+            elif punctuation in "!,;:":
+                self.assertEqual(gate.bare_urls(url), ([url], []))
+                url = "https://alice" + punctuation + "ops~more@example.com/p"
+                diagnostic = f"closing boundary inside bare URL authority {url!r}"
+            else:
+                diagnostic = f"closing boundary inside bare URL authority {url!r}"
+            with self.subTest(punctuation=punctuation):
+                self.assertEqual(gate.bare_urls(url), ([], [diagnostic]))
+        for url in ("https://exam~ple.com/p", "https://example.com:80~90/p",
+                    "https://alice~ops@first@example.com/p",
+                    "https://alice)ops@example.com", "https://exam*ple.com"):
+            with self.subTest(url=url):
+                self.assertEqual(gate.bare_urls(url), ([], [
+                    f"closing boundary inside bare URL authority {url!r}"]))
+        url = "https://alice@first@example.com/p"
+        self.assertEqual(gate.bare_urls(url), ([], [
+            f"invalid bare URL {url!r}: ambiguous userinfo"]))
+
+    def test_whole_tail_classification(self):
+        for text in (URL + ".", "(" + URL + ").", "_" + URL + "_x",
+                     "**" + URL + "**x", "https://example.com.",
+                     "(https://example.com)", URL + "?!."):
+            with self.subTest(text=text):
+                expected = "https://example.com" if "/p" not in text else URL
+                self.assertEqual(gate.bare_urls(text), ([expected], []))
+        for tail in ("~unchecked/path", ")text", "'ops@example.com/p",
+                     "**https://elsewhere.example/p", ")www.example.com"):
+            with self.subTest(tail=tail):
+                chunk = URL + tail
+                self.assertEqual(gate.bare_urls(chunk), ([], [
+                    f"unclassified bare URL tail {tail!r} in {chunk!r}"]))
+
+    def test_truncated_authority_comparison(self):
+        parser = self.parser()
+        data = {"components": {"component": {"sources": {"source": "https://alice"}}}}
+        for punctuation in ("~", "*", ")", "'"):
+            url = "https://alice" + punctuation + "ops@example.com/p"
+            with self.subTest(punctuation=punctuation):
+                diagnostic = f"body line 5: closing boundary inside bare URL authority {url!r}"
+                self.assertEqual(gate.compare(data, ROOT + "- " + url + "\n", parser),
+                                 ([((4,), ("component", "source"), 1, 0)],
+                                  False, (1, 1), [diagnostic]))
+
+    def test_opaque_inline_boundaries(self):
+        parser = self.parser()
+        for token, opaque in (("code_inline", "`ops`"),
+                              ("image", "![ops](image.png)")):
+            for text in ("https://alice" + opaque + "@example.com/p", opaque + URL,
+                         "https://ali**ce**" + opaque + "@example.com/p"):
+                with self.subTest(token=token, text=text):
+                    result = gate.scan(ROOT + "- " + text + "\n", parser)
+                    self.assertEqual(result.findings,
+                                     [f"body line 5: URL-like text touches {token}"])
+            self.assertEqual(gate.scan(ROOT + "- " + URL + " " + opaque + "\n",
+                                       parser).findings, [])
+
+    def test_link_edges_and_labels(self):
+        parser = self.parser()
+        for text, kind in (("https://ali[ce](" + URL + ")@example.com/p", "link_open"),
+                           ("[prefix](" + URL + ")" + URL, "link_close")):
+            with self.subTest(text=text):
+                self.assertEqual(gate.scan(ROOT + "- " + text + "\n", parser).findings,
+                                 [f"body line 5: URL-like text touches {kind}"])
+        for label in (URL, URL + "`code`", "![alt](image.png)" + URL):
+            with self.subTest(label=label):
+                result = gate.scan(ROOT + "- [" + label + "](" + URL + ")\n", parser)
+                self.assertEqual(result.findings, [])
+                self.assertEqual([item.hrefs for item in result.items.values()], [[URL]])
+
+    def test_invalid_link_is_not_recorded(self):
+        parser = self.parser()
+        body = ROOT + "- [bad](https://example.com:bad/p)\n"
+        result = gate.scan(body, parser)
+        self.assertEqual(result.findings,
+                         ["body line 5: URL 'https://example.com:bad/p': invalid port"])
+        self.assertEqual([item.hrefs for item in result.items.values()], [[]])
+
+    def test_partial_and_duplicate_maps(self):
+        parser = self.parser()
+        original = parser.parse
+        body = ROOT + URL + "\n"
+        for defect, diagnostic in (
+                ("inline", "extraction failed: inline crosses Sources boundary"),
+                ("heading", "extraction failed: duplicate heading source identity")):
+            def broken(text, env):
+                tokens = original(text, env)
+                if defect == "inline":
+                    # Include a line before Sources content, within its parent.
+                    tokens[-3].map = [2, 5]
+                    tokens[-2].map = [2, 5]
+                else:
+                    tokens[3:3] = original("# Guide\n", {})
+                return tokens
+            with self.subTest(defect=defect), patch.object(parser, "parse", side_effect=broken):
+                self.assertEqual(gate.scan(body, parser).findings, [diagnostic])
+
     def test_unicode_bare_authorities(self):
         for name, url, normalized in UNICODE_BARE_CASES:
             with self.subTest(name=name):
@@ -197,10 +300,10 @@ class Contracts(unittest.TestCase):
         block = suite[suite.index('echo "== rendered Sources shadow'):
                       suite.index('echo "== llms-full.txt')]
         adapter = """fail=0
-bad() { fail=1; }
+bad() { printf 'DIAGNOSTIC: %s\\n' "$1"; fail=1; }
 python3() {
   case "$3" in
-    tools/test_sources_render.py) printf '%s\\n' "$SELF"; return 0 ;;
+    tools/test_sources_render.py) printf '%s\\n' "$SELF"; return "$SELF_RC" ;;
     tools/sources_render.py) printf '%s\\n' "$REPORT"; return "$RC" ;;
     *) return 99 ;;
   esac
@@ -208,16 +311,28 @@ python3() {
 """
         advisory = "  ADVISORY  rendered Sources: 1/1 guides disagree; 1 findings"
         skip = "  SKIP  rendered Sources comparison: parser absent"
-        for self_out, report, rc, ci, expected in (
-                ("OK", advisory, "0", "", 0), ("OK", skip, "0", "", 0),
-                ("OK", skip, "0", "true", 1), ("OK", "", "0", "", 1),
-                ("", advisory, "0", "", 1), ("OK", advisory, "1", "", 1),
-                ("OK\n  FAIL  injected", advisory, "0", "", 1),
-                ("OK", advisory + "\n  FAIL  injected", "0", "", 1)):
-            result = subprocess.run(["bash", "-c", adapter + block + '\nexit "$fail"'],
-                                    env=dict(os.environ, SELF=self_out, REPORT=report, RC=rc, CI=ci),
-                                    capture_output=True, text=True)
-            self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+        self_bad = "rendered Sources self-test exited 0 without a clean result"
+        report_bad = "rendered Sources comparison exited 0 without a report"
+        for self_out, self_rc, report, rc, ci, diagnostic in (
+                ("OK", "0", advisory, "0", "", None),
+                ("OK", "0", skip, "0", "", None),
+                ("OK", "0", skip, "0", "true", "rendered Sources parser required in CI"),
+                ("OK", "0", "", "0", "", report_bad),
+                ("", "0", advisory, "0", "", self_bad),
+                ("OK", "1", advisory, "0", "", "rendered Sources self-test"),
+                ("OK", "0", advisory, "1", "", "rendered Sources comparison could not run"),
+                ("OK\n  FAIL  injected", "0", advisory, "0", "", self_bad),
+                ("OK", "0", advisory + "\n  FAIL  injected", "0", "", report_bad)):
+            with self.subTest(self_out=self_out, self_rc=self_rc, report=report, rc=rc, ci=ci):
+                result = subprocess.run(["bash", "-c", adapter + block + '\nexit "$fail"'],
+                                        env=dict(os.environ, SELF=self_out, SELF_RC=self_rc,
+                                                 REPORT=report, RC=rc, CI=ci),
+                                        capture_output=True, text=True)
+                output = result.stdout + result.stderr
+                self.assertEqual(result.returncode, int(diagnostic is not None), output)
+                self.assertEqual([line for line in output.splitlines()
+                                  if line.startswith("DIAGNOSTIC: ")],
+                                 ["DIAGNOSTIC: " + diagnostic] if diagnostic else [], output)
 
     def test_section_boundaries(self):
         parser = self.parser()

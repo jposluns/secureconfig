@@ -82,13 +82,21 @@ BARE_UNDERSCORE_CLOSE = re.compile(legacy._CLOSES_AFTER_UNDERSCORE)
 
 
 def bare_urls(text):
-    """Return plain-text destinations and findings using legacy URL boundaries.
+    """Classify every URL-like chunk before accepting a destination.
 
-    Select the first legacy closing boundary before attempting normalization;
-    validity never chooses the endpoint. Non-ASCII authorities are findings:
-    the legacy lookahead can close inside a Unicode host, so it cannot safely
-    delimit one. Explicit links still use full host normalization. Ambiguous
-    parentheses also fail closed instead of guessing a truncated destination.
+    A finding is the default. The first legacy closing boundary fixes the
+    endpoint before normalization; validity never chooses the endpoint. Accept
+    only a valid destination and a fully classified tail: terminal sentence
+    punctuation, closing wrappers, or an emphasis closer followed by a word.
+    The tail must also satisfy the existing closing grammar. A boundary inside
+    the possible authority, including before a later userinfo @, is a finding.
+    Non-ASCII bare authorities and parentheses within destinations are refused.
+
+    Disclosed limits: without a path, terminal punctuation/closing wrappers are
+    treated as prose rather than authority characters. After the authority,
+    emphasis closers may introduce an adjacent alphanumeric word, as in **URL**x and _URL_x. Other
+    tails are findings even when the legacy known-URL matcher would allow them.
+    Explicit link tokens avoid these bare-text ambiguities.
     """
     urls, findings = [], []
     consumed = 0
@@ -100,35 +108,42 @@ def bare_urls(text):
         while end < len(text) and not text[end].isspace():
             end += 1
         chunk = text[start:end]
-        if marker[0].lower() not in {"http://", "https://"} or not BARE_OPEN.match(text, start):
-            findings.append(f"unclassified URL-like text {chunk!r}")
-            continue
-        # Inspect the entire possible authority before consulting the legacy
-        # closer. Unicode dots, combining marks and compatibility characters
-        # must not leave a valid-looking ASCII prefix with an unchecked tail.
-        authority = re.match(r"[^/?#]*", chunk[len(marker[0]):])[0]
-        if not authority.isascii():
-            findings.append(f"non-ASCII authority in bare URL {chunk!r}")
-            consumed = end
-            continue
-        closing = BARE_UNDERSCORE_CLOSE if start and text[start - 1] == "_" else BARE_CLOSE
-        for stop in range(marker.end() + 1, end + 1):
-            if not closing.match(text, stop):
-                continue
-            candidate = text[start:stop]
-            try:
-                normalize_url(candidate)
-            except (ValueError, UnicodeError) as exc:
-                findings.append(f"invalid bare URL {candidate!r}: {exc}")
-            else:
-                if "(" in candidate or ")" in candidate:
-                    findings.append(f"ambiguous parentheses in bare URL {chunk!r}")
+        consumed = end
+        diagnostic = f"unclassified URL-like text {chunk!r}"
+        if marker[0].lower() in {"http://", "https://"} and BARE_OPEN.match(text, start):
+            authority = re.match(r"[^/?#]*", chunk[len(marker[0]):])[0]
+            authority_end = marker.end() + len(authority)
+            underscore = start > 0 and text[start - 1] == "_"
+            closing = BARE_UNDERSCORE_CLOSE if underscore else BARE_CLOSE
+            stop = next((n for n in range(marker.end() + 1, end + 1)
+                         if closing.match(text, n)), None)
+            if not authority.isascii():
+                diagnostic = f"non-ASCII authority in bare URL {chunk!r}"
+            elif stop is not None:
+                candidate, tail = text[start:stop], text[stop:end]
+                # A full match examines every tail character. These are prose
+                # shapes, not a replacement grammar for URL endpoints.
+                terminal = re.fullmatch(r"[?!.,:;_)*~'\"\]>}]*", tail)
+                emphasis = re.fullmatch(
+                    r"[?!.,:;]*(?:\*+|~+" + (r"|_+" if underscore else "")
+                    + r")[^\W_]*", tail)
+                if (stop < authority_end and
+                        (authority_end < end or "@" in text[stop:authority_end]
+                         or not terminal)):
+                    diagnostic = f"closing boundary inside bare URL authority {chunk!r}"
+                elif "(" in candidate or ")" in candidate:
+                    diagnostic = f"ambiguous parentheses in bare URL {chunk!r}"
+                elif not (terminal or emphasis):
+                    diagnostic = f"unclassified bare URL tail {tail!r} in {chunk!r}"
                 else:
-                    urls.append(candidate)
-            consumed = stop
-            break
-        else:
-            findings.append(f"unclassified URL-like text {chunk!r}")
+                    try:
+                        normalize_url(candidate)
+                    except (ValueError, UnicodeError) as exc:
+                        diagnostic = f"invalid bare URL {candidate!r}: {exc}"
+                    else:
+                        urls.append(candidate)
+                        continue
+        findings.append(diagnostic)
     return urls, findings
 
 
@@ -185,6 +200,7 @@ def scan(body, parser):
                 normalize_url(href)
             except (ValueError, UnicodeError) as exc:
                 result.findings.append(f"body line {span[0] + 1}: URL {href!r}: {exc}")
+                return
             if owner:
                 result.items[owner].hrefs.append(href)
             else:
@@ -204,8 +220,34 @@ def scan(body, parser):
                     record(href, span, owner)
                 result.findings.extend(f"body line {span[0] + 1}: {error}" for error in errors)
 
-            for token in children:
+            for index, token in enumerate(children):
                 kind = token.type
+                edges = ()
+                if kind == "link_open":
+                    edges = (-1,)
+                elif kind == "link_close":
+                    edges = (1,)
+                elif kind in {"code_inline", "image", "html_inline"} and "link_open" not in opened:
+                    edges = (-1, 1)
+                if emit:
+                    # Link labels belong to their destination, not bare text.
+                    # Transparent emphasis tokens do not separate visible text.
+                    for step in edges:
+                        adjacent = []
+                        cursor = index + step
+                        while 0 <= cursor < len(children):
+                            neighbour = children[cursor]
+                            if neighbour.type == "text":
+                                adjacent.append(neighbour.content)
+                            elif neighbour.type not in {"em_open", "em_close",
+                                                       "strong_open", "strong_close"}:
+                                break
+                            cursor += step
+                        text = "".join(reversed(adjacent) if step == -1 else adjacent)
+                        edge = re.search(r"\S+$" if step == -1 else r"^\S+", text)
+                        if edge and legacy._URL_OR_LINK.search(edge[0]):
+                            result.findings.append(
+                                f"body line {span[0] + 1}: URL-like text touches {kind}")
                 if kind not in {"text", "em_open", "em_close", "strong_open", "strong_close"}:
                     flush()
                 if kind in {"link_open", "em_open", "strong_open"} and token.nesting == 1:
@@ -261,8 +303,12 @@ def scan(body, parser):
                 if not re.fullmatch(r"h[1-6]", token.tag):
                     raise ValueError("invalid heading rank")
                 if not stack:
+                    if span[0] in parsed_heads:
+                        raise ValueError("duplicate heading source identity")
                     parsed_heads[span[0]] = (int(token.tag[1:]), span[1], token.markup)
             if kind == "inline":
+                if active and not set(range(*span)) <= selected:
+                    raise ValueError("inline crosses Sources boundary")
                 if token.content and not token.children:
                     raise ValueError("inline missing parsed children")
                 inlines(token.children, span, owner, emit=active)
