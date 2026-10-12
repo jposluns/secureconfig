@@ -400,6 +400,12 @@ def message_name_limit(f, kind):
         f.git("commit", "--allow-empty", "-qm", KEY.decode())
     elif kind == "tag annotation only":
         f.git("tag", "-a", "annotation", "-m", KEY.decode())
+    elif kind == "author identity only":
+        f.env["GIT_AUTHOR_NAME"] = KEY.decode()
+        f.git("commit", "--allow-empty", "-qm", "clean")
+    elif kind == "reflog message only":
+        f.git("update-ref", "--create-reflog", "-m", KEY.decode(),
+              "refs/heads/reflog-fixture", "HEAD")
     elif kind == "ref name only":
         f.git("branch", KEY.decode())
     elif kind == "path name only":
@@ -408,7 +414,8 @@ def message_name_limit(f, kind):
     f.scan(0, N, stderr=b"")
 
 
-for kind in ["commit message only", "tag annotation only", "ref name only", "path name only"]:
+for kind in ["commit message only", "tag annotation only", "author identity only",
+             "reflog message only", "ref name only", "path name only"]:
     case("documented limit: " + kind, "LIMIT", lambda f, k=kind: message_name_limit(f, k))
 
 
