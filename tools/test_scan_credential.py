@@ -395,6 +395,23 @@ for kind in ["gzip-only", "committed symlink target", "tag points to blob", "sub
     case("documented limit: " + kind, "LIMIT", lambda f, k=kind: limit(f, k))
 
 
+def message_name_limit(f, kind):
+    if kind == "commit message only":
+        f.git("commit", "--allow-empty", "-qm", KEY.decode())
+    elif kind == "tag annotation only":
+        f.git("tag", "-a", "annotation", "-m", KEY.decode())
+    elif kind == "ref name only":
+        f.git("branch", KEY.decode())
+    elif kind == "path name only":
+        f.write("dist/" + KEY.decode(), b"clean\n")
+        f.commit(b"clean\n", KEY.decode())
+    f.scan(0, N, stderr=b"")
+
+
+for kind in ["commit message only", "tag annotation only", "ref name only", "path name only"]:
+    case("documented limit: " + kind, "LIMIT", lambda f, k=kind: message_name_limit(f, k))
+
+
 # A fresh invoked Bash deliberately changes the old pasted-shell outcomes.
 for before in [
     "enable -n printf", "alias printf=false", "alias read=false", "alias git=false",
