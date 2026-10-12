@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-12
+
+- self-hosted-ci-runners.md: the offline `config.toml` inspection in Verify was run on 20 synthetic fixtures with Python 3.14.4, and its record changes from reasoned to demonstrated for file inspection only. The reading of its output is corrected: `null` means absent from the inspected table only, an unset `services_privileged` inherits `privileged`, the autoscaler limits must be the integer `1`, unexpected types, errors and partial output are inconclusive, and the runner `token` key is omitted but reported fields are not redacted. What counts as a finding, and everything about a live runner or daemon, stays reasoned. Two stale Verify-marking baseline entries for the reworded prose are removed. Row 2.29 stays open for a pinned source for the `pid_mode` key (#449).
+
 ## 2026-10-05
 
 - Add scoped Verify declarations across the eight row 3.30 batch 2 guides, clearing 88 units (12 list items, 22 table rows and 54 prose units) by subtraction-only regeneration from 0a6b18a. Record disposable local certificate, shell and file-guard demonstrations separately from deployment expectations, and cover adjacent fences in their declarations. Retain eleven SQLite frontend historical-evidence units, four mixed Elasticsearch preparation units, one Elasticsearch snapshot/source-audit row and one mixed certificate-interpretation paragraph; preserve commands, claim text and recorded limitations (#443).
