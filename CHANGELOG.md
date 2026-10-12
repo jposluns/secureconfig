@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-12
+
+- vector-databases.md: say how the Milvus Helm chart and the Milvus Operator expose the management port 9091, which serves control routes without authentication (row 1.149). In chart 5.0.30 and Operator v1.3.11 the port is carried on the same Service as the client gRPC port, with a ClusterIP default, so changing that Service's type to reach the client port also puts 9091 in its port list. The chart's `metrics.enabled: false` removes the Service port but not the listener, and the health probes use 9091; the Operator's Service code adds the port with no field to remove it. This is a reading of the cited chart and Operator files at those pins, not a cluster test, and other chart templates and the Operator's generated CRD were not checked. Two components and their sources are added (#452).
+
 ## 2026-10-05
 
 - Add scoped Verify declarations across the eight row 3.30 batch 2 guides, clearing 88 units (12 list items, 22 table rows and 54 prose units) by subtraction-only regeneration from 0a6b18a. Record disposable local certificate, shell and file-guard demonstrations separately from deployment expectations, and cover adjacent fences in their declarations. Retain eleven SQLite frontend historical-evidence units, four mixed Elasticsearch preparation units, one Elasticsearch snapshot/source-audit row and one mixed certificate-interpretation paragraph; preserve commands, claim text and recorded limitations (#443).
