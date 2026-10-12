@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e367fd51000c963bf1dec68adabaf8eb0f4651c2b8ed4aae89312bdd668a5932",
+  "body_sha256": "e293e8003e9d612fc25f2b2fb2b0617ee8664b13558d0b48484e34906ef49036",
   "components": {
     "github": {
       "name": "GitHub Actions documentation",
@@ -261,7 +261,7 @@ REASONED: Both runners are outbound-only job pollers, so most checks are posture
 probes. Every check that needs a live registered runner or worker is reasoned, not demonstrated: the authoring
 environment has no container runtime, registered test runner, or cloud test infrastructure, so those outcomes
 are derived from the cited vendor pages rather than observed. Offline `tomllib` fixture outcomes are recorded
-below; row 2.29 retains the unverified pinned source for `pid_mode`.
+below; row 2.29 retains finding and verifying a pinned source for `pid_mode`.
 Require successful, complete listings; authentication errors, unavailable endpoints, and incomplete pagination
 are inconclusive. Run the REST and config checks from an administrator workstation using stored CLI credentials.
 
@@ -316,7 +316,7 @@ gh api --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /repos/REPLACE_WITH_OWNE
 
 REASONED: following the cited GitLab and Docker documentation, inspect the configuration each runner service actually loads (custom paths and
 deployment-generated config included); no live runner or daemon was tested. The inspection omits the runner `token` key, but reported fields are not redacted.
-`null` means absent from the inspected table only, not a secure default. Unexpected types, empty output, read/parse/structure errors and partial output before an error are inconclusive; exit 0 alone is not a safety verdict.
+`null` means absent from the inspected table only, not a secure default. Unexpected types are inconclusive until corrected, except for the two autoscaler keys, where anything other than integer `1` is flagged. Empty output, read/parse/structure errors and partial output before an error are inconclusive; exit 0 alone is not a safety verdict.
 `privileged = true`, `services_privileged = true`, or a host Docker socket mounted into a job is a finding. Unset `services_privileged` inherits `privileged`, so its `null` does not mean unprivileged services. The
 reported `docker.host` selects the runner manager's Docker endpoint; resolve an absent value through the
 service's `DOCKER_HOST` environment or the default Unix socket. Inspect the daemon's privilege, authentication
@@ -324,6 +324,7 @@ and network controls, and compare access from the actual job environment with an
 Flag job access to a rootful daemon; a `tcp://` value alone does not establish that access. For an Instance or
 Docker Autoscaler executor, flag either `capacity_per_instance` or `max_use_count` being absent or not integer
 `1`; require both explicitly set to integer `1`, not a boolean, float or string.
+For Kubernetes, flag `privileged = true`, require `allow_privilege_escalation = false` and, where jobs do not need tokens, `automount_service_account_token = false`, and check the `service_account` name against the intended RBAC restrictions.
 
 DEMONSTRATED: following block; the extracted Python program ran without sudo on 20 synthetic config.toml cases using Python 3.14.4. Docker fixtures printed true/true, a socket mount and a TCP host versus false/false, empty volumes and a null host; both exited 0. Autoscaler limits printed null/null, 1/2 and 2/1 versus 1/1, all exit 0. Kubernetes fixtures printed true versus false for the three booleans and the supplied service_account. Wrong-type strings, booleans and floats retained their JSON types; misplaced privileged printed docker.privileged null. Empty and runner-less files printed nothing and exited 0. Missing files, malformed TOML and wrong section types exited 1; the second-runner structure error followed one printed runner. Two valid runners printed indices 0 and 1. The runner token key was omitted; a dummy token copied into service_account was printed. These observations cover file inspection only.
 
@@ -411,7 +412,7 @@ Version boundary: GitHub.com documentation checked 18 September 2026, with REST 
 - GitLab CI_JOB_TOKEN and the job-token allowlist: https://docs.gitlab.com/ci/jobs/ci_job_token/
 - GitLab runner authentication tokens and the creation workflow: https://docs.gitlab.com/ci/runners/new_creation_workflow/
 - GitLab Runner monitoring (metrics port 9252, no built-in authorization): https://docs.gitlab.com/runner/monitoring/
-- GitLab Runner advanced configuration (session_server, Docker controls and autoscaler limits): https://docs.gitlab.com/runner/configuration/advanced-configuration/ An automated page-reader report from 2026-10-12 corroborates the inspected Docker and autoscaler keys except `pid_mode`; that TOML tag was reported only from rolling GitLab Runner `common/config.go` on `main`. A pinned vendor source for `pid_mode` remains unverified (row 2.29).
+- GitLab Runner advanced configuration (session_server, Docker controls and autoscaler limits): https://docs.gitlab.com/runner/configuration/advanced-configuration/ A later, partial automated page-reader report dated 2026-10-12 records corroboration of the inspected Docker and autoscaler keys except `pid_mode`; this does not establish a recheck of the full Sources list dated September 2026. That TOML tag was reported only from rolling GitLab Runner `common/config.go` on `main`. Finding and verifying a pinned vendor source for `pid_mode` remains open (row 2.29).
 - GitHub self-hosted runner groups REST API (group visibility, allows_public_repositories, group repositories) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/self-hosted-runner-groups
 - GitHub Actions OIDC (id-token permission, issuer/audience/subject claims): https://docs.github.com/en/actions/reference/security/oidc
 - GitHub workflow-jobs REST API (runner assignment: runner_id, runner_group_id) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/workflow-jobs
