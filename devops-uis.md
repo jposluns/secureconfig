@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "8ea23156fdbfedaa8aa39d8d6777c2da755c11a718bcf90974adefd63cda9c82",
+  "body_sha256": "1b0cff9f5ef3c50b51c9062f2eeae68075ddcb6ce76331d94a88208b774dda25",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -458,7 +458,7 @@ else
 fi
 ```
 
-REASONED: external panel-access expectations from the cited panel authentication sources; no panel deployment or external test network is available. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
+REASONED: preceding block; listener and panel-login checks, Docker 2375 refusal and 2376 client-certificate comparisons, and the GitLab initial-password-file check follow the cited panel, Docker daemon and GitLab sources; no deployed panels, certificate fixture or external test network is available, and no live result is recorded. From outside the network, every panel URL is unreachable or shows a login; a page that renders host, container, or repository data without one is a finding.
 
 ## Sources (checked September 2026)
 

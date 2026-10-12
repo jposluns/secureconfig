@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "9fc89e7be1a5789aafbde8e74adac0f0b05e6279b93554dd441153bc0aa0a4ae",
+  "body_sha256": "8dcc6f81af8ec725a12ae4e2aef1ad598364c08fa6cd67e7546b0867d84317b4",
   "components": {
     "sentry": {
       "name": "Sentry and self-hosted distribution",
@@ -170,7 +170,7 @@ Unverified until checked: the exact host bind in your Compose sample, whether MF
 - **The public DSN misread as a secret.** Rotating a DSN does not protect the tracker; authenticating its web and API does. Do not treat a leaked DSN as the incident.
 - **Plaintext.** Neither serves TLS natively, so an instance reachable without a terminating proxy sends session cookies and the event UI in the clear.
 
-## Verify
+## Verify (REASONED: listener and backing-store inventory, Sentry/GlitchTip registration, redirect handling, disposable signup, off-host backing-port reachability and HTTP-to-HTTPS routing comparisons follow the cited tracker sources; no live tracker, backing stores, authorized signup fixture or external host. Bash 5.3.9 bash -n accepted both Verify fences. With curl replaced by printf LOCAL_CURL in the complete registration subshell, https://fixture.internal/api/chat reached one marker and exit 0; empty input, original placeholders, set -- without arguments and bad value printed guard diagnostics with exit 2 and no marker. This tests those guards only, not registration, protocol reachability, redirects or TLS)
 
 Every probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so the outcomes are derived from the cited vendor sources rather than observed. A redirect to a login page, a 404, or a TLS error is inconclusive, never the fixed state.
 
