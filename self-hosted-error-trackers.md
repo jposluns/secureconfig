@@ -49,9 +49,9 @@ version_basis: {
     "sentry-registration": {"text": "auth.allow-registration defaults False; keep it false on an internet-facing tracker.", "components": ["sentry"], "sources": ["sentry:sd576440e137e"], "status": "REASONED"},
     "sentry-admin": {"text": "createuser --superuser explicitly creates an administrator; plain createuser defaults its superuser prompt to no.", "components": ["sentry"], "sources": ["sentry:s667e27476aba"], "status": "REASONED"},
     "sentry-url": {"text": "Set system.url-prefix to the public HTTPS origin.", "components": ["sentry"], "sources": ["sentry:sf2294c9468b9", "sentry:sd576440e137e"], "status": "REASONED"},
-    "sentry-secret": {"text": "Generate system.secret-key once and keep it out of version control; the generator command lacks a direct Sources citation.", "components": ["sentry"], "sources": ["sentry:sd576440e137e", "sentry:sf2294c9468b9", "sentry:se2c4a137cc29"], "status": "REASONED"},
+    "sentry-secret": {"text": "Generate system.secret-key once and keep it out of version control.", "components": ["sentry"], "sources": ["sentry:sd576440e137e", "sentry:sf2294c9468b9", "sentry:se2c4a137cc29"], "status": "REASONED"},
     "sentry-cookies": {"text": "Enable forwarded scheme/host recognition and secure session/CSRF cookies; bundled settings are commented out.", "components": ["sentry"], "sources": ["sentry:sf2294c9468b9"], "status": "REASONED"},
-    "sentry-nginx": {"text": "Bundled nginx overwrites X-Forwarded-Proto with its scheme; terminate TLS there or propagate the real scheme. Its nginx config is not cited.", "components": ["sentry"], "sources": ["sentry:sd29b3662378f", "sentry:sf2294c9468b9", "sentry:s9d3c3d6f7a19"], "status": "REASONED"},
+    "sentry-nginx": {"text": "Bundled nginx overwrites X-Forwarded-Proto with its scheme; terminate TLS there or propagate the real scheme.", "components": ["sentry"], "sources": ["sentry:sd29b3662378f", "sentry:sf2294c9468b9", "sentry:s9d3c3d6f7a19"], "status": "REASONED"},
     "sentry-mfa": {"text": "Enforce organization member MFA with require2FA.", "components": ["sentry-docs"], "sources": ["sentry-docs:see399d43779f"], "status": "REASONED"},
     "sentry-scrubbing": {"text": "Use dataScrubber, dataScrubberDefaults and scrubIPAddresses to reduce sensitive intake.", "components": ["sentry-docs"], "sources": ["sentry-docs:see399d43779f"], "status": "REASONED"},
     "sentry-precedence": {"text": "auth.allow-registration prioritizes config.yml over the database; verify SSO provisioning and effective scrubbing separately.", "components": ["sentry", "sentry-docs"], "sources": ["sentry:sd576440e137e", "sentry-docs:see399d43779f"], "status": "REASONED"},
@@ -86,9 +86,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | sentry-registration: auth.allow-registration defaults False; keep it false on an internet-facing tracker. | Sentry and self-hosted distribution 26.8.0 | REASONED |
 | sentry-admin: createuser --superuser explicitly creates an administrator; plain createuser defaults its superuser prompt to no. | Sentry and self-hosted distribution 26.8.0 | REASONED |
 | sentry-url: Set system.url-prefix to the public HTTPS origin. | Sentry and self-hosted distribution 26.8.0 | REASONED |
-| sentry-secret: Generate system.secret-key once and keep it out of version control; the generator command lacks a direct Sources citation. | Sentry and self-hosted distribution 26.8.0 | REASONED |
+| sentry-secret: Generate system.secret-key once and keep it out of version control. | Sentry and self-hosted distribution 26.8.0 | REASONED |
 | sentry-cookies: Enable forwarded scheme/host recognition and secure session/CSRF cookies; bundled settings are commented out. | Sentry and self-hosted distribution 26.8.0 | REASONED |
-| sentry-nginx: Bundled nginx overwrites X-Forwarded-Proto with its scheme; terminate TLS there or propagate the real scheme. Its nginx config is not cited. | Sentry and self-hosted distribution 26.8.0 | REASONED |
+| sentry-nginx: Bundled nginx overwrites X-Forwarded-Proto with its scheme; terminate TLS there or propagate the real scheme. | Sentry and self-hosted distribution 26.8.0 | REASONED |
 | sentry-mfa: Enforce organization member MFA with require2FA. | Sentry documentation unknown | REASONED |
 | sentry-scrubbing: Use dataScrubber, dataScrubberDefaults and scrubIPAddresses to reduce sensitive intake. | Sentry documentation unknown | REASONED |
 | sentry-precedence: auth.allow-registration prioritizes config.yml over the database; verify SSO provisioning and effective scrubbing separately. | Sentry and self-hosted distribution 26.8.0; Sentry documentation unknown | REASONED |

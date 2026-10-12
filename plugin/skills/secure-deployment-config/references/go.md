@@ -118,7 +118,7 @@ version_basis: {
     "login-limit": {"text": "A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits.", "components": ["rate"], "sources": ["rate:s5c3fdae5a0af"], "status": "REASONED"},
     "tokens": {"text": "Load tokens from the environment and generate them per authentication.md; token generation and environment handling lack a listed source.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
     "oidc": {"text": "NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
-    "mfa": {"text": "Use pquerna/otp or a fronting identity layer; TOTP and MFA lack a listed source.", "components": ["oidc", "otp"], "sources": ["oidc:s60cc1d7a8fe6", "otp:scdd6f451714e"], "status": "REASONED"},
+    "mfa": {"text": "Use pquerna/otp or a fronting identity layer.", "components": ["oidc", "otp"], "sources": ["oidc:s60cc1d7a8fe6", "otp:scdd6f451714e"], "status": "REASONED"},
     "client-validation": {"text": "InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation.", "components": ["tls"], "sources": ["tls:se2152a9c28fc"], "status": "REASONED"},
     "client-ca": {"text": "Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR.", "components": ["tls", "x509"], "sources": ["tls:se2152a9c28fc", "x509:se65b937f9e1e"], "status": "REASONED"},
     "platform-ca": {"text": "Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set.", "components": ["x509"], "sources": ["x509:se65b937f9e1e"], "status": "REASONED"},
@@ -170,7 +170,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | login-limit: A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits. | Go rate documentation unknown | REASONED |
 | tokens: Load tokens from the environment and generate them per authentication.md; token generation and environment handling lack a listed source. | go-oidc documentation v3 | REASONED |
 | oidc: NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists. | go-oidc documentation v3 | REASONED |
-| mfa: Use pquerna/otp or a fronting identity layer; TOTP and MFA lack a listed source. | go-oidc documentation v3; pquerna/otp v1.5.0 | REASONED |
+| mfa: Use pquerna/otp or a fronting identity layer. | go-oidc documentation v3; pquerna/otp v1.5.0 | REASONED |
 | client-validation: InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation. | Go crypto/tls documentation unknown | REASONED |
 | client-ca: Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR. | Go crypto/tls documentation unknown; Go certificate-store qualification 1.27 | REASONED |
 | platform-ca: Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set. | Go certificate-store qualification 1.27 | REASONED |
