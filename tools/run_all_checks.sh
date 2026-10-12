@@ -32,6 +32,14 @@ not_a_guide() {
   esac
 }
 
+echo "== credential scanner regressions and shell lint =="
+python3 tools/test_scan_credential.py || bad "credential scanner self-test"
+if command -v shellcheck >/dev/null 2>&1; then
+  shellcheck --norc tools/scan_credential.sh || bad "credential scanner shellcheck"
+else
+  printf '  SKIP  shellcheck is not installed; credential scanner lint not run\n'
+fi
+
 echo "== version basis =="
 python3 tools/test_version_basis.py || bad "version-basis self-test"
 python3 tools/version_basis.py --check || bad "version-basis metadata or summary"
