@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "dd2ae360f2d811e19f3f6d4d0915338296a085d3501398ca8ff5565e7296ef30",
+  "body_sha256": "1b67f8071bb1621b2063ffcdbea33ac2afe8a18bfdf94ea9616c4a2dbf1bc5eb",
   "components": {
     "aws": {
       "name": "AWS ALB",
@@ -308,7 +308,7 @@ REASONED: preceding block; origin isolation, anonymous and forged-header denial,
     [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
     case "$1" in
       *REPLACE_WITH_*|*YOUR_PLATFORM_URL*|"") echo "substitute your own app route URL on the set -- line above; not probing" ;;
-      *) curl -q -g -s --noproxy '*' -D - "$1" ;;
+      *) curl -q -g -sS --noproxy '*' -D - "$1" ;;
     esac
   )
   ```

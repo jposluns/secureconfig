@@ -3651,7 +3651,7 @@ REASONED: preceding block; origin isolation, anonymous and forged-header denial,
     [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
     case "$1" in
       *REPLACE_WITH_*|*YOUR_PLATFORM_URL*|"") echo "substitute your own app route URL on the set -- line above; not probing" ;;
-      *) curl -q -g -s --noproxy '*' -D - "$1" ;;
+      *) curl -q -g -sS --noproxy '*' -D - "$1" ;;
     esac
   )
   ```
