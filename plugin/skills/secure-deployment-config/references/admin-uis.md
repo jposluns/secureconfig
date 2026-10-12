@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "d9a367d61846794a80dbbc39934332ffa8dfcf776c2922000f82e14fe5c38a32",
+  "body_sha256": "979346de6464a51f2a4d197f70f1a2c0c72de25bca05078e0e570fd202bc21f4",
   "components": {
     "mongo": {
       "name": "mongo-express",
@@ -215,7 +215,7 @@ curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/REPLACE_WITH_PROTECTE
 #   unsubstituted placeholder is inconclusive, not a pass.
 ```
 
-REASONED: preceding block; listener inventory, published-backend inspection and anonymous front-page/data-route checks and an authenticated data-route positive control follow the cited panel sources; no panel deployment or second test network is available. Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
+REASONED: preceding block; listener inventory, published-backend inspection, anonymous front-page/data-route checks and an authenticated data-route positive control follow the cited panel sources; no panel deployment or second test network is available. Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
 
 ## Sources (checked September 2026)
 
