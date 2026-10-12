@@ -17,6 +17,51 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
         with:
           persist-credentials: false
+      - name: Protect URL underscores for Markdown extraction
+        # Escape quoted URLs only in the known version_basis JSON front matter,
+        # where Markdown extraction can truncate underscores. Body URLs are deliberately
+        # left alone; guides must use autolinks or explicit links for those citations.
+        run: |
+          python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          url = r'https?://[A-Za-z0-9_./:#?@!$&%+=~-]+'
+          quoted = re.compile(r'"(' + url + r')"')
+
+
+          def escape(match):
+              value = match[1]
+              # A final underscore is ambiguous to Markdown extraction; leave it intact.
+              if value.endswith('_'):
+                  return match[0]
+              return match[0].replace(value, value.replace('_', r'\_'), 1)
+
+
+          def prepare(text):
+              if not text.startswith('---\n'):
+                  return text
+              end = re.search(r'^---$', text[4:], re.M)
+              if end is None:
+                  return text
+              metadata = text[4:4 + end.start()]
+              if not metadata.startswith('version_basis: {\n'):
+                  return text
+              try:
+                  json.loads(metadata.removeprefix('version_basis: '))
+              except ValueError:
+                  return text
+              safe = re.split(r'[<>`]', metadata, maxsplit=1)[0]
+              updated = quoted.sub(escape, safe) + metadata[len(safe):]
+              return text[:4] + updated + text[4 + end.start():]
+
+
+          for path in Path('.').glob('*.md'):
+              text = path.read_bytes().decode('utf-8')
+              path.write_bytes(prepare(text).encode('utf-8'))
+          PY
+
       - name: Check links
         id: lychee
         continue-on-error: true
@@ -32,12 +77,15 @@ jobs:
           format: json
           output: lychee/out.json
           # Verbose retains success_map and redirect_map, including accepted bot blocks.
+          # This exact URL is a backend configuration value in open-webui.md,
+          # not a citation or GET resource. Keep its child paths and docs checked.
           args: >-
             --no-progress
             --verbose
             --root-dir ${{ github.workspace }}/site
             --accept 200,201,204,301,302,403,429,999
             --exclude '[<>]'
+            --exclude '^https://api\.openai\.com/v1$'
             --exclude '\$'
             --exclude 'example\.(com|test)'
             --exclude 'app\.internal'
