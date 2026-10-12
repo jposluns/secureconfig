@@ -68,7 +68,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.40 | Weekly link check false positives: lychee truncates URLs at a double underscore (`__init__.py` sources in jupyter.md, litellm.md and sqlite-http-frontends.md were reported as 404 at their parent directory) and fetches configuration-value API base URLs (api.openai.com/v1 in open-webui.md). Fix the extraction or configuration and exclude configuration-value URLs, with recorded cases so a real 404 still fails (F-LYCHEE-2026-09-28). (S, S) | `[gap]` |
+| 3.40 | F-LYCHEE-2026-09-28 remainder after #448: six bare body citations in `agent-builders.md` (two), `jupyter.md`, `mlflow.md`, `sqlite-http-frontends.md` and `workflow-orchestrators.md` remain checked in truncated form until written as autolinks (#447). Then confirm with lychee `--dump` that no cited URL is extracted in truncated form, and confirm the first live weekly sweep. (S, S) | `[gap]` |
 
 ## Priority 4: Tooling and process
 
