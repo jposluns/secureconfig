@@ -29837,6 +29837,7 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 | coturn-longterm: Enable lt-cred-mech, a stable realm and generated user credentials; set certificate/key paths for TLS. | coturn 4.18.0 | REASONED |
 | coturn-static-key: Static user=NAME:0xKEY keeps the clear password out of the config. Default derivation is unsalted MD5 of prepared user:realm:password; realm binding and offline guessing follow. Protect the stored key as a credential. | coturn 4.18.0 | REASONED |
 | coturn-key-argv: The reviewed 4.18.0 password-buffer trace for turnadmin -k finds only -p/--password argv input, copied and SASLprep-processed without argument erasure. No alternative input appears in these files; unprovided build files, helpers and libraries are outside the review. | coturn 4.18.0 | REASONED |
+| coturn-key-derivation: Local Bash 5.3.9 and OpenSSL 3.5.5 static-key derivation reproduced coturn 4.18.0's public example with the password supplied on stdin; this does not demonstrate TURN allocation or terminal echo suppression. | coturn 4.18.0; OpenSSL dgst 3.5 | DEMONSTRATED |
 | coturn-secret: For timed application credentials use use-auth-secret/static-auth-secret instead of static user lines; never distribute the shared secret. | coturn 4.18.0 | REASONED |
 | coturn-realm: Missing realm warns rather than preventing startup; set it explicitly for either credential mode. | coturn 4.18.0 | REASONED |
 | coturn-encryption: TLS availability does not require encryption: plaintext can use 3478 or 5349. no-tcp/no-udp remove plaintext; enable dtls for encrypted UDP clients. | coturn 4.18.0; coturn DTLS opt-in introduction 4.17.0 | REASONED |
@@ -29947,6 +29948,7 @@ DEMONSTRATED: following block; local Bash 5.3.9 and OpenSSL 3.5.5, with the prom
   trap - DEBUG RETURN ERR
   set +x +a +e
   set -o pipefail
+  shopt -u nocasematch
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_USER' 'REPLACE_WITH_REALM'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not deriving'; exit 2; }
   shift

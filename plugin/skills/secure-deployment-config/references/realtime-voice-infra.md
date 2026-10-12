@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "30de6af7a801e05adfbe131f11f0a312850853551e43c10f6063e3df5b00d0eb",
+  "body_sha256": "d1af84d73713292f8566cf7ade51a4187b472830bb0ae581630695e601584dcb",
   "components": {
     "livekit": {
       "name": "LiveKit",
@@ -85,6 +85,13 @@ version_basis: {
       "sources": {
         "s00aaf106164f": "https://docs.openssl.org/3.0/man1/openssl-s_client/"
       }
+    },
+    "openssl-dgst": {
+      "name": "OpenSSL dgst",
+      "basis": "3.5",
+      "sources": {
+        "sd33a4ae3d052": "https://docs.openssl.org/3.5/man1/openssl-dgst/"
+      }
     }
   },
   "claims": {
@@ -112,6 +119,7 @@ version_basis: {
     "coturn-longterm": {"text": "Enable lt-cred-mech, a stable realm and generated user credentials; set certificate/key paths for TLS.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:s5ec265938c96"], "status": "REASONED"},
     "coturn-static-key": {"text": "Static user=NAME:0xKEY keeps the clear password out of the config. Default derivation is unsalted MD5 of prepared user:realm:password; realm binding and offline guessing follow. Protect the stored key as a credential.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:sa6b17658f8ea", "coturn:s1f4d6627e0b7", "coturn:sb4bd08fc99f5", "coturn:sf189fba0e419"], "status": "REASONED"},
     "coturn-key-argv": {"text": "The reviewed 4.18.0 password-buffer trace for turnadmin -k finds only -p/--password argv input, copied and SASLprep-processed without argument erasure. No alternative input appears in these files; unprovided build files, helpers and libraries are outside the review.", "components": ["coturn"], "sources": ["coturn:s58d0de8f7391", "coturn:sa6b17658f8ea", "coturn:s1f4d6627e0b7", "coturn:sb4bd08fc99f5"], "status": "REASONED"},
+    "coturn-key-derivation": {"text": "Local Bash 5.3.9 and OpenSSL 3.5.5 static-key derivation reproduced coturn 4.18.0's public example with the password supplied on stdin; this does not demonstrate TURN allocation or terminal echo suppression.", "components": ["coturn", "openssl-dgst"], "sources": ["coturn:sc4178412962b", "coturn:sb4bd08fc99f5", "openssl-dgst:sd33a4ae3d052"], "status": "DEMONSTRATED", "evidence": "local Bash 5.3.9 and OpenSSL 3.5.5, with the prompt supplied on stdin, produced `user=ninefingers:0xbc807ee29df3c9ffa736523fb2c4e8ee` for coturn 4.18.0's public example in `examples/etc/turnserver.conf` lines 383-390."},
     "coturn-secret": {"text": "For timed application credentials use use-auth-secret/static-auth-secret instead of static user lines; never distribute the shared secret.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
     "coturn-realm": {"text": "Missing realm warns rather than preventing startup; set it explicitly for either credential mode.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
     "coturn-encryption": {"text": "TLS availability does not require encryption: plaintext can use 3478 or 5349. no-tcp/no-udp remove plaintext; enable dtls for encrypted UDP clients.", "components": ["coturn", "dtls"], "sources": ["coturn:sc4178412962b", "coturn:s5ec265938c96", "dtls:s24abe2486071"], "status": "REASONED"},
@@ -175,6 +183,7 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 | coturn-longterm: Enable lt-cred-mech, a stable realm and generated user credentials; set certificate/key paths for TLS. | coturn 4.18.0 | REASONED |
 | coturn-static-key: Static user=NAME:0xKEY keeps the clear password out of the config. Default derivation is unsalted MD5 of prepared user:realm:password; realm binding and offline guessing follow. Protect the stored key as a credential. | coturn 4.18.0 | REASONED |
 | coturn-key-argv: The reviewed 4.18.0 password-buffer trace for turnadmin -k finds only -p/--password argv input, copied and SASLprep-processed without argument erasure. No alternative input appears in these files; unprovided build files, helpers and libraries are outside the review. | coturn 4.18.0 | REASONED |
+| coturn-key-derivation: Local Bash 5.3.9 and OpenSSL 3.5.5 static-key derivation reproduced coturn 4.18.0's public example with the password supplied on stdin; this does not demonstrate TURN allocation or terminal echo suppression. | coturn 4.18.0; OpenSSL dgst 3.5 | DEMONSTRATED |
 | coturn-secret: For timed application credentials use use-auth-secret/static-auth-secret instead of static user lines; never distribute the shared secret. | coturn 4.18.0 | REASONED |
 | coturn-realm: Missing realm warns rather than preventing startup; set it explicitly for either credential mode. | coturn 4.18.0 | REASONED |
 | coturn-encryption: TLS availability does not require encryption: plaintext can use 3478 or 5349. no-tcp/no-udp remove plaintext; enable dtls for encrypted UDP clients. | coturn 4.18.0; coturn DTLS opt-in introduction 4.17.0 | REASONED |
@@ -285,6 +294,7 @@ DEMONSTRATED: following block; local Bash 5.3.9 and OpenSSL 3.5.5, with the prom
   trap - DEBUG RETURN ERR
   set +x +a +e
   set -o pipefail
+  shopt -u nocasematch
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_USER' 'REPLACE_WITH_REALM'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not deriving'; exit 2; }
   shift
