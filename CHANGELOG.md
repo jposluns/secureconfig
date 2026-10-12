@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-12
+
+- Correct eleven Verify declarations added in #440 (row 3.30, batch 1). In admin UIs, DevOps UIs, Docker, free certificates and host, the paragraph declaration attached to a fence now states the scope of that fence's checks. In HAProxy and NATS, declarations record the local checks that were run (shell syntax, input-guard cases with the network command replaced by a local marker, JSON payload parsing and a placeholder scan) together with what those checks do not establish, and stay REASONED for everything that needs a service. Commands, expected outcomes, claims and citations are unchanged, and the marking baseline is unchanged (#445).
+
 ## 2026-10-05
 
 - Add scoped Verify declarations across the eight row 3.30 batch 2 guides, clearing 88 units (12 list items, 22 table rows and 54 prose units) by subtraction-only regeneration from 0a6b18a. Record disposable local certificate, shell and file-guard demonstrations separately from deployment expectations, and cover adjacent fences in their declarations. Retain eleven SQLite frontend historical-evidence units, four mixed Elasticsearch preparation units, one Elasticsearch snapshot/source-audit row and one mixed certificate-interpretation paragraph; preserve commands, claim text and recorded limitations (#443).
