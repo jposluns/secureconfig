@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "1754e45807152dcdb1f4c2fb4662825a41836c2892d5d2f81d3fea163e637e8f",
+  "body_sha256": "7bbd2b75bf72d5a68701e7d6be659e74db436403f8e8b0f0286be4d720002abc",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -277,7 +277,7 @@ ss -tlnp   # inventory: the backend (3000) must be 127.0.0.1 only, never 0.0.0.0
            # socket is a root-owned mode-600 Unix socket (ls -l /run/haproxy/admin.sock), not a TCP listener.
 ```
 
-REASONED: following block; management-surface comparisons follow the cited HAProxy stats, runtime API and TLS documentation, with no HAProxy runtime or certificate fixtures available; Bash 5.3.9(1)-release passed bash -n on this fence, and extracted guards with local printf markers rejected empty, placeholder and missing host setup but admitted both proxy.internal and bad host, so hostname syntax is not validated; certificate/key guards skipped placeholders, empty and nonexistent paths with exit 0 and reached the marker for readable plain-text files, proving neither certificate validity nor a successful TLS check; no network command ran. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener with
+REASONED: following block; management-surface comparisons follow the cited HAProxy stats, runtime API and TLS documentation, with no HAProxy runtime or certificate fixtures available; Bash 5.3.9(1)-release passed bash -n on the following fence, and extracted guards with local printf markers rejected empty, placeholder and missing host setup but admitted both proxy.internal and bad host, so hostname syntax is not validated; certificate/key guards skipped placeholders, empty and nonexistent paths with exit 0 and reached the marker for readable plain-text files, proving neither certificate validity nor a successful TLS check; no network command ran. Verify each management surface you enabled, REASONED from the cited HAProxy documentation: the stats listener with
 an unauthenticated request (refused) and a valid-credential request (returns the statistics) against that
 listener specifically; the runtime socket by its ownership and mode and an unauthorized local identity
 (permission denied), since `show cli level` reporting `admin` is the authorized level, not proof of access
