@@ -35,6 +35,8 @@ def normalize_url(url):
         raise ValueError("empty URL or whitespace/control in URL")
     if legacy._ESCAPE.search(url) or legacy._UNRESERVED.search(url):
         raise ValueError("URL contains an escape, entity or encoded unreserved character")
+    if re.search(r"%(?![0-9A-Fa-f]{2})", url):
+        raise ValueError("malformed percent escape")
     match = re.fullmatch(r"(https?)://([^/?#]+)(.*)", url, re.I)
     if not match:
         raise ValueError("destination is not an absolute HTTP(S) URL")
@@ -79,24 +81,24 @@ def normalize_url(url):
 BARE_OPEN = re.compile(legacy._OPENS)
 BARE_CLOSE = re.compile(legacy._CLOSES)
 BARE_UNDERSCORE_CLOSE = re.compile(legacy._CLOSES_AFTER_UNDERSCORE)
+# Only these rendered trailing characters may be discarded. A terminal
+# underscore is prose by the legacy convention; an internal one is not.
+TRAILING_PROSE = frozenset("?!.,:;_)'\"]>}")
 
 
 def bare_urls(text):
-    """Classify every URL-like chunk before accepting a destination.
+    """Accept the rendered chunk from a URL marker to whitespace only after
+    classifying all of it. The first legacy closing boundary chooses its
+    endpoint; shortening is allowed only for a tail wholly in TRAILING_PROSE.
 
-    A finding is the default. The first legacy closing boundary fixes the
-    endpoint before normalization; validity never chooses the endpoint. Accept
-    only a valid destination and a fully classified tail: terminal sentence
-    punctuation, closing wrappers, or an emphasis closer followed by a word.
-    The tail must also satisfy the existing closing grammar. A boundary inside
-    the possible authority, including before a later userinfo @, is a finding.
-    Non-ASCII bare authorities and parentheses within destinations are refused.
+    Literal stars, tildes and underscores followed by text are never evidence
+    of emphasis. Write literal stars or tildes in paths as explicit links.
+    The parser has already consumed real emphasis before this function runs.
 
-    Disclosed limits: without a path, terminal punctuation/closing wrappers are
-    treated as prose rather than authority characters. After the authority,
-    emphasis closers may introduce an adjacent alphanumeric word, as in **URL**x and _URL_x. Other
-    tails are findings even when the legacy known-URL matcher would allow them.
-    Explicit link tokens avoid these bare-text ambiguities.
+    Terminal punctuation, including terminal underscores, is a prose judgement;
+    explicit links avoid that ambiguity. Authority boundaries, non-ASCII bare
+    authorities and parentheses within destinations fail closed. A marker inside
+    an accepted destination is URL data, not a second independent citation.
     """
     urls, findings = [], []
     consumed = 0
@@ -121,20 +123,16 @@ def bare_urls(text):
                 diagnostic = f"non-ASCII authority in bare URL {chunk!r}"
             elif stop is not None:
                 candidate, tail = text[start:stop], text[stop:end]
-                # A full match examines every tail character. These are prose
-                # shapes, not a replacement grammar for URL endpoints.
-                terminal = re.fullmatch(r"[?!.,:;_)*~'\"\]>}]*", tail)
-                emphasis = re.fullmatch(
-                    r"[?!.,:;]*(?:\*+|~+" + (r"|_+" if underscore else "")
-                    + r")[^\W_]*", tail)
+                terminal = all(char in TRAILING_PROSE for char in tail)
                 if (stop < authority_end and
                         (authority_end < end or "@" in text[stop:authority_end]
                          or not terminal)):
                     diagnostic = f"closing boundary inside bare URL authority {chunk!r}"
                 elif "(" in candidate or ")" in candidate:
                     diagnostic = f"ambiguous parentheses in bare URL {chunk!r}"
-                elif not (terminal or emphasis):
-                    diagnostic = f"unclassified bare URL tail {tail!r} in {chunk!r}"
+                elif not terminal:
+                    diagnostic = (f"unclassified bare URL tail {tail!r} in {chunk!r}; "
+                                  "write it as an explicit link")
                 else:
                     try:
                         normalize_url(candidate)
@@ -178,6 +176,15 @@ def scan(body, parser):
     Cells inherit row maps; inline children inherit their mapped inline block.
     Closing tokens inherit their opener. These tokens normally have no map.
     Raw HTML blocks are refused guide-wide because they can hide headings.
+    Opaque inline boundaries alarm only when URL text continues across a join
+    in the rendered text: a marker straddles the join, or a complete marker
+    shares a whitespace-free chunk with content on the other side. Strip only
+    TRAILING_PROSE from the chunk's end before testing that continuation.
+    Thus code mentioning a scheme followed only by trailing prose punctuation
+    and whitespace/end is documentation, not a continuation. Code contributes
+    visible text to this alarm-only projection, never destinations. Images
+    are checked both with visible alt text and with no textual width (loaded
+    image); neither projection contributes destinations.
     Inline HTML is refused inside Sources; mapped inline HTML elsewhere cannot
     hide a selected opener or boundary without the reconciliation failing.
     """
@@ -210,6 +217,30 @@ def scan(body, parser):
             if not isinstance(children, list):
                 raise ValueError("inline missing parsed children")
             opened, plain = [], []
+            # Alarm-only projections; never feed them to destination extraction.
+            projections = []
+            image_views = (False, True) if any(t.type == "image" for t in children) else (False,)
+            for show_alt in image_views:
+                projected, offsets = [], []
+                position = 0
+                for child in children:
+                    visible = (child.content if child.type in {"text", "code_inline"}
+                               else inline_text(child.children, title=True)
+                               if child.type == "image" and show_alt
+                               else "\n" if child.type in {"softbreak", "hardbreak"} else "")
+                    offsets.append((position, position + len(visible)))
+                    projected.append(visible)
+                    position += len(visible)
+                projected = "".join(projected)
+                # Only a positively classified terminal prose tail ends a URL
+                # chunk before whitespace. All other joined content alarms.
+                url_chunks = [
+                    (chunk.start(), chunk.start() + len(chunk[0].rstrip("".join(TRAILING_PROSE))))
+                    for chunk in re.finditer(r"\S+", projected)
+                    if legacy._URL_OR_LINK.search(chunk[0])
+                ]
+                projections.append((offsets, url_chunks))
+            html_reported = False
 
             def flush():
                 # Emphasis has no visible separator. Join its text tokens so a
@@ -227,27 +258,20 @@ def scan(body, parser):
                     edges = (-1,)
                 elif kind == "link_close":
                     edges = (1,)
-                elif kind in {"code_inline", "image", "html_inline"} and "link_open" not in opened:
+                elif kind in {"code_inline", "image"} and "link_open" not in opened:
                     edges = (-1, 1)
                 if emit:
                     # Link labels belong to their destination, not bare text.
                     # Transparent emphasis tokens do not separate visible text.
-                    for step in edges:
-                        adjacent = []
-                        cursor = index + step
-                        while 0 <= cursor < len(children):
-                            neighbour = children[cursor]
-                            if neighbour.type == "text":
-                                adjacent.append(neighbour.content)
-                            elif neighbour.type not in {"em_open", "em_close",
-                                                       "strong_open", "strong_close"}:
-                                break
-                            cursor += step
-                        text = "".join(reversed(adjacent) if step == -1 else adjacent)
-                        edge = re.search(r"\S+$" if step == -1 else r"^\S+", text)
-                        if edge and legacy._URL_OR_LINK.search(edge[0]):
-                            result.findings.append(
-                                f"body line {span[0] + 1}: URL-like text touches {kind}")
+                    touches = False
+                    for offsets, url_chunks in projections:
+                        for step in edges:
+                            boundary = offsets[index][0 if step == -1 else 1]
+                            if any(start < boundary < end for start, end in url_chunks):
+                                touches = True
+                    if touches:
+                        result.findings.append(
+                            f"body line {span[0] + 1}: URL-like text touches {kind}")
                 if kind not in {"text", "em_open", "em_close", "strong_open", "strong_close"}:
                     flush()
                 if kind in {"link_open", "em_open", "strong_open"} and token.nesting == 1:
@@ -261,8 +285,9 @@ def scan(body, parser):
                     if emit and "link_open" not in opened:
                         plain.append(token.content)
                 elif kind == "html_inline":
-                    if emit:
+                    if emit and not html_reported:
                         result.findings.append(f"body line {span[0] + 1}: unclassified raw HTML")
+                        html_reported = True
                 elif kind == "image" and token.nesting == 0:
                     # Image alt children do not render anchors; still validate types.
                     inlines(token.children, span, owner, emit=False)

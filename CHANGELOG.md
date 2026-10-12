@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-12
 
-- Add an advisory rendered Sources comparison using the shared pinned CommonMark parser with tables, legacy bare-URL boundaries and IDNA 2003 host normalization. A bare URL is accepted only after its whole written chunk is classified: a closing boundary inside the authority, a non-ASCII bare authority or an unclassified tail is reported as a finding instead of a shortened destination, and an invalid destination is not recorded. Negative adapter and shell fixtures require specific diagnostics. Keep the line-grammar Sources check authoritative; corpus differences do not fail gates (#441).
+- Add an advisory rendered Sources comparison using the shared pinned CommonMark parser with tables, legacy bare-URL boundaries and IDNA 2003 host normalization. A bare URL is accepted only after its whole written chunk is classified: a closing boundary inside the authority, a non-ASCII bare authority, a literal `~` or `*` in the URL, or any tail beyond trailing prose punctuation is reported as a finding instead of a shortened destination, and an invalid destination is not recorded. URL text that continues across a code span, image or link boundary is also a finding; such URLs are written as explicit links. Negative adapter and shell fixtures require specific diagnostics. Keep the line-grammar Sources check authoritative; corpus differences do not fail gates (#441).
 
 ## 2026-10-05
 
