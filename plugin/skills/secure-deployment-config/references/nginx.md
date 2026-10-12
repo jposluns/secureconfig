@@ -48,7 +48,7 @@ version_basis: {
     }
   },
   "claims": {
-    "certbot": {"text": "The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot.", "components": ["ng", "certbot"], "sources": ["ng:s6a0728ca7609", "certbot:s3a02bfe1d7ad"], "status": "REASONED"},
+    "certbot": {"text": "The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides.", "components": ["ng", "certbot"], "sources": ["ng:s6a0728ca7609", "certbot:s3a02bfe1d7ad"], "status": "REASONED"},
     "tls": {"text": "443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED"},
     "http2": {"text": "http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
     "tokens": {"text": "server_tokens off suppresses nginx version in headers and error pages.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
@@ -90,7 +90,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. Sources omit certbot. | nginx documentation unknown; Certbot nginx configurator v2.3.0 | REASONED |
+| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. | nginx documentation unknown; Certbot nginx configurator v2.3.0 | REASONED |
 | tls: 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off. | nginx documentation unknown | REASONED |
 | http2: http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed. | nginx documentation unknown | REASONED |
 | tokens: server_tokens off suppresses nginx version in headers and error pages. | nginx documentation unknown | REASONED |

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "5b4195d2715ae9c36fe5d0b98989740c2af65ddfe3e15f41bec3d119d99a3959",
+  "body_sha256": "e896a4fbed1f3b6f8cf63d96d88e05e29059f0520ad1271e9f5e47b2daca1c89",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -101,11 +101,11 @@ version_basis: {
     "zerossl-eab": {"text": "ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials.", "components": ["zerossl"], "sources": ["zerossl:sddca28a3381b"], "status": "REASONED"},
     "acme-default": {"text": "acme.sh registers with ZeroSSL by default.", "components": ["acme"], "sources": ["acme:sa635c50fc1f9"], "status": "REASONED"},
     "acme-install": {"text": "acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell.", "components": ["acme"], "sources": ["acme:sa635c50fc1f9"], "status": "REASONED"},
-    "server-automation": {"text": "The guide recommends Caddy or Traefik for built-in issuance and renewal without an external client; direct vendor Sources entries are absent.", "components": ["le", "caddy", "traefik"], "sources": ["le:s9ff2d787c618", "caddy:s9683cb8d689f", "traefik:s418a6b1ad09b"], "status": "REASONED"},
+    "server-automation": {"text": "The guide recommends Caddy or Traefik for built-in issuance and renewal without an external client.", "components": ["le", "caddy", "traefik"], "sources": ["le:s9ff2d787c618", "caddy:s9683cb8d689f", "traefik:s418a6b1ad09b"], "status": "REASONED"},
     "origin-certificates": {"text": "The guide describes Cloudflare origin certificates as free, long-lived and trusted only by Cloudflare's edge behind its proxy; a Cloudflare Sources entry is absent.", "components": ["le"], "sources": ["le:s9ff2d787c618"], "status": "REASONED"},
     "verify-inventory": {"text": "certbot certificates lists issued certificates and their expiry dates.", "components": ["certbot"], "sources": ["certbot:s44faaf4eb7d7"], "status": "REASONED", "verify": [1]},
-    "verify-https": {"text": "Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. A curl source and version are not recorded.", "components": ["le", "curl-source"], "sources": ["le:s9ff2d787c618", "curl-source:s76f69702c9d5", "curl-source:s60820cd231e1"], "status": "REASONED", "verify": [1]},
-    "verify-certificate": {"text": "The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates; an OpenSSL source and version are not recorded.", "components": ["le", "openssl-cli"], "sources": ["le:s9ff2d787c618", "openssl-cli:s00aaf106164f", "openssl-cli:s0856f4a58574"], "status": "REASONED", "verify": [1]},
+    "verify-https": {"text": "Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k.", "components": ["le", "curl-source"], "sources": ["le:s9ff2d787c618", "curl-source:s76f69702c9d5", "curl-source:s60820cd231e1"], "status": "REASONED", "verify": [1]},
+    "verify-certificate": {"text": "The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates.", "components": ["le", "openssl-cli"], "sources": ["le:s9ff2d787c618", "openssl-cli:s00aaf106164f", "openssl-cli:s0856f4a58574"], "status": "REASONED", "verify": [1]},
     "authentication": {"text": "A certificate alone is insufficient protection; continue with server controls and authentication.", "components": ["le"], "sources": ["le:s9ff2d787c618"], "status": "REASONED"},
     "dns-automation": {"text": "For automated DNS-01 issuance and renewal, use a provider DNS plugin and least-privilege API credentials; manual TXT entry is a separate path.", "components": ["certbot"], "sources": ["certbot:s875be163b4c1", "certbot:s7b60a00cadf3"], "status": "REASONED"},
     "dns-manual": {"text": "certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; these certificates do not auto-renew without a --manual-auth-hook that automates the challenge.", "components": ["certbot"], "sources": ["certbot:s7b60a00cadf3"], "status": "REASONED"}
@@ -146,11 +146,11 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | zerossl-eab: ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials. | ZeroSSL unknown | REASONED |
 | acme-default: acme.sh registers with ZeroSSL by default. | acme.sh unknown | REASONED |
 | acme-install: acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell. | acme.sh unknown | REASONED |
-| server-automation: The guide recommends Caddy or Traefik for built-in issuance and renewal without an external client; direct vendor Sources entries are absent. | Let's Encrypt documentation unknown; Caddy automatic HTTPS v2.11.4; Traefik ACME documentation v3.5 | REASONED |
+| server-automation: The guide recommends Caddy or Traefik for built-in issuance and renewal without an external client. | Let's Encrypt documentation unknown; Caddy automatic HTTPS v2.11.4; Traefik ACME documentation v3.5 | REASONED |
 | origin-certificates: The guide describes Cloudflare origin certificates as free, long-lived and trusted only by Cloudflare's edge behind its proxy; a Cloudflare Sources entry is absent. | Let's Encrypt documentation unknown | REASONED |
 | verify-inventory: certbot certificates lists issued certificates and their expiry dates. | Certbot documentation unknown | REASONED |
-| verify-https: Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. A curl source and version are not recorded. | Let's Encrypt documentation unknown; curl command documentation curl-8_12_1 | REASONED |
-| verify-certificate: The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates; an OpenSSL source and version are not recorded. | Let's Encrypt documentation unknown; OpenSSL certificate commands 3.0 | REASONED |
+| verify-https: Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. | Let's Encrypt documentation unknown; curl command documentation curl-8_12_1 | REASONED |
+| verify-certificate: The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates. | Let's Encrypt documentation unknown; OpenSSL certificate commands 3.0 | REASONED |
 | authentication: A certificate alone is insufficient protection; continue with server controls and authentication. | Let's Encrypt documentation unknown | REASONED |
 | dns-automation: For automated DNS-01 issuance and renewal, use a provider DNS plugin and least-privilege API credentials; manual TXT entry is a separate path. | Certbot documentation unknown | REASONED |
 | dns-manual: certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; these certificates do not auto-renew without a --manual-auth-hook that automates the challenge. | Certbot documentation unknown | REASONED |
@@ -242,7 +242,7 @@ A CAA DNS record restricts which certificate authorities may issue for your doma
 
 ## Verify
 
-REASONED: certificate inventory and HTTPS/certificate inspection follow the cited Certbot and Let's Encrypt guidance; curl and OpenSSL command-specific sources are not recorded. No deployment hostname or issued certificate was supplied for live checks, and this guide records no run.
+REASONED: certificate inventory and HTTPS/certificate inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation. No deployment hostname or issued certificate was supplied for live checks, and this guide records no run.
 
 ```bash
 sudo certbot certificates                       # what is issued and when it expires
@@ -253,7 +253,7 @@ openssl s_client -connect "$host:443" -servername "$host" \
   | openssl x509 -noout -issuer -dates
 ```
 
-REASONED: preceding block; certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance; curl and OpenSSL command-specific sources are not recorded, no deployment hostname or issued certificate was supplied, and no live result is recorded. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
+REASONED: preceding block; certificate inventory, HTTPS access and served-certificate hostname, trust, issuer and date inspection follow the cited Certbot and Let's Encrypt guidance and the cited curl and OpenSSL documentation; no deployment hostname or issued certificate was supplied, and no live result is recorded. A certificate alone does not protect anything: continue with the server guide for your stack and with [authentication.md](authentication.md).
 
 ## Sources (checked September 2026)
 
