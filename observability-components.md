@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8ee1e0a1fb0d79cb2145de241e390b6bd46e4bc5a7e290eda639983d79535a6c",
+  "body_sha256": "da69b5fd9d41a8263e0c735fa03827c8f9c18acb12f60bd367f3ec84100895e2",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -194,7 +194,7 @@ version_basis: {
     "memberlist-policy": {"text": "Keep tls-insecure-skip-verify false, set expected server name as needed, bind privately and restrict trusted peers even with TLS.", "components": ["dskit"], "sources": ["dskit:s675104c4819c", "dskit:s99e7e34182f1"], "status": "REASONED"},
     "memberlist-advertise": {"text": "Advertise address/port affect discovery, not bind; absent overrides derive an address from the first bind and actual port.", "components": ["dskit"], "sources": ["dskit:s251174df8783", "dskit:s052e8107edad"], "status": "REASONED"},
     "loki-tenants": {"text": "auth_enabled defaults true and requires tenant headers, not credentials; false uses fake, and tenant validation checks syntax/length only.", "components": ["loki", "dskit"], "sources": ["loki:sd13fa86b20d0", "loki:sb5e56f0d6348", "dskit:s3634557bb838", "dskit:s1ca109a7a016"], "status": "REASONED"},
-    "loki-grpc-auth": {"text": "Default dskit interceptors lack credentials; Loki has tenant exemptions, and the supplied subset omits full auth-helper implementation.", "components": ["dskit", "loki"], "sources": ["dskit:s38beab6892ea", "dskit:saf57a4cbc682", "loki:s057e686b00bb", "loki:s7786b9105acc"], "status": "REASONED"},
+    "loki-grpc-auth": {"text": "Default dskit interceptors lack credentials; Loki has tenant exemptions.", "components": ["dskit", "loki"], "sources": ["dskit:s38beab6892ea", "dskit:saf57a4cbc682", "loki:s057e686b00bb", "loki:s7786b9105acc"], "status": "REASONED"},
     "loki-push-query": {"text": "Reachable clients can push/query without credentials subject to tenant headers and ingest/query policies.", "components": ["loki"], "sources": ["loki:s9f316e1a5fef", "loki:s39c270ed878c"], "status": "REASONED"},
     "loki-config": {"text": "GET /config exposes configuration without a tenant-auth wrapper.", "components": ["loki"], "sources": ["loki:sbe0aa939a44d"], "status": "REASONED"},
     "loki-diagnostics": {"text": "Metrics and pprof routes are registered by default without a tenant-auth wrapper.", "components": ["dskit"], "sources": ["dskit:s761b46738198"], "status": "REASONED"},
@@ -267,7 +267,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | memberlist-policy: Keep tls-insecure-skip-verify false, set expected server name as needed, bind privately and restrict trusted peers even with TLS. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | memberlist-advertise: Advertise address/port affect discovery, not bind; absent overrides derive an address from the first bind and actual port. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-tenants: auth_enabled defaults true and requires tenant headers, not credentials; false uses fake, and tenant validation checks syntax/length only. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
-| loki-grpc-auth: Default dskit interceptors lack credentials; Loki has tenant exemptions, and the supplied subset omits full auth-helper implementation. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Loki v3.7.8 | REASONED |
+| loki-grpc-auth: Default dskit interceptors lack credentials; Loki has tenant exemptions. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Loki v3.7.8 | REASONED |
 | loki-push-query: Reachable clients can push/query without credentials subject to tenant headers and ingest/query policies. | Loki v3.7.8 | REASONED |
 | loki-config: GET /config exposes configuration without a tenant-auth wrapper. | Loki v3.7.8 | REASONED |
 | loki-diagnostics: Metrics and pprof routes are registered by default without a tenant-auth wrapper. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
@@ -498,8 +498,8 @@ dskit's tenant validation checks syntax and length, not identity or permission. 
 `auth_enabled: false`, Loki uses tenant `fake`. A missing-header rejection is not a login gate.
 dskit's default gRPC interceptor chain has no credential authentication; Loki adds its auth setup,
 with explicit tenant-check exemptions for health, frontend worker, scheduler and other internal RPCs.
-The supplied source subset lacks the auth helper implementation, so its complete interceptor
-behaviour has not been re-traced here. Do not expose gRPC on the strength of `auth_enabled`.
+The complete interceptor behaviour has not been re-traced here. Do not expose gRPC on the
+strength of `auth_enabled`.
 
 A reachable client without credentials can submit logs through `POST /loki/api/v1/push` and query
 through `/loki/api/v1/query` or `/loki/api/v1/query_range`, subject to tenant headers and ingestion
