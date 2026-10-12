@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2636047938757ff42a26a175a8565921c45a8c0cdb98c6380642cb3d1c473474",
+  "body_sha256": "036ca924129f4c96f2c5be4e57a7cf0556d1e398ea5dde457c30690685dceed3",
   "components": {
     "docs": {
       "name": "MLflow documentation",
@@ -334,7 +334,7 @@ REASONED: preceding block; listener inventory, external TCP reachability, proxy/
 - Docker, port publishing (loopback publishing) (loopback-only reach assumes Docker 28.0.0 or later): https://docs.docker.com/engine/network/port-publishing/
 - curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect`, `exitcode`, and `errormsg` write-out variables, the last two added in curl 7.75.0): https://curl.se/docs/manpage.html
 - MLflow `--host` option, default `127.0.0.1`, and `--port`, default `5000`, which the `MLFLOW_HOST` and `MLFLOW_PORT` environment variables override (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/cli_args.py#L162-L180
-- [MLflow's tracking-server command, `def server`, takes those `--host` and `--port` options (pinned tag v3.16.1)](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541)
+- MLflow's tracking-server command, `def server`, takes those `--host` and `--port` options (pinned tag v3.16.1): [`mlflow/cli/__init__.py#L369-L541`](https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541)
 - nginx release-1.28.0 proxy directive registration (checked October 2026; `proxy_pass` takes one upstream argument): https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_proxy_module.c#L305-L310
 - Caddy v2.11.4 `reverse_proxy` parser (checked October 2026): [directive registration](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L40) and [upstream syntax](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L58-L62).
 - iproute2 v6.12.0 `ss` manual (checked October 2026): [numeric output](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34), [listening sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44), [process display](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163), and [TCP sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375).
