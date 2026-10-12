@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "5da935be3e16ec5c813b70304fd06153ce263de13728955a9222f13988d07bdd",
+  "body_sha256": "68196b9fe19ade034159e73ed1774ab6f2d6104a1dcb9d80a79926f88c6fdd4b",
   "components": {
     "ts": {
       "name": "Tailscale documentation",
@@ -137,7 +137,7 @@ ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep:
                                                   # must read 127.0.0.1:3000, never 0.0.0.0:3000 or [::]:3000
 ```
 
-From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
+REASONED: preceding block; loopback listener inventory and direct LAN/VPC isolation, per the guide's cited ss(8) and Tailscale serve identity headers. No Serve host or separate LAN/VPC probe machine is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while a substituted address reached one curl stub. No deployed bind or HTTP response was observed: exposed wildcard binding permits direct bypass; fixed binding is loopback and the direct address does not answer, with failed requests alone inconclusive. From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
 
 REASONED: following block; direct-backend isolation follows the cited Serve identity-header guidance. This read-only review cannot provision a Serve host and separate LAN/VPC probe machine; HTTP replies expose bypass and failed requests remain inconclusive as described below.
 
@@ -156,7 +156,7 @@ REASONED: following block; direct-backend isolation follows the cited Serve iden
 # Any HTTP reply (including 4xx/5xx) proves the app is reachable past the tailnet at that address. A failed request does not by itself prove a loopback bind (a firewall, a wrong address, or a stalled response fails the same way), so read `err`/`exitcode` and rely on the `ss` line above for the actual bind address.
 ```
 
-Then confirm the tailnet path works and that the section-1 restriction actually holds:
+REASONED: preceding block; direct-backend isolation and the allowed tailnet path, per the guide's cited Tailscale serve identity headers and Tailscale serve. No Serve host or allowed/excluded tailnet devices are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; rejected guards reached no curl stub and a substituted direct address reached one. No live access was observed: exposed direct access bypasses the tailnet; fixed direct access is isolated while the allowed tailnet request works. Allowed access alone does not distinguish allow-all from scoped policy. Then confirm the tailnet path works and that the section-1 restriction actually holds:
 
 REASONED: following block; Serve status and allowed-device access follow the cited Serve CLI and policy-test documentation. This read-only review cannot configure a tailnet with allowed and excluded devices; success alone does not prove policy restriction.
 
@@ -165,7 +165,7 @@ tailscale serve status
 curl -q -sI https://host.tailnet.ts.net/            # from an ALLOWED tailnet device: works
 ```
 
-An allowed device connects under both the default allow-all policy and a correctly scoped one, so a request that works here does not prove the section-1 restriction took hold. Assert it in the tailnet policy file's `tests` (an `accept` from the intended identity to this host and port, and a `deny` from an excluded tailnet identity); Tailscale rejects a policy file whose `tests` fail. From a non-tailnet network the serve URL is unreachable while a funnel URL is reachable, so a funneled app must gate every request with its own login.
+REASONED: preceding block; Serve status, allowed access, policy assertions and public Serve/Funnel reachability, per the guide's cited Tailscale serve, Tailscale policy-file tests and Tailscale funnel. No tailnet, policy submission access or allowed/excluded devices are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; no live status, policy evaluation or request was observed. Exposed allow-all admits excluded identities; fixed policy accepts the intended identity and denies the excluded one, with failing assertions rejecting the policy file. Public Serve should remain unreachable; public Funnel remains reachable and therefore needs application login. An allowed device connects under both the default allow-all policy and a correctly scoped one, so a request that works here does not prove the section-1 restriction took hold. Assert it in the tailnet policy file's `tests` (an `accept` from the intended identity to this host and port, and a `deny` from an excluded tailnet identity); Tailscale rejects a policy file whose `tests` fail. From a non-tailnet network the serve URL is unreachable while a funnel URL is reachable, so a funneled app must gate every request with its own login.
 
 ## Sources (checked September 2026)
 
