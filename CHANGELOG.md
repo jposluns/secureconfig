@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-12
+
+- Remove stale "missing source" caveats from five version-basis claims in the self-signed certificate guide. The Git key-handling claim and the curl, Requests and Node.js trust claims no longer say a source or version is unrecorded, because pinned Sources entries for them exist; the verification-bypass claim now names only the Node.js bypass entries as absent. The caveats that remain true (RFC 9525, the filesystem commands and the Debian and RHEL trust stores) are kept, and the metadata review date moves to 2026-10-12. Commands, Verify steps and citations are unchanged (#444).
+
 ## 2026-10-05
 
 - Add scoped Verify declarations across the eight row 3.30 batch 2 guides, clearing 88 units (12 list items, 22 table rows and 54 prose units) by subtraction-only regeneration from 0a6b18a. Record disposable local certificate, shell and file-guard demonstrations separately from deployment expectations, and cover adjacent fences in their declarations. Retain eleven SQLite frontend historical-evidence units, four mixed Elasticsearch preparation units, one Elasticsearch snapshot/source-audit row and one mixed certificate-interpretation paragraph; preserve commands, claim text and recorded limitations (#443).
