@@ -85,6 +85,16 @@ case(
     "#11 merged but never referenced",
 )
 
+# The exemption is the highest number, not the latest merge, and pull requests do merge
+# out of number order (#299 merged after #302). Here #11 merges after #12: exempting the
+# latest merge instead would demand an entry for #12.
+case(
+    "the exemption follows the highest number, not the latest merge",
+    ["A (#10)", "Merge pull request #12 from o/c", "Merge pull request #11 from o/b"],
+    "# Changelog\n\n- A (#10). B (#11).\n",
+    False,
+)
+
 # The mismeasurement that prompted the gate: a reference sharing a parenthesis with
 # another must still count.
 case(
@@ -126,6 +136,101 @@ case(
     "# Changelog\n\n- Added a thing (#10). And later (#26).\n",
     True,
     "#25 merged but never referenced",
+)
+
+# Since #299 this repository merges with merge commits, whose subject GitHub writes
+# as `Merge pull request #N from <owner>/<branch>`. A gate reading only the squash suffix
+# read none of those subjects, so it checked such a pull request only when another
+# commit happened to end in its `(#N)`, and it still reported a pass. Two merges, as
+# above, so the newest-exemption cannot account for the missing one.
+case(
+    "a merge-commit pull request with no reference fails",
+    ["Merge pull request #10 from o/a", "Merge pull request #11 from o/b"],
+    "# Changelog\n\n- nothing referenced here\n",
+    True,
+    "#10 merged but never referenced",
+)
+case(
+    "the same merge-commit history passes once the entry exists",
+    ["Merge pull request #10 from o/a", "Merge pull request #11 from o/b"],
+    "# Changelog\n\n- Added a thing (#10).\n",
+    False,
+)
+
+# Both shapes in one history, as on main: the squash suffix still counts after merge
+# commits arrive, and a merge commit counts after squash merges.
+case(
+    "a squash pull request is still checked alongside merge commits",
+    ["A (#10)", "B (#11)", "Merge pull request #12 from o/c"],
+    "# Changelog\n\n- B (#11). C (#12).\n",
+    True,
+    "#10 merged but never referenced",
+)
+case(
+    "a merge-commit pull request is checked alongside squash merges",
+    ["A (#10)", "Merge pull request #11 from o/b", "Merge pull request #12 from o/c"],
+    "# Changelog\n\n- A (#10). C (#12).\n",
+    True,
+    "#11 merged but never referenced",
+)
+
+# The merge-commit pattern is anchored at the start of the subject. The revert line is
+# the one that tests the anchor: GitHub's revert of a merge commit quotes the prefix, so
+# an unanchored search reads #4, which is not the newest, and demands an entry for it.
+# The branch commit leading with its pull request number does not contain the prefix,
+# so it does not exercise the anchor.
+case(
+    "a #N mid-subject is not read as a merge-commit pull request",
+    [
+        "Merge pull request #10 from o/a",
+        "#11 r1 fix: mentions #3 in passing",
+        'Revert "Merge pull request #4 from o/d"',
+        "Merge pull request #11 from o/b",
+    ],
+    "# Changelog\n\n- Added a thing (#10).\n",
+    False,
+)
+# The merge-commit prefix wins over a suffix-shaped branch name, so the number read is
+# the one GitHub wrote. Reading the suffix first records #3 and never records #11.
+case(
+    "a merge commit's own number wins over a suffix in its branch name",
+    ["Merge pull request #10 from o/a", "Merge pull request #11 from o/b-(#3)", "Merge pull request #12 from o/c"],
+    "# Changelog\n\n- A (#10). C (#12).\n",
+    True,
+    "#11 merged but never referenced",
+)
+
+# GitHub writes ` from ` after the number, and the pattern requires it. A subject that
+# only starts like GitHub's, or another merge subject carrying a number, is not a merged
+# pull request: dropping ` from ` reads #5, and reading any `Merge` subject with a
+# number reads #5 and #6.
+case(
+    "only GitHub's merge-commit subject counts, not a subject that starts like it",
+    ["Merge pull request #10 from o/a", "Merge pull request #5 was superseded",
+     "Merge branch 'issue-#6' into o/b", "Merge pull request #11 from o/b"],
+    "# Changelog\n\n- Added a thing (#10).\n",
+    False,
+)
+
+# Merging main into a branch writes a merge commit too, with no pull request in it, and
+# main carries many of them. It must not count: it adds no number, and a history holding
+# only such merges still fails closed rather than passing.
+case(
+    "merging main into a branch is not a merged pull request",
+    [
+        "Merge pull request #10 from o/a",
+        "Merge remote-tracking branch 'origin/main' into o/b",
+        "Merge pull request #11 from o/b",
+    ],
+    "# Changelog\n\n- Added a thing (#10).\n",
+    False,
+)
+case(
+    "a history of only branch merges fails rather than reporting a pass",
+    ["plain commit", "Merge remote-tracking branch 'origin/main' into o/b"],
+    "# Changelog\n\n- nothing\n",
+    True,
+    "no merged pull request was found",
 )
 
 # Fail closed rather than pass vacuously.
