@@ -29914,7 +29914,61 @@ web-admin=false
 
 REASONED: For static users, coturn 4.18.0's example configuration also accepts `user=REPLACE_WITH_USER:0xREPLACE_WITH_HEX_KEY`; `0x` identifies a key instead of a clear password, which the vendor calls "less secure". This keeps the clear password out of `turnserver.conf`. The cited derivation computes unsalted MD5 of `user:realm:password` after `turnadmin`'s input preparation, including `SASLprep`. It follows that the key is bound to the user and realm, and weak passwords remain guessable offline. Protect the key as a credential: the cited static-account loader stores it directly, and the long-term message-integrity routines generate and check integrity using the key.
 
-REASONED: In the coturn 4.18.0 files cited below, `turnadmin -k` takes the password through `-p`/`--password` in argv. Tracing `main`, every `adminmain` password-buffer reference, `adminuser` and key derivation shows the argument copied into `pwd`, then `SASLprep` applied to the copy without erasing argv. No other option, config file, database, environment, stdin or prompt supplies that buffer in these files: server config loading is bypassed, database options do not populate it, and `-f` reads a separate AES key. This conclusion is limited to the reviewed files; unprovided build files, helper definitions and linked libraries were not audited. Prompting before expanding a password into `-p` still puts it in argv, where local process inspection or command-line auditing can expose it. No production key-generation command is provided here.
+REASONED: In the coturn 4.18.0 files cited below, `turnadmin -k` takes the password through `-p`/`--password` in argv. Tracing `main`, every `adminmain` password-buffer reference, `adminuser` and key derivation shows the argument copied into `pwd`, then `SASLprep` applied to the copy without erasing argv. No other option, config file, database, environment, stdin or prompt supplies that buffer in these files: server config loading is bypassed, database options do not populate it, and `-f` reads a separate AES key. This conclusion is limited to the reviewed files; unprovided build files, helper definitions and linked libraries were not audited. Prompting before expanding a password into `-p` still puts it in argv, where local process inspection or command-line auditing can expose it. No production turnadmin key-generation command is provided here.
+
+For static accounts, the following alternative derives the key without sending the password to an external command as an argument. Use a fresh Bash shell with trusted startup files and real builtins; paste the entire block. Substitute the user and the configured realm inside the single quotes. This deliberately accepts only ASCII letters, digits, dot, underscore and hyphen, with 1 to 127 bytes in each field. Choose a strong, independently generated password within that alphabet. Other characters returned by read are refused, not normalized. Enter only the password at the prompt, without embedded newlines or NUL bytes; Bash read is a line input, not a binary input. These bytes are unchanged by coturn 4.18.0's byte-oriented `SASLprep` in `ns_turn_msg.c` lines 1920-1960; that routine is not a general UTF-8 normalization implementation. `mainrelay.c` lines 3105-3129 prepare all three inputs, and `ns_turn_msg.c` lines 346-358 concatenate their bytes as `user:realm:password`, without a newline or the terminating NUL in the digest. The limits here are below turnadmin's input buffers (`ns_turn_msg_defs.h` lines 53-57).
+
+MD5 here is coturn's static-key format, not a recommendation to use MD5 for password storage. `SHATYPE_DEFAULT` selects the MD5 branch, even though the enum aliases it to `SHATYPE_SHA1`; the SHA256, SHA384 and SHA512 branches are separate. The default key is 16 bytes, printed as 32 lowercase hex digits with a `0x` prefix (`userdb.c` lines 997-1014). OpenSSL 3.5.5's dgst manual documents `-md5`, `-r` for coreutils output and stdin when no file is supplied. The block checks pipeline success and validates the extracted hex before printing the config entry; a build or policy that refuses MD5 produces no key. It does not change OpenSSL policy to enable MD5.
+
+DEMONSTRATED: following block; local Bash 5.3.9 and OpenSSL 3.5.5, with the prompt supplied on stdin, produced `user=ninefingers:0xbc807ee29df3c9ffa736523fb2c4e8ee` for coturn 4.18.0's public example in `examples/etc/turnserver.conf` lines 383-390. An instrumented wrapper recorded Bash, wrapper and OpenSSL command lines from procfs: none contained the example password. A synchronized exposed control did contain it. Unsubstituted placeholders, empty or non-ASCII passwords, readonly password/IFS variables and a failing digest command each exited 2 without a key. This is a local derivation and argv observation, not a TURN allocation test or a demonstration of terminal echo suppression.
+
+```bash
+(
+  trap - DEBUG RETURN ERR
+  set +x +a +e
+  set -o pipefail
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_USER' 'REPLACE_WITH_REALM'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo 'paste the whole block; not deriving'; exit 2; }
+  shift
+  [ "$#" -eq 2 ] || { echo 'supply exactly user and realm; not deriving'; exit 2; }
+  case "$1:$2" in
+    *REPLACE_WITH_*) echo 'substitute user and realm; not deriving'; exit 2 ;;
+  esac
+  case "$1" in
+    ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) echo 'invalid ASCII user; not deriving'; exit 2 ;;
+  esac
+  case "$2" in
+    ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) echo 'invalid ASCII realm; not deriving'; exit 2 ;;
+  esac
+  [ "${#1}" -le 127 ] && [ "${#2}" -le 127 ] || { echo 'user or realm too long; not deriving'; exit 2; }
+  { unset -n turn_password && unset -v turn_password; } 2>/dev/null ||
+    { echo 'cannot clear password variable; not deriving'; exit 2; }
+  { unset -n IFS; } 2>/dev/null ||
+    { echo 'cannot clear IFS; not deriving'; exit 2; }
+  IFS= read -r -s -p 'TURN password: ' turn_password ||
+    { echo 'password read failed; not deriving'; exit 2; }
+  builtin printf '\n' >&2
+  case "$turn_password" in
+    ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) echo 'invalid ASCII password; not deriving'; exit 2 ;;
+  esac
+  [ "${#turn_password}" -le 127 ] || { echo 'password too long; not deriving'; exit 2; }
+  set -- "$1" "$(builtin printf '%s:%s:%s' "$1" "$2" "$turn_password" |
+    openssl dgst -md5 -r && builtin printf '\nOK')"
+  unset -v turn_password
+  case "$2" in
+    *$'\nOK') set -- "$1" "${2%$'\nOK'}" ;;
+    *) echo 'digest failed; no key produced'; exit 2 ;;
+  esac
+  set -- "$1" "${2%% *}"
+  case "$2" in
+    ""|*[!0123456789abcdef]*) echo 'unexpected digest output; no key produced'; exit 2 ;;
+  esac
+  [ "${#2}" -eq 32 ] || { echo 'unexpected digest length; no key produced'; exit 2; }
+  builtin printf 'user=%s:0x%s\n' "$1" "$2"
+)
+```
+
+The prompt variable is cleared of inherited attributes, never exported and used only by Bash builtins. The builtin `printf` sends the exact bytes on stdin to `openssl dgst -md5 -r`; neither the password nor the key is an external process argument. The block clears inherited traps and disables tracing, allexport and inherited errexit before reading, refuses readonly IFS, and removes the password variable after hashing. These measures close the argv channel only. They do not protect against a compromised shell, same-account or root memory inspection, terminal capture, or tracing that is re-enabled. Never type the password into the pasted block or a command line, where shell history can retain it. The printed key is itself a credential: protect its output and place the generated entry in the protected coturn configuration under the same realm. The offline-guessing and key-reuse weaknesses described above still apply.
 
 For application-generated time-limited credentials, replace the `lt-cred-mech`/`user` lines with `use-auth-secret` and a `static-auth-secret` (plus the same `realm`); keep that shared secret in the server config, never distribute it to clients. A realm is an operational requirement for both modes, not a hard startup gate: omitting it warns rather than refuses, so set it explicitly.
 
@@ -30101,6 +30155,7 @@ That proves the certificate and handshake only, not TURN authentication, peer po
 - coturn 4.18.0 password requirement and key output (checked October 2026; lines 242-248 and 941-1016), static-key loading/storage (785-810) and retrieval (637-647): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/apps/relay/userdb.c
 - coturn 4.18.0 default MD5 derivation (checked October 2026; lines 339-428), SASLprep (1920-1960), key-based integrity generation (1985-2034) and checking (2060-2145): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/client/ns_turn_msg.c
 - coturn 4.18.0 SHATYPE_DEFAULT definition (checked October 2026; lines 190-196): https://raw.githubusercontent.com/coturn/coturn/4.18.0/src/client/ns_turn_msg_defs.h
+- OpenSSL 3.5 openssl-dgst(1ssl) manual (checked October 2026 against the vendor page and the installed 3.5.5 manual; `-md5`, `-r` and stdin input): https://docs.openssl.org/3.5/man1/openssl-dgst/
 
 ======================================================================
 ==> image-gen-uis.md
