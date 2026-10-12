@@ -1179,7 +1179,7 @@ ALLOWED_SKIPS = {
     "terminal GIT_PAGER": {"pty-unavailable"},
     "silent terminal input": {"pty-unavailable"},
     "interrupt during read": {"pty-unavailable"},
-    # The ten sampling cases and their enforcement meta-case may skip only
+    # The eleven sampling cases and their enforcement meta-case may skip only
     # when /proc inspection is unavailable outright, or when no environ
     # read of any process succeeded in the whole case; one denied read
     # during sampling is a missed sample, not a skip.
