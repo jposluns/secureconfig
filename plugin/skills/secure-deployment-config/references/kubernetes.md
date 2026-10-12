@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "af67534b412cec41d692c27ec6fd7964d3b9e7a04039b56fc8672259e3a66397",
+  "body_sha256": "3c314b755b70e86ba371b5e8768a7f64f3395f3dfe0e20ef93f34d35d4d0e4f8",
   "components": {
     "kubernetes": {
       "name": "Kubernetes documentation",
@@ -513,7 +513,7 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-**REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure, Gateway TLS/authentication, API targeting and access, and node/kubelet scans, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Kubernetes v1.37.1 server, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
 The existing commands state the expected workload and API outcomes. For the node scans, an exposed
 kubelet is expected to show 10250 open and, when enabled, 10255 open; after private binding and
@@ -630,7 +630,7 @@ nmap -6 -Pn -p 6443,2379,2380,10250,10255,10256,10257,10259 REPLACE_WITH_ITS_IPV
                                                                      # containers; 2379 is the whole of etcd
 ```
 
-One name is not one address and one node is not the cluster. Repeat the scan for every node that has a
+REASONED: preceding block; Gateway/service inventory, TLS/authentication, API reachability and complete node/etcd address coverage, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Kubernetes, operating etcd clusters, Nmap host discovery and Amazon EKS cluster endpoint access. No cluster, node inventory or external probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five YAML blocks parsed and the embedded endpoint parser produced five expected host/port/URL results and two input failures. No live scan ran: exposed endpoints answer untrusted sources; fixed workloads use the authenticated Gateway and restricted infrastructure stays reachable only from allowed sources, across all listed hosts and address families. One name is not one address and one node is not the cluster. Repeat the scan for every node that has a
 public address, worker nodes included, and every address each one answers on, in both families: a host
 filtered on IPv4 while it answers on IPv6 passes every check above and is still reachable. The
 `kubectl get svc` line catches NodePort Services that exist, but nothing here probes the 30000 to 32767
@@ -639,7 +639,7 @@ public addresses. And a cluster whose etcd runs on its own machines has hosts th
 never lists, because they carry no kubelet; take their client and peer addresses from wherever you
 configured them and scan those too.
 
-Be clear about what a pass here is worth. It says that this host, at this moment, over this address
+REASONED: multi-vantage corroboration and effective provider ranges, per the guide's cited Amazon EKS cluster endpoint access, GKE control plane network isolation, including how authorized networks work and AKS API server authorized IP ranges. No cluster configuration or separate probe networks are available. Related shell checks exited 0 without diagnostics; the endpoint parser produced the expected host, port and URL for five valid fixtures and rejected two invalid inputs. No live reachability was observed: exposed configuration admits an untrusted source; fixed configuration restricts every intended boundary while an allowed control still works. A failed probe alone remains inconclusive. Be clear about what a pass here is worth. It says that this host, at this moment, over this address
 family, could not reach that endpoint. It does not say the cluster is restricted, because your own
 egress, a stale kubeconfig context, a resolver, a tunnel that is down, or a transient failure at the far
 end all produce the same result, and because an allowlist that admits one network you forgot about is

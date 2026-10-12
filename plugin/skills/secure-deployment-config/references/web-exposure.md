@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "32bf26037f0218b612285c609d26477dbfbcf6eca30c6d9e4eab746cff7da0da",
+  "body_sha256": "113961028957de19b840a65238100b7575f43c9b068eebdad164bdb7da24047f",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -320,9 +320,9 @@ done
 # a bundler can split or encode a value, so scan for the literal secret as well
 ```
 
-Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
+REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation and Next.js environment variables. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
 
-Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
+REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
 against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and replace
 `example.com` with its served hostname. On an isolated test host, run before and after enabling the
 deny rules: the exposed static server should return 200 with `PLANTED-SECRET`; the fixed server must
