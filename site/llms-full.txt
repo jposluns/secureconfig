@@ -22004,7 +22004,7 @@ Metadata reviewed 2026-10-12; documentation checked 2026-10 (exact day unknown).
 | verify-request: Paired requests require Bash, curl 7.75.0+, verified HTTPS and identical origin/method/path/body; inspect engine JSON, not status alone. | curl minimum 7.75.0; Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown | REASONED |
 | verify-external: Inventory actual listeners, publications and IPv4/IPv6 rules; external TCP success fails, while refusal/timeout needs live private controls and policy evidence. | Meilisearch release reference v1.53.2; Typesense 30.2; OpenBSD-compatible netcat unknown | REASONED |
 | verify-local-tcp: Recorded netcat loopback reachable/refused shapes returned FAIL/exit 1 and INCONCLUSIVE/exit 2 respectively; external reachability remains unobserved. | OpenBSD-compatible netcat unknown | DEMONSTRATED |
-| verify-bundle: Literal bundle and local-history scan exercised on hand-built fixtures; real-client-build positive and negative controls remain unobserved. | Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown; Git grep manual 2.55.0; Git rev-list manual 2.56.0; Git manual 2.56.0 | REASONED |
+| verify-bundle: Repository credential scanner searches literal output and local commit-tree content; regression fixtures ran, while real-client-build controls remain unobserved. | Meilisearch documentation (rolling) unknown; Typesense documentation (rolling) unknown; Git grep manual 2.55.0; Git rev-list manual 2.56.0; Git manual 2.56.0 | REASONED |
 <!-- version-basis:end -->
 
 Both back RAG pipelines and site search. Meilisearch ships a keyless development mode meant for a laptop and answers unauthenticated until you set a master key; Typesense requires an operator-supplied bootstrap key from the moment it starts, with no keyless mode. Meilisearch's default admin key is full access except key management, and Typesense's bootstrap key is admin over all endpoints and data; ship an unprotected dev-mode instance, or leak either engine's privileged key, and the whole corpus, every document your RAG pipeline embedded, is readable and writable by whoever has it.
@@ -22194,57 +22194,24 @@ authentication row got `401` anonymously and `200` on the search key through the
 proxy, keyless Meilisearch made the block print `FAIL: unexpected HTTP status` on an anonymous `200`, the
 exposed state, and Typesense with its plaintext backend on `127.0.0.1:8108` gave `401` anonymously then `200` on a collection-scoped search key.
 
-DEMONSTRATED: hand-built static fixtures, not a real application build, exercised this block with Bash 5.3.9 and Git 2.55.0: ignored and untracked bundles, old commits, reflogs, stashes, branches, tags, hidden files, binary files and literal special characters returned FOUND/exit 1; absence and a gzip-only key returned NOT FOUND/exit 0. Symlinks, unreadable entries, a FIFO, missing or corrupt blobs, broken refs, invalid input, empty output directories and `.git` entries in any ASCII letter case returned INCONCLUSIVE/exit 2, including after earlier matching names. Inherited Git environment overrides no longer redirected history; readonly GIT_DIR returned INCONCLUSIVE. Disabled printf and functions or aliases named printf, read and git preserved FOUND. With core.pager or PAGER configured to emit a warning, terminal-output runs returned FOUND with --no-pager.
+REASONED: search each admin, master or bootstrap key before deploying a client build, using the repository's `tools/scan_credential.sh` credential scanner. The cited Git manuals define the literal file and commit-tree searches; the engine references require privileged keys to stay server-side. The scanner is part of the [secureconfig repository](https://github.com/jposluns/secureconfig) itself, at `tools/scan_credential.sh`, from the merge of [PR #450](https://github.com/jposluns/secureconfig/pull/450) onward; it is not included in the published site or the plugin. Use a full clone of the repository, record the commit you ran, and read the script before giving it a real key.
 
-REASONED: the cited Git manuals describe literal matching and local history traversal, and the engine key references require privileged keys to remain server-side. No real application build is available: the procedure and block below still need real-build positive and negative controls.
+DEMONSTRATED: `tools/test_scan_credential.py` is the regression evidence for the repository tool, run with Bash 5.3.9 and Git 2.55.0 on disposable repositories: literal output and historical matches returned FOUND/1; absence and the named omission fixtures returned NOT FOUND/0; invalid inputs, unsafe output entries, Git diagnostics and incomplete searches returned INCONCLUSIVE/2. These are fixture observations, not real application builds; bounded sampling of the scanner's and its children's argv and environment during live scans found no key, and such sampling is no proof against exposure between samples or through process memory.
 
-1. REASONED: run from the repository root in a fresh Bash 4.3 or later started by the operator with trusted startup files, a trusted Git executable and a finished build in a quiet, complete local repository. Stop build watchers: a file changed during the scan can be skipped. System, global and repository Git configuration files remain trusted.
-2. REASONED: change `./dist` in every occurrence (six) to your actual output directory. Use a simple path without whitespace or shell or Git pathspec metacharacters. The walk requires at least one regular file and refuses symlinks, unreadable or special entries and any path component spelling `.git` in any ASCII letter case, including nested repositories and submodule gitfiles.
-3. REASONED: paste the whole block, then enter one admin, master or bootstrap key alone on one line at the silent read; repeat for each key. Never paste a key into the command or shell history. Before reading or running Git, the block removes every `GIT_` shell variable, including exported variables, and refuses a failed listing or unset. Git then discovers the repository from the current directory.
-4. REASONED: before reading, the block re-enables printf and read, removes aliases and same-named functions for printf, read and git, requires builtin printf/read/compgen and external Git, checks the Bash version and refuses unsafe output entries. Other shell primitives must retain normal behaviour; this does not defend against redefined Bash keywords or the `type` builtin. Backslashes prevent parse-time alias expansion. The subshell restores the calling shell's options on return.
-5. REASONED: matching names can disclose a key embedded in a filename; ref names are not printed because history operands are commit IDs. Same-account and root access to process memory and pipes is not prevented. An interrupted run with no final line is inconclusive.
-6. REASONED: in a disposable real build, seed a dummy key and require FOUND/exit 1, then remove it, rebuild and require NOT FOUND/exit 0; retain an old-commit positive control separately. These real-build controls remain unobserved.
-
-REASONED: following block; the Git grep and rev-list references support literal byte searches of output files and regular-file blobs in local commits. Builtin printf feeds the nonempty, control-free key through a pipeline to `-f -`, with both statuses checked. Except for the diagnostic limits below, any diagnostic or abnormal status prevents NOT FOUND; `-F -a -l` includes binary files and prints matching names only. The Git manual's `--no-pager` disables paging even when `core.pager` or `PAGER` is set.
+REASONED: following block; no real application build is available in the authoring environment. From a trusted fresh shell with BASH_ENV unset, substitute the two checkout paths and the relative build directory, then enter one key alone on a line at the silent read; repeat for each key. Bash 4.3+, trusted Bash/Git executables and Git configuration, a finished build and a quiet repository are prerequisites. In a disposable real build, seed a dummy key and require FOUND/1, remove it and rebuild and require NOT FOUND/0; retain a separate old-commit positive control. Those real-build controls remain unobserved under row 1.117.
 
 ```bash
-(
-  trap - DEBUG RETURN ERR
-  set +x +a +e +u +f
-  scan_fail() { echo 'INCONCLUSIVE: could not complete scan'; exit 2; }
-  { unalias printf read git; unset -f printf read git; enable printf read; } 2>/dev/null || scan_fail
-  [[ $(type -t printf) == builtin && $(type -t read) == builtin && $(type -t git) == file && $(type -t compgen) == builtin ]] || scan_fail
-  (( BASH_VERSINFO[0] > 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 3) )) || scan_fail
-  { unset -n key IFS commits commit hit rc entry err GLOBIGNORE && unset -v key IFS commits commit hit rc entry err GLOBIGNORE; } 2>/dev/null || scan_fail
-  IFS=$' \t\n'; shopt -u failglob; shopt -s globstar dotglob nullglob || scan_fail
-  commits=$(\compgen -v) || scan_fail
-  for entry in $commits; do [[ $entry != GIT_* ]] || { unset -n "$entry" && unset -v "$entry"; } 2>/dev/null || scan_fail; done
-  [[ -d ./dist && ! -L ./dist && -r ./dist && -x ./dist ]] || scan_fail; hit=0
-  for entry in ./dist/**; do
-    [[ $entry != */.[gG][iI][tT] && $entry != */.[gG][iI][tT]/* && ! -L $entry && -r $entry && ( -f $entry || ( -d $entry && -x $entry ) ) ]] || scan_fail; [[ -f $entry ]] && hit=1
-  done
-  (( hit )) || scan_fail
-  IFS= \read -rs key || scan_fail; [[ -n $key && $key != *[[:cntrl:]]* ]] || scan_fail
-  exec 3>&1
-  scan_git() {
-    err=$(if [[ $1 == grep ]]; then
-      \printf '%s\n' "$key" | \git --no-pager "$@" 2>&1 >&3
-      set -- "${PIPESTATUS[@]}"; (( $1 == 0 )) || exit 2; exit "$2"
-    else \git --no-pager "$@" 2>&1 >&3; fi)
-    rc=$?; [[ -z $err && $rc -le 1 ]] || scan_fail
-    return "$rc"
-  }
-  hit=0; commits=$(scan_git rev-list --all --reflog 3>&1) || scan_fail
-  scan_git grep --no-index -F -a -l -f - -- ./dist && hit=1
-  while IFS= \read -r commit; do
-    [[ -z $commit ]] && continue
-    scan_git grep -F -a -l -f - "$commit" -- && hit=1
-  done <<< "$commits"
-  if (( hit )); then \printf '%s\n' 'FOUND: remove and rotate credential'; exit 1; else \printf '%s\n' 'NOT FOUND: no literal credential in stated scope'; exit 0; fi
-)
+(cd /path/to/project && bash /path/to/secureconfig/tools/scan_credential.sh ./dist)
 ```
 
-REASONED: only raw output-file bytes and the content of regular-file blobs in local commit trees are searched, including executable regular files. The commit set is `git rev-list --all --reflog` from the current worktree; refs local to another worktree can be omitted. The target text of a committed symbolic link is not searched. An object referenced only by a tag or other ref and present in no commit tree, such as a tag pointing directly at a blob, is not searched. Gitlinks refer to submodules, whose contents are outside scope; tree entries are traversed, not searched as raw objects. Gzip and Brotli are not decoded, and encoded, escaped or split keys and runtime injection can evade detection. Symlinks, unreadable or special output entries and `.git` components in any ASCII letter case are refused: inspect targets separately, or rebuild into a readable directory of regular files and rerun. Unreachable objects, expired reflogs, unfetched or shallow history, submodule contents and LFS payloads are outside scope; inspect those separately. Replacement refs and grafts can hide original content or ancestry; the scan follows Git's resulting view, not the hidden originals. A finished build and quiet repository are required because a file changed during the scan can be skipped. One Git grep invocation per commit avoids an argument-length limit, but stores the commit list in memory and repeats unchanged-tree work on large repositories; no final line after interruption or resource exhaustion means inconclusive. INCONCLUSIVE with no visible reason can come from a Git warning: run the same Git command outside the block to see its diagnostic, keeping any key on stdin. Git diagnostics consisting only of newlines or containing NUL bytes, and faults requiring injection into the block's own builtins, are outside scope: command substitution strips trailing newlines, and Bash's NUL warning is not captured.
+REASONED: the tool's three outcomes are FOUND/1 (remove and rotate the credential), NOT FOUND/0 (only the scope below) and INCONCLUSIVE/2 (a refusal or incomplete search, taking precedence over earlier matches). It prints matching names, which can themselves contain a key, but never matching content or Git diagnostics. To identify the first failed prerequisite without entering a key, add `--explain` before the output argument; its categories disclose no paths. A READY result checks prerequisites only, not content. Interrupted runs without a final outcome remain inconclusive.
+
+- REASONED: Git grep searches raw output bytes and regular-file blobs in commits from `git rev-list --all --reflog`; it neither decodes gzip/Brotli nor reconstructs encoded, escaped, split or runtime-injected keys.
+- REASONED: Git tree searches omit committed symlink targets, submodule contents and LFS payloads; the output walk refuses symlinks, special/unreadable entries, empty output and any ASCII-case `.git` component.
+- REASONED: Git's commit enumeration omits unreachable objects, expired reflogs, omitted shallow/unfetched history, other-worktree private refs and objects present in no commit tree, including tags directly pointing at blobs.
+- REASONED: Git replacement refs and grafts can hide original content or ancestry; only the resulting Git view is searched.
+- REASONED: a concurrent file change can evade the walk; commit lists consume memory and each commit needs a separate Git search, so resource exhaustion can interrupt completion.
+- REASONED: stdin avoids key-bearing child arguments and files; it does not protect process memory or pipes from the same account/root, or compensate for hostile shell startup files or executables.
 
 ## Common mistakes
 
