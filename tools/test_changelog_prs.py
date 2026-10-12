@@ -85,6 +85,16 @@ case(
     "#11 merged but never referenced",
 )
 
+# The exemption is the highest number, not the latest merge, and pull requests do merge
+# out of number order (#299 merged after #302). Here #11 merges after #12: exempting the
+# latest merge instead would demand an entry for #12.
+case(
+    "the exemption follows the highest number, not the latest merge",
+    ["A (#10)", "Merge pull request #12 from o/c", "Merge pull request #11 from o/b"],
+    "# Changelog\n\n- A (#10). B (#11).\n",
+    False,
+)
+
 # The mismeasurement that prompted the gate: a reference sharing a parenthesis with
 # another must still count.
 case(
@@ -130,8 +140,9 @@ case(
 
 # Since #299 this repository merges with merge commits, whose subject GitHub writes
 # as `Merge pull request #N from <owner>/<branch>`. A gate reading only the squash suffix
-# saw none of them and still reported a pass. Two merges, as above, so the
-# newest-exemption cannot account for the missing one.
+# read none of those subjects, so it checked such a pull request only when another
+# commit happened to end in its `(#N)`, and it still reported a pass. Two merges, as
+# above, so the newest-exemption cannot account for the missing one.
 case(
     "a merge-commit pull request with no reference fails",
     ["Merge pull request #10 from o/a", "Merge pull request #11 from o/b"],
@@ -163,10 +174,11 @@ case(
     "#11 merged but never referenced",
 )
 
-# The merge-commit pattern is anchored at the start of the subject. A branch commit
-# leading with its pull request number, or GitHub's revert of a merge commit, quotes a
-# number that is not being merged; read unanchored, either would demand an entry for a
-# pull request that is not the newest.
+# The merge-commit pattern is anchored at the start of the subject. The revert line is
+# the one that tests the anchor: GitHub's revert of a merge commit quotes the prefix, so
+# an unanchored search reads #4, which is not the newest, and demands an entry for it.
+# The branch commit leading with its pull request number does not contain the prefix,
+# so it does not exercise the anchor.
 case(
     "a #N mid-subject is not read as a merge-commit pull request",
     [
@@ -186,6 +198,18 @@ case(
     "# Changelog\n\n- A (#10). C (#12).\n",
     True,
     "#11 merged but never referenced",
+)
+
+# GitHub writes ` from ` after the number, and the pattern requires it. A subject that
+# only starts like GitHub's, or another merge subject carrying a number, is not a merged
+# pull request: dropping ` from ` reads #5, and reading any `Merge` subject with a
+# number reads #5 and #6.
+case(
+    "only GitHub's merge-commit subject counts, not a subject that starts like it",
+    ["Merge pull request #10 from o/a", "Merge pull request #5 was superseded",
+     "Merge branch 'issue-#6' into o/b", "Merge pull request #11 from o/b"],
+    "# Changelog\n\n- Added a thing (#10).\n",
+    False,
 )
 
 # Merging main into a branch writes a merge commit too, with no pull request in it, and

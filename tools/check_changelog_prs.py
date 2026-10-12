@@ -19,16 +19,20 @@ reads both:
 - a merge commit, whose subject begins `Merge pull request #N from `; this repository
   has merged that way since #299.
 
-Reading only the first shape left every merge-commit pull request unchecked while the
-gate still reported a pass. A merge of one branch into another, such as
+Reading only the first shape left merge-commit pull requests unchecked while the gate
+still reported a pass. It still caught #303 and #306, but only because a commit on each
+one's branch, which reached main with the merge, ended in that pull request's `(#N)`.
+A merge of one branch into another, such as
 `Merge remote-tracking branch 'origin/main' into ...`, is neither shape and does not
 count, nor does a `#N` anywhere else in a subject.
 
-THE ONE EXEMPTION: the highest-numbered merged pull request. A pull request cannot
-reference its own number until it is opened, and the convention here is that a content
-change may be followed by a separate bookkeeping change that records it. Exempting the
-newest one leaves room for exactly that, and no more: let a second pull request merge
-without its entry and this gate goes red.
+THE ONE EXEMPTION: the highest-numbered merged pull request, even when a lower-numbered
+one merged after it. A pull request cannot reference its own number until it is opened,
+so the highest-numbered one may be missing its entry. That is a tolerance, not a
+convention: CONTRIBUTING.md's "Shipping a change" section says to record the change in
+`CHANGELOG.md` "in the same pull request, not in a later bookkeeping one". The
+exemption covers exactly one: let a second pull request merge without its entry and this
+gate goes red.
 
 WHY IT FAILS ON A SHALLOW CLONE rather than skipping: `actions/checkout` fetches one
 commit by default, and with one commit this gate would find nothing missing and report a
