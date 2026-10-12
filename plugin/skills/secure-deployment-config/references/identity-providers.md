@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e876ea1fe36baea3f4b37b4281c5567acb4f5dd5ff06dbc36ce01344b52c1a56",
+  "body_sha256": "77b66be4b020595c5444423e97520b1fd67a9b6bf0143cb2d2491b573d8082bc",
   "components": {
     "entra": {
       "name": "Microsoft Entra documentation",
@@ -295,9 +295,9 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 
 ## Verify
 
-- With only the password (or only a social login) an administrator cannot reach an admin function once MFA is required at the provider; test with a fresh session, and confirm the same admin function DOES succeed once MFA is completed, so the denial is MFA enforcement and not an unrelated failure.
-- A valid account from outside your allowlist (a personal Gmail, a different tenant, a non-member GitHub user) is rejected after login, not admitted, while an allowed account does reach the app, so the rejection is the allowlist and not a broken login path.
-- Correlate each test against the provider's sign-in log (in Microsoft Entra this is Sign-in logs, not Audit logs, which record configuration changes) and your application's authorization decision: confirm the required factor or assurance level was met and that the outside account was denied. A log entry alone shows only that a sign-in happened, not that MFA or the allowlist was enforced.
+- REASONED: paired administrator MFA access, per the guide's cited Microsoft Entra security defaults and Supabase MFA enforcement. No provider tenant, administrator test account or protected admin function is available; this item supplies no local command or configuration to execute. No login was observed. Exposed access permits a password-only or social-login-only session; fixed access denies that same admin function until MFA completes and then permits it. With only the password (or only a social login) an administrator cannot reach an admin function once MFA is required at the provider; test with a fresh session, and confirm the same admin function DOES succeed once MFA is completed, so the denial is MFA enforcement and not an unrelated failure.
+- REASONED: allowed and excluded account comparison, per the guide's cited oauth2-proxy v7.15.4 GitHub organization/team restrictions and username exception. No connected application or allowed/excluded provider accounts are available; this item supplies no local command or configuration to execute. No login was observed. Exposed authorization admits a valid outside account; fixed authorization rejects it while admitting an allowed account. A valid account from outside your allowlist (a personal Gmail, a different tenant, a non-member GitHub user) is rejected after login, not admitted, while an allowed account does reach the app, so the rejection is the allowlist and not a broken login path.
+- REASONED: correlation of sign-in assurance and application authorization, per the guide's cited Microsoft Entra sign-in logs and Microsoft Entra security defaults. No provider test events or application decision logs are available; this item supplies no local command or configuration to execute. No logs were inspected. Exposed decisions admit insufficient assurance or an outside account; fixed decisions require the factor and deny the outside account, corroborated with sign-in records rather than inferred from login success alone. Correlate each test against the provider's sign-in log (in Microsoft Entra this is Sign-in logs, not Audit logs, which record configuration changes) and your application's authorization decision: confirm the required factor or assurance level was met and that the outside account was denied. A log entry alone shows only that a sign-in happened, not that MFA or the allowlist was enforced.
 
 ## Sources (checked September 2026)
 

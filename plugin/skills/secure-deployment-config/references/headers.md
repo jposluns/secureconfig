@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "8cbdb22d5f1ba40e85a22dcccef2b9713ad84fddcdaa83ecdecd65c188390288",
+  "body_sha256": "5bb9b4d1d08b324b335de57ed555a220be389669be0deed6eadbd19d0db07844",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",
@@ -154,11 +154,11 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' -D - -o /dev/null -w 'fin
 # inconclusive.
 ```
 
-Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
+REASONED: preceding block; final-response header values, external scanning and CSP discrimination, per the guide's cited MDN HTTP headers reference and Security header scanner. No deployed application or controlled browser application session is available, and network access is unavailable. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; no HTTP response or browser outcome was observed. Exposed responses omit effective controls or allow the forbidden resource; fixed final responses carry the stated values and block the forbidden resource while permitting the allowed control. Then scan with https://securityheaders.com/ from outside for a second opinion (it fetches with GET). No UNEXPECTED CSP console violations during normal application use is necessary but not sufficient: a permissive CSP produces none, and a correct policy still logs a violation when it blocks something (the negative test below, an attack, or an unwanted load). Confirm the policy actually blocks by loading a page with a deliberately disallowed resource (an inline script the policy forbids, or an off-origin image) and checking it is refused while an allowed resource still loads.
 
-For an authenticated route behind a shared cache, request the same URL as user A, then as user B, then anonymously, after warming the cache; each response must reflect only its own caller, never the one before it.
+REASONED: shared-cache caller separation, per the guide's cited MDN Cache-Control. No deployed shared cache or authenticated A/B accounts are available; this prose supplies no local command or configuration to execute. No response sequence was observed. Exposed caching replays a previous caller's private content; fixed responses after warming the same URL belong only to their current authenticated or anonymous caller. For an authenticated route behind a shared cache, request the same URL as user A, then as user B, then anonymously, after warming the cache; each response must reflect only its own caller, never the one before it.
 
-In a real browser, log in, open an authenticated page, then log out and press the Back button: the authenticated page must not reappear from history. The browser should re-request it and land on the login screen. That confirms the logout outcome, not which header produced it, so also inspect the authenticated and logout responses for the intended `no-store` and `Clear-Site-Data` headers. Because the back/forward-cache clearing is browser-dependent, run the check in each browser you support.
+REASONED: logout, browser history and response-header inspection, per the guide's cited MDN Cache-Control, MDN Clear-Site-Data and MDN back/forward cache. No application session or supported-browser deployment matrix is available; this prose supplies no local command or configuration to execute. No logout sequence was observed. Exposed history restores authenticated content after logout; the expected fixed outcome is a new request reaching login, with no-store and Clear-Site-Data checked independently in every supported browser. In a real browser, log in, open an authenticated page, then log out and press the Back button: the authenticated page must not reappear from history. The browser should re-request it and land on the login screen. That confirms the logout outcome, not which header produced it, so also inspect the authenticated and logout responses for the intended `no-store` and `Clear-Site-Data` headers. Because the back/forward-cache clearing is browser-dependent, run the check in each browser you support.
 
 ## Sources (checked September 2026)
 

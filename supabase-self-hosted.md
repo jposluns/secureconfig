@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "35dd19c3e2e22fbc34379bc762e98415d5c54ee97028c8ded02940445cda71ec",
+  "body_sha256": "957a513c994803bda22f99e20854d682e0ddb87fe02a2edc4350625596c8bb00",
   "components": {
     "docs": {
       "name": "Supabase documentation",
@@ -203,7 +203,7 @@ or an identity-aware proxy that enforces MFA.
 
 ## 5. Verify
 
-Each probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so
+REASONED: following block; listener/publication inventory and external versus allowed-vantage controls, per the guide's cited Supabase self-hosting with Docker and Supabase docker-compose.yml. No Supabase deployment or container runtime is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. No deployed listener was inspected: exposed ports answer externally; fixed ports are private and still work from an allowed vantage, corroborated by effective publication mappings. Credential outcomes described below also remain unobserved. Each probe below is reasoned, not demonstrated: the authoring environment has no container runtime, so
 none was stood up in its exposed and fixed states. Each names its expected exposed and fixed result so
 it discriminates against a live instance. These expectations follow the cited vendor documentation, including the check that forges
 a token with the demo `JWT_SECRET`, which is the check that proves the secret itself was rotated rather
@@ -225,7 +225,7 @@ refusal from that vantage, and the write-out fields need curl 7.75.0 or newer.
 ss -tlnp   # read every listener; 8000/5432/6543: loopback or internal only
 ```
 
-The gateway serves plain HTTP on `8000`. Substitute the base URL, function name, and current legacy
+REASONED: preceding block; listener isolation and the canary function comparison, per the guide's cited Supabase docker-compose.yml and Supabase docker .env.example. No Supabase deployment or container runtime is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five rejected guard cases reached no curl stub, while substituted canary inputs produced two STUB curl lines. No live outcome was observed: fixed listeners are private, and the function's exposed state accepts both requests while JWT enforcement denies the credential-free request and admits the current-token control. The gateway serves plain HTTP on `8000`. Substitute the base URL, function name, and current legacy
 `ANON_KEY` JWT inside the single quotes. Use a canary function with a known response and no independent
 authentication. With `FUNCTIONS_VERIFY_JWT=false`, both requests should reach it; with verification
 enabled, the credential-free request should receive `401` and the Bearer-authenticated request should
@@ -253,7 +253,7 @@ REASONED: following block; the canary function comparison follows the cited envi
 )
 ```
 
-For a port you can still reach, check whether the shipped credentials were replaced, feeding every credential
+REASONED: preceding block; function authentication and retirement of shipped API, signing, dashboard and database credentials, per the guide's cited Supabase self-hosting with Docker, Supabase docker .env.example, Supabase API keys and curl curl-8_14_1 headers from stdin. No Supabase deployment, container runtime or current credentials are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; guarded canary inputs reached two curl stubs and rejected inputs reached none. Synthetic JSON/base64url tokens parsed and demo/current fixture keys produced different HMACs; no service verification ran. Exposed services accept the old credentials or unsigned function request; fixed services reject them while current credentials return the stated positive controls. For a port you can still reach, check whether the shipped credentials were replaced, feeding every credential
 through stdin rather than argv (`curl --config -` for Basic auth, `curl --header @-` for `apikey`/`Authorization`;
 disable shell tracing). Test each shipped API key against `/auth/v1/settings`, then repeat with a current key that must return
 settings JSON. This checks gateway acceptance, not retirement of backend signing keys. Separately, test the

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "80560753d0f8d1b1550244a8f42d8764eaee0786ee60eb04cf71926b2e29b301",
+  "body_sha256": "3e6e4af5d467fb3f81ff7bbe18cf2fe969c8459e58417e1e921d755c2ba32098",
   "components": {
     "server": {
       "name": "code-server",
@@ -168,7 +168,7 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
 # or unsuccessful positive control is inconclusive, not a pass.
 ```
 
-An unauthenticated editor in a private browser window means whoever finds the URL owns the host.
+REASONED: preceding block; listener inventory, direct-origin isolation, paired editor access and MFA, per the guide's cited code-server v4.137.0 deployment guide and HTTP controls. No editor, proxy, IdP or external probe host is available; listeners are denied locally. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics and config YAML parsed. Placeholder, missing-assignment, short, empty and embedded-placeholder inputs printed refusal messages without reaching curl stubs; substituted inputs reached the stubs, but cookie input stopped at unavailable /dev/tty. Live outcomes remain unobserved: exposed access opens the editor anonymously or bypasses MFA; fixed access isolates the origin, challenges anonymous users and requires the second factor while admitting the authenticated control. An unauthenticated editor in a private browser window means whoever finds the URL owns the host.
 
 ## Sources (checked September 2026)
 
