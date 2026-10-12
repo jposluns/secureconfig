@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "45ec84d5a7d3bc1b864b2d93774bdec5b38fc27486764e61a028d186359c511d",
+  "body_sha256": "f2b0e855948c590ae138f7cdf5cfc6fc7b5509f6ab3af6ef188301528a6331bf",
   "components": {
     "protocol": {
       "name": "MDN CORS documentation",
@@ -118,10 +118,10 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 **REASONED:** not demonstrated here: the authoring host forbids opening listeners without an isolated network namespace, and has none, so no deployed API or browser session could be run; this rests on the Fetch Standard and MDN's CORS guide (Sources). An exposed API echoes `https://evil.example` in `Access-Control-Allow-Origin`; the fixed API omits it for that origin and returns only your listed origin, with `Access-Control-Allow-Credentials: true` only where the browser must send credentials.
 
 ```bash
-curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -i access-control
-# expect: no Access-Control-Allow-Origin echoing the hostile origin
-curl -q -s -o /dev/null -D - https://api.example.com/data -H "Origin: https://app.example.com" | grep -i access-control
-# expect: your origin, and Allow-Credentials only if the browser must send credentials: cookies, HTTP authentication, or TLS client certificates
+curl -q -sS -o /dev/null -D - https://api.example.com/data -H "Origin: https://evil.example" | grep -iE 'HTTP/|access-control'
+# expect: a status line, and no Access-Control-Allow-Origin echoing the hostile origin; empty output means a transport error, not a pass
+curl -q -sS -o /dev/null -D - https://api.example.com/data -H "Origin: https://app.example.com" | grep -iE 'HTTP/|access-control'
+# expect: a status line, your origin in Access-Control-Allow-Origin, and Allow-Credentials only if the browser must send credentials: cookies, HTTP authentication, or TLS client certificates
 ```
 
 ## Sources (checked September 2026)
