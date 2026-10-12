@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "3297b6c02d64f834d91cb66b59b1bfc9cbd9857606f7c9303fbe26b30940b2a2",
+  "body_sha256": "dd01520941958a931b14adbf4f0ce2664b58693f02a68c1942574d02b30d09ed",
   "components": {
     "openssl": {
       "name": "OpenSSL documentation (rolling)",
@@ -71,11 +71,11 @@ version_basis: {
     "requests-trust": {"text": "REQUESTS_CA_BUNDLE supplies the certificate path to Python requests; a requests Sources entry and version are absent.", "components": ["openssl", "requests"], "sources": ["openssl:se5d70578564e", "requests:s21c6be6f6df4"], "status": "REASONED"},
     "node-trust": {"text": "NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js; its version is unrecorded.", "components": ["mkcert", "node"], "sources": ["mkcert:s41ae17dba4ce", "node:s402034f5dcea"], "status": "REASONED"},
     "verification-bypasses": {"text": "Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but tool-specific Sources entries are absent.", "components": ["openssl", "requests", "curl-source"], "sources": ["openssl:se5d70578564e", "requests:scff02f87cf30", "curl-source:s60820cd231e1"], "status": "REASONED"},
-    "verify-extensions": {"text": "Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED", "verify": [1]},
-    "verify-tls": {"text": "The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0.", "components": ["openssl"], "sources": ["openssl:s581d7ad32359", "openssl:se5d70578564e"], "status": "REASONED", "verify": [1]},
-    "verify-failures": {"text": "Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62.", "components": ["openssl"], "sources": ["openssl:s581d7ad32359", "openssl:se5d70578564e"], "status": "REASONED", "verify": [1]},
-    "verify-identity": {"text": "Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks.", "components": ["openssl"], "sources": ["openssl:se5d70578564e"], "status": "REASONED", "verify": [1]},
-    "verify-store": {"text": "Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after.", "components": ["openssl", "mkcert", "curl-source"], "sources": ["openssl:s581d7ad32359", "mkcert:s41ae17dba4ce", "curl-source:s19ed21fc98f8", "curl-source:s60820cd231e1"], "status": "REASONED", "verify": [1]},
+    "verify-extensions": {"text": "Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "DEMONSTRATED", "evidence": "On 2026-10-05 in private /dev/shm scratch, OpenSSL 3.5.5 ran the printed x509 command on three disposable one-day RSA certificates. Missing-SAN and CA:TRUE fixtures each exited 0 but lacked the required SAN or leaf constraint; the fixed fixture also exited 0 and printed DNS:app.internal, IP Address:127.0.0.1 and critical CA:FALSE. Subject and validity dates printed for all three.", "verify": [1]},
+    "verify-tls": {"text": "The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0.", "components": ["openssl"], "sources": ["openssl:s581d7ad32359", "openssl:se5d70578564e"], "status": "REASONED", "verify": [2]},
+    "verify-failures": {"text": "Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62.", "components": ["openssl"], "sources": ["openssl:s581d7ad32359", "openssl:se5d70578564e"], "status": "REASONED", "verify": [2]},
+    "verify-identity": {"text": "Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks.", "components": ["openssl"], "sources": ["openssl:se5d70578564e"], "status": "REASONED", "verify": [2]},
+    "verify-store": {"text": "Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after.", "components": ["openssl", "mkcert", "curl-source"], "sources": ["openssl:s581d7ad32359", "mkcert:s41ae17dba4ce", "curl-source:s19ed21fc98f8", "curl-source:s60820cd231e1"], "status": "REASONED", "verify": [2]},
     "trust-limits": {"text": "Self-signed certificates have no revocation or third-party accountability and need manual trust distribution; move beyond them as the audience grows and retain authentication.", "components": ["openssl", "mkcert"], "sources": ["openssl:s211b1e6e4aa4", "mkcert:s41ae17dba4ce"], "status": "REASONED"}
   }
 }
@@ -109,7 +109,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests; a requests Sources entry and version are absent. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3 | REASONED |
 | node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js; its version is unrecorded. | mkcert unknown; Node.js extra CA certificates v22.19.0 | REASONED |
 | verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but tool-specific Sources entries are absent. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3; curl command documentation curl-8_12_1 | REASONED |
-| verify-extensions: Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN. | OpenSSL documentation (rolling) unknown | REASONED |
+| verify-extensions: Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN. | OpenSSL documentation (rolling) unknown | DEMONSTRATED |
 | verify-tls: The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0. | OpenSSL documentation (rolling) unknown | REASONED |
 | verify-failures: Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62. | OpenSSL documentation (rolling) unknown | REASONED |
 | verify-identity: Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks. | OpenSSL documentation (rolling) unknown | REASONED |
@@ -193,10 +193,15 @@ Do not ship `curl -k`, `verify=False`, `rejectUnauthorized: false`, or `NODE_TLS
 
 ## 5. Verify
 
-REASONED: certificate extensions, TLS identity, failure handling and client-trust checks follow the cited OpenSSL and mkcert documentation. No deployment certificate, app.internal service or client trust-store installation was supplied for live checks, and this guide records no run; expected outcomes and limitations are stated below.
+DEMONSTRATED: following block; local certificate-output inspection only. On 2026-10-05 in private /dev/shm scratch, OpenSSL 3.5.5 ran the printed x509 command on three disposable one-day RSA certificates. Missing-SAN and CA:TRUE fixtures each exited 0 but lacked the required SAN or leaf constraint; the fixed fixture also exited 0 and printed DNS:app.internal, IP Address:127.0.0.1 and critical CA:FALSE. Subject and validity dates printed for all three.
 
 ```bash
 openssl x509 -in server.crt -noout -subject -dates -ext subjectAltName,basicConstraints
+```
+
+REASONED: following block; live TLS identity, failure handling and client-trust checks follow the cited OpenSSL and mkcert documentation. No app.internal service or client trust-store installation was supplied for these checks. The local x509 run above does not demonstrate a handshake or installed trust; expected outcomes and limitations are stated below.
+
+```bash
 openssl s_client -connect app.internal:443 -servername app.internal -verify_hostname app.internal -verify_return_error -CAfile server.crt </dev/null
 ```
 

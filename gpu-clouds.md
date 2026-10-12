@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "5f6dcb301790ff264886c75cc4d263b056fc85a9b49d771abf06a6f7f657d9ec",
+  "body_sha256": "1133876679793449f35a393b1dcaaa2aa1e7df431a194608df92cf43a1b67715",
   "components": {
     "runpod": {
       "name": "RunPod documentation",
@@ -217,7 +217,7 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
 )
 ```
 
-Every port `ss` shows listening should be either closed (not exposed at the platform layer) or authenticated (the listener itself demands a key, token, or login). A Jupyter server that answers without its token is a finding, whichever of these platforms it runs on.
+REASONED: exposure interpretation from the cited platform publication and Jupyter authentication documentation; no platform deployment or outside probe host is available. Every port `ss` shows listening should be either closed (not exposed at the platform layer) or authenticated (the listener itself demands a key, token, or login). A Jupyter server that answers without its token is a finding, whichever of these platforms it runs on.
 
 ## Common mistakes
 

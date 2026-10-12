@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e0625f2e0df494bbc4516d4d2aca22047f97d6dbe4e230c7bbe89b106aa3a2cd",
+  "body_sha256": "580906eef700b827600cbfb61873eccc074b864216a9f8f5e1dc9293b22188ff",
   "components": {
     "docs": {
       "name": "MLflow documentation",
@@ -314,7 +314,7 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 )
 ```
 
-An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation.
+REASONED: preceding block; listener inventory, external TCP reachability, proxy/backend authentication and experiment authorization follow the cited MLflow host/binding and authentication documentation and curl connection/error write-out reference. No deployed server, external test path, credentials or experiment-permission fixture is available. An authenticated user without permission on a resource gets `403`; a missing or wrong credential gets `401`. The backend authentication and authorization checks above ship marked reasoned, not demonstrated: the authoring environment has no running MLflow basic-auth server, so the exposed and fixed states (anonymous `experiments/search` open versus `401`, and the admin `200` versus low-permission `403` on a real experiment) are not observed here. The expected outcomes are REASONED from the cited MLflow authentication documentation.
 
 ## Common mistakes
 
