@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "03fa7f791fbd6523f2eed0750f671b6c69f648d1f250a1dbbabee3a86b21c417",
+  "body_sha256": "cbb5254fa77d95b6ee95782ca00276470fcd2a76afbae4708db3d2b272be39ba",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -520,7 +520,9 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 # The hidden prompt keeps the key out of shell history and set +x keeps it out of set -x tracing.
 # Stdin closes the argv channel only: the account owner and root can still read the key in the
 # subshell and python3.
-# -H puts the signature in curl's argv, readable through ps while curl runs: a replayable HMAC for that exact body.
+# The signature, a replayable HMAC for that exact body, goes to curl on stdin as a header line (-H @-)
+# and the fixed, non-secret body as an argument. Stdin closes the argv channel only: the account owner
+# and root can still read the signature in the subshell and curl.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -537,8 +539,8 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   url='https://flux-webhook.example.com/hook/REPLACE_WITH_PATH'
   printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -X POST --data-binary @- -w '\nno-sig http=%{http_code}\n' "$url"          # expect rejected
-  printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -X POST --data-binary @- -H "X-Signature: sha256=$sig" -w '\nsigned http=%{http_code}\n' "$url"  # expect accepted
+  printf 'X-Signature: sha256=%s\n' "$sig" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -X POST --data-binary "$body" -H @- -w '\nsigned http=%{http_code}\n' "$url"  # expect accepted
 )
 ```
 
