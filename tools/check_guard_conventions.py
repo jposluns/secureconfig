@@ -362,8 +362,11 @@ _C2_HARDENING = True
 # waivable with the existing `# guard-conventions: allow <reason>` comment. The
 # header policy is a positive denylist of credential-bearing header NAMES. A
 # signed identity assertion (x-amzn-oidc-data, x-goog-iap-jwt-assertion,
-# Cf-Access-Jwt-Assertion) is a credential (CONTRIBUTING rule 7, #465): it is
-# flagged, as is x-amzn-oidc-accesstoken (a real access token). Secret-free
+# Cf-Access-Jwt-Assertion) is a credential (cloud-identity-proxies.md, Verify,
+# #465); CONTRIBUTING rule 7 supplies the general argv rule. It is flagged,
+# as is x-amzn-oidc-accesstoken (a real access token). The same regex checks
+# env-assignment names with underscores replaced by hyphens, so
+# env X_AMZN_OIDC_DATA=... tool is flagged as C3-TOOL-ARGV. Secret-free
 # forged-identity headers (x-amzn-oidc-identity, X-MS-CLIENT-PRINCIPAL-NAME,
 # X-Goog-Authenticated-User-Email; sent deliberately as forgeries in Verify
 # probes), CF-Access-Client-Id, X-...-token-ttl-seconds and
@@ -435,7 +438,8 @@ MESSAGES = {
                     "argv, world-readable via ps / /proc/<pid>/cmdline; pipe a "
                     "config line 'user = \"...\"' to curl --config - instead",
     "C3-HEADER-ARGV": "a credential-bearing curl header (Authorization, "
-                      "*-Secret, *-Token, *-Api-Key, --oauth2-bearer, or a "
+                      "signed identity assertions, *-Secret, *-Token, "
+                      "*-Api-Key, --oauth2-bearer, or a "
                       "whole $-expanded header) is in argv; pipe the header "
                       "line to curl --header @- instead",
     "C3-BODY-ARGV": "a credential-bearing request body is in curl argv; move "
