@@ -2730,7 +2730,8 @@ nc -vz -w 5 "$1" 1883
      "env HUBBLE_SIGNATURE=public.sig tool\n"
      "env COSIGN_SIGNATURE_APIKEY=\"$1\" tool\n"
      "env x_hub_signature_256=\"$1\" tool\n"
-     "env cosign_signature=public.sig tool\n```\n",
+     "env cosign_signature=public.sig tool\n"
+     "env APP_X_SIGNATURE=public.sig tool\n```\n",
      ["C3-TOOL-ARGV", "C3-TOOL-ARGV", "C3-TOOL-ARGV",
       "C3-TOOL-ARGV", "C3-TOOL-ARGV", "C3-TOOL-ARGV"], ()),
     ("c3-config-value-not-a-url",
