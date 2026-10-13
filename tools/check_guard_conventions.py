@@ -2657,6 +2657,15 @@ nc -vz -w 5 "$1" 1883
      "curl -q -H \"X-MS-CLIENT-PRINCIPAL-NAME: admin\" https://h/\n"
      "curl -q -H \"X-Goog-Authenticated-User-Email: admin@example.com\" https://h/\n```\n",
      [], ()),
+    ("c3-assertion-header-file-and-prefix-ok",
+     "```bash\ncurl -q -H \"@$HOME/assertion.hdr\" https://h/\n"
+     "curl -q -H \"x-amzn-oidc-data-version: 2\" https://h/\n```\n",
+     [], ()),
+    ("c3-assertion-env-assignment-flagged",
+     "```bash\nenv X_AMZN_OIDC_DATA=\"$1\" tool\n"
+     "env CF_ACCESS_JWT_ASSERTION=\"$1\" tool\n"
+     "env X_AMZN_OIDC_IDENTITY=admin tool\n```\n",
+     ["C3-TOOL-ARGV", "C3-TOOL-ARGV"], ()),
     ("c3-config-value-not-a-url",
      "```bash\ncurl -q --config './settings?sig=public' https://h/\n```\n",
      [], ()),
