@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "9808539fc73721db6a09d12a319ccc333686db4e7a7a19dcca7fedca04901b3e",
+  "body_sha256": "447ccdb82af5ce4686e37975afe463b2276003e0effb68caa46a423b7aec9d29",
   "components": {
     "searx": {
       "name": "SearxNG documentation",
@@ -603,6 +603,7 @@ REASONED: following block; credentialed success follows the cited service and cu
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  [ -n "${BASH_VERSION-}" ] || { echo "run this block in bash; not probing"; exit; }  # dash and ash mishandle "${@:6}"
   # The credentials you substitute on the set -- line enter shell history.
   # Clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the credentials from
