@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2577dfafc255d9a9c6c33cf0eceae2d0cc8714d363f068dd912b3faf5f9c11ab",
+  "body_sha256": "20bab04efcd3f11a351d4d195ac9ca85bbf59fdb5cbfdb28de0a72c9aeecac89",
   "components": {
     "nmap": {
       "name": "Nmap documentation",
@@ -171,7 +171,7 @@ When a person leaves, revoke access at every layer they touched, not only their 
 
 ## Verify
 
-REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning.
+REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning; Sources has no curl reference.
 
 ```bash
 # From a second network, not the host itself:
