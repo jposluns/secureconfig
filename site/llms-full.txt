@@ -3842,7 +3842,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | verify-expiry: Revoked or expired credentials must be rejected with a service-log record identifying the client. | Bearer token guidance unknown; JWT access-token profile unknown | REASONED |
 | verify-ci: Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write. | GitHub Actions OIDC unknown | REASONED |
 | verify-trust: Inspect AWS sub, Google repository binding and Azure subject for exact repository plus branch/environment restriction without broad wildcard suffixes. | AWS IAM and credential action unknown; Google Cloud federation and auth action unknown; Azure federation and login unknown | REASONED |
-| verify-artifacts: History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites confidentiality guidance, not these scanner commands. | Bearer token guidance unknown; Gitleaks scan commands v8.19.0 | REASONED |
+| verify-artifacts: History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites Gitleaks history and directory scans, not image-layer scanning or docker history. | Bearer token guidance unknown; Gitleaks scan commands v8.19.0 | REASONED |
 | verify-mtls: Reject missing, untrusted, expired, revoked and, where identity authorization applies, unauthorized certificates while the authorized client succeeds. | Certificate revocation unknown | REASONED |
 <!-- version-basis:end -->
 
@@ -4372,7 +4372,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | http2: http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed. | nginx documentation unknown | REASONED |
 | tokens: server_tokens off suppresses nginx version in headers and error pages. | nginx documentation unknown | REASONED |
 | hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. | nginx documentation unknown; HSTS specification RFC 6797; nginx header-filter source release-1.26.3 | REASONED |
-| hsts-inheritance: A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. This claim cites no source for add_header inheritance or for always response-code coverage. | nginx documentation unknown | REASONED |
+| hsts-inheritance: A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. This claim cites no source for add_header inheritance or for always response-code coverage. | nginx documentation unknown; nginx header-filter source release-1.26.3 | REASONED |
 | proxy: Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host. | nginx documentation unknown | REASONED |
 | forwarded-host: Overwrite X-Forwarded-Host: client-set values otherwise pass upstream. | nginx documentation unknown | REASONED |
 | cipher-policy: Use Mozilla for explicit cipher policy; retain the stated protocol floor. | nginx documentation unknown; Mozilla TLS policy unknown | REASONED |
