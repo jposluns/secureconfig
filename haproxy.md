@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "29da47d0a02956bf2ad4b50ec12d0e7a1c3683226f04d97e1e90ad52cf958b48",
+  "body_sha256": "6937b1cadd7faa0c9a7ab3190199d562e3d9aab6212e43072c01919ba0f901c8",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -303,6 +303,9 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
   # Stats listener (run on the HAProxy machine; --resolve keeps the certificate hostname while connecting to
   # the loopback bind): no credentials must be refused; valid credentials return the statistics.
   curl -q -g "${base[@]}" --resolve "$1:8404:127.0.0.1" -o /dev/null -w 'stats no-creds=%{http_code}\n' "https://$1:8404/stats"
+  # The stats password reaches curl through stdin config (curl --config -), never argv. The hidden prompt
+  # keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin closes the argv channel
+  # only: the account owner and root can still read it in the subshell and curl.
   IFS= read -r -s -p 'stats admin password: ' sp < /dev/tty || exit 2; echo
   case "$sp" in ''|*[[:cntrl:]]*) echo 'supply the stats password; not probing'; exit 2 ;; esac
   sp=${sp//\\/\\\\}; sp=${sp//\"/\\\"}

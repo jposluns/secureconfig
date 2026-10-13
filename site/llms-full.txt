@@ -2044,6 +2044,12 @@ vault write -format=json sys/wrapping/lookup - \
   < /run/secrets/payments-wrapping-lookup.json
 ```
 
+The wrapping token reaches `vault` from the request file on its stdin, so it is not in the
+command's arguments, and because the command never types it or expands a variable holding it,
+neither shell history nor `set -x` tracing records it from this command, provided the delivery
+mechanism, not a shell command containing the token, writes the file. Stdin closes the argv channel only: the account
+owner and root can still read the file and the `vault` process's memory.
+
 Check `data.creation_path`, `data.creation_time`, and `data.creation_ttl`; the latter is the
 original TTL, not the remaining lifetime. Confirm the token is still within that lifetime before
 proceeding. Protect and remove the request file when finished.
@@ -2399,12 +2405,18 @@ grant `read` on `sys/pprof/*`, covering the trailing-slash index and profiling s
 [metrics API](https://developer.hashicorp.com/vault/api-docs/system/metrics), and
 [profiling API](https://developer.hashicorp.com/vault/api-docs/system/pprof).
 
+REASONED: from the shell behaviour of file input on stdin, not from the loopback runs below, which
+did not test it; process inspection was not tested. The following login request takes `role_id`
+and `secret_id` from the request file on `vault`'s stdin: no credential is typed into the command
+or held in a shell variable, so neither shell history nor `set -x` tracing records it, provided the
+file is prepared through protected delivery rather than by a shell command that contains the
+credentials. Stdin closes the argv channel only: the account owner and root can still read the
+file and the `vault` process's memory.
+
 **Bounded credentials and tokens (demonstrated on loopback):** prepare an owner-readable
 JSON request file containing `role_id` and `secret_id` through protected delivery. The following
-login request reads the credentials from stdin, not argv. No credential is typed into the command
-or held in a shell variable, so neither shell history nor `set -x` tracing records it; stdin closes
-the argv channel only, and the account owner and root can still read the file and the `vault`
-process's memory. Its successful output contains a token; handle it only in a protected session.
+login request reads the credentials from stdin, not argv. Its successful output contains a token;
+handle it only in a protected session.
 
 ```bash
 # DEMONSTRATED: loopback AppRole SecretID, CIDR and token-limit runs recorded below.
@@ -2546,6 +2558,17 @@ sixty-one-second request succeeded: the exposed comparison. In the follow-up run
 state, and both `FINDING` lines in the exposed state.
 See [required wrapping TTLs](https://developer.hashicorp.com/vault/docs/concepts/policies#required-response-wrapping-ttls)
 and [wrapping requests](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
+
+REASONED: from the shell behaviour of file input on stdin, not from the loopback lookup runs,
+which did not test it; process inspection was not tested. This applies to both wrapping-lookup
+blocks below, the demonstrated lookup and the recipient-validation lookup. Each passes the
+protected lookup request, wrapping token included, to `vault` from a file on its stdin. Neither
+block types the token or expands a variable holding it, so neither shell history nor `set -x`
+tracing records it from the block, provided the file is prepared through protected delivery
+rather than by a shell command that contains the token. Stdin closes the argv channel only: the
+account owner and root can still read the file and the `vault` process's memory, and where
+`VAULT_TOKEN` holds the same token, as the next paragraph asks, `vault` also receives it in its
+environment, readable through `/proc/<pid>/environ` by the same account and root while it runs.
 
 **Recipient validation (the lookup demonstrated; the recipient's own check REASONED, since it
 belongs to the receiving application):** prepare the
@@ -5109,6 +5132,9 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
   # Stats listener (run on the HAProxy machine; --resolve keeps the certificate hostname while connecting to
   # the loopback bind): no credentials must be refused; valid credentials return the statistics.
   curl -q -g "${base[@]}" --resolve "$1:8404:127.0.0.1" -o /dev/null -w 'stats no-creds=%{http_code}\n' "https://$1:8404/stats"
+  # The stats password reaches curl through stdin config (curl --config -), never argv. The hidden prompt
+  # keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin closes the argv channel
+  # only: the account owner and root can still read it in the subshell and curl.
   IFS= read -r -s -p 'stats admin password: ' sp < /dev/tty || exit 2; echo
   case "$sp" in ''|*[[:cntrl:]]*) echo 'supply the stats password; not probing'; exit 2 ;; esac
   sp=${sp//\\/\\\\}; sp=${sp//\"/\\\"}
@@ -6615,7 +6641,10 @@ the RBAC on the Secrets that hold them. Bootstrap credentials are separate from 
 `flux bootstrap github --token-auth` leaves the PAT in the cluster as the `flux-system` Secret in the
 `flux-system` namespace, while `--token-auth=false` provisions an SSH deploy key that is read-only by
 default; prefer the narrowly scoped key, restrict access to that Secret, and pass any bootstrap token
-through stdin or the prompt, never Git or logs. Image automation is the exception to read-only: the
+through stdin or the prompt, never Git or logs. Typed at the prompt, the token stays out of shell
+history and `set -x` tracing; piped in, it still reaches them when the feeding command contains it
+or expands a variable holding it under `set -x`. Either way stdin closes the argv channel only: the
+account owner and root can still read the token in the `flux` process. Image automation is the exception to read-only: the
 image-automation-controller commits manifest changes back to Git and needs write access (`--read-write-key=true`
 when it uses the bootstrap deploy key), so scope that credential to the one repository, protect the
 deployment branch, use a dedicated update branch, and restrict who may edit `ImageUpdateAutomation` objects. The source-controller then serves the fetched artifacts to the
@@ -22089,7 +22118,9 @@ Review outbound requests too. Meilisearch v1.8 through v1.34.0 need upgrading fo
 
 ## Verify
 
-DEMONSTRATED: following block; the checks below were demonstrated on loopback against the Meilisearch v1.53.2 release binary (its SHA-256 matched the digest GitHub publishes for the asset) and the Typesense 30.2 server (its MD5 matched the one in the release tarball), each with native TLS on 127.0.0.1, or behind a Caddy TLS proxy for the proxy checks, with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and every address set before start. The blocks ran as printed with only their `set --` values substituted, and keys were fed to the prompts on stdin. What those runs do not show is marked **REASONED** where it occurs, with its reason. Backlog row 1.117 retains the real-client-build positive and negative controls for the credential scan below; its hand-built fixtures do not supply a real client bundle. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command: the hidden prompts keep the keys out of shell history and the block's `set +x` keeps them out of `set -x` tracing, but stdin closes the argv channel only, so the keys stay visible to the account owner and root. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
+REASONED: from the shell behaviour of the hidden prompt (`read -s`) and of `set +x`, not from the loopback runs described next, which did not test it; process inspection was not tested. In the paired-request block below, the hidden prompts keep the keys out of shell history and the block's `set +x` keeps them out of `set -x` tracing, but stdin closes the argv channel only, so the keys stay visible to the account owner and root.
+
+DEMONSTRATED: following block; the checks below were demonstrated on loopback against the Meilisearch v1.53.2 release binary (its SHA-256 matched the digest GitHub publishes for the asset) and the Typesense 30.2 server (its MD5 matched the one in the release tarball), each with native TLS on 127.0.0.1, or behind a Caddy TLS proxy for the proxy checks, with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and every address set before start. The blocks ran as printed with only their `set --` values substituted, and keys were fed to the prompts on stdin. What those runs do not show is marked **REASONED** where it occurs, with its reason. Backlog row 1.117 retains the real-client-build positive and negative controls for the credential scan below; its hand-built fixtures do not supply a real client bundle. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
 
 ```bash
 (
@@ -24778,7 +24809,7 @@ Repeat the actual POST with and without Origin. Removing Origin must not bypass 
 
 ### V6. Exercise finite admission and resource budgets (REASONED: admission, body size, model loading, expiry, parameter overrides, queue capacity and recovery comparisons follow C6 scheduler/types and nginx limit references; no inference runtime, loaded model, capacity fixture or GPU. Local V6 marker files above demonstrate child completion only, not either limiter or successful inference)
 
-**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Use only an isolated capacity test with the same small, valid chat fixture as V3:
+**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Like V3's reusable probe, it reads the client configuration on each curl's stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of each curl. Use only an isolated capacity test with the same small, valid chat fixture as V3:
 
 ```bash
 (
@@ -36689,7 +36720,7 @@ never command arguments.
 | --- | --- |
 | Appwrite console MFA | **REASONED:** Requires an unavailable live Appwrite console fixture and controlled operator account with a TOTP authenticator. Using the operator's session and `X-Appwrite-Project: console`, request `GET /v1/account` without an API key. With MFA disabled, password authentication permits this request. Enable MFA and verify the TOTP factor, then create a fresh password-only session: the same request must return `user_more_factors_required`. Complete the TOTP challenge in that session and repeat the request: expect 200 with the operator's account data. See [console MFA](https://appwrite.io/docs/advanced/security/mfa) and [MFA enforcement](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/shared/api.php). |
 | PocketBase writes and management | **REASONED:** Exercise `POST /api/collections/REPLACE_WITH_COLLECTION/records`, then `PATCH` and `DELETE` on disposable record URLs, using valid bodies. Public rules expose the actions; locked or restrictive rules must deny unauthorized changes while intended users still succeed. Separately attempt changing another auth record's email, password, and `verified` field: locked `manageRule` must not grant privileged management; an explicitly authorized manager must succeed only where intended. Confirm collection configuration rejects `manageRule=""`. See [CRUD handlers](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/record_crud.go) and [management validation](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/core/collection_model_auth_options.go). |
-| PocketBase protected files | **REASONED:** GET a known fixture file at `/api/files/REPLACE_WITH_COLLECTION/REPLACE_WITH_RECORD/REPLACE_WITH_FILENAME`. Before protection, its unsigned URL downloads despite locked record access. Enable Protected and a `viewRule` that permits the intended ordinary user but denies guests and an unrelated ordinary user. File-token issuance does not check access to a particular file: authenticated users can obtain tokens. Confirm the unrelated user's `pb.files.getToken()` succeeds, then GET the protected fixture using that user's token-bearing SDK URL: expect 404. The permitted user's `pb.files.getToken()` must also succeed, and GET with that user's token-bearing SDK URL must return the expected fixture bytes as a positive control. Separately, an unsigned guest GET of the same protected file must return 404. Use the SDK for signed URLs, or feed a protected curl configuration through stdin. See [download checks](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/file.go). |
+| PocketBase protected files | **REASONED:** GET a known fixture file at `/api/files/REPLACE_WITH_COLLECTION/REPLACE_WITH_RECORD/REPLACE_WITH_FILENAME`. Before protection, its unsigned URL downloads despite locked record access. Enable Protected and a `viewRule` that permits the intended ordinary user but denies guests and an unrelated ordinary user. File-token issuance does not check access to a particular file: authenticated users can obtain tokens. Confirm the unrelated user's `pb.files.getToken()` succeeds, then GET the protected fixture using that user's token-bearing SDK URL: expect 404. The permitted user's `pb.files.getToken()` must also succeed, and GET with that user's token-bearing SDK URL must return the expected fixture bytes as a positive control. Separately, an unsigned guest GET of the same protected file must return 404. Use the SDK for signed URLs, or feed a protected curl configuration through stdin; that keeps the token-bearing URL out of curl's argv only. Prepare the file with an editor, not a shell command that contains the URL, which would put it in shell history and `set -x` tracing, and the account owner and root can still read the file and curl's memory. See [download checks](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/file.go). |
 | PocketBase realtime | **REASONED:** Establish `GET /api/realtime`, then `POST /api/realtime` subscriptions for both `REPLACE_WITH_COLLECTION/*` and a specific fixture record. Change that record through an authorized writer. Public rules expose events; restrictive list/view rules must suppress unauthorized delivery while an authorized subscriber receives the same mutation. A `PB_CONNECT` event or subscription acknowledgement is insufficient. See [Realtime API](https://pocketbase.io/docs/api-realtime/). |
 | PocketBase MFA, verification, and tokens | **REASONED:** Use `POST /api/collections/_superusers/auth-with-password`, followed by the OTP flow through `/request-otp` and `/auth-with-otp`. Without MFA, password authentication completes; with password, OTP, and MFA enabled, the first factor must not complete authentication, while the correct second factor does. For application users, compare password login for otherwise valid verified and unverified accounts with `authRule="verified = true"`. Retain a test token privately, clear the SDK auth store, and retry an allowed record request with the retained token: clearing local state alone must not revoke it. See [authentication flows](https://pocketbase.io/docs/authentication/). |
 | PocketBase IP and proxy boundary | **REASONED:** Repeat an authorized superuser resource GET from allowed and excluded source addresses. With no allowlist both can work; with the allowlist the excluded address must receive 403. Forged forwarded-IP headers must not change that result through the proxy. From a second host, test the actual backend address and port as well as the proxy: direct backend access must be blocked, while the permitted proxy route works. If the UI is private, separately test GET `/_/` from both networks. See [IP enforcement](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/middlewares.go) and [proxy settings](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/core/settings_model.go). |
@@ -37048,9 +37079,13 @@ handler, not live observations; this authoring environment has no container runt
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
 deployment must also deny the external path while an authorized internal control still succeeds.
 Pass the correct token through curl's stdin configuration, not a literal URL in shell history or
-argv, and enter it at a hidden prompt after `set +x`: a token typed into the command still enters
-shell history and `set -x` tracing, and stdin closes the argv channel only, so the token stays
-visible to the account owner and root. For the Playwright server on the port you configured
+argv, and enter it at a hidden prompt in a clean shell under the `read` exception guards of
+CONTRIBUTING rule 7 (`search-engines.md`'s paired block is the model): `trap - DEBUG RETURN ERR`
+first, then `set +x +a +e` before the read, `unset -n` and then `unset -v` on the variable, failing
+closed if either fails, and a refusal of a readonly `IFS`. Without `+a`, an inherited `set -a` would
+export the token. A token typed into the command still enters shell history and `set -x` tracing,
+and stdin closes the argv channel only, so the token stays visible to the account owner and root.
+For the Playwright server on the port you configured
 (`launchServer` uses an ephemeral port unless you set one; `run-server` takes `--port`), any HTTP
 answer means the port is reachable and is already the finding. The distinguishing behaviour for
 each is in the cited vendor pages.

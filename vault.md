@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "01aead893df3adb7e1a329856ef2a3cf0ff1f01934014333ad3ed77b27e84918",
+  "body_sha256": "fab3292478a0d84fb6f0cdced75f6dc0d4c1e485fe0398e3b9cc4efbc6bf2a5b",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -484,6 +484,12 @@ vault write -format=json sys/wrapping/lookup - \
   < /run/secrets/payments-wrapping-lookup.json
 ```
 
+The wrapping token reaches `vault` from the request file on its stdin, so it is not in the
+command's arguments, and because the command never types it or expands a variable holding it,
+neither shell history nor `set -x` tracing records it from this command, provided the delivery
+mechanism, not a shell command containing the token, writes the file. Stdin closes the argv channel only: the account
+owner and root can still read the file and the `vault` process's memory.
+
 Check `data.creation_path`, `data.creation_time`, and `data.creation_ttl`; the latter is the
 original TTL, not the remaining lifetime. Confirm the token is still within that lifetime before
 proceeding. Protect and remove the request file when finished.
@@ -839,12 +845,18 @@ grant `read` on `sys/pprof/*`, covering the trailing-slash index and profiling s
 [metrics API](https://developer.hashicorp.com/vault/api-docs/system/metrics), and
 [profiling API](https://developer.hashicorp.com/vault/api-docs/system/pprof).
 
+REASONED: from the shell behaviour of file input on stdin, not from the loopback runs below, which
+did not test it; process inspection was not tested. The following login request takes `role_id`
+and `secret_id` from the request file on `vault`'s stdin: no credential is typed into the command
+or held in a shell variable, so neither shell history nor `set -x` tracing records it, provided the
+file is prepared through protected delivery rather than by a shell command that contains the
+credentials. Stdin closes the argv channel only: the account owner and root can still read the
+file and the `vault` process's memory.
+
 **Bounded credentials and tokens (demonstrated on loopback):** prepare an owner-readable
 JSON request file containing `role_id` and `secret_id` through protected delivery. The following
-login request reads the credentials from stdin, not argv. No credential is typed into the command
-or held in a shell variable, so neither shell history nor `set -x` tracing records it; stdin closes
-the argv channel only, and the account owner and root can still read the file and the `vault`
-process's memory. Its successful output contains a token; handle it only in a protected session.
+login request reads the credentials from stdin, not argv. Its successful output contains a token;
+handle it only in a protected session.
 
 ```bash
 # DEMONSTRATED: loopback AppRole SecretID, CIDR and token-limit runs recorded below.
@@ -986,6 +998,17 @@ sixty-one-second request succeeded: the exposed comparison. In the follow-up run
 state, and both `FINDING` lines in the exposed state.
 See [required wrapping TTLs](https://developer.hashicorp.com/vault/docs/concepts/policies#required-response-wrapping-ttls)
 and [wrapping requests](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
+
+REASONED: from the shell behaviour of file input on stdin, not from the loopback lookup runs,
+which did not test it; process inspection was not tested. This applies to both wrapping-lookup
+blocks below, the demonstrated lookup and the recipient-validation lookup. Each passes the
+protected lookup request, wrapping token included, to `vault` from a file on its stdin. Neither
+block types the token or expands a variable holding it, so neither shell history nor `set -x`
+tracing records it from the block, provided the file is prepared through protected delivery
+rather than by a shell command that contains the token. Stdin closes the argv channel only: the
+account owner and root can still read the file and the `vault` process's memory, and where
+`VAULT_TOKEN` holds the same token, as the next paragraph asks, `vault` also receives it in its
+environment, readable through `/proc/<pid>/environ` by the same account and root while it runs.
 
 **Recipient validation (the lookup demonstrated; the recipient's own check REASONED, since it
 belongs to the receiving application):** prepare the

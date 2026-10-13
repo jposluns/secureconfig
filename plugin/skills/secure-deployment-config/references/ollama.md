@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "976fc1d0ecf9df959f219781023cd59569126e62c499f213d11173483ab91b57",
+  "body_sha256": "6c6f8853ded9348f6fe3aa68ed21d43f4a8195763e3f570876579d5ab3d713bf",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -928,7 +928,7 @@ Repeat the actual POST with and without Origin. Removing Origin must not bypass 
 
 ### V6. Exercise finite admission and resource budgets (REASONED: admission, body size, model loading, expiry, parameter overrides, queue capacity and recovery comparisons follow C6 scheduler/types and nginx limit references; no inference runtime, loaded model, capacity fixture or GPU. Local V6 marker files above demonstrate child completion only, not either limiter or successful inference)
 
-**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Use only an isolated capacity test with the same small, valid chat fixture as V3:
+**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Like V3's reusable probe, it reads the client configuration on each curl's stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of each curl. Use only an isolated capacity test with the same small, valid chat fixture as V3:
 
 ```bash
 (

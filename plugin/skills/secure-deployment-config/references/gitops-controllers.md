@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2ff4298c5239b1344684ad4d57304399dd75dfa897d2678170e9f802f0d9e3ad",
+  "body_sha256": "4b40b618a5d9791ca7694ec1041e2d63879e7b379d339ec10a57a5f4c36eeb33",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -364,7 +364,10 @@ the RBAC on the Secrets that hold them. Bootstrap credentials are separate from 
 `flux bootstrap github --token-auth` leaves the PAT in the cluster as the `flux-system` Secret in the
 `flux-system` namespace, while `--token-auth=false` provisions an SSH deploy key that is read-only by
 default; prefer the narrowly scoped key, restrict access to that Secret, and pass any bootstrap token
-through stdin or the prompt, never Git or logs. Image automation is the exception to read-only: the
+through stdin or the prompt, never Git or logs. Typed at the prompt, the token stays out of shell
+history and `set -x` tracing; piped in, it still reaches them when the feeding command contains it
+or expands a variable holding it under `set -x`. Either way stdin closes the argv channel only: the
+account owner and root can still read the token in the `flux` process. Image automation is the exception to read-only: the
 image-automation-controller commits manifest changes back to Git and needs write access (`--read-write-key=true`
 when it uses the bootstrap deploy key), so scope that credential to the one repository, protect the
 deployment branch, use a dedicated update branch, and restrict who may edit `ImageUpdateAutomation` objects. The source-controller then serves the fetched artifacts to the

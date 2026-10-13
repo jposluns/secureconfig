@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "5f849e35b74f4467b5d62781c4c983944a1b934e6e4ca5699d61cf12dc094695",
+  "body_sha256": "dba02e9ff10b84b28b396a28829577d0bfb2442514b22b997985bfe75a551e9a",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -403,9 +403,13 @@ handler, not live observations; this authoring environment has no container runt
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
 deployment must also deny the external path while an authorized internal control still succeeds.
 Pass the correct token through curl's stdin configuration, not a literal URL in shell history or
-argv, and enter it at a hidden prompt after `set +x`: a token typed into the command still enters
-shell history and `set -x` tracing, and stdin closes the argv channel only, so the token stays
-visible to the account owner and root. For the Playwright server on the port you configured
+argv, and enter it at a hidden prompt in a clean shell under the `read` exception guards of
+CONTRIBUTING rule 7 (`search-engines.md`'s paired block is the model): `trap - DEBUG RETURN ERR`
+first, then `set +x +a +e` before the read, `unset -n` and then `unset -v` on the variable, failing
+closed if either fails, and a refusal of a readonly `IFS`. Without `+a`, an inherited `set -a` would
+export the token. A token typed into the command still enters shell history and `set -x` tracing,
+and stdin closes the argv channel only, so the token stays visible to the account owner and root.
+For the Playwright server on the port you configured
 (`launchServer` uses an ephemeral port unless you set one; `run-server` takes `--port`), any HTTP
 answer means the port is reachable and is already the finding. The distinguishing behaviour for
 each is in the cited vendor pages.
