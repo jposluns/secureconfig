@@ -143,6 +143,22 @@ def main():
                      "every `(#N)` suffix and `#N` reference",
                      "#NN", "a#N", "#N1", "#Ns", "#Nx", "x_#N", "#N_suffix", "N#N", "#n"):
             count += case({"notes.md": text}, 0, "no authoring placeholders")
+        # Fenced code has no spans. Only a run of the fence's own character, at least as long
+        # and alone on its line, closes it; container markers may precede the opener.
+        for text in ("```text\n`#N`\n```", "~~~text\n`#N`\n~~~", "````\n```\n`#N`\n````",
+                     "~~~\n```\n`#N`\n~~~", "```\n~~~\n`#N`\n```", "```\n``` x\n`#N`\n```",
+                     "```\n    ```\n`#N`\n```", "```\n\n`#N`", "~~~ `#N`\n~~~",
+                     "- ```text\n  `#N`\n  ```", "> ```\n> `#N`\n> ```",
+                     "1. item\n\n   ~~~\n   `#N`\n   ~~~"):
+            count += case({"notes.md": text}, needle="'#N'")
+        for text in ("```\nx\n```\n`#N`", "~~~~\n~~~\n~~~~\n`#N`", "   ```\nx\n```\n`#N`",
+                     "- ```\n  x\n  ```\n\n`#N`", "```a`\n\n`#N`", "``a\n`#N` b``"):
+            count += case({"notes.md": text}, 0, "no authoring placeholders")
+        # A span closed on the next line does not open another there, and a line's own pairs
+        # must agree with its paragraph's. Raw HTML is not modelled, so a comment stays clean.
+        count += case({"notes.md": "see `a\nb` #N `c`"}, needle="notes.md:2:4:")
+        count += case({"notes.md": "`a\n# h `x` #N `y`"}, needle="notes.md:2:9:")
+        count += case({"notes.md": "<!-- `#N` -->"}, 0, "no authoring placeholders")
         count += case({"notes.md": "#371 (#371) 1.158 3.26 1.0.371\n"},
                       0, "no authoring placeholders")
         count += case({"site/a.md": "#NNN\n", "plugin/a.md": "1.NEW\n",
