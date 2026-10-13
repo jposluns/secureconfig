@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "4d02eb0465b26bde7264d23ac3eb60a961921d5dc0f58808ebeedd9472f2afac",
+  "body_sha256": "2b1176e5a48b0cd32edaf2e3560d3c085cad5292cf930f83662f84a36d6177e4",
   "components": {
     "server": {
       "name": "NATS Server",
@@ -1001,9 +1001,9 @@ REASONED: comparison procedure from the paired controls below; no live broker or
 
 ### V0. Offline checks and their limits
 
-**Demonstrated here:** the five fenced Bash fragments below passed `bash -n` with Bash 5.3.9 and ShellCheck 0.11.0. Guard-only execution rejected 145 invalid input cases and allowed five substituted controls to reach a local marker. Those cases included empty arguments, original and embedded placeholders, angle brackets, `example.com`, wrong argument counts, and missing setup with unrelated caller arguments. No network command ran. This establishes bounded shell and guard evidence, not CLI semantics or general bypass resistance.
+DEMONSTRATED: the local shell-syntax and guard checks recorded in this paragraph, re-run at marking time: the five fragments passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0 with no diagnostics, guard-only runs rejected 30 invalid cases (unsubstituted placeholders, removed set markers, wrong argument counts, empty values, angle brackets and example.com hosts) with their not-probing messages, and all five substituted controls reached a local stub marker; no network command ran. **Demonstrated here:** the five fenced Bash fragments below passed `bash -n` with Bash 5.3.9 and ShellCheck 0.11.0. Guard-only execution rejected 145 invalid input cases and allowed five substituted controls to reach a local marker. Those cases included empty arguments, original and embedded placeholders, angle brackets, `example.com`, wrong argument counts, and missing setup with unrelated caller arguments. No network command ran. This establishes bounded shell and guard evidence, not CLI semantics or general bypass resistance.
 
-The prior guide's reported 14 invalid guard cases and two positive controls concerned its earlier fragments; they are not evidence that the replacement service checks ran.
+REASONED: provenance caveat only, from the revision record of this guide; it states what the earlier runs do not prove, and no new check is claimed. The prior guide's reported 14 invalid guard cases and two positive controls concerned its earlier fragments; they are not evidence that the replacement service checks ran.
 
 REASONED: native-parsing procedure from the linked v2.14.7 configuration-test source; the pinned server and certificate, JWT and include fixtures are unavailable. **Offline-capable, not demonstrated here: native parsing.** With the pinned server and readable certificate, JWT, and include fixtures, run `timeout 10s nats-server -t -c selected.conf`. Repeat for every complete conditional configuration actually selected. Pair each valid fixture with a deliberately malformed configuration or unknown-field negative control. Successful parsing does not establish reachability, authorization, or secure placeholder replacement. See [v2.14.7 configuration-test handling](https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/opts.go).
 
