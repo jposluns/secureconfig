@@ -31138,7 +31138,8 @@ probe of a plaintext listener behind a TLS-terminating proxy. **Exposed:** the `
 handshake against a plaintext listener, or a client sends the key over an `http://` URL or a plaintext gRPC
 channel other than loopback in Phoenix's own network namespace. **Fixed:** the `https://` probe completes with
 verification on, and every client that sends the key, including each 4317 gRPC exporter, uses TLS with
-verification on (Sources names no gRPC client option, so confirm it in that client's configuration). Sources has
+verification on, other than one using loopback in Phoenix's own network namespace (Sources names no gRPC client
+option, so confirm it in that client's configuration). Sources has
 no Phoenix reference for an API-key transport
 requirement or for an OTLP gRPC client's TLS or CA settings, so this guide names no client option for them:
 configure your gRPC client for TLS with the CA that signed Phoenix's certificate. When you script the HTTP

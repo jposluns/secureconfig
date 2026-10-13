@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "4ad6be035fab8eae109584d1510f24dfb92683aca320a31a2e9d9bdfb1191274",
+  "body_sha256": "a45076b765e494c420bfb1efd59d48ec2fc974a48e605c2764b00b9528dea5c6",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -560,7 +560,8 @@ probe of a plaintext listener behind a TLS-terminating proxy. **Exposed:** the `
 handshake against a plaintext listener, or a client sends the key over an `http://` URL or a plaintext gRPC
 channel other than loopback in Phoenix's own network namespace. **Fixed:** the `https://` probe completes with
 verification on, and every client that sends the key, including each 4317 gRPC exporter, uses TLS with
-verification on (Sources names no gRPC client option, so confirm it in that client's configuration). Sources has
+verification on, other than one using loopback in Phoenix's own network namespace (Sources names no gRPC client
+option, so confirm it in that client's configuration). Sources has
 no Phoenix reference for an API-key transport
 requirement or for an OTLP gRPC client's TLS or CA settings, so this guide names no client option for them:
 configure your gRPC client for TLS with the CA that signed Phoenix's certificate. When you script the HTTP
