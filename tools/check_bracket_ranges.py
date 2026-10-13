@@ -75,23 +75,24 @@ the span. Absolute line numbers are not bound: edits elsewhere in the guide and 
 of a whole unchanged block within it keep the waiver. Range-free validator false positives
 need a distinguishing reason.
 
-Against qa/360-r7, the broad quote-presence rule adds 228 unwaived findings. Settling
-quote-free closed prefixes reduces the final delta to 21 added findings on 19 lines and one
-removed false positive. The added lines are egress-metadata.md:154; elasticsearch.md:33, :59,
+Against qa/360-r7, the broad quote-presence rule added 228 unwaived findings. Settling
+quote-free closed prefixes reduced the final delta to 21 added findings on 19 lines and one
+removed false positive. The added lines were egress-metadata.md:154; elasticsearch.md:33, :59,
 :166, :188, :226 and :319; kubernetes.md:21; mcp-clients.md:101; model-servers.md:260;
 rabbitmq.md:377 and :382; realtime-webhooks.md:124 and :135; and
-self-hosted-ci-runners.md:118, :119, :120, :155 and :174. The removed finding is
-container-hardening.md:112. Fourteen new waiver entries cover 15 expressions; existing entries
-cover six additional expressions. The corpus has 0 unwaived findings in 416 bash blocks across
-99 guides, with 39 consumed entries covering 49 expressions. These are false positives,
+self-hosted-ci-runners.md:118, :119, :120, :155 and :174. The removed finding was
+container-hardening.md:112. Fourteen new waiver entries covered 15 expressions; existing entries
+covered six additional expressions. At that round the corpus had 0 unwaived findings in 416 bash
+blocks across 99 guides, with 39 consumed entries covering 49 expressions. These were false positives,
 including the range-free RabbitMQ broker validators; they are not all non-validator text.
 
-After merging main, the corpus delta against qa/360-r9 is 1 added and 0 removed findings:
+At #360, after merging main, the corpus delta against qa/360-r9 was 1 added and 0 removed findings:
 Python sys.argv[1] indexing in the vLLM TCP probe. Four entries were rebound after main's
-rule-7 guard sweep; their spans and reasons are unchanged. All 39 entries bind their intended
-spans and blocks; 1274 individual block-line
-edits each invalidate the corresponding waiver and leave a stale entry. Run
-test_bracket_ranges.py --show-waivers to print every matched location, digests and extracted span.
+rule-7 guard sweep; their spans and reasons are unchanged. All entries bind their intended
+spans and blocks; individual block-line edits each invalidate the corresponding waiver and
+leave a stale entry. test_bracket_ranges.py edits each line of every waived block and prints
+the current binding and edit counts. Run test_bracket_ranges.py --show-waivers to print every
+matched location, digests and extracted span.
 
 The deterministic suite has 2892 cases (2830 ordinary, 41 allowlist, 4 quote-removal and 17
 joining), 2884 checked behaviours, 8 disclosed blind spots and 17 entry-point runs. The
