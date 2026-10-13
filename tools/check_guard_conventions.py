@@ -2629,8 +2629,12 @@ nc -vz -w 5 "$1" 1883
      "```bash\ncurl -q -g -H \"X-Signature: sha256=$sig\" https://h/\n"
      "curl -q -g -H \"X-Hub-Signature: sha1=$sig\" https://h/\n"
      "curl -q -g --header \"X-Hub-Signature-256: sha256=$sig\" https://h/\n"
-     "curl -q -g -H \"Stripe-Signature: t=1,v1=$sig\" https://h/\n```\n",
+     "curl -q -g -H \"Stripe-Signature: t=1,v1=$sig\" https://h/\n"
+     "curl -q -g -H \"Signature: sig1=:$sig:\" https://h/\n"
+     "curl -q -g -H \"Signature-256: sha256=$sig\" https://h/\n"
+     "curl -q -g -H \"Accept-Signature: sig1=()\" https://h/\n```\n",
      ["C3-HEADER-ARGV", "C3-HEADER-ARGV", "C3-HEADER-ARGV",
+      "C3-HEADER-ARGV", "C3-HEADER-ARGV", "C3-HEADER-ARGV",
       "C3-HEADER-ARGV"], ()),
     ("c3-header-signature-stdin-safe",
      "```bash\nprintf 'X-Signature: sha256=%s\\n' \"$sig\" | "
@@ -2711,8 +2715,11 @@ nc -vz -w 5 "$1" 1883
     ("c3-signature-env-assignment-hmac-only",
      "```bash\nenv X_HUB_SIGNATURE_256=\"$1\" tool\n"
      "env X_SIGNATURE_TIMESTAMP=1 tool\n"
-     "env COSIGN_SIGNATURE=public.sig tool\n```\n",
-     ["C3-TOOL-ARGV"], ()),
+     "env COSIGN_SIGNATURE=public.sig tool\n"
+     "env X_SIGNATURE=\"$1\" tool\n"
+     "env IMAGE_SIGNATURE=public.sig tool\n"
+     "env STRIPE_SIGNATURE=\"$1\" tool\n```\n",
+     ["C3-TOOL-ARGV", "C3-TOOL-ARGV"], ()),
     ("c3-config-value-not-a-url",
      "```bash\ncurl -q --config './settings?sig=public' https://h/\n```\n",
      [], ()),
