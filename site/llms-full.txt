@@ -2067,6 +2067,15 @@ token argument:
 vault unwrap
 ```
 
+No token is typed into this command, so the wrapping token is not in `vault`'s arguments, and
+neither shell history nor `set -x` tracing records it from this command. `VAULT_TOKEN` moves it out
+of argv, not out of reach: while the variable is exported, the token is in the environment of every
+program the shell starts, including `vault`, readable through `/proc/<pid>/environ` by the same
+account and root while each runs, and where the shell received `VAULT_TOKEN` in its initial
+environment, that file also shows it for the shell itself. Whoever reads it there before the unwrap
+can unwrap it first, which leaves the recipient's unwrap failing on a consumed token; investigate
+that as above. The exposure lasts until the unwrap consumes the token or its wrapping TTL expires.
+
 Protect the output, which contains the SecretID. Response wrapping is available in Community;
 this example targets current behavior. The conceptual reference notes that some wrapping-token
 features date from Vault 0.8 and may be unavailable before that version.
@@ -2289,6 +2298,14 @@ cluster port, because `cluster_address` defaults to one port above `address`.
 owner-readable header file containing the selected identity's `X-Vault-Token` header through a
 protected mechanism. The file must contain the actual header, not a shell variable reference.
 Use only the intended authentication header, and remove the file when finished.
+
+REASONED: from curl's header-file input in the manual page cited in Sources, not from the loopback
+runs, which did not observe it. In the two blocks below, only the header file's path enters curl's
+argv, through `--header "@$3"`; curl reads the `X-Vault-Token` header from the file. The blocks
+never type the token or expand a variable holding it, so neither shell history nor `set -x` tracing
+records it from the blocks, provided the file is prepared through protected delivery rather than by
+a shell command that contains the token. A header file closes the argv channel only: the account
+owner and root can still read the file and the memory of each curl process while it runs.
 
 Run this block for each full endpoint URL and identity described below. It reports an anonymous
 request followed by the same request with the selected credential; response bodies are discarded
@@ -2696,6 +2713,17 @@ creation time, and a lookup of the consumed token failed with `wrapping token is
 not exist`. A wrapping token looked up three seconds after its two-second TTL failed the same way.
 See [wrapping lookup fields](https://developer.hashicorp.com/vault/api-docs/system/wrapping-lookup)
 and [recipient validation](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
+
+REASONED: from the environment behaviour recorded above for the wrapping-lookup blocks, not from
+the loopback unwrap runs, which did not observe it. The single-use unwrap block below takes the
+wrapping token from `VAULT_TOKEN`, not from its arguments or a file: the block never types the
+token or expands a variable holding it, so neither shell history nor `set -x` tracing records it
+from the block. That closes the argv channel only. While `VAULT_TOKEN` is exported, the token is in
+the environment of every program the shell starts, including `vault`, readable through
+`/proc/<pid>/environ` by the same account and root while each runs; where the shell received
+`VAULT_TOKEN` in its initial environment, that file also shows it for the shell itself and the
+block's subshell. A wrapping token read there before the first unwrap can be unwrapped by its
+reader, so a first unwrap that fails is a finding to investigate, not a pass.
 
 **Single-use unwrap (demonstrated on loopback):** only after the preceding
 validation, run this block with that same wrapping token selected. The first unwrap must succeed;
@@ -6613,10 +6641,16 @@ from unrelated pods.
 
 Redis is not passwordless in these base manifests: the `secret-init` init container runs
 `argocd admin redis-initial-password`, and Redis receives `--requirepass` from the `auth` key of the
-`argocd-redis` Secret. This is an init container, not a separate Job. No Redis TLS is configured by
-these manifests, and Argo CD's Redis client defaults to `--redis-use-tls=false`; protect that traffic
-and Secret as well as the cached data. The password initializer's implementation and the Redis
-image's bind configuration are absent from this source subset.
+`argocd-redis` Secret. This is an init container, not a separate Job. Holding the password in a
+Secret does not keep it off the command line: as an argument, it is in the Redis process's argv for
+that process's whole lifetime, readable through `ps` and `/proc/<pid>/cmdline` by other local
+accounts on the node as well as by the same account and root, and command-line auditing on the node
+can record it beyond that. Where a process overwrites its own arguments, they stay readable until
+the overwrite runs; whether the Redis image does so is not established by this source subset. Treat
+every account that can read the node's processes as able to read the Redis password. No Redis TLS
+is configured by these manifests, and Argo CD's Redis client defaults to `--redis-use-tls=false`;
+protect that traffic and Secret as well as the cached data. The password initializer's
+implementation and the Redis image's bind configuration are absent from this source subset.
 
 Dex's wrapper defaults to TLS for its HTTP endpoint. The generator replaces the `web`, `grpc` and
 `telemetry` mappings: `web.https` uses `/tmp/tls.crt` and `/tmp/tls.key`, or `web.http` is used with
@@ -37037,6 +37071,17 @@ protected by the Router's basic auth; `--registration-secret` makes participants
 event messages, but it is carried in those messages rather than encrypting the transport, so it does
 not make a reachable bus safe on its own: run the bus on a private, trusted network with matching
 secrets on every component.
+
+`--password` and `--registration-secret` are command-line values: each puts its secret in the argv
+of every process that receives it, for that process's whole lifetime, readable through `ps` and
+`/proc/<pid>/cmdline` by other local accounts as well as by the same account and root, and
+command-line auditing on the host can record it beyond that. Do not assume `SE_ROUTER_PASSWORD`
+avoids this. Sources has no reference for how the Docker images' start scripts pass that variable
+to the Router, so it may still reach the `java` command line as `--password`; read the start script
+in the image you run before relying on the variable. Until you have, run Grid components only on
+hosts where every local account other than the one running them and root is trusted with these
+secrets. A secret that does stay in a process's environment is still readable through
+`/proc/<pid>/environ` by the same account and root while that process runs.
 
 The Docker browser images add two more listeners: they start VNC by default (`SE_START_VNC` defaults to
 `true`) on `5900` with noVNC on `7900`, and the vendor's own example connects with the password

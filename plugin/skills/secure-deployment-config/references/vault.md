@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e3c12bf66ccbd730a671f26446cb0bf52d1a412c503ec568f2d101aaf56b6e00",
+  "body_sha256": "0b5f9e41420e466279fcb0178b609a9ef4a674d6009db50e1da807cea4977b0d",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -507,6 +507,15 @@ token argument:
 vault unwrap
 ```
 
+No token is typed into this command, so the wrapping token is not in `vault`'s arguments, and
+neither shell history nor `set -x` tracing records it from this command. `VAULT_TOKEN` moves it out
+of argv, not out of reach: while the variable is exported, the token is in the environment of every
+program the shell starts, including `vault`, readable through `/proc/<pid>/environ` by the same
+account and root while each runs, and where the shell received `VAULT_TOKEN` in its initial
+environment, that file also shows it for the shell itself. Whoever reads it there before the unwrap
+can unwrap it first, which leaves the recipient's unwrap failing on a consumed token; investigate
+that as above. The exposure lasts until the unwrap consumes the token or its wrapping TTL expires.
+
 Protect the output, which contains the SecretID. Response wrapping is available in Community;
 this example targets current behavior. The conceptual reference notes that some wrapping-token
 features date from Vault 0.8 and may be unavailable before that version.
@@ -729,6 +738,14 @@ cluster port, because `cluster_address` defaults to one port above `address`.
 owner-readable header file containing the selected identity's `X-Vault-Token` header through a
 protected mechanism. The file must contain the actual header, not a shell variable reference.
 Use only the intended authentication header, and remove the file when finished.
+
+REASONED: from curl's header-file input in the manual page cited in Sources, not from the loopback
+runs, which did not observe it. In the two blocks below, only the header file's path enters curl's
+argv, through `--header "@$3"`; curl reads the `X-Vault-Token` header from the file. The blocks
+never type the token or expand a variable holding it, so neither shell history nor `set -x` tracing
+records it from the blocks, provided the file is prepared through protected delivery rather than by
+a shell command that contains the token. A header file closes the argv channel only: the account
+owner and root can still read the file and the memory of each curl process while it runs.
 
 Run this block for each full endpoint URL and identity described below. It reports an anonymous
 request followed by the same request with the selected credential; response bodies are discarded
@@ -1136,6 +1153,17 @@ creation time, and a lookup of the consumed token failed with `wrapping token is
 not exist`. A wrapping token looked up three seconds after its two-second TTL failed the same way.
 See [wrapping lookup fields](https://developer.hashicorp.com/vault/api-docs/system/wrapping-lookup)
 and [recipient validation](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
+
+REASONED: from the environment behaviour recorded above for the wrapping-lookup blocks, not from
+the loopback unwrap runs, which did not observe it. The single-use unwrap block below takes the
+wrapping token from `VAULT_TOKEN`, not from its arguments or a file: the block never types the
+token or expands a variable holding it, so neither shell history nor `set -x` tracing records it
+from the block. That closes the argv channel only. While `VAULT_TOKEN` is exported, the token is in
+the environment of every program the shell starts, including `vault`, readable through
+`/proc/<pid>/environ` by the same account and root while each runs; where the shell received
+`VAULT_TOKEN` in its initial environment, that file also shows it for the shell itself and the
+block's subshell. A wrapping token read there before the first unwrap can be unwrapped by its
+reader, so a first unwrap that fails is a finding to investigate, not a pass.
 
 **Single-use unwrap (demonstrated on loopback):** only after the preceding
 validation, run this block with that same wrapping token selected. The first unwrap must succeed;

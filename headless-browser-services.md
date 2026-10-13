@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "8ee4d036bec0426ea1501a346e2760d6ce8dbb7af61a5a0a8a5f368f0e1a3619",
+  "body_sha256": "863c774b7839b3c155c1e9b8d6a843256d4b6cf08136e68aaab9af9e08eb6fcd",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -273,6 +273,17 @@ protected by the Router's basic auth; `--registration-secret` makes participants
 event messages, but it is carried in those messages rather than encrypting the transport, so it does
 not make a reachable bus safe on its own: run the bus on a private, trusted network with matching
 secrets on every component.
+
+`--password` and `--registration-secret` are command-line values: each puts its secret in the argv
+of every process that receives it, for that process's whole lifetime, readable through `ps` and
+`/proc/<pid>/cmdline` by other local accounts as well as by the same account and root, and
+command-line auditing on the host can record it beyond that. Do not assume `SE_ROUTER_PASSWORD`
+avoids this. Sources has no reference for how the Docker images' start scripts pass that variable
+to the Router, so it may still reach the `java` command line as `--password`; read the start script
+in the image you run before relying on the variable. Until you have, run Grid components only on
+hosts where every local account other than the one running them and root is trusted with these
+secrets. A secret that does stay in a process's environment is still readable through
+`/proc/<pid>/environ` by the same account and root while that process runs.
 
 The Docker browser images add two more listeners: they start VNC by default (`SE_START_VNC` defaults to
 `true`) on `5900` with noVNC on `7900`, and the vendor's own example connects with the password

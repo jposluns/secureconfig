@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c0a09b1deb539eca12a347e6350948d7451aecb852aca926d55803e36ab977dd",
+  "body_sha256": "ddea1e9c64574e926e6d221ed6e561d8d2e1bf1d3dc9a28d533f8ad24eca4e44",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -291,10 +291,16 @@ from unrelated pods.
 
 Redis is not passwordless in these base manifests: the `secret-init` init container runs
 `argocd admin redis-initial-password`, and Redis receives `--requirepass` from the `auth` key of the
-`argocd-redis` Secret. This is an init container, not a separate Job. No Redis TLS is configured by
-these manifests, and Argo CD's Redis client defaults to `--redis-use-tls=false`; protect that traffic
-and Secret as well as the cached data. The password initializer's implementation and the Redis
-image's bind configuration are absent from this source subset.
+`argocd-redis` Secret. This is an init container, not a separate Job. Holding the password in a
+Secret does not keep it off the command line: as an argument, it is in the Redis process's argv for
+that process's whole lifetime, readable through `ps` and `/proc/<pid>/cmdline` by other local
+accounts on the node as well as by the same account and root, and command-line auditing on the node
+can record it beyond that. Where a process overwrites its own arguments, they stay readable until
+the overwrite runs; whether the Redis image does so is not established by this source subset. Treat
+every account that can read the node's processes as able to read the Redis password. No Redis TLS
+is configured by these manifests, and Argo CD's Redis client defaults to `--redis-use-tls=false`;
+protect that traffic and Secret as well as the cached data. The password initializer's
+implementation and the Redis image's bind configuration are absent from this source subset.
 
 Dex's wrapper defaults to TLS for its HTTP endpoint. The generator replaces the `web`, `grpc` and
 `telemetry` mappings: `web.https` uses `/tmp/tls.crt` and `/tmp/tls.key`, or `web.http` is used with
