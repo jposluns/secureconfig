@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "ba1bbe6b7e10873113f33961ebb64be71d13f54abee7662de2d76566e2dba393",
+  "body_sha256": "a3f8a5a43997c11ace49b725d371662ff51cbb5063bc49f773bec4fdcbfb16c5",
   "components": {
     "llama": {
       "name": "llama.cpp",
@@ -422,11 +422,21 @@ Self-hosted model servers follow the [ollama.md](ollama.md) pattern: exposing on
   if [ -e "$HOME/.config/llama-server/api-keys" ] || [ -L "$HOME/.config/llama-server/api-keys" ]; then
     echo 'api-keys already exists in ~/.config/llama-server; nothing written'; exit 2
   fi
+  command -v getfacl >/dev/null || { echo 'getfacl not found, so a default ACL on ~/.config/llama-server cannot be ruled out; install the acl package; nothing written'; exit 2; }
+  case "$(getfacl -d -c -p -- "$HOME/.config/llama-server"; echo "getfacl-status=$?")" in
+    getfacl-status=0) ;;
+    *getfacl-status=0) echo 'the directory ~/.config/llama-server has a default ACL, which a new file inherits in place of umask 077; nothing written'; exit 2 ;;
+    *) echo 'getfacl could not read the ACL of ~/.config/llama-server; nothing written'; exit 2 ;;
+  esac
   openssl rand -hex 32 > "$HOME/.config/llama-server/api-keys"
+  case "$(ls -ln -- "$HOME/.config/llama-server/api-keys")" in
+    '-rw------- '*|'-rw-------.'*) ;;
+    *) echo 'api-keys is not mode 0600, so other accounts may read it; delete ~/.config/llama-server/api-keys and do not use the key in it'; exit 2 ;;
+  esac
 )
 ```
 
-`umask 077` applies before anything is written, so the directory is created mode `0700` and the file mode `0600`. The block makes the directory mode `0700` first and then refuses when `api-keys` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not), so running the block again cannot replace a key your clients already hold; `set -C` also refuses an existing regular file, and the explicit check handles the other forms. As with the other writers in this guide, these checks hold only in owner-only directories no other account can replace. If `openssl` fails, the block leaves an empty file behind: delete it before running the block again, and the launch block below refuses to start on it. The key goes from `openssl` straight into the file, so it never passes through a shell variable or a command line. Add one line per further client key; at the pinned commit a line that begins with `#` is a comment. Clients running as that account on this host can read the same file; give remote clients their copy through your secret store ([secrets.md](secrets.md)). The file holds the key in plaintext at rest, readable by that account, by root, and by any backup that copies it, so keep it and its backups out of source control.
+`umask 077` applies before anything is written, so the directory is created mode `0700` and the file mode `0600`, unless the directory carries a default ACL, as it does when `~/.config` has one for `mkdir` to copy: a new file then takes its permissions from that ACL in place of the umask, so the key can be readable by the group or by other accounts, and `chmod 700` does not remove a default ACL. So before it writes, the block runs `getfacl -d -c -p` on the directory, which prints the directory's default ACL and nothing else, and refuses when that prints anything, when `getfacl` fails, or when `getfacl` is not installed; remove a default ACL you do not need with `setfacl -k ~/.config/llama-server` and run the block again. A missing `getfacl` fails closed because the block then cannot tell, before the key exists, whether the file would be private, and a key written to a readable file has to be thrown away; `getfacl` comes from the `acl` package, and where it is not installed the block refuses to run. After the write the block reads the file's mode from `ls -ln`, whose permission field POSIX specifies, and fails unless that field is exactly `-rw-------` followed by a space, or by the `.` that GNU `ls` shows for an SELinux context; the `+` it shows for an ACL fails the check. If the check fails, delete the file and do not use the key in it. The other writers in this guide, and those in [chat-uis.md](chat-uis.md) and [image-gen-uis.md](image-gen-uis.md), make the same two checks. Without these checks, each of this guide's five writer blocks wrote its file mode `0644` when `~/.config` carried a default ACL (run in a scratch home directory with bash 5.3.9, acl 2.3.2 and `openssl` stubbed). The block makes the directory mode `0700` first and then refuses when `api-keys` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not), so running the block again cannot replace a key your clients already hold; `set -C` also refuses an existing regular file, and the explicit check handles the other forms. As with the other writers in this guide, these checks hold only in owner-only directories no other account can replace. If `openssl` fails, the block leaves an empty file behind: delete it before running the block again, and the launch block below refuses to start on it. The key goes from `openssl` straight into the file, so it never passes through a shell variable or a command line. Add one line per further client key; at the pinned commit a line that begins with `#` is a comment. Clients running as that account on this host can read the same file; give remote clients their copy through your secret store ([secrets.md](secrets.md)). The file holds the key in plaintext at rest, readable by that account, by root, and by any backup that copies it, so keep it and its backups out of source control.
 
 Start the server from the file:
 
@@ -463,14 +473,24 @@ vLLM's server requires an API key when one is set: at both pinned commits `--api
   if [ -e "$HOME/.config/vllm/server.yaml" ] || [ -L "$HOME/.config/vllm/server.yaml" ]; then
     echo 'server.yaml already exists in ~/.config/vllm; nothing written'; exit 2
   fi
+  command -v getfacl >/dev/null || { echo 'getfacl not found, so a default ACL on ~/.config/vllm cannot be ruled out; install the acl package; nothing written'; exit 2; }
+  case "$(getfacl -d -c -p -- "$HOME/.config/vllm"; echo "getfacl-status=$?")" in
+    getfacl-status=0) ;;
+    *getfacl-status=0) echo 'the directory ~/.config/vllm has a default ACL, which a new file inherits in place of umask 077; nothing written'; exit 2 ;;
+    *) echo 'getfacl could not read the ACL of ~/.config/vllm; nothing written'; exit 2 ;;
+  esac
   set -- "$(openssl rand -hex 32)"
   [ "${#1}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
   case "$1" in *[!0123456789abcdef]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
   printf 'api-key: "%s"\n' "$1" > "$HOME/.config/vllm/server.yaml"
+  case "$(ls -ln -- "$HOME/.config/vllm/server.yaml")" in
+    '-rw------- '*|'-rw-------.'*) ;;
+    *) echo 'server.yaml is not mode 0600, so other accounts may read it; delete ~/.config/vllm/server.yaml and do not use the key in it'; exit 2 ;;
+  esac
 )
 ```
 
-The block makes the directory mode `0700` first, then refuses, before it generates a key, when `server.yaml` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not), so a rerun cannot replace a key your clients already hold. It writes nothing unless the generated key is 64 hex characters. `umask 077` creates the directory mode `0700` and the file mode `0600`, and `set -C` still refuses to overwrite an existing regular file. These checks run before the write, not atomically with it, so they hold only while no other account can replace the directory or any directory above it: run the block in owner-only directories you control, such as your own home directory, never under a path another account can write to. The key passes only through the subshell's positional parameters and the builtin `printf`, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read it, and it assumes a clean shell. Start the server with only non-secret values on its command line, substituting your model inside the quotes, and do not add `--api-key` there, which would put the value back in argv:
+The block makes the directory mode `0700` first, then refuses, before it generates a key, when `server.yaml` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not), so a rerun cannot replace a key your clients already hold. It writes nothing unless the generated key is 64 hex characters. `umask 077` creates the directory mode `0700` and the file mode `0600`, and `set -C` still refuses to overwrite an existing regular file. As in the llama.cpp block, it also refuses, before it generates a key, a directory with a default ACL, a failed `getfacl` or a missing one, and after the write it fails unless `ls -ln` shows the file as `-rw-------`; delete a file that check refuses and do not use its key. These checks run before the write, not atomically with it, so they hold only while no other account can replace the directory or any directory above it: run the block in owner-only directories you control, such as your own home directory, never under a path another account can write to. The key passes only through the subshell's positional parameters and the builtin `printf`, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read it, and it assumes a clean shell. Start the server with only non-secret values on its command line, substituting your model inside the quotes, and do not add `--api-key` there, which would put the value back in argv:
 
 ```bash
 (
@@ -528,15 +548,25 @@ The launcher reference lists `--api-key` (env `API_KEY`) without describing it. 
   if [ -e "$HOME/.config/sglang/server.yaml" ] || [ -L "$HOME/.config/sglang/server.yaml" ]; then
     echo 'server.yaml already exists in ~/.config/sglang; nothing written'; exit 2
   fi
+  command -v getfacl >/dev/null || { echo 'getfacl not found, so a default ACL on ~/.config/sglang cannot be ruled out; install the acl package; nothing written'; exit 2; }
+  case "$(getfacl -d -c -p -- "$HOME/.config/sglang"; echo "getfacl-status=$?")" in
+    getfacl-status=0) ;;
+    *getfacl-status=0) echo 'the directory ~/.config/sglang has a default ACL, which a new file inherits in place of umask 077; nothing written'; exit 2 ;;
+    *) echo 'getfacl could not read the ACL of ~/.config/sglang; nothing written'; exit 2 ;;
+  esac
   set -- "$(openssl rand -hex 32)" "$(openssl rand -hex 32)"
   [ "${#1}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
   [ "${#2}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
   case "$1$2" in *[!0123456789abcdef]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
   printf 'api-key: "%s"\nadmin-api-key: "%s"\n' "$1" "$2" > "$HOME/.config/sglang/server.yaml"
+  case "$(ls -ln -- "$HOME/.config/sglang/server.yaml")" in
+    '-rw------- '*|'-rw-------.'*) ;;
+    *) echo 'server.yaml is not mode 0600, so other accounts may read it; delete ~/.config/sglang/server.yaml and do not use the keys in it'; exit 2 ;;
+  esac
 )
 ```
 
-The block writes nothing unless both generated keys are 64 hex characters, because SGLang serves ordinary requests whenever the API key is empty, even when `--admin-api-key` is set, so an empty value would leave the OpenAI-compatible endpoints open. `umask 077` creates the directory mode `0700` and the file mode `0600`. The block makes the directory mode `0700` first and then refuses, before it generates a key, when `server.yaml` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not), so a rerun cannot replace keys your clients already hold; `set -C` also refuses an existing regular file, and the explicit check handles the other forms. These checks hold only in owner-only directories no other account can replace. The keys pass only through the subshell's positional parameters and the builtin `printf`, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read them, and it assumes a clean shell. Start the server with only non-secret values on its command line, substituting your model path inside the quotes, and do not add `--api-key` or `--admin-api-key` there, which would put the values back in argv:
+The block writes nothing unless both generated keys are 64 hex characters, because SGLang serves ordinary requests whenever the API key is empty, even when `--admin-api-key` is set, so an empty value would leave the OpenAI-compatible endpoints open. `umask 077` creates the directory mode `0700` and the file mode `0600`. The block makes the directory mode `0700` first and then refuses, before it generates a key, when `server.yaml` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not), so a rerun cannot replace keys your clients already hold; `set -C` also refuses an existing regular file, and the explicit check handles the other forms. These checks hold only in owner-only directories no other account can replace. As in the llama.cpp block, it also refuses, before it generates the keys, a directory with a default ACL, a failed `getfacl` or a missing one, and after the write it fails unless `ls -ln` shows the file as `-rw-------`; delete a file that check refuses and do not use its keys. The keys pass only through the subshell's positional parameters and the builtin `printf`, never a command line; the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read them, and it assumes a clean shell. Start the server with only non-secret values on its command line, substituting your model path inside the quotes, and do not add `--api-key` or `--admin-api-key` there, which would put the values back in argv:
 
 ```bash
 python -m sglang.launch_server --model-path 'REPLACE_WITH_MODEL_PATH' --config "$HOME/.config/sglang/server.yaml"
@@ -612,14 +642,24 @@ All three are secrets, and none belongs on the command line, where `ps` and `/pr
   if [ -e "$HOME/.config/text-generation-webui/gradio-auth" ] || [ -L "$HOME/.config/text-generation-webui/gradio-auth" ]; then
     echo 'gradio-auth already exists in ~/.config/text-generation-webui; nothing written'; exit 2
   fi
+  command -v getfacl >/dev/null || { echo 'getfacl not found, so a default ACL on ~/.config/text-generation-webui cannot be ruled out; install the acl package; nothing written'; exit 2; }
+  case "$(getfacl -d -c -p -- "$HOME/.config/text-generation-webui"; echo "getfacl-status=$?")" in
+    getfacl-status=0) ;;
+    *getfacl-status=0) echo 'the directory ~/.config/text-generation-webui has a default ACL, which a new file inherits in place of umask 077; nothing written'; exit 2 ;;
+    *) echo 'getfacl could not read the ACL of ~/.config/text-generation-webui; nothing written'; exit 2 ;;
+  esac
   set -- "$1" "$(openssl rand -hex 16)"
   [ "${#2}" -eq 32 ] || { echo 'password generation failed; nothing written'; exit 2; }
   case "$2" in *[!0123456789abcdef]*) echo 'password generation failed; nothing written'; exit 2 ;; esac
   printf '%s:%s\n' "$1" "$2" > "$HOME/.config/text-generation-webui/gradio-auth"
+  case "$(ls -ln -- "$HOME/.config/text-generation-webui/gradio-auth")" in
+    '-rw------- '*|'-rw-------.'*) ;;
+    *) echo 'gradio-auth is not mode 0600, so other accounts may read it; delete ~/.config/text-generation-webui/gradio-auth and do not use the password in it'; exit 2 ;;
+  esac
 )
 ```
 
-The `set --` line opens with a marker the block checks, so a paste that drops that line is refused rather than run on your shell's own arguments. The block makes the directory mode `0700` first, then refuses, before it generates a password, when `gradio-auth` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not); as with the vLLM block, that holds only in owner-only directories no other account can replace. `umask 077` creates the directory mode `0700` and the file mode `0600`, `set -C` still refuses to overwrite an existing regular file, and the block writes nothing unless the generated password is 32 hex characters. The password passes only through the subshell's positional parameters and the builtin `printf`; the block clears inherited traps first and assumes a clean shell. Read the password from the file once into your password manager. The file holds it in plaintext at rest, readable by that account and by root, so keep it and its backups out of source control.
+The `set --` line opens with a marker the block checks, so a paste that drops that line is refused rather than run on your shell's own arguments. The block makes the directory mode `0700` first, then refuses, before it generates a password, when `gradio-auth` already exists in any form (a regular file, a FIFO, or a symlink, dangling or not); as with the vLLM block, that holds only in owner-only directories no other account can replace. `umask 077` creates the directory mode `0700` and the file mode `0600`, `set -C` still refuses to overwrite an existing regular file, and the block writes nothing unless the generated password is 32 hex characters. As in the llama.cpp block, it also refuses, before it generates the password, a directory with a default ACL, a failed `getfacl` or a missing one, and after the write it fails unless `ls -ln` shows the file as `-rw-------`; delete a file that check refuses and do not use its password. The password passes only through the subshell's positional parameters and the builtin `printf`; the block clears inherited traps first and assumes a clean shell. Read the password from the file once into your password manager. The file holds it in plaintext at rest, readable by that account and by root, so keep it and its backups out of source control.
 
 The API keys have no file flag and no environment input at the pinned sources: the API reads them only from the parsed arguments. The pinned `modules/shared.py` does read further flags from `CMD_FLAGS.txt` in the user-data directory, and it splices them into Python's own argument list inside the process, so keys placed there stay out of `/proc/<pid>/cmdline`. Do not use the checkout's own `user_data/CMD_FLAGS.txt` for them: at the pinned commit it is a tracked file (it ships with three comment lines), so a key written there is a change to a tracked file that `git diff` prints and `git stash` copies into the repository, and the update wizard in `one_click.py` runs `git merge --autostash` (stashing the change) and offers `git reset --hard` (discarding it). This was read from the code, not run. Point `--user-data-dir` at a private directory outside the checkout instead, readable only by the account that runs text-generation-webui; it then stands in for the whole `user_data` directory (the model, LoRA and cache directories, among others, default under it), so copy across the models and settings you use. Write generated keys into a new `CMD_FLAGS.txt` there, as that account, substituting the directory's absolute path inside the quotes on the `set --` line (a path with spaces stays one value there). Write each `'` in the path as `'\''`; this is required, because a `'` left unescaped or escaped wrongly ends the quoting early, and the rest of the line can then change the path the block uses or run as shell syntax:
 
@@ -648,15 +688,25 @@ The API keys have no file flag and no environment input at the pinned sources: t
   if [ -e CMD_FLAGS.txt ] || [ -L CMD_FLAGS.txt ]; then
     echo 'CMD_FLAGS.txt already exists there; use a new private directory; no key written'; exit 2
   fi
+  command -v getfacl >/dev/null || { echo 'getfacl not found, so a default ACL on that directory cannot be ruled out; install the acl package; no key written'; exit 2; }
+  case "$(getfacl -d -c -p -- .; echo "getfacl-status=$?")" in
+    getfacl-status=0) ;;
+    *getfacl-status=0) echo 'that directory has a default ACL, which a new file inherits in place of umask 077; no key written'; exit 2 ;;
+    *) echo 'getfacl could not read the ACL of that directory; no key written'; exit 2 ;;
+  esac
   set -- "$(openssl rand -hex 32)" "$(openssl rand -hex 32)"
   [ "${#1}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
   [ "${#2}" -eq 64 ] || { echo 'key generation failed; nothing written'; exit 2; }
   case "$1$2" in *[!0123456789abcdef]*) echo 'key generation failed; nothing written'; exit 2 ;; esac
   printf -- '--api-key %s\n--admin-key %s\n' "$1" "$2" > CMD_FLAGS.txt
+  case "$(ls -ln -- CMD_FLAGS.txt)" in
+    '-rw------- '*|'-rw-------.'*) ;;
+    *) echo 'CMD_FLAGS.txt is not mode 0600, so other accounts may read it; delete CMD_FLAGS.txt in that directory and do not use the keys in it'; exit 2 ;;
+  esac
 )
 ```
 
-The block creates `CMD_FLAGS.txt` once and never appends to one. Its `set --` line opens with a marker the block checks, so a paste that drops that line is refused rather than run on your shell's own arguments. Before it generates a key, it refuses a relative path; a directory that holds a `.git` entry of any kind, or has one in any directory above it, whether a repository directory, a submodule's or worktree's `.git` file, a symlink or a malformed entry, which covers the checkout's own `user_data`; and a directory where `CMD_FLAGS.txt` already exists in any form, a dangling symlink included. The walk starts in the target directory and steps up with `cd -P ..` until `.` and `..` are the same directory, testing `.git` relative to each one, so symlinks are resolved and no path string is built: a newline or other unusual byte in a directory name, or a physical path longer than the system's path limit, cannot hide an ancestor's `.git`. It refuses if any step fails. The walk does not run git, so neither a git error nor an inherited `GIT_*` variable can let the write through. It cannot see a checkout reached through a bind mount, or a repository whose work tree is set elsewhere (a bare "dotfiles" repository used with `--work-tree=$HOME`, for example), so choose a directory you know is outside any checkout. Like the other writers' checks, the walk and the existence check run before the write, not atomically with it, so they hold only in owner-only directories no other account can change, and a `.git` created there between the check and the write is not seen. A directory the block refuses after entering it is left behind, empty if the block created it, and mode `0700`. The block makes the directory mode `0700` after entering it, so for a directory another account owns `chmod` itself fails and the block stops there, with `chmod`'s error rather than its own message and the directory's mode unchanged; run as root, that `chmod` succeeds on any directory, so do not run the block as root. `umask 077` creates the file mode `0600`, `set -C` also refuses an existing regular file (the explicit check handles the other forms), and the block writes nothing unless both keys are 64 hex characters. The keys pass only through the subshell's positional parameters and the builtin `printf`. Add any other flags you want in the file on new lines after the two key lines, and never add or edit a key line: the loader joins the file's lines before splitting them into arguments, and a later `--api-key` or `--admin-key` would silently replace a key. To rotate the keys, run the block again with a new private directory and move your settings across. Start `server.py` from the installation directory with only non-secret values on its command line, substituting the same path inside the quotes:
+The block creates `CMD_FLAGS.txt` once and never appends to one. Its `set --` line opens with a marker the block checks, so a paste that drops that line is refused rather than run on your shell's own arguments. Before it generates a key, it refuses a relative path; a directory that holds a `.git` entry of any kind, or has one in any directory above it, whether a repository directory, a submodule's or worktree's `.git` file, a symlink or a malformed entry, which covers the checkout's own `user_data`; and a directory where `CMD_FLAGS.txt` already exists in any form, a dangling symlink included. The walk starts in the target directory and steps up with `cd -P ..` until `.` and `..` are the same directory, testing `.git` relative to each one, so symlinks are resolved and no path string is built: a newline or other unusual byte in a directory name, or a physical path longer than the system's path limit, cannot hide an ancestor's `.git`. It refuses if any step fails. The walk does not run git, so neither a git error nor an inherited `GIT_*` variable can let the write through. It cannot see a checkout reached through a bind mount, or a repository whose work tree is set elsewhere (a bare "dotfiles" repository used with `--work-tree=$HOME`, for example), so choose a directory you know is outside any checkout. Like the other writers' checks, the walk and the existence check run before the write, not atomically with it, so they hold only in owner-only directories no other account can change, and a `.git` created there between the check and the write is not seen. A directory the block refuses after entering it is left behind, empty if the block created it, and mode `0700`. The block makes the directory mode `0700` after entering it, so for a directory another account owns `chmod` itself fails and the block stops there, with `chmod`'s error rather than its own message and the directory's mode unchanged; run as root, that `chmod` succeeds on any directory, so do not run the block as root. `umask 077` creates the file mode `0600`, `set -C` also refuses an existing regular file (the explicit check handles the other forms), and the block writes nothing unless both keys are 64 hex characters. As in the llama.cpp block, it also refuses, before it generates a key, a directory with a default ACL, which `chmod 700` does not remove and a new file would inherit in place of the umask, a failed `getfacl` or a missing one, and after the write it fails unless `ls -ln` shows `CMD_FLAGS.txt` as `-rw-------`; delete a file that check refuses and do not use its keys. The keys pass only through the subshell's positional parameters and the builtin `printf`. Add any other flags you want in the file on new lines after the two key lines, and never add or edit a key line: the loader joins the file's lines before splitting them into arguments, and a later `--api-key` or `--admin-key` would silently replace a key. To rotate the keys, run the block again with a new private directory and move your settings across. Start `server.py` from the installation directory with only non-secret values on its command line, substituting the same path inside the quotes:
 
 ```bash
 python server.py --user-data-dir 'REPLACE_WITH_PRIVATE_USER_DATA_DIR' --api --gradio-auth-path "$HOME/.config/text-generation-webui/gradio-auth"
