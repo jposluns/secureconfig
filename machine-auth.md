@@ -216,7 +216,7 @@ version_basis: {
     "verify-expiry": {"text": "Revoked or expired credentials must be rejected with a service-log record identifying the client.", "components": ["bearer", "jwt"], "sources": ["bearer:sefd3dd623da3", "jwt:sc36d79fcad94"], "status": "REASONED"},
     "verify-ci": {"text": "Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d", "github:s653a0d94dd2f", "github:sa8ed4c86a8ea", "github:s80d46a4f675c"], "status": "REASONED"},
     "verify-trust": {"text": "Inspect AWS sub, Google repository binding and Azure subject for exact repository plus branch/environment restriction without broad wildcard suffixes.", "components": ["aws", "google", "azure"], "sources": ["aws:s6fff7087bca4", "google:s03844cd0246a", "google:s0f874cc5b70e", "azure:sc70c3d4b8844"], "status": "REASONED"},
-    "verify-artifacts": {"text": "History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites confidentiality guidance, not these scanner commands.", "components": ["bearer", "gitleaks"], "sources": ["bearer:sefd3dd623da3", "gitleaks:s6310bf73dd3e", "gitleaks:s3809c36cec88"], "status": "REASONED"},
+    "verify-artifacts": {"text": "History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites Gitleaks history and directory scans, not image-layer scanning or docker history.", "components": ["bearer", "gitleaks"], "sources": ["bearer:sefd3dd623da3", "gitleaks:s6310bf73dd3e", "gitleaks:s3809c36cec88"], "status": "REASONED"},
     "verify-mtls": {"text": "Reject missing, untrusted, expired, revoked and, where identity authorization applies, unauthorized certificates while the authorized client succeeds.", "components": ["pki"], "sources": ["pki:s93ee2b4751f8"], "status": "REASONED"}
   }
 }
@@ -267,7 +267,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | verify-expiry: Revoked or expired credentials must be rejected with a service-log record identifying the client. | Bearer token guidance unknown; JWT access-token profile unknown | REASONED |
 | verify-ci: Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write. | GitHub Actions OIDC unknown | REASONED |
 | verify-trust: Inspect AWS sub, Google repository binding and Azure subject for exact repository plus branch/environment restriction without broad wildcard suffixes. | AWS IAM and credential action unknown; Google Cloud federation and auth action unknown; Azure federation and login unknown | REASONED |
-| verify-artifacts: History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites confidentiality guidance, not these scanner commands. | Bearer token guidance unknown; Gitleaks scan commands v8.19.0 | REASONED |
+| verify-artifacts: History, working-tree and image-layer scans must show no keys; docker history alone misses copied files. Sources cites Gitleaks history and directory scans, not image-layer scanning or docker history. | Bearer token guidance unknown; Gitleaks scan commands v8.19.0 | REASONED |
 | verify-mtls: Reject missing, untrusted, expired, revoked and, where identity authorization applies, unauthorized certificates while the authorized client succeeds. | Certificate revocation unknown | REASONED |
 <!-- version-basis:end -->
 
