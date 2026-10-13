@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-13
 
+- DECISIONS.md and TODO.md: record the maintainer's ruling that band 5 (site and adopters) is worked last, after bands 2 and 3 and only when bands 1 to 4 are clear (#499)
 - `model-servers.md`, `chat-uis.md`, `image-gen-uis.md`: the seven create-once key writers refuse a target directory carrying a default ACL, or a missing or failing `getfacl`, before writing, and check with `ls -ln` that the written file is `-rw-------`, telling the reader to delete it otherwise; closes row 1.141 (#498)
 - tools/check_no_placeholders.py: refuse bare `#N` in every Markdown context except the exact notations `#N`, `(#N)`, and the literal prefix `Merge pull request #N from `; the exemption reads only the characters around each match on its line, keeping the existing marker boundaries. Regression tests cover near-misses, the completion incident and all eight existing reference-format uses. TODO.md's Queueing paragraph now names band 4 after band 1, per the recorded "Queue order" ruling in DECISIONS.md (#497)
 - Fold claim-level detail for the 185 confirmed remaining source-gap notes across 50 guides into row 1.179 instead of adding rows, per the 2026-10-13 maintainer ruling (#491)
