@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "ddea1e9c64574e926e6d221ed6e561d8d2e1bf1d3dc9a28d533f8ad24eca4e44",
+  "body_sha256": "03fa7f791fbd6523f2eed0750f671b6c69f648d1f250a1dbbabee3a86b21c417",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -292,9 +292,9 @@ from unrelated pods.
 Redis is not passwordless in these base manifests: the `secret-init` init container runs
 `argocd admin redis-initial-password`, and Redis receives `--requirepass` from the `auth` key of the
 `argocd-redis` Secret. This is an init container, not a separate Job. Holding the password in a
-Secret does not keep it off the command line: as an argument, it is in the Redis process's argv for
-that process's whole lifetime, readable through `ps` and `/proc/<pid>/cmdline` by other local
-accounts on the node as well as by the same account and root, and command-line auditing on the node
+Secret does not keep it off the command line: as an argument, it is in the Redis process's argv from
+its start until the process overwrites its arguments, if it does, readable through `ps` and
+`/proc/<pid>/cmdline` by other local accounts on the node as well as by the same account and root, and command-line auditing on the node
 can record it beyond that. Where a process overwrites its own arguments, they stay readable until
 the overwrite runs; whether the Redis image does so is not established by this source subset. Treat
 every account that can read the node's processes as able to read the Redis password. No Redis TLS
@@ -520,6 +520,7 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 # The hidden prompt keeps the key out of shell history and set +x keeps it out of set -x tracing.
 # Stdin closes the argv channel only: the account owner and root can still read the key in the
 # subshell and python3.
+# -H puts the signature in curl's argv, readable through ps while curl runs: a replayable HMAC for that exact body.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e

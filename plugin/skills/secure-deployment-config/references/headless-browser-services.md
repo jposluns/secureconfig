@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "863c774b7839b3c155c1e9b8d6a843256d4b6cf08136e68aaab9af9e08eb6fcd",
+  "body_sha256": "20320e208ad6f7cf742d2c722f8b706df89ba06fea196dcc56f07cb8856a05a3",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -280,7 +280,7 @@ of every process that receives it, for that process's whole lifetime, readable t
 command-line auditing on the host can record it beyond that. Do not assume `SE_ROUTER_PASSWORD`
 avoids this. Sources has no reference for how the Docker images' start scripts pass that variable
 to the Router, so it may still reach the `java` command line as `--password`; read the start script
-in the image you run before relying on the variable. Until you have, run Grid components only on
+in the image you run before relying on the variable. Wherever either secret reaches a command line (always for the flags; for `SE_ROUTER_PASSWORD` unless the start script shows otherwise), run Grid components only on
 hosts where every local account other than the one running them and root is trusted with these
 secrets. A secret that does stay in a process's environment is still readable through
 `/proc/<pid>/environ` by the same account and root while that process runs.
@@ -303,7 +303,7 @@ The current Docker configuration reference agrees; the older quickstart's genera
 does not match this release. The current reference documents the same default for Enterprise,
 but its private image was not inspected or run here, so equivalence is not source-verified.
 Always set a long, randomized `TOKEN` (never a vendor sample, never committed), and publish the port to
-loopback (`-p 127.0.0.1:3000:3000`) or keep it on an internal container network with no host mapping.
+loopback (`-p 127.0.0.1:3000:3000`) or keep it on an internal container network with no host mapping. `TOKEN` reaches the server through its environment, which keeps it out of argv but not out of reach: it is readable through `/proc/<pid>/environ` by the same account and root for as long as the server, or any process that inherited it, runs.
 The token is presented in the connection URL, so proxy and access logs become credential stores; front
 the service with TLS so it is unreadable in transit, and handle the token as [secrets.md](secrets.md)
 describes.

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "0b5f9e41420e466279fcb0178b609a9ef4a674d6009db50e1da807cea4977b0d",
+  "body_sha256": "f9c5702b76aafdab4a011adf4703f2f18a3c0d169a9165bd7c08a44ea55224b9",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -374,7 +374,7 @@ See [token behavior](https://developer.hashicorp.com/vault/docs/concepts/tokens)
 [root generation](https://developer.hashicorp.com/vault/docs/commands/operator/generate-root).
 
 For CLI authentication, select tokens through a securely injected `VAULT_TOKEN` environment variable
-or a token helper. Enter interactive login credentials and unseal shares at the prompt.
+or a token helper. `VAULT_TOKEN` moves a token out of argv, not out of reach: while exported it is in the environment of every program the shell starts, readable through `/proc/<pid>/environ` by the same account and root, and where the shell received it at startup, in the shell's own. Enter interactive login credentials and unseal shares at the prompt.
 The prompt keeps them out of the command text, shell history and tracing; the account owner and
 root can still read them in the `vault` process.
 Never put credentials in command arguments, URLs, shell history, or build logs.
@@ -514,7 +514,7 @@ program the shell starts, including `vault`, readable through `/proc/<pid>/envir
 account and root while each runs, and where the shell received `VAULT_TOKEN` in its initial
 environment, that file also shows it for the shell itself. Whoever reads it there before the unwrap
 can unwrap it first, which leaves the recipient's unwrap failing on a consumed token; investigate
-that as above. The exposure lasts until the unwrap consumes the token or its wrapping TTL expires.
+that as above. The opportunity to unwrap ends when the token is consumed or expires; its bytes can remain exposed in process environments afterward.
 
 Protect the output, which contains the SecretID. Response wrapping is available in Community;
 this example targets current behavior. The conceptual reference notes that some wrapping-token
@@ -593,7 +593,7 @@ trailing slash where a block appends an API path. Never embed credentials in a U
 assume ordinary shell builtins; do not insert a literal apostrophe into a single-quoted placeholder.
 Use a clean shell without inherited HTTP proxy settings or Vault proxy overrides for direct CLI
 checks. Select each CLI identity through securely injected `VAULT_TOKEN` or its token helper;
-do not paste token values into commands. Keep credential-bearing CLI output out of recordings and
+do not paste token values into commands. An exported `VAULT_TOKEN` is still readable through process environments (section 6). Keep credential-bearing CLI output out of recordings and
 build logs.
 
 **Listener, health, audit, root revocation, and role inspection (demonstrated on loopback):** run
@@ -740,7 +740,7 @@ protected mechanism. The file must contain the actual header, not a shell variab
 Use only the intended authentication header, and remove the file when finished.
 
 REASONED: from curl's header-file input in the manual page cited in Sources, not from the loopback
-runs, which did not observe it. In the two blocks below, only the header file's path enters curl's
+runs, which did not observe it. In the two blocks below, of the credential, only the header file's path enters curl's
 argv, through `--header "@$3"`; curl reads the `X-Vault-Token` header from the file. The blocks
 never type the token or expand a variable holding it, so neither shell history nor `set -x` tracing
 records it from the blocks, provided the file is prepared through protected delivery rather than by
