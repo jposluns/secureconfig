@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "46ed6bc80b51c565259ebf468feca455b5e5d85bc8cddf65d6f08f2cb044eff6",
+  "body_sha256": "80a927047aab02dcf166a0d74721782617ef4388d7e199be1efe8c4e0deb63db",
   "components": {
     "es": {
       "name": "Elasticsearch documentation",
@@ -866,7 +866,7 @@ DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with B
 
 REASONED: introduction to the deployment prerequisites for the cited cluster API checks; local preparation observations are recorded above, while cluster identities and deployed trust remain unavailable. Before running:
 
-- REASONED: substitution and paste procedure for the guarded block; re-run at marking time, the unsubstituted guard refused with exit 1 and substituted values reached the first curl call against a local argument recorder; deployed hostname and certificate coverage is not established here. Substitute your actual hostname, HTTP port, and CA path inside the single quotes on the `set --` line. Paste the whole block. Use a TLS hostname covered by the deployed certificate.
+- REASONED: substitution and paste procedure for the guarded block; re-run at marking time, the unsubstituted guard refused with exit 1 and substituted values reached the first curl call against a local argument recorder; deployed hostname and certificate coverage is not established here; no deployed cluster or its CA certificate is available in the authoring environment. Substitute your actual hostname, HTTP port, and CA path inside the single quotes on the `set --` line. Paste the whole block. Use a TLS hostname covered by the deployed certificate.
 - REASONED: CA selection from the cited product TLS references; no deployed cluster CA or administrator identity is available. Elasticsearch automatic setup supplies `http_ca.crt`. For OpenSearch, use the **deployed production HTTP CA**, such as `/path/production-ca.pem`, and your production administrator's header file. Do not verify production against the demo CA.
 - REASONED: fixture control from the cited privilege and document APIs; no seeded target cluster is available. Have an administrator confirm that `app-data` and `other-data` each contain a readable document with ID `rbac-probe`. A missing document is not an RBAC-denial result.
 - REASONED: header-file preparation only; re-run at marking time, a disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; no target cluster is available to confirm that the user does not exist. Prepare `/path/audit-probe.header` with a Basic authentication header for a confirmed nonexistent user named `audit_probe` and a deliberately wrong password. Keep all credentials in header files.
