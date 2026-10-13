@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "2e2cdb5c2144e56c008708384053af2e58c3a5a158a5251b6426a0a84385b56c",
+  "body_sha256": "894919e60596d84330cfad19d2749e978dcd1d2e287d3b6d25efa781e4ca61ba",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
@@ -227,6 +227,8 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{ht
 #   Assumes a clean Bash shell with trusted startup files. Uncomment each WHOLE subshell to run.
 #   Tokens stay in positional parameters and curl's stdin, not named variables, environment or argv.
 #   The same account and root can still read process memory; this does not erase earlier exports.
+#   Stdin closes the argv channel only. No token is typed, and each subshell turns set -x tracing off
+#   before it fetches a token, so shell history and set -x tracing do not record it.
 #   (
 #     trap - DEBUG RETURN ERR
 #     set +x +a +e

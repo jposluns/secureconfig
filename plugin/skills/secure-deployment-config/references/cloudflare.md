@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "1d96bfdce5fab3e19bd2a7ec1d9232e1ef774c16bdc5bae2356e5bc26107fcfc",
+  "body_sha256": "decc3aa29bd5707044085d4568cc1ef54d56fb21147ac4982a32578ab018372b",
   "components": {
     "cf": {
       "name": "Cloudflare Zero Trust",
@@ -191,7 +191,8 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
   # Use Bash in a fresh, trusted shell. Replace the URL and client ID inside
   # the quotes; paste only the secret at the hidden prompt, never into the command.
   # The prompted secret reaches curl on stdin, outside argv and shell history;
-  # it remains accessible to the account owner or root.
+  # stdin does not hide it from set -x tracing (the block turns tracing off),
+  # and it remains accessible to the account owner or root.
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
   { unset -n HDR && unset -v HDR; } 2>/dev/null ||
@@ -237,7 +238,7 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 - `curl -q -sI https://app.example.com/` returns a 302 whose `location` is your team's `*.cloudflareaccess.com` login, never a 200 or your application's own content.
 - With a service token, a GET returns your application content, not the Access login. Use a route known to serve your application's content with HTTP 200. Expect `http=200 location=`; an Access login redirect, denial or transport error is not a pass. Compare with the anonymous check above: an exposed app serves the route anonymously too, so token success alone does not prove Access is enforced.
 
-Use Bash in a fresh, trusted shell and replace the URL and client ID inside the quotes. Paste only the secret at the hidden prompt, never into the command. The block discards the body and prints only the status and redirect destination; a 200 alone cannot identify the content. The secret stays in an unexported subshell variable and reaches curl on stdin, which does not hide it from the account owner or root.
+Use Bash in a fresh, trusted shell and replace the URL and client ID inside the quotes. Paste only the secret at the hidden prompt, never into the command. The block discards the body and prints only the status and redirect destination; a 200 alone cannot identify the content. The secret stays in an unexported subshell variable and reaches curl on stdin, which keeps it out of argv and shell history but does not hide it from `set -x` tracing (the block turns tracing off) or the account owner or root.
 
 ```bash
 # REASONED: no live Cloudflare account is available; not demonstrated against exposed and protected apps. The cited Cloudflare service-token documentation specifies the two headers and Service Auth policy.

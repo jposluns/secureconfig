@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "30661e96bd909783390fe7578c5ddd10469906a6237167bc76de6f9c2a4a0b8f",
+  "body_sha256": "ee71088950de478c655bf736bd3c3846ad22ebe8beab06df18e1e88a583f0917",
   "components": {
     "searx": {
       "name": "SearxNG documentation",
@@ -548,6 +548,8 @@ REASONED: following block; native authentication follows the cited service sourc
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # When you repeat this block with a valid credential header in $4, the secret
   # on the set -- line enters shell history; clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the header from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' ''
   # $3 is the same harmless JSON body as checks 5 and 7 (keep the empty quotes if none is needed).
   # $4 is a credential header: leave it EMPTY for the anonymous run, put a WRONG credential for the
@@ -603,6 +605,8 @@ REASONED: following block; credentialed success follows the cited service and cu
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The credential you substitute on the set -- line enters shell history.
   # Clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the credential from
+  # set -x tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' 'REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL'
   # $3 is the same harmless JSON body as the anonymous check. Keep the empty quotes if none is needed.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
