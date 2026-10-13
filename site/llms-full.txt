@@ -3818,13 +3818,13 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | m2m-billing: As of September 2026, Entra External ID M2M is billed per transaction as an add-on; hourly renewal is roughly 720 monthly transactions. | Entra External ID unknown | REASONED |
 | client-secret: Client credentials still need long-lived-secret protection unless replaced by federation supported by the provider. | OAuth client credentials unknown; Azure federation and login unknown | REASONED |
 | mtls-identity: Use a separate short-lived certificate per client and keep CA keys off signed servers; mTLS is a possession factor, not human MFA. | Certificate revocation unknown | REASONED |
-| mtls-nginx: nginx uses ssl_verify_client on in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; nginx mTLS release-1.28.0 | REASONED |
-| mtls-apache: Apache uses SSLVerifyClient require in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; Apache mTLS 2.4 | REASONED |
-| mtls-postgres: PostgreSQL uses clientcert=verify-full in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; PostgreSQL client certificates 17 | REASONED |
-| mtls-mysql: MySQL uses REQUIRE X509 in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; MySQL client certificates 8.4 | REASONED |
-| mtls-redis: Redis uses tls-auth-clients yes in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; Redis TLS client authentication 7.4.2 | REASONED |
-| mtls-rabbitmq: RabbitMQ uses ssl_options.fail_if_no_peer_cert = true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; RabbitMQ TLS client authentication 3.13 | REASONED |
-| mtls-mosquitto: Mosquitto uses require_certificate true in the linked service guide; the cited RFC covers certificate revocation, not this product directive. | Certificate revocation unknown; Mosquitto TLS client authentication v2.0.21 | REASONED |
+| mtls-nginx: nginx uses ssl_verify_client on in the linked service guide. | Certificate revocation unknown; nginx mTLS release-1.28.0 | REASONED |
+| mtls-apache: Apache uses SSLVerifyClient require in the linked service guide. | Certificate revocation unknown; Apache mTLS 2.4 | REASONED |
+| mtls-postgres: PostgreSQL uses clientcert=verify-full in the linked service guide. | Certificate revocation unknown; PostgreSQL client certificates 17 | REASONED |
+| mtls-mysql: MySQL uses REQUIRE X509 in the linked service guide. | Certificate revocation unknown; MySQL client certificates 8.4 | REASONED |
+| mtls-redis: Redis uses tls-auth-clients yes in the linked service guide. | Certificate revocation unknown; Redis TLS client authentication 7.4.2 | REASONED |
+| mtls-rabbitmq: RabbitMQ uses ssl_options.fail_if_no_peer_cert = true in the linked service guide. | Certificate revocation unknown; RabbitMQ TLS client authentication 3.13 | REASONED |
+| mtls-mosquitto: Mosquitto uses require_certificate true in the linked service guide. | Certificate revocation unknown; Mosquitto TLS client authentication v2.0.21 | REASONED |
 | mtls-revocation: Replacing a key does not reject the old certificate; revoke with checked CRL/OCSP, remove it from an allowlist or wait for expiry, and test refusal. | Certificate revocation unknown | REASONED |
 | oidc-token: GitHub id-token: write permits short-lived OIDC tokens from token.actions.githubusercontent.com; restrict trust to the exact repository and branch or environment. | GitHub Actions OIDC unknown | REASONED |
 | aws-action: configure-aws-credentials uses role-to-assume and aws-region and defaults its audience to sts.amazonaws.com. | AWS IAM and credential action unknown | REASONED |
@@ -10460,7 +10460,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | vast-ssh: Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance. | Vast.ai documentation unknown | REASONED |
 | runpod-ssh: RunPod recommends SSH keys and offers an optional password; use the key and skip the password. | RunPod documentation unknown | REASONED |
 | verify-inventory: ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. The cited ss manual sections do not cover network-namespace scope. | RunPod documentation unknown; Vast.ai documentation unknown; iproute2 ss manual v6.12.0 | REASONED |
-| verify-jupyter: Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth but not this exact endpoint/status pair. | Jupyter Server security unknown | REASONED |
+| verify-jupyter: Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth and the missing-token 403, but not this exact endpoint or the with-token 200. | Jupyter Server security unknown | REASONED |
 | verify-mapping: Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control. | RunPod documentation unknown; Vast.ai documentation unknown; Modal proxy authentication unknown; Jupyter Server security unknown | REASONED |
 | remote-desktop: Inventory template noVNC ports such as 6080 and VNC ports such as 5900/5901; check weak or empty passwords, require a strong password plus encrypted tunnel for direct VNC, or remove its public mapping. Test with a VNC client; no noVNC/VNC source is recorded here. | RunPod documentation unknown; Vast.ai documentation unknown | REASONED |
 <!-- version-basis:end -->
@@ -26413,7 +26413,7 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 
 ## Verify
 
-**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. Only the pgrep subcheck has the recorded stub-process demonstration below; the whole mixed block remains REASONED.
+**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. The pgrep subcheck has the recorded stub-process demonstration below. The /invocations subshell was run from a file in Bash 5.3.9 with curl replaced by a stub that prints its arguments: a substituted model name reached the stub once, carrying that name in the JSON body; a missing set -- line (with and without a caller argument), a set -- line holding only the marker (also under set -u) and one holding two values each printed its refusal and exited 0, and the unsubstituted placeholder printed its refusal and exited 2, none of them reaching the stub. Bash 5.3.9 bash -n accepted the whole block. These local guard runs observe no server or proxy, so the whole mixed block remains REASONED.
 
 ```bash
 ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/1234. ss shows only a
@@ -26444,7 +26444,10 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
   printf 'Authorization: Bearer %s\n' "$1" | curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- https://models.example.com/v1/models   # positive control: 200 with a model list, printed
 )
 (
-  set -- 'REPLACE_WITH_A_REAL_SERVED_MODEL'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_A_REAL_SERVED_MODEL'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
   case "$1" in ""|*REPLACE_WITH_*) echo 'substitute a real served model name inside the quotes on the set -- line above; not probing'; exit 2 ;; esac
   curl -q -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' \
     -d "{\"model\":\"$1\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" https://models.example.com/invocations
@@ -27271,7 +27274,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 | container-bind: Host loopback is for a same-host proxy; container loopback blocks sibling/published access, so use a private network without publication or host-loopback 127.0.0.1:5678:5678. | n8n documentation unknown | REASONED |
 | other-ports: Keep Postgres and task-runner broker ports unpublished and publish only the HTTPS proxy. | n8n documentation unknown | REASONED |
 | public-url: Set N8N_PROTOCOL=https and the full N8N_WEBHOOK_URL; WEBHOOK_URL is deprecated from 2.35.0 but still warns and works. | n8n documentation unknown | REASONED |
-| secure-cookie: Retain N8N_SECURE_COOKIE=true, its default. Source gap: listed proxy page does not state this default. | n8n documentation unknown; n8n listener source n8n@2.40.6 | REASONED |
+| secure-cookie: Retain N8N_SECURE_COOKIE=true, its default. | n8n documentation unknown; n8n listener source n8n@2.40.6 | REASONED |
 | proxy-hops: Set N8N_PROXY_HOPS to the trusted hop count for forwarded client IPs and rate limiting; public webhooks do not require a public editor. | n8n documentation unknown | REASONED |
 | native-tls: N8N_PROTOCOL=https with N8N_SSL_KEY/N8N_SSL_CERT enables native TLS. | n8n documentation unknown | REASONED |
 | owner: Complete first-run owner setup before publication; an unclaimed instance can be claimed by its first visitor. Source gap: listed security-policy page does not document owner setup. | n8n documentation unknown | REASONED |
@@ -27283,9 +27286,9 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 | webhook-auth: Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential. | n8n documentation unknown | REASONED |
 | auth-boundaries: Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries. | n8n documentation unknown | REASONED |
 | signature: A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials. | n8n documentation unknown | REASONED |
-| code-execution: Code executes JavaScript/Python; Execute Command runs shell commands inside the container under Docker and is disabled by default from 2.0. Source gap: listed task-runner page supports Code, not the Execute Command default. | n8n documentation unknown; n8n 2.0 breaking changes unknown | REASONED |
+| code-execution: Code executes JavaScript/Python; Execute Command runs shell commands inside the container under Docker and is disabled by default from 2.0. Source gap: listed task-runner page supports Code; rolling 2.0 changes page supports the Execute Command default, pending a planned pin; neither covers shell execution inside the container under Docker. | n8n documentation unknown; n8n 2.0 breaking changes unknown | REASONED |
 | runners: Use hardened external task runners; vendor describes internal mode as insecure by design. | n8n documentation unknown | REASONED |
-| environment: Set N8N_BLOCK_ENV_ACCESS_IN_NODE=true to block node access to the service environment, including encryption material. Source gap: listed task-runner page does not document this variable. | n8n documentation unknown | REASONED |
+| environment: Set N8N_BLOCK_ENV_ACCESS_IN_NODE=true to block node access to the service environment, including encryption material. Source gap: listed task-runner page names this variable, not its encryption-material scope. | n8n documentation unknown | REASONED |
 | js-modules: Narrow NODE_FUNCTION_ALLOW_BUILTIN/NODE_FUNCTION_ALLOW_EXTERNAL in external launcher's /etc/n8n-task-runners.json env-overrides; main-container values are overridden. | n8n documentation unknown | REASONED |
 | python-modules: Set N8N_RUNNERS_STDLIB_ALLOW/N8N_RUNNERS_EXTERNAL_ALLOW explicitly; wildcard grants broad module access and version-dependent defaults need confirmation. | n8n documentation unknown | REASONED |
 | ssrf: Enable N8N_SSRF_PROTECTION_ENABLED from 2.12.0 and restrict network egress; the app filter does not contain arbitrary code/command networking. | n8n SSRF filter minimum 2.12.0 | REASONED |
