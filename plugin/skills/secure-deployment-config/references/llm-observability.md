@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "4db5d1cb6e2ad3909d8b7983448e35c8170346dfd5d1cc7ade500d3e473b2027",
+  "body_sha256": "a5e355c974cb27f95cd77cbc6babf94b0dabe6949baad4540cfb933a75152092",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -406,7 +406,8 @@ so its default is TLS off, not TLS unsupported. Later versions add per-protocol 
 (`PHOENIX_TLS_ENABLED_FOR_HTTP` and `PHOENIX_TLS_ENABLED_FOR_GRPC`, each overriding `PHOENIX_TLS_ENABLED` for
 its protocol); check your release. Either way terminate TLS deliberately (natively, or at a reverse proxy or tunnel
 per [nginx.md](nginx.md), [caddy.md](caddy.md)), and make sure any plaintext backend port a proxy forwards
-to is not separately reachable.
+to is not separately reachable. For Phoenix with an API key, the proxy or tunnel is itself a key-sending client: it
+must reach Phoenix over loopback in Phoenix's own network namespace or over TLS with verification on (see Verify).
 
 ## Verify
 
