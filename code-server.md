@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "0ce2fd51af4e0fbc10f6fecc6170732369a7905393c0da845767844371ebcf9a",
+  "body_sha256": "c4ea5ce9b7f9aa9d987a4c5b925127f6f16de8d0620338865b6bfd73e34745a0",
   "components": {
     "server": {
       "name": "code-server",
@@ -150,6 +150,8 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
     -w '\nunauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
   # 2) Authenticated positive control: paste a cookie from a valid browser session; it enters via stdin
   #    (curl --header @-), never argv. The authenticated response must contain the editor.
+  #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
+  #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
   { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
