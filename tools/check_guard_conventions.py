@@ -360,10 +360,14 @@ _C2_HARDENING = True
 # to local observers while it is there, including before curl scrubs supported
 # arguments on some platforms). Detected inside the same per-curl walk as C1/C2 and
 # waivable with the existing `# guard-conventions: allow <reason>` comment. The
-# header policy is a positive denylist of credential-bearing header NAMES, so
-# identity/assertion headers (x-amzn-oidc-identity), CF-Access-Client-Id,
-# X-...-token-ttl-seconds and content-negotiation headers pass by construction,
-# while x-amzn-oidc-accesstoken (a real access token) is flagged. This is a bounded
+# header policy is a positive denylist of credential-bearing header NAMES. A
+# signed identity assertion (x-amzn-oidc-data, x-goog-iap-jwt-assertion,
+# Cf-Access-Jwt-Assertion) is a credential (CONTRIBUTING rule 7, #465): it is
+# flagged, as is x-amzn-oidc-accesstoken (a real access token). Secret-free
+# forged-identity headers (x-amzn-oidc-identity, X-MS-CLIENT-PRINCIPAL-NAME,
+# X-Goog-Authenticated-User-Email; sent deliberately as forgeries in Verify
+# probes), CF-Access-Client-Id, X-...-token-ttl-seconds and
+# content-negotiation headers still pass by construction. This is a bounded
 # lexical scan with DISCLOSED limits, not a full curl parser. Known false negatives,
 # covered by rule 5's tracing obligation: a credential reached through a shell
 # variable or command substitution in a VALUE (curl "$URL", --json "$BODY") -- so
@@ -377,6 +381,7 @@ _C2_HARDENING = True
 CREDENTIAL_HEADER_RE = re.compile(
     r"^(?:authorization|proxy-authorization|cookie|"
     r"x-api-key|api-key|apikey|x-auth-token|private-token|x-goog-api-key|"
+    r"x-amzn-oidc-data|x-goog-iap-jwt-assertion|cf-access-jwt-assertion|"
     r"x-amzn-oidc-accesstoken|"
     r"(?:[a-z0-9-]+-)?(?:secret|token|api-key|apikey|access-token))$",
     re.I,
@@ -2638,6 +2643,29 @@ nc -vz -w 5 "$1" 1883
      "```bash\ncurl -q -H \"x-amzn-oidc-accesstoken: REAL\" https://h/\n"
      "curl -q -H \"x-amzn-oidc-identity: admin\" https://h/\n```\n",
      ["C3-HEADER-ARGV"], ()),
+    ("c3-assertion-header-argv-flagged",
+     "```bash\ncurl -q -H \"x-amzn-oidc-data: REPLACE_WITH_JWT\" https://h/\n"
+     "curl -q -H \"x-goog-iap-jwt-assertion: REPLACE_WITH_JWT\" https://h/\n"
+     "curl -q -H \"Cf-Access-Jwt-Assertion: REPLACE_WITH_JWT\" https://h/\n```\n",
+     ["C3-HEADER-ARGV", "C3-HEADER-ARGV", "C3-HEADER-ARGV"], ()),
+    ("c3-assertion-header-stdin-safe",
+     "```bash\nprintf 'x-amzn-oidc-data: %s\\n' \"$1\" | "
+     "curl -q -sS -D - --header @- http://127.0.0.1:3000/whoami\n```\n",
+     [], ()),
+    ("c3-forged-identity-headers-argv-ok",
+     "```bash\ncurl -q -H \"x-amzn-oidc-identity: admin\" https://h/\n"
+     "curl -q -H \"X-MS-CLIENT-PRINCIPAL-NAME: admin\" https://h/\n"
+     "curl -q -H \"X-Goog-Authenticated-User-Email: admin@example.com\" https://h/\n```\n",
+     [], ()),
+    ("c3-assertion-header-file-and-prefix-ok",
+     "```bash\ncurl -q -H \"@$HOME/assertion.hdr\" https://h/\n"
+     "curl -q -H \"x-amzn-oidc-data-version: 2\" https://h/\n```\n",
+     [], ()),
+    ("c3-assertion-env-assignment-flagged",
+     "```bash\nenv X_AMZN_OIDC_DATA=\"$1\" tool\n"
+     "env CF_ACCESS_JWT_ASSERTION=\"$1\" tool\n"
+     "env X_AMZN_OIDC_IDENTITY=admin tool\n```\n",
+     ["C3-TOOL-ARGV", "C3-TOOL-ARGV"], ()),
     ("c3-config-value-not-a-url",
      "```bash\ncurl -q --config './settings?sig=public' https://h/\n```\n",
      [], ()),
