@@ -4428,6 +4428,8 @@ curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 https://example.com/  
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The password you substitute on the set -- line enters shell history.
   # Clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the password from
+  # set -x tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -5325,6 +5327,8 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The password you substitute on the set -- line enters shell history.
   # Clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the password from
+  # set -x tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -20611,7 +20615,7 @@ REASONED: following block; S3 public-access and presigned-URL documentation supp
 
 Expected sequence: authorized `200`, anonymous `403`, then denial of the expired signed URL. A DNS, TLS, proxy, or local curl error is inconclusive. Client proxies are disabled so a proxy cannot answer for S3. One object is not the whole bucket: repeat for other keys, prefixes, and enabled access paths.
 
-The signed URL stays out of curl's process arguments because the shell's builtin `printf` supplies it through stdin. This does not protect it from shell tracing, copied terminal output, or the account owner's process inspection. Keep `set -x` off. The curl status fields require curl 7.75.0 or later.
+The signed URL stays out of curl's process arguments because the shell's builtin `printf` supplies it through stdin. The block generates it by command substitution and it is never typed, so it is not in this block's shell history. This does not protect it from shell tracing, copied terminal output, or the account owner's process inspection. Keep `set -x` off. The curl status fields require curl 7.75.0 or later.
 
 ### 3. Check known objects on every other enabled route
 
@@ -20641,7 +20645,7 @@ The signed URL stays out of curl's process arguments because the shell's builtin
 )
 ```
 
-A pasted signed URL can enter shell history even though it is absent from curl's arguments. Use a shell session configured not to retain credentials, and do not record signed URLs in test reports.
+A pasted signed URL can enter shell history even though it is absent from curl's arguments, and stdin does not protect it from shell tracing or the account owner's process inspection. Use a shell session configured not to retain credentials, and do not record signed URLs in test reports.
 
 | Provider | Required comparison |
 | --- | --- |
@@ -22426,7 +22430,7 @@ The bundle scan, the git inventory and the `stat` check were demonstrated on the
 )
 ```
 
-Scan built client bundles for a leaked Turso/libSQL token, keeping the token off argv and shell history:
+Scan built client bundles for a leaked Turso/libSQL token, keeping the token off argv and shell history, though not out of your own account's view of the process:
 
 DEMONSTRATED: following block; the recorded authoring-host placeholder-token runs distinguish exposed and clean bundles and exercise the listed shell guards; no real token was used.
 
@@ -22510,7 +22514,7 @@ REASONED: following block; LiteFS and Litestream listener isolation follows the 
 )
 ```
 
-Any HTTP response from the untrusted vantage shows that an HTTP listener answered. Confirmed direct reachability to LiteFS exposes its unauthenticated endpoints, subject to their role and state conditions above; a fronting proxy can return its own denial or expose only selected paths, so its response alone does not establish reachability to the whole LiteFS API. A timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address, routing, proxy configuration, and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Have a valid database token from the secret store ready to paste. The block prompts for it with input hidden, never exports it, and refuses a control character, so a pasted token cannot inject a second header. This keeps the token out of curl's argv, not out of reach of the account that runs the block:
+Any HTTP response from the untrusted vantage shows that an HTTP listener answered. Confirmed direct reachability to LiteFS exposes its unauthenticated endpoints, subject to their role and state conditions above; a fronting proxy can return its own denial or expose only selected paths, so its response alone does not establish reachability to the whole LiteFS API. A timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address, routing, proxy configuration, and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Have a valid database token from the secret store ready to paste. The block prompts for it with input hidden, never exports it, and refuses a control character, so a pasted token cannot inject a second header. This keeps the token out of curl's argv, and the hidden prompt and the block's `set +x` keep it out of shell history and `set -x` tracing, but not out of reach of the account that runs the block:
 
 REASONED: following block; the cited Turso SQL-over-HTTP reference supplies the anonymous/authorized discriminator; no Turso database and token were available.
 
@@ -26262,6 +26266,8 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The API key you substitute on the set -- line enters shell history.
   # Use a short-lived key or clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the key from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_API_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -27183,6 +27189,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 # Public API auth, matched pair against the same URL: without the key n8n returns 401, with a valid key
 # it returns the workflow JSON (the positive control). The key is fed on stdin (-H @-), so it stays out
 # of curl's argv; the one on the set -- line still enters shell history, so use a short-lived key and clear it.
+# Stdin closes the argv channel only: it does not hide the key from set -x tracing or your own
+# account's view of the process.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_N8N_API_KEY'
@@ -28453,7 +28461,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-jobs: Through the trusted tunnel valid-token submission must succeed and token-free submission must fail authentication with 401, not a connection error. | Ray pinned source ray-2.58.0; KubeRay authentication documentation unknown | REASONED |
 | verify-grpc-tls: ray health-check must pass with the correct CA and fail certificate verification with a wrong CA/name; local config errors are inconclusive. | Ray documentation unknown | REASONED |
 | verify-agent: Direct non-browser /logs/ must expose an index with token mode off, allow a valid token with it on and reject absent tokens with 401; health exemptions cannot discriminate. | Ray pinned source ray-2.58.0 | REASONED |
-| verify-token-secret: Trusted-path hidden prompt and stdin header avoid new token argv/history exposure; account owner/root can still read memory. | Ray pinned source ray-2.58.0; curl minimum write-out version 7.75.0 | REASONED |
+| verify-token-secret: Trusted-path hidden prompt and stdin header avoid new token argv/history exposure and set +x avoids tracing; account owner/root can still read memory. | Ray pinned source ray-2.58.0; curl minimum write-out version 7.75.0 | REASONED |
 <!-- version-basis:end -->
 
 Ray's own security page is blunt: if you expose the Ray Dashboard, Ray Jobs, or Ray Client services, "anybody who can access the associated ports can execute arbitrary code on your Ray Cluster", explicitly by submitting a Job or connecting a Client, indirectly through the Dashboard REST API, and implicitly because Ray deserializes arbitrary Python objects with cloudpickle. Ray "doesn't implement access controls for developers interacting with a given cluster"; security and isolation "must be enforced outside of the Ray Cluster". The head ports in question are the dashboard (and Jobs API) on `8265`, the Ray Client server on `10001`, and the head node port `6379`, all plain HTTP or gRPC with no login of their own unless you enable token authentication (step 3). The per-node agent listeners in step 2 add independent paths to job submission, logs, profiling, runtime environments and metrics.
@@ -28655,7 +28663,7 @@ REASONED: direct-agent target selection from the cited static-route and token mi
 
 REASONED: paired exposed anonymous, fixed authenticated and fixed anonymous expectations from the cited static-route and token middleware sources; no live agent or cluster token. In an isolated exposed state with token mode off, select `anonymous`: a non-browser GET to `/logs/` should return 200 and the log directory index. With token mode on, first select `token` and supply the valid cluster token: expect the same access. Then select `anonymous` against that same live agent: expect 401. A connection error, 404, redirect, unexpected body or failed positive control is inconclusive; 403 is not the expected missing-token result. `/api/healthz` and `/api/local_raylet_healthz` are exempt and cannot discriminate token enforcement. These expectations follow the pinned static route and app-wide token middleware cited in Sources.
 
-REASONED: following block; direct-agent anonymous/token request preparation and the paired /logs/ controls follow the cited Ray sources; no live agent or cluster token. Bash 5.3.9 ran the complete subshell with curl replaced by printf LOCAL_CURL. With origin http://127.0.0.1:52365 and token mode, stdin containing an empty line, REPLACE_WITH_TOKEN or bad plus byte 0x01 plus value printed the token diagnostic without a marker; DUMMY_NOT_A_SECRET plus LF reached one marker. All exited 0. The anonymous branch accepted both that substituted origin and bad value; empty/original-placeholder origins and set -- without arguments skipped. These are local guard observations, not URL validation, HTTP status or authorization evidence. This block assumes a clean Bash shell with trusted startup files. The hidden prompt and stdin header keep the token out of curl's argv and the pasted command history; they do not hide it from the account owner or root. Do not put the token in the pasted text.
+REASONED: following block; direct-agent anonymous/token request preparation and the paired /logs/ controls follow the cited Ray sources; no live agent or cluster token. Bash 5.3.9 ran the complete subshell with curl replaced by printf LOCAL_CURL. With origin http://127.0.0.1:52365 and token mode, stdin containing an empty line, REPLACE_WITH_TOKEN or bad plus byte 0x01 plus value printed the token diagnostic without a marker; DUMMY_NOT_A_SECRET plus LF reached one marker. All exited 0. The anonymous branch accepted both that substituted origin and bad value; empty/original-placeholder origins and set -- without arguments skipped. These are local guard observations, not URL validation, HTTP status or authorization evidence. This block assumes a clean Bash shell with trusted startup files. The hidden prompt and stdin header keep the token out of curl's argv and the pasted command history, and the block's `set +x` keeps it out of `set -x` tracing; none of these hides it from the account owner or root. Do not put the token in the pasted text.
 
 ```bash
 # REASONED: direct agent token controls follow the cited Ray 2.58.0 sources; no isolated multi-node cluster is available.
@@ -31829,7 +31837,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-loki: A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs. | Loki v3.7.8; curl curl-8_14_1 | REASONED |
 | verify-basic: Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200. | node_exporter v1.12.1; Pushgateway v1.11.3; Alertmanager v0.34.1; Jaeger v2.21.0; Exporter toolkit v0.17.1 | DEMONSTRATED |
 | verify-loki-mtls: Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
-| verify-secret: Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. | Exporter toolkit v0.17.1; curl curl-8_14_1 | REASONED |
+| verify-secret: Basic-auth stdin closes argv exposure only; shell history, tracing and your own account's view of the process can still leak the password. | Exporter toolkit v0.17.1; curl curl-8_14_1 | REASONED |
 <!-- version-basis:end -->
 
 The Prometheus server has its own section in [admin-uis.md](admin-uis.md). This guide covers the pieces
@@ -32202,7 +32210,8 @@ Fixed, `no credentials` is `401` and `with credentials` is `200`. The loopback r
 pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager
 `/api/v2/status` and Jaeger `/api/v3/services`. For Loki under mTLS, the REASONED equivalent is `--cert` and `--key` on an authorized client
 (`200`) against the same request without them, which fails in the handshake. This closes the argv
-channel only. The password can still reach shell history or `set -x` output.
+channel only. The password can still reach shell history or `set -x` output, and stdin does not hide it
+from your own account's view of the process.
 
 ## Sources (checked September 2026)
 
@@ -33941,7 +33950,7 @@ REASONED: following block; the canary function comparison follows the cited envi
 
 REASONED: preceding block; function authentication and retirement of shipped API, signing, dashboard and database credentials, per the guide's cited Supabase self-hosting with Docker, Supabase docker .env.example, Supabase API keys and curl curl-8_14_1 headers from stdin. No Supabase deployment, container runtime or current credentials are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; guarded canary inputs reached two curl stubs and rejected inputs reached none. Synthetic JSON/base64url tokens parsed and demo/current fixture keys produced different HMACs; no service verification ran. Exposed services accept the old credentials or unsigned function request; fixed services reject them while current credentials return the stated positive controls. For a port you can still reach, check whether the shipped credentials were replaced, feeding every credential
 through stdin rather than argv (`curl --config -` for Basic auth, `curl --header @-` for `apikey`/`Authorization`;
-disable shell tracing). Test each shipped API key against `/auth/v1/settings`, then repeat with a current key that must return
+disable shell tracing). Stdin closes the argv channel only: it does not hide a credential typed into a command from shell history, or the credential from your own account's view of the process. Test each shipped API key against `/auth/v1/settings`, then repeat with a current key that must return
 settings JSON. This checks gateway acceptance, not retirement of backend signing keys. Separately, test the
 same harmless REST canary with two correctly formed, unexpired `service_role` JWTs carrying equivalent claims:
 one signed with the current key and one with the demo `JWT_SECRET`. Keep a valid current `apikey` on both
@@ -34285,7 +34294,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | verify-defaults: Pair a legitimate login with the deployed component default credentials; a no-credential request does not test defaults. | OWASP guidance unknown | REASONED |
 | verify-webhook: Wrong/unsigned signatures must have no effect; valid events must act once and replay must not act twice, even with changed GitHub delivery IDs. | GitHub webhooks documentation unknown; Stripe webhooks documentation unknown | REASONED |
 | verify-stale: On a synchronized Stripe fixture with 300-second tolerance, a request backdated 600 seconds must fail timestamp validation. | stripe-node v18.5.0; stripe-python v12.5.0 | REASONED |
-| verify-secrets: Hidden prompts and stdin headers avoid new secret argv/history/environment exposure; Python reads and closes secret pipe fd 3. Process memory remains readable. | curl minimum write-out version 7.75.0; Python os documentation unknown | REASONED |
+| verify-secrets: Hidden prompts and stdin headers avoid new secret argv/history/environment exposure and set +x avoids tracing; Python reads and closes secret pipe fd 3. Process memory remains readable. | curl minimum write-out version 7.75.0; Python os documentation unknown | REASONED |
 | verify-origin: Compare allowed and external vantage points using connect-to and correct Host/TLS name; HTTP or TLS responses prove reachability, errors alone do not prove isolation. | curl minimum write-out version 7.75.0 | REASONED |
 <!-- version-basis:end -->
 
@@ -34329,7 +34338,7 @@ If a receiver fetches payload URLs or forwards webhooks to user-selected destina
 
 ## Verify
 
-These checks are REASONED from the cited vendor documentation, not demonstrated: no endpoint, WebSocket client, or event fixtures were supplied. Use Bash and curl 7.75.0 or newer. Substitute inside the single quotes and paste each complete block; a value containing an apostrophe needs proper shell escaping. Each secret-bearing block assumes a clean shell. Enter the complete Cookie header value at the hidden prompt, without the `Cookie:` prefix; do not export `AUDIT_COOKIE`. The block clears inherited attributes before reading, keeps the cookie in an unexported subshell variable, sends headers through curl stdin, and unsets the variable on exit. This avoids putting the new input in history, argv or the environment; it does not hide process memory from the same account or root, or erase an earlier export.
+These checks are REASONED from the cited vendor documentation, not demonstrated: no endpoint, WebSocket client, or event fixtures were supplied. Use Bash and curl 7.75.0 or newer. Substitute inside the single quotes and paste each complete block; a value containing an apostrophe needs proper shell escaping. Each secret-bearing block assumes a clean shell. Enter the complete Cookie header value at the hidden prompt, without the `Cookie:` prefix; do not export `AUDIT_COOKIE`. The block clears inherited attributes before reading, keeps the cookie in an unexported subshell variable, sends headers through curl stdin, and unsets the variable on exit. This avoids putting the new input in history, `set -x` tracing (the block turns tracing off), argv or the environment; it does not hide process memory from the same account or root, or erase an earlier export.
 
 Run the first block with `ws` only for endpoints that require a session cookie during the handshake, and with `sse` for cookie-authenticated SSE endpoints. For WebSocket endpoints authenticated solely by a first-message token, use the application-client checks below: a cookie-free `101` is expected and does not by itself establish application authentication. Each negative uses the same URL and deployment as its successful control, and a failed positive control invalidates the comparison. For the handshake, require `101` with a valid cookie and allowed Origin, then a rejection (`401`/`403`, or a login redirect behind an identity-aware proxy, never `101`) without the cookie and for each invalid-Origin case. For SSE, require `200` with `text/event-stream` and the expected protected event with the cookie, then a rejection or login redirect without it. A login page, `404`, unrelated `403`, or server error proves nothing about the intended control, and a timeout alone is inconclusive (an observed `101` or protected event still counts even if curl then times out on the open stream).
 
@@ -34393,7 +34402,7 @@ Run the first block with `ws` only for endpoints that require a session cookie d
 
 First-message-token and default-credential authentication need the application's real WebSocket client and message schema, which were not supplied; the expected outcomes are REASONED from the cited authentication guidance. Against the same endpoint, first demonstrate a valid token and an authorized protected operation, then repeat with no token, an invalid token, an expired token, and a protected operation attempted before authentication; require explicit rejection or an observed authentication-deadline close with no protected data or side effect (silence alone is inconclusive), test channel authorization by first demonstrating the operation on the target channel with an authorized user's token, then repeating the same operation on the same channel and endpoint with a valid token belonging to an unauthorized user, requiring authorization rejection with no protected data or side effect, and verify revocation on an already-open connection. For each installed component with documented default credentials, pair a successful legitimate login with the same request using the defaults, which must fail; do not infer this from a no-credential request, and do not invent a universal default username or password.
 
-For the webhook route, use an isolated test endpoint and a fresh, valid JSON event fixture that produces an observable effect. Enter its endpoint secret at the hidden prompt, and for GitHub export only the fixture's non-secret event type as `AUDIT_GITHUB_EVENT`; these are probe inputs, not vendor configuration. This block assumes a clean shell. It reads `AUDIT_WEBHOOK_SECRET` into an unexported subshell variable and unsets it on exit; Python reads the secret bytes from a pipe on file descriptor 3 and closes that descriptor before starting curl. Neither the secret nor the signed headers enter argv or the environment. The secret remains readable in process memory by the same account and root, and a previously exported value is not erased. The wrong-signature and unsigned requests must be rejected by signature validation with no effect, the correctly signed request must reach the handler and produce the effect, and its repetition must produce no second effect (a success acknowledgement for an already-processed event is fine). For this Stripe probe, confirm that the isolated receiver uses a 300-second tolerance and that the sender and receiver clocks are synchronized; the harness backdates the stale request by 600 seconds, so that request must fail timestamp validation. Confirm the rejecting component in the application logs; transport errors and timeouts are inconclusive. These endpoint outcomes are reasoned, not demonstrated here.
+For the webhook route, use an isolated test endpoint and a fresh, valid JSON event fixture that produces an observable effect. Enter its endpoint secret at the hidden prompt, and for GitHub export only the fixture's non-secret event type as `AUDIT_GITHUB_EVENT`; these are probe inputs, not vendor configuration. This block assumes a clean shell. It reads `AUDIT_WEBHOOK_SECRET` into an unexported subshell variable and unsets it on exit; Python reads the secret bytes from a pipe on file descriptor 3 and closes that descriptor before starting curl. Neither the secret nor the signed headers enter shell history, `set -x` tracing (the block turns tracing off), argv or the environment. The secret remains readable in process memory by the same account and root, and a previously exported value is not erased. The wrong-signature and unsigned requests must be rejected by signature validation with no effect, the correctly signed request must reach the handler and produce the effect, and its repetition must produce no second effect (a success acknowledgement for an already-processed event is fine). For this Stripe probe, confirm that the isolated receiver uses a 300-second tolerance and that the sender and receiver clocks are synchronized; the harness backdates the stale request by 600 seconds, so that request must fail timestamp validation. Confirm the rejecting component in the application logs; transport errors and timeouts are inconclusive. These endpoint outcomes are reasoned, not demonstrated here.
 
 REASONED: following block; signature, replay and timestamp expectations follow the cited GitHub and Stripe sources; no endpoint or event fixtures were supplied.
 
@@ -36539,9 +36548,11 @@ Use a separate protected header file for each identity, and confirm that identit
 allowed resource before accepting its denial elsewhere.
 
 Substitute inside the single quotes and paste whole blocks. Do not paste literal apostrophes
-inside those quotes. The guards assume ordinary shell builtins. Credentials are read through
-stdin; this does not protect against shell tracing, unsafe file permissions, or the account
-owner reading those files. Never place a token-bearing URL in this block.
+inside those quotes. The guards assume ordinary shell builtins. The headers reach curl from a
+file on its stdin and this block never expands their contents, so they stay out of curl's
+arguments, shell history and `set -x` tracing. The file's permissions and how it was prepared
+remain exposures, as does the same account or root reading the file or viewing the process.
+Never place a token-bearing URL in this block.
 
 REASONED: following block; resource and scope comparisons follow the cited vendor documentation and available pins; live backend fixtures and controlled accounts were unavailable.
 
