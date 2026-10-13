@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-13
+
+- chat-uis.md: the anonymous API Verify probe now prints its status with `curl -q -sS -o /dev/null -w '%{http_code}\n'` instead of `-s` printing only the body, so a pass needs a visible 401 and a transport error shows curl's error rather than empty output; the proxy probe moves from `-sI` to `-sSI` so a TLS, DNS or connection failure is no longer silent. The curl Sources item now cites the manual for `-s`, `-S`, `-o /dev/null`, `-I` and `http_code`, and `verify-login` cites it. A local run with curl 8.18.0 against loopback stubs answering 401 and 200 and a closed port showed the API probe's before and after output, including `000`, which is recorded as observed because the manual does not document it. A closed-port run of the proxy probe showed `-sI` silent and `-sSI` printing curl's connection error. Follow-up from #465's review (#467).
+
 ## 2026-10-12
 
 - cloud-identity-proxies.md, cors.md: Verify probes now show the status line, so empty output cannot read as a pass (follow-up from #463's review). In cloud-identity-proxies.md the forged-header `/whoami` probe adds `-D -`, the anonymous HEAD probe uses `-sSI`, and the altered-assertion example now builds its `x-amzn-oidc-data` header with `printf` and feeds it to curl on stdin with `--header @-` from a rule-7 subshell, never on the command line. In cors.md each probe runs in its own `set -o pipefail` subshell with an `|| echo` inconclusive line, so a failed or partial transfer cannot read as a pass, and the hostile-origin expectation requires a 2xx status matching the own-origin probe, treating any other status, a proxy's lone Connection established line, or empty output as inconclusive. Each guide's Verify declaration records the curl 8.18.0 runs against a loopback listener and a closed loopback port that showed the before and after output (#465).
