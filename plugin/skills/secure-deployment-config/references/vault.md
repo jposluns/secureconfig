@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e000470f2a50f6f45b5a7d7e5c559a5a6ecd52d696237272aedaa821ee0f7000",
+  "body_sha256": "e3c12bf66ccbd730a671f26446cb0bf52d1a412c503ec568f2d101aaf56b6e00",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -307,7 +307,9 @@ and [Integrated Storage configuration](https://developer.hashicorp.com/vault/doc
 A fresh server starts sealed: the storage is encrypted and Vault cannot read it until it is unsealed,
 and the seal you pick decides who or what does that. Shamir splits the unseal capability into key
 shares (`vault operator init -key-shares=5 -key-threshold=3`), and a threshold of custodians must each
-supply a share at the hidden prompt to unseal; never pass a share on the command line. Auto-unseal
+supply a share at the hidden prompt to unseal; never pass a share on the command line. The prompt
+keeps the share out of the command text, shell history and tracing; the account owner and root can
+still read it in the `vault` process. Auto-unseal
 uses the configured external seal service, such as AWS KMS (`seal "awskms" { ... }`) or another
 Vault's Transit secrets engine, and instead emits recovery keys for privileged operations.
 Transit auto-unseal is available in Community; seal wrapping requires Enterprise.
@@ -373,6 +375,8 @@ See [token behavior](https://developer.hashicorp.com/vault/docs/concepts/tokens)
 
 For CLI authentication, select tokens through a securely injected `VAULT_TOKEN` environment variable
 or a token helper. Enter interactive login credentials and unseal shares at the prompt.
+The prompt keeps them out of the command text, shell history and tracing; the account owner and
+root can still read them in the `vault` process.
 Never put credentials in command arguments, URLs, shell history, or build logs.
 See [CLI authentication](https://developer.hashicorp.com/vault/docs/commands) and
 [login prompts](https://developer.hashicorp.com/vault/docs/commands/login).
@@ -483,6 +487,12 @@ field. Pass that request on stdin:
 vault write -format=json sys/wrapping/lookup - \
   < /run/secrets/payments-wrapping-lookup.json
 ```
+
+The wrapping token reaches `vault` from the request file on its stdin, so it is not in the
+command's arguments, and because the command never types it or expands a variable holding it,
+neither shell history nor `set -x` tracing records it from this command, provided the delivery
+mechanism, not a shell command containing the token, writes the file. Stdin closes the argv channel only: the account
+owner and root can still read the file and the `vault` process's memory.
 
 Check `data.creation_path`, `data.creation_time`, and `data.creation_ttl`; the latter is the
 original TTL, not the remaining lifetime. Confirm the token is still within that lifetime before
@@ -839,6 +849,32 @@ grant `read` on `sys/pprof/*`, covering the trailing-slash index and profiling s
 [metrics API](https://developer.hashicorp.com/vault/api-docs/system/metrics), and
 [profiling API](https://developer.hashicorp.com/vault/api-docs/system/pprof).
 
+REASONED: from the shell behaviour of file input on stdin, not from the loopback runs below, which
+did not test it. What was run: on 2026-10-13 UTC a QA review ran the following block under `bash -x`
+with its external commands stubbed and a dummy secret as the credential; no trace line carried the
+dummy secret, while a positive control that printed the file with a traced builtin `printf` did.
+A second run the same day pasted the block into Bash 5.3.9 (`bash --noprofile --norc -i`) on a
+pseudo-terminal with history enabled, with a `vault` stub that read stdin and slept four seconds
+and the observing and inspected processes under the same account: the history file held no
+contents of the JSON request file, and neither `/proc/<pid>/cmdline` (the stub's arguments were
+`write -format=json auth/approle/login -`) nor `/proc/<pid>/environ` of the stub and the block's
+subshell contained the dummy secret. In that run the observer was an ancestor of the inspected
+processes. A third run the same day, on the QA review's evaluation host, repeated the observation
+with same-account observers that were siblings of the block's shells rather than ancestors: neither
+`/proc/<pid>/cmdline` nor `/proc/<pid>/environ` of any sampled process, including the `vault`
+recording stub, the block's subshell and the outer shell, contained the dummy secret. What was not
+run: the contents of process memory are unknown, because every attempt by those observers to open
+`/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
+`/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the
+evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
+was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
+evaluation host's PATH. The following
+login request takes `role_id` and `secret_id` from the request file on
+`vault`'s stdin: no credential is typed into the command or held in a shell variable, so neither
+shell history nor `set -x` tracing records it, provided the file is prepared through protected
+delivery rather than by a shell command that contains the credentials. Stdin closes the argv
+channel only: the account owner and root can still read the file and the `vault` process's memory.
+
 **Bounded credentials and tokens (demonstrated on loopback):** prepare an owner-readable
 JSON request file containing `role_id` and `secret_id` through protected delivery. The following
 login request reads the credentials from stdin, not argv. Its successful output contains a token;
@@ -984,6 +1020,40 @@ sixty-one-second request succeeded: the exposed comparison. In the follow-up run
 state, and both `FINDING` lines in the exposed state.
 See [required wrapping TTLs](https://developer.hashicorp.com/vault/docs/concepts/policies#required-response-wrapping-ttls)
 and [wrapping requests](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
+
+REASONED: from the shell behaviour of file input on stdin, not from the loopback lookup runs,
+which did not test it. What was run: on 2026-10-13 UTC a QA review ran both wrapping-lookup blocks
+below under `bash -x` with their external commands stubbed and a dummy secret as the token; no
+trace line carried the dummy secret, while a positive control that printed the file with a traced
+builtin `printf` did. A second run the same day pasted both blocks into Bash 5.3.9
+(`bash --noprofile --norc -i`) on a pseudo-terminal with history enabled, with a `vault` stub that
+read stdin and slept four seconds, the dummy token placed in the shell's initial environment as
+`VAULT_TOKEN`, and the observing and inspected processes under the same account: the history file
+held no token value and `/proc/<pid>/cmdline` did not contain it, but `/proc/<pid>/environ` of
+both the stub and the block's subshell contained `VAULT_TOKEN` set to the dummy token. In that run
+the observer was an ancestor of the inspected processes. A third run the same day, on the QA
+review's evaluation host, repeated the observation with same-account observers that were siblings
+of the block's shells rather than ancestors: `/proc/<pid>/cmdline` of no sampled process contained
+the dummy token, but `/proc/<pid>/environ` of the `vault` recording stub, the block's subshell and
+the outer shell, which held `VAULT_TOKEN` in its initial environment, all contained it. What was
+not run: the contents of process memory are unknown, because every attempt by those observers to
+open `/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
+`/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the
+evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
+was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
+evaluation host's PATH. This applies to both wrapping-lookup
+blocks below, the demonstrated lookup and the recipient-validation lookup. Each passes the
+protected lookup request, wrapping token included, to `vault` from a file on its stdin. Neither
+block types the token or expands a variable holding it, so neither shell history nor `set -x`
+tracing records it from the block, provided the file is prepared through protected delivery
+rather than by a shell command that contains the token. Stdin closes the argv channel only: the
+account owner and root can still read the file and the `vault` process's memory, and where
+`VAULT_TOKEN` holds the same token, as the next paragraph asks, the token is also in the
+environment of every program the shell starts while `VAULT_TOKEN` is exported, including `vault`,
+readable through `/proc/<pid>/environ` by the same account and root while each runs. Where the
+shell received `VAULT_TOKEN` in its initial environment, as in the runs above, that file also shows
+it for the shell itself and the block's subshell; a shell that sets `VAULT_TOKEN` only after it
+starts was not tested.
 
 **Recipient validation (the lookup demonstrated; the recipient's own check REASONED, since it
 belongs to the receiving application):** prepare the

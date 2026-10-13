@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "35e34cd3c31b810f6c7abf2018a6bf87cc6f1a0c6d7cf7f24db9b36a4c867da2",
+  "body_sha256": "dffad6d4437899fa1b48348f4c6baf33e5cf759c7266d2e46267ea0401704846",
   "components": {
     "docs": {
       "name": "Supabase documentation",
@@ -237,6 +237,9 @@ REASONED: following block; the canary function comparison follows the cited envi
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The anon JWT you substitute on the set -- line enters shell history; clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the JWT from set -x tracing, your own account
+  # or root.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BASE_URL' 'REPLACE_WITH_A_FUNCTION_NAME' 'REPLACE_WITH_CURRENT_ANON_JWT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift

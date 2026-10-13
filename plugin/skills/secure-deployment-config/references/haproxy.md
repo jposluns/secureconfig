@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "7bbd2b75bf72d5a68701e7d6be659e74db436403f8e8b0f0286be4d720002abc",
+  "body_sha256": "0f2f714f5034a60557f35051d656a92e56a1d6e86415538dfc2a8b0bce9c87af",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -180,7 +180,7 @@ backend app
     server app1 127.0.0.1:3000 check
 ```
 
-Hashed `password` entries rely on the system's crypt(3); `$6$` works on glibc-based Linux. Avoid `insecure-password`, which stores the password in cleartext in the configuration file. For machine-to-machine access, client certificates are stronger: add `verify required ca-file /etc/ssl/certs/internal-ca.crt` to the `bind :443` line.
+`openssl passwd -6` prompts for the password. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `openssl` process while it runs. Hashed `password` entries rely on the system's crypt(3); `$6$` works on glibc-based Linux. Avoid `insecure-password`, which stores the password in cleartext in the configuration file. For machine-to-machine access, client certificates are stronger: add `verify required ca-file /etc/ssl/certs/internal-ca.crt` to the `bind :443` line.
 
 Basic authentication here is single-factor. For human-facing sites, add MFA with an [Authelia](https://www.authelia.com/) portal (HAProxy is supported through Authelia's Lua module) or by fronting the site with Cloudflare Access; options in [mfa.md](mfa.md).
 
@@ -254,6 +254,8 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   curl -q -g "${base[@]}" -D - -o /dev/null -w 'redirect http=%{http_code}\n' "http://$1/"   # expect 301 + https Location
   # 2) Auth triple against ONE protected resource. No creds and wrong creds must be 401; valid creds the app's
   #    expected success. The password reaches curl through stdin config (curl --config -), never argv.
+  #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
+  #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
   curl -q -g "${base[@]}" -o /dev/null -w 'no-creds http=%{http_code}\n' "https://$1/"
   printf 'user = "admin:%s"\n' 'definitely-wrong' | curl -q -g "${base[@]}" --config - -o /dev/null -w 'bad-creds http=%{http_code}\n' "https://$1/"
   printf 'user = "admin:%s"\n' "$pw"              | curl -q -g "${base[@]}" --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$1/"
@@ -301,6 +303,9 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
   # Stats listener (run on the HAProxy machine; --resolve keeps the certificate hostname while connecting to
   # the loopback bind): no credentials must be refused; valid credentials return the statistics.
   curl -q -g "${base[@]}" --resolve "$1:8404:127.0.0.1" -o /dev/null -w 'stats no-creds=%{http_code}\n' "https://$1:8404/stats"
+  # The stats password reaches curl through stdin config (curl --config -), never argv. The hidden prompt
+  # keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin closes the argv channel
+  # only: the account owner and root can still read it in the subshell and curl.
   IFS= read -r -s -p 'stats admin password: ' sp < /dev/tty || exit 2; echo
   case "$sp" in ''|*[[:cntrl:]]*) echo 'supply the stats password; not probing'; exit 2 ;; esac
   sp=${sp//\\/\\\\}; sp=${sp//\"/\\\"}
