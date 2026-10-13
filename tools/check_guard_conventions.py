@@ -2719,7 +2719,8 @@ nc -vz -w 5 "$1" 1883
      "env X_SIGNATURE=\"$1\" tool\n"
      "env IMAGE_SIGNATURE=public.sig tool\n"
      "env STRIPE_SIGNATURE=\"$1\" tool\n"
-     "env HUB_SIGNATURE_256=\"$1\" tool\n```\n",
+     "env HUB_SIGNATURE_256=\"$1\" tool\n"
+     "env IMAGE_SIGNATURE_256=public.sig tool\n```\n",
      ["C3-TOOL-ARGV", "C3-TOOL-ARGV", "C3-TOOL-ARGV"], ()),
     ("c3-config-value-not-a-url",
      "```bash\ncurl -q --config './settings?sig=public' https://h/\n```\n",
