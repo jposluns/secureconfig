@@ -88,10 +88,11 @@ including the range-free RabbitMQ broker validators; they are not all non-valida
 
 After merging main, the corpus delta against qa/360-r9 is 1 added and 0 removed findings:
 Python sys.argv[1] indexing in the vLLM TCP probe. Four entries were rebound after main's
-rule-7 guard sweep; their spans and reasons are unchanged. All 39 entries bind their intended
-spans and blocks; 1274 individual block-line
-edits each invalidate the corresponding waiver and leave a stale entry. Run
-test_bracket_ranges.py --show-waivers to print every matched location, digests and extracted span.
+rule-7 guard sweep; their spans and reasons are unchanged. All entries bind their intended
+spans and blocks; individual block-line edits each invalidate the corresponding waiver and
+leave a stale entry. test_bracket_ranges.py edits each line of every waived block and prints
+the current binding and edit counts. Run test_bracket_ranges.py --show-waivers to print every
+matched location, digests and extracted span.
 
 The deterministic suite has 2892 cases (2830 ordinary, 41 allowlist, 4 quote-removal and 17
 joining), 2884 checked behaviours, 8 disclosed blind spots and 17 entry-point runs. The
