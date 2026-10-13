@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ee71088950de478c655bf736bd3c3846ad22ebe8beab06df18e1e88a583f0917",
+  "body_sha256": "c3526c7d3b32abdeeaa45d6b3117855f905bd087df11b6e14b11abc099838d06",
   "components": {
     "searx": {
       "name": "SearxNG documentation",
@@ -603,19 +603,21 @@ REASONED: following block; credentialed success follows the cited service and cu
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  # The credential you substitute on the set -- line enters shell history.
+  # The credentials you substitute on the set -- line enter shell history.
   # Clear that history line afterward.
-  # Stdin closes the argv channel only: it does not hide the credential from
+  # Stdin closes the argv channel only: it does not hide the credentials from
   # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' 'REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' 'REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL' ''
   # $3 is the same harmless JSON body as the anonymous check. Keep the empty quotes if none is needed.
+  # $5 is an optional second credential header, for an ingress and application that need separate
+  # credentials. Keep the empty quotes if one header is enough.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
-  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit; }
+  [ "$#" -eq 5 ] || { echo "the set -- line needs exactly 5 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ] || [ -z "$4" ]; then
     echo "fill in the URL, method, and header on the set -- line above; not probing"; exit
   fi
-  case "$1$2$3$4" in
+  case "$1$2$3$4$5" in
     *REPLACE_WITH_*) echo "substitute the request values on the set -- line above; not probing"; exit ;;
   esac
   case "$1" in
@@ -623,13 +625,22 @@ REASONED: following block; credentialed success follows the cited service and cu
     *) echo "use a https:// URL; not probing"; exit ;;
   esac
   case "$4" in
-    *[[:cntrl:]]*) echo "put the credential header on one line; not probing"; exit ;;
+    *[[:cntrl:]]*) echo "put the credential header on one line, and a second header in the fifth value; not probing"; exit ;;
   esac
-  # Body options, if any, go after the four values. The credential header ($4) reaches curl on stdin
-  # (--header @-), never in its argv, where ps and /proc/<pid>/cmdline would show it.
+  case "$5" in
+    *[[:cntrl:]]*) echo "put the second credential header on one line; not probing"; exit ;;
+  esac
+  # Body options, if any, go after the five values. The credential headers ($4, and $5 if set) reach
+  # curl on stdin (--header @-, one per line), never in its argv, where ps and /proc/<pid>/cmdline
+  # would show them.
   if [ -n "$3" ]; then set -- "$@" -H 'Content-Type: application/json' --data-binary "$3"; fi
-  printf '%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
-    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:5}" -X "$2" "$1"
+  if [ -n "$5" ]; then
+    printf '%s\n' "$4" "$5" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
+      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:6}" -X "$2" "$1"
+  else
+    printf '%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
+      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:6}" -X "$2" "$1"
+  fi
 )
 ```
 

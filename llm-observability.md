@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "115defc6c4457c38e5805b1e115c02846cccfef92b4a0c77a2d6fde97e84d2a7",
+  "body_sha256": "2a3aa81068f5c1064dd6f52275bd3132c30d5d9a7cf651a71a45fd453fe0635c",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -462,13 +462,22 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
   printf 'user = "%s:%s"\n' "$1" "$2" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
     -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - https://langfuse.example.com/api/public/projects
 )
-# Collector OTLP/HTTP, matched pair: WITHOUT the configured auth header expect 401/403; then repeat WITH it
-# (add -H 'Authorization: Bearer <token>', or -u user:pass for basicauth) and expect a 2xx - the positive
+# Collector OTLP/HTTP, matched pair: WITHOUT the configured auth header expect 401/403; then repeat the
+# probe below WITH it, on curl's stdin as described next, and expect a 2xx - the positive
 # control. Run the pair DIRECTLY against the receiver to establish RECEIVER authentication (a proxy can
 # answer 401/2xx while the receiver is open), and test the public ingress separately. Keep the JSON content
 # type (a wrong content type draws a 415 that is not an authentication result). This tests this OTLP/HTTP
 # receiver only; test each enabled OTLP/gRPC receiver separately, and note the Phoenix check further below
 # targets a DIFFERENT server, not this Collector.
+# Never add the credential with -H or -u, which put it in curl's argv, where ps and /proc/<pid>/cmdline
+# show it. For bearertokenauth, pipe printf 'Authorization: Bearer %s\n' "$1" into the probe and add
+# --header @- to its options; for basicauth, pipe printf 'user = "%s"\n' "$1" into it, with "$1" as
+# user:password, and add --config -. Keep -q as curl's first option in either case. Run that repeat in a
+# subshell built like the Langfuse block above: trap - DEBUG RETURN ERR first, the credential on its
+# set -- line, a refusal of a placeholder, an empty value or a control character, and for basicauth a
+# backslash and then a double quote escaped in "$1" before the printf. The credential on that set -- line
+# enters shell history, so clear that line afterward. Stdin closes the argv channel only: it does not
+# hide the credential from set -x tracing or your own account's view of the process.
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
   -w 'otlp no-auth=%{http_code} exit=%{exitcode}\n' -H 'Content-Type: application/json' -d '{"resourceSpans":[]}' \
