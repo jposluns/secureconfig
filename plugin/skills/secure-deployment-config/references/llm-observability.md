@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "89b29b689a4ab9ee07a7484089bea2c03a86bfa2e250bb2a527e700a355f359b",
+  "body_sha256": "4ad6be035fab8eae109584d1510f24dfb92683aca320a31a2e9d9bdfb1191274",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -557,8 +557,11 @@ channel puts the Bearer key on the wire in cleartext, and a private network is n
 observe that network reads the key. The plaintext exception, this guide's reasoning rather than machine-auth.md's
 rule, is a client on the Phoenix host using loopback in Phoenix's own network namespace, for example a direct
 probe of a plaintext listener behind a TLS-terminating proxy. **Exposed:** the `https://` probe fails the TLS
-handshake against a plaintext listener, or a client uses an `http://` URL other than loopback in Phoenix's own network namespace. **Fixed:** the
-`https://` probe completes with verification on. Sources has no Phoenix reference for an API-key transport
+handshake against a plaintext listener, or a client sends the key over an `http://` URL or a plaintext gRPC
+channel other than loopback in Phoenix's own network namespace. **Fixed:** the `https://` probe completes with
+verification on, and every client that sends the key, including each 4317 gRPC exporter, uses TLS with
+verification on (Sources names no gRPC client option, so confirm it in that client's configuration). Sources has
+no Phoenix reference for an API-key transport
 requirement or for an OTLP gRPC client's TLS or CA settings, so this guide names no client option for them:
 configure your gRPC client for TLS with the CA that signed Phoenix's certificate. When you script the HTTP
 probe, keep the key out of argv and tracing. In a fresh, clean shell (CONTRIBUTING rule 7), build a subshell
