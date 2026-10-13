@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "e7b2412d7cb064154c2bb3ccfd55a5fdf1e8294e54abf1eab06156f48220099d",
+  "body_sha256": "5f68a88b1c332ed11977030830dc0c18a89de5dae66a00e01ea974160c347170",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -352,7 +352,7 @@ unpublished wherever these run.
 
 ## Verify
 
-Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
+REASONED: following block; this introduction and the listener inventory below for every DevTools, Grid, browserless, VNC and Playwright port it names, per the guide's cited Selenium Grid getting started, Selenium Docker images env vars, browserless Docker configuration and Chromium 154.0.8037.57 browser and headless-shell loopback factory entries. No isolated network namespace was available for a live listener, so no exposed or fixed service ran. During marking review (October 2026) both Verify blocks passed bash -n under bash 5.3.9, and ss -tln on the authoring host showed none of these ports listening, so it tested no target. Exposed, a listed port shows a wildcard or public bind; fixed, loopback or an internal address only. Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
 without an isolated network namespace, and has none. No exposed or fixed service was run.
 Each names its expected exposed and fixed result so
 it discriminates when run against a live instance, based on the cited vendor documentation and pinned sources. Run each
@@ -371,14 +371,14 @@ curl 7.75.0 or newer, and an IPv6 literal needs brackets in the URL.
 ss -tlnp   # read every listener; 9222/4442/4443/4444/5555/3000/5900/7900: loopback or internal only
 ```
 
-**REASONED DevTools listener check:** for the pinned stock browser and headless shell, expect only
+REASONED: preceding block; the listener inventory above for every port it names, and this DevTools TCP listener check, per the guide's cited Chromium 154.0.8037.57 entries for the browser loopback factories, the headless-shell loopback factory and the actual bound address and DevToolsActivePort output, plus its Selenium Grid getting started, Selenium Docker images env vars and browserless Docker configuration entries for the other ports. A google-chrome binary of unchecked version is present in the authoring environment, but no isolated network namespace was available (creating one was refused), so no DevTools listener or forwarder was started and neither state was observed; the expected exposed and fixed results are those stated here. **REASONED DevTools listener check:** for the pinned stock browser and headless shell, expect only
 `127.0.0.1` or `::1` for the DevTools TCP listener. Inspect both address families and every actual
 port, including ephemeral ports, plus forwarders in the host and container network namespaces.
 Exposed, a forwarder supplies a reachable non-loopback listener; fixed, no unauthenticated external
 path remains while the local browser endpoint still answers. The pinned socket factories and HTTP
 handler below establish these expected results.
 
-For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
+REASONED: the guard and substitution instructions for the DevTools, Grid, browserless and Playwright probes, per the guide's cited curl diagnostic variables entry (pinned tag curl-8_14_1) and Chromium 154.0.8037.57 host check entry. During marking review (October 2026) the guarded block ran in bash 5.3.9 with a stub curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with two values, the exactly-1-value refusal; with 203.0.113.10 substituted, the stub received http://203.0.113.10:9222/json/version, and the 4444/status and 3000/pressure edits reached it as written. No endpoint was probed, so the exposed and fixed results below remain unobserved. For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
 forces a real substitution, and read the write-out. Replace `9222` in the curl URL with the actual
 externally forwarded port if different. For the local positive control, run the same guarded block
 inside the browser's network namespace with its actual loopback address and DevTools port.
@@ -401,7 +401,7 @@ REASONED: following block; external discovery/authentication probes and local po
 )
 ```
 
-**REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
+REASONED: preceding block; the external DevTools, Selenium Grid Router and Node, browserless and Playwright probes and their local positive controls, per the guide's cited Chromium 154.0.8037.57 host check, JSON discovery, approval-mode 404 and browser WebSocket URL entry, Selenium Grid CLI options, browserless 2.56.7 TOKEN initialization and HTTP and WebSocket authentication rejection entries, browserless pressure API entry and Playwright Docker entry. No container runtime or isolated network namespace was available, so no service ran. During marking review (October 2026) the guard branches ran with a stub curl as recorded above, and the token configuration pattern described here, run with a stub curl and a dummy token holding a double quote and a backslash, kept the token out of argv and sent the escaped url line on stdin. The expected exposed and fixed results are those stated here. **REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
 a `200` JSON body containing `webSocketDebuggerUrl`. Fixed, the external request cannot reach that
 endpoint while the local positive control still returns it. A `404` from approval mode is not a pass.
 A connection refused or a timeout that happened during the connect is consistent with
@@ -432,7 +432,7 @@ For the Playwright server on the port you configured
 answer means the port is reachable and is already the finding. The distinguishing behaviour for
 each is in the cited vendor pages.
 
-**REASONED browserless file-protocol check:** no live instance was tested: the authoring host forbids
+REASONED: browserless Playwright WebSocket file-protocol enforcement on every enabled route, per the guide's cited browserless 2.51.0 Playwright WebSocket route table, browserless 2.51.0 Playwright WebSocket enforcement and blocked-URL policy close, and Browserless ALLOW_FILE_PROTOCOL configuration and false default entries. It needs a running browserless 2.51.0 container and a compatible Playwright client; the authoring environment has no container runtime, no Playwright or browserless package and no network to fetch them, and the check has no shell block, so nothing here ran locally. Exposed, page.evaluate returns the canary contents; fixed, the navigation is refused with a blocked-URL policy close. **REASONED browserless file-protocol check:** no live instance was tested: the authoring host forbids
 opening listeners without an isolated network namespace, and has none. With
 `ALLOW_FILE_PROTOCOL=false`, use a valid token and a compatible Playwright client on each enabled
 Playwright WebSocket route. The v2.51.0
