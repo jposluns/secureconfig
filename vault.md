@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "9202f823196bb06b58513081157bc9bc1c666fdc08e6e765e73653977aeac034",
+  "body_sha256": "fd7622a9b2b231210f09f925c7c64045bb749605c220a01db6ae1ea123a8cb37",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -858,10 +858,17 @@ pseudo-terminal with history enabled, with a `vault` stub that read stdin and sl
 and the observing and inspected processes under the same account: the history file held no
 contents of the JSON request file, and neither `/proc/<pid>/cmdline` (the stub's arguments were
 `write -format=json auth/approle/login -`) nor `/proc/<pid>/environ` of the stub and the block's
-subshell contained the dummy secret. What was not run: process memory was not read
-(`/proc/<pid>/mem`, a debugger or ptrace was not attempted); neither an unrelated process of the
-same account nor root was tested as the observer, because the observer was an ancestor of the
-inspected processes; and no real `vault` client or live Vault service was involved. The following
+subshell contained the dummy secret. In that run the observer was an ancestor of the inspected
+processes. A third run the same day, on the QA review's evaluation host, repeated the observation
+with same-account observers that were siblings of the block's shells rather than ancestors: neither
+`/proc/<pid>/cmdline` nor `/proc/<pid>/environ` of any sampled process, including the `vault`
+recording stub, the block's subshell and the outer shell, contained the dummy secret. What was not
+run: the contents of process memory are unknown, because every attempt by those observers to open
+`/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
+`/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the
+evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
+was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
+evaluation host's PATH. The following
 login request takes `role_id` and `secret_id` from the request file on
 `vault`'s stdin: no credential is typed into the command or held in a shell variable, so neither
 shell history nor `set -x` tracing records it, provided the file is prepared through protected
@@ -1023,11 +1030,18 @@ builtin `printf` did. A second run the same day pasted both blocks into Bash 5.3
 read stdin and slept four seconds, the dummy token placed in the shell's initial environment as
 `VAULT_TOKEN`, and the observing and inspected processes under the same account: the history file
 held no token value and `/proc/<pid>/cmdline` did not contain it, but `/proc/<pid>/environ` of
-both the stub and the block's subshell contained `VAULT_TOKEN` set to the dummy token. What was
-not run: process memory was not read (`/proc/<pid>/mem`, a debugger or ptrace was not attempted);
-neither an unrelated process of the same account nor root was tested as the observer, because the
-observer was an ancestor of the inspected processes; and no real `vault` client or live Vault
-service was involved. This applies to both wrapping-lookup
+both the stub and the block's subshell contained `VAULT_TOKEN` set to the dummy token. In that run
+the observer was an ancestor of the inspected processes. A third run the same day, on the QA
+review's evaluation host, repeated the observation with same-account observers that were siblings
+of the block's shells rather than ancestors: `/proc/<pid>/cmdline` of no sampled process contained
+the dummy token, but `/proc/<pid>/environ` of the `vault` recording stub, the block's subshell and
+the outer shell, which held `VAULT_TOKEN` in its initial environment, all contained it. What was
+not run: the contents of process memory are unknown, because every attempt by those observers to
+open `/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
+`/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the
+evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
+was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
+evaluation host's PATH. This applies to both wrapping-lookup
 blocks below, the demonstrated lookup and the recipient-validation lookup. Each passes the
 protected lookup request, wrapping token included, to `vault` from a file on its stdin. Neither
 block types the token or expands a variable holding it, so neither shell history nor `set -x`
@@ -1035,8 +1049,9 @@ tracing records it from the block, provided the file is prepared through protect
 rather than by a shell command that contains the token. Stdin closes the argv channel only: the
 account owner and root can still read the file and the `vault` process's memory, and where
 `VAULT_TOKEN` holds the same token, as the next paragraph asks, the token is also in the
-environment of `vault` and of the block's subshell, readable through `/proc/<pid>/environ` by the
-same account and root while they run.
+environment of the shell holding `VAULT_TOKEN` and every process it starts, including `vault` and
+the block's subshell, readable through `/proc/<pid>/environ` by the same account and root while
+each runs.
 
 **Recipient validation (the lookup demonstrated; the recipient's own check REASONED, since it
 belongs to the receiving application):** prepare the

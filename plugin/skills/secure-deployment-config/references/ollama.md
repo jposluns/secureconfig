@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "42aad18a3cd5d66768f6345db46b7f639aeb12e20fc79df8ed8490dbe3e5da71",
+  "body_sha256": "634f1be362c2db52a6ce999a82ea8f9d03c17f3d085eb0d6fadde179de931030",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -351,7 +351,7 @@ server {
 }
 ```
 
-Substitute the hostname and certificate paths. Generate password entries with `htpasswd -B -C 12`, using its interactive password prompt and the intended password-file path and username. Bare `-B` defaults to bcrypt cost 5, below OWASP's minimum of 10; regenerate existing cost-5 hashes. Protect the password file and its backups. See [nginx Basic authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html), [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html), and [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
+Substitute the hostname and certificate paths. Generate password entries with `htpasswd -B -C 12`, using its interactive password prompt and the intended password-file path and username. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `htpasswd` process while it runs. Bare `-B` defaults to bcrypt cost 5, below OWASP's minimum of 10; regenerate existing cost-5 hashes. Protect the password file and its backups. See [nginx Basic authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html), [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html), and [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
 
 Authentication is at `server` scope so every permitted location inherits it. Do not disable it in an added inference location. A denied path or method can return 404 or 405 before authentication; those responses do not imply access to Ollama.
 

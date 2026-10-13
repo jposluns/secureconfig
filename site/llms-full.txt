@@ -2418,10 +2418,17 @@ pseudo-terminal with history enabled, with a `vault` stub that read stdin and sl
 and the observing and inspected processes under the same account: the history file held no
 contents of the JSON request file, and neither `/proc/<pid>/cmdline` (the stub's arguments were
 `write -format=json auth/approle/login -`) nor `/proc/<pid>/environ` of the stub and the block's
-subshell contained the dummy secret. What was not run: process memory was not read
-(`/proc/<pid>/mem`, a debugger or ptrace was not attempted); neither an unrelated process of the
-same account nor root was tested as the observer, because the observer was an ancestor of the
-inspected processes; and no real `vault` client or live Vault service was involved. The following
+subshell contained the dummy secret. In that run the observer was an ancestor of the inspected
+processes. A third run the same day, on the QA review's evaluation host, repeated the observation
+with same-account observers that were siblings of the block's shells rather than ancestors: neither
+`/proc/<pid>/cmdline` nor `/proc/<pid>/environ` of any sampled process, including the `vault`
+recording stub, the block's subshell and the outer shell, contained the dummy secret. What was not
+run: the contents of process memory are unknown, because every attempt by those observers to open
+`/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
+`/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the
+evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
+was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
+evaluation host's PATH. The following
 login request takes `role_id` and `secret_id` from the request file on
 `vault`'s stdin: no credential is typed into the command or held in a shell variable, so neither
 shell history nor `set -x` tracing records it, provided the file is prepared through protected
@@ -2583,11 +2590,18 @@ builtin `printf` did. A second run the same day pasted both blocks into Bash 5.3
 read stdin and slept four seconds, the dummy token placed in the shell's initial environment as
 `VAULT_TOKEN`, and the observing and inspected processes under the same account: the history file
 held no token value and `/proc/<pid>/cmdline` did not contain it, but `/proc/<pid>/environ` of
-both the stub and the block's subshell contained `VAULT_TOKEN` set to the dummy token. What was
-not run: process memory was not read (`/proc/<pid>/mem`, a debugger or ptrace was not attempted);
-neither an unrelated process of the same account nor root was tested as the observer, because the
-observer was an ancestor of the inspected processes; and no real `vault` client or live Vault
-service was involved. This applies to both wrapping-lookup
+both the stub and the block's subshell contained `VAULT_TOKEN` set to the dummy token. In that run
+the observer was an ancestor of the inspected processes. A third run the same day, on the QA
+review's evaluation host, repeated the observation with same-account observers that were siblings
+of the block's shells rather than ancestors: `/proc/<pid>/cmdline` of no sampled process contained
+the dummy token, but `/proc/<pid>/environ` of the `vault` recording stub, the block's subshell and
+the outer shell, which held `VAULT_TOKEN` in its initial environment, all contained it. What was
+not run: the contents of process memory are unknown, because every attempt by those observers to
+open `/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
+`/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the
+evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
+was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
+evaluation host's PATH. This applies to both wrapping-lookup
 blocks below, the demonstrated lookup and the recipient-validation lookup. Each passes the
 protected lookup request, wrapping token included, to `vault` from a file on its stdin. Neither
 block types the token or expands a variable holding it, so neither shell history nor `set -x`
@@ -2595,8 +2609,9 @@ tracing records it from the block, provided the file is prepared through protect
 rather than by a shell command that contains the token. Stdin closes the argv channel only: the
 account owner and root can still read the file and the `vault` process's memory, and where
 `VAULT_TOKEN` holds the same token, as the next paragraph asks, the token is also in the
-environment of `vault` and of the block's subshell, readable through `/proc/<pid>/environ` by the
-same account and root while they run.
+environment of the shell holding `VAULT_TOKEN` and every process it starts, including `vault` and
+the block's subshell, readable through `/proc/<pid>/environ` by the same account and root while
+each runs.
 
 **Recipient validation (the lookup demonstrated; the recipient's own check REASONED, since it
 belongs to the receiving application):** prepare the
@@ -5037,7 +5052,7 @@ backend app
     server app1 127.0.0.1:3000 check
 ```
 
-Hashed `password` entries rely on the system's crypt(3); `$6$` works on glibc-based Linux. Avoid `insecure-password`, which stores the password in cleartext in the configuration file. For machine-to-machine access, client certificates are stronger: add `verify required ca-file /etc/ssl/certs/internal-ca.crt` to the `bind :443` line.
+`openssl passwd -6` prompts for the password. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `openssl` process while it runs. Hashed `password` entries rely on the system's crypt(3); `$6$` works on glibc-based Linux. Avoid `insecure-password`, which stores the password in cleartext in the configuration file. For machine-to-machine access, client certificates are stronger: add `verify required ca-file /etc/ssl/certs/internal-ca.crt` to the `bind :443` line.
 
 Basic authentication here is single-factor. For human-facing sites, add MFA with an [Authelia](https://www.authelia.com/) portal (HAProxy is supported through Authelia's Lua module) or by fronting the site with Cloudflare Access; options in [mfa.md](mfa.md).
 
@@ -22152,7 +22167,7 @@ Review outbound requests too. Meilisearch v1.8 through v1.34.0 need upgrading fo
 
 ## Verify
 
-REASONED: from the shell behaviour of the hidden prompt (`read -s`) and of `set +x`, not from the loopback runs described next, which did not test it. What was run: on 2026-10-13 UTC a QA review ran the paired-request block under `bash -x` with its external commands stubbed and a dummy secret fed to the prompts on a pseudo-terminal; no trace line carried the dummy secret, and the same block with its `set +x` removed traced it. A second run the same day pasted the block into Bash 5.3.9 (`bash --noprofile --norc -i`) on a pseudo-terminal with history enabled, with stub commands that read stdin and slept four seconds, a dummy secret entered at the prompts, and the observing and inspected processes under the same account: the history file held the pasted block, with its literal `$audit_key` references, but no prompt response, and neither `/proc/<pid>/cmdline` nor `/proc/<pid>/environ` of the stubs, the block's subshell or its command-substitution shells contained the dummy secret. What was not run: process memory was not read (`/proc/<pid>/mem`, a debugger or ptrace was not attempted); neither an unrelated process of the same account nor root was tested as the observer, because the observer was an ancestor of the inspected processes; and no real curl client or live Meilisearch or Typesense service was involved. In the paired-request block below, the hidden prompts keep the keys out of shell history and the block's `set +x` keeps them out of `set -x` tracing, but stdin closes the argv channel only, so the keys stay visible to the account owner and root.
+REASONED: from the shell behaviour of the hidden prompt (`read -s`) and of `set +x`, not from the loopback runs described next, which did not test it. What was run: on 2026-10-13 UTC a QA review ran the paired-request block under `bash -x` with its external commands stubbed and a dummy secret fed to the prompts on a pseudo-terminal; no trace line carried the dummy secret, and the same block with its `set +x` removed traced it. A second run the same day pasted the block into Bash 5.3.9 (`bash --noprofile --norc -i`) on a pseudo-terminal with history enabled, with stub commands that read stdin and slept four seconds, a dummy secret entered at the prompts, and the observing and inspected processes under the same account: the history file held the pasted block, with its literal `$audit_key` references, but no prompt response, and neither `/proc/<pid>/cmdline` nor `/proc/<pid>/environ` of the stubs, the block's subshell or its command-substitution shells contained the dummy secret. In that run the observer was an ancestor of the inspected processes. A third run the same day, on the QA review's evaluation host, repeated the observation with same-account observers that were siblings of the block's shells rather than ancestors: neither `/proc/<pid>/cmdline` nor `/proc/<pid>/environ` of any sampled process, including the recording stubs, the command-substitution shells, the block's subshell and the outer shell, contained the dummy secret. What was not run: the contents of process memory are unknown, because every attempt by those observers to open `/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where `/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag was set); and no real curl client or live Meilisearch or Typesense service ran, because every run replaced curl with a recording stub and `meilisearch` and `typesense-server` were not on the evaluation host's PATH. In the paired-request block below, the hidden prompts keep the keys out of shell history and the block's `set +x` keeps them out of `set -x` tracing, but stdin closes the argv channel only, so the keys stay visible to the account owner and root.
 
 DEMONSTRATED: following block; the checks below were demonstrated on loopback against the Meilisearch v1.53.2 release binary (its SHA-256 matched the digest GitHub publishes for the asset) and the Typesense 30.2 server (its MD5 matched the one in the release tarball), each with native TLS on 127.0.0.1, or behind a Caddy TLS proxy for the proxy checks, with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and every address set before start. The blocks ran as printed with only their `set --` values substituted, and keys were fed to the prompts on stdin. What those runs do not show is marked **REASONED** where it occurs, with its reason. Backlog row 1.117 retains the real-client-build positive and negative controls for the credential scan below; its hand-built fixtures do not supply a real client bundle. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
 
@@ -24266,7 +24281,7 @@ server {
 }
 ```
 
-Substitute the hostname and certificate paths. Generate password entries with `htpasswd -B -C 12`, using its interactive password prompt and the intended password-file path and username. Bare `-B` defaults to bcrypt cost 5, below OWASP's minimum of 10; regenerate existing cost-5 hashes. Protect the password file and its backups. See [nginx Basic authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html), [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html), and [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
+Substitute the hostname and certificate paths. Generate password entries with `htpasswd -B -C 12`, using its interactive password prompt and the intended password-file path and username. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `htpasswd` process while it runs. Bare `-B` defaults to bcrypt cost 5, below OWASP's minimum of 10; regenerate existing cost-5 hashes. Protect the password file and its backups. See [nginx Basic authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html), [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html), and [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
 
 Authentication is at `server` scope so every permitted location inherits it. Do not disable it in an added inference location. A denied path or method can return 404 or 405 before authentication; those responses do not imply access to Ollama.
 
