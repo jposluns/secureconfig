@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "6b68123690219675d0214ff292235b6217822990cd2cbb31e307ac1171cfc5aa",
+  "body_sha256": "b71f19f5e83dedcb603521d8ada9b6180759a8c7bc620b8496d2ea00c67f736e",
   "components": {
     "ng": {
       "name": "nginx documentation",
@@ -254,6 +254,8 @@ curl -q -s -o /dev/null -w '%{http_code}\n' --max-time 10 https://example.com/  
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The password you substitute on the set -- line enters shell history.
   # Clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the password from
+  # set -x tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

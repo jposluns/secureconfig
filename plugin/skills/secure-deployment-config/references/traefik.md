@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e4e5ed854883e8bbfa1b96b876b1208964bf24fae160626b66ec649ec9ccc532",
+  "body_sha256": "fc7b918b67e7957c9129dcc2f26a7d0f30d4686f1b766bf7f8a51f7279728463",
   "components": {
     "traefik-docs": {
       "name": "Traefik documentation (rolling)",
@@ -272,6 +272,8 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The password you substitute on the set -- line enters shell history.
   # Clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the password from
+  # set -x tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "da69b5fd9d41a8263e0c735fa03827c8f9c18acb12f60bd367f3ec84100895e2",
+  "body_sha256": "17bcb074cd67f8b103c8b027874244a65727a0f7f29e3d14fc0cee1f48bc1476",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -211,7 +211,7 @@ version_basis: {
     "verify-loki": {"text": "A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs.", "components": ["loki", "curl"], "sources": ["loki:s70975c2655fa", "loki:s057e686b00bb", "curl:s3db522258e44"], "status": "REASONED", "verify": [2]},
     "verify-basic": {"text": "Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200.", "components": ["node", "push", "alert", "jaeger", "toolkit"], "sources": ["node:s896899f5a500", "push:s5c9f9745f42d", "alert:s120d6ecf3fcd", "jaeger:sc6f47d82b947", "toolkit:sbb86207a38e5"], "status": "DEMONSTRATED", "evidence": "The loopback runs gave exactly that pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager `/api/v2/status` and Jaeger `/api/v3/services`.", "verify": [3]},
     "verify-loki-mtls": {"text": "Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred.", "components": ["loki", "dskit"], "sources": ["loki:s70975c2655fa", "dskit:sd35a28be4391"], "status": "REASONED"},
-    "verify-secret": {"text": "Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password.", "components": ["toolkit", "curl"], "sources": ["toolkit:sbb86207a38e5", "curl:s5e1383feef7d", "curl:s82a34ee18632"], "status": "REASONED"}
+    "verify-secret": {"text": "Basic-auth stdin closes argv exposure only; shell history, tracing and your own account's view of the process can still leak the password.", "components": ["toolkit", "curl"], "sources": ["toolkit:sbb86207a38e5", "curl:s5e1383feef7d", "curl:s82a34ee18632"], "status": "REASONED"}
   }
 }
 ---
@@ -284,7 +284,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-loki: A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs. | Loki v3.7.8; curl curl-8_14_1 | REASONED |
 | verify-basic: Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200. | node_exporter v1.12.1; Pushgateway v1.11.3; Alertmanager v0.34.1; Jaeger v2.21.0; Exporter toolkit v0.17.1 | DEMONSTRATED |
 | verify-loki-mtls: Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
-| verify-secret: Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. | Exporter toolkit v0.17.1; curl curl-8_14_1 | REASONED |
+| verify-secret: Basic-auth stdin closes argv exposure only; shell history, tracing and your own account's view of the process can still leak the password. | Exporter toolkit v0.17.1; curl curl-8_14_1 | REASONED |
 <!-- version-basis:end -->
 
 The Prometheus server has its own section in [admin-uis.md](admin-uis.md). This guide covers the pieces
@@ -657,7 +657,8 @@ Fixed, `no credentials` is `401` and `with credentials` is `200`. The loopback r
 pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager
 `/api/v2/status` and Jaeger `/api/v3/services`. For Loki under mTLS, the REASONED equivalent is `--cert` and `--key` on an authorized client
 (`200`) against the same request without them, which fails in the handshake. This closes the argv
-channel only. The password can still reach shell history or `set -x` output.
+channel only. The password can still reach shell history or `set -x` output, and stdin does not hide it
+from your own account's view of the process.
 
 ## Sources (checked September 2026)
 

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "550e63e0c44d607de4629aa8fb60b3c8b4752b29e6ccb9396f87a1c1c07e0019",
+  "body_sha256": "10877fe715ebd908888bd44339aee1ab1c926733c2781fb4f377d455dd357527",
   "components": {
     "see": {
       "name": "SQLite Encryption Extension",
@@ -330,7 +330,7 @@ The bundle scan, the git inventory and the `stat` check were demonstrated on the
 )
 ```
 
-Scan built client bundles for a leaked Turso/libSQL token, keeping the token off argv and shell history:
+Scan built client bundles for a leaked Turso/libSQL token, keeping the token off argv and shell history, though not out of your own account's view of the process:
 
 DEMONSTRATED: following block; the recorded authoring-host placeholder-token runs distinguish exposed and clean bundles and exercise the listed shell guards; no real token was used.
 
@@ -414,7 +414,7 @@ REASONED: following block; LiteFS and Litestream listener isolation follows the 
 )
 ```
 
-Any HTTP response from the untrusted vantage shows that an HTTP listener answered. Confirmed direct reachability to LiteFS exposes its unauthenticated endpoints, subject to their role and state conditions above; a fronting proxy can return its own denial or expose only selected paths, so its response alone does not establish reachability to the whole LiteFS API. A timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address, routing, proxy configuration, and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Have a valid database token from the secret store ready to paste. The block prompts for it with input hidden, never exports it, and refuses a control character, so a pasted token cannot inject a second header. This keeps the token out of curl's argv, not out of reach of the account that runs the block:
+Any HTTP response from the untrusted vantage shows that an HTTP listener answered. Confirmed direct reachability to LiteFS exposes its unauthenticated endpoints, subject to their role and state conditions above; a fronting proxy can return its own denial or expose only selected paths, so its response alone does not establish reachability to the whole LiteFS API. A timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address, routing, proxy configuration, and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Have a valid database token from the secret store ready to paste. The block prompts for it with input hidden, never exports it, and refuses a control character, so a pasted token cannot inject a second header. This keeps the token out of curl's argv, and the hidden prompt and the block's `set +x` keep it out of shell history and `set -x` tracing, but not out of reach of the account that runs the block:
 
 REASONED: following block; the cited Turso SQL-over-HTTP reference supplies the anonymous/authorized discriminator; no Turso database and token were available.
 
