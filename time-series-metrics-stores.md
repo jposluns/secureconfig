@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "2609dd5fcc5de69fc6916bb45270e028a38a699502a215327c37d9dfe77dcbe2",
+  "body_sha256": "e0da00137fe67ffece497c6157594e02a012c12e44d704253e4499707b36dc02",
   "components": {
     "influx2": {
       "name": "InfluxDB OSS",
@@ -329,7 +329,7 @@ Bind every listener to loopback or a private interface, and put authentication a
 
 ## Verify
 
-REASONED: following block; every probe in this section, including the TCP and UDP listener inventory below for each port it names, per the guide's cited InfluxDB 2.x configuration options, InfluxDB 1.x configuration, VictoriaMetrics v1.152.0 single-node HTTP fallback, VictoriaMetrics v1.152.0-cluster HTTP fallback binds, and QuestDB HTTP server, PostgreSQL wire protocol, ingestion and minimal HTTP server entries. No InfluxDB, VictoriaMetrics or QuestDB listener ran. During marking review (October 2026) all three Verify blocks passed bash -n under bash 5.3.9; the inventory needs sudo on the service host and was not run. Exposed, a listed port shows a public or wildcard bind; fixed, only its intended private address. Every probe below is **REASONED, not demonstrated**: the authoring host forbids opening listeners without an isolated network namespace, and has none. Outcomes are derived from the cited vendor sources rather than observed. A transport failure, a redirect, a 404, a 405 or a TLS error is inconclusive, never the fixed state.
+REASONED: following block; every probe in this section, including the TCP and UDP listener inventory below for each port it names, per the guide's cited InfluxDB 2.x configuration options, InfluxDB 1.x configuration, VictoriaMetrics v1.152.0 single-node HTTP fallback, VictoriaMetrics v1.152.0-cluster HTTP fallback binds, and QuestDB HTTP server, PostgreSQL wire protocol, ingestion and minimal HTTP server entries. No InfluxDB, VictoriaMetrics or QuestDB listener ran. During marking review (October 2026) all three Verify blocks passed bash -n under bash 5.3.9, and the inventory's two commands, run without sudo on the review host as ss -tlnp and ss -ulnp (iproute2 6.19.0), accepted their flags and showed none of the named TCP or UDP ports listening, with an empty process column, so they tested no target; the sudo form was not run. Exposed, a listed port shows a public or wildcard bind; fixed, only its intended private address. Every probe below is **REASONED, not demonstrated**: the authoring host forbids opening listeners without an isolated network namespace, and has none. Outcomes are derived from the cited vendor sources rather than observed. A transport failure, a redirect, a 404, a 405 or a TLS error is inconclusive, never the fixed state.
 
 ```bash
 # REASONED: listener inventory; no isolated network namespace for listeners on the authoring host. Expected outcomes and vendor sources are recorded below.

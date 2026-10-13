@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "00b4c8e217c74f7036a2f96bab9213ac0aadee0af4b1f00c9b17f9a62bfccd41",
+  "body_sha256": "5a16d74e2220ef29ebf1113b4e31fcbaa6c4bb5a68b65da24f219dd3c4a95708",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -577,8 +577,8 @@ There are two fixes, and you can use both:
 
 ## Verify
 
-REASONED: following block; this introduction and the TCP and UDP listener inventory below for every port it names, per the guide's cited node_exporter v1.12.1 source, Alertmanager v0.34.1 README, Pushgateway v1.11.3 README, Jaeger v2.21.0 ports and dskit pinned wildcard listener construction entries. The non-Loki loopback runs this guide records were not repeated in this marking review. No second host and no isolated network namespace were available, so no wildcard bind was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9; the inventory needs sudo on the service host, which the authoring environment refused, so it was not run. Exposed, a listed port shows a wildcard bind; fixed, loopback or a private address. The non-Loki HTTP results below were demonstrated on 127.0.0.1 against the versions named at the top,
-in both the exposed state and the fixed state. All Loki checks are REASONED: the authoring host
+REASONED: following block; this introduction and the TCP and UDP listener inventory below for every port it names, per the guide's cited node_exporter v1.12.1 source, Alertmanager v0.34.1 README, Pushgateway v1.11.3 README, Jaeger v2.21.0 ports and dskit pinned wildcard listener construction entries. No second host and no isolated network namespace were available, so no wildcard bind was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9, and its two commands, run without sudo on the review host as ss -tlnp and ss -ulnp (iproute2 6.19.0), accepted their flags and showed none of the named TCP or UDP ports listening, with an empty process column, so they tested no target; the sudo form was not run. Exposed, a listed port shows a wildcard bind; fixed, loopback or a private address. The non-Loki loopback HTTP runs on 127.0.0.1 against the versions named at the top
+are declared DEMONSTRATED at the credential block below and were not repeated in this marking review. All Loki checks are REASONED: the authoring host
 forbids opening listeners without an isolated network namespace, and has none. The default
 all-interfaces binds were not observed, so they are
 reasoned: the authoring host forbids binding every interface, so each run overrode the address to
