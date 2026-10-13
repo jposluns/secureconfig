@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e5f3bbdf3ebf8b7dafa0476eeb177319742379d4c0a1c8a707b5b971542e3046",
+  "body_sha256": "34058dfecfffb6d313005d5a4b2fd64c3fe6ce36fe42293af29cb9aa75d8022c",
   "components": {
     "keycloak": {
       "name": "Keycloak documentation",
@@ -320,7 +320,7 @@ authentik also reaches past this host. Its Compose file, by default, "mounts the
 
 ## Verify
 
-REASONED: scope of every live check below; the authoring host forbids opening listeners without an isolated network namespace, and has none, and ran neither identity provider, while the fenced shell blocks below passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0 at marking time with no diagnostics. Live checks here are **REASONED**: the authoring host forbids opening listeners without an isolated network namespace, and has none. This source audit ran neither identity provider. The expected outcomes, including those of the existing checks below, follow the cited vendor documentation and pinned sources; Sources has no curl reference. Backlog row 1.173 retains only tracing authentik's documentation-backed worker and outpost metrics handlers at `version/2026.8.3`.
+REASONED: scope of every live check below; the authoring host forbids opening listeners without an isolated network namespace, and has none, and ran neither identity provider, while the fenced shell blocks below passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0 at marking time with no diagnostics. Live checks here are **REASONED**: the authoring host forbids opening listeners without an isolated network namespace, and has none. This source audit ran neither identity provider. The expected outcomes, including those of the existing checks below, follow the cited vendor documentation and pinned sources; Sources has no curl reference or Keycloak 8080/8443 listener reference. Backlog row 1.173 retains only tracing authentik's documentation-backed worker and outpost metrics handlers at `version/2026.8.3`.
 
 REASONED: authentik setup-flow comparison per the cited pinned root redirect, setup view, OOBE policy and source tests at version/2026.8.3; no disposable authentik instance or isolated test network is available in the authoring environment, so the expected redirects and logins were not observed. For authentik's setup check, use a disposable instance in an isolated test network and a fresh browser session. Open `http://127.0.0.1:9000/` locally or through the SSH forward. In the exposed state, with no bootstrap credentials and no usable `akadmin` password, expect the redirects through `/setup` to `/if/flow/initial-setup/`, then the setup form without a login. Complete it with test credentials and confirm those credentials log in as `akadmin`. After setup, a new anonymous session visiting `/setup` must return through the root to authentication rather than offer setup. Repeat on a fresh instance bootstrapped with `AUTHENTIK_BOOTSTRAP_PASSWORD`: expect login with the supplied password and no setup form. A direct visit to the flow is not a sufficient negative check because it is denied even before setup. The pinned root redirect, setup view, OOBE policy and source tests distinguish these outcomes; the tests were read, not executed here.
 
