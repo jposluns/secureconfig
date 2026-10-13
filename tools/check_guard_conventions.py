@@ -2723,9 +2723,16 @@ nc -vz -w 5 "$1" 1883
      "env IMAGE_SIGNATURE_256=public.sig tool\n"
      "env SIGNATURE=public.sig tool\n"
      "env SIGNATURE_256=public.sig tool\n"
-     "env APP_HUB_SIGNATURE_256=\"$1\" tool\n```\n",
+     "env APP_HUB_SIGNATURE_256=\"$1\" tool\n"
+     "env TX_SIGNATURE=public.sig tool\n"
+     "env XML_SIGNATURE=public.sig tool\n"
+     "env DOCKERHUB_SIGNATURE=public.sig tool\n"
+     "env HUBBLE_SIGNATURE=public.sig tool\n"
+     "env COSIGN_SIGNATURE_APIKEY=\"$1\" tool\n"
+     "env x_hub_signature_256=\"$1\" tool\n"
+     "env cosign_signature=public.sig tool\n```\n",
      ["C3-TOOL-ARGV", "C3-TOOL-ARGV", "C3-TOOL-ARGV",
-      "C3-TOOL-ARGV"], ()),
+      "C3-TOOL-ARGV", "C3-TOOL-ARGV", "C3-TOOL-ARGV"], ()),
     ("c3-config-value-not-a-url",
      "```bash\ncurl -q --config './settings?sig=public' https://h/\n```\n",
      [], ()),
