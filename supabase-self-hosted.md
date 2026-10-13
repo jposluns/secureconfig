@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "dffad6d4437899fa1b48348f4c6baf33e5cf759c7266d2e46267ea0401704846",
+  "body_sha256": "7c164db251a9a460bc5a5768dd372b4569da8f9e3bcab39401c91d57596d94bb",
   "components": {
     "docs": {
       "name": "Supabase documentation",
@@ -247,6 +247,7 @@ REASONED: following block; the canary function comparison follows the cited envi
   case "$1" in *REPLACE_WITH_*|"") echo "substitute the base URL (https://your-proxy, or http://127.0.0.1:8000 for a private-origin check); not probing"; exit 2 ;; esac
   case "$2" in *REPLACE_WITH_*|*FUNCTION_NAME*|"") echo "substitute a function name; not probing"; exit 2 ;; esac
   case "$3" in *REPLACE_WITH_*|"") echo "substitute a current legacy anon JWT; not probing"; exit 2 ;; esac
+  case "$3" in *[[:cntrl:]]*) echo "the anon JWT must be one line with no control characters; not probing"; exit 2 ;; esac
   # Compare the credential-free request with a current legacy anon JWT sent as Bearer.
   # Use a canary with a known response and no independent authentication.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -256,7 +257,7 @@ REASONED: following block; the canary function comparison follows the cited envi
 )
 ```
 
-REASONED: preceding block; function authentication and retirement of shipped API, signing, dashboard and database credentials, per the guide's cited Supabase self-hosting with Docker, Supabase docker .env.example, Supabase API keys and curl curl-8_14_1 headers from stdin. No Supabase deployment, container runtime or current credentials are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; guarded canary inputs reached two curl stubs and rejected inputs reached none. Synthetic JSON/base64url tokens parsed and demo/current fixture keys produced different HMACs; no service verification ran. Exposed services accept the old credentials or unsigned function request; fixed services reject them while current credentials return the stated positive controls. For a port you can still reach, check whether the shipped credentials were replaced, feeding every credential
+REASONED: preceding block; function authentication and retirement of shipped API, signing, dashboard and database credentials, per the guide's cited Supabase self-hosting with Docker, Supabase docker .env.example, Supabase API keys and curl curl-8_14_1 headers from stdin. No Supabase deployment, container runtime or current credentials are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; guarded canary inputs reached two curl stubs and rejected inputs reached none. On 2026-10-13 UTC a QA review ran the block, extracted to a file and unchanged except for placeholder substitution, against a recording curl stub: it exited 2 with no curl call for an anon JWT with an embedded newline, a carriage return and a tab, and for a placeholder, and exited 0 after two curl calls for a valid dummy JWT, which reached curl only on stdin; the block as it stood before its control-character guard passed an embedded newline to curl (two calls), and the stub received an injected second header line (`X-Injected: yes`) on its stdin. Synthetic JSON/base64url tokens parsed and demo/current fixture keys produced different HMACs; no service verification ran. Exposed services accept the old credentials or unsigned function request; fixed services reject them while current credentials return the stated positive controls. For a port you can still reach, check whether the shipped credentials were replaced, feeding every credential
 through stdin rather than argv (`curl --config -` for Basic auth, `curl --header @-` for `apikey`/`Authorization`;
 disable shell tracing). Stdin closes the argv channel only: it does not hide a credential typed into a command from shell history, or the credential from your own account's view of the process. Test each shipped API key against `/auth/v1/settings`, then repeat with a current key that must return
 settings JSON. This checks gateway acceptance, not retirement of backend signing keys. Separately, test the
