@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "8ee4d036bec0426ea1501a346e2760d6ce8dbb7af61a5a0a8a5f368f0e1a3619",
+  "body_sha256": "e7b2412d7cb064154c2bb3ccfd55a5fdf1e8294e54abf1eab06156f48220099d",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -274,10 +274,25 @@ event messages, but it is carried in those messages rather than encrypting the t
 not make a reachable bus safe on its own: run the bus on a private, trusted network with matching
 secrets on every component.
 
+`--password` and `--registration-secret` are command-line values: each puts its secret in the argv
+of every process that receives it, from its start until the process overwrites its arguments, if it
+does, readable through `ps` and `/proc/<pid>/cmdline` by other local accounts as well as by the same
+account and root, and command-line auditing on the host can record it beyond that. Sources has no
+reference for a Grid input outside argv for either secret. Do not assume `SE_ROUTER_PASSWORD`
+avoids this. Sources has no reference for how the Docker images' start scripts pass that variable
+to the Router, so it may still reach the `java` command line as `--password`; read the start script
+in the image you run before relying on the variable. Wherever either secret reaches a command line (always for the flags; for `SE_ROUTER_PASSWORD` unless the start script shows otherwise), run Grid components only on
+hosts where every local account other than the one running them and root is trusted with these
+secrets. A secret that does stay in a process's environment is still readable through
+`/proc/<pid>/environ` by the same account and root while that process, or any process that inherited it, runs.
+
 The Docker browser images add two more listeners: they start VNC by default (`SE_START_VNC` defaults to
 `true`) on `5900` with noVNC on `7900`, and the vendor's own example connects with the password
 `secret`; change it with `SE_VNC_PASSWORD`, disable the prompt deliberately only with
-`SE_VNC_NO_PASSWORD`, or turn VNC off with `SE_START_VNC=false`. Selenium can terminate TLS itself with
+`SE_VNC_NO_PASSWORD`, or turn VNC off with `SE_START_VNC=false`. `SE_VNC_PASSWORD` is an environment
+credential: it is readable through `/proc/<pid>/environ` by the same account and root while any process
+holding it runs, and Sources has no reference for how the image passes it to the VNC server, so, as with `SE_ROUTER_PASSWORD`, it may reach a command line; read the image's start script before relying on the variable, and apply the trusted-host condition above if it does.
+Selenium can terminate TLS itself with
 `--https-certificate` and `--https-private-key`, but it is not enabled by default, and the Router's
 basic auth travels in clear text without it; enabling native HTTPS or, more commonly, fronting the Grid
 per [nginx.md](nginx.md), [caddy.md](caddy.md) and [fronting-auth.md](fronting-auth.md) is what protects
@@ -292,7 +307,7 @@ The current Docker configuration reference agrees; the older quickstart's genera
 does not match this release. The current reference documents the same default for Enterprise,
 but its private image was not inspected or run here, so equivalence is not source-verified.
 Always set a long, randomized `TOKEN` (never a vendor sample, never committed), and publish the port to
-loopback (`-p 127.0.0.1:3000:3000`) or keep it on an internal container network with no host mapping.
+loopback (`-p 127.0.0.1:3000:3000`) or keep it on an internal container network with no host mapping. `TOKEN` reaches the server through its environment, which keeps it out of the server's argv (a value typed on a launcher's command line, such as after `-e TOKEN=`, is in that launcher's argv instead) but not out of reach: it is readable through `/proc/<pid>/environ` by the same account and root for as long as the server, or any process that inherited it, runs.
 The token is presented in the connection URL, so proxy and access logs become credential stores; front
 the service with TLS so it is unreadable in transit, and handle the token as [secrets.md](secrets.md)
 describes.
