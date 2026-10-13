@@ -853,7 +853,8 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
   # Use Bash in a fresh, trusted shell. Replace the URL and client ID inside
   # the quotes; paste only the secret at the hidden prompt, never into the command.
   # The prompted secret reaches curl on stdin, outside argv and shell history;
-  # it remains accessible to the account owner or root.
+  # stdin does not hide it from set -x tracing (the block turns tracing off),
+  # and it remains accessible to the account owner or root.
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
   { unset -n HDR && unset -v HDR; } 2>/dev/null ||
@@ -899,7 +900,7 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 - `curl -q -sI https://app.example.com/` returns a 302 whose `location` is your team's `*.cloudflareaccess.com` login, never a 200 or your application's own content.
 - With a service token, a GET returns your application content, not the Access login. Use a route known to serve your application's content with HTTP 200. Expect `http=200 location=`; an Access login redirect, denial or transport error is not a pass. Compare with the anonymous check above: an exposed app serves the route anonymously too, so token success alone does not prove Access is enforced.
 
-Use Bash in a fresh, trusted shell and replace the URL and client ID inside the quotes. Paste only the secret at the hidden prompt, never into the command. The block discards the body and prints only the status and redirect destination; a 200 alone cannot identify the content. The secret stays in an unexported subshell variable and reaches curl on stdin, which does not hide it from the account owner or root.
+Use Bash in a fresh, trusted shell and replace the URL and client ID inside the quotes. Paste only the secret at the hidden prompt, never into the command. The block discards the body and prints only the status and redirect destination; a 200 alone cannot identify the content. The secret stays in an unexported subshell variable and reaches curl on stdin, which keeps it out of argv and shell history but does not hide it from `set -x` tracing (the block turns tracing off) or the account owner or root.
 
 ```bash
 # REASONED: no live Cloudflare account is available; not demonstrated against exposed and protected apps. The cited Cloudflare service-token documentation specifies the two headers and Service Auth policy.
@@ -4810,6 +4811,8 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The password you substitute on the set -- line enters shell history.
   # Clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the password from
+  # set -x tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PASSWORD'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -10158,6 +10161,8 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 -w '%{ht
 #   Assumes a clean Bash shell with trusted startup files. Uncomment each WHOLE subshell to run.
 #   Tokens stay in positional parameters and curl's stdin, not named variables, environment or argv.
 #   The same account and root can still read process memory; this does not erase earlier exports.
+#   Stdin closes the argv channel only. No token is typed, and each subshell turns set -x tracing off
+#   before it fetches a token, so shell history and set -x tracing do not record it.
 #   (
 #     trap - DEBUG RETURN ERR
 #     set +x +a +e
@@ -10349,6 +10354,8 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The Jupyter token you substitute on the set -- line enters shell history.
   # Clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the token from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JUPYTER_TOKEN'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -10368,6 +10375,8 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The token you substitute on the set -- line enters shell history.
   # Use a short-lived token or clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the token from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_POD_ID-REPLACE_WITH_PORT.proxy.runpod.net/REPLACE_WITH_PROTECTED_PATH' 'REPLACE_WITH_TOKEN'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -28848,6 +28857,8 @@ admin_password = REPLACE_WITH_LONG_RANDOM_VALUE
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # Both passwords you substitute on the set -- line enter shell history.
   # Clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the passwords from
+  # set -x tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CURRENT_ADMIN_PASSWORD' 'REPLACE_WITH_LONG_RANDOM_VALUE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -28905,7 +28916,8 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 # credentials (its service-token headers), and a denial from that proxy is distinct from MLflow's own
 # backend 401/403. The credentials below reach curl through a config file on stdin (curl --config -),
 # never argv, because -u user:password is world-readable via ps / /proc/<pid>/cmdline; stdin protects
-# the argv channel only, not shell history or set -x tracing. Substitute each password INSIDE the
+# the argv channel only, not shell history, set -x tracing, or your own
+# account's view of the process. Substitute each password INSIDE the
 # single quotes on the set -- line; a password containing a literal apostrophe must be written '\'' there.
 (
   # Each credential reaches curl on stdin via a config file (curl --config -), never
@@ -29225,6 +29237,8 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The app key you substitute on the set -- line enters shell history.
   # Use a short-lived key or clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the key from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DIFY_APP_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -29679,6 +29693,8 @@ REASONED: following block; native authentication follows the cited service sourc
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # When you repeat this block with a valid credential header in $4, the secret
   # on the set -- line enters shell history; clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the header from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' ''
   # $3 is the same harmless JSON body as checks 5 and 7 (keep the empty quotes if none is needed).
   # $4 is a credential header: leave it EMPTY for the anonymous run, put a WRONG credential for the
@@ -29734,6 +29750,8 @@ REASONED: following block; credentialed success follows the cited service and cu
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The credential you substitute on the set -- line enters shell history.
   # Clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the credential from
+  # set -x tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' 'REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL'
   # $3 is the same harmless JSON body as the anonymous check. Keep the empty quotes if none is needed.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
@@ -30981,6 +30999,8 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The secret key you substitute on the set -- line enters shell history.
   # Use a short-lived project key or clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the keys from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -33408,7 +33428,8 @@ Do not use a secret or service-role key for an ordinary-user test.
 Paste the whole block and substitute inside the single quotes. Use an unsigned HTTPS endpoint
 URL, never a credential-bearing or signed URL. The response must contain only your harmless
 fixture data. Credentials enter curl through stdin, not process arguments; that does not protect
-a carelessly created header file, shell history, or tracing. The write-out fields require curl
+a carelessly created header file, shell history, or tracing, and it does not hide the
+credentials from your own account's view of the process. The write-out fields require curl
 7.75.0 or newer.
 
 REASONED: following block; ordinary-user profiles and MFA comparisons follow the cited Supabase/PostgreSQL documentation; no disposable project or controlled user sessions were supplied.
@@ -37289,7 +37310,8 @@ so the authorized control proves the origin is the service and the canary exists
 can count as protection. Use a fresh, trusted shell. Enter the authorized header at the block's hidden prompt
 (`Authorization: Bearer ...` for Strapi, Directus and PostgREST, or `X-Hasura-Admin-Secret: ...` for Hasura);
 press Enter at the negative-header prompt for the anonymous test. Both headers stay in unexported subshell
-variables and reach curl on stdin, never in argv or pasted commands. Inherited values are discarded; the
+variables and reach curl on stdin, never in argv or pasted commands, keeping the prompted values out of
+shell history; the block's `set +x` keeps them out of `set -x` tracing. Inherited values are discarded; the
 variables are unset after use and the subshell contains early exits. This does not hide credentials from the
 account owner or root. Treat an empty result, a missing route, an unrelated error, an HTML page, a TLS error, or a timeout as inconclusive,
 never as the fixed state. Substitute your own host for the `example.com` placeholder.
