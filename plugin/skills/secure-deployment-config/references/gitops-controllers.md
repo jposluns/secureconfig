@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "127e2d2f2c3a14eb944124d5941f969255073e9d7fabd3a0c6c40e42be964bfa",
+  "body_sha256": "c0a09b1deb539eca12a347e6350948d7451aecb852aca926d55803e36ab977dd",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -245,7 +245,13 @@ The install generates an initial `admin` password and stores it in cleartext in 
 `argocd-initial-admin-secret`, in the `password` field. Rotate it and then delete the Secret:
 `argocd account update-password` changes the password, and the vendor says the Secret "can safely be
 deleted" afterward since it only holds the bootstrap value. Deleting the Secret does not by itself
-rotate the credential, so change the password first. `admin` is the only built-in user and a
+rotate the credential, so change the password first. Give `argocd account update-password` the current
+and new passwords at the tool's prompt, not as arguments: `--current-password` and `--new-password`
+would put them in its argv. Sources has no reference for the command prompting (its Argo CD user
+management entry is described as covering disabling admin and changing the password), so confirm
+that it does before relying on it. A prompt keeps the passwords out of the command text, shell
+history and shell tracing; the account owner and root can still read them in the `argocd` process
+while it runs. `admin` is the only built-in user and a
 superuser with unrestricted access; once you have configured SSO (OIDC or Dex) and granted named
 roles, disable it with `admin.enabled: "false"` in the `argocd-cm` ConfigMap, and pair Argo CD logins
 with your identity provider's MFA ([mfa.md](mfa.md)).
@@ -364,7 +370,13 @@ the RBAC on the Secrets that hold them. Bootstrap credentials are separate from 
 `flux bootstrap github --token-auth` leaves the PAT in the cluster as the `flux-system` Secret in the
 `flux-system` namespace, while `--token-auth=false` provisions an SSH deploy key that is read-only by
 default; prefer the narrowly scoped key, restrict access to that Secret, and pass any bootstrap token
-through stdin or the prompt, never Git or logs. Image automation is the exception to read-only: the
+through stdin or the prompt, never Git or logs. Typed at the prompt, the token stays out of shell
+history and `set -x` tracing. Piped in, a token typed literally into the feeding command enters
+shell history, and with `set -x` on also the trace; a token the feeding command expands from a
+variable reaches the trace with `set -x` on, but history records only the variable's name, which
+does not carry its value (a command that assigned the value literally is in history itself). Either
+way stdin closes the argv channel only: the account owner and root can still read the token in the
+`flux` process. Image automation is the exception to read-only: the
 image-automation-controller commits manifest changes back to Git and needs write access (`--read-write-key=true`
 when it uses the bootstrap deploy key), so scope that credential to the one repository, protect the
 deployment branch, use a dedicated update branch, and restrict who may edit `ImageUpdateAutomation` objects. The source-controller then serves the fetched artifacts to the
@@ -422,6 +434,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
 # Run in a subshell with tracing, allexport and errexit OFF, so an inherited `set -x` cannot echo the token,
 # an inherited `set -a` cannot export it (read -s and the stdin header prevent neither), and an inherited
 # `set -e` cannot end the block early.
+# The hidden prompt keeps the token out of shell history; stdin closes the argv channel only, so the
+# account owner and root can still read the token in the subshell and curl.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -497,6 +511,9 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 # REASONED: Flux webhook checks follow the cited receiver documentation; no live Flux is available.
 # Read the HMAC key without echo.
 # Python's hmac reads the key from stdin; only the non-secret request body is passed in argv.
+# The hidden prompt keeps the key out of shell history and set +x keeps it out of set -x tracing.
+# Stdin closes the argv channel only: the account owner and root can still read the key in the
+# subshell and python3.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "08aeca4c308b9319bf88fd4d776f248339364ddbfff0a34fc00c64087c16aed1",
+  "body_sha256": "ba9c1235f218520afa449f3dacaf45ce083cf44c6f8e686ec760fadbcf3d0ed2",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -597,6 +597,9 @@ ss -tlnp   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8
 
 # Prefect: an empty JSON filter. Once the auth string is set the anonymous call is 401 and the authorized call
 # returns a JSON flow list; an anonymous list, even an empty one, is the finding. Feed the auth string on stdin.
+# getpass prompts without echo on a terminal, so the auth string enters neither shell history nor set -x
+# tracing; stdin closes the argv channel only, and the account owner and root can still read it in
+# python3 and curl.
 # Do NOT use /api/health or /api/ready as the authentication discriminator. Current server source exempts
 # those GET paths; this behavior is version-dependent and was not present in 3.1.8.
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
@@ -623,7 +626,9 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
 # Airflow: obtaining a token from the documented Compose account is the finding. Send the credentials as JSON
 # on stdin; FAB 3.9.0 returns 201 Created with a nonempty access_token when airflow/airflow works. Compare with a valid account on
 # the same route, and test an API read with no token then a token at the proxy and the origin. On Airflow 2 use
-# its /api/v1/ endpoint and its own auth mechanism instead.
+# its /api/v1/ endpoint and its own auth mechanism instead. A real password typed into the printf line below for
+# that comparison enters shell history and, with set -x on, the trace; stdin closes curl's argv channel only,
+# and the account owner and root can still read the password in curl.
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 printf '{"username":"%s","password":"%s"}' 'airflow' 'airflow' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -679,6 +684,9 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   https://argo.internal:2746/api/v1/workflows/argo
 # Enter a Kubernetes bearer token (client mode) or an Argo session token (SSO mode) with list permission in
 # this namespace. The token goes to curl on stdin, never argv.
+# getpass prompts without echo on a terminal, so the token enters neither shell history nor set -x
+# tracing; stdin closes the argv channel only, and the account owner and root can still read it in
+# python3 and curl.
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 python3 -c 'import getpass; t=getpass.getpass("Argo bearer token (without Bearer prefix): "); assert t and all(33 <= ord(c) <= 126 for c in t), "invalid token"; print("Authorization: Bearer " + t)' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "8295e348dbc18710f8e9396c52d9b6c72bc66c30c4cf9dd34b10752b71fe3530",
+  "body_sha256": "8ee4d036bec0426ea1501a346e2760d6ce8dbb7af61a5a0a8a5f368f0e1a3619",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -402,10 +402,20 @@ These are REASONED expectations from the cited configuration, API documentation 
 handler, not live observations; this authoring environment has no container runtime and cannot
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
 deployment must also deny the external path while an authorized internal control still succeeds.
-Pass the correct token through curl's stdin configuration, not a literal URL in shell history or
-argv. For the Playwright server on the port you configured (`launchServer` uses an ephemeral port
-unless you set one; `run-server` takes `--port`), any HTTP answer means the port is reachable and
-is already the finding. The distinguishing behaviour for each is in the cited vendor pages.
+Pass the correct token through curl's stdin configuration, as a `url = "...?token=..."` line fed to
+`--config -`, not a literal URL in shell history or argv. Because the config value is double-quoted,
+escape a backslash and then a double quote in the token before substituting it, and refuse a token
+containing a control character, so a pasted newline cannot inject a second directive. Enter the
+token at a hidden prompt in a clean shell under the `read` exception guards of
+CONTRIBUTING rule 7 (`search-engines.md`'s paired block is the model): `trap - DEBUG RETURN ERR`
+first, then `set +x +a +e` before the read, `unset -n` and then `unset -v` on the variable, failing
+closed if either fails, and a refusal of a readonly `IFS`. Without `+a`, an inherited `set -a` would
+export the token. A token typed into the command still enters shell history and `set -x` tracing,
+and stdin closes the argv channel only, so the token stays visible to the account owner and root.
+For the Playwright server on the port you configured
+(`launchServer` uses an ephemeral port unless you set one; `run-server` takes `--port`), any HTTP
+answer means the port is reachable and is already the finding. The distinguishing behaviour for
+each is in the cited vendor pages.
 
 **REASONED browserless file-protocol check:** no live instance was tested: the authoring host forbids
 opening listeners without an isolated network namespace, and has none. With
