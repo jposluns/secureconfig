@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "a1c0746e9da8e532c64c2c7c9675c26c2aa3cd6f22ff7de2f229b0e0cec3119c",
+  "body_sha256": "be85a4ef3f330945752543519fb46986d4177b4d7d2d3119d192cda82f69cf30",
   "components": {
     "kubernetes": {
       "name": "Kubernetes documentation",
@@ -364,6 +364,9 @@ Gateway API defines no authentication filter; each implementation adds its own. 
 # read it. Apache's own page says of it: "This option should be used with extreme care,
 # since the password is clearly visible on the command line. For script use see the -i
 # option." -i reads it from stdin instead. Envoy Gateway's example uses -b; this does not.
+# The hidden prompts keep the password out of shell history and set +x keeps it out of set -x
+# tracing. Stdin closes the argv channel only: the account owner and root can still read it in the
+# subshell and htpasswd.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e

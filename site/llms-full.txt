@@ -1867,7 +1867,9 @@ and [Integrated Storage configuration](https://developer.hashicorp.com/vault/doc
 A fresh server starts sealed: the storage is encrypted and Vault cannot read it until it is unsealed,
 and the seal you pick decides who or what does that. Shamir splits the unseal capability into key
 shares (`vault operator init -key-shares=5 -key-threshold=3`), and a threshold of custodians must each
-supply a share at the hidden prompt to unseal; never pass a share on the command line. Auto-unseal
+supply a share at the hidden prompt to unseal; never pass a share on the command line. The prompt
+keeps the share out of the command text, shell history and tracing; the account owner and root can
+still read it in the `vault` process. Auto-unseal
 uses the configured external seal service, such as AWS KMS (`seal "awskms" { ... }`) or another
 Vault's Transit secrets engine, and instead emits recovery keys for privileged operations.
 Transit auto-unseal is available in Community; seal wrapping requires Enterprise.
@@ -1933,6 +1935,8 @@ See [token behavior](https://developer.hashicorp.com/vault/docs/concepts/tokens)
 
 For CLI authentication, select tokens through a securely injected `VAULT_TOKEN` environment variable
 or a token helper. Enter interactive login credentials and unseal shares at the prompt.
+The prompt keeps them out of the command text, shell history and tracing; the account owner and
+root can still read them in the `vault` process.
 Never put credentials in command arguments, URLs, shell history, or build logs.
 See [CLI authentication](https://developer.hashicorp.com/vault/docs/commands) and
 [login prompts](https://developer.hashicorp.com/vault/docs/commands/login).
@@ -2043,6 +2047,12 @@ field. Pass that request on stdin:
 vault write -format=json sys/wrapping/lookup - \
   < /run/secrets/payments-wrapping-lookup.json
 ```
+
+The wrapping token reaches `vault` from the request file on its stdin, so it is not in the
+command's arguments, and because the command never types it or expands a variable holding it,
+neither shell history nor `set -x` tracing records it from this command, provided the delivery
+mechanism, not a shell command containing the token, writes the file. Stdin closes the argv channel only: the account
+owner and root can still read the file and the `vault` process's memory.
 
 Check `data.creation_path`, `data.creation_time`, and `data.creation_ttl`; the latter is the
 original TTL, not the remaining lifetime. Confirm the token is still within that lifetime before
@@ -2399,6 +2409,32 @@ grant `read` on `sys/pprof/*`, covering the trailing-slash index and profiling s
 [metrics API](https://developer.hashicorp.com/vault/api-docs/system/metrics), and
 [profiling API](https://developer.hashicorp.com/vault/api-docs/system/pprof).
 
+REASONED: from the shell behaviour of file input on stdin, not from the loopback runs below, which
+did not test it. What was run: on 2026-10-13 UTC a QA review ran the following block under `bash -x`
+with its external commands stubbed and a dummy secret as the credential; no trace line carried the
+dummy secret, while a positive control that printed the file with a traced builtin `printf` did.
+A second run the same day pasted the block into Bash 5.3.9 (`bash --noprofile --norc -i`) on a
+pseudo-terminal with history enabled, with a `vault` stub that read stdin and slept four seconds
+and the observing and inspected processes under the same account: the history file held no
+contents of the JSON request file, and neither `/proc/<pid>/cmdline` (the stub's arguments were
+`write -format=json auth/approle/login -`) nor `/proc/<pid>/environ` of the stub and the block's
+subshell contained the dummy secret. In that run the observer was an ancestor of the inspected
+processes. A third run the same day, on the QA review's evaluation host, repeated the observation
+with same-account observers that were siblings of the block's shells rather than ancestors: neither
+`/proc/<pid>/cmdline` nor `/proc/<pid>/environ` of any sampled process, including the `vault`
+recording stub, the block's subshell and the outer shell, contained the dummy secret. What was not
+run: the contents of process memory are unknown, because every attempt by those observers to open
+`/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
+`/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the
+evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
+was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
+evaluation host's PATH. The following
+login request takes `role_id` and `secret_id` from the request file on
+`vault`'s stdin: no credential is typed into the command or held in a shell variable, so neither
+shell history nor `set -x` tracing records it, provided the file is prepared through protected
+delivery rather than by a shell command that contains the credentials. Stdin closes the argv
+channel only: the account owner and root can still read the file and the `vault` process's memory.
+
 **Bounded credentials and tokens (demonstrated on loopback):** prepare an owner-readable
 JSON request file containing `role_id` and `secret_id` through protected delivery. The following
 login request reads the credentials from stdin, not argv. Its successful output contains a token;
@@ -2544,6 +2580,40 @@ sixty-one-second request succeeded: the exposed comparison. In the follow-up run
 state, and both `FINDING` lines in the exposed state.
 See [required wrapping TTLs](https://developer.hashicorp.com/vault/docs/concepts/policies#required-response-wrapping-ttls)
 and [wrapping requests](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
+
+REASONED: from the shell behaviour of file input on stdin, not from the loopback lookup runs,
+which did not test it. What was run: on 2026-10-13 UTC a QA review ran both wrapping-lookup blocks
+below under `bash -x` with their external commands stubbed and a dummy secret as the token; no
+trace line carried the dummy secret, while a positive control that printed the file with a traced
+builtin `printf` did. A second run the same day pasted both blocks into Bash 5.3.9
+(`bash --noprofile --norc -i`) on a pseudo-terminal with history enabled, with a `vault` stub that
+read stdin and slept four seconds, the dummy token placed in the shell's initial environment as
+`VAULT_TOKEN`, and the observing and inspected processes under the same account: the history file
+held no token value and `/proc/<pid>/cmdline` did not contain it, but `/proc/<pid>/environ` of
+both the stub and the block's subshell contained `VAULT_TOKEN` set to the dummy token. In that run
+the observer was an ancestor of the inspected processes. A third run the same day, on the QA
+review's evaluation host, repeated the observation with same-account observers that were siblings
+of the block's shells rather than ancestors: `/proc/<pid>/cmdline` of no sampled process contained
+the dummy token, but `/proc/<pid>/environ` of the `vault` recording stub, the block's subshell and
+the outer shell, which held `VAULT_TOKEN` in its initial environment, all contained it. What was
+not run: the contents of process memory are unknown, because every attempt by those observers to
+open `/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
+`/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the
+evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
+was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
+evaluation host's PATH. This applies to both wrapping-lookup
+blocks below, the demonstrated lookup and the recipient-validation lookup. Each passes the
+protected lookup request, wrapping token included, to `vault` from a file on its stdin. Neither
+block types the token or expands a variable holding it, so neither shell history nor `set -x`
+tracing records it from the block, provided the file is prepared through protected delivery
+rather than by a shell command that contains the token. Stdin closes the argv channel only: the
+account owner and root can still read the file and the `vault` process's memory, and where
+`VAULT_TOKEN` holds the same token, as the next paragraph asks, the token is also in the
+environment of every program the shell starts while `VAULT_TOKEN` is exported, including `vault`,
+readable through `/proc/<pid>/environ` by the same account and root while each runs. Where the
+shell received `VAULT_TOKEN` in its initial environment, as in the runs above, that file also shows
+it for the shell itself and the block's subshell; a shell that sets `VAULT_TOKEN` only after it
+starts was not tested.
 
 **Recipient validation (the lookup demonstrated; the recipient's own check REASONED, since it
 belongs to the receiving application):** prepare the
@@ -4984,7 +5054,7 @@ backend app
     server app1 127.0.0.1:3000 check
 ```
 
-Hashed `password` entries rely on the system's crypt(3); `$6$` works on glibc-based Linux. Avoid `insecure-password`, which stores the password in cleartext in the configuration file. For machine-to-machine access, client certificates are stronger: add `verify required ca-file /etc/ssl/certs/internal-ca.crt` to the `bind :443` line.
+`openssl passwd -6` prompts for the password. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `openssl` process while it runs. Hashed `password` entries rely on the system's crypt(3); `$6$` works on glibc-based Linux. Avoid `insecure-password`, which stores the password in cleartext in the configuration file. For machine-to-machine access, client certificates are stronger: add `verify required ca-file /etc/ssl/certs/internal-ca.crt` to the `bind :443` line.
 
 Basic authentication here is single-factor. For human-facing sites, add MFA with an [Authelia](https://www.authelia.com/) portal (HAProxy is supported through Authelia's Lua module) or by fronting the site with Cloudflare Access; options in [mfa.md](mfa.md).
 
@@ -5058,6 +5128,8 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   curl -q -g "${base[@]}" -D - -o /dev/null -w 'redirect http=%{http_code}\n' "http://$1/"   # expect 301 + https Location
   # 2) Auth triple against ONE protected resource. No creds and wrong creds must be 401; valid creds the app's
   #    expected success. The password reaches curl through stdin config (curl --config -), never argv.
+  #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
+  #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
   curl -q -g "${base[@]}" -o /dev/null -w 'no-creds http=%{http_code}\n' "https://$1/"
   printf 'user = "admin:%s"\n' 'definitely-wrong' | curl -q -g "${base[@]}" --config - -o /dev/null -w 'bad-creds http=%{http_code}\n' "https://$1/"
   printf 'user = "admin:%s"\n' "$pw"              | curl -q -g "${base[@]}" --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$1/"
@@ -5105,6 +5177,9 @@ rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verificati
   # Stats listener (run on the HAProxy machine; --resolve keeps the certificate hostname while connecting to
   # the loopback bind): no credentials must be refused; valid credentials return the statistics.
   curl -q -g "${base[@]}" --resolve "$1:8404:127.0.0.1" -o /dev/null -w 'stats no-creds=%{http_code}\n' "https://$1:8404/stats"
+  # The stats password reaches curl through stdin config (curl --config -), never argv. The hidden prompt
+  # keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin closes the argv channel
+  # only: the account owner and root can still read it in the subshell and curl.
   IFS= read -r -s -p 'stats admin password: ' sp < /dev/tty || exit 2; echo
   case "$sp" in ''|*[[:cntrl:]]*) echo 'supply the stats password; not probing'; exit 2 ;; esac
   sp=${sp//\\/\\\\}; sp=${sp//\"/\\\"}
@@ -6076,6 +6151,9 @@ Gateway API defines no authentication filter; each implementation adds its own. 
 # read it. Apache's own page says of it: "This option should be used with extreme care,
 # since the password is clearly visible on the command line. For script use see the -i
 # option." -i reads it from stdin instead. Envoy Gateway's example uses -b; this does not.
+# The hidden prompts keep the password out of shell history and set +x keeps it out of set -x
+# tracing. Stdin closes the argv channel only: the account owner and root can still read it in the
+# subshell and htpasswd.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -6509,7 +6587,13 @@ The install generates an initial `admin` password and stores it in cleartext in 
 `argocd-initial-admin-secret`, in the `password` field. Rotate it and then delete the Secret:
 `argocd account update-password` changes the password, and the vendor says the Secret "can safely be
 deleted" afterward since it only holds the bootstrap value. Deleting the Secret does not by itself
-rotate the credential, so change the password first. `admin` is the only built-in user and a
+rotate the credential, so change the password first. Give `argocd account update-password` the current
+and new passwords at the tool's prompt, not as arguments: `--current-password` and `--new-password`
+would put them in its argv. Sources has no reference for the command prompting (its Argo CD user
+management entry is described as covering disabling admin and changing the password), so confirm
+that it does before relying on it. A prompt keeps the passwords out of the command text, shell
+history and shell tracing; the account owner and root can still read them in the `argocd` process
+while it runs. `admin` is the only built-in user and a
 superuser with unrestricted access; once you have configured SSO (OIDC or Dex) and granted named
 roles, disable it with `admin.enabled: "false"` in the `argocd-cm` ConfigMap, and pair Argo CD logins
 with your identity provider's MFA ([mfa.md](mfa.md)).
@@ -6628,7 +6712,13 @@ the RBAC on the Secrets that hold them. Bootstrap credentials are separate from 
 `flux bootstrap github --token-auth` leaves the PAT in the cluster as the `flux-system` Secret in the
 `flux-system` namespace, while `--token-auth=false` provisions an SSH deploy key that is read-only by
 default; prefer the narrowly scoped key, restrict access to that Secret, and pass any bootstrap token
-through stdin or the prompt, never Git or logs. Image automation is the exception to read-only: the
+through stdin or the prompt, never Git or logs. Typed at the prompt, the token stays out of shell
+history and `set -x` tracing. Piped in, a token typed literally into the feeding command enters
+shell history, and with `set -x` on also the trace; a token the feeding command expands from a
+variable reaches the trace with `set -x` on, but history records only the variable's name, which
+does not carry its value (a command that assigned the value literally is in history itself). Either
+way stdin closes the argv channel only: the account owner and root can still read the token in the
+`flux` process. Image automation is the exception to read-only: the
 image-automation-controller commits manifest changes back to Git and needs write access (`--read-write-key=true`
 when it uses the bootstrap deploy key), so scope that credential to the one repository, protect the
 deployment branch, use a dedicated update branch, and restrict who may edit `ImageUpdateAutomation` objects. The source-controller then serves the fetched artifacts to the
@@ -6686,6 +6776,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
 # Run in a subshell with tracing, allexport and errexit OFF, so an inherited `set -x` cannot echo the token,
 # an inherited `set -a` cannot export it (read -s and the stdin header prevent neither), and an inherited
 # `set -e` cannot end the block early.
+# The hidden prompt keeps the token out of shell history; stdin closes the argv channel only, so the
+# account owner and root can still read the token in the subshell and curl.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -6761,6 +6853,9 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 # REASONED: Flux webhook checks follow the cited receiver documentation; no live Flux is available.
 # Read the HMAC key without echo.
 # Python's hmac reads the key from stdin; only the non-secret request body is passed in argv.
+# The hidden prompt keeps the key out of shell history and set +x keeps it out of set -x tracing.
+# Stdin closes the argv channel only: the account owner and root can still read the key in the
+# subshell and python3.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -18533,7 +18628,7 @@ The exposed fixture has the plaintext listeners enabled. The fixed deployment sh
 
 **REASONED: transport and authentication require the missing server/client runtime and reachable TLS endpoints.** For the exposed authentication fixture, provision the same named account, `app_reader`, with `IDENTIFIED WITH no_password`, the same allowed client origin, and sufficient access to execute `SELECT 1`. This is an isolated alternative to the password-authenticated account in step 2. A stock passwordless `default` account does not establish anything about `app_reader`. Keep the host, certificate, interface, and request constant between fixture states. [Authentication methods](https://clickhouse.com/docs/reference/statements/create/user#identification).
 
-For the correct HTTP request, provision `~/.config/clickhouse/app-reader.headers` through a secure editor or secret-management mechanism, readable only by its owner, with two lines: `X-ClickHouse-User: app_reader` and `X-ClickHouse-Key: ` followed by the actual password. Use a nonempty, single-line password without control characters, different from the deliberate wrong-password value below. Do not put the secret in a shell command. The correct request reads both headers from that protected file on stdin, keeping the password out of curl's argv and shell history. Install the CA and native client configuration from step 4 first. For a certificate trusted by curl's system CA store, omit each `--cacert /etc/clickhouse-client/ca.crt` pair from the HTTP probes; retain certificate verification.
+For the correct HTTP request, provision `~/.config/clickhouse/app-reader.headers` through a secure editor or secret-management mechanism, readable only by its owner, with two lines: `X-ClickHouse-User: app_reader` and `X-ClickHouse-Key: ` followed by the actual password. Use a nonempty, single-line password without control characters, different from the deliberate wrong-password value below. Do not put the secret in a shell command. The correct request reads both headers from that protected file on stdin, keeping the password out of curl's argv and shell history; no shell command or variable carries it, so `set -x` tracing does not record it either. Stdin closes the argv channel only: the account owner and root can still read the password in that file and in curl's memory. Install the CA and native client configuration from step 4 first. For a certificate trusted by curl's system CA store, omit each `--cacert /etc/clickhouse-client/ca.crt` pair from the HTTP probes; retain certificate verification.
 
 Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authentication and the `X-ClickHouse-User`/`X-ClickHouse-Key` headers; avoid `user` and `password` URL parameters because intermediaries can log them. The block requires curl 7.75.0 or later for its diagnostic write-out fields. [HTTP authentication](https://clickhouse.com/docs/concepts/features/interfaces/http), [native client](https://clickhouse.com/docs/concepts/features/interfaces/client).
 
@@ -18583,6 +18678,7 @@ Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authenticat
         "https://$1:8443/?query=SELECT%201" \
         < "$HOME/.config/clickhouse/app-reader.headers"
 
+      # The password prompts keep the password out of the command; the account owner and root can still read it in the clickhouse-client process.
       echo '[native wrong password: enter a deliberately wrong password]'
       clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
         --host "$1" --port 9440 --secure --user app_reader --query 'SELECT 1' --password
@@ -18625,6 +18721,7 @@ In the deliberately authentication-disabled fixture, empty, wrong, and supplied 
           exit 2
           ;;
         *)
+          # The password prompt keeps the password out of the command; the account owner and root can still read it in the clickhouse-client process.
           clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
             --host "$1" --port 9440 --secure --user "$2" --password
           ;;
@@ -22100,6 +22197,8 @@ Review outbound requests too. Meilisearch v1.8 through v1.34.0 need upgrading fo
 
 ## Verify
 
+REASONED: from the shell behaviour of the hidden prompt (`read -s`) and of `set +x`, not from the loopback runs described next, which did not test it. What was run: on 2026-10-13 UTC a QA review ran the paired-request block under `bash -x` with its external commands stubbed and a dummy secret fed to the prompts on a pseudo-terminal; no trace line carried the dummy secret, and the same block with its `set +x` removed traced it. A second run the same day pasted the block into Bash 5.3.9 (`bash --noprofile --norc -i`) on a pseudo-terminal with history enabled, with stub commands that read stdin and slept four seconds, a dummy secret entered at the prompts, and the observing and inspected processes under the same account: the history file held the pasted block, with its literal `$audit_key` references, but no prompt response, and neither `/proc/<pid>/cmdline` nor `/proc/<pid>/environ` of the stubs, the block's subshell or its command-substitution shells contained the dummy secret. In that run the observer was an ancestor of the inspected processes. A third run the same day, on the QA review's evaluation host, repeated the observation with same-account observers that were siblings of the block's shells rather than ancestors: neither `/proc/<pid>/cmdline` nor `/proc/<pid>/environ` of any sampled process, including the recording stubs, the command-substitution shells, the block's subshell and the outer shell, contained the dummy secret. What was not run: the contents of process memory are unknown, because every attempt by those observers to open `/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where `/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag was set); and no real curl request to a live Meilisearch or Typesense service ran, because `meilisearch` and `typesense-server` were not on the evaluation host's PATH (every run used a recording curl stub). In the paired-request block below, the hidden prompts keep the keys out of shell history and the block's `set +x` keeps them out of `set -x` tracing, but stdin closes the argv channel only, so the keys stay visible to the account owner and root.
+
 DEMONSTRATED: following block; the checks below were demonstrated on loopback against the Meilisearch v1.53.2 release binary (its SHA-256 matched the digest GitHub publishes for the asset) and the Typesense 30.2 server (its MD5 matched the one in the release tarball), each with native TLS on 127.0.0.1, or behind a Caddy TLS proxy for the proxy checks, with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and every address set before start. The blocks ran as printed with only their `set --` values substituted, and keys were fed to the prompts on stdin. What those runs do not show is marked **REASONED** where it occurs, with its reason. Backlog row 1.117 retains the real-client-build positive and negative controls for the credential scan below; its hand-built fixtures do not supply a real client bundle. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
 
 ```bash
@@ -24212,7 +24311,7 @@ server {
 }
 ```
 
-Substitute the hostname and certificate paths. Generate password entries with `htpasswd -B -C 12`, using its interactive password prompt and the intended password-file path and username. Bare `-B` defaults to bcrypt cost 5, below OWASP's minimum of 10; regenerate existing cost-5 hashes. Protect the password file and its backups. See [nginx Basic authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html), [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html), and [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
+Substitute the hostname and certificate paths. Generate password entries with `htpasswd -B -C 12`, using its interactive password prompt and the intended password-file path and username. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `htpasswd` process while it runs. Bare `-B` defaults to bcrypt cost 5, below OWASP's minimum of 10; regenerate existing cost-5 hashes. Protect the password file and its backups. See [nginx Basic authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html), [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html), and [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
 
 Authentication is at `server` scope so every permitted location inherits it. Do not disable it in an added inference location. A denied path or method can return 404 or 405 before authentication; those responses do not imply access to Ollama.
 
@@ -24248,7 +24347,7 @@ ollama.example.com {
 }
 ```
 
-Generate the hash with `caddy hash-password`. The exact matcher and fallback keep other paths private. Stock Caddy has no built-in rate-limiting directive; provide the admission and resource controls in C6 through a suitable fronting layer before publishing this alternative. See [Basic authentication](https://caddyserver.com/docs/caddyfile/directives/basic_auth), [request matchers](https://caddyserver.com/docs/caddyfile/matchers), [exclusive handles](https://caddyserver.com/docs/caddyfile/directives/handle), and [reverse proxy configuration](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy).
+Generate the hash with `caddy hash-password`. Run it without `--plaintext`, which would put the password in its arguments, and enter the password at its prompt. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `caddy` process while it runs. The exact matcher and fallback keep other paths private. Stock Caddy has no built-in rate-limiting directive; provide the admission and resource controls in C6 through a suitable fronting layer before publishing this alternative. See [Basic authentication](https://caddyserver.com/docs/caddyfile/directives/basic_auth), [request matchers](https://caddyserver.com/docs/caddyfile/matchers), [exclusive handles](https://caddyserver.com/docs/caddyfile/directives/handle), and [reverse proxy configuration](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy).
 
 ### Bearer-only clients
 
@@ -24674,7 +24773,7 @@ Use the normal trust store when appropriate. Escape backslashes and double quote
 
 Inspect these files before use: allow only the intended authentication, trust, client-certificate, and test-header settings. Do not include URLs, redirects, proxy settings, insecure TLS options, extra transfers, or request/output overrides. An intentional `resolve` entry can support a hostname-negative test against the same server address. The files are trusted test inputs, not a safe format for untrusted instructions.
 
-The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
+The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of curl. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
 
 ```bash
 (
@@ -24789,7 +24888,7 @@ Repeat the actual POST with and without Origin. Removing Origin must not bypass 
 
 ### V6. Exercise finite admission and resource budgets (REASONED: admission, body size, model loading, expiry, parameter overrides, queue capacity and recovery comparisons follow C6 scheduler/types and nginx limit references; no inference runtime, loaded model, capacity fixture or GPU. Local V6 marker files above demonstrate child completion only, not either limiter or successful inference)
 
-**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Use only an isolated capacity test with the same small, valid chat fixture as V3:
+**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Like V3's reusable probe, it reads the client configuration on each curl's stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of each curl. Use only an isolated capacity test with the same small, valid chat fixture as V3:
 
 ```bash
 (
@@ -27377,6 +27476,8 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
     -w '\nunauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
   # 2) Authenticated positive control: paste a cookie from a valid browser session; it enters via stdin
   #    (curl --header @-), never argv. The authenticated response must contain the editor.
+  #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
+  #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
   { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
@@ -31480,6 +31581,9 @@ ss -tlnp   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8
 
 # Prefect: an empty JSON filter. Once the auth string is set the anonymous call is 401 and the authorized call
 # returns a JSON flow list; an anonymous list, even an empty one, is the finding. Feed the auth string on stdin.
+# getpass prompts without echo on a terminal, so the auth string enters neither shell history nor set -x
+# tracing; stdin closes the argv channel only, and the account owner and root can still read it in
+# python3 and curl.
 # Do NOT use /api/health or /api/ready as the authentication discriminator. Current server source exempts
 # those GET paths; this behavior is version-dependent and was not present in 3.1.8.
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
@@ -31506,7 +31610,9 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
 # Airflow: obtaining a token from the documented Compose account is the finding. Send the credentials as JSON
 # on stdin; FAB 3.9.0 returns 201 Created with a nonempty access_token when airflow/airflow works. Compare with a valid account on
 # the same route, and test an API read with no token then a token at the proxy and the origin. On Airflow 2 use
-# its /api/v1/ endpoint and its own auth mechanism instead.
+# its /api/v1/ endpoint and its own auth mechanism instead. A real password typed into the printf line below for
+# that comparison enters shell history and, with set -x on, the trace; stdin closes curl's argv channel only,
+# and the account owner and root can still read the password in curl.
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 printf '{"username":"%s","password":"%s"}' 'airflow' 'airflow' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -31562,6 +31668,9 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   https://argo.internal:2746/api/v1/workflows/argo
 # Enter a Kubernetes bearer token (client mode) or an Argo session token (SSO mode) with list permission in
 # this namespace. The token goes to curl on stdin, never argv.
+# getpass prompts without echo on a terminal, so the token enters neither shell history nor set -x
+# tracing; stdin closes the argv channel only, and the account owner and root can still read it in
+# python3 and curl.
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 python3 -c 'import getpass; t=getpass.getpass("Argo bearer token (without Bearer prefix): "); assert t and all(33 <= ord(c) <= 126 for c in t), "invalid token"; print("Authorization: Bearer " + t)' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
@@ -32432,7 +32541,7 @@ The admin UI is on port `81`; the proxy itself is on `80`/`443`. Port `81` is ne
 
 - The web vault needs HTTPS (browsers expose the crypto APIs it uses only in secure contexts). The wiki recommends a reverse proxy for TLS ([caddy.md](caddy.md), [nginx.md](nginx.md)) and rates the built-in `ROCKET_TLS` as not recommended. Set `DOMAIN=https://vault.example.com`.
 - `SIGNUPS_ALLOWED=false` (the default is `true`, letting anyone who reaches the instance register). Organization owners and admins can still invite users while `INVITATIONS_ALLOWED=true`; `SIGNUPS_DOMAINS_WHITELIST` admits specific email domains.
-- The admin page is disabled unless `ADMIN_TOKEN` is set. Store it as an argon2id PHC string generated with `vaultwarden hash` (or `docker run --rm -it vaultwarden/server /vaultwarden hash`), never plaintext; in a compose `environment:` block every `$` in the hash becomes `$$`. Enable HTTPS before enabling the admin page. Admin sessions expire after 20 minutes by default.
+- The admin page is disabled unless `ADMIN_TOKEN` is set. Store it as an argon2id PHC string generated with `vaultwarden hash` (or `docker run --rm -it vaultwarden/server /vaultwarden hash`), never plaintext; in a compose `environment:` block every `$` in the hash becomes `$$`. Enter the password at the tool's prompt; Sources has no reference for `vaultwarden hash` prompting (its Vaultwarden entry is described as covering the admin page and `ADMIN_TOKEN`, registration, HTTPS and the `.env.template`), so confirm that it does before relying on it. A prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `vaultwarden` process while it runs, and in the `docker run -it` form the `docker` client relays it, so anyone who can use the Docker daemon can read it too. Enable HTTPS before enabling the admin page. Admin sessions expire after 20 minutes by default.
 - Inside a container it listens on `80` (`8000` outside Docker); publish it only to loopback or the proxy network.
 
 ## Kubernetes Dashboard
@@ -32486,14 +32595,14 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 ## Dozzle
 
 - Dozzle reads the Docker socket to show logs, the same host-level access the Docker API section above describes ([docker.md](docker.md)); a Dozzle login is a login to the host.
-- Authentication is off unless configured. Generate a `users.yml` with `docker run -it --rm amir20/dozzle generate admin > users.yml` (omit `--password` and Dozzle prompts for it on stdin, so it never lands in shell history), mount that file into the container, and set `DOZZLE_AUTH_PROVIDER=simple`; or set `DOZZLE_AUTH_PROVIDER=forward-proxy` to delegate login to a fronting proxy such as Authelia, Authentik, or Cloudflare Access.
+- Authentication is off unless configured. Generate a `users.yml` with `docker run -it --rm amir20/dozzle generate admin > users.yml` (omit `--password` and Dozzle prompts for it on stdin, so it never lands in shell history or `set -x` tracing; stdin closes the argv channel only, so the password stays visible to your own account and root while the `docker` client relays it, and to anyone who can use the Docker daemon), mount that file into the container, and set `DOZZLE_AUTH_PROVIDER=simple`; or set `DOZZLE_AUTH_PROVIDER=forward-proxy` to delegate login to a fronting proxy such as Authelia, Authentik, or Cloudflare Access.
 - Container actions (start, stop, recreate) and shell access into a running container can be turned on; leave both off unless a specific workflow needs them, since either turns a log viewer into remote command execution on the host.
 - Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet, or Access, with MFA at the fronting layer, like every panel above.
 
 ## Docker Registry (`registry:2`)
 
 - The reference registry image ships with no authentication at all: anyone who reaches the port can push and pull every image, and TLS must be configured before any authentication scheme works, since credentials would otherwise cross the wire in clear text.
-- Restrict access with htpasswd basic authentication, a token server, or a registry distribution that has its own authentication built in. If using the registry's own native htpasswd auth provider (set directly in the registry's `config.yml`), credentials must be bcrypt-hashed at a strong cost (`htpasswd -B -C 12`; bare -B is cost 5, below the OWASP minimum of 10); the registry rejects any non-bcrypt hash format. If instead a reverse proxy sits in front and does its own basic authentication from its own htpasswd file, that proxy's own hashing rules apply, not the registry's.
+- Restrict access with htpasswd basic authentication, a token server, or a registry distribution that has its own authentication built in. If using the registry's own native htpasswd auth provider (set directly in the registry's `config.yml`), credentials must be bcrypt-hashed at a strong cost (bare `-B` is cost 5, below the OWASP minimum of 10); the registry rejects any non-bcrypt hash format. Generate each entry with `htpasswd -B -C 12`, using its interactive password prompt and the intended password-file path and username, never `-b`, which takes the password as an argument. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `htpasswd` process while it runs. If instead a reverse proxy sits in front and does its own basic authentication from its own htpasswd file, that proxy's own hashing rules apply, not the registry's.
 - Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet, or Access, with MFA at the fronting layer.
 
 ## Filebrowser
@@ -32504,7 +32613,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 ## Node-RED
 
 - The editor and admin API on `1880` have no authentication at all by default; anyone who reaches the port can view, deploy, and modify flows.
-- Set `adminAuth` in `settings.js` with bcrypt-hashed user passwords (`node-red admin hash-pw` generates the hash), and set `credentialSecret` to a value you control, since Node-RED otherwise generates one for you and stored credentials are only as protected as that secret.
+- Set `adminAuth` in `settings.js` with bcrypt-hashed user passwords (`node-red admin hash-pw` generates the hash), and set `credentialSecret` to a value you control, since Node-RED otherwise generates one for you and stored credentials are only as protected as that secret. Give `hash-pw` the password at the tool's prompt, not as an argument; Sources has no reference for `hash-pw` prompting (its Node-RED entry is described as covering `adminAuth` and `credentialSecret`), so confirm that it does before relying on it. A prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `node-red` process while it runs.
 - Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet, or Access, with MFA at the fronting layer; the editor is equivalent to a shell on whatever the flows can reach.
 
 ## Verify
@@ -33980,6 +34089,9 @@ REASONED: following block; the canary function comparison follows the cited envi
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The anon JWT you substitute on the set -- line enters shell history; clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the JWT from set -x tracing, your own account
+  # or root.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BASE_URL' 'REPLACE_WITH_A_FUNCTION_NAME' 'REPLACE_WITH_CURRENT_ANON_JWT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -36652,7 +36764,12 @@ the deployment's password policy:
 
 The request can create an account on a misconfigured instance. Run it only on the disposable
 fixture or an explicitly designated registration-test deployment. Use the API origin serving
-the console project, not a guessed `/console` UI path.
+the console project, not a guessed `/console` UI path. The block feeds the signup JSON, test
+password included, to curl on stdin from the protected file: no password is typed into the command
+or held in a shell variable, so neither shell history nor `set -x` tracing records it, provided the
+file is prepared with an editor, not a shell command containing the password, which would enter
+shell history. Stdin closes the argv channel only; the account owner and root can still read the
+file and curl's memory.
 
 REASONED: following block; console registration comparisons follow the pinned Appwrite handler; no disposable Appwrite installation or controlled signup fixture was available.
 
@@ -36711,7 +36828,7 @@ never command arguments.
 | --- | --- |
 | Appwrite console MFA | **REASONED:** Requires an unavailable live Appwrite console fixture and controlled operator account with a TOTP authenticator. Using the operator's session and `X-Appwrite-Project: console`, request `GET /v1/account` without an API key. With MFA disabled, password authentication permits this request. Enable MFA and verify the TOTP factor, then create a fresh password-only session: the same request must return `user_more_factors_required`. Complete the TOTP challenge in that session and repeat the request: expect 200 with the operator's account data. See [console MFA](https://appwrite.io/docs/advanced/security/mfa) and [MFA enforcement](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/controllers/shared/api.php). |
 | PocketBase writes and management | **REASONED:** Exercise `POST /api/collections/REPLACE_WITH_COLLECTION/records`, then `PATCH` and `DELETE` on disposable record URLs, using valid bodies. Public rules expose the actions; locked or restrictive rules must deny unauthorized changes while intended users still succeed. Separately attempt changing another auth record's email, password, and `verified` field: locked `manageRule` must not grant privileged management; an explicitly authorized manager must succeed only where intended. Confirm collection configuration rejects `manageRule=""`. See [CRUD handlers](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/record_crud.go) and [management validation](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/core/collection_model_auth_options.go). |
-| PocketBase protected files | **REASONED:** GET a known fixture file at `/api/files/REPLACE_WITH_COLLECTION/REPLACE_WITH_RECORD/REPLACE_WITH_FILENAME`. Before protection, its unsigned URL downloads despite locked record access. Enable Protected and a `viewRule` that permits the intended ordinary user but denies guests and an unrelated ordinary user. File-token issuance does not check access to a particular file: authenticated users can obtain tokens. Confirm the unrelated user's `pb.files.getToken()` succeeds, then GET the protected fixture using that user's token-bearing SDK URL: expect 404. The permitted user's `pb.files.getToken()` must also succeed, and GET with that user's token-bearing SDK URL must return the expected fixture bytes as a positive control. Separately, an unsigned guest GET of the same protected file must return 404. Use the SDK for signed URLs, or feed a protected curl configuration through stdin. See [download checks](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/file.go). |
+| PocketBase protected files | **REASONED:** GET a known fixture file at `/api/files/REPLACE_WITH_COLLECTION/REPLACE_WITH_RECORD/REPLACE_WITH_FILENAME`. Before protection, its unsigned URL downloads despite locked record access. Enable Protected and a `viewRule` that permits the intended ordinary user but denies guests and an unrelated ordinary user. File-token issuance does not check access to a particular file: authenticated users can obtain tokens. Confirm the unrelated user's `pb.files.getToken()` succeeds, then GET the protected fixture using that user's token-bearing SDK URL: expect 404. The permitted user's `pb.files.getToken()` must also succeed, and GET with that user's token-bearing SDK URL must return the expected fixture bytes as a positive control. Separately, an unsigned guest GET of the same protected file must return 404. Use the SDK for signed URLs, or feed a protected curl configuration through stdin; that keeps the token-bearing URL out of curl's argv only. Prepare the file with an editor, not a shell command that contains the URL, which would put it in shell history and `set -x` tracing, and the account owner and root can still read the file and curl's memory. See [download checks](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/file.go). |
 | PocketBase realtime | **REASONED:** Establish `GET /api/realtime`, then `POST /api/realtime` subscriptions for both `REPLACE_WITH_COLLECTION/*` and a specific fixture record. Change that record through an authorized writer. Public rules expose events; restrictive list/view rules must suppress unauthorized delivery while an authorized subscriber receives the same mutation. A `PB_CONNECT` event or subscription acknowledgement is insufficient. See [Realtime API](https://pocketbase.io/docs/api-realtime/). |
 | PocketBase MFA, verification, and tokens | **REASONED:** Use `POST /api/collections/_superusers/auth-with-password`, followed by the OTP flow through `/request-otp` and `/auth-with-otp`. Without MFA, password authentication completes; with password, OTP, and MFA enabled, the first factor must not complete authentication, while the correct second factor does. For application users, compare password login for otherwise valid verified and unverified accounts with `authRule="verified = true"`. Retain a test token privately, clear the SDK auth store, and retry an allowed record request with the retained token: clearing local state alone must not revoke it. See [authentication flows](https://pocketbase.io/docs/authentication/). |
 | PocketBase IP and proxy boundary | **REASONED:** Repeat an authorized superuser resource GET from allowed and excluded source addresses. With no allowlist both can work; with the allowlist the excluded address must receive 403. Forged forwarded-IP headers must not change that result through the proxy. From a second host, test the actual backend address and port as well as the proxy: direct backend access must be blocked, while the permitted proxy route works. If the UI is private, separately test GET `/_/` from both networks. See [IP enforcement](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/middlewares.go) and [proxy settings](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/core/settings_model.go). |
@@ -37069,10 +37186,20 @@ These are REASONED expectations from the cited configuration, API documentation 
 handler, not live observations; this authoring environment has no container runtime and cannot
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
 deployment must also deny the external path while an authorized internal control still succeeds.
-Pass the correct token through curl's stdin configuration, not a literal URL in shell history or
-argv. For the Playwright server on the port you configured (`launchServer` uses an ephemeral port
-unless you set one; `run-server` takes `--port`), any HTTP answer means the port is reachable and
-is already the finding. The distinguishing behaviour for each is in the cited vendor pages.
+Pass the correct token through curl's stdin configuration, as a `url = "...?token=..."` line fed to
+`--config -`, not a literal URL in shell history or argv. Because the config value is double-quoted,
+escape a backslash and then a double quote in the token before substituting it, and refuse a token
+containing a control character, so a pasted newline cannot inject a second directive. Enter the
+token at a hidden prompt in a clean shell under the `read` exception guards of
+CONTRIBUTING rule 7 (`search-engines.md`'s paired block is the model): `trap - DEBUG RETURN ERR`
+first, then `set +x +a +e` before the read, `unset -n` and then `unset -v` on the variable, failing
+closed if either fails, and a refusal of a readonly `IFS`. Without `+a`, an inherited `set -a` would
+export the token. A token typed into the command still enters shell history and `set -x` tracing,
+and stdin closes the argv channel only, so the token stays visible to the account owner and root.
+For the Playwright server on the port you configured
+(`launchServer` uses an ephemeral port unless you set one; `run-server` takes `--port`), any HTTP
+answer means the port is reachable and is already the finding. The distinguishing behaviour for
+each is in the cited vendor pages.
 
 **REASONED browserless file-protocol check:** no live instance was tested: the authoring host forbids
 opening listeners without an isolated network namespace, and has none. With

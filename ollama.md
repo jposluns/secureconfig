@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "47e500f3f0a094ca6eba59c4ae2409b1d7cfe369cd193867b31216c6e7a1588c",
+  "body_sha256": "fe91d990b7d6e65780106bd5b6a4a26c0b626484fddc6462b5fa98fc1e78addf",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -351,7 +351,7 @@ server {
 }
 ```
 
-Substitute the hostname and certificate paths. Generate password entries with `htpasswd -B -C 12`, using its interactive password prompt and the intended password-file path and username. Bare `-B` defaults to bcrypt cost 5, below OWASP's minimum of 10; regenerate existing cost-5 hashes. Protect the password file and its backups. See [nginx Basic authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html), [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html), and [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
+Substitute the hostname and certificate paths. Generate password entries with `htpasswd -B -C 12`, using its interactive password prompt and the intended password-file path and username. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `htpasswd` process while it runs. Bare `-B` defaults to bcrypt cost 5, below OWASP's minimum of 10; regenerate existing cost-5 hashes. Protect the password file and its backups. See [nginx Basic authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html), [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html), and [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
 
 Authentication is at `server` scope so every permitted location inherits it. Do not disable it in an added inference location. A denied path or method can return 404 or 405 before authentication; those responses do not imply access to Ollama.
 
@@ -387,7 +387,7 @@ ollama.example.com {
 }
 ```
 
-Generate the hash with `caddy hash-password`. The exact matcher and fallback keep other paths private. Stock Caddy has no built-in rate-limiting directive; provide the admission and resource controls in C6 through a suitable fronting layer before publishing this alternative. See [Basic authentication](https://caddyserver.com/docs/caddyfile/directives/basic_auth), [request matchers](https://caddyserver.com/docs/caddyfile/matchers), [exclusive handles](https://caddyserver.com/docs/caddyfile/directives/handle), and [reverse proxy configuration](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy).
+Generate the hash with `caddy hash-password`. Run it without `--plaintext`, which would put the password in its arguments, and enter the password at its prompt. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `caddy` process while it runs. The exact matcher and fallback keep other paths private. Stock Caddy has no built-in rate-limiting directive; provide the admission and resource controls in C6 through a suitable fronting layer before publishing this alternative. See [Basic authentication](https://caddyserver.com/docs/caddyfile/directives/basic_auth), [request matchers](https://caddyserver.com/docs/caddyfile/matchers), [exclusive handles](https://caddyserver.com/docs/caddyfile/directives/handle), and [reverse proxy configuration](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy).
 
 ### Bearer-only clients
 
@@ -813,7 +813,7 @@ Use the normal trust store when appropriate. Escape backslashes and double quote
 
 Inspect these files before use: allow only the intended authentication, trust, client-certificate, and test-header settings. Do not include URLs, redirects, proxy settings, insecure TLS options, extra transfers, or request/output overrides. An intentional `resolve` entry can support a hostname-negative test against the same server address. The files are trusted test inputs, not a safe format for untrusted instructions.
 
-The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
+The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of curl. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
 
 ```bash
 (
@@ -928,7 +928,7 @@ Repeat the actual POST with and without Origin. Removing Origin must not bypass 
 
 ### V6. Exercise finite admission and resource budgets (REASONED: admission, body size, model loading, expiry, parameter overrides, queue capacity and recovery comparisons follow C6 scheduler/types and nginx limit references; no inference runtime, loaded model, capacity fixture or GPU. Local V6 marker files above demonstrate child completion only, not either limiter or successful inference)
 
-**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Use only an isolated capacity test with the same small, valid chat fixture as V3:
+**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Like V3's reusable probe, it reads the client configuration on each curl's stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of each curl. Use only an isolated capacity test with the same small, valid chat fixture as V3:
 
 ```bash
 (

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "1b0cff9f5ef3c50b51c9062f2eeae68075ddcb6ce76331d94a88208b774dda25",
+  "body_sha256": "7cea8ce7dc2689ed90673f4d926b8259c0c8f0b24281b47ea184dfe91ffa1289",
   "components": {
     "portainer": {
       "name": "Portainer",
@@ -335,7 +335,7 @@ The admin UI is on port `81`; the proxy itself is on `80`/`443`. Port `81` is ne
 
 - The web vault needs HTTPS (browsers expose the crypto APIs it uses only in secure contexts). The wiki recommends a reverse proxy for TLS ([caddy.md](caddy.md), [nginx.md](nginx.md)) and rates the built-in `ROCKET_TLS` as not recommended. Set `DOMAIN=https://vault.example.com`.
 - `SIGNUPS_ALLOWED=false` (the default is `true`, letting anyone who reaches the instance register). Organization owners and admins can still invite users while `INVITATIONS_ALLOWED=true`; `SIGNUPS_DOMAINS_WHITELIST` admits specific email domains.
-- The admin page is disabled unless `ADMIN_TOKEN` is set. Store it as an argon2id PHC string generated with `vaultwarden hash` (or `docker run --rm -it vaultwarden/server /vaultwarden hash`), never plaintext; in a compose `environment:` block every `$` in the hash becomes `$$`. Enable HTTPS before enabling the admin page. Admin sessions expire after 20 minutes by default.
+- The admin page is disabled unless `ADMIN_TOKEN` is set. Store it as an argon2id PHC string generated with `vaultwarden hash` (or `docker run --rm -it vaultwarden/server /vaultwarden hash`), never plaintext; in a compose `environment:` block every `$` in the hash becomes `$$`. Enter the password at the tool's prompt; Sources has no reference for `vaultwarden hash` prompting (its Vaultwarden entry is described as covering the admin page and `ADMIN_TOKEN`, registration, HTTPS and the `.env.template`), so confirm that it does before relying on it. A prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `vaultwarden` process while it runs, and in the `docker run -it` form the `docker` client relays it, so anyone who can use the Docker daemon can read it too. Enable HTTPS before enabling the admin page. Admin sessions expire after 20 minutes by default.
 - Inside a container it listens on `80` (`8000` outside Docker); publish it only to loopback or the proxy network.
 
 ## Kubernetes Dashboard
@@ -389,14 +389,14 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 ## Dozzle
 
 - Dozzle reads the Docker socket to show logs, the same host-level access the Docker API section above describes ([docker.md](docker.md)); a Dozzle login is a login to the host.
-- Authentication is off unless configured. Generate a `users.yml` with `docker run -it --rm amir20/dozzle generate admin > users.yml` (omit `--password` and Dozzle prompts for it on stdin, so it never lands in shell history), mount that file into the container, and set `DOZZLE_AUTH_PROVIDER=simple`; or set `DOZZLE_AUTH_PROVIDER=forward-proxy` to delegate login to a fronting proxy such as Authelia, Authentik, or Cloudflare Access.
+- Authentication is off unless configured. Generate a `users.yml` with `docker run -it --rm amir20/dozzle generate admin > users.yml` (omit `--password` and Dozzle prompts for it on stdin, so it never lands in shell history or `set -x` tracing; stdin closes the argv channel only, so the password stays visible to your own account and root while the `docker` client relays it, and to anyone who can use the Docker daemon), mount that file into the container, and set `DOZZLE_AUTH_PROVIDER=simple`; or set `DOZZLE_AUTH_PROVIDER=forward-proxy` to delegate login to a fronting proxy such as Authelia, Authentik, or Cloudflare Access.
 - Container actions (start, stop, recreate) and shell access into a running container can be turned on; leave both off unless a specific workflow needs them, since either turns a log viewer into remote command execution on the host.
 - Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet, or Access, with MFA at the fronting layer, like every panel above.
 
 ## Docker Registry (`registry:2`)
 
 - The reference registry image ships with no authentication at all: anyone who reaches the port can push and pull every image, and TLS must be configured before any authentication scheme works, since credentials would otherwise cross the wire in clear text.
-- Restrict access with htpasswd basic authentication, a token server, or a registry distribution that has its own authentication built in. If using the registry's own native htpasswd auth provider (set directly in the registry's `config.yml`), credentials must be bcrypt-hashed at a strong cost (`htpasswd -B -C 12`; bare -B is cost 5, below the OWASP minimum of 10); the registry rejects any non-bcrypt hash format. If instead a reverse proxy sits in front and does its own basic authentication from its own htpasswd file, that proxy's own hashing rules apply, not the registry's.
+- Restrict access with htpasswd basic authentication, a token server, or a registry distribution that has its own authentication built in. If using the registry's own native htpasswd auth provider (set directly in the registry's `config.yml`), credentials must be bcrypt-hashed at a strong cost (bare `-B` is cost 5, below the OWASP minimum of 10); the registry rejects any non-bcrypt hash format. Generate each entry with `htpasswd -B -C 12`, using its interactive password prompt and the intended password-file path and username, never `-b`, which takes the password as an argument. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `htpasswd` process while it runs. If instead a reverse proxy sits in front and does its own basic authentication from its own htpasswd file, that proxy's own hashing rules apply, not the registry's.
 - Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet, or Access, with MFA at the fronting layer.
 
 ## Filebrowser
@@ -407,7 +407,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 ## Node-RED
 
 - The editor and admin API on `1880` have no authentication at all by default; anyone who reaches the port can view, deploy, and modify flows.
-- Set `adminAuth` in `settings.js` with bcrypt-hashed user passwords (`node-red admin hash-pw` generates the hash), and set `credentialSecret` to a value you control, since Node-RED otherwise generates one for you and stored credentials are only as protected as that secret.
+- Set `adminAuth` in `settings.js` with bcrypt-hashed user passwords (`node-red admin hash-pw` generates the hash), and set `credentialSecret` to a value you control, since Node-RED otherwise generates one for you and stored credentials are only as protected as that secret. Give `hash-pw` the password at the tool's prompt, not as an argument; Sources has no reference for `hash-pw` prompting (its Node-RED entry is described as covering `adminAuth` and `credentialSecret`), so confirm that it does before relying on it. A prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `node-red` process while it runs.
 - Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet, or Access, with MFA at the fronting layer; the editor is equivalent to a shell on whatever the flows can reach.
 
 ## Verify
