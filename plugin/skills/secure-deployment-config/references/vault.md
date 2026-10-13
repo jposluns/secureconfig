@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e3c12bf66ccbd730a671f26446cb0bf52d1a412c503ec568f2d101aaf56b6e00",
+  "body_sha256": "dc62827d786fdf1f030f51f61217aa4c346524f79e7100c79e5ec23f6d441754",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -374,7 +374,7 @@ See [token behavior](https://developer.hashicorp.com/vault/docs/concepts/tokens)
 [root generation](https://developer.hashicorp.com/vault/docs/commands/operator/generate-root).
 
 For CLI authentication, select tokens through a securely injected `VAULT_TOKEN` environment variable
-or a token helper. Enter interactive login credentials and unseal shares at the prompt.
+or a token helper. `VAULT_TOKEN` moves a token out of argv, not out of reach: while exported it is in the environment of every program the shell starts, readable through `/proc/<pid>/environ` by the same account and root, and where the shell received it at startup, in the shell's own. Enter interactive login credentials and unseal shares at the prompt.
 The prompt keeps them out of the command text, shell history and tracing; the account owner and
 root can still read them in the `vault` process.
 Never put credentials in command arguments, URLs, shell history, or build logs.
@@ -507,6 +507,15 @@ token argument:
 vault unwrap
 ```
 
+No token is typed into this command, so the wrapping token is not in `vault`'s arguments, and
+neither shell history nor `set -x` tracing records it from this command. `VAULT_TOKEN` moves it out
+of argv, not out of reach: while the variable is exported, the token is in the environment of every
+program the shell starts, including `vault`, readable through `/proc/<pid>/environ` by the same
+account and root while each runs, and where the shell received `VAULT_TOKEN` in its initial
+environment, that file also shows it for the shell itself. Whoever reads it there before the unwrap
+can unwrap it first, which leaves the recipient's unwrap failing on a consumed token; investigate
+that as above. The opportunity to unwrap ends when the token is consumed or expires; its bytes can remain exposed in process environments afterward.
+
 Protect the output, which contains the SecretID. Response wrapping is available in Community;
 this example targets current behavior. The conceptual reference notes that some wrapping-token
 features date from Vault 0.8 and may be unavailable before that version.
@@ -579,12 +588,17 @@ For authenticated and on-host checks, transport failure, TLS failure, an unexpec
 missing positive control is inconclusive, never the fixed state.
 See [curl write-out fields](https://curl.se/docs/manpage.html#-w).
 
+REASONED: from the Vault CLI environment and token-helper documentation and the curl manual page
+cited in Sources, and from the guards in the blocks below, not from the loopback runs, which record
+no run with altered shell builtins, an apostrophe in a placeholder, or inherited proxy settings or
+Vault proxy overrides. The `VAULT_TOKEN` environment exposure rests on the stubbed QA runs recorded
+at the wrapping-lookup blocks below (same-account observers, no real `vault` client, root not tested).
 Paste whole blocks and substitute inside the single quotes. Use the base HTTPS URL without a
 trailing slash where a block appends an API path. Never embed credentials in a URL. These guards
 assume ordinary shell builtins; do not insert a literal apostrophe into a single-quoted placeholder.
 Use a clean shell without inherited HTTP proxy settings or Vault proxy overrides for direct CLI
 checks. Select each CLI identity through securely injected `VAULT_TOKEN` or its token helper;
-do not paste token values into commands. Keep credential-bearing CLI output out of recordings and
+do not paste token values into commands. An exported `VAULT_TOKEN` is still readable through process environments (section 6). Keep credential-bearing CLI output out of recordings and
 build logs.
 
 **Listener, health, audit, root revocation, and role inspection (demonstrated on loopback):** run
@@ -729,6 +743,14 @@ cluster port, because `cluster_address` defaults to one port above `address`.
 owner-readable header file containing the selected identity's `X-Vault-Token` header through a
 protected mechanism. The file must contain the actual header, not a shell variable reference.
 Use only the intended authentication header, and remove the file when finished.
+
+REASONED: from curl's header-file input in the manual page cited in Sources, not from the loopback
+runs, which did not observe it. In the two blocks below, of the credential, only the header file's path enters curl's
+argv, through `--header "@$3"`; curl reads the `X-Vault-Token` header from the file. The blocks
+never type the token or expand a variable holding it, so neither shell history nor `set -x` tracing
+records it from the blocks, provided the file is prepared through protected delivery rather than by
+a shell command that contains the token. A header file closes the argv channel only: the account
+owner and root can still read the file and the memory of each curl process while it runs.
 
 Run this block for each full endpoint URL and identity described below. It reports an anonymous
 request followed by the same request with the selected credential; response bodies are discarded
@@ -1136,6 +1158,17 @@ creation time, and a lookup of the consumed token failed with `wrapping token is
 not exist`. A wrapping token looked up three seconds after its two-second TTL failed the same way.
 See [wrapping lookup fields](https://developer.hashicorp.com/vault/api-docs/system/wrapping-lookup)
 and [recipient validation](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
+
+REASONED: from the environment behaviour recorded above for the wrapping-lookup blocks, not from
+the loopback unwrap runs, which did not observe it. The single-use unwrap block below takes the
+wrapping token from `VAULT_TOKEN`, not from its arguments or a file: the block never types the
+token or expands a variable holding it, so neither shell history nor `set -x` tracing records it
+from the block. That closes the argv channel only. While `VAULT_TOKEN` is exported, the token is in
+the environment of every program the shell starts, including `vault`, readable through
+`/proc/<pid>/environ` by the same account and root while each runs; where the shell received
+`VAULT_TOKEN` in its initial environment, that file also shows it for the shell itself and the
+block's subshell. A wrapping token read there before the first unwrap can be unwrapped by its
+reader, so a first unwrap that fails is a finding to investigate, not a pass.
 
 **Single-use unwrap (demonstrated on loopback):** only after the preceding
 validation, run this block with that same wrapping token selected. The first unwrap must succeed;
