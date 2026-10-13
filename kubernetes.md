@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "81cb30b755aa97af405ba2690e47055262d45ca70afe3182deaf0dac5c370464",
+  "body_sha256": "309ace61f870f4b15d5e442334760914d5476c35e88cd5fe138df84b3f1d5731",
   "components": {
     "kubernetes": {
       "name": "Kubernetes documentation",
@@ -380,18 +380,38 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   [ -n "$PASSWORD" ] || { echo 'no password supplied; not creating the secret'; exit 2; }
   [ "$PASSWORD" = "$confirm" ] || { echo 'the two entries differ; not creating the secret'; exit 2; }
   set -o pipefail  # so a failure anywhere in a pipeline below, not only in htpasswd, fails it
-  printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin ||
+  # htpasswd -c writes a file. It goes in a private directory from mktemp -d (mode 0700), not the
+  # current one. The EXIT trap removes that directory when the subshell reaches its end, whatever
+  # kubectl returns, or leaves through one of the `exit` lines below, and the HUP, INT and TERM
+  # traps after it turn a hangup, Ctrl-C or SIGTERM into such an exit. SIGKILL leaves the directory
+  # and its .htpasswd behind, as can a signal before those traps are set, and in some measured runs
+  # where the shell running the block was the terminal's session leader and was itself ended by the
+  # signal (run directly as the terminal's process, without job control), so its exit hung up the
+  # terminal, a hangup or SIGTERM did too; if that happens, remove it from your temporary directory
+  # by hand.
+  set -- "$(mktemp -d)"
+  [ -d "$1" ] || { echo 'cannot create a private directory; not creating the secret'; exit 2; }
+  trap 'rm -rf -- "$1"' EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+  printf '%s' "$PASSWORD" | htpasswd -cis "$1/.htpasswd" admin ||
     { echo 'password-file creation failed; not creating the secret'; exit 2; }
   # -i does no verification, so the block asks twice and refuses a mismatch; `-vi` below then
   # confirms the file holds that value, and the secret is created only if it does. Paste the block by
   # itself: the shell reads the whole subshell before either `read` runs. Without bracketed paste,
   # lines pasted after the closing `)` feed the two prompts instead, and the block refuses unless both
   # are identical; with bracketed paste, they run as commands once the block finishes.
-  printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin ||
+  printf '%s' "$PASSWORD" | htpasswd -vi "$1/.htpasswd" admin ||
     { echo 'htpasswd could not verify the file; not creating the secret'; exit 2; }
-  kubectl create secret generic app-basic-auth --from-file=.htpasswd
+  # Sources has no kubectl reference for the key name this gives the file in the Secret, and the
+  # runs recorded below used a stub kubectl, so before Envoy Gateway uses app-basic-auth, confirm
+  # that the Secret has a .htpasswd key, listing its key names only and never printing its value.
+  kubectl create secret generic app-basic-auth --from-file="$1/.htpasswd"
 )
 ```
+
+On 2026-10-13 (UTC), with Bash 5.3.9 on a pty, a dummy password typed at the hidden prompts, stub `htpasswd` and `kubectl` executables, and logging wrappers around the real `mktemp` and `rm`, the block removed its directory after normal completion, a refused creation, a refused verification and a failed `kubectl`, and after Ctrl-C, SIGHUP or SIGTERM sent to its process group while `kubectl` waited, both pasted into an interactive shell and run as a script; SIGKILL left the directory and its `.htpasswd` behind. Where the shell running the block was the terminal's session leader (run directly as the terminal's process, without job control), 50 repeats removed the directory after 50 Ctrl-C, 49 SIGHUP and 50 SIGTERM runs, and an earlier 20 repeats of the same commands after 20, 19 and 17; 50 repeats of the block without the HUP, INT and TERM traps removed it after 50, 2 and 1; in the SIGHUP and SIGTERM runs that shell was itself ended by the signal, so its exit hung up the terminal. The dummy password reached the `htpasswd` stub only on stdin, never in any stub's argv, the `bash -x` trace or the terminal output. Stubs stood in for the cluster, so these runs do not show which key `kubectl` gives the file in the Secret.
 
 `-s` is SHA-1, which Apache describes as "insecure by today's standards", and it is not a
 choice here: Envoy Gateway's basic auth documentation says "only SHA hash algorithm is
