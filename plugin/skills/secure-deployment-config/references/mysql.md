@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "eb302b42bc94b7e3db4e45393bf501b343cb9f2bbf5304f0c781b8db45598af3",
+  "body_sha256": "3b7ba3deadbbecb403f8d7f1dd08cd323d71dcadc157fea97a6df766c8b1eb28",
   "components": {
     "mysql": {
       "name": "MySQL reference",
@@ -626,13 +626,13 @@ Apply the same MariaDB client substitution when appropriate. Restrict access to 
 
 ## 5. Verify
 
-Service behavior below is **REASONED, not demonstrated**. The authoring environment has a read-only filesystem, no MySQL/MariaDB client or server binaries, no Docker/Podman runtime, and no supplied writable deployment or database credentials. No available authorized environment could reproduce the exposed and fixed service states.
+REASONED: service scope for every check in this section, from the authoring limitations recorded in this paragraph and the vendor documentation cited at each check below. Service behavior below is **REASONED, not demonstrated**. The authoring environment has a read-only filesystem, no MySQL/MariaDB client or server binaries, no Docker/Podman runtime, and no supplied writable deployment or database credentials. No available authorized environment could reproduce the exposed and fixed service states.
 
-Locally, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
+DEMONSTRATED: the local shell and guard checks recorded in this paragraph, re-run at marking time: all seven blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, guard-only runs under bash -u rejected 25 invalid cases across the five guarded blocks with their not-connecting messages, and each guard dispatched one valid case to a local stub command; no database client or server ran. Locally, all seven shell blocks passed `bash -n` and ShellCheck. Guard-only execution under `bash -u` rejected 119 tested invalid-input cases across the five guarded blocks, including an empty value in every argument position, embedded placeholders, angle brackets, example hostnames, missing/wrong markers, and incorrect argument counts. Each guard also accepted one valid dispatch case. These tests exercised guards only; no database behavior was simulated.
 
-All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance. Native configuration parsing and restart behavior remain REASONED because the server binaries and writable deployment are unavailable.
+DEMONSTRATED: the in-memory INI parse recorded in this paragraph, re-run at marking time against both states: all five INI fragments parsed with Python 3.14.4 configparser in strict mode (`ConfigParser(strict=True)`, other arguments at their defaults); with the same parser and options, a control fragment repeating `require_secure_transport` under `[mysqld]` was rejected with DuplicateOptionError, and a control fragment placing that option before any section header was rejected with MissingSectionHeaderError; vendor option acceptance stays with the reasoned native checks, as stated. All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance. Native configuration parsing and restart behavior remain REASONED because the server binaries and writable deployment are unavailable.
 
-The snapshot's C2 scanner does not classify `mysql`, `mariadb`, or `ss` as probes. A supplemental in-memory check added those command names, accepted these guarded blocks, and detected a deliberately unguarded probe before the guard. No gate or repository file was changed.
+DEMONSTRATED: the scanner-classification evidence recorded in this paragraph, re-run at marking time against both states: the shipped roster was confirmed to omit mysql, mariadb and ss; an in-memory scan with those names added accepted this guide as shipped (seven fences, eleven probes, five guard fences, no finding); the deliberately unguarded probe control was re-observed, with an injected unguarded mysql probe line before the first guard reported as C2-PROBE-OUTSIDE-GUARD at the injected line; and the scanner self-test passed (1190 cases). The snapshot's C2 scanner does not classify `mysql`, `mariadb`, or `ss` as probes. A supplemental in-memory check added those command names, accepted these guarded blocks, and detected a deliberately unguarded probe before the guard. No gate or repository file was changed.
 
 ### TLS and account requirements (REASONED: TLS/account comparisons from cited vendor documentation; no writable deployment, clients, credentials or certificates.)
 

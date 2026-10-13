@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e25847a93aa28dbe5c54a7fa18cfc756beb51ced60fb94f943baa4479a8e5c5d",
+  "body_sha256": "973f4d839eb4538008c40a8d227dde76da82922c15c1955c92318f126aa82494",
   "components": {
     "aws": {
       "name": "AWS security groups and CLI",
@@ -88,7 +88,7 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 ## Verify
 
-Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker range (an IAP `35.235.240.0/20` rule, or an Azure Bastion subnet rule, is expected), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
+REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules and Azure network security group rule properties; no authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker range (an IAP `35.235.240.0/20` rule, or an Azure Bastion subnet rule, is expected), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
 
 REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
 
