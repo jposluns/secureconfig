@@ -38,7 +38,7 @@ version_basis: {
     }
   },
   "claims": {
-    "placement": {"text": "Set response headers at a proxy, in application middleware or in a static host's _headers file; stack-specific Sources entries and versions are not recorded.", "components": ["mdn", "helmet", "django"], "sources": ["mdn:s40155272e6bf", "helmet:sf42121cfc014", "django:se79954c08919"], "status": "REASONED"},
+    "placement": {"text": "Set response headers at a proxy, in application middleware or in a static host's _headers file; proxy header directives and the static-host _headers file lack Sources entries.", "components": ["mdn", "helmet", "django"], "sources": ["mdn:s40155272e6bf", "helmet:sf42121cfc014", "django:se79954c08919"], "status": "REASONED"},
     "hsts": {"text": "Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
     "hsts-preload": {"text": "Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED"},
     "csp": {"text": "Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
@@ -76,7 +76,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| placement: Set response headers at a proxy, in application middleware or in a static host's _headers file; stack-specific Sources entries and versions are not recorded. | MDN HTTP documentation unknown; Helmet v8.1.0; Django 5.2 | REASONED |
+| placement: Set response headers at a proxy, in application middleware or in a static host's _headers file; proxy header directives and the static-host _headers file lack Sources entries. | MDN HTTP documentation unknown; Helmet v8.1.0; Django 5.2 | REASONED |
 | hsts: Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS. | MDN HTTP documentation unknown | REASONED |
 | hsts-preload: Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates. | MDN HTTP documentation unknown | REASONED |
 | csp: Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy. | MDN HTTP documentation unknown | REASONED |
