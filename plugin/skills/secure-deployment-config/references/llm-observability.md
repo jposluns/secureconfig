@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a45076b765e494c420bfb1efd59d48ec2fc974a48e605c2764b00b9528dea5c6",
+  "body_sha256": "7672b425192bce3a8f020158fe1565490f057073ca8908f01ff6b67e205667e8",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -556,9 +556,10 @@ proxy or tunnel in front of it. Phoenix defaults to TLS off, so a plain `http://
 channel puts the Bearer key on the wire in cleartext, and a private network is not a substitute: anyone who can
 observe that network reads the key. The plaintext exception, this guide's reasoning rather than machine-auth.md's
 rule, is a client on the Phoenix host using loopback in Phoenix's own network namespace, for example a direct
-probe of a plaintext listener behind a TLS-terminating proxy. **Exposed:** the `https://` probe fails the TLS
+probe of a plaintext listener behind a TLS-terminating proxy. **Exposed:** the `https://` probe of the endpoint
+your clients use (Phoenix's port when Phoenix terminates TLS, otherwise the proxy or tunnel) fails the TLS
 handshake against a plaintext listener, or a client sends the key over an `http://` URL or a plaintext gRPC
-channel other than loopback in Phoenix's own network namespace. **Fixed:** the `https://` probe completes with
+channel other than loopback in Phoenix's own network namespace. **Fixed:** that probe completes with
 verification on, and every client that sends the key, including each 4317 gRPC exporter, uses TLS with
 verification on, other than one using loopback in Phoenix's own network namespace (Sources names no gRPC client
 option, so confirm it in that client's configuration). Sources has
