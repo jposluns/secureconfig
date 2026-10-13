@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "a1d83cfd5e93d36ec58bccbf27fcae4074e9850b8f3dbe809fa9f6389133d741",
+  "body_sha256": "a1c0746e9da8e532c64c2c7c9675c26c2aa3cd6f22ff7de2f229b0e0cec3119c",
   "components": {
     "kubernetes": {
       "name": "Kubernetes documentation",
@@ -382,7 +382,8 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   # kubectl returns, or leaves through one of the `exit` lines below, and the HUP, INT and TERM
   # traps after it turn a hangup, Ctrl-C or SIGTERM into such an exit. SIGKILL leaves the directory
   # and its .htpasswd behind, as can a signal before those traps are set, and in some measured runs
-  # where the shell running the block was the terminal's session leader, so its exit hung up the
+  # where the shell running the block was the terminal's session leader and was itself ended by the
+  # signal (run directly as the terminal's process, without job control), so its exit hung up the
   # terminal, a hangup or SIGTERM did too; if that happens, remove it from your temporary directory
   # by hand.
   set -- "$(mktemp -d)"
@@ -400,11 +401,14 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   # are identical; with bracketed paste, they run as commands once the block finishes.
   printf '%s' "$PASSWORD" | htpasswd -vi "$1/.htpasswd" admin ||
     { echo 'htpasswd could not verify the file; not creating the secret'; exit 2; }
+  # Sources has no kubectl reference for the key name this gives the file in the Secret, and the
+  # runs recorded below used a stub kubectl, so before Envoy Gateway uses app-basic-auth, confirm
+  # that the Secret has a .htpasswd key, listing its key names only and never printing its value.
   kubectl create secret generic app-basic-auth --from-file="$1/.htpasswd"
 )
 ```
 
-On 2026-10-13 (UTC), with Bash 5.3.9 on a pty, a dummy password typed at the hidden prompts, stub `htpasswd` and `kubectl` executables, and logging wrappers around the real `mktemp` and `rm`, the block removed its directory after normal completion, a refused creation, a refused verification and a failed `kubectl`, and after Ctrl-C, SIGHUP or SIGTERM sent to its process group while `kubectl` waited, both pasted into an interactive shell and run as a script; SIGKILL left the directory and its `.htpasswd` behind. Where the shell running the block was the terminal's session leader, so its exit hung up the terminal, 50 repeats removed the directory after 50 Ctrl-C, 49 SIGHUP and 50 SIGTERM runs, and an earlier 20 repeats of the same commands after 20, 19 and 17; 50 repeats of the block without the HUP, INT and TERM traps removed it after 50, 2 and 1. The dummy password reached the `htpasswd` stub only on stdin, never in any stub's argv, the `bash -x` trace or the terminal output. Stubs stood in for the cluster, so these runs do not show which key `kubectl` gives the file in the Secret.
+On 2026-10-13 (UTC), with Bash 5.3.9 on a pty, a dummy password typed at the hidden prompts, stub `htpasswd` and `kubectl` executables, and logging wrappers around the real `mktemp` and `rm`, the block removed its directory after normal completion, a refused creation, a refused verification and a failed `kubectl`, and after Ctrl-C, SIGHUP or SIGTERM sent to its process group while `kubectl` waited, both pasted into an interactive shell and run as a script; SIGKILL left the directory and its `.htpasswd` behind. Where the shell running the block was the terminal's session leader and was itself ended by the signal (run directly as the terminal's process, without job control), so its exit hung up the terminal, 50 repeats removed the directory after 50 Ctrl-C, 49 SIGHUP and 50 SIGTERM runs, and an earlier 20 repeats of the same commands after 20, 19 and 17; 50 repeats of the block without the HUP, INT and TERM traps removed it after 50, 2 and 1. The dummy password reached the `htpasswd` stub only on stdin, never in any stub's argv, the `bash -x` trace or the terminal output. Stubs stood in for the cluster, so these runs do not show which key `kubectl` gives the file in the Secret.
 
 `-s` is SHA-1, which Apache describes as "insecure by today's standards", and it is not a
 choice here: Envoy Gateway's basic auth documentation says "only SHA hash algorithm is
