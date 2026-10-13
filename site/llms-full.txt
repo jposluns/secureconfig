@@ -20615,7 +20615,7 @@ REASONED: following block; S3 public-access and presigned-URL documentation supp
 
 Expected sequence: authorized `200`, anonymous `403`, then denial of the expired signed URL. A DNS, TLS, proxy, or local curl error is inconclusive. Client proxies are disabled so a proxy cannot answer for S3. One object is not the whole bucket: repeat for other keys, prefixes, and enabled access paths.
 
-The signed URL stays out of curl's process arguments because the shell's builtin `printf` supplies it through stdin. This does not protect it from shell tracing, copied terminal output, or the account owner's process inspection. Keep `set -x` off. The curl status fields require curl 7.75.0 or later.
+The signed URL stays out of curl's process arguments because the shell's builtin `printf` supplies it through stdin. The block generates it by command substitution and it is never typed, so it is not in this block's shell history. This does not protect it from shell tracing, copied terminal output, or the account owner's process inspection. Keep `set -x` off. The curl status fields require curl 7.75.0 or later.
 
 ### 3. Check known objects on every other enabled route
 
@@ -36548,9 +36548,11 @@ Use a separate protected header file for each identity, and confirm that identit
 allowed resource before accepting its denial elsewhere.
 
 Substitute inside the single quotes and paste whole blocks. Do not paste literal apostrophes
-inside those quotes. The guards assume ordinary shell builtins. Credentials are read through
-stdin; this does not protect against shell tracing, unsafe file permissions, or the account
-owner reading those files or viewing the process. Never place a token-bearing URL in this block.
+inside those quotes. The guards assume ordinary shell builtins. The headers reach curl from a
+file on its stdin and this block never expands their contents, so they stay out of curl's
+arguments, shell history and `set -x` tracing. The file's permissions and how it was prepared
+remain exposures, as does the same account or root reading the file or viewing the process.
+Never place a token-bearing URL in this block.
 
 REASONED: following block; resource and scope comparisons follow the cited vendor documentation and available pins; live backend fixtures and controlled accounts were unavailable.
 

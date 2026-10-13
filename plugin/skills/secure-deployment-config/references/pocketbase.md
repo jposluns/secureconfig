@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "3d43df7bec29f9c2ac9655e9f92da7d762b77b8e277f896d2edff78626251587",
+  "body_sha256": "e42ed83e4d46fbf07f275f4ea335aec99095740e1bc54bb237a316474b588287",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -635,9 +635,11 @@ Use a separate protected header file for each identity, and confirm that identit
 allowed resource before accepting its denial elsewhere.
 
 Substitute inside the single quotes and paste whole blocks. Do not paste literal apostrophes
-inside those quotes. The guards assume ordinary shell builtins. Credentials are read through
-stdin; this does not protect against shell tracing, unsafe file permissions, or the account
-owner reading those files or viewing the process. Never place a token-bearing URL in this block.
+inside those quotes. The guards assume ordinary shell builtins. The headers reach curl from a
+file on its stdin and this block never expands their contents, so they stay out of curl's
+arguments, shell history and `set -x` tracing. The file's permissions and how it was prepared
+remain exposures, as does the same account or root reading the file or viewing the process.
+Never place a token-bearing URL in this block.
 
 REASONED: following block; resource and scope comparisons follow the cited vendor documentation and available pins; live backend fixtures and controlled accounts were unavailable.
 

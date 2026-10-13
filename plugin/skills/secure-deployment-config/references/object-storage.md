@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "81d04eba7ee01a84c58cfb0c6f08beb1a3be3a72e8086b59bfcdc44fa0103df3",
+  "body_sha256": "1a185d165142dc295d421dec2fbedeb6ce48be6c5a71742f42f34b8755476ac8",
   "components": {
     "s3": {
       "name": "Amazon S3 documentation",
@@ -803,7 +803,7 @@ REASONED: following block; S3 public-access and presigned-URL documentation supp
 
 Expected sequence: authorized `200`, anonymous `403`, then denial of the expired signed URL. A DNS, TLS, proxy, or local curl error is inconclusive. Client proxies are disabled so a proxy cannot answer for S3. One object is not the whole bucket: repeat for other keys, prefixes, and enabled access paths.
 
-The signed URL stays out of curl's process arguments because the shell's builtin `printf` supplies it through stdin. This does not protect it from shell tracing, copied terminal output, or the account owner's process inspection. Keep `set -x` off. The curl status fields require curl 7.75.0 or later.
+The signed URL stays out of curl's process arguments because the shell's builtin `printf` supplies it through stdin. The block generates it by command substitution and it is never typed, so it is not in this block's shell history. This does not protect it from shell tracing, copied terminal output, or the account owner's process inspection. Keep `set -x` off. The curl status fields require curl 7.75.0 or later.
 
 ### 3. Check known objects on every other enabled route
 
