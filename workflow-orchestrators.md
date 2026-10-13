@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "986359ed053f226b464dfe728a1173410cf6e7fc6b5db5db92535e62b1956db8",
+  "body_sha256": "ba9c1235f218520afa449f3dacaf45ce083cf44c6f8e686ec760fadbcf3d0ed2",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -626,7 +626,9 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
 # Airflow: obtaining a token from the documented Compose account is the finding. Send the credentials as JSON
 # on stdin; FAB 3.9.0 returns 201 Created with a nonempty access_token when airflow/airflow works. Compare with a valid account on
 # the same route, and test an API read with no token then a token at the proxy and the origin. On Airflow 2 use
-# its /api/v1/ endpoint and its own auth mechanism instead.
+# its /api/v1/ endpoint and its own auth mechanism instead. A real password typed into the printf line below for
+# that comparison enters shell history and, with set -x on, the trace; stdin closes curl's argv channel only,
+# and the account owner and root can still read the password in curl.
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 printf '{"username":"%s","password":"%s"}' 'airflow' 'airflow' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \

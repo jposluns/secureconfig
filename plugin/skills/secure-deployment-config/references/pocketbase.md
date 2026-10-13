@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "319dd7050fdc7e0ac32b25fdc97728c614437c450c562c6a40f3cf21776932c7",
+  "body_sha256": "acaf28d8689f08462b752047020e35059929d1af65315ce1d66c672f51ed4b39",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -693,8 +693,10 @@ The request can create an account on a misconfigured instance. Run it only on th
 fixture or an explicitly designated registration-test deployment. Use the API origin serving
 the console project, not a guessed `/console` UI path. The block feeds the signup JSON, test
 password included, to curl on stdin from the protected file: no password is typed into the command
-or held in a shell variable, so neither shell history nor `set -x` tracing records it. Stdin closes
-the argv channel only; the account owner and root can still read the file and curl's memory.
+or held in a shell variable, so neither shell history nor `set -x` tracing records it, provided the
+file is prepared with an editor, not a shell command containing the password, which would enter
+shell history. Stdin closes the argv channel only; the account owner and root can still read the
+file and curl's memory.
 
 REASONED: following block; console registration comparisons follow the pinned Appwrite handler; no disposable Appwrite installation or controlled signup fixture was available.
 

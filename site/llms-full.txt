@@ -2406,12 +2406,15 @@ grant `read` on `sys/pprof/*`, covering the trailing-slash index and profiling s
 [profiling API](https://developer.hashicorp.com/vault/api-docs/system/pprof).
 
 REASONED: from the shell behaviour of file input on stdin, not from the loopback runs below, which
-did not test it; process inspection was not tested. The following login request takes `role_id`
-and `secret_id` from the request file on `vault`'s stdin: no credential is typed into the command
-or held in a shell variable, so neither shell history nor `set -x` tracing records it, provided the
-file is prepared through protected delivery rather than by a shell command that contains the
-credentials. Stdin closes the argv channel only: the account owner and root can still read the
-file and the `vault` process's memory.
+did not test it. What was run: on 2026-10-13 UTC a QA review ran the following block under `bash -x`
+with its external commands stubbed and a dummy secret as the credential; no trace line carried the
+dummy secret, while a positive control that printed the file with a traced builtin `printf` did.
+What was not run: process inspection (`/proc`, memory) was not tested, and no live Vault service
+was involved. The following login request takes `role_id` and `secret_id` from the request file on
+`vault`'s stdin: no credential is typed into the command or held in a shell variable, so neither
+shell history nor `set -x` tracing records it, provided the file is prepared through protected
+delivery rather than by a shell command that contains the credentials. Stdin closes the argv
+channel only: the account owner and root can still read the file and the `vault` process's memory.
 
 **Bounded credentials and tokens (demonstrated on loopback):** prepare an owner-readable
 JSON request file containing `role_id` and `secret_id` through protected delivery. The following
@@ -2560,7 +2563,11 @@ See [required wrapping TTLs](https://developer.hashicorp.com/vault/docs/concepts
 and [wrapping requests](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
 
 REASONED: from the shell behaviour of file input on stdin, not from the loopback lookup runs,
-which did not test it; process inspection was not tested. This applies to both wrapping-lookup
+which did not test it. What was run: on 2026-10-13 UTC a QA review ran both wrapping-lookup blocks
+below under `bash -x` with their external commands stubbed and a dummy secret as the token; no
+trace line carried the dummy secret, while a positive control that printed the file with a traced
+builtin `printf` did. What was not run: process inspection (`/proc`, memory) was not tested, and
+no live Vault service was involved. This applies to both wrapping-lookup
 blocks below, the demonstrated lookup and the recipient-validation lookup. Each passes the
 protected lookup request, wrapping token included, to `vault` from a file on its stdin. Neither
 block types the token or expands a variable holding it, so neither shell history nor `set -x`
@@ -6642,9 +6649,12 @@ the RBAC on the Secrets that hold them. Bootstrap credentials are separate from 
 `flux-system` namespace, while `--token-auth=false` provisions an SSH deploy key that is read-only by
 default; prefer the narrowly scoped key, restrict access to that Secret, and pass any bootstrap token
 through stdin or the prompt, never Git or logs. Typed at the prompt, the token stays out of shell
-history and `set -x` tracing; piped in, it still reaches them when the feeding command contains it
-or expands a variable holding it under `set -x`. Either way stdin closes the argv channel only: the
-account owner and root can still read the token in the `flux` process. Image automation is the exception to read-only: the
+history and `set -x` tracing. Piped in, a token typed literally into the feeding command enters
+shell history, and with `set -x` on also the trace; a token the feeding command expands from a
+variable reaches the trace with `set -x` on, but history records only the variable's name, which
+does not carry its value (a command that assigned the value literally is in history itself). Either
+way stdin closes the argv channel only: the account owner and root can still read the token in the
+`flux` process. Image automation is the exception to read-only: the
 image-automation-controller commits manifest changes back to Git and needs write access (`--read-write-key=true`
 when it uses the bootstrap deploy key), so scope that credential to the one repository, protect the
 deployment branch, use a dedicated update branch, and restrict who may edit `ImageUpdateAutomation` objects. The source-controller then serves the fetched artifacts to the
@@ -18602,6 +18612,7 @@ Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authenticat
         "https://$1:8443/?query=SELECT%201" \
         < "$HOME/.config/clickhouse/app-reader.headers"
 
+      # The password prompts keep the password out of the command; the account owner and root can still read it in the clickhouse-client process.
       echo '[native wrong password: enter a deliberately wrong password]'
       clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
         --host "$1" --port 9440 --secure --user app_reader --query 'SELECT 1' --password
@@ -18644,6 +18655,7 @@ In the deliberately authentication-disabled fixture, empty, wrong, and supplied 
           exit 2
           ;;
         *)
+          # The password prompt keeps the password out of the command; the account owner and root can still read it in the clickhouse-client process.
           clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
             --host "$1" --port 9440 --secure --user "$2" --password
           ;;
@@ -22119,7 +22131,7 @@ Review outbound requests too. Meilisearch v1.8 through v1.34.0 need upgrading fo
 
 ## Verify
 
-REASONED: from the shell behaviour of the hidden prompt (`read -s`) and of `set +x`, not from the loopback runs described next, which did not test it; process inspection was not tested. In the paired-request block below, the hidden prompts keep the keys out of shell history and the block's `set +x` keeps them out of `set -x` tracing, but stdin closes the argv channel only, so the keys stay visible to the account owner and root.
+REASONED: from the shell behaviour of the hidden prompt (`read -s`) and of `set +x`, not from the loopback runs described next, which did not test it. What was run: on 2026-10-13 UTC a QA review ran the paired-request block under `bash -x` with its external commands stubbed and a dummy secret fed to the prompts on a pseudo-terminal; no trace line carried the dummy secret, and the same block with its `set +x` removed traced it. What was not run: process inspection (`/proc`, memory) was not tested, and no live Meilisearch or Typesense service was involved. In the paired-request block below, the hidden prompts keep the keys out of shell history and the block's `set +x` keeps them out of `set -x` tracing, but stdin closes the argv channel only, so the keys stay visible to the account owner and root.
 
 DEMONSTRATED: following block; the checks below were demonstrated on loopback against the Meilisearch v1.53.2 release binary (its SHA-256 matched the digest GitHub publishes for the asset) and the Typesense 30.2 server (its MD5 matched the one in the release tarball), each with native TLS on 127.0.0.1, or behind a Caddy TLS proxy for the proxy checks, with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and every address set before start. The blocks ran as printed with only their `set --` values substituted, and keys were fed to the prompts on stdin. What those runs do not show is marked **REASONED** where it occurs, with its reason. Backlog row 1.117 retains the real-client-build positive and negative controls for the credential scan below; its hand-built fixtures do not supply a real client bundle. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
 
@@ -24695,7 +24707,7 @@ Use the normal trust store when appropriate. Escape backslashes and double quote
 
 Inspect these files before use: allow only the intended authentication, trust, client-certificate, and test-header settings. Do not include URLs, redirects, proxy settings, insecure TLS options, extra transfers, or request/output overrides. An intentional `resolve` entry can support a hostname-negative test against the same server address. The files are trusted test inputs, not a safe format for untrusted instructions.
 
-The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and curl's memory. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
+The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of curl. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
 
 ```bash
 (
@@ -31529,7 +31541,9 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
 # Airflow: obtaining a token from the documented Compose account is the finding. Send the credentials as JSON
 # on stdin; FAB 3.9.0 returns 201 Created with a nonempty access_token when airflow/airflow works. Compare with a valid account on
 # the same route, and test an API read with no token then a token at the proxy and the origin. On Airflow 2 use
-# its /api/v1/ endpoint and its own auth mechanism instead.
+# its /api/v1/ endpoint and its own auth mechanism instead. A real password typed into the printf line below for
+# that comparison enters shell history and, with set -x on, the trace; stdin closes curl's argv channel only,
+# and the account owner and root can still read the password in curl.
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 printf '{"username":"%s","password":"%s"}' 'airflow' 'airflow' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -36683,8 +36697,10 @@ The request can create an account on a misconfigured instance. Run it only on th
 fixture or an explicitly designated registration-test deployment. Use the API origin serving
 the console project, not a guessed `/console` UI path. The block feeds the signup JSON, test
 password included, to curl on stdin from the protected file: no password is typed into the command
-or held in a shell variable, so neither shell history nor `set -x` tracing records it. Stdin closes
-the argv channel only; the account owner and root can still read the file and curl's memory.
+or held in a shell variable, so neither shell history nor `set -x` tracing records it, provided the
+file is prepared with an editor, not a shell command containing the password, which would enter
+shell history. Stdin closes the argv channel only; the account owner and root can still read the
+file and curl's memory.
 
 REASONED: following block; console registration comparisons follow the pinned Appwrite handler; no disposable Appwrite installation or controlled signup fixture was available.
 
@@ -37101,8 +37117,11 @@ These are REASONED expectations from the cited configuration, API documentation 
 handler, not live observations; this authoring environment has no container runtime and cannot
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
 deployment must also deny the external path while an authorized internal control still succeeds.
-Pass the correct token through curl's stdin configuration, not a literal URL in shell history or
-argv, and enter it at a hidden prompt in a clean shell under the `read` exception guards of
+Pass the correct token through curl's stdin configuration, as a `url = "...?token=..."` line fed to
+`--config -`, not a literal URL in shell history or argv. Because the config value is double-quoted,
+escape a backslash and then a double quote in the token before substituting it, and refuse a token
+containing a control character, so a pasted newline cannot inject a second directive. Enter the
+token at a hidden prompt in a clean shell under the `read` exception guards of
 CONTRIBUTING rule 7 (`search-engines.md`'s paired block is the model): `trap - DEBUG RETURN ERR`
 first, then `set +x +a +e` before the read, `unset -n` and then `unset -v` on the variable, failing
 closed if either fails, and a refusal of a readonly `IFS`. Without `+a`, an inherited `set -a` would

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "279dd58d0f0b03f6f58c6770aae3b80d88f8f301529790677171c40ace1116b7",
+  "body_sha256": "633a3872e3a4502803e804bfa0380274d0ac0dae2bf92ff004114b3bb3a76d1f",
   "components": {
     "docs": {
       "name": "ClickHouse documentation",
@@ -649,6 +649,7 @@ Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authenticat
         "https://$1:8443/?query=SELECT%201" \
         < "$HOME/.config/clickhouse/app-reader.headers"
 
+      # The password prompts keep the password out of the command; the account owner and root can still read it in the clickhouse-client process.
       echo '[native wrong password: enter a deliberately wrong password]'
       clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
         --host "$1" --port 9440 --secure --user app_reader --query 'SELECT 1' --password
@@ -691,6 +692,7 @@ In the deliberately authentication-disabled fixture, empty, wrong, and supplied 
           exit 2
           ;;
         *)
+          # The password prompt keeps the password out of the command; the account owner and root can still read it in the clickhouse-client process.
           clickhouse-client --config-file "$HOME/.config/clickhouse/config.xml" \
             --host "$1" --port 9440 --secure --user "$2" --password
           ;;

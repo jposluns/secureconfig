@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "4b40b618a5d9791ca7694ec1041e2d63879e7b379d339ec10a57a5f4c36eeb33",
+  "body_sha256": "10f40db6d4598c42a2e7d8b41ccbf1c99d57e78d805f96dce1f0feb87905c95f",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -365,9 +365,12 @@ the RBAC on the Secrets that hold them. Bootstrap credentials are separate from 
 `flux-system` namespace, while `--token-auth=false` provisions an SSH deploy key that is read-only by
 default; prefer the narrowly scoped key, restrict access to that Secret, and pass any bootstrap token
 through stdin or the prompt, never Git or logs. Typed at the prompt, the token stays out of shell
-history and `set -x` tracing; piped in, it still reaches them when the feeding command contains it
-or expands a variable holding it under `set -x`. Either way stdin closes the argv channel only: the
-account owner and root can still read the token in the `flux` process. Image automation is the exception to read-only: the
+history and `set -x` tracing. Piped in, a token typed literally into the feeding command enters
+shell history, and with `set -x` on also the trace; a token the feeding command expands from a
+variable reaches the trace with `set -x` on, but history records only the variable's name, which
+does not carry its value (a command that assigned the value literally is in history itself). Either
+way stdin closes the argv channel only: the account owner and root can still read the token in the
+`flux` process. Image automation is the exception to read-only: the
 image-automation-controller commits manifest changes back to Git and needs write access (`--read-write-key=true`
 when it uses the bootstrap deploy key), so scope that credential to the one repository, protect the
 deployment branch, use a dedicated update branch, and restrict who may edit `ImageUpdateAutomation` objects. The source-controller then serves the fetched artifacts to the

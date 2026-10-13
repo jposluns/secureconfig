@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fab3292478a0d84fb6f0cdced75f6dc0d4c1e485fe0398e3b9cc4efbc6bf2a5b",
+  "body_sha256": "3c6f8b27bebefb88556940604a63b137b772698c69b7332a78157fe62ae5df34",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -846,12 +846,15 @@ grant `read` on `sys/pprof/*`, covering the trailing-slash index and profiling s
 [profiling API](https://developer.hashicorp.com/vault/api-docs/system/pprof).
 
 REASONED: from the shell behaviour of file input on stdin, not from the loopback runs below, which
-did not test it; process inspection was not tested. The following login request takes `role_id`
-and `secret_id` from the request file on `vault`'s stdin: no credential is typed into the command
-or held in a shell variable, so neither shell history nor `set -x` tracing records it, provided the
-file is prepared through protected delivery rather than by a shell command that contains the
-credentials. Stdin closes the argv channel only: the account owner and root can still read the
-file and the `vault` process's memory.
+did not test it. What was run: on 2026-10-13 UTC a QA review ran the following block under `bash -x`
+with its external commands stubbed and a dummy secret as the credential; no trace line carried the
+dummy secret, while a positive control that printed the file with a traced builtin `printf` did.
+What was not run: process inspection (`/proc`, memory) was not tested, and no live Vault service
+was involved. The following login request takes `role_id` and `secret_id` from the request file on
+`vault`'s stdin: no credential is typed into the command or held in a shell variable, so neither
+shell history nor `set -x` tracing records it, provided the file is prepared through protected
+delivery rather than by a shell command that contains the credentials. Stdin closes the argv
+channel only: the account owner and root can still read the file and the `vault` process's memory.
 
 **Bounded credentials and tokens (demonstrated on loopback):** prepare an owner-readable
 JSON request file containing `role_id` and `secret_id` through protected delivery. The following
@@ -1000,7 +1003,11 @@ See [required wrapping TTLs](https://developer.hashicorp.com/vault/docs/concepts
 and [wrapping requests](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
 
 REASONED: from the shell behaviour of file input on stdin, not from the loopback lookup runs,
-which did not test it; process inspection was not tested. This applies to both wrapping-lookup
+which did not test it. What was run: on 2026-10-13 UTC a QA review ran both wrapping-lookup blocks
+below under `bash -x` with their external commands stubbed and a dummy secret as the token; no
+trace line carried the dummy secret, while a positive control that printed the file with a traced
+builtin `printf` did. What was not run: process inspection (`/proc`, memory) was not tested, and
+no live Vault service was involved. This applies to both wrapping-lookup
 blocks below, the demonstrated lookup and the recipient-validation lookup. Each passes the
 protected lookup request, wrapping token included, to `vault` from a file on its stdin. Neither
 block types the token or expands a variable holding it, so neither shell history nor `set -x`

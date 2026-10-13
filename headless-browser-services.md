@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "dba02e9ff10b84b28b396a28829577d0bfb2442514b22b997985bfe75a551e9a",
+  "body_sha256": "8ee4d036bec0426ea1501a346e2760d6ce8dbb7af61a5a0a8a5f368f0e1a3619",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -402,8 +402,11 @@ These are REASONED expectations from the cited configuration, API documentation 
 handler, not live observations; this authoring environment has no container runtime and cannot
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
 deployment must also deny the external path while an authorized internal control still succeeds.
-Pass the correct token through curl's stdin configuration, not a literal URL in shell history or
-argv, and enter it at a hidden prompt in a clean shell under the `read` exception guards of
+Pass the correct token through curl's stdin configuration, as a `url = "...?token=..."` line fed to
+`--config -`, not a literal URL in shell history or argv. Because the config value is double-quoted,
+escape a backslash and then a double quote in the token before substituting it, and refuse a token
+containing a control character, so a pasted newline cannot inject a second directive. Enter the
+token at a hidden prompt in a clean shell under the `read` exception guards of
 CONTRIBUTING rule 7 (`search-engines.md`'s paired block is the model): `trap - DEBUG RETURN ERR`
 first, then `set +x +a +e` before the read, `unset -n` and then `unset -v` on the variable, failing
 closed if either fails, and a refusal of a readonly `IFS`. Without `+a`, an inherited `set -a` would
