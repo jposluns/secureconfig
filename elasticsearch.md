@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e2a0eca835d77b8bb89f162b1893226044607f18979ef84e9527868f1fd5a4e2",
+  "body_sha256": "50fe8bd19cbb9d10fe423db2d3f7e91ba870a7d64bceb441ce82cc2a9b8d6290",
   "components": {
     "es": {
       "name": "Elasticsearch documentation",
@@ -890,7 +890,7 @@ REASONED: following block; cluster authorization, TLS, CORS and audit expectatio
   shift
   [ "$#" -eq 3 ] || { echo "set exactly host, CA file, and HTTP port; not probing"; exit 1; }
   case "$1|$2|$3" in
-    *REPLACE_WITH_*|*example.com*) echo "substitute your deployment; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*) echo "substitute your deployment; not probing"; exit 1 ;;
   esac
   [ -n "$1" ] || { echo "host required; not probing"; exit 1; }
   case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 1 ;; esac
@@ -1032,7 +1032,7 @@ REASONED: following block; REST fixture comparisons follow the cited product API
   shift
   [ "$#" -eq 7 ] || { echo "set host, CA, port, header file, method, path, and body file; not probing"; exit 1; }
   case "$1|$2|$3|$4|$5|$6|$7" in
-    *REPLACE_WITH_*|*example.com*) echo "substitute your deployment; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*) echo "substitute your deployment; not probing"; exit 1 ;;
   esac
   case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 1 ;; esac
   case "$3" in ""|*[!0123456789]*) echo "numeric port required; not probing"; exit 1 ;; esac
@@ -1195,7 +1195,7 @@ REASONED: following block; UI TLS comparison follows the cited Kibana and Dashbo
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
   shift
   [ "$#" -eq 3 ] || { echo "set UI host, CA file, and port; not probing"; exit 1; }
-  case "$1|$2|$3" in *REPLACE_WITH_*|*example.com*) echo "substitute your UI deployment"; exit 1 ;; esac
+  case "$1|$2|$3" in *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*) echo "substitute your UI deployment"; exit 1 ;; esac
   case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address"; exit 1 ;; esac
   case "$3" in ""|*[!0123456789]*) echo "numeric UI port required"; exit 1 ;; esac
   [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1

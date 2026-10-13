@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "3c314b755b70e86ba371b5e8768a7f64f3395f3dfe0e20ef93f34d35d4d0e4f8",
+  "body_sha256": "a45fff5c2da3cd2c4f33378bfb017868feecbccc7fdd4159e83ec3f51c86f8ed",
   "components": {
     "kubernetes": {
       "name": "Kubernetes documentation",
@@ -377,16 +377,21 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   [ -n "$PASSWORD" ] || { echo 'no password supplied; not creating the secret'; exit 2; }
   [ "$PASSWORD" = "$confirm" ] || { echo 'the two entries differ; not creating the secret'; exit 2; }
   set -o pipefail  # so a failure anywhere in a pipeline below, not only in htpasswd, fails it
-  printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin ||
+  # htpasswd -c writes a file. It goes in a private directory from mktemp -d (mode 0700), not the
+  # current one, and the EXIT trap removes that directory however the subshell ends.
+  set -- "$(mktemp -d)"
+  [ -d "$1" ] || { echo 'cannot create a private directory; not creating the secret'; exit 2; }
+  trap 'rm -rf -- "$1"' EXIT
+  printf '%s' "$PASSWORD" | htpasswd -cis "$1/.htpasswd" admin ||
     { echo 'password-file creation failed; not creating the secret'; exit 2; }
   # -i does no verification, so the block asks twice and refuses a mismatch; `-vi` below then
   # confirms the file holds that value, and the secret is created only if it does. Paste the block by
   # itself: the shell reads the whole subshell before either `read` runs. Without bracketed paste,
   # lines pasted after the closing `)` feed the two prompts instead, and the block refuses unless both
   # are identical; with bracketed paste, they run as commands once the block finishes.
-  printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin ||
+  printf '%s' "$PASSWORD" | htpasswd -vi "$1/.htpasswd" admin ||
     { echo 'htpasswd could not verify the file; not creating the secret'; exit 2; }
-  kubectl create secret generic app-basic-auth --from-file=.htpasswd
+  kubectl create secret generic app-basic-auth --from-file=.htpasswd="$1/.htpasswd"
 )
 ```
 
