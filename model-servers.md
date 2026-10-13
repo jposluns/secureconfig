@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "3807ba09de4420e364e5c3c18407dd9706a0ec531f33af4313f981c3e33b355e",
+  "body_sha256": "ba1bbe6b7e10873113f33961ebb64be71d13f54abee7662de2d76566e2dba393",
   "components": {
     "llama": {
       "name": "llama.cpp",
@@ -677,7 +677,7 @@ One proxy detail is specific to this API: unless `--listen` (or `--public-api`) 
 
 ## Verify
 
-**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. Only the pgrep subcheck has the recorded stub-process demonstration below; the whole mixed block remains REASONED.
+**REASONED:** following block; service checks follow the cited server handlers and need unavailable live servers/proxy fixtures. The pgrep subcheck has the recorded stub-process demonstration below. The /invocations subshell was run from a file in Bash 5.3.9 with curl replaced by a stub that prints its arguments: a substituted model name reached the stub once, carrying that name in the JSON body; a missing set -- line (with and without a caller argument), a set -- line holding only the marker (also under set -u) and one holding two values each printed its refusal and exited 0, and the unsubstituted placeholder printed its refusal and exited 2, none of them reaching the stub. Bash 5.3.9 bash -n accepted the whole block. These local guard runs observe no server or proxy, so the whole mixed block remains REASONED.
 
 ```bash
 ss -tlnp   # every listener; 8080/8000/8001/8002/3000/80/9000/30000/5000/7860/1234. ss shows only a
@@ -708,7 +708,10 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
   printf 'Authorization: Bearer %s\n' "$1" | curl -q -sS --noproxy '*' -w 'http=%{http_code} exit=%{exitcode}\n' -H @- https://models.example.com/v1/models   # positive control: 200 with a model list, printed
 )
 (
-  set -- 'REPLACE_WITH_A_REAL_SERVED_MODEL'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_A_REAL_SERVED_MODEL'
+  [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit; }
   case "$1" in ""|*REPLACE_WITH_*) echo 'substitute a real served model name inside the quotes on the set -- line above; not probing'; exit 2 ;; esac
   curl -q -sS --noproxy '*' -D - -o invocations-body.txt -w 'http=%{http_code}\n' -X POST -H 'Content-Type: application/json' \
     -d "{\"model\":\"$1\",\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}" https://models.example.com/invocations
