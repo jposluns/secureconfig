@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "3cf23a948dc285344e04862457c1c45e289a19f393f2139235edb4958d0d7913",
+  "body_sha256": "974d3df1a504e87e5a28ea9a128ff1f99090e0ec8a10714dedfd5320ac9597e0",
   "components": {
     "strapi": {
       "name": "Strapi MFA announcement",
@@ -401,7 +401,7 @@ can count as protection. Use a fresh, trusted shell. Enter the authorized header
 (`Authorization: Bearer ...` for Strapi, Directus and PostgREST, or `X-Hasura-Admin-Secret: ...` for Hasura);
 press Enter at the negative-header prompt for the anonymous test. Both headers stay in unexported subshell
 variables and reach curl on stdin, never in argv or pasted commands, keeping the prompted values out of
-shell history and `set -x` tracing. Inherited values are discarded; the
+shell history; the block's `set +x` keeps them out of `set -x` tracing. Inherited values are discarded; the
 variables are unset after use and the subshell contains early exits. This does not hide credentials from the
 account owner or root. Treat an empty result, a missing route, an unrelated error, an HTML page, a TLS error, or a timeout as inconclusive,
 never as the fixed state. Substitute your own host for the `example.com` placeholder.
