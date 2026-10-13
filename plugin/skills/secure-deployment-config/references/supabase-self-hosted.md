@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "dffad6d4437899fa1b48348f4c6baf33e5cf759c7266d2e46267ea0401704846",
+  "body_sha256": "e6a4720837e15d12b385e22c16a056833fa55a63fd805489e419ed569a8d0959",
   "components": {
     "docs": {
       "name": "Supabase documentation",
@@ -247,6 +247,7 @@ REASONED: following block; the canary function comparison follows the cited envi
   case "$1" in *REPLACE_WITH_*|"") echo "substitute the base URL (https://your-proxy, or http://127.0.0.1:8000 for a private-origin check); not probing"; exit 2 ;; esac
   case "$2" in *REPLACE_WITH_*|*FUNCTION_NAME*|"") echo "substitute a function name; not probing"; exit 2 ;; esac
   case "$3" in *REPLACE_WITH_*|"") echo "substitute a current legacy anon JWT; not probing"; exit 2 ;; esac
+  case "$3" in *[[:cntrl:]]*) echo "the anon JWT must be one line with no control characters; not probing"; exit 2 ;; esac
   # Compare the credential-free request with a current legacy anon JWT sent as Bearer.
   # Use a canary with a known response and no independent authentication.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
