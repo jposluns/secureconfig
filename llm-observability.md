@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "9a60217191fe5525bbe7e35d54c8ce74f96456a63289d88bfcd4aea4ee430fab",
+  "body_sha256": "4db5d1cb6e2ad3909d8b7983448e35c8170346dfd5d1cc7ade500d3e473b2027",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -557,18 +557,17 @@ channel puts the Bearer key on the wire in cleartext, and a private network is n
 observe that network reads the key. The plaintext exception, this guide's reasoning rather than machine-auth.md's
 rule, is a client on the Phoenix host using loopback in Phoenix's own network namespace, for example a direct
 probe of a plaintext listener behind a TLS-terminating proxy. A TLS-terminating proxy or tunnel that forwards the
-key to Phoenix is such a client: it uses that loopback or TLS with verification on. **Exposed:** where any client
-sends the key other than over that loopback, the `https://` probe of the endpoint those clients use (Phoenix's
-port when Phoenix terminates TLS, otherwise the proxy or tunnel) fails the TLS handshake against a plaintext
-listener, or a client sends the key over an `http://` URL or a plaintext gRPC channel other than loopback in
-Phoenix's own network namespace. **Fixed:** that probe, where it applies, completes with verification on, and
-every client that sends the key, including each 4317 gRPC exporter, uses TLS with verification on, other than one
-using loopback in Phoenix's own network namespace (Sources names no gRPC client TLS option, so confirm it in that
-client's configuration). Sources has no Phoenix reference for an API-key transport requirement or for an OTLP
-gRPC client's TLS or CA settings, so this guide names no client option for them: for gRPC clients using TLS,
-trust the
-CA for the certificate presented by the endpoint your client connects to, whether Phoenix or the TLS-terminating
-proxy or tunnel. When you script the HTTP
+key to Phoenix is itself a client that sends the key, so it must use that loopback or TLS with verification on.
+**Exposed:** where any client sends the key other than over that loopback, the `https://` probe of the endpoint
+those clients use (Phoenix's port when Phoenix terminates TLS, otherwise the proxy or tunnel) fails the TLS
+handshake against a plaintext listener, or a client sends the key over an `http://` URL or a plaintext gRPC
+channel other than loopback in Phoenix's own network namespace. **Fixed:** that probe, where it applies,
+completes with verification on, and every client that sends the key, including each 4317 gRPC exporter, uses TLS
+with verification on, other than one using loopback in Phoenix's own network namespace (Sources names no gRPC
+client TLS option, so confirm it in that client's configuration). Sources has no Phoenix reference for an API-key
+transport requirement or for an OTLP gRPC client's TLS or CA settings, so this guide names no client option for
+them: for gRPC clients using TLS, trust the CA for the certificate presented by the endpoint your client connects
+to, whether Phoenix or the TLS-terminating proxy or tunnel. When you script the HTTP
 probe, keep the key out of argv and tracing. In a fresh, clean shell (CONTRIBUTING rule 7), build a subshell
 like the Langfuse block above and add `set +x` straight after its `trap - DEBUG RETURN ERR` line, so tracing is
 off before the key arrives on the `set --` line; refuse a placeholder, an empty value or a control character;
