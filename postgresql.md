@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f7b13148f4c7d9b913dcb765e37ff8d0a3a5f76e9be2ec44bb9f2ebb83641205",
+  "body_sha256": "774984562a54c479ba28d560f6e157e45a94468e2585f9223660583568d6042d",
   "components": {
     "docs": {
       "name": "PostgreSQL documentation",
@@ -431,11 +431,11 @@ At the time of writing, pgAudit 18.x targets PostgreSQL 18. Package and managed-
 
 ## 8. Verify
 
-This revision's service checks are **REASONED, not demonstrated**. The authoring environment has psql 18.6 and PostgreSQL server binaries, but is read-only and has no authorized writable test deployment. Neither Docker nor Podman was found on `PATH`. Missing binaries are not the reason for the service-test limitation. Earlier execution evidence is not recorded in this file; this does not establish whether a previous author ran the earlier probes.
+REASONED: service-check scope from the authoring limitations recorded in this paragraph and the PostgreSQL and pgAudit documentation cited at each check below. This revision's service checks are **REASONED, not demonstrated**. The authoring environment has psql 18.6 and PostgreSQL server binaries, but is read-only and has no authorized writable test deployment. Neither Docker nor Podman was found on `PATH`. Missing binaries are not the reason for the service-test limitation. Earlier execution evidence is not recorded in this file; this does not establish whether a previous author ran the earlier probes.
 
-Local checks performed: both shell blocks passed `bash -n` and ShellCheck. Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service. PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected. This did not load certificates or pgAudit, parse HBA through a running server, or execute SQL.
+REASONED: the local checks recorded in this paragraph, partially re-run at marking time: both blocks passed bash -n (Bash 5.3.9) and ShellCheck 0.11.0, and 19 guard and argument cases ran with local command spies (13 rejected with their not-probing messages, and the valid values and every documented mode dispatched to the spy); the PostgreSQL configuration parse was not re-run, because no PostgreSQL server binary is present in the marking environment. Local checks performed: both shell blocks passed `bash -n` and ShellCheck. Unsubstituted blocks exited locally, and 22 guard/argument cases passed using explicit local command spies without contacting a service. PostgreSQL 18.6 parsed and returned the 14 configuration values shown in the TLS, logging, and preload blocks using anonymous memory; an invalid Boolean control was rejected. This did not load certificates or pgAudit, parse HBA through a running server, or execute SQL.
 
-Demonstrate exposed configurations only in an isolated disposable deployment. Record the server/client versions, fixture, commands, output, and relevant server logs for both states. A DNS error, timeout, missing CA file, or unrelated authentication failure does not prove enforcement.
+REASONED: deployment-demonstration procedure per the cited PostgreSQL documentation; no isolated disposable deployment is available in the authoring environment, so this remains the required procedure rather than a recorded run. Demonstrate exposed configurations only in an isolated disposable deployment. Record the server/client versions, fixture, commands, output, and relevant server logs for both states. A DNS error, timeout, missing CA file, or unrelated authentication failure does not prove enforcement.
 
 ### 8.1. TLS and authentication (REASONED: TLS/authentication comparisons from cited PostgreSQL documentation; no authorized writable deployment or certificate fixtures.)
 
@@ -800,7 +800,7 @@ WHERE error IS NOT NULL OR NOT applied;
 
 | Check scope | Status and missing prerequisite | Deployment comparison |
 | --- | --- | --- |
-| Service checks 8.1-8.8 | REASONED from the cited PostgreSQL and pgAudit documentation; not demonstrated. An authorized writable disposable PostgreSQL deployment, TLS/client-certificate fixtures, nonmember credentials, collected logs, and pgAudit for the optional check are unavailable. | Run each applicable exposed/fixed comparison and matched positive control above through real authenticated logins. Record versions, configurations, commands, results, and correlated server logs. Include the earlier `trust` rule, plaintext-permitting `host` rule, and non-SCRAM password exchange fixtures. Record diagnostic output without treating it as enforcement proof. |
+| REASONED: whole row, per the cited PostgreSQL and pgAudit documentation, with the missing prerequisites and the required exposed and fixed comparisons stated in this row; no authorized writable deployment is available. Service checks 8.1-8.8 | REASONED from the cited PostgreSQL and pgAudit documentation; not demonstrated. An authorized writable disposable PostgreSQL deployment, TLS/client-certificate fixtures, nonmember credentials, collected logs, and pgAudit for the optional check are unavailable. | Run each applicable exposed/fixed comparison and matched positive control above through real authenticated logins. Record versions, configurations, commands, results, and correlated server logs. Include the earlier `trust` rule, plaintext-permitting `host` rule, and non-SCRAM password exchange fixtures. Record diagnostic output without treating it as enforcement proof. |
 
 ## Common mistakes
 
