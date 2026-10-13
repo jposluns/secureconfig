@@ -86,7 +86,7 @@ cover six additional expressions. At that round the corpus had 0 unwaived findin
 blocks across 99 guides, with 39 consumed entries covering 49 expressions. These were false positives,
 including the range-free RabbitMQ broker validators; they are not all non-validator text.
 
-After merging main, the corpus delta against qa/360-r9 is 1 added and 0 removed findings:
+At #360, after merging main, the corpus delta against qa/360-r9 was 1 added and 0 removed findings:
 Python sys.argv[1] indexing in the vLLM TCP probe. Four entries were rebound after main's
 rule-7 guard sweep; their spans and reasons are unchanged. All entries bind their intended
 spans and blocks; individual block-line edits each invalidate the corresponding waiver and
