@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "47e500f3f0a094ca6eba59c4ae2409b1d7cfe369cd193867b31216c6e7a1588c",
+  "body_sha256": "976fc1d0ecf9df959f219781023cd59569126e62c499f213d11173483ab91b57",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -813,7 +813,7 @@ Use the normal trust store when appropriate. Escape backslashes and double quote
 
 Inspect these files before use: allow only the intended authentication, trust, client-certificate, and test-header settings. Do not include URLs, redirects, proxy settings, insecure TLS options, extra transfers, or request/output overrides. An intentional `resolve` entry can support a hostname-negative test against the same server address. The files are trusted test inputs, not a safe format for untrusted instructions.
 
-The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
+The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and curl's memory. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
 
 ```bash
 (

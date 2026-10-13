@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a04f8a9df4b4a7bd2adf972e0f55453e67d1b1505c6ca31521b47f0b53e3723e",
+  "body_sha256": "279dd58d0f0b03f6f58c6770aae3b80d88f8f301529790677171c40ace1116b7",
   "components": {
     "docs": {
       "name": "ClickHouse documentation",
@@ -599,7 +599,7 @@ The exposed fixture has the plaintext listeners enabled. The fixed deployment sh
 
 **REASONED: transport and authentication require the missing server/client runtime and reachable TLS endpoints.** For the exposed authentication fixture, provision the same named account, `app_reader`, with `IDENTIFIED WITH no_password`, the same allowed client origin, and sufficient access to execute `SELECT 1`. This is an isolated alternative to the password-authenticated account in step 2. A stock passwordless `default` account does not establish anything about `app_reader`. Keep the host, certificate, interface, and request constant between fixture states. [Authentication methods](https://clickhouse.com/docs/reference/statements/create/user#identification).
 
-For the correct HTTP request, provision `~/.config/clickhouse/app-reader.headers` through a secure editor or secret-management mechanism, readable only by its owner, with two lines: `X-ClickHouse-User: app_reader` and `X-ClickHouse-Key: ` followed by the actual password. Use a nonempty, single-line password without control characters, different from the deliberate wrong-password value below. Do not put the secret in a shell command. The correct request reads both headers from that protected file on stdin, keeping the password out of curl's argv and shell history. Install the CA and native client configuration from step 4 first. For a certificate trusted by curl's system CA store, omit each `--cacert /etc/clickhouse-client/ca.crt` pair from the HTTP probes; retain certificate verification.
+For the correct HTTP request, provision `~/.config/clickhouse/app-reader.headers` through a secure editor or secret-management mechanism, readable only by its owner, with two lines: `X-ClickHouse-User: app_reader` and `X-ClickHouse-Key: ` followed by the actual password. Use a nonempty, single-line password without control characters, different from the deliberate wrong-password value below. Do not put the secret in a shell command. The correct request reads both headers from that protected file on stdin, keeping the password out of curl's argv and shell history; no shell command or variable carries it, so `set -x` tracing does not record it either. Stdin closes the argv channel only: the account owner and root can still read the password in that file and in curl's memory. Install the CA and native client configuration from step 4 first. For a certificate trusted by curl's system CA store, omit each `--cacert /etc/clickhouse-client/ca.crt` pair from the HTTP probes; retain certificate verification.
 
 Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authentication and the `X-ClickHouse-User`/`X-ClickHouse-Key` headers; avoid `user` and `password` URL parameters because intermediaries can log them. The block requires curl 7.75.0 or later for its diagnostic write-out fields. [HTTP authentication](https://clickhouse.com/docs/concepts/features/interfaces/http), [native client](https://clickhouse.com/docs/concepts/features/interfaces/client).
 

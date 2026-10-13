@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "7bbd2b75bf72d5a68701e7d6be659e74db436403f8e8b0f0286be4d720002abc",
+  "body_sha256": "29da47d0a02956bf2ad4b50ec12d0e7a1c3683226f04d97e1e90ad52cf958b48",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -254,6 +254,8 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   curl -q -g "${base[@]}" -D - -o /dev/null -w 'redirect http=%{http_code}\n' "http://$1/"   # expect 301 + https Location
   # 2) Auth triple against ONE protected resource. No creds and wrong creds must be 401; valid creds the app's
   #    expected success. The password reaches curl through stdin config (curl --config -), never argv.
+  #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
+  #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
   curl -q -g "${base[@]}" -o /dev/null -w 'no-creds http=%{http_code}\n' "https://$1/"
   printf 'user = "admin:%s"\n' 'definitely-wrong' | curl -q -g "${base[@]}" --config - -o /dev/null -w 'bad-creds http=%{http_code}\n' "https://$1/"
   printf 'user = "admin:%s"\n' "$pw"              | curl -q -g "${base[@]}" --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$1/"

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e000470f2a50f6f45b5a7d7e5c559a5a6ecd52d696237272aedaa821ee0f7000",
+  "body_sha256": "01aead893df3adb7e1a329856ef2a3cf0ff1f01934014333ad3ed77b27e84918",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -841,8 +841,10 @@ grant `read` on `sys/pprof/*`, covering the trailing-slash index and profiling s
 
 **Bounded credentials and tokens (demonstrated on loopback):** prepare an owner-readable
 JSON request file containing `role_id` and `secret_id` through protected delivery. The following
-login request reads the credentials from stdin, not argv. Its successful output contains a token;
-handle it only in a protected session.
+login request reads the credentials from stdin, not argv. No credential is typed into the command
+or held in a shell variable, so neither shell history nor `set -x` tracing records it; stdin closes
+the argv channel only, and the account owner and root can still read the file and the `vault`
+process's memory. Its successful output contains a token; handle it only in a protected session.
 
 ```bash
 # DEMONSTRATED: loopback AppRole SecretID, CIDR and token-limit runs recorded below.

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "127e2d2f2c3a14eb944124d5941f969255073e9d7fabd3a0c6c40e42be964bfa",
+  "body_sha256": "2ff4298c5239b1344684ad4d57304399dd75dfa897d2678170e9f802f0d9e3ad",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -422,6 +422,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
 # Run in a subshell with tracing, allexport and errexit OFF, so an inherited `set -x` cannot echo the token,
 # an inherited `set -a` cannot export it (read -s and the stdin header prevent neither), and an inherited
 # `set -e` cannot end the block early.
+# The hidden prompt keeps the token out of shell history; stdin closes the argv channel only, so the
+# account owner and root can still read the token in the subshell and curl.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -497,6 +499,9 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 # REASONED: Flux webhook checks follow the cited receiver documentation; no live Flux is available.
 # Read the HMAC key without echo.
 # Python's hmac reads the key from stdin; only the non-secret request body is passed in argv.
+# The hidden prompt keeps the key out of shell history and set +x keeps it out of set -x tracing.
+# Stdin closes the argv channel only: the account owner and root can still read the key in the
+# subshell and python3.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e

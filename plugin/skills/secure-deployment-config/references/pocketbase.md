@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e42ed83e4d46fbf07f275f4ea335aec99095740e1bc54bb237a316474b588287",
+  "body_sha256": "ba5166589169710c7b6882d13c151acbac3a43e730d5bc3279c63e6fa3ca7f30",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -691,7 +691,10 @@ the deployment's password policy:
 
 The request can create an account on a misconfigured instance. Run it only on the disposable
 fixture or an explicitly designated registration-test deployment. Use the API origin serving
-the console project, not a guessed `/console` UI path.
+the console project, not a guessed `/console` UI path. The block feeds the signup JSON, test
+password included, to curl on stdin from the protected file: no password is typed into the command
+or held in a shell variable, so neither shell history nor `set -x` tracing records it. Stdin closes
+the argv channel only; the account owner and root can still read the file and curl's memory.
 
 REASONED: following block; console registration comparisons follow the pinned Appwrite handler; no disposable Appwrite installation or controlled signup fixture was available.
 

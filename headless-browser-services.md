@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "8295e348dbc18710f8e9396c52d9b6c72bc66c30c4cf9dd34b10752b71fe3530",
+  "body_sha256": "5f849e35b74f4467b5d62781c4c983944a1b934e6e4ca5699d61cf12dc094695",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -403,9 +403,12 @@ handler, not live observations; this authoring environment has no container runt
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
 deployment must also deny the external path while an authorized internal control still succeeds.
 Pass the correct token through curl's stdin configuration, not a literal URL in shell history or
-argv. For the Playwright server on the port you configured (`launchServer` uses an ephemeral port
-unless you set one; `run-server` takes `--port`), any HTTP answer means the port is reachable and
-is already the finding. The distinguishing behaviour for each is in the cited vendor pages.
+argv, and enter it at a hidden prompt after `set +x`: a token typed into the command still enters
+shell history and `set -x` tracing, and stdin closes the argv channel only, so the token stays
+visible to the account owner and root. For the Playwright server on the port you configured
+(`launchServer` uses an ephemeral port unless you set one; `run-server` takes `--port`), any HTTP
+answer means the port is reachable and is already the finding. The distinguishing behaviour for
+each is in the cited vendor pages.
 
 **REASONED browserless file-protocol check:** no live instance was tested: the authoring host forbids
 opening listeners without an isolated network namespace, and has none. With

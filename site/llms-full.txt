@@ -2401,8 +2401,10 @@ grant `read` on `sys/pprof/*`, covering the trailing-slash index and profiling s
 
 **Bounded credentials and tokens (demonstrated on loopback):** prepare an owner-readable
 JSON request file containing `role_id` and `secret_id` through protected delivery. The following
-login request reads the credentials from stdin, not argv. Its successful output contains a token;
-handle it only in a protected session.
+login request reads the credentials from stdin, not argv. No credential is typed into the command
+or held in a shell variable, so neither shell history nor `set -x` tracing records it; stdin closes
+the argv channel only, and the account owner and root can still read the file and the `vault`
+process's memory. Its successful output contains a token; handle it only in a protected session.
 
 ```bash
 # DEMONSTRATED: loopback AppRole SecretID, CIDR and token-limit runs recorded below.
@@ -5058,6 +5060,8 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl reload haproxy
   curl -q -g "${base[@]}" -D - -o /dev/null -w 'redirect http=%{http_code}\n' "http://$1/"   # expect 301 + https Location
   # 2) Auth triple against ONE protected resource. No creds and wrong creds must be 401; valid creds the app's
   #    expected success. The password reaches curl through stdin config (curl --config -), never argv.
+  #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
+  #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
   curl -q -g "${base[@]}" -o /dev/null -w 'no-creds http=%{http_code}\n' "https://$1/"
   printf 'user = "admin:%s"\n' 'definitely-wrong' | curl -q -g "${base[@]}" --config - -o /dev/null -w 'bad-creds http=%{http_code}\n' "https://$1/"
   printf 'user = "admin:%s"\n' "$pw"              | curl -q -g "${base[@]}" --config - -o /dev/null -w 'valid http=%{http_code}\n' "https://$1/"
@@ -6076,6 +6080,9 @@ Gateway API defines no authentication filter; each implementation adds its own. 
 # read it. Apache's own page says of it: "This option should be used with extreme care,
 # since the password is clearly visible on the command line. For script use see the -i
 # option." -i reads it from stdin instead. Envoy Gateway's example uses -b; this does not.
+# The hidden prompts keep the password out of shell history and set +x keeps it out of set -x
+# tracing. Stdin closes the argv channel only: the account owner and root can still read it in the
+# subshell and htpasswd.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -6666,6 +6673,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
 # Run in a subshell with tracing, allexport and errexit OFF, so an inherited `set -x` cannot echo the token,
 # an inherited `set -a` cannot export it (read -s and the stdin header prevent neither), and an inherited
 # `set -e` cannot end the block early.
+# The hidden prompt keeps the token out of shell history; stdin closes the argv channel only, so the
+# account owner and root can still read the token in the subshell and curl.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -6741,6 +6750,9 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 # REASONED: Flux webhook checks follow the cited receiver documentation; no live Flux is available.
 # Read the HMAC key without echo.
 # Python's hmac reads the key from stdin; only the non-secret request body is passed in argv.
+# The hidden prompt keeps the key out of shell history and set +x keeps it out of set -x tracing.
+# Stdin closes the argv channel only: the account owner and root can still read the key in the
+# subshell and python3.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -18510,7 +18522,7 @@ The exposed fixture has the plaintext listeners enabled. The fixed deployment sh
 
 **REASONED: transport and authentication require the missing server/client runtime and reachable TLS endpoints.** For the exposed authentication fixture, provision the same named account, `app_reader`, with `IDENTIFIED WITH no_password`, the same allowed client origin, and sufficient access to execute `SELECT 1`. This is an isolated alternative to the password-authenticated account in step 2. A stock passwordless `default` account does not establish anything about `app_reader`. Keep the host, certificate, interface, and request constant between fixture states. [Authentication methods](https://clickhouse.com/docs/reference/statements/create/user#identification).
 
-For the correct HTTP request, provision `~/.config/clickhouse/app-reader.headers` through a secure editor or secret-management mechanism, readable only by its owner, with two lines: `X-ClickHouse-User: app_reader` and `X-ClickHouse-Key: ` followed by the actual password. Use a nonempty, single-line password without control characters, different from the deliberate wrong-password value below. Do not put the secret in a shell command. The correct request reads both headers from that protected file on stdin, keeping the password out of curl's argv and shell history. Install the CA and native client configuration from step 4 first. For a certificate trusted by curl's system CA store, omit each `--cacert /etc/clickhouse-client/ca.crt` pair from the HTTP probes; retain certificate verification.
+For the correct HTTP request, provision `~/.config/clickhouse/app-reader.headers` through a secure editor or secret-management mechanism, readable only by its owner, with two lines: `X-ClickHouse-User: app_reader` and `X-ClickHouse-Key: ` followed by the actual password. Use a nonempty, single-line password without control characters, different from the deliberate wrong-password value below. Do not put the secret in a shell command. The correct request reads both headers from that protected file on stdin, keeping the password out of curl's argv and shell history; no shell command or variable carries it, so `set -x` tracing does not record it either. Stdin closes the argv channel only: the account owner and root can still read the password in that file and in curl's memory. Install the CA and native client configuration from step 4 first. For a certificate trusted by curl's system CA store, omit each `--cacert /etc/clickhouse-client/ca.crt` pair from the HTTP probes; retain certificate verification.
 
 Clients use native TLS on 9440 or HTTPS on 8443. HTTP supports Basic authentication and the `X-ClickHouse-User`/`X-ClickHouse-Key` headers; avoid `user` and `password` URL parameters because intermediaries can log them. The block requires curl 7.75.0 or later for its diagnostic write-out fields. [HTTP authentication](https://clickhouse.com/docs/concepts/features/interfaces/http), [native client](https://clickhouse.com/docs/concepts/features/interfaces/client).
 
@@ -22077,7 +22089,7 @@ Review outbound requests too. Meilisearch v1.8 through v1.34.0 need upgrading fo
 
 ## Verify
 
-DEMONSTRATED: following block; the checks below were demonstrated on loopback against the Meilisearch v1.53.2 release binary (its SHA-256 matched the digest GitHub publishes for the asset) and the Typesense 30.2 server (its MD5 matched the one in the release tarball), each with native TLS on 127.0.0.1, or behind a Caddy TLS proxy for the proxy checks, with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and every address set before start. The blocks ran as printed with only their `set --` values substituted, and keys were fed to the prompts on stdin. What those runs do not show is marked **REASONED** where it occurs, with its reason. Backlog row 1.117 retains the real-client-build positive and negative controls for the credential scan below; its hand-built fixtures do not supply a real client bundle. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
+DEMONSTRATED: following block; the checks below were demonstrated on loopback against the Meilisearch v1.53.2 release binary (its SHA-256 matched the digest GitHub publishes for the asset) and the Typesense 30.2 server (its MD5 matched the one in the release tarball), each with native TLS on 127.0.0.1, or behind a Caddy TLS proxy for the proxy checks, with certificates from a private test CA that curl trusted through `CURL_CA_BUNDLE`, and every address set before start. The blocks ran as printed with only their `set --` values substituted, and keys were fed to the prompts on stdin. What those runs do not show is marked **REASONED** where it occurs, with its reason. Backlog row 1.117 retains the real-client-build positive and negative controls for the credential scan below; its hand-built fixtures do not supply a real client bundle. Use Bash and curl 7.75.0 or later; never add `-k`. Substitute your actual HTTPS origin inside the single quotes, without a trailing slash. Run each row of the matrix below through this paired-request block, changing the method, path, JSON body, header prefix, and expected statuses on its `set --` line, and enter credentials at the prompts rather than in the command: the hidden prompts keep the keys out of shell history and the block's `set +x` keeps them out of `set -x` tracing, but stdin closes the argv channel only, so the keys stay visible to the account owner and root. Both requests use exactly the same origin, method, path, and body; inspect the engine JSON as well as the status, since a proxy login page, redirect, missing resource, or transport failure does not establish engine authorization.
 
 ```bash
 (
@@ -24651,7 +24663,7 @@ Use the normal trust store when appropriate. Escape backslashes and double quote
 
 Inspect these files before use: allow only the intended authentication, trust, client-certificate, and test-header settings. Do not include URLs, redirects, proxy settings, insecure TLS options, extra transfers, or request/output overrides. An intentional `resolve` entry can support a hostname-negative test against the same server address. The files are trusted test inputs, not a safe format for untrusted instructions.
 
-The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
+The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and curl's memory. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
 
 ```bash
 (
@@ -27352,6 +27364,8 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
     -w '\nunauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
   # 2) Authenticated positive control: paste a cookie from a valid browser session; it enters via stdin
   #    (curl --header @-), never argv. The authenticated response must contain the editor.
+  #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
+  #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
   { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
@@ -31432,6 +31446,9 @@ ss -tlnp   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8
 
 # Prefect: an empty JSON filter. Once the auth string is set the anonymous call is 401 and the authorized call
 # returns a JSON flow list; an anonymous list, even an empty one, is the finding. Feed the auth string on stdin.
+# getpass prompts without echo on a terminal, so the auth string enters neither shell history nor set -x
+# tracing; stdin closes the argv channel only, and the account owner and root can still read it in
+# python3 and curl.
 # Do NOT use /api/health or /api/ready as the authentication discriminator. Current server source exempts
 # those GET paths; this behavior is version-dependent and was not present in 3.1.8.
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
@@ -31514,6 +31531,9 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   https://argo.internal:2746/api/v1/workflows/argo
 # Enter a Kubernetes bearer token (client mode) or an Argo session token (SSO mode) with list permission in
 # this namespace. The token goes to curl on stdin, never argv.
+# getpass prompts without echo on a terminal, so the token enters neither shell history nor set -x
+# tracing; stdin closes the argv channel only, and the account owner and root can still read it in
+# python3 and curl.
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 python3 -c 'import getpass; t=getpass.getpass("Argo bearer token (without Bearer prefix): "); assert t and all(33 <= ord(c) <= 126 for c in t), "invalid token"; print("Authorization: Bearer " + t)' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
@@ -32438,7 +32458,7 @@ Without `--tlsverify` the daemon does not check client certificates. Firewall 23
 ## Dozzle
 
 - Dozzle reads the Docker socket to show logs, the same host-level access the Docker API section above describes ([docker.md](docker.md)); a Dozzle login is a login to the host.
-- Authentication is off unless configured. Generate a `users.yml` with `docker run -it --rm amir20/dozzle generate admin > users.yml` (omit `--password` and Dozzle prompts for it on stdin, so it never lands in shell history), mount that file into the container, and set `DOZZLE_AUTH_PROVIDER=simple`; or set `DOZZLE_AUTH_PROVIDER=forward-proxy` to delegate login to a fronting proxy such as Authelia, Authentik, or Cloudflare Access.
+- Authentication is off unless configured. Generate a `users.yml` with `docker run -it --rm amir20/dozzle generate admin > users.yml` (omit `--password` and Dozzle prompts for it on stdin, so it never lands in shell history or `set -x` tracing; stdin closes the argv channel only, so the password stays visible to your own account and root while the `docker` client relays it, and to anyone who can use the Docker daemon), mount that file into the container, and set `DOZZLE_AUTH_PROVIDER=simple`; or set `DOZZLE_AUTH_PROVIDER=forward-proxy` to delegate login to a fronting proxy such as Authelia, Authentik, or Cloudflare Access.
 - Container actions (start, stop, recreate) and shell access into a running container can be turned on; leave both off unless a specific workflow needs them, since either turns a log viewer into remote command execution on the host.
 - Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet, or Access, with MFA at the fronting layer, like every panel above.
 
@@ -33932,6 +33952,9 @@ REASONED: following block; the canary function comparison follows the cited envi
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  # The anon JWT you substitute on the set -- line enters shell history; clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the JWT from set -x tracing, your own account
+  # or root.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_BASE_URL' 'REPLACE_WITH_A_FUNCTION_NAME' 'REPLACE_WITH_CURRENT_ANON_JWT'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 2; }
   shift
@@ -36604,7 +36627,10 @@ the deployment's password policy:
 
 The request can create an account on a misconfigured instance. Run it only on the disposable
 fixture or an explicitly designated registration-test deployment. Use the API origin serving
-the console project, not a guessed `/console` UI path.
+the console project, not a guessed `/console` UI path. The block feeds the signup JSON, test
+password included, to curl on stdin from the protected file: no password is typed into the command
+or held in a shell variable, so neither shell history nor `set -x` tracing records it. Stdin closes
+the argv channel only; the account owner and root can still read the file and curl's memory.
 
 REASONED: following block; console registration comparisons follow the pinned Appwrite handler; no disposable Appwrite installation or controlled signup fixture was available.
 
@@ -37022,9 +37048,12 @@ handler, not live observations; this authoring environment has no container runt
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
 deployment must also deny the external path while an authorized internal control still succeeds.
 Pass the correct token through curl's stdin configuration, not a literal URL in shell history or
-argv. For the Playwright server on the port you configured (`launchServer` uses an ephemeral port
-unless you set one; `run-server` takes `--port`), any HTTP answer means the port is reachable and
-is already the finding. The distinguishing behaviour for each is in the cited vendor pages.
+argv, and enter it at a hidden prompt after `set +x`: a token typed into the command still enters
+shell history and `set -x` tracing, and stdin closes the argv channel only, so the token stays
+visible to the account owner and root. For the Playwright server on the port you configured
+(`launchServer` uses an ephemeral port unless you set one; `run-server` takes `--port`), any HTTP
+answer means the port is reachable and is already the finding. The distinguishing behaviour for
+each is in the cited vendor pages.
 
 **REASONED browserless file-protocol check:** no live instance was tested: the authoring host forbids
 opening listeners without an isolated network namespace, and has none. With
