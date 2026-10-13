@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "ba9c1235f218520afa449f3dacaf45ce083cf44c6f8e686ec760fadbcf3d0ed2",
+  "body_sha256": "dfc6a604767609c969733fe7076681734a57319097f312b6f06e21f3cd93f8ff",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -625,14 +625,22 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
 
 # Airflow: obtaining a token from the documented Compose account is the finding. Send the credentials as JSON
 # on stdin; FAB 3.9.0 returns 201 Created with a nonempty access_token when airflow/airflow works. Compare with a valid account on
-# the same route, and test an API read with no token then a token at the proxy and the origin. On Airflow 2 use
-# its /api/v1/ endpoint and its own auth mechanism instead. A real password typed into the printf line below for
-# that comparison enters shell history and, with set -x on, the trace; stdin closes curl's argv channel only,
-# and the account owner and root can still read the password in curl.
+# the same route (the second call below), and test an API read with no token then a token at the proxy and the
+# origin. On Airflow 2 use its /api/v1/ endpoint and its own auth mechanism instead. The first call's body is
+# fixed; never type a real password into it.
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-printf '{"username":"%s","password":"%s"}' 'airflow' 'airflow' \
+printf '%s' '{"username":"airflow","password":"airflow"}' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
       -w '\nairflow-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+      -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token
+# The valid-account comparison. getpass prompts without echo on a terminal, so the username and password enter
+# neither shell history nor set -x tracing, and json.dumps escapes any double quote, backslash or control
+# character in them, so the body stays one JSON object; stdin closes the argv channel only, and the account
+# owner and root can still read the password in python3 and curl.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
+python3 -c 'import getpass,json; print(json.dumps({"username": getpass.getpass("Airflow username: "), "password": getpass.getpass("Airflow password: ")}))' \
+  | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      -w '\nairflow-valid-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
       -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
