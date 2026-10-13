@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "f9c5702b76aafdab4a011adf4703f2f18a3c0d169a9165bd7c08a44ea55224b9",
+  "body_sha256": "dc62827d786fdf1f030f51f61217aa4c346524f79e7100c79e5ec23f6d441754",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -588,6 +588,11 @@ For authenticated and on-host checks, transport failure, TLS failure, an unexpec
 missing positive control is inconclusive, never the fixed state.
 See [curl write-out fields](https://curl.se/docs/manpage.html#-w).
 
+REASONED: from the Vault CLI environment and token-helper documentation and the curl manual page
+cited in Sources, and from the guards in the blocks below, not from the loopback runs, which record
+no run with altered shell builtins, an apostrophe in a placeholder, or inherited proxy settings or
+Vault proxy overrides. The `VAULT_TOKEN` environment exposure rests on the stubbed QA runs recorded
+at the wrapping-lookup blocks below (same-account observers, no real `vault` client, root not tested).
 Paste whole blocks and substitute inside the single quotes. Use the base HTTPS URL without a
 trailing slash where a block appends an API path. Never embed credentials in a URL. These guards
 assume ordinary shell builtins; do not insert a literal apostrophe into a single-quoted placeholder.

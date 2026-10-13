@@ -2148,6 +2148,11 @@ For authenticated and on-host checks, transport failure, TLS failure, an unexpec
 missing positive control is inconclusive, never the fixed state.
 See [curl write-out fields](https://curl.se/docs/manpage.html#-w).
 
+REASONED: from the Vault CLI environment and token-helper documentation and the curl manual page
+cited in Sources, and from the guards in the blocks below, not from the loopback runs, which record
+no run with altered shell builtins, an apostrophe in a placeholder, or inherited proxy settings or
+Vault proxy overrides. The `VAULT_TOKEN` environment exposure rests on the stubbed QA runs recorded
+at the wrapping-lookup blocks below (same-account observers, no real `vault` client, root not tested).
 Paste whole blocks and substitute inside the single quotes. Use the base HTTPS URL without a
 trailing slash where a block appends an API path. Never embed credentials in a URL. These guards
 assume ordinary shell builtins; do not insert a literal apostrophe into a single-quoted placeholder.
@@ -6667,7 +6672,9 @@ its start until the process overwrites its arguments, if it does, readable throu
 `/proc/<pid>/cmdline` by other local accounts on the node as well as by the same account and root, and command-line auditing on the node
 can record it beyond that. Where a process overwrites its own arguments, they stay readable until
 the overwrite runs; whether the Redis image does so is not established by this source subset. Treat
-every account that can read the node's processes as able to read the Redis password. No Redis TLS
+every account that can read the node's processes as able to read the Redis password. If the
+Deployment passes the value through a container environment variable, it is also readable through
+`/proc/<pid>/environ` by the same account and root while Redis runs. No Redis TLS
 is configured by these manifests, and Argo CD's Redis client defaults to `--redis-use-tls=false`;
 protect that traffic and Secret as well as the cached data. The password initializer's
 implementation and the Redis image's bind configuration are absent from this source subset.

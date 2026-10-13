@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "f42a5e4f5e8ef63674fc66b2663be1230a9fc9841f1260f452b953abb9473722",
+  "body_sha256": "9c634dc794de391041a9365158fb66ce73364cd91a85e13fbc1fd3345e10493d",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -304,7 +304,9 @@ its start until the process overwrites its arguments, if it does, readable throu
 `/proc/<pid>/cmdline` by other local accounts on the node as well as by the same account and root, and command-line auditing on the node
 can record it beyond that. Where a process overwrites its own arguments, they stay readable until
 the overwrite runs; whether the Redis image does so is not established by this source subset. Treat
-every account that can read the node's processes as able to read the Redis password. No Redis TLS
+every account that can read the node's processes as able to read the Redis password. If the
+Deployment passes the value through a container environment variable, it is also readable through
+`/proc/<pid>/environ` by the same account and root while Redis runs. No Redis TLS
 is configured by these manifests, and Argo CD's Redis client defaults to `--redis-use-tls=false`;
 protect that traffic and Secret as well as the cached data. The password initializer's
 implementation and the Redis image's bind configuration are absent from this source subset.
