@@ -2977,7 +2977,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | management-mtls: https-management-client-auth accepts none/request/required and inherits HTTP settings; this plaintext topology needs management TLS credentials and trust before client certificates can authenticate it. | Keycloak documentation unknown | REASONED |
 | authentik-metrics: authentik server metrics use unauthenticated plain HTTP /metrics with default [::]:9300; absent host publication does not protect its container-network listener. | authentik source version/2026.8.3 | REASONED |
 | worker-outpost-metrics: Unauthenticated 9300 metrics for workers and outposts remain documentation-backed; their handlers were not traced in the recorded audit. Restrict to monitoring clients. | authentik operational documentation unknown | REASONED |
-| keycloak-mfa: Enroll administrator TOTP or WebAuthn and require the factor in the realm authentication flow; registered devices alone do not enforce MFA. | Keycloak documentation unknown | REASONED |
+| keycloak-mfa: Enroll administrator TOTP or WebAuthn and require the factor in the realm authentication flow; registered devices alone do not enforce MFA. Sources has no Keycloak TOTP, WebAuthn or authentication-flow enforcement reference. | Keycloak documentation unknown | REASONED |
 | brute-force-default: Keycloak brute-force detection is disabled by default and must be enabled per realm. | Keycloak documentation unknown | REASONED |
 | redirect-wildcards: Keycloak permits trailing redirect-URI wildcards and bare *; deliberately register exact URIs instead. | Keycloak documentation unknown | REASONED |
 | docker-socket: authentik Compose mounts the worker Docker socket for outpost management; use a socket proxy or remove the mount and manage outposts manually. | authentik operational documentation unknown; authentik source version/2026.8.3 | REASONED |
@@ -10448,7 +10448,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | outside: Run exposure checks from a second network; host-local curl and ss do not establish outside reachability or platform firewall behaviour. | Nmap documentation unknown | REASONED |
-| tcp-scan: Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. No nc reference is recorded in Sources. | Nmap documentation unknown; OpenBSD nc manual 7.6 | REASONED |
+| tcp-scan: Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. Sources has no reference for nc implementations other than OpenBSD netcat. | Nmap documentation unknown; OpenBSD nc manual 7.6 | REASONED |
 | udp-scan: The full port sweep is TCP only; inventory UDP services and probe their ports separately with nmap -sU. | Nmap documentation unknown | REASONED |
 | all-addresses: Check public IPv4, public IPv6 and platform URLs as well as the custom domain; one address cannot establish coverage of the others. | Nmap documentation unknown; Vercel Deployment Protection unknown | REASONED |
 | passive-index: Cross-reference Shodan and Censys indexes for previously indexed exposure; indexed observations are not a fresh direct scan. | Shodan unknown; Censys unknown | REASONED |
@@ -10468,7 +10468,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | verify-ipv4: From another network, nmap -Pn -p- should find only intended TCP ports; unintended open ports fail, and errors or an unexecuted scan are inconclusive. | Nmap documentation unknown | REASONED |
 | verify-ipv6: Repeat the full TCP sweep over the public IPv6 address with -6; a scan that did not run is inconclusive. | Nmap documentation unknown | REASONED |
 | verify-dns: curl failure does not prove DNS removal; resolver A/AAAA/CNAME answers need investigation and empty output is inconclusive. Check every authoritative server with +norecurse for NXDOMAIN or NOERROR/NODATA without CNAME; SERVFAIL, referral and timeout are inconclusive. | BIND dig documentation unknown | REASONED |
-| verify-certificate: The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No OpenSSL source or observed outcome is recorded; Nmap is outside-check context only. | Nmap documentation unknown; OpenSSL command documentation 3.0 | REASONED |
+| verify-certificate: The scheduled external s_client probe checks hostname and verification errors and pipes the certificate to x509 -enddate. No observed outcome is recorded; Nmap is outside-check context only. | Nmap documentation unknown; OpenSSL command documentation 3.0 | REASONED |
 <!-- version-basis:end -->
 
 This repository's per-service guides check TLS, binding, and authentication from inside the host and at the moment you set them up. Real exposure is judged from outside the host, and it drifts: a preview URL, a restored backup, or an upgrade can reopen something already closed. This guide is the lifecycle layer around the per-service checks.
@@ -10516,7 +10516,7 @@ When a person leaves, revoke access at every layer they touched, not only their 
 
 ## Verify
 
-REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap and dig documentation and the guide's lifecycle reasoning; an OpenSSL source is not recorded.
+REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning.
 
 ```bash
 # From a second network, not the host itself:
