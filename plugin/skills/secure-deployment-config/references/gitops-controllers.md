@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "10f40db6d4598c42a2e7d8b41ccbf1c99d57e78d805f96dce1f0feb87905c95f",
+  "body_sha256": "e1e566860b300d332c1f9067b42820fa681dd09fa22818f48c5bc822e2a641fb",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -245,7 +245,12 @@ The install generates an initial `admin` password and stores it in cleartext in 
 `argocd-initial-admin-secret`, in the `password` field. Rotate it and then delete the Secret:
 `argocd account update-password` changes the password, and the vendor says the Secret "can safely be
 deleted" afterward since it only holds the bootstrap value. Deleting the Secret does not by itself
-rotate the credential, so change the password first. `admin` is the only built-in user and a
+rotate the credential, so change the password first. Give `argocd account update-password` the current
+and new passwords at the tool's prompt, not as arguments: `--current-password` and `--new-password`
+would put them in its argv. This guide's Sources do not establish that the command prompts, so
+confirm that it does before relying on it. A prompt keeps the passwords out of the command text, shell
+history and shell tracing; the account owner and root can still read them in the `argocd` process
+while it runs. `admin` is the only built-in user and a
 superuser with unrestricted access; once you have configured SSO (OIDC or Dex) and granted named
 roles, disable it with `admin.enabled: "false"` in the `argocd-cm` ConfigMap, and pair Argo CD logins
 with your identity provider's MFA ([mfa.md](mfa.md)).

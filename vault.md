@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fd7622a9b2b231210f09f925c7c64045bb749605c220a01db6ae1ea123a8cb37",
+  "body_sha256": "e3c12bf66ccbd730a671f26446cb0bf52d1a412c503ec568f2d101aaf56b6e00",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -1049,9 +1049,11 @@ tracing records it from the block, provided the file is prepared through protect
 rather than by a shell command that contains the token. Stdin closes the argv channel only: the
 account owner and root can still read the file and the `vault` process's memory, and where
 `VAULT_TOKEN` holds the same token, as the next paragraph asks, the token is also in the
-environment of the shell holding `VAULT_TOKEN` and every process it starts, including `vault` and
-the block's subshell, readable through `/proc/<pid>/environ` by the same account and root while
-each runs.
+environment of every program the shell starts while `VAULT_TOKEN` is exported, including `vault`,
+readable through `/proc/<pid>/environ` by the same account and root while each runs. Where the
+shell received `VAULT_TOKEN` in its initial environment, as in the runs above, that file also shows
+it for the shell itself and the block's subshell; a shell that sets `VAULT_TOKEN` only after it
+starts was not tested.
 
 **Recipient validation (the lookup demonstrated; the recipient's own check REASONED, since it
 belongs to the receiving application):** prepare the

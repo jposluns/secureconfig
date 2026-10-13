@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "634f1be362c2db52a6ce999a82ea8f9d03c17f3d085eb0d6fadde179de931030",
+  "body_sha256": "fe91d990b7d6e65780106bd5b6a4a26c0b626484fddc6462b5fa98fc1e78addf",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -387,7 +387,7 @@ ollama.example.com {
 }
 ```
 
-Generate the hash with `caddy hash-password`. The exact matcher and fallback keep other paths private. Stock Caddy has no built-in rate-limiting directive; provide the admission and resource controls in C6 through a suitable fronting layer before publishing this alternative. See [Basic authentication](https://caddyserver.com/docs/caddyfile/directives/basic_auth), [request matchers](https://caddyserver.com/docs/caddyfile/matchers), [exclusive handles](https://caddyserver.com/docs/caddyfile/directives/handle), and [reverse proxy configuration](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy).
+Generate the hash with `caddy hash-password`. Run it without `--plaintext`, which would put the password in its arguments, and enter the password at its prompt. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `caddy` process while it runs. The exact matcher and fallback keep other paths private. Stock Caddy has no built-in rate-limiting directive; provide the admission and resource controls in C6 through a suitable fronting layer before publishing this alternative. See [Basic authentication](https://caddyserver.com/docs/caddyfile/directives/basic_auth), [request matchers](https://caddyserver.com/docs/caddyfile/matchers), [exclusive handles](https://caddyserver.com/docs/caddyfile/directives/handle), and [reverse proxy configuration](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy).
 
 ### Bearer-only clients
 
