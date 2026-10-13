@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "3dae5770b60e1bc86535c470882f0639f94e38b86d599cbb3b2ce0549bd8772d",
+  "body_sha256": "5688ba2003dc3804084002cecbf3d2196d243f3008783fdfb56e675ea5976ecf",
   "components": {
     "next": {
       "name": "Next.js documentation",
@@ -120,7 +120,7 @@ version_basis: {
     "verify-bind": {"text": "ss inventories loopback 3000; it does not prove firewall/platform ingress isolation.", "components": ["next"], "sources": ["next:s066f8a176a52", "next:s353c30dff99f"], "status": "REASONED", "verify": [1]},
     "verify-anonymous": {"text": "Anonymous admin/dashboard must contain no protected data: login 3xx, chosen 401/403, or streamed 200 redirect shell require reading saved bodies.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [1]},
     "verify-authorized": {"text": "Authorized dashboard/admin controls must return real content; non-admin must deny admin data, meaningful only after admin success.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [1]},
-    "verify-cookie-input": {"text": "Prompt cookie values without echo and send through curl stdin; avoids argv only, assumes clean shell and separate subshell pastes.", "components": ["curl"], "sources": ["curl:s5345a985007a"], "status": "REASONED", "verify": [1]},
+    "verify-cookie-input": {"text": "Prompt cookie values without echo and send through curl stdin; hidden prompt and set +x keep them from argv, history and tracing, not the account owner or root; assumes clean shell and separate subshell pastes.", "components": ["curl"], "sources": ["curl:s5345a985007a"], "status": "REASONED", "verify": [1]},
     "verify-secret": {"text": "Require .next/static, prompt full literal secret and send to grep stdin: 0 leak, 1 no literal match, other codes inconclusive. Encoded/split secrets can escape.", "components": ["next", "grep"], "sources": ["next:s964651d4eed4", "grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae"], "status": "REASONED", "verify": [1]},
     "verify-action": {"text": "Fresh disposable record per Action attempt; authorized mutation changes store, anonymous/unauthorized replays deny without changes, not merely not-found.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED", "verify": [1]}
   }
@@ -166,7 +166,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-bind: ss inventories loopback 3000; it does not prove firewall/platform ingress isolation. | Next.js documentation unknown | REASONED |
 | verify-anonymous: Anonymous admin/dashboard must contain no protected data: login 3xx, chosen 401/403, or streamed 200 redirect shell require reading saved bodies. | Next.js documentation unknown | REASONED |
 | verify-authorized: Authorized dashboard/admin controls must return real content; non-admin must deny admin data, meaningful only after admin success. | Next.js documentation unknown | REASONED |
-| verify-cookie-input: Prompt cookie values without echo and send through curl stdin; avoids argv only, assumes clean shell and separate subshell pastes. | curl unknown | REASONED |
+| verify-cookie-input: Prompt cookie values without echo and send through curl stdin; hidden prompt and set +x keep them from argv, history and tracing, not the account owner or root; assumes clean shell and separate subshell pastes. | curl unknown | REASONED |
 | verify-secret: Require .next/static, prompt full literal secret and send to grep stdin: 0 leak, 1 no literal match, other codes inconclusive. Encoded/split secrets can escape. | Next.js documentation unknown; GNU grep unknown | REASONED |
 | verify-action: Fresh disposable record per Action attempt; authorized mutation changes store, anonymous/unauthorized replays deny without changes, not merely not-found. | Next.js documentation unknown | REASONED |
 <!-- version-basis:end -->
@@ -303,7 +303,7 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 
 ## Verify
 
-REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application, session controls or run outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources.
+REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin.
 
 ```bash
 ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the
@@ -319,9 +319,10 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 # `better-auth.session_token` (or `__Secure-better-auth.session_token` with secure cookies) - and paste a
 # real, freshly issued cookie VALUE at each hidden prompt. Test the admin route with an admin AND a non-admin
 # cookie (authorization, not only authentication), and confirm each success body is the real protected
-# content, not a login page. Each cookie reaches curl on stdin (--header @-), never argv; that closes the argv
-# channel only, not shell history, tracing, or your own account's view of the process. Paste this subshell by
-# itself: without bracketed paste, lines pasted after its closing ) are read as the cookies instead.
+# content, not a login page. Each cookie reaches curl on stdin (--header @-), never argv. The hidden prompt
+# keeps the cookies out of shell history and the block's set +x keeps them out of set -x tracing; neither hides
+# them from the account owner or root. Paste this subshell by itself: without bracketed paste, lines pasted
+# after its closing ) are read as the cookies instead.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
