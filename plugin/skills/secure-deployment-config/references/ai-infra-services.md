@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a30822ddddd373df1ef170411c73b4f5076b76e371873849ea4137fa6dc9c2cf",
+  "body_sha256": "06e64b398d807cfd259dd78a0fd6353f0bf67af51678831e4dffc7ffc744962c",
   "components": {
     "searx": {
       "name": "SearxNG documentation",
@@ -546,6 +546,7 @@ REASONED: following block; native authentication follows the cited service sourc
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  ( set -- a b c d e f g; [ "$(printf '%s,' "${@:5}")" = 'e,f,g,' ] ) 2>/dev/null || { echo "run this block in bash; not probing"; exit; }  # dash and ash mishandle "${@:5}"
   # When you repeat this block with a valid credential header in $4, the secret
   # on the set -- line enters shell history; clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the header from set -x

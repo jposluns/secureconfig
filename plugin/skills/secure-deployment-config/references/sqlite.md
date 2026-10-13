@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "10877fe715ebd908888bd44339aee1ab1c926733c2781fb4f377d455dd357527",
+  "body_sha256": "05b2e8fc032f8d5fb7e49ea52f33cdc01a4e3bf14414b362e49320674bc93112",
   "components": {
     "see": {
       "name": "SQLite Encryption Extension",
@@ -332,7 +332,7 @@ The bundle scan, the git inventory and the `stat` check were demonstrated on the
 
 Scan built client bundles for a leaked Turso/libSQL token, keeping the token off argv and shell history, though not out of your own account's view of the process:
 
-DEMONSTRATED: following block; the recorded authoring-host placeholder-token runs distinguish exposed and clean bundles and exercise the listed shell guards; no real token was used.
+DEMONSTRATED: following block; the recorded authoring-host placeholder-token runs distinguish exposed and clean bundles and exercise the listed shell guards; no real token was used. On 2026-10-13 (UTC), after both scans were changed to print file names only (`-l`), a bundle carrying a JWT-shaped dummy printed `dist/app.js` before `token-literal exit: 0` and again before `jwt-shape exit: 0`, with no token in the output, and a clean bundle printed `1` for both; before the change each scan printed the line holding the token.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -352,8 +352,8 @@ DEMONSTRATED: following block; the recorded authoring-host placeholder-token run
   fi
   echo
   [ -n "$tok" ] || { echo 'no token supplied; not scanning'; exit 2; }
-  printf '%s\n' "$tok" | grep -rnF -f - -- "$@"; echo "token-literal exit: $? (1 is the goal: not found; 0 means the token is in the bundle)"
-  grep -rnE 'eyJ[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-]{10,}[.][ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-]{10,}' -- "$@"; echo "jwt-shape exit: $? (1 is the goal; 0 means a JWT-shaped string needs explaining)"
+  printf '%s\n' "$tok" | grep -rlF -f - -- "$@"; echo "token-literal exit: $? (1 is the goal: not found; 0 means the token is in the bundle)"
+  grep -rlE 'eyJ[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-]{10,}[.][ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-]{10,}' -- "$@"; echo "jwt-shape exit: $? (1 is the goal; 0 means a JWT-shaped string needs explaining)"
 )
 ```
 

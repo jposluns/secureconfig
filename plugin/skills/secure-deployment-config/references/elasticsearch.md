@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "d7ced560934a3e50607bc903b70a3c9fdc3c1d8d825b447808d43c4904df61d4",
+  "body_sha256": "4850209326079d3cc18ffba9676739f0f26cd259334c579e38081fd753d6c671",
   "components": {
     "es": {
       "name": "Elasticsearch documentation",
@@ -862,7 +862,7 @@ For either UI, loopback binding suits a proxy in the same network namespace. For
 
 REASONED: verification scope from the recorded authoring limitations; no target cluster, container runtime, node access or audit collector is available. All deployment checks below are **REASONED, not demonstrated**: the authoring environment has no target cluster or Docker/Podman runtime, and no access to the target node or audit collector; the authoring host forbids opening listeners without an isolated network namespace, and has none. Expected outcomes follow the cited vendor behavior; no deployment result is claimed.
 
-DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results.
+DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. In a further run on 2026-10-13 (UTC), after the cluster guard gained the REST guard's 1 to 65535 port range check, ports 0, 65536, 99999 and a 20-digit value exited 1 before any curl call, while 1, 9200 and 65535 reached the first curl call; before the change every one of those ports reached it. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results.
 
 REASONED: introduction to the deployment prerequisites for the cited cluster API checks; local preparation observations are recorded above, while cluster identities and deployed trust remain unavailable. Before running:
 
@@ -897,6 +897,7 @@ REASONED: following block; cluster authorization, TLS, CORS and audit expectatio
   [ -r "$2" ] || { echo "readable CA file required; not probing"; exit 1; }
   [ -n "$3" ] || { echo "port required; not probing"; exit 1; }
   case "$3" in *[!0123456789]*) echo "HTTP port must be numeric"; exit 1 ;; esac
+  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
 
   # Reasoned: no target cluster or container runtime. Anonymous root probe.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \

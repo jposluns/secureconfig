@@ -7194,7 +7194,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | vite-bind: Vite 8.3.1 server.host defaults localhost; true/0.0.0.0 exposes all addresses and should not remain beyond trusted-network tests. | Vite bind source v8.3.1; Vite documentation unknown | REASONED |
 | vite-hosts: server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names. | Vite documentation unknown | REASONED |
 | verify-private: Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects. | Nuxt documentation 4.x; SvelteKit documentation unknown | REASONED |
-| verify-secret: Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole following symlinks; only a result with every match under dist/server/ is reported as server output, else FINDING with dist/server/ matches labelled. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; input protects argv only. | GNU grep unknown; SvelteKit adapter-node @sveltejs/adapter-node@5.5.7; Nuxt output source v4.0.0; Nitro output defaults 2.12.0; Vite bind source v8.3.1; Vite documentation unknown; Nitro documentation (rolling) unknown | REASONED |
+| verify-secret: Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole following symlinks; only a result with every match under dist/server/ is reported as server output, else FINDING with dist/server/ matches labelled. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; hidden input and set +x keep the secret from argv, history and tracing, not the account owner or root. | GNU grep unknown; SvelteKit adapter-node @sveltejs/adapter-node@5.5.7; Nuxt output source v4.0.0; Nitro output defaults 2.12.0; Vite bind source v8.3.1; Vite documentation unknown; Nitro documentation (rolling) unknown | REASONED |
 | verify-host: Spoofed Host must not be trusted; supplied allowlist reference is Vite-specific. | Vite documentation unknown | REASONED |
 | verify-proxy: Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its preset/platform, not NUXT_PUBLIC_. | SvelteKit documentation unknown; Nuxt documentation 4.x | REASONED |
 <!-- version-basis:end -->
@@ -7295,7 +7295,7 @@ ls -d build/client build/prerendered .output/public dist 2>/dev/null  # confirm 
 curl -q -si https://app.example.com/ -H "Host: evil.example.com" | head -1   # a spoofed Host is not trusted
 ```
 
-REASONED: preceding block; the whole fence: the private-route request, the output-path listing, the client-secret scan and the spoofed-Host request, per the cited framework documentation and GNU grep manual entries; no deployed framework application is available in the authoring environment, so the two curl checks were not run; at marking time the scan subshell ran against local fixture trees, where a planted secret produced the FINDING line and a clean fixture tree reported clean, while the argv, history and transformation limits stated in this paragraph are documented, not demonstrated. The prompt keeps the secret out of process argv only; it does not hide it from shell history, `set -x` tracing, or your own account's view of the process. A clean grep result here is evidence, not proof: it means the literal value did not match in the directories searched, not that the secret cannot be present in some other form. A bundler could split, encode, or otherwise transform it, so check the exit code and confirm the directory actually exists rather than reading silence alone as clean.
+REASONED: preceding block; the whole fence: the private-route request, the output-path listing, the client-secret scan and the spoofed-Host request, per the cited framework documentation and GNU grep manual entries; no deployed framework application is available in the authoring environment, so the two curl checks were not run; at marking time the scan subshell ran against local fixture trees, where a planted secret produced the FINDING line and a clean fixture tree reported clean. On 2026-10-13 (UTC), with Bash 5.3.9 and a dummy secret typed at a pty's hidden prompt, the scan subshell traced two lines under `bash -x` (`trap -` and `set +x +a +e`), neither holding the dummy, where the same subshell with `set +x` removed traced 32 lines, one of them holding the dummy; an interactive Bash given the subshell wrote a history file holding the block's lines and not the dummy. The account-owner and transformation limits stated in this paragraph are documented, not demonstrated. The secret reaches grep on stdin, never argv; the hidden prompt keeps it out of shell history and the block's `set +x` keeps it out of `set -x` tracing, but this does not hide it from the account owner or root. A clean grep result here is evidence, not proof: it means the literal value did not match in the directories searched, not that the secret cannot be present in some other form. A bundler could split, encode, or otherwise transform it, so check the exit code and confirm the directory actually exists rather than reading silence alone as clean.
 
 REASONED: proxy cookie, redirect and trusted-proxy checks per the cited SvelteKit adapter-node and Nuxt runtime config documentation; no reverse proxy or deployed adapter is available in the authoring environment, so these outcomes were not observed. Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use an `https://` `Location` once `ORIGIN` (SvelteKit) is set; without it, SvelteKit often builds an `http://` URL even though the browser connection is TLS. `NUXT_PUBLIC_...` is the public runtime-config prefix, exposed straight to the client bundle; it is not a trusted-proxy or secure-cookie setting and does nothing for this check. Nuxt's own trusted-proxy and origin handling come from its deployment preset and hosting platform rather than one documented app-level variable, so verify the equivalent behavior against whichever adapter you deploy with.
 
@@ -7578,7 +7578,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-bind: ss inventories loopback 3000; it does not prove firewall/platform ingress isolation. | Next.js documentation unknown | REASONED |
 | verify-anonymous: Anonymous admin/dashboard must contain no protected data: login 3xx, chosen 401/403, or streamed 200 redirect shell require reading saved bodies. | Next.js documentation unknown | REASONED |
 | verify-authorized: Authorized dashboard/admin controls must return real content; non-admin must deny admin data, meaningful only after admin success. | Next.js documentation unknown | REASONED |
-| verify-cookie-input: Prompt cookie values without echo and send through curl stdin; avoids argv only, assumes clean shell and separate subshell pastes. | curl unknown | REASONED |
+| verify-cookie-input: Prompt cookie values without echo and send through curl stdin; hidden prompt and set +x keep them from argv, history and tracing, not the account owner or root; assumes clean shell and separate subshell pastes. | curl unknown | REASONED |
 | verify-secret: Require .next/static, prompt full literal secret and send to grep stdin: 0 leak, 1 no literal match, other codes inconclusive. Encoded/split secrets can escape. | Next.js documentation unknown; GNU grep unknown | REASONED |
 | verify-action: Fresh disposable record per Action attempt; authorized mutation changes store, anonymous/unauthorized replays deny without changes, not merely not-found. | Next.js documentation unknown | REASONED |
 <!-- version-basis:end -->
@@ -7715,7 +7715,7 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 
 ## Verify
 
-REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application, session controls or run outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources.
+REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin.
 
 ```bash
 ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the
@@ -7731,9 +7731,10 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 # `better-auth.session_token` (or `__Secure-better-auth.session_token` with secure cookies) - and paste a
 # real, freshly issued cookie VALUE at each hidden prompt. Test the admin route with an admin AND a non-admin
 # cookie (authorization, not only authentication), and confirm each success body is the real protected
-# content, not a login page. Each cookie reaches curl on stdin (--header @-), never argv; that closes the argv
-# channel only, not shell history, tracing, or your own account's view of the process. Paste this subshell by
-# itself: without bracketed paste, lines pasted after its closing ) are read as the cookies instead.
+# content, not a login page. Each cookie reaches curl on stdin (--header @-), never argv. The hidden prompt
+# keeps the cookies out of shell history and the block's set +x keeps them out of set -x tracing; neither hides
+# them from the account owner or root. Paste this subshell by itself: without bracketed paste, lines pasted
+# after its closing ) are read as the cookies instead.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -14829,7 +14830,7 @@ For either UI, loopback binding suits a proxy in the same network namespace. For
 
 REASONED: verification scope from the recorded authoring limitations; no target cluster, container runtime, node access or audit collector is available. All deployment checks below are **REASONED, not demonstrated**: the authoring environment has no target cluster or Docker/Podman runtime, and no access to the target node or audit collector; the authoring host forbids opening listeners without an isolated network namespace, and has none. Expected outcomes follow the cited vendor behavior; no deployment result is claimed.
 
-DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results.
+DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. In a further run on 2026-10-13 (UTC), after the cluster guard gained the REST guard's 1 to 65535 port range check, ports 0, 65536, 99999 and a 20-digit value exited 1 before any curl call, while 1, 9200 and 65535 reached the first curl call; before the change every one of those ports reached it. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results.
 
 REASONED: introduction to the deployment prerequisites for the cited cluster API checks; local preparation observations are recorded above, while cluster identities and deployed trust remain unavailable. Before running:
 
@@ -14864,6 +14865,7 @@ REASONED: following block; cluster authorization, TLS, CORS and audit expectatio
   [ -r "$2" ] || { echo "readable CA file required; not probing"; exit 1; }
   [ -n "$3" ] || { echo "port required; not probing"; exit 1; }
   case "$3" in *[!0123456789]*) echo "HTTP port must be numeric"; exit 1 ;; esac
+  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
 
   # Reasoned: no target cluster or container runtime. Anonymous root probe.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
@@ -22433,7 +22435,7 @@ The bundle scan, the git inventory and the `stat` check were demonstrated on the
 
 Scan built client bundles for a leaked Turso/libSQL token, keeping the token off argv and shell history, though not out of your own account's view of the process:
 
-DEMONSTRATED: following block; the recorded authoring-host placeholder-token runs distinguish exposed and clean bundles and exercise the listed shell guards; no real token was used.
+DEMONSTRATED: following block; the recorded authoring-host placeholder-token runs distinguish exposed and clean bundles and exercise the listed shell guards; no real token was used. On 2026-10-13 (UTC), after both scans were changed to print file names only (`-l`), a bundle carrying a JWT-shaped dummy printed `dist/app.js` before `token-literal exit: 0` and again before `jwt-shape exit: 0`, with no token in the output, and a clean bundle printed `1` for both; before the change each scan printed the line holding the token.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
@@ -22453,8 +22455,8 @@ DEMONSTRATED: following block; the recorded authoring-host placeholder-token run
   fi
   echo
   [ -n "$tok" ] || { echo 'no token supplied; not scanning'; exit 2; }
-  printf '%s\n' "$tok" | grep -rnF -f - -- "$@"; echo "token-literal exit: $? (1 is the goal: not found; 0 means the token is in the bundle)"
-  grep -rnE 'eyJ[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-]{10,}[.][ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-]{10,}' -- "$@"; echo "jwt-shape exit: $? (1 is the goal; 0 means a JWT-shaped string needs explaining)"
+  printf '%s\n' "$tok" | grep -rlF -f - -- "$@"; echo "token-literal exit: $? (1 is the goal: not found; 0 means the token is in the bundle)"
+  grep -rlE 'eyJ[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-]{10,}[.][ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-]{10,}' -- "$@"; echo "jwt-shape exit: $? (1 is the goal; 0 means a JWT-shaped string needs explaining)"
 )
 ```
 
@@ -27198,7 +27200,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 1 ;; esac
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the API key on the set -- line above; not probing"; exit 1 ;; esac
   u=https://n8n.example.com/api/v1/workflows
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' "$u"
   printf 'X-N8N-API-KEY: %s\n' "$1" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\nwith-key=%{http_code} exit=%{exitcode}\n' -H @- "$u"
@@ -29700,6 +29702,7 @@ REASONED: following block; native authentication follows the cited service sourc
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
+  ( set -- a b c d e f g; [ "$(printf '%s,' "${@:5}")" = 'e,f,g,' ] ) 2>/dev/null || { echo "run this block in bash; not probing"; exit; }  # dash and ash mishandle "${@:5}"
   # When you repeat this block with a valid credential header in $4, the secret
   # on the set -- line enters shell history; clear that history line afterward.
   # Stdin closes the argv channel only: it does not hide the header from set -x

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "ce455ab2ec533dae213f13068ad7f04f32f61b5a012d514fe69940d1a5af6569",
+  "body_sha256": "b7c0e2345c420f76775329aa3a251347b4034eb7a65d4b5fa1a1466caa972c36",
   "components": {
     "docs": {
       "name": "n8n documentation",
@@ -192,7 +192,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
-  case "$1" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 1 ;; esac
+  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the API key on the set -- line above; not probing"; exit 1 ;; esac
   u=https://n8n.example.com/api/v1/workflows
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' "$u"
   printf 'X-N8N-API-KEY: %s\n' "$1" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\nwith-key=%{http_code} exit=%{exitcode}\n' -H @- "$u"
