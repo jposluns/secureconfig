@@ -100,10 +100,13 @@ separate development fuzzer has 17 regression tests. Mutations removing block bi
 a partial block, accepting legacy entries or malformed block digests, preserving raw line endings, binding only
 the opener or skipping stale detection fail the suite. The fixed corpus includes the 1143 earlier
 exploratory misses and all 1476 round-8 exploratory misses and 3 targeted misses. Seventeen
-terminal-list variants include the 4 terminal exploratory misses. Both quote guards agree with
-their original predicates on 776 values under each of C and en_US.utf8, with ordinary and
-readonly quote-variable names, including diagnostics and exit status. Literal quote
-alternatives have separate bracket-free case arms and assign no quote variables.
+terminal-list variants include the 4 terminal exploratory misses. test_quote_guards.py checks
+that both quote guards agree with their original predicates on 776 values under the C locale,
+its default and the only locale run_all_checks.sh runs it under, with ordinary and readonly
+quote-variable names, including diagnostics and exit status. Its --locale option replays the
+same comparison under one other named locale, such as en_US.utf8; that replay is manual and is
+not part of the offline gates. Literal quote alternatives have separate bracket-free case arms
+and assign no quote variables.
 
 The development run uses C and en_US.utf8, 16 workers, lengths 0 through 5 over 17 characters,
 and seven multiline scaffolds with insertions of lengths 0 through 4 over the same alphabet:
