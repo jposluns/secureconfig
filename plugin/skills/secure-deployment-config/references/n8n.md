@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "ce455ab2ec533dae213f13068ad7f04f32f61b5a012d514fe69940d1a5af6569",
+  "body_sha256": "e39440389876628cdeeb8c85b1aa0e6a28136b2bf328de8bd303e1b7bf4c4f88",
   "components": {
     "docs": {
       "name": "n8n documentation",
@@ -171,6 +171,7 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 
 ```bash
 # REASONED: listener, TLS, API and webhook comparisons have no recorded n8n run; no live n8n deployment is available in this read-only review. Expectations follow the listed sources, with sourcing gaps recorded in the claim table.
+# On 2026-10-13 (UTC), against a stub curl, the placeholder was refused with the substitute message and a line feed, carriage return, tab or DEL with the control-character message, before any curl call; a valid dummy key let both curl calls run and reached only the with-key call, on its stdin.
 # Owner setup must be COMPLETE before the instance is public: an unclaimed n8n hands admin to whoever
 # reaches it first. Confirm the owner exists (the first-run setup wizard no longer appears); do NOT POST
 # owner-creation data to a live instance as a "test".
@@ -193,6 +194,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
   case "$1" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 1 ;; esac
+  case "$1" in *[[:cntrl:]]*) echo "the API key must be one line with no control characters; not probing"; exit 1 ;; esac
   u=https://n8n.example.com/api/v1/workflows
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' "$u"
   printf 'X-N8N-API-KEY: %s\n' "$1" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\nwith-key=%{http_code} exit=%{exitcode}\n' -H @- "$u"
