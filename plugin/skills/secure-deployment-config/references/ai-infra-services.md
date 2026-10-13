@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ee71088950de478c655bf736bd3c3846ad22ebe8beab06df18e1e88a583f0917",
+  "body_sha256": "a30822ddddd373df1ef170411c73b4f5076b76e371873849ea4137fa6dc9c2cf",
   "components": {
     "searx": {
       "name": "SearxNG documentation",
@@ -384,7 +384,7 @@ Machine clients need separate credentials, with the narrowest permissions the ap
 
 ## Verify
 
-**Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally, in `bash`, `dash` and BusyBox `ash`, with and without `set -u`. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. The specific blocking capability is that the authoring environment has no container runtime, and with it no live service, no external network vantage, no TLS exchange and no browser authentication flow. The maintainer's verified vendor record supplies the deployment facts, and each check below states the outcome it expects in both the exposed and the fixed state.
+**Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally, in `bash`, `dash` and BusyBox `ash`, with and without `set -u`. Check 7's five-value guard, changed in #475, was exercised in `bash` on 2026-10-13 (UTC) against a stub curl: one and two headers reached curl only on stdin, and a line feed, carriage return or placeholder in either header was refused before any curl call; it was not re-run in `dash` or BusyBox `ash`. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. The specific blocking capability is that the authoring environment has no container runtime, and with it no live service, no external network vantage, no TLS exchange and no browser authentication flow. The maintainer's verified vendor record supplies the deployment facts, and each check below states the outcome it expects in both the exposed and the fixed state.
 
 Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it. Keep the quotes even for an empty value, and paste every block whole. Each block opens with a fixed marker on its `set --` line, and the guard lines below check that marker and count the values, so a fragment that keeps those lines but drops or shortens the `set --` line stops instead of running on whatever arguments your own shell already held. A fragment pasted from below the guard lines is not guarded at all, which is why the instruction is to paste whole blocks. One case is beyond a pasted block's reach: a shell that already holds the marker and the right number of plausible values is indistinguishable from the block having set them, so paste whole blocks rather than relying on the check to catch every way of not doing so.
 
@@ -603,19 +603,22 @@ REASONED: following block; credentialed success follows the cited service and cu
 ```bash
 (                              # a subshell, so your own script arguments are untouched
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
-  # The credential you substitute on the set -- line enters shell history.
+  ( set -- a b c d e f g; [ "$(printf '%s,' "${@:6}")" = 'f,g,' ] ) 2>/dev/null || { echo "run this block in bash; not probing"; exit; }  # dash and ash mishandle "${@:6}"
+  # The credentials you substitute on the set -- line enter shell history.
   # Clear that history line afterward.
-  # Stdin closes the argv channel only: it does not hide the credential from
+  # Stdin closes the argv channel only: it does not hide the credentials from
   # set -x tracing or your own account's view of the process.
-  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' 'REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL'
+  set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PROTECTED_URL' 'REPLACE_WITH_HTTP_METHOD' '' 'REPLACE_WITH_HEADER_NAME: REPLACE_WITH_CREDENTIAL' ''
   # $3 is the same harmless JSON body as the anonymous check. Keep the empty quotes if none is needed.
+  # $5 is an optional second credential header, for an ingress and application that need separate
+  # credentials. Keep the empty quotes if one header is enough.
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
-  [ "$#" -eq 4 ] || { echo "the set -- line needs exactly 4 values; not probing"; exit; }
+  [ "$#" -eq 5 ] || { echo "the set -- line needs exactly 5 values; not probing"; exit; }
   if [ -z "$1" ] || [ -z "$2" ] || [ -z "$4" ]; then
     echo "fill in the URL, method, and header on the set -- line above; not probing"; exit
   fi
-  case "$1$2$3$4" in
+  case "$1$2$3$4$5" in
     *REPLACE_WITH_*) echo "substitute the request values on the set -- line above; not probing"; exit ;;
   esac
   case "$1" in
@@ -623,13 +626,22 @@ REASONED: following block; credentialed success follows the cited service and cu
     *) echo "use a https:// URL; not probing"; exit ;;
   esac
   case "$4" in
-    *[[:cntrl:]]*) echo "put the credential header on one line; not probing"; exit ;;
+    *[[:cntrl:]]*) echo "put the credential header on one line, and a second header in the fifth value; not probing"; exit ;;
   esac
-  # Body options, if any, go after the four values. The credential header ($4) reaches curl on stdin
-  # (--header @-), never in its argv, where ps and /proc/<pid>/cmdline would show it.
+  case "$5" in
+    *[[:cntrl:]]*) echo "put the second credential header on one line; not probing"; exit ;;
+  esac
+  # Body options, if any, go after the five values. The credential headers ($4, and $5 if set) reach
+  # curl on stdin (--header @-, one per line), never in its argv, where ps and /proc/<pid>/cmdline
+  # would show them.
   if [ -n "$3" ]; then set -- "$@" -H 'Content-Type: application/json' --data-binary "$3"; fi
-  printf '%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
-    -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:5}" -X "$2" "$1"
+  if [ -n "$5" ]; then
+    printf '%s\n' "$4" "$5" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
+      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:6}" -X "$2" "$1"
+  else
+    printf '%s\n' "$4" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --header @- \
+      -D - -w '\nhttp=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "${@:6}" -X "$2" "$1"
+  fi
 )
 ```
 
