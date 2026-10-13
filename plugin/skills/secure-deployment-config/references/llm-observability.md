@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "68772af115244cd987fb81f6064d6599b74521295574b1d27230de51e7958d4d",
+  "body_sha256": "b11ef64f26f70031ec023d6e5fa301f04722bfc4fd15a3c0e68e341b7216fc0a",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -538,6 +538,27 @@ move it to loopback by host
 setting: isolate it in a private container network, restrict or omit its host publication, and inspect its
 namespace, publications, and firewall separately from the HTTP port. A wildcard listener inside an isolated
 namespace is not by itself public exposure.
+
+REASONED: transport for the Phoenix API key in the OTLP checks above. The requirement applies the bearer-key
+rule in [machine-auth.md](machine-auth.md); the cited Phoenix sources supply only the TLS settings named here,
+and no Phoenix instance is available, so no plaintext-versus-TLS run was made. Send a Phoenix API key only over
+TLS or loopback: use an `https://` URL for `/v1/traces` with certificate verification left on, and a TLS
+channel for the gRPC Export on 4317, terminated by Phoenix itself (`PHOENIX_TLS_ENABLED=True` with
+`PHOENIX_TLS_CERT_FILE` and `PHOENIX_TLS_KEY_FILE`, or the per-protocol `PHOENIX_TLS_ENABLED_FOR_HTTP` and
+`PHOENIX_TLS_ENABLED_FOR_GRPC` where your release has them) or by a reverse proxy or tunnel in front of it.
+Phoenix defaults to TLS off, so a plain `http://` URL or a plaintext gRPC channel puts the Bearer key on the
+wire in cleartext, and a private network is not a substitute: anyone who can observe that network reads the
+key. The one plaintext exception is a direct probe of a plaintext Phoenix listener behind a TLS-terminating
+proxy, run on the Phoenix host itself against a loopback address, so the key never crosses a network link.
+None of the Phoenix sources cited below states a transport requirement for the API key or documents an OTLP
+gRPC client's TLS or CA settings, so this guide names no client option for them: configure your gRPC client
+for TLS with the CA that signed Phoenix's certificate. When you script the HTTP probe, keep the key out of
+argv and tracing. In a fresh, clean shell (CONTRIBUTING rule 7), build a subshell like the Langfuse block
+above and add `set +x` straight after its `trap - DEBUG RETURN ERR` line, so tracing is off before the key
+arrives on the `set --` line; refuse a placeholder, an empty value or a control character; then pipe
+`printf 'Authorization: Bearer %s\n' "$1"` into curl with `--header @-`, never `-H` with the key and never
+the key in the URL. The key on that `set --` line enters shell history, so clear that line afterward, and
+stdin keeps it out of argv only, not out of your own account's view of the process.
 
 A dashboard that renders traces, prompts, or provider keys without a login is a finding; so is an OTLP port
 that accepts spans with no credential at all.
