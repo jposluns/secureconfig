@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fb5a7bd91247ee079b7f4e4cb0bda995b85de127be33e595d1b18f4a73ab0c7a",
+  "body_sha256": "e39ddc28a25e208f11730472e509ff0a23655d8df3c25ece05bef16df4a2dabc",
   "components": {
     "firebase": {
       "name": "Firebase documentation",
@@ -893,7 +893,8 @@ Do not use a secret or service-role key for an ordinary-user test.
 Paste the whole block and substitute inside the single quotes. Use an unsigned HTTPS endpoint
 URL, never a credential-bearing or signed URL. The response must contain only your harmless
 fixture data. Credentials enter curl through stdin, not process arguments; that does not protect
-a carelessly created header file, shell history, or tracing. The write-out fields require curl
+a carelessly created header file, shell history, or tracing, and it does not hide the
+credentials from your own account's view of the process. The write-out fields require curl
 7.75.0 or newer.
 
 REASONED: following block; ordinary-user profiles and MFA comparisons follow the cited Supabase/PostgreSQL documentation; no disposable project or controlled user sessions were supplied.

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "93bfdc4f83c4b909a31cccd0267de7afb7e8c5fbf7a04b4ebd5c018ba2e41dd4",
+  "body_sha256": "115defc6c4457c38e5805b1e115c02846cccfef92b4a0c77a2d6fde97e84d2a7",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -447,6 +447,8 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The secret key you substitute on the set -- line enters shell history.
   # Use a short-lived project key or clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the keys from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

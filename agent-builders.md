@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "62e5456617f213293cfa39b2e164b25da4f4abf5a712e7d9764e7f796d91fdc3",
+  "body_sha256": "3d0e9aa1cf17e8d8013ae5889dae00cf2f2fb3c552578db44f9a45d633b3e906",
   "components": {
     "dify": {
       "name": "Dify documentation",
@@ -471,6 +471,8 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The app key you substitute on the set -- line enters shell history.
   # Use a short-lived key or clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the key from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DIFY_APP_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
