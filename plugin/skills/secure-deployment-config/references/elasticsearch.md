@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e2a0eca835d77b8bb89f162b1893226044607f18979ef84e9527868f1fd5a4e2",
+  "body_sha256": "5caff6c4098e383a6f0e53d192255f488033b796dcece17e8eab5180d5742a6f",
   "components": {
     "es": {
       "name": "Elasticsearch documentation",
@@ -862,7 +862,7 @@ For either UI, loopback binding suits a proxy in the same network namespace. For
 
 REASONED: verification scope from the recorded authoring limitations; no target cluster, container runtime, node access or audit collector is available. All deployment checks below are **REASONED, not demonstrated**: the authoring environment has no target cluster or Docker/Podman runtime, and no access to the target node or audit collector; the authoring host forbids opening listeners without an isolated network namespace, and has none. Expected outcomes follow the cited vendor behavior; no deployment result is claimed.
 
-DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. In a further run on 2026-10-13 (UTC), after the cluster guard gained the REST guard's 1 to 65535 port range check, ports 0, 65536, 99999 and a 20-digit value exited 1 before any curl call, while 1, 9200 and 65535 reached the first curl call; before the change every one of those ports reached it. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results.
+DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. In a further run on 2026-10-13 (UTC), after the cluster guard gained the REST guard's 1 to 65535 port range check, ports 0, 65536, 99999 and a 20-digit value exited 1 before any curl call, while 1, 9200 and 65535 reached the first curl call; before the change every one of those ports reached it. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. In a further run on 2026-10-13 (UTC), after the cluster, REST and UI guards' `example.com` test was made case-insensitive, each of the three refused `example.com`, `EXAMPLE.COM`, `Example.Com` and `es.EXAMPLE.com` with exit 1 before any curl call and passed `Dummy.Valid.test` to its first curl call unchanged; before the change the three forms that are not all lowercase reached curl in all three guards. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results.
 
 REASONED: introduction to the deployment prerequisites for the cited cluster API checks; local preparation observations are recorded above, while cluster identities and deployed trust remain unavailable. Before running:
 
@@ -890,7 +890,7 @@ REASONED: following block; cluster authorization, TLS, CORS and audit expectatio
   shift
   [ "$#" -eq 3 ] || { echo "set exactly host, CA file, and HTTP port; not probing"; exit 1; }
   case "$1|$2|$3" in
-    *REPLACE_WITH_*|*example.com*) echo "substitute your deployment; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*) echo "substitute your deployment; not probing"; exit 1 ;;
   esac
   [ -n "$1" ] || { echo "host required; not probing"; exit 1; }
   case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 1 ;; esac
@@ -1021,7 +1021,7 @@ REASONED: deployment scope from the cited product APIs; no target cluster, eligi
 
 REASONED: fixture and substitution instructions per the cited product APIs and the local preparation recorded above; no isolated test deployment is available in the authoring environment. Use isolated test deployments for exposed-state fixtures. Substitute values inside single quotes and paste whole shell blocks. Values containing a literal apostrophe need proper shell quoting. Keep credentials in the protected header files described above, with tracing disabled. The following blocks assume the shell's normal builtins.
 
-REASONED: body-file and per-request procedure for the REST block below, per the cited product APIs; re-run at marking time, the guard in that block refused a placeholder, a missing body file, an unsupported method and a relative path with exit 1 and dispatched valid values to a local argument recorder, and a parsed JSON body was saved as a mode-0600 file; no target cluster is available. For the REST request tables below, save each JSON body in a protected file. Run this block once per request, setting the method, path, and body-file arguments. Use `/dev/null` for a request with no body. Select the administrator or application header file as directed:
+REASONED: body-file and per-request procedure for the REST block below, per the cited product APIs; re-run at marking time, before the guard's `example.com` test was made case-insensitive, the guard in that block refused a placeholder, a missing body file, an unsupported method and a relative path with exit 1 and dispatched valid values to a local argument recorder, and a parsed JSON body was saved as a mode-0600 file; on 2026-10-13 (UTC), with Bash 5.3.9 and a stub curl executable, the edited guard refused `example.com`, `EXAMPLE.COM`, `Example.Com` and `es.EXAMPLE.com` with exit 1 before any curl call and passed `Dummy.Valid.test` to curl unchanged, where before the edit the three forms that are not all lowercase reached curl; no target cluster is available. For the REST request tables below, save each JSON body in a protected file. Run this block once per request, setting the method, path, and body-file arguments. Use `/dev/null` for a request with no body. Select the administrator or application header file as directed:
 
 REASONED: following block; REST fixture comparisons follow the cited product APIs and restriction rules; no target cluster, eligible Elasticsearch licence or repository access was available.
 
@@ -1032,7 +1032,7 @@ REASONED: following block; REST fixture comparisons follow the cited product API
   shift
   [ "$#" -eq 7 ] || { echo "set host, CA, port, header file, method, path, and body file; not probing"; exit 1; }
   case "$1|$2|$3|$4|$5|$6|$7" in
-    *REPLACE_WITH_*|*example.com*) echo "substitute your deployment; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*) echo "substitute your deployment; not probing"; exit 1 ;;
   esac
   case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 1 ;; esac
   case "$3" in ""|*[!0123456789]*) echo "numeric port required; not probing"; exit 1 ;; esac
@@ -1195,7 +1195,7 @@ REASONED: following block; UI TLS comparison follows the cited Kibana and Dashbo
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
   shift
   [ "$#" -eq 3 ] || { echo "set UI host, CA file, and port; not probing"; exit 1; }
-  case "$1|$2|$3" in *REPLACE_WITH_*|*example.com*) echo "substitute your UI deployment"; exit 1 ;; esac
+  case "$1|$2|$3" in *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*) echo "substitute your UI deployment"; exit 1 ;; esac
   case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address"; exit 1 ;; esac
   case "$3" in ""|*[!0123456789]*) echo "numeric UI port required"; exit 1 ;; esac
   [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1

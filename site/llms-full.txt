@@ -6195,18 +6195,38 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   [ -n "$PASSWORD" ] || { echo 'no password supplied; not creating the secret'; exit 2; }
   [ "$PASSWORD" = "$confirm" ] || { echo 'the two entries differ; not creating the secret'; exit 2; }
   set -o pipefail  # so a failure anywhere in a pipeline below, not only in htpasswd, fails it
-  printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin ||
+  # htpasswd -c writes a file. It goes in a private directory from mktemp -d (mode 0700), not the
+  # current one. The EXIT trap removes that directory when the subshell reaches its end, whatever
+  # kubectl returns, or leaves through one of the `exit` lines below, and the HUP, INT and TERM
+  # traps after it turn a hangup, Ctrl-C or SIGTERM into such an exit. SIGKILL leaves the directory
+  # and its .htpasswd behind, as can a signal before those traps are set, and in some measured runs
+  # where the shell running the block was the terminal's session leader and was itself ended by the
+  # signal (run directly as the terminal's process, without job control), so its exit hung up the
+  # terminal, a hangup or SIGTERM did too; if that happens, remove it from your temporary directory
+  # by hand.
+  set -- "$(mktemp -d)"
+  [ -d "$1" ] || { echo 'cannot create a private directory; not creating the secret'; exit 2; }
+  trap 'rm -rf -- "$1"' EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+  printf '%s' "$PASSWORD" | htpasswd -cis "$1/.htpasswd" admin ||
     { echo 'password-file creation failed; not creating the secret'; exit 2; }
   # -i does no verification, so the block asks twice and refuses a mismatch; `-vi` below then
   # confirms the file holds that value, and the secret is created only if it does. Paste the block by
   # itself: the shell reads the whole subshell before either `read` runs. Without bracketed paste,
   # lines pasted after the closing `)` feed the two prompts instead, and the block refuses unless both
   # are identical; with bracketed paste, they run as commands once the block finishes.
-  printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin ||
+  printf '%s' "$PASSWORD" | htpasswd -vi "$1/.htpasswd" admin ||
     { echo 'htpasswd could not verify the file; not creating the secret'; exit 2; }
-  kubectl create secret generic app-basic-auth --from-file=.htpasswd
+  # Sources has no kubectl reference for the key name this gives the file in the Secret, and the
+  # runs recorded below used a stub kubectl, so before Envoy Gateway uses app-basic-auth, confirm
+  # that the Secret has a .htpasswd key, listing its key names only and never printing its value.
+  kubectl create secret generic app-basic-auth --from-file="$1/.htpasswd"
 )
 ```
+
+On 2026-10-13 (UTC), with Bash 5.3.9 on a pty, a dummy password typed at the hidden prompts, stub `htpasswd` and `kubectl` executables, and logging wrappers around the real `mktemp` and `rm`, the block removed its directory after normal completion, a refused creation, a refused verification and a failed `kubectl`, and after Ctrl-C, SIGHUP or SIGTERM sent to its process group while `kubectl` waited, both pasted into an interactive shell and run as a script; SIGKILL left the directory and its `.htpasswd` behind. Where the shell running the block was the terminal's session leader (run directly as the terminal's process, without job control), 50 repeats removed the directory after 50 Ctrl-C, 49 SIGHUP and 50 SIGTERM runs, and an earlier 20 repeats of the same commands after 20, 19 and 17; 50 repeats of the block without the HUP, INT and TERM traps removed it after 50, 2 and 1; in the SIGHUP and SIGTERM runs that shell was itself ended by the signal, so its exit hung up the terminal. The dummy password reached the `htpasswd` stub only on stdin, never in any stub's argv, the `bash -x` trace or the terminal output. Stubs stood in for the cluster, so these runs do not show which key `kubectl` gives the file in the Secret.
 
 `-s` is SHA-1, which Apache describes as "insecure by today's standards", and it is not a
 choice here: Envoy Gateway's basic auth documentation says "only SHA hash algorithm is
@@ -14962,7 +14982,7 @@ For either UI, loopback binding suits a proxy in the same network namespace. For
 
 REASONED: verification scope from the recorded authoring limitations; no target cluster, container runtime, node access or audit collector is available. All deployment checks below are **REASONED, not demonstrated**: the authoring environment has no target cluster or Docker/Podman runtime, and no access to the target node or audit collector; the authoring host forbids opening listeners without an isolated network namespace, and has none. Expected outcomes follow the cited vendor behavior; no deployment result is claimed.
 
-DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. In a further run on 2026-10-13 (UTC), after the cluster guard gained the REST guard's 1 to 65535 port range check, ports 0, 65536, 99999 and a 20-digit value exited 1 before any curl call, while 1, 9200 and 65535 reached the first curl call; before the change every one of those ports reached it. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results.
+DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. In a further run on 2026-10-13 (UTC), after the cluster guard gained the REST guard's 1 to 65535 port range check, ports 0, 65536, 99999 and a 20-digit value exited 1 before any curl call, while 1, 9200 and 65535 reached the first curl call; before the change every one of those ports reached it. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. In a further run on 2026-10-13 (UTC), after the cluster, REST and UI guards' `example.com` test was made case-insensitive, each of the three refused `example.com`, `EXAMPLE.COM`, `Example.Com` and `es.EXAMPLE.com` with exit 1 before any curl call and passed `Dummy.Valid.test` to its first curl call unchanged; before the change the three forms that are not all lowercase reached curl in all three guards. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results.
 
 REASONED: introduction to the deployment prerequisites for the cited cluster API checks; local preparation observations are recorded above, while cluster identities and deployed trust remain unavailable. Before running:
 
@@ -14990,7 +15010,7 @@ REASONED: following block; cluster authorization, TLS, CORS and audit expectatio
   shift
   [ "$#" -eq 3 ] || { echo "set exactly host, CA file, and HTTP port; not probing"; exit 1; }
   case "$1|$2|$3" in
-    *REPLACE_WITH_*|*example.com*) echo "substitute your deployment; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*) echo "substitute your deployment; not probing"; exit 1 ;;
   esac
   [ -n "$1" ] || { echo "host required; not probing"; exit 1; }
   case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 1 ;; esac
@@ -15121,7 +15141,7 @@ REASONED: deployment scope from the cited product APIs; no target cluster, eligi
 
 REASONED: fixture and substitution instructions per the cited product APIs and the local preparation recorded above; no isolated test deployment is available in the authoring environment. Use isolated test deployments for exposed-state fixtures. Substitute values inside single quotes and paste whole shell blocks. Values containing a literal apostrophe need proper shell quoting. Keep credentials in the protected header files described above, with tracing disabled. The following blocks assume the shell's normal builtins.
 
-REASONED: body-file and per-request procedure for the REST block below, per the cited product APIs; re-run at marking time, the guard in that block refused a placeholder, a missing body file, an unsupported method and a relative path with exit 1 and dispatched valid values to a local argument recorder, and a parsed JSON body was saved as a mode-0600 file; no target cluster is available. For the REST request tables below, save each JSON body in a protected file. Run this block once per request, setting the method, path, and body-file arguments. Use `/dev/null` for a request with no body. Select the administrator or application header file as directed:
+REASONED: body-file and per-request procedure for the REST block below, per the cited product APIs; re-run at marking time, before the guard's `example.com` test was made case-insensitive, the guard in that block refused a placeholder, a missing body file, an unsupported method and a relative path with exit 1 and dispatched valid values to a local argument recorder, and a parsed JSON body was saved as a mode-0600 file; on 2026-10-13 (UTC), with Bash 5.3.9 and a stub curl executable, the edited guard refused `example.com`, `EXAMPLE.COM`, `Example.Com` and `es.EXAMPLE.com` with exit 1 before any curl call and passed `Dummy.Valid.test` to curl unchanged, where before the edit the three forms that are not all lowercase reached curl; no target cluster is available. For the REST request tables below, save each JSON body in a protected file. Run this block once per request, setting the method, path, and body-file arguments. Use `/dev/null` for a request with no body. Select the administrator or application header file as directed:
 
 REASONED: following block; REST fixture comparisons follow the cited product APIs and restriction rules; no target cluster, eligible Elasticsearch licence or repository access was available.
 
@@ -15132,7 +15152,7 @@ REASONED: following block; REST fixture comparisons follow the cited product API
   shift
   [ "$#" -eq 7 ] || { echo "set host, CA, port, header file, method, path, and body file; not probing"; exit 1; }
   case "$1|$2|$3|$4|$5|$6|$7" in
-    *REPLACE_WITH_*|*example.com*) echo "substitute your deployment; not probing"; exit 1 ;;
+    *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*) echo "substitute your deployment; not probing"; exit 1 ;;
   esac
   case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address; not probing"; exit 1 ;; esac
   case "$3" in ""|*[!0123456789]*) echo "numeric port required; not probing"; exit 1 ;; esac
@@ -15295,7 +15315,7 @@ REASONED: following block; UI TLS comparison follows the cited Kibana and Dashbo
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block; not probing"; exit 1; }
   shift
   [ "$#" -eq 3 ] || { echo "set UI host, CA file, and port; not probing"; exit 1; }
-  case "$1|$2|$3" in *REPLACE_WITH_*|*example.com*) echo "substitute your UI deployment"; exit 1 ;; esac
+  case "$1|$2|$3" in *REPLACE_WITH_*|*[Ee][Xx][Aa][Mm][Pp][Ll][Ee].[Cc][Oo][Mm]*) echo "substitute your UI deployment"; exit 1 ;; esac
   case "$1" in ""|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*) echo "use a DNS hostname or IPv4 address"; exit 1 ;; esac
   case "$3" in ""|*[!0123456789]*) echo "numeric UI port required"; exit 1 ;; esac
   [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
@@ -31626,14 +31646,22 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
 
 # Airflow: obtaining a token from the documented Compose account is the finding. Send the credentials as JSON
 # on stdin; FAB 3.9.0 returns 201 Created with a nonempty access_token when airflow/airflow works. Compare with a valid account on
-# the same route, and test an API read with no token then a token at the proxy and the origin. On Airflow 2 use
-# its /api/v1/ endpoint and its own auth mechanism instead. A real password typed into the printf line below for
-# that comparison enters shell history and, with set -x on, the trace; stdin closes curl's argv channel only,
-# and the account owner and root can still read the password in curl.
+# the same route (the second call below), and test an API read with no token then a token at the proxy and the
+# origin. On Airflow 2 use its /api/v1/ endpoint and its own auth mechanism instead. The first call's body is
+# fixed; never type a real password into it.
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-printf '{"username":"%s","password":"%s"}' 'airflow' 'airflow' \
+printf '%s' '{"username":"airflow","password":"airflow"}' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
       -w '\nairflow-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+      -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token
+# The valid-account comparison. getpass prompts without echo on a terminal, so the username and password enter
+# neither shell history nor set -x tracing, and json.dumps escapes any double quote, backslash or control
+# character in them, so the body stays one JSON object; stdin closes the argv channel only, and the account
+# owner and root can still read the password in python3 and curl.
+# guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
+python3 -c 'import getpass,json; print(json.dumps({"username": getpass.getpass("Airflow username: "), "password": getpass.getpass("Airflow password: ")}))' \
+  | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+      -w '\nairflow-valid-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
       -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -34116,6 +34144,7 @@ REASONED: following block; the canary function comparison follows the cited envi
   case "$1" in *REPLACE_WITH_*|"") echo "substitute the base URL (https://your-proxy, or http://127.0.0.1:8000 for a private-origin check); not probing"; exit 2 ;; esac
   case "$2" in *REPLACE_WITH_*|*FUNCTION_NAME*|"") echo "substitute a function name; not probing"; exit 2 ;; esac
   case "$3" in *REPLACE_WITH_*|"") echo "substitute a current legacy anon JWT; not probing"; exit 2 ;; esac
+  case "$3" in *[[:cntrl:]]*) echo "the anon JWT must be one line with no control characters; not probing"; exit 2 ;; esac
   # Compare the credential-free request with a current legacy anon JWT sent as Bearer.
   # Use a canary with a known response and no independent authentication.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
@@ -34125,7 +34154,7 @@ REASONED: following block; the canary function comparison follows the cited envi
 )
 ```
 
-REASONED: preceding block; function authentication and retirement of shipped API, signing, dashboard and database credentials, per the guide's cited Supabase self-hosting with Docker, Supabase docker .env.example, Supabase API keys and curl curl-8_14_1 headers from stdin. No Supabase deployment, container runtime or current credentials are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; guarded canary inputs reached two curl stubs and rejected inputs reached none. Synthetic JSON/base64url tokens parsed and demo/current fixture keys produced different HMACs; no service verification ran. Exposed services accept the old credentials or unsigned function request; fixed services reject them while current credentials return the stated positive controls. For a port you can still reach, check whether the shipped credentials were replaced, feeding every credential
+REASONED: preceding block; function authentication and retirement of shipped API, signing, dashboard and database credentials, per the guide's cited Supabase self-hosting with Docker, Supabase docker .env.example, Supabase API keys and curl curl-8_14_1 headers from stdin. No Supabase deployment, container runtime or current credentials are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; guarded canary inputs reached two curl stubs and rejected inputs reached none. On 2026-10-13 UTC a QA review ran the block, extracted to a file and unchanged except for placeholder substitution, against a recording curl stub: it exited 2 with no curl call for an anon JWT with an embedded newline, a carriage return and a tab, and for a placeholder, and exited 0 after two curl calls for a valid dummy JWT, which reached curl only on stdin; the block as it stood before its control-character guard passed an embedded newline to curl (two calls), and the stub received an injected second header line (`X-Injected: yes`) on its stdin. Synthetic JSON/base64url tokens parsed and demo/current fixture keys produced different HMACs; no service verification ran. Exposed services accept the old credentials or unsigned function request; fixed services reject them while current credentials return the stated positive controls. For a port you can still reach, check whether the shipped credentials were replaced, feeding every credential
 through stdin rather than argv (`curl --config -` for Basic auth, `curl --header @-` for `apikey`/`Authorization`;
 disable shell tracing). Stdin closes the argv channel only: it does not hide a credential typed into a command from shell history, or the credential from your own account's view of the process. Test each shipped API key against `/auth/v1/settings`, then repeat with a current key that must return
 settings JSON. This checks gateway acceptance, not retirement of backend signing keys. Separately, test the
