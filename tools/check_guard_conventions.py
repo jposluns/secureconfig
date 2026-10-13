@@ -365,14 +365,22 @@ _C2_HARDENING = True
 # Cf-Access-Jwt-Assertion) is a credential (cloud-identity-proxies.md, Verify,
 # #465); CONTRIBUTING rule 7 supplies the general argv rule. It is flagged,
 # as is x-amzn-oidc-accesstoken (a real access token). A webhook HMAC
-# signature header (any *-Signature or *-Signature-256 name, such as
-# X-Signature, X-Hub-Signature, X-Hub-Signature-256 or Stripe-Signature) is
-# flagged too: it is computed from the shared secret over the body, so anyone
-# who reads it from argv can replay that request while the receiver accepts it
-# (#485 round 2 found an X-Signature in argv); X-Signature-Timestamp and
-# Signature-Input do not match. The same regex checks
+# signature header is flagged too. The match set is bare Signature and
+# Signature-256 plus any *-Signature or *-Signature-256 name, such as
+# X-Signature, X-Hub-Signature, X-Hub-Signature-256 or Stripe-Signature: the
+# value is computed from the shared secret over the body, so anyone who reads
+# it from argv can replay that request while the receiver accepts it (#485
+# round 2 found an X-Signature in argv). X-Signature-Timestamp and
+# Signature-Input do not match; Accept-Signature also matches and needs a
+# waiver. The same regex checks
 # env-assignment names with underscores replaced by hyphens, so
-# env X_AMZN_OIDC_DATA=... tool is flagged as C3-TOOL-ARGV. Secret-free
+# env X_AMZN_OIDC_DATA=... tool is flagged as C3-TOOL-ARGV. On that env path
+# the signature suffixes count only for a header-shaped name, one with an X_
+# prefix or a HUB_ segment (_ENV_HMAC_NAME_RE): X_HUB_SIGNATURE_256 and
+# X_SIGNATURE are flagged; COSIGN_SIGNATURE and IMAGE_SIGNATURE (a detached
+# public signature is not a credential) are not, and neither is
+# STRIPE_SIGNATURE, a disclosed false negative (the Stripe-Signature header
+# is still flagged). Secret-free
 # forged-identity headers (x-amzn-oidc-identity, X-MS-CLIENT-PRINCIPAL-NAME,
 # X-Goog-Authenticated-User-Email; sent deliberately as forgeries in Verify
 # probes), CF-Access-Client-Id, X-...-token-ttl-seconds and
@@ -446,9 +454,11 @@ MESSAGES = {
                     "config line 'user = \"...\"' to curl --config - instead",
     "C3-HEADER-ARGV": "a credential-bearing curl header (Authorization, "
                       "signed identity assertions, *-Secret, *-Token, "
-                      "*-Api-Key, *-Signature, --oauth2-bearer, or a "
+                      "*-Api-Key, Signature, Signature-256, *-Signature, "
+                      "*-Signature-256, --oauth2-bearer, or a "
                       "whole $-expanded header) is in argv; pipe the header "
-                      "line to curl --header @- instead",
+                      "line to curl --header @- instead (Accept-Signature "
+                      "also matches; waive it where it holds no secret)",
     "C3-BODY-ARGV": "a credential-bearing request body is in curl argv; move "
                     "it into a --config - stream ('data-binary = \"...\"') or "
                     "feed it from a file with @file",
@@ -1002,6 +1012,11 @@ _ENV_SECRET_RE = re.compile(
 _ENV_NONSECRET_RE = re.compile(
     r"(?:_URL|_URI|_ENDPOINT|_HOST|_PORT|_PATH|_FILE|_DIR|_NAME|"
     r"_KEY_ID|_PUBLIC_KEY|_TTL|_TTL_SECONDS)$")
+# CREDENTIAL_HEADER_RE signature suffixes count on the env path only for a
+# header-shaped name (an X_ prefix or a HUB_ segment): X_HUB_SIGNATURE_256
+# carries a webhook HMAC, COSIGN_SIGNATURE a public detached signature.
+_ENV_SIGNATURE_RE = re.compile(r"(?:^|_)SIGNATURE(?:_256)?$")
+_ENV_HMAC_NAME_RE = re.compile(r"^X_|(?:^|_)HUB_")
 _ENV_VALUE_OPTS = frozenset(("-u", "--unset", "-C", "--chdir",
                             "-a", "--argv0", "-f", "--file"))
 _ENV_NOARG_OPTS = frozenset((
@@ -1066,7 +1081,9 @@ def _env_credential_flags(args):
             and (upper in _ENV_CREDENTIAL_NAMES
                  or _ENV_SECRET_RE.search(upper)
                  or BODY_SECRET_RE.fullmatch(name + "=")
-                 or CREDENTIAL_HEADER_RE.fullmatch(name.replace("_", "-"))))
+                 or (CREDENTIAL_HEADER_RE.fullmatch(name.replace("_", "-"))
+                     and (not _ENV_SIGNATURE_RE.search(upper)
+                          or _ENV_HMAC_NAME_RE.search(upper)))))
         # A URI value was already counted, even under a credential name.
         if value and secret_name and not _uri_credential(value):
             flags.append(name)
@@ -2611,13 +2628,16 @@ nc -vz -w 5 "$1" 1883
     ("c3-header-argv-signature",
      "```bash\ncurl -q -g -H \"X-Signature: sha256=$sig\" https://h/\n"
      "curl -q -g -H \"X-Hub-Signature: sha1=$sig\" https://h/\n"
-     "curl -q -g --header \"X-Hub-Signature-256: sha256=$sig\" https://h/\n```\n",
-     ["C3-HEADER-ARGV", "C3-HEADER-ARGV", "C3-HEADER-ARGV"], ()),
+     "curl -q -g --header \"X-Hub-Signature-256: sha256=$sig\" https://h/\n"
+     "curl -q -g -H \"Stripe-Signature: t=1,v1=$sig\" https://h/\n```\n",
+     ["C3-HEADER-ARGV", "C3-HEADER-ARGV", "C3-HEADER-ARGV",
+      "C3-HEADER-ARGV"], ()),
     ("c3-header-signature-stdin-safe",
      "```bash\nprintf 'X-Signature: sha256=%s\\n' \"$sig\" | "
      "curl -q -g -sS -H @- https://h/\n```\n", [], ()),
     ("c3-header-signature-timestamp-ok",
-     "```bash\ncurl -q -g -H \"X-Signature-Timestamp: 1700000000\" https://h/\n```\n",
+     "```bash\ncurl -q -g -H \"X-Signature-Timestamp: 1700000000\" https://h/\n"
+     "curl -q -g -H \"Signature-Input: sig1=();created=1\" https://h/\n```\n",
      [], ()),
     ("c3-header-nonsecret-and-identity-ok",
      "```bash\ncurl -q -H \"Content-Type: application/json\" https://h/\n"
@@ -2688,6 +2708,11 @@ nc -vz -w 5 "$1" 1883
      "env CF_ACCESS_JWT_ASSERTION=\"$1\" tool\n"
      "env X_AMZN_OIDC_IDENTITY=admin tool\n```\n",
      ["C3-TOOL-ARGV", "C3-TOOL-ARGV"], ()),
+    ("c3-signature-env-assignment-hmac-only",
+     "```bash\nenv X_HUB_SIGNATURE_256=\"$1\" tool\n"
+     "env X_SIGNATURE_TIMESTAMP=1 tool\n"
+     "env COSIGN_SIGNATURE=public.sig tool\n```\n",
+     ["C3-TOOL-ARGV"], ()),
     ("c3-config-value-not-a-url",
      "```bash\ncurl -q --config './settings?sig=public' https://h/\n```\n",
      [], ()),
