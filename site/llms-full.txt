@@ -14865,7 +14865,7 @@ REASONED: following block; cluster authorization, TLS, CORS and audit expectatio
   [ -r "$2" ] || { echo "readable CA file required; not probing"; exit 1; }
   [ -n "$3" ] || { echo "port required; not probing"; exit 1; }
   case "$3" in *[!0123456789]*) echo "HTTP port must be numeric"; exit 1 ;; esac
-  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
+  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || { echo "HTTP port must be 1 to 65535; not probing"; exit 1; }
 
   # Reasoned: no target cluster or container runtime. Anonymous root probe.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
@@ -27200,7 +27200,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit 1; }
   shift
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 1; }
-  case "$1" in *REPLACE_WITH_*|""|*[[:cntrl:]]*) echo "substitute the API key on the set -- line above; not probing"; exit 1 ;; esac
+  case "$1" in *REPLACE_WITH_*|"") echo "substitute the API key on the set -- line above; not probing"; exit 1 ;; esac
+  case "$1" in *[[:cntrl:]]*) echo "the API key must be one line with no control characters; not probing"; exit 1 ;; esac
   u=https://n8n.example.com/api/v1/workflows
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w 'no-key=%{http_code} exit=%{exitcode}\n' "$u"
   printf 'X-N8N-API-KEY: %s\n' "$1" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -w '\nwith-key=%{http_code} exit=%{exitcode}\n' -H @- "$u"
@@ -29540,7 +29541,7 @@ Machine clients need separate credentials, with the narrowest permissions the ap
 
 ## Verify
 
-**Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally, in `bash`, `dash` and BusyBox `ash`, with and without `set -u`. Check 7's five-value guard, changed in #475, was exercised in `bash` on 2026-10-13 (UTC) against a stub curl: one and two headers reached curl only on stdin, and a line feed, carriage return or placeholder in either header was refused before any curl call; it was not re-run in `dash` or BusyBox `ash`. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. The specific blocking capability is that the authoring environment has no container runtime, and with it no live service, no external network vantage, no TLS exchange and no browser authentication flow. The maintainer's verified vendor record supplies the deployment facts, and each check below states the outcome it expects in both the exposed and the fixed state.
+**Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally, in `bash`, `dash` and BusyBox `ash`, with and without `set -u`. Check 7's five-value guard, changed in #475, was exercised in `bash` on 2026-10-13 (UTC) against a stub curl: one and two headers reached curl only on stdin, and a line feed, carriage return or placeholder in either header was refused before any curl call; it was not re-run in `dash` or BusyBox `ash`. Check 6's slice guard, added in #478, was exercised on 2026-10-13 (UTC) against a stub curl: `bash` reached the stub unchanged, and `dash` and BusyBox `ash` printed "run this block in bash; not probing" before any curl call, with and without `BASH_VERSION` exported; in those shells checks 6 and 7 now stop at that guard before their placeholder guards run. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. The specific blocking capability is that the authoring environment has no container runtime, and with it no live service, no external network vantage, no TLS exchange and no browser authentication flow. The maintainer's verified vendor record supplies the deployment facts, and each check below states the outcome it expects in both the exposed and the fixed state.
 
 Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it. Keep the quotes even for an empty value, and paste every block whole. Each block opens with a fixed marker on its `set --` line, and the guard lines below check that marker and count the values, so a fragment that keeps those lines but drops or shortens the `set --` line stops instead of running on whatever arguments your own shell already held. A fragment pasted from below the guard lines is not guarded at all, which is why the instruction is to paste whole blocks. One case is beyond a pasted block's reach: a shell that already holds the marker and the right number of plausible values is indistinguishable from the block having set them, so paste whole blocks rather than relying on the check to catch every way of not doing so.
 

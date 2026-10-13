@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "4850209326079d3cc18ffba9676739f0f26cd259334c579e38081fd753d6c671",
+  "body_sha256": "e2a0eca835d77b8bb89f162b1893226044607f18979ef84e9527868f1fd5a4e2",
   "components": {
     "es": {
       "name": "Elasticsearch documentation",
@@ -897,7 +897,7 @@ REASONED: following block; cluster authorization, TLS, CORS and audit expectatio
   [ -r "$2" ] || { echo "readable CA file required; not probing"; exit 1; }
   [ -n "$3" ] || { echo "port required; not probing"; exit 1; }
   case "$3" in *[!0123456789]*) echo "HTTP port must be numeric"; exit 1 ;; esac
-  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || exit 1
+  [ "$3" -ge 1 ] && [ "$3" -le 65535 ] || { echo "HTTP port must be 1 to 65535; not probing"; exit 1; }
 
   # Reasoned: no target cluster or container runtime. Anonymous root probe.
   curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 \
