@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6a82ca2f72b36029aa57f99508787486436086bce94e36d7fc3de3087c1fc827",
+  "body_sha256": "d706462f70d56c5bd0cc94bb1b91252fa454f2e4882908019ccfe8061145de30",
   "components": {
     "mysql": {
       "name": "MySQL reference",
@@ -632,7 +632,7 @@ DEMONSTRATED: the local shell and guard checks recorded in this paragraph, re-ru
 
 DEMONSTRATED: the in-memory INI parse recorded in this paragraph, re-run at marking time: all five INI fragments parsed with Python 3.14.4 configparser in strict mode; vendor option acceptance stays with the reasoned native checks, as stated. All five INI fragments parsed with an in-memory INI parser. This checks basic structure, not vendor option acceptance. Native configuration parsing and restart behavior remain REASONED because the server binaries and writable deployment are unavailable.
 
-REASONED: scanner-classification evidence, partially re-run at marking time: the shipped roster was confirmed to omit mysql, mariadb and ss, an in-memory scan with those names added accepted the blocks in this guide (seven fences, eleven probes, five guard fences, no finding) and the scanner self-test passed; the deliberately unguarded probe control is the original record in this paragraph and was not re-observed. The snapshot's C2 scanner does not classify `mysql`, `mariadb`, or `ss` as probes. A supplemental in-memory check added those command names, accepted these guarded blocks, and detected a deliberately unguarded probe before the guard. No gate or repository file was changed.
+DEMONSTRATED: the scanner-classification evidence recorded in this paragraph, re-run at marking time against both states: the shipped roster was confirmed to omit mysql, mariadb and ss; an in-memory scan with those names added accepted this guide as shipped (seven fences, eleven probes, five guard fences, no finding); the deliberately unguarded probe control was re-observed, with an injected unguarded mysql probe line before the first guard reported as C2-PROBE-OUTSIDE-GUARD at the injected line; and the scanner self-test passed (1190 cases). The snapshot's C2 scanner does not classify `mysql`, `mariadb`, or `ss` as probes. A supplemental in-memory check added those command names, accepted these guarded blocks, and detected a deliberately unguarded probe before the guard. No gate or repository file was changed.
 
 ### TLS and account requirements (REASONED: TLS/account comparisons from cited vendor documentation; no writable deployment, clients, credentials or certificates.)
 

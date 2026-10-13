@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "a8778424f67ee92d41e3543b417596266dd7ad9fc784982e5a0b007d62b7dfb3",
+  "body_sha256": "f0a8bbf5b28086454cdd126837e8ed1ac87d01fdc60def464d3960df75018c70",
   "components": {
     "keycloak": {
       "name": "Keycloak documentation",
@@ -445,7 +445,7 @@ done
 #    by the client-id form of the same mechanism and is not in the user list at all.
 ```
 
-REASONED: preceding block; repeat coverage across addresses and families and the surfaces that block does not test, per the cited Keycloak and authentik documentation; no deployed provider or public address is available in the authoring environment. One name is not one address, and one address is not one origin. Repeat steps 2 to 5 and 7 for every public address the name carries and in both families, since a host filtered on IPv4 while it answers on IPv6 passes all of them. A CDN or load balancer answering on 443 also says nothing about whether the backend has its own reachable address, so check the origin directly as well. And nothing here tests `id-admin.internal`, the database, or the authentik outposts of section 7; those are separate surfaces with separate checks. The port list is the one this guide's own topology creates, not an inventory: scan the whole range if you want one.
+REASONED: preceding block; all eight steps of that fence, including the listener inventory, routing, administrative login, port isolation and bootstrap-account removal checks, and the repeat coverage across addresses and families and the surfaces that block does not test, per the cited Keycloak and authentik documentation and pinned sources; no deployed provider, isolated network namespace for listeners, or public address is available in the authoring environment, so none of the steps ran. One name is not one address, and one address is not one origin. Repeat steps 2 to 5 and 7 for every public address the name carries and in both families, since a host filtered on IPv4 while it answers on IPv6 passes all of them. A CDN or load balancer answering on 443 also says nothing about whether the backend has its own reachable address, so check the origin directly as well. And nothing here tests `id-admin.internal`, the database, or the authentik outposts of section 7; those are separate surfaces with separate checks. The port list is the one this guide's own topology creates, not an inventory: scan the whole range if you want one.
 
 ## Sources (checked September 2026)
 
