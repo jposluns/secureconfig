@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "c3526c7d3b32abdeeaa45d6b3117855f905bd087df11b6e14b11abc099838d06",
+  "body_sha256": "9808539fc73721db6a09d12a319ccc333686db4e7a7a19dcca7fedca04901b3e",
   "components": {
     "searx": {
       "name": "SearxNG documentation",
@@ -384,7 +384,7 @@ Machine clients need separate credentials, with the narrowest permissions the ap
 
 ## Verify
 
-**Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally, in `bash`, `dash` and BusyBox `ash`, with and without `set -u`. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. The specific blocking capability is that the authoring environment has no container runtime, and with it no live service, no external network vantage, no TLS exchange and no browser authentication flow. The maintainer's verified vendor record supplies the deployment facts, and each check below states the outcome it expects in both the exposed and the fixed state.
+**Demonstration status:** the placeholder guards and the placeholder-scan discrimination were exercised locally, in `bash`, `dash` and BusyBox `ash`, with and without `set -u`. Check 7's five-value guard, changed in #475, was exercised in `bash` on 2026-10-13 (UTC) against a stub curl: one and two headers reached curl only on stdin, and a line feed, carriage return or placeholder in either header was refused before any curl call; it was not re-run in `dash` or BusyBox `ash`. Checks 2 to 7 below are **reasoned rather than demonstrated** against deployments. The specific blocking capability is that the authoring environment has no container runtime, and with it no live service, no external network vantage, no TLS exchange and no browser authentication flow. The maintainer's verified vendor record supplies the deployment facts, and each check below states the outcome it expects in both the exposed and the fixed state.
 
 Use Bash for these blocks and curl 7.75.0 or newer for `exitcode` and `errormsg`. Copy each complete block, including the enclosing parentheses. The values go on the `set --` line, so no named variable is exposed to attributes or values the reader's shell already holds, and every probe sits behind a guard that leaves the subshell rather than running on an unsubstituted value. Substitute inside the single quotes and leave them in place. They are what keeps a URL's `&` from backgrounding the line and a `$(...)` or a backtick in a pasted value from running: the shell evaluates that value before any guard in the block can see it. Keep the quotes even for an empty value, and paste every block whole. Each block opens with a fixed marker on its `set --` line, and the guard lines below check that marker and count the values, so a fragment that keeps those lines but drops or shortens the `set --` line stops instead of running on whatever arguments your own shell already held. A fragment pasted from below the guard lines is not guarded at all, which is why the instruction is to paste whole blocks. One case is beyond a pasted block's reach: a shell that already holds the marker and the right number of plausible values is indistinguishable from the block having set them, so paste whole blocks rather than relying on the check to catch every way of not doing so.
 

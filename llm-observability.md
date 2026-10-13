@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "2a3aa81068f5c1064dd6f52275bd3132c30d5d9a7cf651a71a45fd453fe0635c",
+  "body_sha256": "68772af115244cd987fb81f6064d6599b74521295574b1d27230de51e7958d4d",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -473,7 +473,8 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 # show it. For bearertokenauth, pipe printf 'Authorization: Bearer %s\n' "$1" into the probe and add
 # --header @- to its options; for basicauth, pipe printf 'user = "%s"\n' "$1" into it, with "$1" as
 # user:password, and add --config -. Keep -q as curl's first option in either case. Run that repeat in a
-# subshell built like the Langfuse block above: trap - DEBUG RETURN ERR first, the credential on its
+# subshell built like the Langfuse block above, in a fresh, clean shell (CONTRIBUTING rule 7):
+# trap - DEBUG RETURN ERR first, the credential on its
 # set -- line, a refusal of a placeholder, an empty value or a control character, and for basicauth a
 # backslash and then a double quote escaped in "$1" before the printf. The credential on that set -- line
 # enters shell history, so clear that line afterward. Stdin closes the argv channel only: it does not
