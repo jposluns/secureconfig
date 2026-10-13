@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "cbb5254fa77d95b6ee95782ca00276470fcd2a76afbae4708db3d2b272be39ba",
+  "body_sha256": "f42a5e4f5e8ef63674fc66b2663be1230a9fc9841f1260f452b953abb9473722",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -62,6 +62,13 @@ version_basis: {
         "s3767d400e364": "https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/",
         "sdac90731b97d": "https://argo-cd.readthedocs.io/en/stable/operator-manual/webhook/",
         "s9357e3b59e84": "https://argo-cd.readthedocs.io/en/stable/user-guide/projects/"
+      }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md"
       }
     },
     "flux": {
@@ -138,13 +145,13 @@ version_basis: {
     "flux-oidc": {"text": "generic-oidc, introduced in Flux 2.9, rejects secretRef and validates bearer tokens; constrain issuer validations and audience, whose default is notification-controller.", "components": ["flux", "flux-oidc"], "sources": ["flux:s35bb9a844dcf", "flux-oidc:s1ea193b2b3cc"], "status": "REASONED"},
     "flux-rbac": {"text": "Only kustomize-controller and helm-controller hold cluster-admin; other controllers still have meaningful permissions including Secret access.", "components": ["flux"], "sources": ["flux:s0669b973542c"], "status": "REASONED"},
     "flux-lockdown": {"text": "Use scoped reconciliation ServiceAccounts, --no-cross-namespace-refs and --no-remote-bases; --default-service-account fills an omission, not an explicit serviceAccountName.", "components": ["flux"], "sources": ["flux:sf3f80d9941c8"], "status": "REASONED"},
-    "verify-argo": {"text": "Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC.", "components": ["argo-docs", "argo"], "sources": ["argo-docs:sf5f1c41f89bd", "argo:s6e8c96d23e05"], "status": "REASONED", "verify": [1]},
+    "verify-argo": {"text": "Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC.", "components": ["argo-docs", "argo", "curl"], "sources": ["argo-docs:sf5f1c41f89bd", "argo:s6e8c96d23e05", "curl:s3db522258e44"], "status": "REASONED", "verify": [1]},
     "verify-bootstrap": {"text": "Absence of the bootstrap Secret proves removal of that material, not password rotation.", "components": ["argo-docs"], "sources": ["argo-docs:s2efb9ee633af"], "status": "REASONED", "verify": [1]},
     "verify-inventory": {"text": "Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation.", "components": ["argo", "flux"], "sources": ["argo:s743c8187cbd7", "flux:s493859f3b848"], "status": "REASONED", "verify": [1]},
     "verify-repo-metrics": {"text": "Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control.", "components": ["argo"], "sources": ["argo:s98b27313f615", "argo:s1a13cc06db6d"], "status": "REASONED", "verify": [2]},
     "verify-server-metrics": {"text": "Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive.", "components": ["argo"], "sources": ["argo:s028a4769d6c3", "argo:s743c8187cbd7"], "status": "REASONED"},
     "verify-profiler": {"text": "From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control.", "components": ["argo"], "sources": ["argo:sc52bbd14bff4", "argo:s028a4769d6c3"], "status": "REASONED"},
-    "verify-flux": {"text": "Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent.", "components": ["flux", "python"], "sources": ["flux:s35bb9a844dcf", "python:s7a54556e5dac", "python:s31fccd7d50e5"], "status": "REASONED", "verify": [3]},
+    "verify-flux": {"text": "Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. Sources has no curl --data-binary reference.", "components": ["flux", "python", "curl"], "sources": ["flux:s35bb9a844dcf", "python:s7a54556e5dac", "python:s31fccd7d50e5", "curl:s3db522258e44"], "status": "REASONED", "verify": [3]},
     "verify-receiver-status": {"text": "Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection.", "components": ["flux"], "sources": ["flux:s35bb9a844dcf"], "status": "REASONED"}
   }
 }
@@ -202,13 +209,13 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | flux-oidc: generic-oidc, introduced in Flux 2.9, rejects secretRef and validates bearer tokens; constrain issuer validations and audience, whose default is notification-controller. | Flux documentation unknown; Flux OIDC introduction v2.9 | REASONED |
 | flux-rbac: Only kustomize-controller and helm-controller hold cluster-admin; other controllers still have meaningful permissions including Secret access. | Flux documentation unknown | REASONED |
 | flux-lockdown: Use scoped reconciliation ServiceAccounts, --no-cross-namespace-refs and --no-remote-bases; --default-service-account fills an omission, not an explicit serviceAccountName. | Flux documentation unknown | REASONED |
-| verify-argo: Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC. | Argo CD documentation unknown; Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| verify-argo: Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC. | Argo CD documentation unknown; Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; curl curl-8_14_1 | REASONED |
 | verify-bootstrap: Absence of the bootstrap Secret proves removal of that material, not password rotation. | Argo CD documentation unknown | REASONED |
 | verify-inventory: Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Flux documentation unknown | REASONED |
 | verify-repo-metrics: Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | verify-server-metrics: Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | verify-profiler: From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| verify-flux: Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. | Flux documentation unknown; Python documentation unknown | REASONED |
+| verify-flux: Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. Sources has no curl --data-binary reference. | Flux documentation unknown; Python documentation unknown; curl curl-8_14_1 | REASONED |
 | verify-receiver-status: Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection. | Flux documentation unknown | REASONED |
 <!-- version-basis:end -->
 
@@ -556,6 +563,7 @@ need the guarded-subshell form so an unsubstituted address cannot time out and r
 ## Sources (checked September 2026)
 
 - Python HMAC calculation and binary stdin: https://docs.python.org/3/library/hmac.html and https://docs.python.org/3/library/sys.html#sys.stdin
+- [curl curl-8_14_1 custom headers (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 
 Argo CD source claims below were checked offline at v3.5.3, commit
 `c9c369efcc5b2a0bd720803f8d14a1c3eaddf579`. Retained readthedocs links provide operational guidance;
