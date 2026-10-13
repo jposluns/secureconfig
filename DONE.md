@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.147 | `model-servers.md` Verify: give the vLLM `/invocations` probe rule 6's whole-block marker, quoted value count and `shift`, as the key probe above it has, and record the local guard cases in the block's REASONED declaration (maintainer ruling 2026-09-26T00:27Z). (M, XS) | Done, #N. |
 | 1.194 | `cloud-identity-proxies.md` Verify: guard the default platform-route probe with the whole-block marker, quoted value count and placeholder refusal; declare the item and fence and remove its marking exemption. (M, XS) | Done, #457. |
 | 1.193 | `realtime-voice-infra.md`: a coturn key derivation that keeps the TURN password off the command line (maintainer ruling 2026-10-12). (M, S) | Done, #455. A guarded Bash block reads the password with `read -r -s` and pipes `user:realm:password` from the builtin `printf` to `openssl dgst -md5 -r`, so the password is in no process argv; locally it reproduced coturn 4.18.0's example key, and an instrumented run recorded no password in any command line. Inputs are limited to ASCII letters, digits, `.`, `_` and `-`; MD5 is coturn's static-key format, not a recommendation. |
 | 1.149 | `vector-databases.md`: check how the Milvus Helm chart and the Operator expose 9091 (a Service, and on which type), at a pinned chart and Operator version. Found in #361 review. (M, S) | Done, #452. Documents chart 5.0.30 and Operator v1.3.11 Service ports and controls. |
