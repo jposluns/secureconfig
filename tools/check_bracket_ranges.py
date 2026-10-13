@@ -82,8 +82,8 @@ removed false positive. The added lines are egress-metadata.md:154; elasticsearc
 rabbitmq.md:377 and :382; realtime-webhooks.md:124 and :135; and
 self-hosted-ci-runners.md:118, :119, :120, :155 and :174. The removed finding is
 container-hardening.md:112. Fourteen new waiver entries cover 15 expressions; existing entries
-cover six additional expressions. The corpus has 0 unwaived findings in 416 bash blocks across
-99 guides, with 39 consumed entries covering 49 expressions. These are false positives,
+cover six additional expressions. At that round the corpus had 0 unwaived findings in 416 bash
+blocks across 99 guides, with 39 consumed entries covering 49 expressions. These were false positives,
 including the range-free RabbitMQ broker validators; they are not all non-validator text.
 
 After merging main, the corpus delta against qa/360-r9 is 1 added and 0 removed findings:
