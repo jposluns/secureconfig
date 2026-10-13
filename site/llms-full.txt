@@ -6090,10 +6090,18 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   [ "$PASSWORD" = "$confirm" ] || { echo 'the two entries differ; not creating the secret'; exit 2; }
   set -o pipefail  # so a failure anywhere in a pipeline below, not only in htpasswd, fails it
   # htpasswd -c writes a file. It goes in a private directory from mktemp -d (mode 0700), not the
-  # current one, and the EXIT trap removes that directory however the subshell ends.
+  # current one. The EXIT trap removes that directory when the subshell reaches its end, whatever
+  # kubectl returns, or leaves through one of the `exit` lines below, and the HUP, INT and TERM
+  # traps after it turn a hangup, Ctrl-C or SIGTERM into such an exit. SIGKILL leaves the directory
+  # and its .htpasswd behind, as can a signal before those traps are set, and in some measured runs
+  # a hangup or SIGTERM that also ended the shell running the block did too; if that happens, remove
+  # it from your temporary directory by hand.
   set -- "$(mktemp -d)"
   [ -d "$1" ] || { echo 'cannot create a private directory; not creating the secret'; exit 2; }
   trap 'rm -rf -- "$1"' EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
   printf '%s' "$PASSWORD" | htpasswd -cis "$1/.htpasswd" admin ||
     { echo 'password-file creation failed; not creating the secret'; exit 2; }
   # -i does no verification, so the block asks twice and refuses a mismatch; `-vi` below then
@@ -6103,9 +6111,11 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   # are identical; with bracketed paste, they run as commands once the block finishes.
   printf '%s' "$PASSWORD" | htpasswd -vi "$1/.htpasswd" admin ||
     { echo 'htpasswd could not verify the file; not creating the secret'; exit 2; }
-  kubectl create secret generic app-basic-auth --from-file=.htpasswd="$1/.htpasswd"
+  kubectl create secret generic app-basic-auth --from-file="$1/.htpasswd"
 )
 ```
+
+On 2026-10-13 (UTC), with Bash 5.3.9 on a pty, a dummy password typed at the hidden prompts, stub `htpasswd` and `kubectl` executables, and logging wrappers around the real `mktemp` and `rm`, the block removed its directory after normal completion, a refused creation, a refused verification and a failed `kubectl`, and after Ctrl-C, SIGHUP or SIGTERM sent to its process group while `kubectl` waited, both pasted into an interactive shell and run as a script; SIGKILL left the directory and its `.htpasswd` behind. Where the signal also ended the shell running the block, 50 repeats removed the directory after 50 Ctrl-C, 49 SIGHUP and 50 SIGTERM runs, and an earlier 20 repeats of the same commands after 20, 19 and 17; 50 repeats of the block without the HUP, INT and TERM traps removed it after 50, 2 and 1. The dummy password reached the `htpasswd` stub only on stdin, never in any stub's argv, the `bash -x` trace or the terminal output. Stubs stood in for the cluster, so these runs do not show which key `kubectl` gives the file in the Secret.
 
 `-s` is SHA-1, which Apache describes as "insecure by today's standards", and it is not a
 choice here: Envoy Gateway's basic auth documentation says "only SHA hash algorithm is
@@ -14835,7 +14845,7 @@ For either UI, loopback binding suits a proxy in the same network namespace. For
 
 REASONED: verification scope from the recorded authoring limitations; no target cluster, container runtime, node access or audit collector is available. All deployment checks below are **REASONED, not demonstrated**: the authoring environment has no target cluster or Docker/Podman runtime, and no access to the target node or audit collector; the authoring host forbids opening listeners without an isolated network namespace, and has none. Expected outcomes follow the cited vendor behavior; no deployment result is claimed.
 
-DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. In a further run on 2026-10-13 (UTC), after the cluster guard gained the REST guard's 1 to 65535 port range check, ports 0, 65536, 99999 and a 20-digit value exited 1 before any curl call, while 1, 9200 and 65535 reached the first curl call; before the change every one of those ports reached it. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results.
+DEMONSTRATED: local preparation on 2026-10-05 in private /dev/shm scratch with Bash 5.3.9 and Python 3.14.4. All nine shell blocks passed bash -n and all eight inline Verify JSON payloads parsed. On 2026-10-13 (UTC), with the same Bash release, the initial cluster guard rejected the shipped placeholders, the search.example.com and es.example.com hosts, a host containing an invalid character, a missing CA and a nonnumeric port with exit 1; a valid host with a readable CA reached the first curl call. In a further run on 2026-10-13 (UTC), after the cluster guard gained the REST guard's 1 to 65535 port range check, ports 0, 65536, 99999 and a 20-digit value exited 1 before any curl call, while 1, 9200 and 65535 reached the first curl call; before the change every one of those ports reached it. The REST guard rejected a placeholder, missing body file, unsupported method and relative path with exit 1; valid values reached its curl call. In a further run on 2026-10-13 (UTC), after the cluster, REST and UI guards' `example.com` test was made case-insensitive, each of the three refused `example.com`, `EXAMPLE.COM`, `Example.Com` and `es.EXAMPLE.com` with exit 1 before any curl call and passed `Dummy.Valid.test` to its first curl call unchanged; before the change the three mixed-case forms reached curl in all three guards. An explicitly substituted curl argument recorder measured those calls, not HTTP responses. A disposable Basic header decoded to audit_probe:deliberately-wrong and had mode 0600; one parsed JSON payload was saved as a mode-0600 body file. These runs do not establish deployment CA identity, account nonexistence or per-request cluster results.
 
 REASONED: introduction to the deployment prerequisites for the cited cluster API checks; local preparation observations are recorded above, while cluster identities and deployed trust remain unavailable. Before running:
 
@@ -14994,7 +15004,7 @@ REASONED: deployment scope from the cited product APIs; no target cluster, eligi
 
 REASONED: fixture and substitution instructions per the cited product APIs and the local preparation recorded above; no isolated test deployment is available in the authoring environment. Use isolated test deployments for exposed-state fixtures. Substitute values inside single quotes and paste whole shell blocks. Values containing a literal apostrophe need proper shell quoting. Keep credentials in the protected header files described above, with tracing disabled. The following blocks assume the shell's normal builtins.
 
-REASONED: body-file and per-request procedure for the REST block below, per the cited product APIs; re-run at marking time, the guard in that block refused a placeholder, a missing body file, an unsupported method and a relative path with exit 1 and dispatched valid values to a local argument recorder, and a parsed JSON body was saved as a mode-0600 file; no target cluster is available. For the REST request tables below, save each JSON body in a protected file. Run this block once per request, setting the method, path, and body-file arguments. Use `/dev/null` for a request with no body. Select the administrator or application header file as directed:
+REASONED: body-file and per-request procedure for the REST block below, per the cited product APIs; re-run at marking time, before the guard's `example.com` test was made case-insensitive, the guard in that block refused a placeholder, a missing body file, an unsupported method and a relative path with exit 1 and dispatched valid values to a local argument recorder, and a parsed JSON body was saved as a mode-0600 file; on 2026-10-13 (UTC), with Bash 5.3.9 and a stub curl executable, the edited guard refused `example.com`, `EXAMPLE.COM`, `Example.Com` and `es.EXAMPLE.com` with exit 1 before any curl call and passed `Dummy.Valid.test` to curl unchanged, where before the edit the three mixed-case forms reached curl; no target cluster is available. For the REST request tables below, save each JSON body in a protected file. Run this block once per request, setting the method, path, and body-file arguments. Use `/dev/null` for a request with no body. Select the administrator or application header file as directed:
 
 REASONED: following block; REST fixture comparisons follow the cited product APIs and restriction rules; no target cluster, eligible Elasticsearch licence or repository access was available.
 
