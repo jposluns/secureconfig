@@ -75,14 +75,14 @@ the span. Absolute line numbers are not bound: edits elsewhere in the guide and 
 of a whole unchanged block within it keep the waiver. Range-free validator false positives
 need a distinguishing reason.
 
-Against qa/360-r7, the broad quote-presence rule adds 228 unwaived findings. Settling
-quote-free closed prefixes reduces the final delta to 21 added findings on 19 lines and one
-removed false positive. The added lines are egress-metadata.md:154; elasticsearch.md:33, :59,
+Against qa/360-r7, the broad quote-presence rule added 228 unwaived findings. Settling
+quote-free closed prefixes reduced the final delta to 21 added findings on 19 lines and one
+removed false positive. The added lines were egress-metadata.md:154; elasticsearch.md:33, :59,
 :166, :188, :226 and :319; kubernetes.md:21; mcp-clients.md:101; model-servers.md:260;
 rabbitmq.md:377 and :382; realtime-webhooks.md:124 and :135; and
-self-hosted-ci-runners.md:118, :119, :120, :155 and :174. The removed finding is
-container-hardening.md:112. Fourteen new waiver entries cover 15 expressions; existing entries
-cover six additional expressions. At that round the corpus had 0 unwaived findings in 416 bash
+self-hosted-ci-runners.md:118, :119, :120, :155 and :174. The removed finding was
+container-hardening.md:112. Fourteen new waiver entries covered 15 expressions; existing entries
+covered six additional expressions. At that round the corpus had 0 unwaived findings in 416 bash
 blocks across 99 guides, with 39 consumed entries covering 49 expressions. These were false positives,
 including the range-free RabbitMQ broker validators; they are not all non-validator text.
 
