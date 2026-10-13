@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e8fb8ad3106592943d72f2faf54100da40d29f2eb644a9f22272d356d9de393c",
+  "body_sha256": "722b38adeb8cecd2010d7911c4573ec51811f5b8ffe66da7590b48d13877711d",
   "components": {
     "docs": {
       "name": "MLflow documentation",
@@ -218,6 +218,8 @@ admin_password = REPLACE_WITH_LONG_RANDOM_VALUE
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # Both passwords you substitute on the set -- line enter shell history.
   # Clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the passwords from
+  # set -x tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CURRENT_ADMIN_PASSWORD' 'REPLACE_WITH_LONG_RANDOM_VALUE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -275,7 +277,8 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 # credentials (its service-token headers), and a denial from that proxy is distinct from MLflow's own
 # backend 401/403. The credentials below reach curl through a config file on stdin (curl --config -),
 # never argv, because -u user:password is world-readable via ps / /proc/<pid>/cmdline; stdin protects
-# the argv channel only, not shell history or set -x tracing. Substitute each password INSIDE the
+# the argv channel only, not shell history, set -x tracing, or your own
+# account's view of the process. Substitute each password INSIDE the
 # single quotes on the set -- line; a password containing a literal apostrophe must be written '\'' there.
 (
   # Each credential reaches curl on stdin via a config file (curl --config -), never
