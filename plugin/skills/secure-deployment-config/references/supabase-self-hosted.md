@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "957a513c994803bda22f99e20854d682e0ddb87fe02a2edc4350625596c8bb00",
+  "body_sha256": "35e34cd3c31b810f6c7abf2018a6bf87cc6f1a0c6d7cf7f24db9b36a4c867da2",
   "components": {
     "docs": {
       "name": "Supabase documentation",
@@ -255,7 +255,7 @@ REASONED: following block; the canary function comparison follows the cited envi
 
 REASONED: preceding block; function authentication and retirement of shipped API, signing, dashboard and database credentials, per the guide's cited Supabase self-hosting with Docker, Supabase docker .env.example, Supabase API keys and curl curl-8_14_1 headers from stdin. No Supabase deployment, container runtime or current credentials are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; guarded canary inputs reached two curl stubs and rejected inputs reached none. Synthetic JSON/base64url tokens parsed and demo/current fixture keys produced different HMACs; no service verification ran. Exposed services accept the old credentials or unsigned function request; fixed services reject them while current credentials return the stated positive controls. For a port you can still reach, check whether the shipped credentials were replaced, feeding every credential
 through stdin rather than argv (`curl --config -` for Basic auth, `curl --header @-` for `apikey`/`Authorization`;
-disable shell tracing). Test each shipped API key against `/auth/v1/settings`, then repeat with a current key that must return
+disable shell tracing). Stdin closes the argv channel only: it does not hide a credential typed into a command from shell history, or the credential from your own account's view of the process. Test each shipped API key against `/auth/v1/settings`, then repeat with a current key that must return
 settings JSON. This checks gateway acceptance, not retirement of backend signing keys. Separately, test the
 same harmless REST canary with two correctly formed, unexpired `service_role` JWTs carrying equivalent claims:
 one signed with the current key and one with the demo `JWT_SECRET`. Keep a valid current `apikey` on both
