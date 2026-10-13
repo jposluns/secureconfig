@@ -3003,7 +3003,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | outpost-boundaries: authentik has an embedded server outpost and may deploy outposts on other hosts; each is another listener requiring its own exposure checks, none demonstrated by this guide's Verify probes. General installation source; no pinned outpost-listener reference in Sources. | authentik operational documentation unknown | REASONED |
 | verify-proxy-neutralization: Run external probes outside every allowed network; unset all uppercase and lowercase HTTP/HTTPS/ALL/NO_PROXY variables and use curl -q --noproxy '*' to bypass proxies and curlrc, which could otherwise make blocked endpoints appear reachable. General reverse-proxy source; Sources has no curl reference. | Keycloak documentation unknown | REASONED |
 | verify-authentik-routes: The fenced paths are Keycloak-specific; for authentik substitute its own application and administration URLs and use an expected responding endpoint as the positive control. General installation source; no pinned replacement-route reference in Sources. | authentik operational documentation unknown | REASONED |
-| admin-factor-order: Before connecting the first application, enroll a phishing-resistant factor on the administrator account of either provider and enforce it in the flow. Keycloak administration and general authentik installation sources; no pinned authentik administrator-factor reference. | Keycloak documentation unknown; authentik operational documentation unknown | REASONED |
+| admin-factor-order: Before connecting the first application, enroll a phishing-resistant factor on the administrator account of either provider and enforce it in the flow. Keycloak administration and general authentik installation sources; no pinned authentik administrator-factor reference, and Sources has no Keycloak administrator-factor or authentication-flow enforcement reference. | Keycloak documentation unknown; authentik operational documentation unknown | REASONED |
 | keycloak-http-opt-in: In the production example, backend plain HTTP on 8080 exists only when explicitly enabled with --http-enabled=true; confine that hop to loopback or a controlled private segment. | Keycloak documentation unknown | REASONED |
 | idp-maintenance: A self-hosted identity provider needs patching, backups and availability because its compromise affects dependent services. General production and installation sources; no dedicated maintenance reference in Sources. | Keycloak documentation unknown; authentik operational documentation unknown | REASONED |
 <!-- version-basis:end -->
@@ -10501,7 +10501,7 @@ When a person leaves, revoke access at every layer they touched, not only their 
 
 ## Verify
 
-REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning.
+REASONED: outside-network scans, DNS retirement and certificate inspection; no deployment, authoritative DNS zone or second-network probe host was supplied for this metadata review, and no run is recorded. The commands and expected readings below follow the cited Nmap, dig and OpenSSL 3.0 documentation and the guide's lifecycle reasoning; Sources has no curl reference.
 
 ```bash
 # From a second network, not the host itself:
