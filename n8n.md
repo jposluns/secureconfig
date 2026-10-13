@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "3ebc2c9a945c5fc23f60a1be959b362413a22794398b827ff834383481d44e42",
+  "body_sha256": "e39440389876628cdeeb8c85b1aa0e6a28136b2bf328de8bd303e1b7bf4c4f88",
   "components": {
     "docs": {
       "name": "n8n documentation",
@@ -171,7 +171,7 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 
 ```bash
 # REASONED: listener, TLS, API and webhook comparisons have no recorded n8n run; no live n8n deployment is available in this read-only review. Expectations follow the listed sources, with sourcing gaps recorded in the claim table.
-# On 2026-10-13 (UTC), against a stub curl, the placeholder was refused with the substitute message and a line feed, carriage return, tab or DEL with the control-character message, before any curl call; a valid dummy key reached both curl calls, on stdin only.
+# On 2026-10-13 (UTC), against a stub curl, the placeholder was refused with the substitute message and a line feed, carriage return, tab or DEL with the control-character message, before any curl call; a valid dummy key let both curl calls run and reached only the with-key call, on its stdin.
 # Owner setup must be COMPLETE before the instance is public: an unclaimed n8n hands admin to whoever
 # reaches it first. Confirm the owner exists (the first-run setup wizard no longer appears); do NOT POST
 # owner-creation data to a live instance as a "test".
