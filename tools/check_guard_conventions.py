@@ -364,7 +364,13 @@ _C2_HARDENING = True
 # signed identity assertion (x-amzn-oidc-data, x-goog-iap-jwt-assertion,
 # Cf-Access-Jwt-Assertion) is a credential (cloud-identity-proxies.md, Verify,
 # #465); CONTRIBUTING rule 7 supplies the general argv rule. It is flagged,
-# as is x-amzn-oidc-accesstoken (a real access token). The same regex checks
+# as is x-amzn-oidc-accesstoken (a real access token). A webhook HMAC
+# signature header (any *-Signature or *-Signature-256 name, such as
+# X-Signature, X-Hub-Signature, X-Hub-Signature-256 or Stripe-Signature) is
+# flagged too: it is computed from the shared secret over the body, so anyone
+# who reads it from argv can replay that request while the receiver accepts it
+# (#485 round 2 found an X-Signature in argv); X-Signature-Timestamp and
+# Signature-Input do not match. The same regex checks
 # env-assignment names with underscores replaced by hyphens, so
 # env X_AMZN_OIDC_DATA=... tool is flagged as C3-TOOL-ARGV. Secret-free
 # forged-identity headers (x-amzn-oidc-identity, X-MS-CLIENT-PRINCIPAL-NAME,
@@ -386,7 +392,8 @@ CREDENTIAL_HEADER_RE = re.compile(
     r"x-api-key|api-key|apikey|x-auth-token|private-token|x-goog-api-key|"
     r"x-amzn-oidc-data|x-goog-iap-jwt-assertion|cf-access-jwt-assertion|"
     r"x-amzn-oidc-accesstoken|"
-    r"(?:[a-z0-9-]+-)?(?:secret|token|api-key|apikey|access-token))$",
+    r"(?:[a-z0-9-]+-)?(?:secret|token|api-key|apikey|access-token|"
+    r"signature|signature-256))$",
     re.I,
 )
 BODY_SECRET_RE = re.compile(
@@ -439,7 +446,7 @@ MESSAGES = {
                     "config line 'user = \"...\"' to curl --config - instead",
     "C3-HEADER-ARGV": "a credential-bearing curl header (Authorization, "
                       "signed identity assertions, *-Secret, *-Token, "
-                      "*-Api-Key, --oauth2-bearer, or a "
+                      "*-Api-Key, *-Signature, --oauth2-bearer, or a "
                       "whole $-expanded header) is in argv; pipe the header "
                       "line to curl --header @- instead",
     "C3-BODY-ARGV": "a credential-bearing request body is in curl argv; move "
@@ -2601,6 +2608,17 @@ nc -vz -w 5 "$1" 1883
     ("c3-header-stdin-safe",
      "```bash\nprintf 'Authorization: Bearer %s\\n' \"$1\" | "
      "curl -q -g -sS -H @- http://h/x\n```\n", [], ()),
+    ("c3-header-argv-signature",
+     "```bash\ncurl -q -g -H \"X-Signature: sha256=$sig\" https://h/\n"
+     "curl -q -g -H \"X-Hub-Signature: sha1=$sig\" https://h/\n"
+     "curl -q -g --header \"X-Hub-Signature-256: sha256=$sig\" https://h/\n```\n",
+     ["C3-HEADER-ARGV", "C3-HEADER-ARGV", "C3-HEADER-ARGV"], ()),
+    ("c3-header-signature-stdin-safe",
+     "```bash\nprintf 'X-Signature: sha256=%s\\n' \"$sig\" | "
+     "curl -q -g -sS -H @- https://h/\n```\n", [], ()),
+    ("c3-header-signature-timestamp-ok",
+     "```bash\ncurl -q -g -H \"X-Signature-Timestamp: 1700000000\" https://h/\n```\n",
+     [], ()),
     ("c3-header-nonsecret-and-identity-ok",
      "```bash\ncurl -q -H \"Content-Type: application/json\" https://h/\n"
      "curl -q -H \"x-amzn-oidc-identity: admin\" https://h/\n"
