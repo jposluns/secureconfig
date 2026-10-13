@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "34b7219ecb57344de15743d885bf99a158a767f0aa8a4d8d765a7b5b8115425d",
+  "body_sha256": "a1d83cfd5e93d36ec58bccbf27fcae4074e9850b8f3dbe809fa9f6389133d741",
   "components": {
     "kubernetes": {
       "name": "Kubernetes documentation",
@@ -382,8 +382,9 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   # kubectl returns, or leaves through one of the `exit` lines below, and the HUP, INT and TERM
   # traps after it turn a hangup, Ctrl-C or SIGTERM into such an exit. SIGKILL leaves the directory
   # and its .htpasswd behind, as can a signal before those traps are set, and in some measured runs
-  # a hangup or SIGTERM that also ended the shell running the block did too; if that happens, remove
-  # it from your temporary directory by hand.
+  # where the shell running the block was the terminal's session leader, so its exit hung up the
+  # terminal, a hangup or SIGTERM did too; if that happens, remove it from your temporary directory
+  # by hand.
   set -- "$(mktemp -d)"
   [ -d "$1" ] || { echo 'cannot create a private directory; not creating the secret'; exit 2; }
   trap 'rm -rf -- "$1"' EXIT
@@ -403,7 +404,7 @@ Gateway API defines no authentication filter; each implementation adds its own. 
 )
 ```
 
-On 2026-10-13 (UTC), with Bash 5.3.9 on a pty, a dummy password typed at the hidden prompts, stub `htpasswd` and `kubectl` executables, and logging wrappers around the real `mktemp` and `rm`, the block removed its directory after normal completion, a refused creation, a refused verification and a failed `kubectl`, and after Ctrl-C, SIGHUP or SIGTERM sent to its process group while `kubectl` waited, both pasted into an interactive shell and run as a script; SIGKILL left the directory and its `.htpasswd` behind. Where the signal also ended the shell running the block, 50 repeats removed the directory after 50 Ctrl-C, 49 SIGHUP and 50 SIGTERM runs, and an earlier 20 repeats of the same commands after 20, 19 and 17; 50 repeats of the block without the HUP, INT and TERM traps removed it after 50, 2 and 1. The dummy password reached the `htpasswd` stub only on stdin, never in any stub's argv, the `bash -x` trace or the terminal output. Stubs stood in for the cluster, so these runs do not show which key `kubectl` gives the file in the Secret.
+On 2026-10-13 (UTC), with Bash 5.3.9 on a pty, a dummy password typed at the hidden prompts, stub `htpasswd` and `kubectl` executables, and logging wrappers around the real `mktemp` and `rm`, the block removed its directory after normal completion, a refused creation, a refused verification and a failed `kubectl`, and after Ctrl-C, SIGHUP or SIGTERM sent to its process group while `kubectl` waited, both pasted into an interactive shell and run as a script; SIGKILL left the directory and its `.htpasswd` behind. Where the shell running the block was the terminal's session leader, so its exit hung up the terminal, 50 repeats removed the directory after 50 Ctrl-C, 49 SIGHUP and 50 SIGTERM runs, and an earlier 20 repeats of the same commands after 20, 19 and 17; 50 repeats of the block without the HUP, INT and TERM traps removed it after 50, 2 and 1. The dummy password reached the `htpasswd` stub only on stdin, never in any stub's argv, the `bash -x` trace or the terminal output. Stubs stood in for the cluster, so these runs do not show which key `kubectl` gives the file in the Secret.
 
 `-s` is SHA-1, which Apache describes as "insecure by today's standards", and it is not a
 choice here: Envoy Gateway's basic auth documentation says "only SHA hash algorithm is
