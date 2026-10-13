@@ -2,12 +2,19 @@
 """Refuse authoring placeholders in tracked Markdown and the root VERSION.
 
 Scan raw text, including comments, quotations and code blocks. Generated site/ and
-plugin/ trees are excluded. There are no exemptions. Match standalone PR, id and
-version markers, plus the case-sensitive stale completion phrase. Ids have a
+plugin/ trees are excluded. There are no path exemptions. Match standalone PR, id
+and version markers, plus the case-sensitive stale completion phrase. Ids have a
 single digit and optionally a hyphen followed by one uppercase ASCII word.
 Token boundaries use ASCII letters and digits. An adjacent underscore is a
 boundary unless its other neighbour is an ASCII letter or digit, so Markdown
 underscore emphasis is checked while underscore-joined identifiers stay clean.
+
+The PR marker #NNN is refused everywhere. The shorter #N is refused except inside
+an inline code span, where it names the pull-request reference format. Spans follow
+CommonMark within one line: a backtick run opens a span that the next run of the
+same length closes, and a backslash-escaped backtick opens nothing. A run with no
+such closer is literal text, so #N after an unclosed backtick, in a span continued
+onto the next line, or in a fenced code block is still refused.
 
 Git supplies the tracked set; read only the selected paths directly.
 Missing tracked inputs, unreadable files and invalid UTF-8 are errors, not passes.
@@ -30,8 +37,30 @@ PLACEHOLDER = re.compile(
     r"(?![A-Za-z0-9]|_[A-Za-z0-9])"
     r"|Done in this draft"
 )
+# The shorter PR marker has the same boundaries, but an inline code span exempts it.
+SHORT_PR = re.compile(r"(?<![A-Za-z0-9])(?<![A-Za-z0-9]_)#N(?![A-Za-z0-9]|_[A-Za-z0-9])")
+# A backslash escapes one ASCII punctuation character; otherwise take a whole backtick run.
+BACKTICK_RUN = re.compile(r"\\[!-/:-@\[-`{-~]|`+")
 MARKDOWN = {".md", ".markdown", ".mdc"}
 GENERATED = {"site", "plugin"}
+
+
+def code_spans(line):
+    """Return the content range of each inline code span on one line."""
+    spans = []
+    position = 0
+    while True:
+        opener = BACKTICK_RUN.search(line, position)
+        if opener is None:
+            return spans
+        position = opener.end()
+        if opener.group().startswith("\\"):
+            continue
+        # Backslashes are literal inside a span, so only a run of equal length closes it.
+        closer = re.compile(rf"(?<!`)`{{{len(opener.group())}}}(?!`)").search(line, position)
+        if closer is not None:
+            spans.append((position, closer.start()))
+            position = closer.end()
 
 
 def main():
@@ -55,7 +84,12 @@ def main():
             if path.is_symlink():
                 raise ValueError(f"{relative}: tracked input is a symbolic link")
             for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-                for match in PLACEHOLDER.finditer(line):
+                spans = code_spans(line)
+                matches = list(PLACEHOLDER.finditer(line)) + [
+                    match for match in SHORT_PR.finditer(line)
+                    if not any(start <= match.start() < end for start, end in spans)
+                ]
+                for match in sorted(matches, key=lambda match: match.start()):
                     findings.append(
                         f"{relative}:{number}:{match.start() + 1}: "
                         f"leftover authoring placeholder {match.group()!r}"

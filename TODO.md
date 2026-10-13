@@ -27,8 +27,9 @@ Retired without ever naming an item, and never to be issued: **2.21** to **2.23*
 ## Queueing
 
 **AIQT: fix issues first.** Band 1 is worked to empty before anything else is picked, whatever
-the severity of what is waiting in the other bands. After band 1 is clear, take the highest
-severity across bands 2 and 3 together rather than finishing a band.
+the severity of what is waiting in the other bands. After band 1 is clear, band 4 follows, then
+take the highest severity across bands 2 and 3 together rather than finishing a band (see "Queue
+order" in `DECISIONS.md`).
 
 Maintainer direction supersedes the order at any time. Items blocked on another project are not
 picked, they are waited on.

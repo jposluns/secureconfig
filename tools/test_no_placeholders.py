@@ -20,7 +20,7 @@ def git(root, *args):
 @isolated_git_environment()
 def case(files, expected=1, needle="leftover authoring placeholder", *,
          untracked=(), missing=(), unreadable=(), blocked_dirs=(),
-         symlink=False, no_git=False):
+         symlink=False, no_git=False, absent=()):
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
         git(root, "init", "-q")
@@ -69,6 +69,8 @@ def case(files, expected=1, needle="leftover authoring placeholder", *,
         prefix = "  ok    " if expected == 0 else "  FAIL  "
         assert result.returncode == expected, (result.returncode, expected, output)
         assert prefix in output and needle in output, output
+        for text in absent:
+            assert text not in output, output
         if expected == 0:
             assert "  FAIL  " not in output, output
         return 1
@@ -122,6 +124,25 @@ def main():
         for text in ("done in this draft", "Done in this Draft", "Done in this DRAFT",
                      "Done in a draft", "Done, #363."):
             count += case({"DONE.md": text}, 0, "no authoring placeholders")
+        # A bare #N in prose is the #495 incident. Inside an inline code span it names the
+        # reference format; #NNN stays refused even there. An unclosed run opens no span.
+        count += case({"DONE.md": "Done, #N."}, needle="DONE.md:1:7:")
+        for text in ("#N", "(#N)", "#N.", "(#N),#N", "_#N_", "__#N__", "*#N*",
+                     "<!-- #N -->", "<!--#N-->", "> #N", "_#N", "#N_",
+                     "`#N", "``#N`", "`#N``", "\\`#N\\`", "`a` #N `b`",
+                     "`x\n#N`", "```text\n#N\n```"):
+            count += case({"notes.md": text}, needle="'#N'")
+        count += case({"notes.md": "`#N` #N\n"}, needle="notes.md:1:6:",
+                      absent=("notes.md:1:2:",))
+        count += case({"notes.md": "`#N`\n#N\n"}, needle="notes.md:2:1:",
+                      absent=("notes.md:1:",))
+        for text in ("`#NNN`", "``#NNN``", "`(#NNN)`", "`` `#NNN` ``"):
+            count += case({"notes.md": text}, needle="'#NNN'")
+        for text in ("`#N`", "``#N``", "`(#N)`", "`` `#N` ``", "``#N` and `#N``",
+                     "`Merge pull request #N from ...`",
+                     "every `(#N)` suffix and `#N` reference",
+                     "#NN", "a#N", "#N1", "#Ns", "#Nx", "x_#N", "#N_suffix", "N#N", "#n"):
+            count += case({"notes.md": text}, 0, "no authoring placeholders")
         count += case({"notes.md": "#371 (#371) 1.158 3.26 1.0.371\n"},
                       0, "no authoring placeholders")
         count += case({"site/a.md": "#NNN\n", "plugin/a.md": "1.NEW\n",
