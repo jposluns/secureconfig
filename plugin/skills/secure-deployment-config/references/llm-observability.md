@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a1411b70bd1d7f96aee43b3d7a7faebe6d282fcca2a2afd4eafbe852f2ac2cdc",
+  "body_sha256": "615d81873369861b93b4ee6cfacc4b6199c95009983e500ee6cdacceb0489a18",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -519,7 +519,7 @@ is rejected with `401` or `403`. Anything else (a `404`, a redirect to a login p
 error) is inconclusive and does not prove authentication is on; fall back to the credential check above and to
 the listener inventory. Substitute a bracketed literal for an IPv6 host in the URL, for example `[::1]:6006`.
 
-REASONED: the OTLP/HTTP admission and OTLP gRPC Export checks, per the guide's cited Arize Phoenix authentication entry, Arize Phoenix gRPC OTLP Export authorization entry and pinned Phoenix gRPC bind entry. They need a running Phoenix and, for 4317, an OTLP gRPC client with the protobuf descriptor; the authoring environment has no Phoenix and no protobuf or gRPC Python package, so no request was sent and the empty-body encoding was not reproduced locally. The expected exposed and fixed results are those stated here. The OTLP/HTTP ingestion path CAN be probed without hand-encoding a span: an empty `ExportTraceServiceRequest`
+REASONED: the OTLP/HTTP admission and OTLP gRPC Export checks, per the guide's cited Arize Phoenix authentication entry, Arize Phoenix gRPC OTLP Export authorization entry and pinned Phoenix gRPC bind entry. They need a running Phoenix and, for 4317, an OTLP gRPC client with the protobuf descriptor; the authoring environment has no Phoenix and no protobuf or gRPC Python package, so live HTTP admission, protobuf encoding and gRPC Export were not exercised. During marking review (October 2026), bash ran the HTTP recipe with a stub curl on PATH and no network, anonymously and with a dummy bearer header supplied through stdin using --header @-. In both calls the stub received --data-binary followed by an empty argument, -H followed by Content-Type: application/x-protobuf, and https://phoenix.internal:6006/v1/traces; the anonymous call had empty stdin and no authorization header, and the second received Authorization: Bearer dummy-write-key followed by a newline on stdin. Both stub calls exited 0. This checks local HTTP request construction only, not protobuf serialization, Phoenix admission or gRPC behaviour. The expected exposed and fixed results are those stated here. The OTLP/HTTP ingestion path CAN be probed without hand-encoding a span: an empty `ExportTraceServiceRequest`
 is a zero-length protobuf body, so send `--data-binary ''` with `Content-Type: application/x-protobuf` to
 `/v1/traces` on the HTTP port (6006) and read the status - anonymously it must be rejected (401/403), and
 with a WRITE-authorized `Authorization: Bearer` key (a system key, or a user key allowed to write traces,
