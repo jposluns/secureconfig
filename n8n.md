@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "c22b274f7193fd37358264d2c71e4df60bb0476cacf003435df72f8cf420f665",
+  "body_sha256": "ce455ab2ec533dae213f13068ad7f04f32f61b5a012d514fe69940d1a5af6569",
   "components": {
     "docs": {
       "name": "n8n documentation",
@@ -184,6 +184,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 # Public API auth, matched pair against the same URL: without the key n8n returns 401, with a valid key
 # it returns the workflow JSON (the positive control). The key is fed on stdin (-H @-), so it stays out
 # of curl's argv; the one on the set -- line still enters shell history, so use a short-lived key and clear it.
+# Stdin closes the argv channel only: it does not hide the key from set -x tracing or your own
+# account's view of the process.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_N8N_API_KEY'

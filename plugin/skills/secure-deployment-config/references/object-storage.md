@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "be2b957154f87aad0b10b24e01097cd43d9d55af28b332adb094cc8b7d40bec5",
+  "body_sha256": "81d04eba7ee01a84c58cfb0c6f08beb1a3be3a72e8086b59bfcdc44fa0103df3",
   "components": {
     "s3": {
       "name": "Amazon S3 documentation",
@@ -833,7 +833,7 @@ The signed URL stays out of curl's process arguments because the shell's builtin
 )
 ```
 
-A pasted signed URL can enter shell history even though it is absent from curl's arguments. Use a shell session configured not to retain credentials, and do not record signed URLs in test reports.
+A pasted signed URL can enter shell history even though it is absent from curl's arguments, and stdin does not protect it from shell tracing or the account owner's process inspection. Use a shell session configured not to retain credentials, and do not record signed URLs in test reports.
 
 | Provider | Required comparison |
 | --- | --- |

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "dde56f7dd4fe33399c2fc52b88269035d7a470a5b4bad48d96647a75ba18c874",
+  "body_sha256": "3807ba09de4420e364e5c3c18407dd9706a0ec531f33af4313f981c3e33b355e",
   "components": {
     "llama": {
       "name": "llama.cpp",
@@ -697,6 +697,8 @@ pgrep -c -f -- '(^| )--((admin-)?api-key|admin-key|gradio-auth|http-restricted-a
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The API key you substitute on the set -- line enters shell history.
   # Use a short-lived key or clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the key from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_API_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
