@@ -124,12 +124,12 @@ def main():
         for text in ("done in this draft", "Done in this Draft", "Done in this DRAFT",
                      "Done in a draft", "Done, #363."):
             count += case({"DONE.md": text}, 0, "no authoring placeholders")
-        # A bare #N in prose is the #495 incident. Inside an inline code span it names the
-        # reference format; #NNN stays refused even there. An unclosed run opens no span.
+        # The #495 incident is refused; only the three exact notations are exempt.
+        # Longer markers retain their existing behavior in every context.
         count += case({"DONE.md": "Done, #N."}, needle="DONE.md:1:7:")
         for text in ("#N", "(#N)", "#N.", "(#N),#N", "_#N_", "__#N__", "*#N*",
                      "<!-- #N -->", "<!--#N-->", "> #N", "_#N", "#N_",
-                     "`#N", "``#N`", "`#N``", "\\`#N\\`", "`a` #N `b`",
+                     "`#N", "\\`#N\\`", "`a` #N `b`",
                      "`x\n#N`", "```text\n#N\n```"):
             count += case({"notes.md": text}, needle="'#N'")
         count += case({"notes.md": "`#N` #N\n"}, needle="notes.md:1:6:",
@@ -138,27 +138,51 @@ def main():
                       absent=("notes.md:1:",))
         for text in ("`#NNN`", "``#NNN``", "`(#NNN)`", "`` `#NNN` ``"):
             count += case({"notes.md": text}, needle="'#NNN'")
-        for text in ("`#N`", "``#N``", "`(#N)`", "`` `#N` ``", "``#N` and `#N``",
+        for text in ("`#N`", "``#N`", "`#N``", "``#N``", "`(#N)`", "`` `#N` ``", "``#N` and `#N``",
                      "`Merge pull request #N from ...`",
                      "every `(#N)` suffix and `#N` reference",
                      "#NN", "a#N", "#N1", "#Ns", "#Nx", "x_#N", "#N_suffix", "N#N", "#n"):
             count += case({"notes.md": text}, 0, "no authoring placeholders")
-        # Fenced code has no spans. Only a run of the fence's own character, at least as long
-        # and alone on its line, closes it; container markers may precede the opener.
+        # Literal notations remain exempt regardless of fences or container markers.
         for text in ("```text\n`#N`\n```", "~~~text\n`#N`\n~~~", "````\n```\n`#N`\n````",
                      "~~~\n```\n`#N`\n~~~", "```\n~~~\n`#N`\n```", "```\n``` x\n`#N`\n```",
                      "```\n    ```\n`#N`\n```", "```\n\n`#N`", "~~~ `#N`\n~~~",
                      "- ```text\n  `#N`\n  ```", "> ```\n> `#N`\n> ```",
                      "1. item\n\n   ~~~\n   `#N`\n   ~~~"):
-            count += case({"notes.md": text}, needle="'#N'")
+            count += case({"notes.md": text}, 0, "no authoring placeholders")
         for text in ("```\nx\n```\n`#N`", "~~~~\n~~~\n~~~~\n`#N`", "   ```\nx\n```\n`#N`",
                      "- ```\n  x\n  ```\n\n`#N`", "```a`\n\n`#N`", "``a\n`#N` b``"):
             count += case({"notes.md": text}, 0, "no authoring placeholders")
-        # A span closed on the next line does not open another there, and a line's own pairs
-        # must agree with its paragraph's. Raw HTML is not modelled, so a comment stays clean.
+        # Adjacent backticks elsewhere do not exempt a bare marker; exact notations in
+        # comments remain clean.
         count += case({"notes.md": "see `a\nb` #N `c`"}, needle="notes.md:2:4:")
         count += case({"notes.md": "`a\n# h `x` #N `y`"}, needle="notes.md:2:9:")
         count += case({"notes.md": "<!-- `#N` -->"}, 0, "no authoring placeholders")
+        # Near-misses and arbitrary code spans do not name an allowed notation.
+        for text in ("`#N `", " #N`", "`( #N)`", "`(#N) `",
+                     "`Done, #N.`", "`x #N y`", "`(#N`",
+                     "`merge pull request #N from branch`",
+                     "`Merge pull request #N From branch`",
+                     "`Merge pull request #N from",
+                     "`Merge pull request #N\n from branch`",
+                     "<https://example.com/`> #N `",
+                     "> ```\n> x\n`x #N y`",
+                     "```\n`x #N y`", "\t`x #N y`",
+                     "~~~text\n#N\n~~~"):
+            count += case({"notes.md": text}, needle="'#N'")
+        count += case({"notes.md": "`Merge pull request #N from "},
+                      0, "no authoring placeholders")
+        # All eight pre-existing reference-format uses, copied from origin/main.
+        count += case({'CHANGELOG.md': "- tools/check_changelog_prs.py: the changelog gate now reads merge-commit pull requests (`Merge pull request #N from ...`) as well as squash `(#N)` suffixes (maintainer ruling 2026-10-12). This repository has merged with merge commits since #299, and through #459 the old gate read none of those 160 merge-commit subjects. It still checked #303 and #306, but only because a commit on each one's branch ended in its `(#N)`, so 158 merged pull requests were never checked while the gate still passed: the old gate counted 299, and on the full history through #459 the gate now counts 457, all referenced. Ten new cases, seven of which fail against the old gate, cover both shapes, an anchored prefix that requires GitHub's `from` after the number, the exemption following the highest number rather than the latest merge, and merges of main into a branch, which do not count (#460)."},
+                      0, "no authoring placeholders")
+        count += case({'CHANGELOG.md': "- A required gate on the changelog's own pull-request coverage (#53). It compares every `(#N)`"},
+                      0, "no authoring placeholders")
+        count += case({'CHANGELOG.md': '  squash-merge suffix in the local history against the `#N` references here, so it reads the'},
+                      0, "no authoring placeholders")
+        count += case({'DONE.md': "| 3.10 | Gate the changelog's pull-request coverage, comparing every `(#N)` squash-merge suffix in the local history against the `#N` references in `CHANGELOG.md` | Done, #53. It found two unreferenced pull requests on its first run against its own branch, #50 and #51, the second being the `DECISIONS.md` restructure that had no entry at all. Exempts exactly one, the newest merged, because a pull request cannot reference its own number before it is opened. Fails on a shallow clone rather than skipping, since with one commit it would find nothing missing and report a pass. Eleven cases, six of six mutants killed after mutation testing found the end anchor on the merge pattern was unprotected |"},
+                      0, "no authoring placeholders")
+        count += case({'DONE.md': "| 3.3 | Complete the `(#N)` pull-request references in `CHANGELOG.md`. The row's premise was wrong twice: it named PRs 4 and 5, which were already referenced, and the real gap was the eight records-maintenance pull requests, which is systematic rather than scattered | Done, #48 |"},
+                      0, "no authoring placeholders")
         count += case({"notes.md": "#371 (#371) 1.158 3.26 1.0.371\n"},
                       0, "no authoring placeholders")
         count += case({"site/a.md": "#NNN\n", "plugin/a.md": "1.NEW\n",
