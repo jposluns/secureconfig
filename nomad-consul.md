@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "bb6a34f71b51bd54a12ed4bb3a22c675ed5d5a39e644150b13556106cdc09144",
+  "body_sha256": "9f815d0beca379896156ea78ba6bfbe25b5357f2de01d06bcc5253bbd2b00db6",
   "components": {
     "nomad": {
       "name": "Nomad Community Edition",
@@ -212,7 +212,7 @@ set `encrypt`.
 
 ## Verify
 
-These checks were demonstrated on loopback, against Nomad 2.0.7 and Consul 2.0.4 agents whose every
+REASONED: this overview distinguishes the historical loopback record from this marking review, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`); wildcard API binds are expected exposed and private or management binds fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. This review passed all five Verify blocks through `bash -n` and ShellCheck 0.11.0 with no output, exercised guards and synthetic command results, and used a local terminal to test token input; these runs do not reproduce live ACL, bootstrap, anonymous-policy, listener or external-isolation outcomes. The historical record follows: These checks were demonstrated on loopback, against Nomad 2.0.7 and Consul 2.0.4 agents whose every
 listener was bound to 127.0.0.1: the Nomad and Consul probes in each ACL state, the bootstrap and anonymous-policy checks, and the
 listener list.
 The exposed listener state is REASONED from source: the authoring host forbids binding every
@@ -220,7 +220,7 @@ interface, so the default wildcard bind was not observed, and no Nomad client ra
 The TCP reachability probe is the block demonstrated on loopback in
 [low-code-builders.md](low-code-builders.md) with this guide's ports.
 
-On each host, list the listeners, TCP and UDP:
+REASONED: this listener-inventory instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`); wildcard API binds are expected exposed and private or management binds fixed. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. With sudo stubbed, the block printed `stub ss -tlnp 0.0.0.0:4646` and `stub ss -ulnp 0.0.0.0:4646`, then the corresponding `10.0.0.5:4646` fixture lines; this tests command dispatch only, not listener state. On each host, list the listeners, TCP and UDP:
 
 REASONED: following block; default and external listener expectations follow the pinned Nomad and Consul sources; only the reduced loopback inventory below was observed, and wildcard binding was forbidden.
 
@@ -234,7 +234,7 @@ ports, 4646 and 8500; fixed means a private or management address. On the loopba
 listened on TCP on test ports standing in for Nomad's 4646, 4647 and 4648 and Consul's 8500, 8300
 and 8301 (the runs turned off Consul's DNS, Serf WAN and gRPC), and on UDP on the two Serf ports.
 
-For Nomad, send three requests without a token, to every agent's API, servers and clients. Substitute the API URL (for example
+REASONED: this anonymous-request instruction, per the guide's cited Nomad 2.0.7 ACL resolution when disabled; expected ACLs-off results are self/jobs/agent HTTP 200 with self AccessorID `acls-disabled`, versus 200/403/403 and `anonymous` with ACLs on. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. Placeholder, empty URL, control character, missing marker, wrong value count and omitted `set --` fixtures each printed the corresponding refusal with no external stub calls. Synthetic curl, grep and head stubs printed those HTTP/AccessorID results; they do not establish live ACL behaviour. For Nomad, send three requests without a token, to every agent's API, servers and clients. Substitute the API URL (for example
 `http://10.0.0.5:4646`) inside the single quotes, and paste the whole block.
 
 DEMONSTRATED: following block; the recorded Nomad 2.0.7 loopback runs observed the ACL-off/on and per-agent HTTP results below on test ports, without running a client job.
@@ -272,7 +272,7 @@ status or message is inconclusive: a redirect (for example from a trailing slash
 HTTPS), a proxy's own response, or a certificate error once TLS is on says nothing about the
 server's ACLs; run the curl block above from a host that trusts the cluster's CA.
 
-`nomad` takes the token from `-token`, which puts it in argv, or from `NOMAD_TOKEN`, and has no stdin
+REASONED: this token-input and process-exposure explanation, per the guide's cited Nomad 2.0.7 CLI token input: `-token` (`command/meta.go` L96, L170-L171) or `NOMAD_TOKEN` (`api/api.go` L388-L389), with no stdin form; a token in argv is exposed there, while the prompted prefix form avoids argv and shell history but retains same-account/root environment access. No real Nomad process or second-account inspection was used in this review. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. A local terminal with a Nomad stub printed `no token supplied; not probing` and exited 2 for empty input, and `stub policy 404 (ACL policy not found) token=present` and exited 0 for a fixture token; readonly tok and IFS printed their refusal messages and exited 2 without invoking the stub. These observations establish local input handling only. `nomad` takes the token from `-token`, which puts it in argv, or from `NOMAD_TOKEN`, and has no stdin
 input for it (checked at v2.0.7). The block prompts for the token, so it stays out of shell history,
 and hands it to the one `nomad` command as a prefix assignment, never exported. That moves the token
 out of argv, not out of reach: while `nomad` runs, it can be read from `/proc/<pid>/environ` by the
@@ -308,7 +308,7 @@ anonymous job registration returned `200`, and `nomad acl policy info anonymous`
 With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous`
 policy, it returned `403`.
 
-For Consul, send two requests without a token, to every agent's HTTP API, servers and clients; probe
+REASONED: this per-agent anonymous-request instruction, per the guide's cited Consul 2.0.4 ACL resolution when disabled and Consul 2.0.4 configuration builder (listener addresses, ACL default, script checks and their warning, UI); expected ACLs-off self/agent results are 401/200, and enabled deny-policy results are 403/403 with the anonymous-permission message. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this marking review, the related block passed `bash -n` and ShellCheck 0.11.0 with no output. Placeholder, empty URL, control character, missing marker, wrong value count and omitted `set --` fixtures each printed the corresponding refusal with no external stub calls. Synthetic curl, grep and head stubs printed those status pairs and messages; they do not establish live ACL behaviour. For Consul, send two requests without a token, to every agent's HTTP API, servers and clients; probe
 an agent whose `client_addr` is loopback, the default, from its own host (for example
 `http://127.0.0.1:8500`). Substitute the HTTP API URL (for example
 `http://10.0.0.5:8500`) inside the single quotes, and paste the whole block.
@@ -367,7 +367,7 @@ sections. On the same runs an anonymous key-value write succeeded in both expose
 refused with `403` with the deny policy, and with script checks at their default, registering a script
 check through the API was refused with "Scripts are disabled on this agent from remote calls".
 
-Finally, from a host that should not have access, try a TCP connection to each port. The block takes
+REASONED: this external TCP-check instruction, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`); exposed means connected, while refusal or timeout is only consistent with fixed, and a failed control is inconclusive. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, invalid IPv6, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. These are synthetic dispatch and output tests, not network observations. Finally, from a host that should not have access, try a TCP connection to each port. The block takes
 one IP address rather than a host name, so that a name with both IPv4 and IPv6 addresses cannot hide
 one behind a timeout on the other: run it once for each public address of the host. It also takes a
 port you know is open on that address from this host (for example SSH on 22) as the positive control,
@@ -411,7 +411,7 @@ REASONED: following block; port targets follow the pinned Nomad and Consul defau
 )
 ```
 
-Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
+REASONED: preceding block; this interpretation and the entire TCP block, including address and port guards, the positive control, all nine targets and all result branches, per the guide's cited Nomad 2.0.7 agent defaults (`bind_addr`, ports, ACLs, `disable_remote_exec`, `-dev` binds, `raw_exec` and `enable_debug`) and Consul 2.0.4 agent defaults (`bind_addr`, `client_addr`, ports, `default_policy`, `disable_remote_exec`, `-dev`); exposed means connected, while refusal or timeout is only consistent with fixed, and UDP remains outside the probe. No external probing host or live service comparison was used in this marking review. The recorded authoring limitation applies: a live Nomad or Consul stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The related block passed `bash -n` and ShellCheck 0.11.0 with no output; placeholder, empty address, zero address, host name, invalid IPv4, invalid IPv6, zero IPv6, dotted IPv6, empty or text port, ports 0 and 65536, missing marker, wrong count and omitted `set --` fixtures printed their refusals with no external stub calls. A timeout stub produced the nine target lines as `connected`, `timed out`, `refused` or `inconclusive`; a failed control printed `did not connect` and stopped after one stub call. These are synthetic dispatch and output tests; the earlier cross-guide loopback record remains historical. Exposed, a port reports "connected"; a transparent proxy on the probing host's network can also
 complete the handshake, so confirm a surprising "connected" with `ss` on the host. "refused" and
 "timed out" show only that this host could not reach the port: a firewall in front of the host
 produces either, but so can filtering on the probing host's own network, and the control proves only
