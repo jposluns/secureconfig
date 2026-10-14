@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "776cb9211e72687862f66f7ffd9bbd16d584257c4ece092cc93080eb7880b4ad",
+  "body_sha256": "08fe49a8530c6cebeba9458fdafa73200250b7b650b96855174728b65a9e9fb4",
   "components": {
     "owasp": {
       "name": "OWASP secret handling",
@@ -215,7 +215,7 @@ Leaked API keys and credentials in public repositories are the most common secur
    ```
 5. **Secrets never enter a command line.** A process's arguments are readable through `/proc/<pid>/cmdline`, which is what `ps` prints; on a default Linux that means every other user on the host, for as long as the process runs, and the command is then written to your shell history. A `hidepid` proc mount or a separate PID namespace narrows who can see it, neither is the default, and neither covers the history. Prefer a flag that reads from stdin (`htpasswd -i`, `docker login --password-stdin`, `gh auth login --with-token`), a file the tool reads itself (`~/.pgpass`, `curl --netrc`; create it with `umask 077` and keep it mode `0600`, since it stores the secret in plaintext and PostgreSQL ignores a `~/.pgpass` that group or others can read), or an environment variable where the tool offers nothing better. Where a value has to be typed, `read -rs` keeps it off the screen, and what `read` consumes is input rather than a command, so no shell records it. One caveat: shell tracing (`set -x`) echoes the expanded command line, so a script that expands a secret into a pipeline (including the `printf`-into-`--password-stdin` pattern below) must turn tracing off around it, because reading from stdin protects the argument list but not the trace.
 
-   This block assumes a clean Bash shell and prompts for the registry token instead of using an ambient `TOKEN`. It clears inherited attributes, turns tracing and allexport off, and unsets the unexported variable on exit. The entered token stays out of history, argv and the environment; process memory is still readable by the same account and root, and this does not erase an earlier export. Docker stores the login in its configured credential store or configuration file, as described in rule 9.
+   This block assumes a clean Bash shell and prompts for the registry token instead of using an ambient `TOKEN`. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. It clears inherited attributes, turns tracing and allexport off, and unsets the unexported variable on exit. The entered token stays out of history, argv and the environment; process memory is still readable by the same account and root, and this does not erase an earlier export. Docker stores the login in its configured credential store or configuration file, as described in rule 9.
 
    ```bash
    (

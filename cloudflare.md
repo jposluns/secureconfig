@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "decc3aa29bd5707044085d4568cc1ef54d56fb21147ac4982a32578ab018372b",
+  "body_sha256": "ea4aedab4e4da13e3285944da384c99c699714b926b61eb82c5d5d76f7172fbe",
   "components": {
     "cf": {
       "name": "Cloudflare Zero Trust",
@@ -184,7 +184,7 @@ Every request to the hostname now hits a Cloudflare login page first; only ident
 
 MFA: the emailed one-time PIN proves control of a mailbox only. For anything sensitive, connect an identity provider and enforce MFA there; Access then inherits it. If both One-time PIN and the IdP are enabled on the same application a user may pick either, so OTP becomes a bypass of the IdP's MFA: remove One-time PIN from a sensitive application's login methods, leaving only the MFA-enforcing IdP, or enforce Access's own MFA requirement across the allowed methods. Broader options: [mfa.md](mfa.md).
 
-For APIs and machine clients, create a **service token** in the Zero Trust dashboard (Access service authentication section), add a **Service Auth** policy to the application, and send the token with each request:
+For APIs and machine clients, create a **service token** in the Zero Trust dashboard (Access service authentication section), add a **Service Auth** policy to the application, and send the token with each request. Paste the client secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
 (
@@ -238,7 +238,7 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 - `curl -q -sI https://app.example.com/` returns a 302 whose `location` is your team's `*.cloudflareaccess.com` login, never a 200 or your application's own content.
 - With a service token, a GET returns your application content, not the Access login. Use a route known to serve your application's content with HTTP 200. Expect `http=200 location=`; an Access login redirect, denial or transport error is not a pass. Compare with the anonymous check above: an exposed app serves the route anonymously too, so token success alone does not prove Access is enforced.
 
-Use Bash in a fresh, trusted shell and replace the URL and client ID inside the quotes. Paste only the secret at the hidden prompt, never into the command. The block discards the body and prints only the status and redirect destination; a 200 alone cannot identify the content. The secret stays in an unexported subshell variable and reaches curl on stdin, which keeps it out of argv and shell history but does not hide it from `set -x` tracing (the block turns tracing off) or the account owner or root.
+REASONED: the usage and secret-handling notes for the service-token block below, per the guide's cited Cloudflare Access service tokens and curl manual entries and the block's own text, with the paste-alone warning per CONTRIBUTING rule 7's `read` exception. No Cloudflare account, Access application or service token is available, so no status or redirect destination was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 without diagnostics; no stubbed run of the block was made. Use Bash in a fresh, trusted shell and replace the URL and client ID inside the quotes. Paste the secret alone at the hidden prompt, never into the command: a multi-line paste leaves every line after the first for your shell to run. The block discards the body and prints only the status and redirect destination; a 200 alone cannot identify the content. The secret stays in an unexported subshell variable and reaches curl on stdin, which keeps it out of argv and shell history but does not hide it from `set -x` tracing (the block turns tracing off) or the account owner or root.
 
 ```bash
 # REASONED: no live Cloudflare account is available; not demonstrated against exposed and protected apps. The cited Cloudflare service-token documentation specifies the two headers and Service Auth policy.
