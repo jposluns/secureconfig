@@ -55,6 +55,9 @@ class Fixture:
         }
         if template is None:
             self.git("init", "-q", "-b", "main")
+            # Keep the template stable while cases copy its Git directory.
+            self.git("config", "maintenance.auto", "false")
+            self.git("config", "gc.auto", "0")
             self.git("config", "commit.gpgsign", "false")
             self.git("config", "color.ui", "false")
             self.write("dist/app.js", b"clean\n")
@@ -118,6 +121,13 @@ def bundle(f, key=KEY, content=None, path="app.js"):
     f.scan(1, quoted("dist/" + path) + F, key=key)
 
 
+def template_maintenance_disabled(f):
+    # Read the copied local config so ambient defaults cannot satisfy this check.
+    assert f.git("config", "--local", "--bool", "maintenance.auto").strip() == b"false"
+    assert f.git("config", "--local", "--int", "gc.auto").strip() == b"0"
+
+
+case("template automatic maintenance disabled", "CHECK", template_maintenance_disabled)
 case("untracked bundle", "FOUND", lambda f: f.found())
 case("absent key", "NOT FOUND", lambda f: f.scan(0, N, stderr=b""))
 for name, key in [
