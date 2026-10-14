@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "1d87cfe7235bfad5f9b776751cdf2c773cd1139c24eee9ef9df72f4c85adf9f4",
+  "body_sha256": "76352c5663e3b52ede6e53bc5099bdb1b679377667102622df8b43b1d0b6eb93",
   "components": {
     "totp": {
       "name": "TOTP standard",
@@ -363,11 +363,11 @@ Unattended machine connections (service-to-service database and model-server API
 
 ## Verify
 
-- With only the password, attempt an MFA-protected operation, not just a login: once the factor is enrolled AND enforcement is on (provider policy, Supabase `aal2`, or the app's own check, per rule 6) the operation is refused, and completing the second factor then allows it. Some layers still open a password-only (`aal1`) session and enforce at the operation, so a session opening is not itself a failure; a protected operation that succeeds without a second factor is, and the user is not protected.
-- Recovery codes are single-use, and their hashes rather than their values are stored.
-- Repeated wrong codes hit a rate limit or lockout.
-- Submitting the same valid TOTP code a second time within its time step is refused.
-- No TOTP secret or recovery code appears in the repository or its history.
+- REASONED: operation-level enforcement per the guide's cited Supabase documentation entries on server-side MFA enforcement and on restrictive RLS requiring aal2, and the cited Microsoft Entra Conditional Access MFA authentication-strength requirement, with the expected refusal without and success with the second factor stated in this item; no deployed application, identity provider or enrolled test account is available in the authoring environment, and this item names no command, so no part of it ran locally. With only the password, attempt an MFA-protected operation, not just a login: once the factor is enrolled AND enforcement is on (provider policy, Supabase `aal2`, or the app's own check, per rule 6) the operation is refused, and completing the second factor then allows it. Some layers still open a password-only (`aal1`) session and enforce at the operation, so a session opening is not itself a failure; a protected operation that succeeds without a second factor is, and the user is not protected.
+- REASONED: recovery-code handling per the guide's cited NIST SP 800-63B-4 look-up secrets entry, whose section 3.1.2.2 requires single successful use and hashed storage (reread in the local reference copy at marking time); no deployed application or credential store is available in the authoring environment, so neither a refused reuse nor the stored form was observed, and this item names no command. A reused code that works or a stored plaintext code is the exposed state. Recovery codes are single-use, and their hashes rather than their values are stored.
+- REASONED: attempt throttling per the guide's cited HOTP (RFC 4226) and TOTP (RFC 6238) entries; no deployed application with an enrolled test account is available in the authoring environment, so no wrong codes were sent, and this item names no command. Unlimited wrong attempts are the exposed state and a rate limit or lockout the fixed one. Repeated wrong codes hit a rate limit or lockout.
+- REASONED: replay refusal per the guide's cited TOTP (RFC 6238) entry; no deployed application with an enrolled test account is available in the authoring environment, so no code was submitted, and this item names no command. A second acceptance of the same code is the exposed state and its refusal the fixed one. Submitting the same valid TOTP code a second time within its time step is refused.
+- DEMONSTRATED: repository and history search on disposable fixture repositories at marking time: a known-value search (git log --all -S over history, grep -rF outside .git over the working tree) found a planted synthetic base32 TOTP secret and three recovery codes in exposed repositories, in history after deletion and in the working tree, and found none of them in a clean control. Gitleaks 8.30.1 with default rules flagged the TOTP secret only when it was assigned to a SECRET-named variable and missed a bare base32 value and all three recovery codes, so a clean gitleaks run does not satisfy this item. The search needs the plaintext values; this demonstrates the search, not that any given repository is clean. No TOTP secret or recovery code appears in the repository or its history.
 - A departed user's second factor, active sessions, and app-level access are revoked, not only their password changed. Enforcing MFA is not the end; offboarding belongs in the access lifecycle too, and [deployment-lifecycle.md](deployment-lifecycle.md) has the checklist.
 
 ## Standards and sources (checked September 2026)

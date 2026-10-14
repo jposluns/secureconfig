@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "a611323044795e385ea849459d83530905f39322ab9a550d26d84cfc757091d8",
+  "body_sha256": "f3e154c2cf4443c8b2df7b9171bd41c7fd1597b50108babe67a9d732771a4886",
   "components": {
     "github": {
       "name": "GitHub Actions documentation",
@@ -265,7 +265,7 @@ below; row 2.29 retains finding and verifying a pinned source for `pid_mode`.
 Require successful, complete listings; authentication errors, unavailable endpoints, and incomplete pagination
 are inconclusive. Run the REST and config checks from an administrator workstation using stored CLI credentials.
 
-GitHub eligibility: `visibility: all` does not by itself mean public access, and `allows_public_repositories`
+REASONED: eligibility semantics per the guide's cited GitHub self-hosted runner groups REST API and runner groups and access entries; no GitHub organization or registered test runner is available in the authoring environment, so no listing was read. At marking time the three jq filters in the block below, run with jq 1.8.1 on synthetic REST-shaped JSON, printed the named fields, including allows_public_repositories true for an exposed group and false for a fixed one; the gh client's own --jq handling was not exercised. GitHub eligibility: `visibility: all` does not by itself mean public access, and `allows_public_repositories`
 is a separate control, so list every runner group, then each selected group's repositories, then every public
 repository's own runners (a repository-level runner belongs to no group).
 
@@ -277,7 +277,7 @@ gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /orgs/REPLACE_WIT
 gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /repos/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/actions/runners --jq '.runners[] | {id, name, status}'
 ```
 
-Check every selected repository's visibility and trust level, including inherited groups: a public repository
+REASONED: following block; the repository review in this paragraph and the organization and repository workflow-permission reads in the block below, per the guide's cited GitHub GITHUB_TOKEN permissions and GitHub self-hosted runner groups and access entries; no GitHub organization or repository is available in the authoring environment, so no setting was read. At marking time the block passed bash -n and ShellCheck 0.11.0, and its jq filter on synthetic JSON printed write and true for an exposed posture and read and false for a fixed one. Check every selected repository's visibility and trust level, including inherited groups: a public repository
 must have neither a repository-level self-hosted runner nor access through a group, and private or internal
 repositories still need review of who can submit executable workflow code. Then confirm the default token
 posture and that workflow approval of pull requests is off unless required (a workflow can still raise its own
@@ -303,7 +303,7 @@ jobs:
       - run: printf '%s\n' eligibility-probe
 ```
 
-Assign `ci-audit-probe` to the test runner. With eligibility deliberately exposed the approved run must execute
+REASONED: preceding block; the eligibility-probe workflow above and the assignment comparison in this paragraph, per the guide's cited GitHub self-hosted runner groups and access, workflow-jobs REST API and events that trigger workflows entries; no isolated test organization, public test repository or disposable runner is available in the authoring environment, so no fork run was assigned or refused. At marking time PyYAML 6.0.3 parsed the workflow with empty permissions and the self-hosted and ci-audit-probe labels, reading its on key as boolean true under YAML 1.1, so this checked structure only, and the job-listing jq filter below printed a runner_id for an assigned synthetic job and null for an unassigned one. Assign `ci-audit-probe` to the test runner. With eligibility deliberately exposed the approved run must execute
 on it; after applying the private-repository restriction an equivalent fork run must not be assigned to it, and
 the same harmless job from an allowed private repository confirms the runner is still available. Inspect the
 assignment, and treat a skipped workflow, pending approval, offline runner, or queue timeout as inconclusive:
@@ -346,7 +346,7 @@ for index, runner in enumerate(config.get("runners", [])):
 PYTOML
 ```
 
-Read the GitLab job-token allowlist and runner scope from the API and require a release runner's `access_level`
+REASONED: following block; the ref_protected requirement in this paragraph and the job-token scope, allowlist and runner reads in the block below, per the guide's cited GitLab project job-token scopes API and GitLab Runner security entries; no GitLab instance, project or registered runner is available in the authoring environment, so nothing was read. At marking time the block passed bash -n and ShellCheck 0.11.0 and, against a stub glab, made four calls with its placeholders passed through unchanged, as it has no guard. A release runner at not_protected is the exposed state and ref_protected the fixed one. Read the GitLab job-token allowlist and runner scope from the API and require a release runner's `access_level`
 to be `ref_protected`, comparing against an isolated control with unrestricted inbound access or `not_protected`;
 `gitlab-runner verify` only confirms authentication, nothing about isolation.
 
@@ -358,7 +358,7 @@ glab api --hostname REPLACE_WITH_GITLAB_HOST --paginate projects/REPLACE_WITH_PR
 glab api --hostname REPLACE_WITH_GITLAB_HOST runners/REPLACE_WITH_RUNNER_ID
 ```
 
-Lifecycle and contamination are REASONED from the cited vendor pages: an ephemeral or JIT GitHub runner should be gone
+REASONED: preceding block; the GitLab reads in the block above, per the guide's cited GitLab project job-token scopes API and GitLab Runner security entries, and the lifecycle and contamination checks in this paragraph, per the cited GitHub self-hosted runners REST API, GitLab Instance and Docker Autoscaler executors, and GitHub Actions security hardening entries; no registered runner, worker infrastructure or GitLab instance is available in the authoring environment. At marking time both canary commands passed bash -n and ShellCheck 0.11.0, and with job A and job B sharing one home directory job B printed its FAIL line and exited 1, while in a fresh home directory it printed the canary-absent line and exited 0; this exercises the marker logic only, not worker reuse or destruction. Lifecycle and contamination are REASONED from the cited vendor pages: an ephemeral or JIT GitHub runner should be gone
 from a fully paginated `gh api /orgs/REPLACE_WITH_ORG/actions/runners` after a harmless job, but deregistration
 is not proof the machine was destroyed, and a GitLab runner manager can stay registered while its workers are
 replaced, so verify termination and storage disposal through the infrastructure provider. Test reuse with two
@@ -367,7 +367,7 @@ B runs `if test -e "$HOME/.ci-isolation-canary"; then echo 'FAIL: previous job s
 the hardened case uses a newly provisioned worker with disposal records and no marker. Marker absence alone is
 insufficient, and worker destruction does not remove shared caches or artifacts, so review those separately.
 
-Finally, `ss` is an inventory only; inspect the relevant container and pod namespaces and published ports too.
+REASONED: listener inventory and reachability comparison per the guide's cited GitLab Runner monitoring and advanced configuration entries; no deployed metrics or session-server endpoint and no external vantage are available in the authoring environment, so no probe was sent. At marking time plain ss -tln without sudo listed this host's listeners, and the guarded block below passed bash -n and ShellCheck 0.11.0 and, run with stub sudo and curl under bash and bash -u, refused the unsubstituted, empty, embedded-placeholder, ftp, two-value and missing set -- line cases with its not-probing messages and exit 2, and passed http and https URLs to the stub curl. Finally, `ss` is an inventory only; inspect the relevant container and pod namespaces and published ports too.
 If a metrics or session-server listener is enabled, run the guarded block against the exact configured URL from
 its permitted client network: monitoring for metrics, GitLab for the session server. Configure trusted
 certificate verification for HTTPS, including the runner-generated session-server certificate. Require the
