@@ -242,23 +242,23 @@ Open the guide before relying on either, because defaults change between release
 
 ## Verify
 
-**This is a baseline inventory, not a security check, and not a proof of completeness.** It gives you a
+REASONED: inventory completeness only; no deployment interface, container-namespace or routing inventory was available for reconciliation. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. An exposed route may be absent from the host listing, and private binding alone cannot establish complete coverage, per the guide's cited `ss` manual and Docker port publishing. **This is a baseline inventory, not a security check, and not a proof of completeness.** It gives you a
 list of the listeners and routes it discovered. It cannot establish that the list is complete: a
 container on a bridge network publishes no host port and holds its sockets in another network
 namespace, and a container on routed IPv6 accepts traffic on its own address whatever the host
 publishes. Reconcile what you find here against your interface addresses, container addresses and
 namespaces, and your routing and publishing configuration before believing the inventory is whole.
 
-It establishes nothing at all about whether those services are safe to expose, and no checklist on an
+REASONED: limits of socket inventory; no application endpoints or authorized and unauthorized identity fixtures were available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. Exposed and fixed authentication can produce the same socket listing, so the service guide must test access separately, per the guide's cited `ss` manual. It establishes nothing at all about whether those services are safe to expose, and no checklist on an
 index page can. That claim belongs to each service's own guide, and even there the Verify blocks are
 worked examples over sampled URLs, not an enumeration of your application's sensitive routes.
 
-**REASONED:** following block; not demonstrated, and this page records no run. The block rests on the
-cited `ss` manual and Docker `container ls` reference, and on this index's consistency with the guides
+**REASONED:** following block; not demonstrated. Historical authoring note: this page previously recorded no run. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. The block rests on the
+guide's cited `ss` manual and Docker `container ls`, and on this index's consistency with the guides
 it cites; it is not an observation. A discriminating run needs a service bound on every interface (the
 exposed state, a `0.0.0.0` or `[::]` local address) and the same service bound to loopback (the fixed
-state, `127.0.0.1` or `::1`), and the authoring host forbids opening listeners without an isolated
-network namespace, and has none.
+state, `127.0.0.1` or `::1`). A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated
+network namespace, and none was available.
 
 ```bash
 sudo ss -tlnp                    # listening TCP sockets, with the owning process
@@ -267,26 +267,26 @@ sudo ss -aunp                    # all UDP sockets, including non-listening sock
 docker ps --format '{{.Names}}\t{{.Ports}}'   # published container ports, which the host view can miss
 ```
 
-Repeat the [all-UDP-sockets check](https://man7.org/linux/man-pages/man8/ss.8.html) during active calls or
+REASONED: preceding block; the entire TCP/UDP and Docker inventory block, plus repeating UDP inventory during activity. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback addresses when fixed; dynamic media or relay sockets may be absent while idle, per the guide's cited `ss` manual, Docker `container ls`, and Sources entry "Defaults, configured examples, published host-port mappings, and ranges above are documented in the linked guides, which cite their vendor sources" (realtime-voice-infra.md). Repeat the [all-UDP-sockets check](https://man7.org/linux/man-pages/man8/ss.8.html) during active calls or
 relay allocations, because media and relay sockets may be absent while idle.
 
-`ss` reports sockets in its own network namespace, so a container's listeners are not all visible from
+REASONED: namespace and error interpretation; no deployment container-namespace inventory was available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. Host output can omit an exposed container socket, and empty or failed output cannot establish the fixed state, per the guide's cited `ss` manual. `ss` reports sockets in its own network namespace, so a container's listeners are not all visible from
 the host. A diagnostic such as `Cannot open netlink socket` means the command failed: empty output with
 a zero exit status is not a pass.
 
-From a second machine on a different network, against a host **you own or are authorized to test**.
+REASONED: authorized target and vantage selection; no second machine on a different network or deployment address inventory was available. Locally, the scan block passed bash -n and ShellCheck 0.11.0 with no output; the sudo stub printed all four nmap argument lists with unchanged REPLACE_WITH_A_LITERAL_IPV4_ADDRESS or REPLACE_WITH_A_LITERAL_IPV6_ADDRESS targets. No placeholder guard prevented execution; this is not a live scan. A public listener should report open and a privately bound port closed or filtered from that second network, but unresolved target substitution makes either result inconclusive, per the guide's cited Nmap legal issues and Nmap target specification. From a second machine on a different network, against a host **you own or are authorized to test**.
 Run these against every public address the host answers on, not just one; a host with several
 interfaces or a NAT address beside an elastic address has several inbound paths. Substitute a literal
 address, and check the target Nmap prints before you read the result: the
 placeholder below is a hostname as far as Nmap is concerned, and if it resolves in your environment
 Nmap will scan whatever it resolved to.
 
-**REASONED:** following block; not demonstrated, and this page records no run. The block rests on the
-cited Nmap port-specification, host-discovery, target-specification and scan-technique pages, and on
+**REASONED:** following block; not demonstrated. Historical authoring note: this page previously recorded no run. Locally, the scan block passed bash -n and ShellCheck 0.11.0 with no output; the sudo stub printed all four nmap argument lists with unchanged REPLACE_WITH_A_LITERAL_IPV4_ADDRESS or REPLACE_WITH_A_LITERAL_IPV6_ADDRESS targets. No placeholder guard prevented execution; this is not a live scan. The block rests on the
+guide's cited Nmap port specification, Nmap host discovery, Nmap target specification, Nmap scan techniques and Nmap miscellaneous options, and on
 this index's consistency with the guides it cites; it is not an observation. A discriminating run needs
 a publicly bound listener that the scan reports `open` (exposed) and the same port reported `closed` or
-`filtered` once it is bound privately (fixed), probed from a second network. The authoring host forbids
-opening listeners without an isolated network namespace, and has none, and no second network was
+`filtered` once it is bound privately (fixed), probed from a second network. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids
+that without an isolated network namespace, and none was available; no second network was
 available.
 
 ```bash
@@ -296,26 +296,26 @@ sudo nmap -Pn -sU --top-ports 100 REPLACE_WITH_A_LITERAL_IPV4_ADDRESS      # UDP
 sudo nmap -Pn -6 -sU --top-ports 100 REPLACE_WITH_A_LITERAL_IPV6_ADDRESS   # UDP over IPv6
 ```
 
-UDP scanning needs privilege and returns `open|filtered` when it cannot distinguish the two, so a
+REASONED: preceding block; all four IPv4/IPv6 TCP/UDP scan commands and interpretation of the top-100 UDP sample. Locally, the scan block passed bash -n and ShellCheck 0.11.0 with no output; the sudo stub printed all four nmap argument lists with unchanged REPLACE_WITH_A_LITERAL_IPV4_ADDRESS or REPLACE_WITH_A_LITERAL_IPV6_ADDRESS targets. No placeholder guard prevented execution; this is not a live scan. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No second network was available. Expect open for the exposed port and closed or filtered for a privately bound port from that network; UDP open|filtered remains ambiguous, per the guide's cited Nmap port specification, Nmap host discovery, Nmap target specification, Nmap scan techniques and Nmap miscellaneous options. UDP scanning needs privilege and returns `open|filtered` when it cannot distinguish the two, so a
 clean-looking UDP result is weaker evidence than a clean TCP one. Treat the top-100 scan as a first
 pass and probe the UDP ports your own inventory names.
 
-Four things to establish, and none of them is "the service is secure":
+REASONED: scope of the four inventory conditions; no deployment process, address, route or service-test inventory was available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. The exposed state has unexplained listeners or routes; the inventory-fixed state accounts for them without establishing application security, per the guide's cited `ss` manual and Nmap target specification. Four things to establish, and none of them is "the service is secure":
 
-1. **Every listening socket is attributed**, to a named owning process or to an identified kernel
+1. REASONED: attribution; no deployment process inventory or kernel WireGuard interface was available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. An exposed inventory contains unattributed sockets; a reconciled one assigns each to a process or kernel service without requiring a process name for WireGuard, per the guide's cited `ss` manual, IANA Service Name and Transport Protocol Port Number Registry, and Sources entry "Defaults, configured examples, published host-port mappings, and ranges above are documented in the linked guides, which cite their vendor sources" (tunnels.md). **Every listening socket is attributed**, to a named owning process or to an identified kernel
    service or interface. Kernel WireGuard is the case that breaks process attribution: it owns its UDP
    socket in the kernel, so `ss -p` names no process and `sudo` does not create one. A port appearing
    in the table above is a hint about which guides to read, not an identification of what is running.
-2. **Every socket's bind address is deliberate.** `127.0.0.1`, `::1`, a private address or a tailnet
+2. REASONED: bind-address review; no deployment bind-address inventory was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect wildcard addresses in the exposed fixture and loopback addresses in the fixed fixture; deliberate private or tailnet bindings still need deployment context, per the guide's cited `ss` manual. **Every socket's bind address is deliberate.** `127.0.0.1`, `::1`, a private address or a tailnet
    address, unless you can say why it is public.
-3. **Every inbound route is inventoried, not just the ones a port scan finds.** A scan of your public
+3. REASONED: route reconciliation; no deployment hostname, container-address, tunnel or proxy-route inventory was available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the scan block passed bash -n and ShellCheck 0.11.0 with no output; the sudo stub printed all four nmap argument lists with unchanged REPLACE_WITH_A_LITERAL_IPV4_ADDRESS or REPLACE_WITH_A_LITERAL_IPV6_ADDRESS targets. No placeholder guard prevented execution; this is not a live scan. An exposed route may remain reachable through a tunnel while a host scan shows no inbound port; the inventory-fixed state lists each route separately, per the guide's cited Nmap target specification and Sources entry "Defaults, configured examples, published host-port mappings, and ranges above are documented in the linked guides, which cite their vendor sources" (tunnels.md, cloudflare.md and tailscale.md). **Every inbound route is inventoried, not just the ones a port scan finds.** A scan of your public
    address says nothing about an outbound tunnel. An application on loopback reached through
    [tunnels.md](tunnels.md), [cloudflare.md](cloudflare.md) or [tailscale.md](tailscale.md) is exposed
    at that hostname while your host shows no open inbound port at all. List every hostname, every
    literal address the host answers on including container addresses, every tunnel, proxy and alternate
    virtual host, and every URL path a proxy routes to a different backend. Each is its own route, and a
    scan by hostname does not cover a request made to a bare address.
-4. **Each reachable service has been through its own guide**, by every route from condition 3, not only
+4. REASONED: service-guide coverage by route; no deployment route inventory or completed service-guide results were available. A live TCP/UDP test service stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Locally, the inventory block passed bash -n and ShellCheck 0.11.0 with no output; stubs printed sudo with ss -tlnp, -tlunp and -aunp, and docker ps with its literal format argument. These are argument observations, not socket observations. Exposed and fixed application authentication can leave the socket listing unchanged, so each route needs its service checks, per the guide's cited `ss` manual and Sources entry "Defaults, configured examples, published host-port mappings, and ranges above are documented in the linked guides, which cite their vendor sources". **Each reachable service has been through its own guide**, by every route from condition 3, not only
    the ones the scan surfaced. Those guides are where the authentication and TLS checks live.
 
 Then keep going: enumerate your own sensitive routes and request each one anonymously and as an
