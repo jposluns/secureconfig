@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "5979e5972ac8ed17aa3bd8d89abf17d4a202361e28ac34528e8d440909936ac8",
+  "body_sha256": "dccd49375e6c01b1e8e33d9d0d3818833c5dd129efecc2392edac3fbf3e0df3a",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -344,7 +344,7 @@ debugger". Do not publish 25 unless you use email triggers.
 
 ## Verify
 
-REASONED: Historical run summary, not a new demonstration. All six shell blocks passed bash -n, and ShellCheck 0.11.0 reported no findings. Local stubs exercised inventory, key-presence, login-request, TCP control and per-port paths; sample and replaced file fixtures printed FOUND and no vendor sample tokens found. No deployment was available for this review; the authoring host forbids opening listeners without an isolated network namespace, and none was available. Exposed/fixed expectations below that are not recorded as demonstrated remain source reasoning, including the guide's cited Docker packet filtering (`DOCKER-USER`). The following host and run statements describe the earlier authoring environment. Three checks here were demonstrated: the sample-token check, the Windmill default-login pair, and
+REASONED: Historical run summary, not a new demonstration. All six shell blocks passed bash -n, and ShellCheck 0.11.0 reported no findings. Local stubs exercised inventory, key-presence, login-request, TCP control and per-port paths; sample and replaced file fixtures printed "FOUND vendor sample tokens" and "no vendor sample tokens found". No deployment was available for this review; the authoring host forbids opening listeners without an isolated network namespace, and none was available. Exposed/fixed expectations below that are not recorded as demonstrated remain source reasoning, including the guide's cited Docker packet filtering (`DOCKER-USER`). The following host and run statements describe the earlier authoring environment. Three checks here were demonstrated: the sample-token check, the Windmill default-login pair, and
 the TCP reachability probe's outcomes on loopback; the NocoDB key check's logic was exercised with a
 stand-in for `docker exec`. Everything else is reasoned. NocoDB 2026.09.0, Baserow,
 Appsmith and Budibase ship for production as container images and the authoring host has no container
@@ -365,7 +365,7 @@ docker ps --format '{{.Names}}\t{{.Ports}}'   # every "0.0.0.0:" or "[::]:" ("::
 REASONED: preceding block; The inventory block passed bash -n; sudo and docker stubs printed wildcard and loopback publications. No deployment was available for inventory; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. Expect wildcard addresses when exposed and loopback or private addresses when fixed, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2). Exposed, the reasoned expectation is a wildcard address, on the host or in a Docker publication, for any
 of those ports; fixed means a loopback or private address only.
 
-REASONED: The file-check block passed bash -n; local sample and replaced fixtures printed FOUND vendor sample tokens and no vendor sample tokens found; a missing path printed not checked. Placeholder, missing-marker, short-assignment and empty inputs stopped locally. Original vendor files were unavailable as fixtures in this offline run. Expected sample hits and their absence after replacement follow the guide's cited Budibase v3.46.0 sample environment, Appsmith v2.4.1 development Compose file and Windmill v1.817.0 Compose file. Check each environment and Compose file the deployment uses for the vendor sample values: run the block
+REASONED: The file-check block passed bash -n; local sample and replaced fixtures printed "FOUND vendor sample tokens" and "no vendor sample tokens found"; a missing path printed not checked. Placeholder, missing-marker, short-assignment and empty inputs stopped locally. Original vendor files were unavailable as fixtures in this offline run. Expected sample hits and their absence after replacement follow the guide's cited Budibase v3.46.0 sample environment, Appsmith v2.4.1 development Compose file and Windmill v1.817.0 Compose file. Check each environment and Compose file the deployment uses for the vendor sample values: run the block
 once per file, including every file an `env_file:` line names and the `.env` Compose reads for
 variable substitution. Substitute the file path inside the
 single quotes (a path containing an apostrophe needs other quoting), and paste the whole block.
