@@ -15874,15 +15874,15 @@ For either target, provision `MINIO_AUDIT_QUEUE_DIR` on persistent storage on ea
 
 AIStor retries failed delivery, but events can be permanently lost when the queue fills. Monitor receiver availability, queue capacity, and delivery failures. A webhook 2xx means the receiver acknowledged the request; it does not prove durable storage, and AIStor cannot recover an acknowledged event that the receiver failed to store. Keep receiver retention and deletion rights independent of application access to the object store.
 
-## 8. Verify
+## 8. Verify (REASONED: the local evidence, source provenance, and unavailable live prerequisites below cover every comparison)
 
-Substitute deployment-specific values and use harmless private fixtures. Run checks in stages, confirming every expected-success operation before interpreting a denial. A timeout, TLS failure, invalid credential, missing object, or proxy-generated error is not evidence that the intended security control worked.
+REASONED: only local parsing and shell behaviour were exercised in an offline scratch clone. All eight Bash blocks passed bash -n and ShellCheck 0.11.0 with exit 0 and no output; all three JSON examples parsed with Python json.loads. The shell runs used mc, curl, and ss stubs, with the two alias-file input paths mapped to a scratch JSON fixture. The first six Bash blocks printed stub responses and forwarded their placeholders unchanged: substitute real values before a live run. No live AIStor endpoint, credentials, KMS, durable audit receiver, IdP, or load/metrics deployment was supplied to this offline test. Stub responses establish argument and stdin handling only; every exposed/fixed service outcome below remains an expectation, not an observation. Substitute deployment-specific values and use harmless private fixtures. Run checks in stages, confirming every expected-success operation before interpreting a denial. A timeout, TLS failure, invalid credential, missing object, or proxy-generated error is not evidence that the intended security control worked.
 
 REASONED in this authoring environment: the existing probes below are retained, but their live outcomes were not demonstrated here. There is no `minio` or `mc` binary, container runtime, deployed KMS, or audit receiver available for these checks.
 
 Prepare `/path/to/REPLACE_WITH_ADMIN_ALIAS.json` as an owner-only credential file with these fields:
 
-REASONED: following block; alias JSON follows the cited mc alias import schema; no minio or mc binary or live endpoint was available.
+REASONED: following block; alias JSON follows the cited mc alias import schema; no minio or mc binary or live endpoint was available. Python json.loads parsed the five-field alias example; importing and authenticating with these fields still requires a live endpoint. Per the guide's cited AIStor `mc alias import` (stdin and JSON fields). These existing citations were not reopened.
 
 ```json
 {
@@ -15896,7 +15896,7 @@ REASONED: following block; alias JSON follows the cited mc alias import schema; 
 
 Use root credentials in `mys3` only for the administrative comparisons below. Protect both the imported file and the resulting local `mc` configuration. Importing an alias is configuration, not proof of working authentication; confirm signed operations against MinIO's own endpoint.
 
-REASONED: following block; exposure and alias-import expectations follow the cited server and anonymous-policy documentation; no minio, mc or container runtime was available.
+REASONED: following block; exposure and alias-import expectations follow the cited server and anonymous-policy documentation; no minio, mc or container runtime was available. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With a fixture alias input path, the block printed stub listener, curl, and mc responses; the recorded calls covered all four URLs and alias JSON on stdin. Real listener scope, anonymous grants versus MinIO denials, and signed authentication were not observed. Per the guide's cited MinIO/AIStor server address flags (`--address` defaults to `:9000` on all interfaces; `--console-address` / `MINIO_CONSOLE_ADDRESS`: a static port for the embedded console UI, or a dynamic one logged at startup when omitted); MinIO `mc anonymous get-json` (retrieve a bucket's anonymous policy as JSON to inspect grants, prefixes, and conditions); AIStor `mc alias import` (stdin and JSON fields). These existing citations were not reopened.
 
 ```bash
 ss -tlnp   # read every listener; S3 API 9000 and the console (--console-address, ~9001); private unless deliberate
@@ -15913,7 +15913,7 @@ For the exposure probes, an anonymous grant can produce successful listing or ob
 
 **Scoped access, REASONED:** no `minio`, `mc`, or container runtime is available here. Prepare two different buckets containing known, harmless private objects. The application's policy must name only the application bucket. Build the app alias JSON with the generated scoped key and the same endpoint, `api`, and `path` fields as above.
 
-REASONED: following block; scoped-access comparisons follow the cited access-management and mc documentation; no minio, mc or container runtime was available.
+REASONED: following block; scoped-access comparisons follow the cited access-management and mc documentation; no minio, mc or container runtime was available. Local bash -n and ShellCheck 0.11.0 exited 0 without output. A fixture alias input and mc stub recorded both policy queries, all reads, and the write payload; output was stub responses, not authorization results. The expected broad-key versus scoped-key outcomes are described below. Per the guide's cited AIStor access management (built-in policies, custom policy structure, actions, and resources); AIStor `mc cat`; AIStor `mc pipe`. These existing citations were not reopened.
 
 ```bash
 mc alias import app < /path/to/REPLACE_WITH_APP_ALIAS.json
@@ -15930,7 +15930,7 @@ Confirm the policy reviews exclude anonymous access to both fixtures. Root must 
 
 **Encryption, REASONED:** no `minio`, `mc`, or KMS is available here. After configuring a working key manager and the intended bucket default, write a new object without a client encryption override:
 
-REASONED: following block; encryption comparison follows the cited KMS, encrypt and stat documentation; no live deployment or KMS was available.
+REASONED: following block; encryption comparison follows the cited KMS, encrypt and stat documentation; no live deployment or KMS was available. Local bash -n and ShellCheck 0.11.0 exited 0 without output; the mc stub recorded encrypt info, the write payload, and stat, printing stub responses. Successful unencrypted versus encrypted writes still require the live KMS comparison below. Per the guide's cited AIStor `mc encrypt info`; AIStor `mc stat` (metadata and specific-version inspection); AIStor MinIO KMS setup (environment settings, backend dependency, and object verification). These existing citations were not reopened.
 
 ```bash
 mc encrypt info mys3/REPLACE_WITH_BUCKET
@@ -15942,7 +15942,7 @@ Confirm the bucket default and the newly written object's SSE metadata, includin
 
 **Retention, REASONED:** no `minio`, `mc`, or container runtime is available here. Use a newly created disposable bucket with locking enabled and no default retention. Stop if creation or either write fails. These fixtures compare an unlocked version with a protected version under the same root identity.
 
-REASONED: following block; retention fixtures follow the cited object-locking and mc documentation; no live deployment was available.
+REASONED: following block; retention fixtures follow the cited object-locking and mc documentation; no live deployment was available. Local bash -n and ShellCheck 0.11.0 exited 0 without output; the mc stub recorded bucket creation, both write payloads, and both inspections, printing stub responses. Real version IDs and unlocked versus protected versions require the live comparison below. Per the guide's cited AIStor object locking (existing buckets, Console limitation, retention modes, and delete markers); AIStor `mc mb` (`--with-lock` enables versioning without setting retention); AIStor `mc stat` (metadata and specific-version inspection). These existing citations were not reopened.
 
 ```bash
 mc mb --with-lock mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET
@@ -15954,7 +15954,7 @@ mc stat mys3/REPLACE_WITH_NEW_RETENTION_TEST_BUCKET/protected.txt
 
 Record the exact version IDs from the successful object inspections. Substitute them below. The protected fixture receives a one-day COMPLIANCE lock and cannot be deleted early, including by root.
 
-REASONED: following block; exact-version deletion comparison follows the cited retention, rm and stat documentation; no live deployment was available.
+REASONED: following block; exact-version deletion comparison follows the cited retention, rm and stat documentation; no live deployment was available. Local bash -n and ShellCheck 0.11.0 exited 0 without output; the mc stub recorded all eight operations with their version selectors and printed stub responses. Actual deletion of the unlocked version and survival of the COMPLIANCE version remain unobserved. Per the guide's cited AIStor `mc retention set` (default retention, existing buckets, ignored flags, and version IDs); AIStor `mc retention info`; AIStor `mc rm` (specific-version deletion); AIStor `mc stat` (metadata and specific-version inspection). These existing citations were not reopened.
 
 ```bash
 mc retention set --version-id REPLACE_WITH_PROTECTED_VERSION COMPLIANCE 1d \
@@ -15979,7 +15979,7 @@ Before deletion, confirm the protected version has COMPLIANCE retention with a f
 
 **Audit delivery, REASONED:** no `minio`, `mc`, or audit receiver is available here. After enabling the chosen target and restarting AIStor, use a unique object name and record the test time. Reuse the proven private object in the forbidden bucket for the denied request.
 
-REASONED: following block; durable delivery comparison follows the cited audit documentation; no live deployment or receiver was available.
+REASONED: following block; durable delivery comparison follows the cited audit documentation; no live deployment or receiver was available. Local bash -n and ShellCheck 0.11.0 exited 0 without output; the mc stub recorded the write payload and both reads, printing stub responses. Missing audit records without a target versus durable matching records with one still require the receiver comparison below. Per the guide's cited AIStor audit logging (no default destination, queue loss, persistent queue, and event fields); AIStor webhook audit delivery (environment settings and acknowledgement limits); AIStor Kafka audit delivery (environment settings and restart). These existing citations were not reopened.
 
 ```bash
 printf '%s\n' 'audit delivery probe' | mc pipe app/REPLACE_WITH_APP_BUCKET/REPLACE_WITH_UNIQUE_AUDIT_OBJECT
@@ -15989,7 +15989,7 @@ mc cat app/REPLACE_WITH_OTHER_BUCKET/REPLACE_WITH_KNOWN_PRIVATE_OBJECT
 
 Query the receiver's persisted records for the matching bucket, object, operation, time, identity, status, and request ID. Confirm records for both the successful operations and the denied read, and confirm they remain available from durable storage, for example after restarting the receiver. With no target configured, these S3 requests can complete without any external audit record. With delivery configured, the matching records must actually be stored at the receiver. An S3 200 proves nothing about logging; a webhook 2xx proves only acknowledgement. Sources: audit logging, webhook delivery, and Kafka delivery.
 
-**OIDC authorization, REASONED:** no live AIStor deployment, configured IdP, or authenticated S3 test client is available here. Use two known private fixtures, one in the application bucket and one outside it, and establish administrative reads of both.
+REASONED: STS request fields, role/claim mapping, unmapped identities, and explicit duration are source reasoning only. Per the guide's cited AIStor OIDC access management (role and claim mapping); AIStor AssumeRoleWithWebIdentity (duration bounds and JWT-expiry precedence). These existing citations were not reopened. No configured IdP, live AIStor endpoint, or authenticated STS/S3 client was supplied; the broad versus scoped reads and longer explicit session described below were not run. There is no executable SDK example here to exercise locally. **OIDC authorization, REASONED:** no live AIStor deployment, configured IdP, or authenticated S3 test client is available here. Use two known private fixtures, one in the application bucket and one outside it, and establish administrative reads of both.
 
 Through an STS-capable SDK client, call `AssumeRoleWithWebIdentity` with `Version=2011-06-15`, a valid `WebIdentityToken`, and the configured `RoleArn` for role-policy mapping; omit `RoleArn` for claim mapping. Load tokens and returned credentials from protected storage, not command-line arguments or logs. Using the returned access key, secret key, and session token, issue `GetObject` for both fixtures.
 
@@ -16001,7 +16001,7 @@ For the duration caveat, use a valid JWT expiring in approximately 20 minutes, `
 
 Paste whole Bash blocks. Substitute inside the single quotes; values containing a literal apostrophe need proper shell quoting. Disable shell history recording and tracing before handling a real URL. The block keeps the URL out of curl's argv, but does not protect it from history, tracing, or the account owner.
 
-REASONED: following block; URL expiry and signature-age comparisons follow the cited share-download and policy documentation; no live AIStor or mc was available.
+REASONED: following block; URL expiry and signature-age comparisons follow the cited share-download and policy documentation; no live AIStor or mc was available. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With curl stubbed, the literal placeholder, empty value, embedded placeholder, example.com, control character, HTTP URL, wrong marker, and wrong argument counts printed their guard messages without invoking curl, including a short assignment under set -u. A fixture HTTPS URL reached curl via config stdin, not argv; a backslash/quote fixture was escaped in that input. Both admitted cases printed a stub response. These are local guard and formatting observations, not expiry or signature-age enforcement. Per the guide's cited AIStor `mc share download` (presigned credentials and expiry); AIStor access management (built-in policies, custom policy structure, actions, and resources); AWS S3 signature-condition reference (supplementary semantics for AIStor's documented condition key). These existing citations were not reopened.
 
 ```bash
 (
@@ -16033,7 +16033,7 @@ Correlate denials with AIStor's own request or audit evidence. A proxy error, ex
 
 **Console disabled, REASONED:** no live AIStor deployment or `mc` is available here. Run this on each AIStor host with permission to inspect its listeners. Supply the direct Console URL established by section 3, without credentials or query parameters, and a proven application object:
 
-REASONED: following block; Console disablement follows the cited Console settings; no live AIStor or mc was available.
+REASONED: following block; Console disablement follows the cited Console settings; no live AIStor or mc was available. Local bash -n and ShellCheck 0.11.0 exited 0 without output. With mc, ss, and curl stubbed, the literal placeholders, either empty value, embedded placeholder, example.com, control character, HTTP URL, wrong marker, and wrong argument counts printed guard messages without external calls, including a short assignment under set -u. Valid fixtures called mc, ss, and curl in order and printed stub listener/curl responses; a failing mc printed signed S3 read failed; stop, exited 1, and called neither ss nor curl. Enabled versus disabled Console behaviour still requires the live comparison below. Per the guide's cited AIStor Console settings (disablement and browser redirection); AIStor `mc cat`. These existing citations were not reopened.
 
 ```bash
 (
@@ -16058,7 +16058,7 @@ REASONED: following block; Console disablement follows the cited Console setting
 
 With the Console enabled, establish that its UI is served. After applying `MINIO_BROWSER=off` and restarting, confirm that the running service received that setting, the embedded Console listener is absent, and signed S3 reads still succeed. A failed request to the previous URL alone is insufficient. Disabling only `MINIO_BROWSER_REDIRECT` leaves the direct Console available. Sources: [AIStor Console settings](https://docs.min.io/aistor/reference/aistor-server/settings/console/) and [`mc cat`](https://docs.min.io/aistor/reference/cli/mc-cat/).
 
-**API concurrency, REASONED:** no live multi-node AIStor deployment, authenticated load client, or metrics collector is available here. In a disposable four-node deployment, compare automatic sizing with the illustrative explicit budget of 64. Verify the effective setting on every node after restart.
+REASONED: load admission and metrics interpretation are source reasoning only. Per the guide's cited AIStor core settings (automatic and explicit cluster-wide concurrency budgets); AIStor metrics v3 (active and queued requests). These existing citations were not reopened. Local Python arithmetic returned 16 for 64/4 and 32 for 128/4; no four-node AIStor deployment, authenticated load client, or metrics collector was supplied. More than 16 admitted requests per node under automatic sizing versus pools constrained to 16 under the explicit budget remains an unobserved comparison. **API concurrency, REASONED:** no live multi-node AIStor deployment, authenticated load client, or metrics collector is available here. In a disposable four-node deployment, compare automatic sizing with the illustrative explicit budget of 64. Verify the effective setting on every node after restart.
 
 Have the load client issue signed `GetObject` requests for `REPLACE_WITH_APP_BUCKET/REPLACE_WITH_LARGE_PRIVATE_FIXTURE`, first individually, then with 128 concurrent requests distributed evenly across the four nodes. Use sufficiently long transfers to observe simultaneous processing. Keep credentials in the client's protected credential store.
 
