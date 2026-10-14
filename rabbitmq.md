@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "07e4b6139c6bc6c7b605885dd1243d6cae7647b7d20c4f009ac063110f09622a",
+  "body_sha256": "0aed7cf2cfe5f9946c0855aa5f0f7210c1618e735309a2a3dc310e8e802c5da0",
   "components": {
     "docs": {
       "name": "RabbitMQ documentation",
@@ -342,9 +342,9 @@ The Erlang cookie is a shared secret granting powerful node and CLI access. On t
 
 Restart the node through your deployment's service manager after applying listener configuration, including the separate epmd lifecycle change where needed.
 
-## 5. Verify
+## 5. Verify (REASONED: all checks 1-9, their fences, instructions, expected outcomes and authoring-record tables in this section; a live RabbitMQ stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. No live exposed/fixed broker, external vantage, allowed administration/application/cluster peers, matching cookies, broker logs or multi-node TLS comparison was established. Per the guide's cited RabbitMQ access control, guest restrictions, interactive user creation, and resource permissions; RabbitMQ virtual hosts and logical isolation; RabbitMQ CLI user, vhost, permission, and tag commands; RabbitMQ management listeners, HTTPS, and roles; RabbitMQ HTTP API authentication and endpoints; RabbitMQ TLS, peer verification, certificate usage, and verification depth; RabbitMQ networking, epmd lifecycle, private bindings, and distribution ports; RabbitMQ diagnostics, remote node selection, and authenticated ping; RabbitMQ CLI authentication and Erlang cookie handling; RabbitMQ definitions imports, sensitive exports, and export transformations; RabbitMQ administration CLI v2 configuration and TLS flags; RabbitMQ inter-node TLS (distribution over TLS); Erlang/OTP 27 distribution over TLS; RabbitMQ queues, durability, and exclusive queue behaviour; RabbitMQ channel exceptions and access-refused errors; Pika TLS context and client certificate example; Pika connection parameters; Pika blocking connection and channel methods; Pika authentication and authorization exceptions; curl password prompts, TLS validation, and diagnostic flags, the exposed and fixed outcomes are those stated at each step: excessive grants and forbidden connections versus scoped grants and denied connections with successful authorized controls; optional versus required client certificates; unwanted versus approved definitions; plaintext versus authenticated TLS distribution; unrestricted versus tenant-scoped topic operations. Marking review ran 19 Bash blocks through bash -n and ShellCheck 0.11.0 with no findings, and an SC2086 canary produced its expected diagnostic. Stub-only Verify execution exercised argument dispatch and 32 guard refusals under bash -u, printing the corresponding refusal without external commands; valid substitutions reached only stubs. Both embedded Python programs parsed; the TOML example and four INI key/value structures parsed, without native schema validation. The reduced-export overwrite guard reached a stub for an absent path and refused both an existing file and a dangling symlink. Seven reduced-export JSON fixtures printed the empty-sections success, not a definitions object, or review required for each of the five nonempty sections. These local results do not demonstrate broker behavior. Native RabbitMQ configuration parsing remains unconfirmed: rabbitmqctl, erl and rabbitmqadmin were not found on PATH in this review. All original absence statements and local-check counts below are historical authoring records, not new host observations; the original test receipts were not reauthenticated.)
 
-Service behaviour has not been demonstrated in the authoring environment. The nine service checks below are REASONED: RabbitMQ/Erlang binaries, `rabbitmqadmin`, Pika, Docker, and Podman are absent, and no broker or external peer test environment was supplied. Expected outcomes are REASONED from the cited RabbitMQ documentation.
+Historical authoring record: service behaviour was not demonstrated. The original review recorded RabbitMQ/Erlang binaries, rabbitmqadmin, Pika, Docker and Podman as absent, with no broker or external peer test environment available; this marking review does not reassert those historical host observations. Expected service outcomes remain REASONED from the Sources entries named in the section declaration.
 
 Use Bash and paste whole guarded blocks. Substitute inside the single quotes on each `set --` line, retaining the quotes; do not insert literal apostrophes. The guards assume real shell builtins. A fragment pasted below its guard is unguarded, and inherited arguments identical to the marker and expected values cannot be distinguished from a complete paste. Use curl 7.75.0 or newer for the diagnostic write-out fields. `--user` below contains only a username and prompts for the password; do not append a password.
 
@@ -720,7 +720,7 @@ Local authoring checks, completed without a broker:
 | Embedded Python | Both programs passed Python syntax parsing. |
 | RabbitMQ configuration | Key/value structure checked locally and settings traced to current vendor docs; native configuration/schema parsing remains unconfirmed because RabbitMQ and Erlang are absent. |
 
-No broker, container, or whole-corpus gate suite was run. Local syntax checks do not demonstrate service behaviour.
+Historical authoring record: no broker, container, or whole-corpus gate suite was run in the original review. Local syntax checks do not demonstrate service behaviour.
 
 | Check scope | Procedure and prerequisites | Status |
 |---|---|---|
