@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "61fd343a1628d6a02baf4e4704deba7f0d3b5c1504abde6fe488aae1ad476c0c",
+  "body_sha256": "09d0b804757afedabfea12e61f477ca388d5f54a769d88c76bf1b1ddf592ed4d",
   "components": {
     "see": {
       "name": "SQLite Encryption Extension",
@@ -332,7 +332,9 @@ The bundle scan, the git inventory and the `stat` check were demonstrated on the
 
 Scan built client bundles for a leaked Turso/libSQL token, keeping the token off argv and shell history, though not out of your own account's view of the process:
 
-DEMONSTRATED: following block; the recorded authoring-host placeholder-token runs distinguish exposed and clean bundles and exercise the listed shell guards; no real token was used. On 2026-10-13 (UTC), after both scans were changed to print file names only (`-l`), a bundle carrying a JWT-shaped dummy printed `dist/app.js` before `token-literal exit: 0` and again before `jwt-shape exit: 0`, with no token in the output, and a clean bundle printed `1` for both; before the change each scan printed the line holding the token. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
+REASONED: the paste-alone instruction for the block below, per CONTRIBUTING rule 7's `read` exception. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
+
+DEMONSTRATED: following block; the recorded authoring-host placeholder-token runs distinguish exposed and clean bundles and exercise the listed shell guards; no real token was used. On 2026-10-13 (UTC), after both scans were changed to print file names only (`-l`), a bundle carrying a JWT-shaped dummy printed `dist/app.js` before `token-literal exit: 0` and again before `jwt-shape exit: 0`, with no token in the output, and a clean bundle printed `1` for both; before the change each scan printed the line holding the token.
 
 ```bash
 (                                       # a subshell, so your own script arguments are untouched
