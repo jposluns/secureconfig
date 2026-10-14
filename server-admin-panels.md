@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "e3a3c13329e4342ac65ef6026a9d8b863441c93f4baa72be2e7ea50cb831d387",
+  "body_sha256": "cd4eabcb1db825ee7e680363e6700a7bace840018376474845307e9668d26715",
   "components": {
     "cockpit": {
       "name": "Cockpit",
@@ -265,14 +265,14 @@ separated privileges by default, and cannot reach the VM or node consoles.
 
 ## Verify
 
-Two checks here were demonstrated: the Webmin configuration check, whose parser was compared with
+REASONED: this historical run overview preserves the original authoring record, not a new live comparison; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules, per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). Two checks here were demonstrated: the Webmin configuration check, whose parser was compared with
 Webmin 2.670's own on thirty test files, and the TCP reachability probe, which is the block demonstrated
 on loopback in [low-code-builders.md](low-code-builders.md) with this guide's ports. Everything else
 is reasoned: the authoring host runs neither Cockpit's
 systemd socket nor Proxmox VE, and it forbids binding every interface, so no default bind was observed.
 Those expected outcomes are REASONED from the cited vendor documentation and source.
 
-On the host, list the listeners, TCP and UDP:
+REASONED: this TCP and UDP inventory instruction; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules, per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). On the host, list the listeners, TCP and UDP:
 
 REASONED: following block; pinned Cockpit, Webmin/Usermin and Proxmox sources support this inventory. The recorded host lacks Cockpit systemd and Proxmox and forbids wildcard binds; exposed/fixed expectations follow.
 
@@ -281,12 +281,12 @@ sudo ss -tlnp   # 9090 (Cockpit), 10000 (Webmin), 20000 (Usermin), 8006 and 3128
 sudo ss -ulnp   # Webmin's discovery socket on UDP 10000 (Usermin 20000) should be gone
 ```
 
-Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on those ports;
+REASONED: preceding block; this listener interpretation covers both TCP and UDP inventory, including the cluster exception; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules, per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on those ports;
 fixed means a management address only. On a Proxmox VE cluster, where the vendor advises against
 `LISTEN_IP`, 8006 and 3128 keep their wildcard binds; there the fixed state is the access lists and
 firewall below.
 
-On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
+REASONED: this file-inspection procedure needs a Webmin host and running miniserv for comparison with sockets; a live Webmin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the parser block through `bash -n` and ShellCheck 0.11.0 without output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. The extracted Perl program on local exposed and fixed fixtures printed `NO effective bind=: every address`, discovery and `NO allow=`, versus `bind=10.0.0.5`, `no UDP discovery socket` and `allow=10.0.0.0/24`; extra-listener/deny/sudo and repeated-bind fixtures printed the corresponding settings and last bind. These are file results only; expected live exposure and management-only access follow per the guide's cited Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket) and Webmin 2.670 sudo login, configuration parser (`read_config_file`), allow and deny lists, and basic-authentication failure counting (`passdelay`). On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
 with a copy of miniserv's own `read_config_file` (a line starting with `#` is a comment, spaces around
 the name and the value are trimmed, and the last occurrence of a setting wins), then applies
 miniserv's rules: `bind=*`, `bind=0`, `bind=0.0.0.0`, `bind=::`, or an empty or missing `bind=` means
@@ -357,11 +357,11 @@ without `=`. On each, the copy's parsed values matched Webmin 2.670's own `read_
 the same file, and the block printed the outcomes above; it reported an unreadable path as not
 checked.
 
-On a Cockpit host, reasoned: `systemctl cat cockpit.socket` shows the effective listeners; exposed is a
+REASONED: this Cockpit socket and root-deny inspection needs a Cockpit systemd/PAM host; a live Cockpit stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review used a `systemctl` stub printing `[Socket]`, empty `ListenStream=` and `ListenStream=10.0.0.5:9090`; the `sudo` stub printed `sudo stub: cat /etc/cockpit/disallowed-users`, not file contents. The expected bare-port exposure versus reset/private bind and missing-file root access versus a root deny entry follow per the guide's cited Cockpit 368 listening address and port and Cockpit 368 PAM stack and root deny list. On a Cockpit host, reasoned: `systemctl cat cockpit.socket` shows the effective listeners; exposed is a
 bare `ListenStream=9090`, fixed is the drop-in's empty `ListenStream=` followed by an address and port.
 `sudo cat /etc/cockpit/disallowed-users` should list `root`; a missing file lets root log in.
 
-On a Proxmox VE node, reasoned: `grep -E '^(LISTEN_IP|ALLOW_FROM|DENY_FROM|POLICY)=' /etc/default/pveproxy`
+REASONED: this Proxmox bind, ACL, firewall and second-factor inspection needs a Proxmox node, cluster inventory and administrative web-interface access; a live Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the stated grep expression on scratch files: an empty fixture exited 1 without output, and a fixed fixture exited 0 printing `ALLOW_FROM="10.0.0.0/24"` and `DENY_FROM="all"`; a `pve-firewall` stub printed `Status: enabled/running (stub)`. Expected exposed wildcard/default-allow access and disabled firewall versus management-only bind or ACLs, enabled firewall with management-only rules, and an enrolled second factor for every administrator follow per the guide's cited Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12), Proxmox VE firewall (Proxmox VE 9.2, pve-docs 9.2.12) and Proxmox VE user management (Proxmox VE 9.2, pve-docs 9.2.12; root@pam, two-factor, lockout and API tokens). On a Proxmox VE node, reasoned: `grep -E '^(LISTEN_IP|ALLOW_FROM|DENY_FROM|POLICY)=' /etc/default/pveproxy`
 prints nothing on a default install (or reports that the file does not exist), which means the
 wildcard bind and the `allow` policy. Fixed is `LISTEN_IP` set to a management address on a single
 node, or `ALLOW_FROM` with your management networks together with `DENY_FROM="all"` or
@@ -372,7 +372,7 @@ default; fixed is enabled and running, with rules that allow 8006, 22 and 3128 o
 addresses, which you confirm in the datacenter and node firewall rules in the web interface. In the web interface, check
 that every administrative user, `root@pam` included, has a second factor.
 
-Finally, from a host that should not have access, try a TCP connection to each panel port. The block
+REASONED: this external-vantage procedure needs each server public address, a known-open control port and a host outside the allowed management network; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the TCP block through `bash -n` and ShellCheck 0.11.0 with no output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. A `timeout` stub returning 124 for the control printed `control 198.51.100.7:22 did not connect (timeout stub invoked); not probing`. Expected exposed TCP connects; fixed isolation may refuse or time out, which is only consistent with isolation after the positive control and server inventory checks, per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). Finally, from a host that should not have access, try a TCP connection to each panel port. The block
 takes one IP address rather than a host name, so that a name with both IPv4 and IPv6 addresses cannot
 hide one behind a timeout on the other: run it once for each public address of the server. It also
 takes a port you know is open on that address from this host (for example SSH on 22) as the positive
