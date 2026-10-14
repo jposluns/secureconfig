@@ -35520,7 +35520,7 @@ debugger". Do not publish 25 unless you use email triggers.
 
 ## Verify
 
-Three checks here were demonstrated: the sample-token check, the Windmill default-login pair, and
+REASONED: Historical run summary, not a new demonstration. All six shell blocks passed bash -n, and ShellCheck 0.11.0 reported no findings. Local stubs exercised inventory, key-presence, login-request and TCP-control paths; sample and replaced file fixtures printed FOUND and no vendor sample tokens found. Deployment behaviour was not reproduced under the authorized offline, stub-only restriction. Exposed/fixed expectations below remain source reasoning, including the guide's cited Docker packet filtering (`DOCKER-USER`) and Windmill v1.817.0 README (default credentials). The following host and run statements describe the earlier authoring environment. Three checks here were demonstrated: the sample-token check, the Windmill default-login pair, and
 the TCP reachability probe's outcomes on loopback; the NocoDB key check's logic was exercised with a
 stand-in for `docker exec`. Everything else is reasoned. NocoDB 2026.09.0, Baserow,
 Appsmith and Budibase ship for production as container images and the authoring host has no container
@@ -35528,7 +35528,7 @@ runtime. NocoDB also cannot run here outside a container: its server calls `list
 can only bind every interface, which the host forbids; the same applies to Windmill's default bind.
 The remaining checks are REASONED from the cited vendor documentation and pinned source readings.
 
-On the host, list the listeners, then read Docker's own publications, because a port published through
+REASONED: The inventory block passed bash -n; sudo and docker stubs printed wildcard and loopback publications. No deployment inventory was available under the scratch-only restriction. Expect wildcard addresses when exposed and loopback or private addresses when fixed, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2). On the host, list the listeners, then read Docker's own publications, because a port published through
 Docker's NAT may have no host socket at all, so absence from `ss` is not proof of isolation:
 
 REASONED: following block; pinned Compose and Docker sources support listener/publication inventory. The recorded host has no container runtime and forbids wildcard binds; exposed/fixed expectations follow.
@@ -35538,10 +35538,10 @@ sudo ss -tlnp   # 8080 (NocoDB; Appsmith dev Compose), 80/443 (Baserow, Windmill
 docker ps --format '{{.Names}}\t{{.Ports}}'   # every "0.0.0.0:" or "[::]:" (":::" before Docker CLI 27.2) publication accepts connections on every host address: reachable from outside unless a firewall rule (for example in DOCKER-USER) filters it
 ```
 
-Exposed, the reasoned expectation is a wildcard address, on the host or in a Docker publication, for any
+REASONED: preceding block; The inventory block passed bash -n; sudo and docker stubs printed wildcard and loopback publications. No deployment inventory was available under the scratch-only restriction. Expect wildcard addresses when exposed and loopback or private addresses when fixed, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2). Exposed, the reasoned expectation is a wildcard address, on the host or in a Docker publication, for any
 of those ports; fixed means a loopback or private address only.
 
-Check each environment and Compose file the deployment uses for the vendor sample values: run the block
+REASONED: The file-check block passed bash -n; local sample and replaced fixtures printed FOUND vendor sample tokens and no vendor sample tokens found; a missing path printed not checked. Placeholder, missing-marker, short-assignment and empty inputs stopped locally. Original vendor files were unavailable as fixtures in this offline run. Expected sample hits and their absence after replacement follow the guide's cited Budibase v3.46.0 sample environment, Appsmith v2.4.1 development Compose file and Windmill v1.817.0 Compose file. Check each environment and Compose file the deployment uses for the vendor sample values: run the block
 once per file, including every file an `env_file:` line names and the `.env` Compose reads for
 variable substitution. Substitute the file path inside the
 single quotes (a path containing an apostrophe needs other quoting), and paste the whole block.
@@ -35575,7 +35575,7 @@ Windmill's Compose file its `changeme` Postgres password. It also reported Compo
 URL parameters (`&password=changeme&`) and trailing punctuation. On copies with the values replaced it printed "no
 vendor sample tokens found", and on an unreadable path it reported that it did not check.
 
-For NocoDB, check the encryption key in the container rather than in a file: Compose variable
+REASONED: The key-presence block passed bash -n; a docker stub executing the inner shell test printed non-empty for a set key, EMPTY or unset for empty and absent keys, and not checked for a missing container. Placeholder, missing-marker, short-assignment, empty and option-like inputs stopped locally. No deployed NocoDB container was available within the authorized offline, stub-only tests. Expect EMPTY or unset when exposed and non-empty when fixed; this tests presence only, per the guide's cited Docker `docker exec` environment and NocoDB 2026.09.0 container start scripts. For NocoDB, check the encryption key in the container rather than in a file: Compose variable
 substitution, `env_file:` precedence and YAML values all decide the value, and the container's
 configured environment is their result. `docker exec` runs with that configured environment, not with
 the server process's own, so the two differ if the image's startup changes the variable. NocoDB's
@@ -35584,7 +35584,7 @@ without touching it, but the pinned tree has no Dockerfile, so which script the 
 verified. The block reports only whether the key is non-empty and never prints it. Substitute the
 container name inside the single quotes.
 
-This check assumes a clean host Bash shell, trusted container image and startup files, and a
+REASONED: Presence-check assumptions and limits, per the guide's cited Docker `docker exec` environment, NocoDB 2026.09.0 container start scripts and NocoDB 2026.09.0 credential encryption. The key-presence block passed bash -n; a docker stub executing the inner shell test printed non-empty for a set key, EMPTY or unset for empty and absent keys, and not checked for a missing container. Placeholder, missing-marker, short-assignment, empty and option-like inputs stopped locally. No deployed NocoDB container was available within the authorized offline, stub-only tests. Expect EMPTY or unset when exposed and non-empty when fixed; this tests presence only, per the guide's cited Docker `docker exec` environment and NocoDB 2026.09.0 container start scripts. Process-environment visibility, image startup selection and encryption were not tested against a deployed container. This check assumes a clean host Bash shell, trusted container image and startup files, and a
 container shell whose `[` is a builtin. It intentionally tests an existing container environment
 value: prompting for a key or supplying a file would test that replacement, not the deployed
 configuration. Docker's documented `exec`
@@ -35618,12 +35618,12 @@ REASONED: following block; Docker exec inheritance and pinned NocoDB start scrip
 )
 ```
 
-Exposed: "EMPTY or unset". Fixed: "non-empty". Anything else means the check did not run. With a
+REASONED: preceding block; The key-presence block passed bash -n; a docker stub executing the inner shell test printed non-empty for a set key, EMPTY or unset for empty and absent keys, and not checked for a missing container. Placeholder, missing-marker, short-assignment, empty and option-like inputs stopped locally. No deployed NocoDB container was available within the authorized offline, stub-only tests. Expect EMPTY or unset when exposed and non-empty when fixed; this tests presence only, per the guide's cited Docker `docker exec` environment and NocoDB 2026.09.0 container start scripts. The following stand-in account is the guide's earlier record. Exposed: "EMPTY or unset". Fixed: "non-empty". Anything else means the check did not run. With a
 stand-in for `docker exec`, the block printed "non-empty" for a set key, "EMPTY or unset" for an empty
 and an unset one, and "not checked" when the container was missing; it was not run against a real
 NocoDB container (no container runtime on the authoring host).
 
-For Windmill, check whether the default login still works. The password below is the vendor's
+REASONED: The login block passed bash -n, its JSON parsed, and a curl stub received the default credentials on stdin and the substituted /api/auth/login URL. Placeholder, missing-marker, short-assignment and empty inputs stopped locally. No live Windmill service or credential rotation was available in the authorized stub-only tests. Expected default-login success before rotation and rejection afterwards follow the guide's cited Windmill v1.817.0 README (default credentials); precise HTTP observations below belong to the earlier recorded run. For Windmill, check whether the default login still works. The password below is the vendor's
 published default, not a secret, so it is fine in the request body. Substitute the base URL (for
 example the Caddy address on port 80) inside the single quotes.
 
@@ -35680,7 +35680,7 @@ equivalent probe: its request validation runs before the "already initialised" c
 either fails validation in both states or, with a valid body on a fresh instance, creates the admin.
 Claim the admin yourself before the proxy is reachable.
 
-For NocoDB, Baserow and Appsmith, check signup by hand, reasoned from source. In a private browser
+REASONED: Manual signup procedure, per the guide's cited NocoDB 2026.09.0 first user, signup and its refusal message, Baserow 2.3.4 first user, signup and its refusal message, Appsmith v2.4.1 server properties (bind address, signup) and Appsmith v2.4.1 `SIGNUP_DISABLED` error. No browser-accessible deployment or account lifecycle was available in this authorized offline, stub-only run. This paragraph contains no shell or configuration fragment to execute locally. Expect account creation when exposed and backend refusal when fixed, with administrator login still working. For NocoDB, Baserow and Appsmith, check signup by hand, reasoned from source. In a private browser
 window, open the instance's sign-up page and try to create an account with an address you control.
 Exposed: the account is created, or, on a fresh instance, you become its administrator. Fixed: the
 signup is refused. The backends' refusal messages are NocoDB's "Not allowed to signup, contact super
@@ -35691,7 +35691,7 @@ inconclusive, because the frontend does not enforce the setting: check the backe
 `APPSMITH_SIGNUP_DISABLED`). Delete any test account the exposed state let you create, then sign in as your
 admin as the positive control.
 
-Finally, from a host that should not have access, try a TCP connection to each published port. The
+REASONED: The TCP block passed bash -n; timeout stubs printed connected for the control and every tested port, while refusal, timeout and fixture error at the control stopped further probes. Placeholder, missing-marker, short-assignment, empty, malformed-address and invalid-port inputs stopped locally. No public probing host or live sockets were available in the authorized stub-only tests. Exposed means connected; refusal or timeout is only consistent with fixed, subject to the controls below, per the guide's cited Docker packet filtering (`DOCKER-USER`) and Baserow 2.3.4 install with Docker (ufw warning). Finally, from a host that should not have access, try a TCP connection to each published port. The
 block uses bash's `/dev/tcp`, so it works for SMTP on 25 as well as the web ports. It takes one IP
 address rather than a host name, so that a name with both IPv4 and IPv6 addresses cannot hide one
 behind a timeout on the other: run it once for each public address of the host. It also takes a port you know
