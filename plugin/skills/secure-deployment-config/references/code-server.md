@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "c4ea5ce9b7f9aa9d987a4c5b925127f6f16de8d0620338865b6bfd73e34745a0",
+  "body_sha256": "4dfd35a63a16c1e36dc1b89dd972dd12f78009c6ba4876f4a2ef920a7f18bfbe",
   "components": {
     "server": {
       "name": "code-server",
@@ -170,7 +170,7 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
 # or unsuccessful positive control is inconclusive, not a pass.
 ```
 
-REASONED: preceding block; listener inventory, direct-origin isolation, paired editor access and MFA, per the guide's cited code-server v4.137.0 deployment guide and HTTP controls. No editor, proxy, IdP or external probe host is available; listeners are denied locally. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics and config YAML parsed. Placeholder, missing-assignment, short, empty and embedded-placeholder inputs printed refusal messages without reaching curl stubs; substituted inputs reached the stubs; under a pseudo-terminal, empty, placeholder and control-character cookies exited 2 before the authenticated request, and a fixture cookie exited 0 and reached curl only on stdin as a `Cookie:` header. Live outcomes remain unobserved: exposed access opens the editor anonymously or bypasses MFA; fixed access isolates the origin, challenges anonymous users and requires the second factor while admitting the authenticated control. An unauthenticated editor in a private browser window means whoever finds the URL owns the host.
+REASONED: preceding block; listener inventory, direct-origin isolation, paired editor access and MFA, per the guide's cited code-server v4.137.0 deployment guide and HTTP controls. No editor, proxy, IdP or external probe host is available; listeners are denied locally. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics and config YAML parsed. Placeholder, missing-assignment, short, empty and embedded-placeholder inputs printed refusal messages without reaching curl stubs; substituted inputs reached the stubs; under a pseudo-terminal, empty, placeholder and control-character cookies exited 2 before the authenticated request, and a fixture cookie exited 0 and reached curl only on stdin as a `Cookie:` header. Live outcomes remain unobserved: exposed access opens the editor anonymously or bypasses MFA; fixed access isolates the origin, challenges anonymous users and requires the second factor while admitting the authenticated control. An unauthenticated editor in a private browser window means whoever finds the URL owns the host. Paste the cookie value alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ## Sources (checked September 2026)
 

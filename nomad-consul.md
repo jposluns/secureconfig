@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fc7d1dae3a7aea0f0a6710547e7f882d435c1c85a650f90d3fcab196de1cba5c",
+  "body_sha256": "bb6a34f71b51bd54a12ed4bb3a22c675ed5d5a39e644150b13556106cdc09144",
   "components": {
     "nomad": {
       "name": "Nomad Community Edition",
@@ -278,7 +278,7 @@ and hands it to the one `nomad` command as a prefix assignment, never exported. 
 out of argv, not out of reach: while `nomad` runs, it can be read from `/proc/<pid>/environ` by the
 same account and by root.
 
-REASONED: following block; token input follows the pinned Nomad 2.0.7 CLI source; the recorded policy inspection used the earlier exported-token form, not this prompt and prefix assignment.
+REASONED: following block; token input follows the pinned Nomad 2.0.7 CLI source; the recorded policy inspection used the earlier exported-token form, not this prompt and prefix assignment. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
 (

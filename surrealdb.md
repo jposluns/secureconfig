@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "9a8c03a97cc098158b8f17009b67162a74a20245d3c43022ce751005865918ef",
+  "body_sha256": "1c20f348beab923cb9de42b1f2dc317b379076973afe4a75b18fd5fee259f2e2",
   "components": {
     "docs": {
       "name": "SurrealDB documentation (rolling)",
@@ -166,6 +166,8 @@ never exported:
 This moves the password out of argv, not out of reach: it stays readable through `/proc/<pid>/environ` by
 the same user and by root for the server's whole lifetime, as it does through the environment of any
 process that inherits it. Treat it as exposed to that account and to root while the server runs.
+Paste the password alone at the hidden prompt: a multi-line paste leaves every line after the first for
+your shell to run.
 
 The block clears `SURREAL_USER` and `SURREAL_PASS` itself, then refuses to start while any other `SURREAL_*` variable is set in the calling shell, naming each. `surreal start` reads many of its options from such variables, including `SURREAL_UNAUTHENTICATED` and `SURREAL_BIND`, so an inherited one would start the server differently from what the block shows. Unset them, or start from a clean shell.
 
@@ -290,6 +292,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null -w '
 REASONED: preceding block; listener inventory, health, anonymous/authenticated database-info queries, public-origin reachability and TLS interpretation follow the cited SurrealDB bind, health, SQL/authentication and TLS documentation. No running deployment, system-user JWT, external test path or deployment certificate is available. These server outcomes are reasoned, not demonstrated here (no SurrealDB runtime in the authoring environment);
 the expected exposed and fixed outcomes follow the cited SurrealDB documentation. Confirm the TLS certificate chain wherever
 TLS terminates with normal validation (a trusted CA for private PKI); never use `-k`.
+Paste the JWT alone at the hidden prompt: a multi-line paste leaves every line after the first for your
+shell to run.
 
 ## Sources (checked September 2026)
 

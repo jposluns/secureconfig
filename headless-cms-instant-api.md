@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "974d3df1a504e87e5a28ea9a128ff1f99090e0ec8a10714dedfd5320ac9597e0",
+  "body_sha256": "c898ea150f7de1a517583669a1ecd284d8f26eebc6dfe06c7c266c225b8ad922",
   "components": {
     "strapi": {
       "name": "Strapi MFA announcement",
@@ -413,7 +413,7 @@ never as the fixed state. Substitute your own host for the `example.com` placeho
 | Hasura | `/v1/graphql` | `{"query":"query { secureconfig_probe(where: {marker: {_eq: \"secureconfig-canary\"}}) { marker } }"}` | admin-secret-required JSON error |
 | PostgREST | `/secureconfig_probe?select=marker&marker=eq.secureconfig-canary` | empty | 401 with `PGRST302` when the anonymous role is unset |
 
-REASONED: following block; paired canary, token and credential-retirement probes follow the cited vendor documentation; the authoring environment has no container runtime for exposed/fixed service fixtures.
+REASONED: following block; paired canary, token and credential-retirement probes follow the cited vendor documentation; the authoring environment has no container runtime for exposed/fixed service fixtures. Paste each header alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
 
 ```bash
 (

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "9c634dc794de391041a9365158fb66ce73364cd91a85e13fbc1fd3345e10493d",
+  "body_sha256": "2fdad4fc55164c4b0bcff775ca01134bfe8a14e56e2d640966168f4c40bcfe7f",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -431,9 +431,25 @@ so it discriminates against a live install, based on the cited vendor documentat
 redirect, a `404`, an HTML body, a TLS error, a `kubectl` `Forbidden`, or a missing-CRD error is
 inconclusive, never the fixed state.
 
+REASONED: the backlog scope note and the token-paste instruction for the Argo CD block below; the scope
+note restates backlog row 2.28, and the paste-alone warning follows CONTRIBUTING rule 7's `read`
+exception. No container runtime, isolated network namespace or Kubernetes cluster is available, so no
+Argo CD response was observed. During marking review (October 2026) the block passed bash -n under
+bash 5.3.9 and ShellCheck 0.11.0 without diagnostics.
+In a scratch-local review, the block ran from a file with curl, kubectl, sudo and ss stubbed,
+no network and a pseudo-terminal. Unchanged placeholders and substituted dummy inputs each printed
+'stub curl' twice, 'stub kubectl' six times, 'stub sudo' and 'stub ss' (file exit 0).
+An empty token printed 'supply the token; not probing'; readonly tok printed
+'a readonly tok is set in this shell; not probing'; readonly IFS printed
+'a readonly IFS is set in this shell; not probing'. Each refusal still printed the anonymous
+'stub curl' and all inventory stub lines, and the file exited 0 after inventory continued.
+These stub outputs do not verify Argo CD authorization; the live comparison remains anonymous
+401 versus application JSON listing the expected application with a valid token.
 Backlog row 2.28 retains only the missing-source audits: controller binds, repo-server RPC authorization
 and certificate fallback, Dex runtime authentication and authorization, the Redis image bind and
 password initializer, and the RBAC fallback. Those implementations are not fully traced here.
+In the block below, paste the Argo CD bearer token alone at the hidden prompt: a multi-line paste leaves
+every line after the first for your shell to run.
 
 ```bash
 # REASONED: Argo CD API and cluster inventory checks follow the cited documentation and pinned sources;
@@ -514,11 +530,28 @@ line when the mounted file contains exactly `true`. In an isolated demonstration
 a failed control is inconclusive. Return profiling to disabled after the demonstration. The pinned
 metrics mux, profiler wrapper and server NetworkPolicy below distinguish these states.
 
+REASONED: the paired Argo CD `401` reading for the Argo CD API block earlier in this section and the Flux receiver checks
+for the block below, per the guide's cited Argo CD anonymous-access and RBAC entries, Flux notification
+Receivers entry and Python HMAC entries, with the paste-alone warning per CONTRIBUTING rule 7's `read`
+exception. No live Argo CD or Flux installation is available, so no receiver response or reconciliation
+was observed. During marking review (October 2026) the Flux block passed bash -n under bash 5.3.9 and
+ShellCheck 0.11.0 without diagnostics.
+In a scratch-local review, the block ran from a file with curl and python3 stubbed, no network
+and a pseudo-terminal. Unchanged placeholders and substituted dummy inputs each printed
+'stub curl' twice (exit 0); an empty secret printed 'supply the HMAC secret; not probing'
+(exit 2); readonly hmac and readonly sig each printed
+'a readonly hmac or sig is set in this shell; not probing' (exit 2); readonly IFS printed
+'a readonly IFS is set in this shell; not probing' (exit 2). The python3 stub supplied a fixed
+signature, so the HMAC computation is not verified. The stub outputs do not verify receiver
+authorization or reconciliation; the live comparison remains rejection without a signature
+versus acceptance and reconciliation with a valid signature over the same body.
 A bare `401` proves less than it looks: a fronting authentication proxy can return it while the
 underlying `users.anonymous.enabled` is still on, so pair the probe with an authenticated request
 through the same route that should succeed, and read the anonymous and `policy.default` settings from
 `argocd-cm`/`argocd-rbac-cm` directly. For Flux, test the webhook with an **unauthenticated** request, not merely an unsigned body, since a valid
-`X-Gitlab-Token` or OIDC token authenticates without a signature. For a `generic-hmac` receiver the
+`X-Gitlab-Token` or OIDC token authenticates without a signature. Paste the receiver's HMAC secret alone at the
+block's hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
+For a `generic-hmac` receiver the
 signature is `X-Signature: sha256=<hex HMAC of the exact body under the receiver's secret>`; send identical
 bytes without it (must be rejected) and then with it (must be accepted and trigger the reconciliation):
 
