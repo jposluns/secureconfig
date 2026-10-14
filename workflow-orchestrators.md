@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "e5a142ce470ded790d4ede1922b5e4bb7b183d3eb548c81c457862b7ed887ca8",
+  "body_sha256": "40c61454919a8bcf5f66f3b00ac7801ac24920448cd3fc610b720718ddbc3780",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -576,7 +576,7 @@ Pods can turn an exposed API into cluster compromise.
 
 ## Verify
 
-REASONED: following block; every probe in the following block (the ss inventory, the Prefect, Dagster, Airflow, Temporal, Flower and Argo anonymous and authorized calls, the Flower socket-directory stat and getfacl lines, and the guarded direct-origin probe), per the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow FAB provider, API authentication; Apache Airflow running in Docker; Temporal, self-hosted security; Flower configuration; and Argo anonymous fallback when server mode is enabled. The authoring environment has no container runtime, Kubernetes cluster or orchestrator install, and no network access to obtain one. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with stub ss, curl and temporal and no network: each illustrative probe reached only the stubs; the origin guard printed its substitute-your-origin-URL refusal unchanged, the paste-the-whole-block refusal without its set -- line, the exactly-1-value refusal when shortened and the http-or-https refusal for an ftp:// URL, and passed a substituted https:// URL to the stub. The October 2026 marking review reported piped-input helper checks, including header encoding, JSON escaping and invalid Argo tokens; these are historical observations, not new runs. In the TODO 50 review, the unchanged and changed blocks ran from files with hidden prompts driven through a pseudo-terminal, dummy credentials, and stubs for every external command (the Python stub delegated only the known helpers to the isolated interpreter). No probe reached a service. Before the change, all three authenticated labels still ran when their helper exited 73, including after partial output. An empty terminal response produced a Basic header with an empty value for Prefect and JSON containing an empty username or password for Airflow; those helpers succeeded. Argo rejected an empty response, but its curl still ran with empty stdin. This distinguishes an empty prompt response from the earlier piped-input failure report. After the change, valid dummy inputs reached all three authenticated curl stubs with the expected header or JSON. Each empty credential, each helper exit 73 and each partial-output failure printed the matching credential-helper refusal and skipped only that authenticated probe; the other labelled calls were unchanged. These local runs test shell control flow, not service authentication. The stat and getfacl observations are recorded after the block. These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
+REASONED: following block; every probe in the following block (the ss inventory, the Prefect, Dagster, Airflow, Temporal, Flower and Argo anonymous and authorized calls, the Flower socket-directory stat and getfacl lines, and the guarded direct-origin probe), per the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow FAB provider, API authentication; Apache Airflow running in Docker; Temporal, self-hosted security; Flower configuration; and Argo anonymous fallback when server mode is enabled. The authoring environment has no container runtime, Kubernetes cluster or orchestrator install, and no network access to obtain one. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with stub ss, curl and temporal and no network: each illustrative probe reached only the stubs; the origin guard printed its substitute-your-origin-URL refusal unchanged, the paste-the-whole-block refusal without its set -- line, the exactly-1-value refusal when shortened and the http-or-https refusal for an ftp:// URL, and passed a substituted https:// URL to the stub. The October 2026 marking review reported piped-input helper checks, including header encoding, JSON escaping and invalid Argo tokens; these are historical observations, not new runs. In the first TODO 50 review, the unchanged and changed blocks ran from files with hidden prompts driven through a pseudo-terminal, dummy credentials, and stubs for every external command (the Python stub delegated only the known helpers to the isolated interpreter). No probe reached a service. Before the change, all three authenticated labels still ran when their helper exited 73, including after partial output. An empty terminal response produced a Basic header with an empty value for Prefect and JSON containing an empty username or password for Airflow; those helpers succeeded. Argo rejected an empty response, but its curl still ran with empty stdin. After the change, valid dummy inputs reached all three authenticated curl stubs with the expected header or JSON. Each empty credential, each helper exit 73 and each partial-output failure printed the matching credential-helper refusal and skipped only that authenticated probe; the other labelled calls were unchanged. These local runs test shell control flow, not service authentication. During marking review (October 2026), the second TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 with dummy credentials on a pseudo-terminal, stubs for every external command and only the known credential helpers delegated to the scratch interpreter. Under bash -e before this revision, each helper exit 73, partial-output failure or empty credential stopped the calling shell at that authenticated probe, so later probes did not run. After this revision, each refusal skipped only its authenticated request and all later probes ran. Valid credentials reached all three authenticated curl stubs with the expected header or JSON before and after, with and without bash -e. All four empty credential cases and each helper failure were also checked without errexit before and after. With PYTHONOPTIMIZE=1 and an empty Argo token, the unchanged helper sent an empty bearer header; the revised helper refused it and skipped the Argo authenticated request, with and without bash -e. Every completed sequence reached the unchanged direct-origin placeholder refusal; all files exited 2, either at the first unhandled refusal before this revision under bash -e or at the final origin guard. These runs checked shell flow and credential encoding only, not service authentication. The stat and getfacl observations are recorded after the block. These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
 live orchestrator was stood up in its exposed or fixed state. For Argo, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED.
 The exception is the Flower unix-socket stat mode
@@ -601,7 +601,7 @@ ss -tlnp   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8
 # returns a JSON flow list; an anonymous list, even an empty one, is the finding. Feed the auth string on stdin.
 # getpass prompts without echo on a terminal, so the auth string enters neither shell history nor set -x
 # tracing; stdin closes the argv channel only, and the account owner and root can still read it in
-# python3 and curl.
+# python3, the block's subshell and curl.
 # Do NOT use /api/health or /api/ready as the authentication discriminator. Current server source exempts
 # those GET paths; this behavior is version-dependent and was not present in 3.1.8.
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
@@ -611,7 +611,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
 (
   trap - DEBUG RETURN ERR
   set +x +a +e
-  set -- "$(python3 -c 'import base64,getpass,sys; s=getpass.getpass("Prefect username:password: "); s or sys.exit("empty credential"); print("header = \"Authorization: Basic " + base64.b64encode(s.encode()).decode() + "\"")'; printf '\n%s' "$?")"
+  set -- "$(python3 -I -c 'import base64,getpass,sys; s=getpass.getpass("Prefect username:password: "); s or sys.exit("empty credential"); print("header = \"Authorization: Basic " + base64.b64encode(s.encode()).decode() + "\"")'; printf '\n%s' "$?")"
   case "$1" in
     *$'\n0') set -- "${1%$'\n'*}" ;;
     *) echo "prefect-auth: credential helper failed; not probing"; exit 2 ;;
@@ -621,7 +621,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --config - \
         -w '\nprefect-auth http=%{http_code} exit=%{exitcode}\n' \
         -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter
-)
+) || echo 'prefect-auth: probe failed; continuing'
 
 # Dagster has no login of its own, so test /graphql, which can read configuration and launch runs.
 # A RepositoryConnection containing nodes (including an empty nodes list) is a successful read.
@@ -647,11 +647,11 @@ printf '%s' '{"username":"airflow","password":"airflow"}' \
 # The valid-account comparison. getpass prompts without echo on a terminal, so the username and password enter
 # neither shell history nor set -x tracing, and json.dumps escapes any double quote, backslash or control
 # character in them, so the body stays one JSON object; stdin closes the argv channel only, and the account
-# owner and root can still read the password in python3 and curl.
+# owner and root can still read the password in python3, the block's subshell and curl.
 (
   trap - DEBUG RETURN ERR
   set +x +a +e
-  set -- "$(python3 -c 'import getpass,json,sys; u=getpass.getpass("Airflow username: "); p=getpass.getpass("Airflow password: "); (u and p) or sys.exit("empty credential"); print(json.dumps({"username": u, "password": p}))'; printf '\n%s' "$?")"
+  set -- "$(python3 -I -c 'import getpass,json,sys; u=getpass.getpass("Airflow username: "); p=getpass.getpass("Airflow password: "); (u and p) or sys.exit("empty credential"); print(json.dumps({"username": u, "password": p}))'; printf '\n%s' "$?")"
   case "$1" in
     *$'\n0') set -- "${1%$'\n'*}" ;;
     *) echo "airflow-valid-token: credential helper failed; not probing"; exit 2 ;;
@@ -661,7 +661,7 @@ printf '%s' '{"username":"airflow","password":"airflow"}' \
     | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
         -w '\nairflow-valid-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
         -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token
-)
+) || echo 'airflow-valid-token: probe failed; continuing'
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   -w '\nairflow-pools-anon http=%{http_code} exit=%{exitcode}\n' https://airflow.example.com/api/v2/pools
@@ -714,11 +714,11 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
 # this namespace. The token goes to curl on stdin, never argv.
 # getpass prompts without echo on a terminal, so the token enters neither shell history nor set -x
 # tracing; stdin closes the argv channel only, and the account owner and root can still read it in
-# python3 and curl.
+# python3, the block's subshell and curl.
 (
   trap - DEBUG RETURN ERR
   set +x +a +e
-  set -- "$(python3 -c 'import getpass; t=getpass.getpass("Argo bearer token (without Bearer prefix): "); assert t and all(33 <= ord(c) <= 126 for c in t), "invalid token"; print("Authorization: Bearer " + t)'; printf '\n%s' "$?")"
+  set -- "$(python3 -I -c 'import getpass,sys; t=getpass.getpass("Argo bearer token (without Bearer prefix): "); (t and all(33 <= ord(c) <= 126 for c in t)) or sys.exit("invalid token"); print("Authorization: Bearer " + t)'; printf '\n%s' "$?")"
   case "$1" in
     *$'\n0') set -- "${1%$'\n'*}" ;;
     *) echo "argo-auth: credential helper failed; not probing"; exit 2 ;;
@@ -728,7 +728,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
     | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
         --header @- -w '\nargo-auth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
         https://argo.internal:2746/api/v1/workflows/argo
-)
+) || echo 'argo-auth: probe failed; continuing'
 
 # Direct-origin reachability from an UNTRUSTED vantage (run from OUTSIDE your network). Paste the whole block and
 # substitute your origin URL inside the quotes; any HTTP response means the origin is published and is itself the
