@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "dfc6a604767609c969733fe7076681734a57319097f312b6f06e21f3cd93f8ff",
+  "body_sha256": "a221c5f2a0836b7565c8055e4638d8834cdf535abe50ab07bf64e2d718cf3930",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -576,7 +576,7 @@ Pods can turn an exposed API into cluster compromise.
 
 ## Verify
 
-These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
+REASONED: following block; every probe in the following block (the ss inventory, the Prefect, Dagster, Airflow, Temporal, Flower and Argo anonymous and authorized calls, the Flower socket-directory stat and getfacl lines, and the guarded direct-origin probe), per the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow FAB provider, API authentication; Apache Airflow running in Docker; Temporal, self-hosted security; Flower configuration; and Argo anonymous fallback when server mode is enabled. The authoring environment has no container runtime, Kubernetes cluster or orchestrator install, and no network access to obtain one. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with stub ss, curl and temporal and no network: each illustrative probe reached only the stubs; the origin guard printed its substitute-your-origin-URL refusal unchanged, the paste-the-whole-block refusal without its set -- line, the exactly-1-value refusal when shortened and the http-or-https refusal for an ftp:// URL, and passed a substituted https:// URL to the stub. Run on piped input, the Prefect helper printed one header line whose Basic value decoded to the input, the Airflow helper printed one JSON object that round-tripped a double quote, backslash and control character, and the Argo helper refused a space, tab, non-ASCII or empty token. With empty input each helper failed, yet its paired curl still ran with an empty stdin. The stat and getfacl observations are recorded after the block. These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
 live orchestrator was stood up in its exposed or fixed state. For Argo, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED.
 The exception is the Flower unix-socket stat mode
@@ -721,22 +721,22 @@ python3 -c 'import getpass; t=getpass.getpass("Argo bearer token (without Bearer
 )
 ```
 
-A DAG list, flow run, task graph, repository, or worker pool that renders without a credential is a finding; so
+REASONED: preceding block; every probe in the block above, summarized here as findings, per the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow running in Docker; Temporal, self-hosted security; Temporal, Web UI configuration reference; Flower configuration; and Argo anonymous fallback when server mode is enabled. It adds no probe of its own; that block's local runs are recorded in the declaration before it, and no orchestrator was available in the authoring environment to show either state. Exposed, a listing answers without a credential; fixed, the anonymous call is refused while the matched authorized call succeeds. A DAG list, flow run, task graph, repository, or worker pool that renders without a credential is a finding; so
 is a Temporal Service that answers `temporal workflow list` with no claim behind it, since the UI login does not
 cover the frontend gRPC path.
 
-The Flower unix-socket directory checks were demonstrated on the authoring host, on tmpfs, with directories only:
+DEMONSTRATED: the Flower socket-directory stat and getfacl checks in the items below, on directories only, exposed (mode 0755, or a named entry granting x) against fixed (mode 0750 with only the base entries). During marking review (October 2026) they were run again in a btrfs scratch directory with uutils stat 0.8.0 and getfacl 2.3.2 and printed the values recorded below; again no socket was created and no Flower process ran. The Flower unix-socket directory checks were demonstrated on the authoring host, on tmpfs, with directories only:
 no socket was created and no Flower process ran.
 
-- `stat -c '%a %U:%G %u:%g %n'` printed `755` for a directory created with mode `0755` and `750` for one created
+- DEMONSTRATED: the mode check, exposed 0755 against fixed 0750; the marking-review run (October 2026, btrfs, uutils stat 0.8.0, getfacl 2.3.2) printed the same values. `stat -c '%a %U:%G %u:%g %n'` printed `755` for a directory created with mode `0755` and `750` for one created
   with `0750`; `getfacl -p` on the `0750` directory listed only `user::rwx`, `group::r-x` and `other::---`.
-- After `setfacl -m u:nobody:--x` on the `0750` directory, `stat` still printed `750`. Only the trailing `+` in
+- DEMONSTRATED: a named entry on the fixed 0750 directory, before and after; the marking-review run (October 2026, btrfs, uutils stat 0.8.0, getfacl 2.3.2) printed the same values. After `setfacl -m u:nobody:--x` on the `0750` directory, `stat` still printed `750`. Only the trailing `+` in
   `ls -ld` and getfacl's `user:nobody:--x` line showed the named entry.
-- After `setfacl -m m::r--`, getfacl printed `user:nobody:--x` with `#effective:---`. While masked, `stat` printed `740`. A later
+- DEMONSTRATED: the mask and chmod interaction; the marking-review run (October 2026, btrfs, uutils stat 0.8.0, getfacl 2.3.2) printed the same values, and access as nobody was again not tested. After `setfacl -m m::r--`, getfacl printed `user:nobody:--x` with `#effective:---`. While masked, `stat` printed `740`. A later
   `chmod 0750` reset `mask::` to `r-x`, and getfacl printed `user:nobody:--x` with no `#effective:` mark, so
   under acl(5) the entry's `x` is in effect again (access as `nobody` was not tested).
 
-Not run: whether an account outside the proxy's group is refused at the directory, the socket's `777` after each
+REASONED: the checks listed here remain unobserved, per the guide's cited Flower and Tornado unix-socket entry (pinned v2.2.0 and v6.5.10, with unix(7), path_resolution(7), user_namespaces(7) and acl(5)). The authoring environment has no Flower install, no container runtime and no privilege to act as a second account, so neither an outside account's refusal at a 0750 directory (fixed) nor its traversal through a named x entry (exposed) was observed. During marking review (October 2026) the 2750 form and a default: entry were run in a btrfs scratch directory: after chmod 2750, uutils stat 0.8.0 printed 2750 (uutils mkdir 0.8.0 given -m 2750 had left 750); getfacl 2.3.2 listed default:user:nobody:--x beside an access ACL of only user::, group:: and other::, and a directory created inside inherited user:nobody:--x as an access entry. Not run: whether an account outside the proxy's group is refused at the directory, the socket's `777` after each
 Flower start, the `2750` setgid form, a `default:` entry, and the `%u:%g` comparison from inside a container that
 shares the directory.
 
