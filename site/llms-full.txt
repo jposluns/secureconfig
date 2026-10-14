@@ -4372,7 +4372,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | http2: http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed. | nginx documentation unknown | REASONED |
 | tokens: server_tokens off suppresses nginx version in headers and error pages. | nginx documentation unknown | REASONED |
 | hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. | nginx documentation unknown; HSTS specification RFC 6797; nginx header-filter source release-1.26.3 | REASONED |
-| hsts-inheritance: A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. This claim cites no source for add_header inheritance or for always response-code coverage. | nginx documentation unknown; nginx header-filter source release-1.26.3 | REASONED |
+| hsts-inheritance: A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. This claim cites no source for add_header inheritance. | nginx documentation unknown; nginx header-filter source release-1.26.3 | REASONED |
 | proxy: Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host. | nginx documentation unknown | REASONED |
 | forwarded-host: Overwrite X-Forwarded-Host: client-set values otherwise pass upstream. | nginx documentation unknown | REASONED |
 | cipher-policy: Use Mozilla for explicit cipher policy; retain the stated protocol floor. | nginx documentation unknown; Mozilla TLS policy unknown | REASONED |
@@ -5573,7 +5573,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | expiry: No cookie maximum age is set by default; set cookie.maxAge. | express-session documentation unknown | REASONED |
 | login-limit: Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls. | express-rate-limit minimum v8 | REASONED |
 | tokens: Load API tokens from process.env and compare with crypto.timingSafeEqual; these APIs are not covered by listed Sources. | Node.js documentation unknown | REASONED |
-| mfa: Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; these cross-references are not covered by listed Sources. | express-session documentation unknown; otplib v12.0.1; qrcode v1.5.4 | REASONED |
+| mfa: Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; the fronting identity layer is not covered by listed Sources. | express-session documentation unknown; otplib v12.0.1; qrcode v1.5.4 | REASONED |
 | tls-validation: Never disable validation with NODE_TLS_REJECT_UNAUTHORIZED=0 process-wide or rejectUnauthorized=false per connection/shared agent; the environment-variable rule lacks a listed source. | Node.js documentation unknown | REASONED |
 | client-ca: Use NODE_EXTRA_CA_CERTS for an internal CA; this variable is not covered by listed Sources. | Node.js documentation unknown | REASONED |
 | verify-redirect: HTTP should return 301 with an HTTPS Location. | Node.js documentation unknown | REASONED |
