@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "5688ba2003dc3804084002cecbf3d2196d243f3008783fdfb56e675ea5976ecf",
+  "body_sha256": "3bdad54327114894a6f45d5d5adb334b0b4fbc9bf784629b0385e6e2c4063461",
   "components": {
     "next": {
       "name": "Next.js documentation",
@@ -303,7 +303,7 @@ Deployment Protection controls who can open a deployment URL: Vercel Authenticat
 
 ## Verify
 
-REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin.
+REASONED: following block; listener inventory, route/action authorization controls, cookie input and client-secret scan. No deployed application or session controls are available, so no route or session outcome is recorded here; expectations are reasoned from the cited Next.js, auth-library, curl and grep sources. On 2026-10-13 (UTC), with Bash 5.3.9, a stubbed curl and dummy values typed at a pty's hidden prompts, the cookie and secret-scan subshells each traced two lines under `bash -x` (`trap -` and `set +x +a +e`), none holding a dummy value; with `set +x` removed, the dummies appeared in 3 and 1 trace lines. An interactive Bash given each subshell wrote a history file holding the block's lines and no dummy value, and the stub received each cookie only on stdin. Paste each cookie value and the secret alone at its hidden prompt: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
 
 ```bash
 ss -tlnp   # read every listener; 3000 on 127.0.0.1 only when self-hosted. ss shows the BIND, not the

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "2b1176e5a48b0cd32edaf2e3560d3c085cad5292cf930f83662f84a36d6177e4",
+  "body_sha256": "f0ed2c277c31a17bf1ab9675093049dc936f11fc2d2a8c07925c9c6fbd95d872",
   "components": {
     "server": {
       "name": "NATS Server",
@@ -1029,7 +1029,7 @@ Inventory 4222, 8222, and every enabled peer or protocol listener, including 622
 
 The CLI reads saved contexts and environment settings before defaults. Each block clears inherited `NATS_*` settings and uses `--no-context`. This prevents a supposedly anonymous check from silently inheriting a token, user, seed, credentials file, or proxy setting. A fully clean `env -i` launch is another way to isolate ambient settings, but required credentials must still be supplied deliberately.
 
-Paste the whole subshell after substituting all four values. These probes accept a DNS hostname or IPv4 address, without a scheme, port, or embedded credentials. TLS paths and the username are exported inside the guarded subshell. The password is read from the terminal and never exported or passed as a command argument: natscli v0.4.0 offers no stdin input for it and binds `--password` to `NATS_PASSWORD`, so each `nats` command that needs it receives it as a one-command `NATS_PASSWORD="$pw"` prefix assignment. That moves the password out of argv, not out of reach: it can remain readable through `/proc/<pid>/environ` by the same user and by root while that `nats` command, or the `timeout` that runs it, is running. Environment secrets still require a trusted local execution account.
+Paste the whole subshell after substituting all four values. These probes accept a DNS hostname or IPv4 address, without a scheme, port, or embedded credentials. TLS paths and the username are exported inside the guarded subshell. The password is read from the terminal and never exported or passed as a command argument: natscli v0.4.0 offers no stdin input for it and binds `--password` to `NATS_PASSWORD`, so each `nats` command that needs it receives it as a one-command `NATS_PASSWORD="$pw"` prefix assignment. That moves the password out of argv, not out of reach: it can remain readable through `/proc/<pid>/environ` by the same user and by root while that `nats` command, or the `timeout` that runs it, is running. Environment secrets still require a trusted local execution account. Paste the password alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 The first publish is the allowed control. The subsequent operations deliberately test missing credentials, a wrong password, a missing client certificate, and forbidden publish/subscribe subjects. Inspect each command's diagnostics; the block's final exit status is not a combined verdict.
 
@@ -1095,7 +1095,7 @@ See [authentication](https://docs.nats.io/learn/security/authentication-basics),
 
 A successful publish message or a quiet subscriber is insufficient proof of delivery. In a quiet fixture, start terminal 1, wait for subscription establishment, then run terminal 2 while terminal 1 is still active. The consumer must print the exact marker from terminal 2.
 
-Terminal 1 is self-contained and reads its password inside the guarded subshell. Piping a password to `nats sub` does not configure authentication; in CLI v0.4.0, a username without a password is treated as a token.
+Terminal 1 is self-contained and reads its password inside the guarded subshell. Paste the password alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. Piping a password to `nats sub` does not configure authentication; in CLI v0.4.0, a username without a password is treated as a token.
 
 ```bash
 # REASONED: subscriber delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
@@ -1131,7 +1131,7 @@ Terminal 1 is self-contained and reads its password inside the guarded subshell.
 )
 ```
 
-Terminal 2 independently establishes its target, TLS configuration, and credentials; it cannot inherit variables from terminal 1's subshell:
+Terminal 2 independently establishes its target, TLS configuration, and credentials; it cannot inherit variables from terminal 1's subshell. Paste its password alone at the hidden prompt too: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
 # REASONED: publisher delivery control; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
@@ -1174,7 +1174,7 @@ Terminal 2 independently establishes its target, TLS configuration, and credenti
 
 For queue comparisons, rerun the complete consumer block with the `order-worker` identity, its password and certificate fixtures, and replace the final subscription arguments with `sub orders.lookup --queue order-workers --count 1`. Publish a unique marker to `orders.lookup` using the complete publisher block. Then repeat with `--queue other-workers` and with no queue option. The exposed broad subscription grant accepts these forms; the fixed worker must receive through `order-workers` and reject the other forms. Test both acceptance and actual marker delivery. Do not grant the worker a bare `orders.lookup` permission to make a failing test pass.
 
-The following self-contained request block is also used by V4 and V5. Its last three inputs are identity, subject, and JSON body. Keep subjects such as `$SYS.REQ.SERVER.PING` and `$JS.API.INFO` single-quoted on the `set --` line. The inbox prefix matches the selected identity.
+The following self-contained request block is also used by V4 and V5. Its last three inputs are identity, subject, and JSON body. Keep subjects such as `$SYS.REQ.SERVER.PING` and `$JS.API.INFO` single-quoted on the `set --` line. The inbox prefix matches the selected identity. Paste the password alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
 # REASONED: request/reply, account and JetStream checks; no pinned server/CLI, broker or certificate fixtures. Expected outcomes and vendor sources are recorded in this section.
