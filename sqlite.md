@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "05b2e8fc032f8d5fb7e49ea52f33cdc01a4e3bf14414b362e49320674bc93112",
+  "body_sha256": "09d0b804757afedabfea12e61f477ca388d5f54a769d88c76bf1b1ddf592ed4d",
   "components": {
     "see": {
       "name": "SQLite Encryption Extension",
@@ -332,6 +332,8 @@ The bundle scan, the git inventory and the `stat` check were demonstrated on the
 
 Scan built client bundles for a leaked Turso/libSQL token, keeping the token off argv and shell history, though not out of your own account's view of the process:
 
+REASONED: the paste-alone instruction for the block below, per CONTRIBUTING rule 7's `read` exception. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
+
 DEMONSTRATED: following block; the recorded authoring-host placeholder-token runs distinguish exposed and clean bundles and exercise the listed shell guards; no real token was used. On 2026-10-13 (UTC), after both scans were changed to print file names only (`-l`), a bundle carrying a JWT-shaped dummy printed `dist/app.js` before `token-literal exit: 0` and again before `jwt-shape exit: 0`, with no token in the output, and a clean bundle printed `1` for both; before the change each scan printed the line holding the token.
 
 ```bash
@@ -416,7 +418,7 @@ REASONED: following block; LiteFS and Litestream listener isolation follows the 
 
 Any HTTP response from the untrusted vantage shows that an HTTP listener answered. Confirmed direct reachability to LiteFS exposes its unauthenticated endpoints, subject to their role and state conditions above; a fronting proxy can return its own denial or expose only selected paths, so its response alone does not establish reachability to the whole LiteFS API. A timeout, DNS, or TLS error, or a failed authorized control, is inconclusive, so corroborate with the bind address, routing, proxy configuration, and firewall. For Turso (REASONED: this outbound check needs a Turso database and token, and none was available to the authoring environment), prove the HTTP database rejects anonymous queries. Have a valid database token from the secret store ready to paste. The block prompts for it with input hidden, never exports it, and refuses a control character, so a pasted token cannot inject a second header. This keeps the token out of curl's argv, and the hidden prompt and the block's `set +x` keep it out of shell history and `set -x` tracing, but not out of reach of the account that runs the block:
 
-REASONED: following block; the cited Turso SQL-over-HTTP reference supplies the anonymous/authorized discriminator; no Turso database and token were available.
+REASONED: following block; the cited Turso SQL-over-HTTP reference supplies the anonymous/authorized discriminator; no Turso database and token were available. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
 (

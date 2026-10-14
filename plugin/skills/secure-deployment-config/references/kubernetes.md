@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "309ace61f870f4b15d5e442334760914d5476c35e88cd5fe138df84b3f1d5731",
+  "body_sha256": "1e80b5ac6d9df2701bae1929db0d6cb2f9ce6416a58415b189d509640b8a44c8",
   "components": {
     "kubernetes": {
       "name": "Kubernetes documentation",
@@ -357,7 +357,7 @@ spec:
 
 ## 3. Authentication at the entry point
 
-Gateway API defines no authentication filter; each implementation adds its own. Envoy Gateway's `SecurityPolicy` attaches basic auth to a Gateway, HTTPRoute, or GRPCRoute from a Secret holding an htpasswd file. Its docs state that only SHA hashes are supported, which falls short of the bcrypt rule in [authentication.md](authentication.md): treat it as a gate over TLS with long random passwords, and keep the application's own login in place.
+Gateway API defines no authentication filter; each implementation adds its own. Envoy Gateway's `SecurityPolicy` attaches basic auth to a Gateway, HTTPRoute, or GRPCRoute from a Secret holding an htpasswd file. Its docs state that only SHA hashes are supported, which falls short of the bcrypt rule in [authentication.md](authentication.md): treat it as a gate over TLS with long random passwords, and keep the application's own login in place. At each of the block's two hidden prompts, paste the password alone: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
 
 ```bash
 # -b would take the password from the command line, where `ps` and your shell history can

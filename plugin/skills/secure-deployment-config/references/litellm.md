@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e31ac9969a6349e8ea943b3f7ce82c422645927fc519e3e112e93c186e808399",
+  "body_sha256": "2a5e3014404a2d45329664d113112b9a482ab9426c3c2c0da18d404541b2b3e6",
   "components": {
     "docs": {
       "name": "LiteLLM documentation",
@@ -205,7 +205,7 @@ At the time of writing, current LiteLLM refuses to start when the resolved maste
 
 Virtual keys need a PostgreSQL database: set `DATABASE_URL=postgresql://user:password@host:5432/dbname` in the environment (or `database_url` under `general_settings`) before `/key/generate` will work.
 
-The original alias-only request below illustrates issuance and attribution. It does not establish least privilege: use the restricted request body below for application keys. This block assumes a clean Bash shell. Substitute your actual HTTPS origin inside the single quotes (an apostrophe needs shell escaping), paste the whole block, and enter the master key at the hidden prompt. The key stays in an unexported subshell variable, is sent to curl on stdin, and is unset on exit; no ambient master key is used. The response contains the newly issued virtual key, so keep the output private.
+The original alias-only request below illustrates issuance and attribution. It does not establish least privilege: use the restricted request body below for application keys. This block assumes a clean Bash shell. Substitute your actual HTTPS origin inside the single quotes (an apostrophe needs shell escaping), paste the whole block, and enter the master key at the hidden prompt. Paste the key there alone: a multi-line paste leaves every line after the first for your shell to run. The key stays in an unexported subshell variable, is sent to curl on stdin, and is unset on exit; no ambient master key is used. The response contains the newly issued virtual key, so keep the output private.
 
 ```bash
 (

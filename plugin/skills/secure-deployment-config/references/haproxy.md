@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "0f2f714f5034a60557f35051d656a92e56a1d6e86415538dfc2a8b0bce9c87af",
+  "body_sha256": "c5a820789a98a0a7fbd2c4e51e0b31d288cc20df984318835255c0c7b7912494",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -285,6 +285,8 @@ listener specifically; the runtime socket by its ownership and mode and an unaut
 (permission denied), since `show cli level` reporting `admin` is the authorized level, not proof of access
 control; and, where `verify required` is set, client certificates (no certificate and an untrusted one
 rejected at TLS, a trusted one admitted with `--cert`/`--key`, server verification kept on).
+In this block and the one above, paste the password alone at the hidden prompt: a multi-line paste leaves
+every line after the first for your shell to run.
 
 ```bash
 # REASONED: management-surface checks follow the cited HAProxy documentation; no HAProxy runtime is available.

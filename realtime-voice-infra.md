@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "d1af84d73713292f8566cf7ade51a4187b472830bb0ae581630695e601584dcb",
+  "body_sha256": "2a3aa971c42b8ff87243392ecca47e74a92363857aebb08034c5ce12d7215ad3",
   "components": {
     "livekit": {
       "name": "LiveKit",
@@ -336,7 +336,7 @@ DEMONSTRATED: following block; local Bash 5.3.9 and OpenSSL 3.5.5, with the prom
 )
 ```
 
-The prompt variable is cleared of inherited attributes, never exported and used only by Bash builtins. The builtin `printf` sends the exact bytes on stdin to `openssl dgst -md5 -r`; neither the password nor the key is an external process argument. The block clears inherited traps and disables tracing, allexport and inherited errexit before reading, refuses readonly IFS, and removes the password variable after hashing. These measures close the argv channel only. They do not protect against a compromised shell, same-account or root memory inspection, terminal capture, or tracing that is re-enabled. Never type the password into the pasted block or a command line, where shell history can retain it. The printed key is itself a credential: protect its output and place the generated entry in the protected coturn configuration under the same realm. The offline-guessing and key-reuse weaknesses described above still apply.
+The prompt variable is cleared of inherited attributes, never exported and used only by Bash builtins. The builtin `printf` sends the exact bytes on stdin to `openssl dgst -md5 -r`; neither the password nor the key is an external process argument. The block clears inherited traps and disables tracing, allexport and inherited errexit before reading, refuses readonly IFS, and removes the password variable after hashing. These measures close the argv channel only. They do not protect against a compromised shell, same-account or root memory inspection, terminal capture, or tracing that is re-enabled. Never type the password into the pasted block or a command line, where shell history can retain it. Paste it alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. The printed key is itself a credential: protect its output and place the generated entry in the protected coturn configuration under the same realm. The offline-guessing and key-reuse weaknesses described above still apply.
 
 For application-generated time-limited credentials, replace the `lt-cred-mech`/`user` lines with `use-auth-secret` and a `static-auth-secret` (plus the same `realm`); keep that shared secret in the server config, never distribute it to clients. A realm is an operational requirement for both modes, not a hard startup gate: omitting it warns rather than refuses, so set it explicitly.
 
@@ -408,7 +408,7 @@ For coturn, the discriminator is a TURN **Allocate** exchange, not an HTTP reque
 
 Read the verbose output, not the exit status: the anonymous run must show a `401` challenge and no relayed address, and the credentialed run, the positive control, must show a relayed address. Substitute the test user, the peer and the TURN host inside the single quotes, and paste the whole block. It assumes a clean shell (CONTRIBUTING rule 7).
 
-REASONED: following block; Allocate and peer-policy outcomes follow the cited coturn 4.18.0 sources; no container runtime is available.
+REASONED: following block; Allocate and peer-policy outcomes follow the cited coturn 4.18.0 sources; no container runtime is available. Paste the throwaway password alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
 (
@@ -442,7 +442,7 @@ For the LiveKit rotation test, mint each token with `livekit-cli` (`lk`). `lk` t
 
 The block prompts for the secret, so it stays out of shell history, and hands it and the key to the one `lk` command as a prefix assignment, never exported. That moves the secret out of argv, not out of reach: while `lk` runs, the same account and root can read it from `/proc/<pid>/environ`. Run the block once with the old key and once with the new. For the public development pair the key is `devkey` and the secret typed at the prompt is `secret`. Each printed token is a bearer credential for its grants until it expires, so keep `--valid-for` short and treat the terminal output as a secret. Keep the old-key token: the same token must be accepted on the isolated development fixture and rejected by the deployment after rotation, and the new-key token must be accepted. Substitute the key inside the single quotes, and paste the whole block. It assumes a clean shell (CONTRIBUTING rule 7).
 
-REASONED: following block; token minting and rotation follow the cited LiveKit and livekit-cli sources; no container runtime is available.
+REASONED: following block; token minting and rotation follow the cited LiveKit and livekit-cli sources; no container runtime is available. Paste the API secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ```bash
 (
