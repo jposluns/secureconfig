@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "a221c5f2a0836b7565c8055e4638d8834cdf535abe50ab07bf64e2d718cf3930",
+  "body_sha256": "62067696a2212d81e6c7a635e474e5173f7d428edf6f6d30fff1947e44cad543",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -732,12 +732,12 @@ no socket was created and no Flower process ran.
   with `0750`; `getfacl -p` on the `0750` directory listed only `user::rwx`, `group::r-x` and `other::---`.
 - DEMONSTRATED: a named entry on the fixed 0750 directory, before and after; the marking-review run (October 2026, btrfs, uutils stat 0.8.0, getfacl 2.3.2) printed the same values. After `setfacl -m u:nobody:--x` on the `0750` directory, `stat` still printed `750`. Only the trailing `+` in
   `ls -ld` and getfacl's `user:nobody:--x` line showed the named entry.
-- DEMONSTRATED: the mask and chmod interaction; the marking-review run (October 2026, btrfs, uutils stat 0.8.0, getfacl 2.3.2) printed the same values, and access as nobody was again not tested. After `setfacl -m m::r--`, getfacl printed `user:nobody:--x` with `#effective:---`. While masked, `stat` printed `740`. A later
+- DEMONSTRATED: the mask and chmod interaction, compared with the fixed 0750 directory in the first item, where `getfacl -p` listed only `user::rwx`, `group::r-x` and `other::---`; the marking-review run (October 2026, btrfs, uutils stat 0.8.0, getfacl 2.3.2) printed the same values, and access as nobody was again not tested. After `setfacl -m m::r--`, getfacl printed `user:nobody:--x` with `#effective:---`. While masked, `stat` printed `740`. A later
   `chmod 0750` reset `mask::` to `r-x`, and getfacl printed `user:nobody:--x` with no `#effective:` mark, so
   under acl(5) the entry's `x` is in effect again (access as `nobody` was not tested).
 
-REASONED: the checks listed here remain unobserved, per the guide's cited Flower and Tornado unix-socket entry (pinned v2.2.0 and v6.5.10, with unix(7), path_resolution(7), user_namespaces(7) and acl(5)). The authoring environment has no Flower install, no container runtime and no privilege to act as a second account, so neither an outside account's refusal at a 0750 directory (fixed) nor its traversal through a named x entry (exposed) was observed. During marking review (October 2026) the 2750 form and a default: entry were run in a btrfs scratch directory: after chmod 2750, uutils stat 0.8.0 printed 2750 (uutils mkdir 0.8.0 given -m 2750 had left 750); getfacl 2.3.2 listed default:user:nobody:--x beside an access ACL of only user::, group:: and other::, and a directory created inside inherited user:nobody:--x as an access entry. Not run: whether an account outside the proxy's group is refused at the directory, the socket's `777` after each
-Flower start, the `2750` setgid form, a `default:` entry, and the `%u:%g` comparison from inside a container that
+REASONED: the Flower service, cross-account and container checks remain unobserved, per the guide's cited Flower `--unix_socket` passes the fixed mode `0o777` entry (pinned v2.2.0 and v6.5.10, with unix(7), path_resolution(7), user_namespaces(7) and acl(5)). The authoring environment has no Flower install, no container runtime and no privilege to act as a second account, so neither an outside account's refusal at a 0750 directory (fixed) nor its traversal through a named x entry (exposed) was observed. During marking review (October 2026) the 2750 form and a default: entry were run in a btrfs scratch directory: after chmod 2750, uutils stat 0.8.0 printed 2750 (uutils mkdir 0.8.0 given -m 2750 had left 750); getfacl 2.3.2 listed default:user:nobody:--x beside an access ACL of only user::, group:: and other::, and a directory created inside inherited user:nobody:--x as an access entry. Not run: whether an account outside the proxy's group is refused at the directory, the socket's `777` after each
+Flower start, and the `%u:%g` comparison from inside a container that
 shares the directory.
 
 ## Common mistakes

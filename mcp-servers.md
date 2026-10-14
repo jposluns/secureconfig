@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "49dc8333951f98fc4f3dc212f296fd7296f084e39c3d423ae35ff3878f38fe18",
+  "body_sha256": "192fef10cb2480cd4f290b778d6539d5587059578b413647a0903d3947c06efc",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -259,7 +259,7 @@ location /mcp {
 
 ## Verify
 
-REASONED: following block; the ss listener inventory and the guarded direct-origin probe, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (loopback binding) and curl manual entry (exitcode and errormsg, both added in curl 7.75.0). The authoring environment has no MCP 2026-07-28 server, fronting layer or second probe host, so neither the exposed result (any HTTP code from your address) nor the fixed one (a refusal or timeout reaching your address, or an answer only from the fronting layer) was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0, then ran with stub ss and curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with the set -- line shortened, or given a second value under IFS=0, the exactly-1-value refusal; with 198.51.100.7 substituted, the stub curl received http://198.51.100.7:3000/mcp. A real ss -tlnp printed nine listeners, none on port 3000. The direct-origin request below checks listener reachability, not MCP RPC success: any HTTP response, now typically `400`/`405`, proves that the port answered. Use curl 7.75.0 or newer for the `exitcode` and `errormsg` write-out variables. See the curl manual.
+REASONED: following block; the ss listener inventory and the guarded direct-origin probe, per the guide's cited MCP specification 2026-07-28 Streamable HTTP entry (loopback binding) and curl manual entry (exitcode and errormsg, both added in curl 7.75.0). During this review, a real ss -tlnp reported `Cannot open netlink socket: Operation not permitted`; the listener inventory could not be established from that run. The direct-origin comparison requires an MCP 2026-07-28 server, fronting layer and second probe host, unavailable in the authoring environment, so neither the exposed result (any HTTP code from your address) nor the fixed one (a refusal or timeout reaching your address, or an answer only from the fronting layer) was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0, then ran with stub ss and curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with the set -- line shortened, or given a second value under IFS=0, the exactly-1-value refusal; with 198.51.100.7 substituted, the stub curl received http://198.51.100.7:3000/mcp. A real ss -tlnp printed nine listeners, none on port 3000. The direct-origin request below checks listener reachability, not MCP RPC success: any HTTP response, now typically `400`/`405`, proves that the port answered. Use curl 7.75.0 or newer for the `exitcode` and `errormsg` write-out variables. See the curl manual.
 
 ```bash
 # REASONED: listener isolation follows the cited deployment guidance; no live MCP 2026-07-28 server is available.
