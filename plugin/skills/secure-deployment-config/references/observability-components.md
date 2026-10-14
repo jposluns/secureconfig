@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "17bcb074cd67f8b103c8b027874244a65727a0f7f29e3d14fc0cee1f48bc1476",
+  "body_sha256": "5a16d74e2220ef29ebf1113b4e31fcbaa6c4bb5a68b65da24f219dd3c4a95708",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -577,8 +577,8 @@ There are two fixes, and you can use both:
 
 ## Verify
 
-The non-Loki HTTP results below were demonstrated on 127.0.0.1 against the versions named at the top,
-in both the exposed state and the fixed state. All Loki checks are REASONED: the authoring host
+REASONED: following block; this introduction and the TCP and UDP listener inventory below for every port it names, per the guide's cited node_exporter v1.12.1 source, Alertmanager v0.34.1 README, Pushgateway v1.11.3 README, Jaeger v2.21.0 ports and dskit pinned wildcard listener construction entries. No second host and no isolated network namespace were available, so no wildcard bind was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9, and its two commands, run without sudo on the review host as ss -tlnp and ss -ulnp (iproute2 6.19.0), accepted their flags and showed none of the named TCP or UDP ports listening, with an empty process column, so they tested no target; the sudo form was not run. Exposed, a listed port shows a wildcard bind; fixed, loopback or a private address. The non-Loki loopback HTTP runs on 127.0.0.1 against the versions named at the top
+are declared DEMONSTRATED at the credential block below and were not repeated in this marking review. All Loki checks are REASONED: the authoring host
 forbids opening listeners without an isolated network namespace, and has none. The default
 all-interfaces binds were not observed, so they are
 reasoned: the authoring host forbids binding every interface, so each run overrode the address to
@@ -595,7 +595,7 @@ sudo ss -tlnp   # loopback or a private address only: 9100 9093 9094 9091 3100 9
 sudo ss -ulnp   # Alertmanager gossip also uses UDP 9094; Jaeger's Thrift receivers UDP 6831 and 6832
 ```
 
-Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unconfigured node_exporter,
+REASONED: preceding block; the expected inventory results for every TCP and UDP port the block names, per the same cited listener sources; no wildcard bind was observed because no isolated network namespace was available. The following block's guard was run with a stub curl: unchanged, it printed its substitute-the-service-address refusal. Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unconfigured node_exporter,
 and likewise for the others. Fixed means a loopback or private address. Then probe from a host that
 should not have access. The block refuses to run until you substitute the address.
 
@@ -618,14 +618,14 @@ REASONED: following block; external probes follow the cited listener and authent
 )
 ```
 
-Any `200` is the finding: that service answers the unauthenticated request. For a service that uses
+REASONED: preceding block; the second-host probes of node_exporter, Alertmanager, Pushgateway, Jaeger and Loki and the Loki tenant-header repeat, per the guide's cited Prometheus security model, Exporter toolkit v0.17.1 web configuration, Jaeger 2.21 security and Loki v3.7.8 authentication entries. The authoring environment had no second host and no Loki listener. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: without its set -- line it printed the paste-the-whole-block refusal, and with 203.0.113.10 substituted the stub received the five URLs in order. The expected exposed and fixed results are those stated here. Any `200` is the finding: that service answers the unauthenticated request. For a service that uses
 TLS, switch that URL to `https`. A `401` then means its authentication is on. From a host that should
 be blocked, a connection refusal or a connect timeout is consistent with isolation. Read the `err`
 text to confirm it happened while connecting, not in a local proxy or policy. The write-out fields need
 curl 7.75.0 or newer. For Loki, a `401` without a tenant header proves nothing. Repeat the Loki probe
 with `-H 'X-Scope-OrgID: anyone'` added, and treat a `200` as exposure.
 
-Run the positive control from a host that should have access, so a dead service is not read as fixed.
+REASONED: the positive-control and stdin-password instructions for the following credential pair, per the guide's cited Exporter toolkit v0.17.1 web configuration entry. The pair itself is declared below from the guide's recorded loopback runs; this marking review did not repeat them. During marking review (October 2026) that block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-URL refusal; an http:// URL drew the use-an-https-URL refusal; a user containing a colon was refused; and with dummy values the password reached curl only on stdin as an escaped user line, never in argv. Exposed, the request without credentials returns 200; fixed, 401 without and 200 with credentials. Run the positive control from a host that should have access, so a dead service is not read as fixed.
 The password reaches curl on stdin, not argv. Substitute inside the quotes, and add
 `--cacert /path/to/ca.crt` if the certificate is private.
 

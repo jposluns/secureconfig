@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "a5e355c974cb27f95cd77cbc6babf94b0dabe6949baad4540cfb933a75152092",
+  "body_sha256": "435c166bc69b76c305d34c8245a24ba7a75a97baa711858ea13e90cd74d00392",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -411,7 +411,7 @@ must reach Phoenix over loopback in Phoenix's own network namespace or over TLS 
 
 ## Verify
 
-Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
+REASONED: following block; the Collector listener inventory and every probe in the following block (the ss inventory, the Langfuse dashboard reachability check and public API key pair, and the Collector OTLP/HTTP pair), per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network: with the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
 isolated network namespace, and has none. Expected outcomes follow the cited pinned Collector configuration. Inspect the
 effective config and inventory TCP and UDP sockets in the Collector's network namespace, together
 with container publications and firewall rules. With the shipped config, expect the nine wildcard
@@ -486,7 +486,7 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
   https://otel-collector.internal:4318/v1/traces
 ```
 
-For Phoenix specifically, prove the default admin credential is dead and that the read API does not answer an
+REASONED: the Phoenix default-credential check and the anonymous read-API probe it introduces, per the guide's cited Arize Phoenix authentication entry (the default admin account and /v1/ REST permissions) and Arize Phoenix OAuth2 sign-up and basic-auth controls entry. No Phoenix instance is available in the authoring environment, so the manual login was not attempted; the expected exposed and fixed results are those stated here. For Phoenix specifically, prove the default admin credential is dead and that the read API does not answer an
 anonymous request. **These checks are REASONED from the cited Phoenix documentation and source, not demonstrated** (no Phoenix instance in the authoring
 environment). The credential
 check is manual, because the vendor documents only the UI login flow and a scripted guess against the wrong
@@ -514,12 +514,12 @@ anonymously (the probe prints the `exitcode` and `errormsg` write-out variables,
 )
 ```
 
-**Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
+REASONED: preceding block; the anonymous Phoenix read-API probe and these outcomes, per the guide's cited Arize Phoenix authentication entry (/v1/ REST permissions) and curl manual entry. No Phoenix instance is available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-host refusal and exited 1; without its set -- line, the paste-the-whole-block refusal with exit 1; with phoenix.internal:6006 substituted, the stub received https://phoenix.internal:6006/v1/projects. **Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
 is rejected with `401` or `403`. Anything else (a `404`, a redirect to a login page, a `415`, or a transport
 error) is inconclusive and does not prove authentication is on; fall back to the credential check above and to
 the listener inventory. Substitute a bracketed literal for an IPv6 host in the URL, for example `[::1]:6006`.
 
-The OTLP/HTTP ingestion path CAN be probed without hand-encoding a span: an empty `ExportTraceServiceRequest`
+REASONED: the OTLP/HTTP admission and OTLP gRPC Export checks, per the guide's cited Arize Phoenix authentication entry, Arize Phoenix gRPC OTLP Export authorization entry and pinned Phoenix gRPC bind entry. They need a running Phoenix and, for 4317, an OTLP gRPC client with the protobuf descriptor; the authoring environment has no Phoenix and no protobuf or gRPC Python package, so live HTTP admission, protobuf encoding and gRPC Export were not exercised. During marking review (October 2026), bash ran the HTTP recipe with a stub curl on PATH and no network, anonymously and with a dummy bearer header supplied through stdin using --header @-. In both calls the stub received --data-binary followed by an empty argument, -H followed by Content-Type: application/x-protobuf, and https://phoenix.internal:6006/v1/traces; the anonymous call had empty stdin and no authorization header, and the second received Authorization: Bearer dummy-write-key followed by a newline on stdin. Both stub calls exited 0. This checks local HTTP request construction only, not protobuf serialization, Phoenix admission or gRPC behaviour. The expected exposed and fixed results are those stated here. The OTLP/HTTP ingestion path CAN be probed without hand-encoding a span: an empty `ExportTraceServiceRequest`
 is a zero-length protobuf body, so send `--data-binary ''` with `Content-Type: application/x-protobuf` to
 `/v1/traces` on the HTTP port (6006) and read the status - anonymously it must be rejected (401/403), and
 with a WRITE-authorized `Authorization: Bearer` key (a system key, or a user key allowed to write traces,
@@ -578,7 +578,7 @@ only to `--config -`), send the empty `application/x-protobuf` POST described ab
 entry for the pasted block. The key on that `set --` line enters shell history, and stdin keeps it out of argv
 only, not out of your own account's view of the process.
 
-A dashboard that renders traces, prompts, or provider keys without a login is a finding; so is an OTLP port
+REASONED: a summary of the findings the checks above look for, per the guide's cited Langfuse authentication and SSO, Arize Phoenix authentication and OpenTelemetry Collector security best practices entries; it adds no probe of its own, and no deployment was available to show either finding. Exposed, a dashboard or OTLP port answers without a credential; fixed, both require one. A dashboard that renders traces, prompts, or provider keys without a login is a finding; so is an OTLP port
 that accepts spans with no credential at all.
 
 ## Common mistakes
