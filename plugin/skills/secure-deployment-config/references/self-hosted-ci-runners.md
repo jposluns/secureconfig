@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "f3e154c2cf4443c8b2df7b9171bd41c7fd1597b50108babe67a9d732771a4886",
+  "body_sha256": "be360ff48f0a28112c905137a82cb1d1581687dc0ce6d0c535a51f4de4d78e3f",
   "components": {
     "github": {
       "name": "GitHub Actions documentation",
@@ -260,8 +260,8 @@ clients. Enable neither unless needed, and firewall each to the clients that nee
 REASONED: Both runners are outbound-only job pollers, so most checks are posture and REST audits, not reachability
 probes. Every check that needs a live registered runner or worker is reasoned, not demonstrated: the authoring
 environment has no container runtime, registered test runner, or cloud test infrastructure, so those outcomes
-are derived from the cited vendor pages rather than observed. Offline `tomllib` fixture outcomes are recorded
-below; row 2.29 retains finding and verifying a pinned source for `pid_mode`.
+are derived from the cited vendor pages rather than observed. Offline outcomes are recorded below: `tomllib` fixtures,
+jq filters on synthetic REST-shaped JSON, a PyYAML parse of the probe workflow, a stub `glab` run, the canary commands, the guarded listener block with stub `sudo` and `curl`, and bash -n and ShellCheck syntax checks; row 2.29 retains finding and verifying a pinned source for `pid_mode`.
 Require successful, complete listings; authentication errors, unavailable endpoints, and incomplete pagination
 are inconclusive. Run the REST and config checks from an administrator workstation using stored CLI credentials.
 
