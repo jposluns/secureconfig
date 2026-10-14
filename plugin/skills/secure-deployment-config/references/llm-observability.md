@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "615d81873369861b93b4ee6cfacc4b6199c95009983e500ee6cdacceb0489a18",
+  "body_sha256": "435c166bc69b76c305d34c8245a24ba7a75a97baa711858ea13e90cd74d00392",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -411,7 +411,7 @@ must reach Phoenix over loopback in Phoenix's own network namespace or over TLS 
 
 ## Verify
 
-REASONED: following block; the Collector listener inventory and every probe in the following block (the ss inventory, the Langfuse dashboard reachability check and public API key pair, and the Collector OTLP/HTTP pair), per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network: with the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
+REASONED: following block; the Collector listener inventory and every probe in the following block (the ss inventory, the Langfuse dashboard reachability check and public API key pair, and the Collector OTLP/HTTP pair), per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network: with the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
 isolated network namespace, and has none. Expected outcomes follow the cited pinned Collector configuration. Inspect the
 effective config and inventory TCP and UDP sockets in the Collector's network namespace, together
 with container publications and firewall rules. With the shipped config, expect the nine wildcard
