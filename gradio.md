@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "02872d3930728907f0979cc6f4ba8a029361897527f5ff843fae7c8ca57ede0d",
+  "body_sha256": "b05b85a4144bcb16a146ea0834470b7f5b89ae7edc2bd28e0de73d88d5cc0eb4",
   "components": {
     "gradio": {
       "name": "Gradio",
@@ -457,7 +457,7 @@ ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO
 
 ### Optional surfaces, authorization, capacity, and collection
 
-**REASONED:** Route-prefix and optional-surface comparisons, per the guide's cited Gradio 6.28.0 routes source and Gradio MCP server documentation (rolling documentation, checked September 2026); no live Gradio, browser, MCP client fixture, or IdP is supplied here. Local marker JSON parsed and stubbed helper requests preserved the HTTPS prefix, printing 'STUB curl called; no HTTP observation'. Each row below specifies its expected exposed/fixed result and positive control; none was observed against a service. Use the protected request helper and the specified browser or MCP operations. Include the actual deployment prefix in every route.
+**REASONED:** Route-prefix and optional-surface comparisons, per the guide's cited Gradio 6.28.0 routes source and Gradio MCP server documentation (rolling documentation, checked September 2026); no live Gradio, browser, MCP client fixture, or IdP is supplied here. Local marker JSON parsed and stubbed helper requests preserved the HTTPS prefix, printing 'STUB curl called; no HTTP observation'. Each row below specifies its expected exposed/fixed result and, except Vibe mode, a positive control; none was observed against a service. Use the protected request helper and the specified browser or MCP operations. Include the actual deployment prefix in every route.
 
 | Comparison | Request and expected exposed/fixed outcomes |
 | --- | --- |

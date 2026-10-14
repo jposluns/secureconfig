@@ -27084,7 +27084,7 @@ ss -tlnp   # With server_port=None, the port search starts at 7860 unless GRADIO
 
 ### Optional surfaces, authorization, capacity, and collection
 
-**REASONED:** Route-prefix and optional-surface comparisons, per the guide's cited Gradio 6.28.0 routes source and Gradio MCP server documentation (rolling documentation, checked September 2026); no live Gradio, browser, MCP client fixture, or IdP is supplied here. Local marker JSON parsed and stubbed helper requests preserved the HTTPS prefix, printing 'STUB curl called; no HTTP observation'. Each row below specifies its expected exposed/fixed result and positive control; none was observed against a service. Use the protected request helper and the specified browser or MCP operations. Include the actual deployment prefix in every route.
+**REASONED:** Route-prefix and optional-surface comparisons, per the guide's cited Gradio 6.28.0 routes source and Gradio MCP server documentation (rolling documentation, checked September 2026); no live Gradio, browser, MCP client fixture, or IdP is supplied here. Local marker JSON parsed and stubbed helper requests preserved the HTTPS prefix, printing 'STUB curl called; no HTTP observation'. Each row below specifies its expected exposed/fixed result and, except Vibe mode, a positive control; none was observed against a service. Use the protected request helper and the specified browser or MCP operations. Include the actual deployment prefix in every route.
 
 | Comparison | Request and expected exposed/fixed outcomes |
 | --- | --- |
