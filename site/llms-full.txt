@@ -33834,10 +33834,10 @@ logs, or client bundles. Secret hygiene and in-function authorization are both r
 
 ## Verify
 
-Use disposable projects and harmless fixtures for exposed/fixed comparisons. Do not temporarily
+REASONED: disposable-fixture comparisons require controlled projects and accounts; a local Supabase CLI stack opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Local bash -n and ShellCheck 0.11.0 runs exited 0 without output; stub runs refused placeholders and malformed set lines, and the valid request printed synthetic http=200 exit=0 err=. For identity-based requests, exposed access admits unauthorized fixture data; fixed access denies it while the owner control succeeds, per the guide's cited Firebase security rules and Supabase row level security. Use disposable projects and harmless fixtures for exposed/fixed comparisons. Do not temporarily
 open production data. No disposable cloud project, controlled user accounts, deployed client
-bundle, or authorized writable service-fixture environment was supplied here. The checks below
-are **REASONED, not demonstrated**, from the cited Firebase and Supabase documentation.
+bundle, or authorized writable service-fixture environment was supplied during authoring. No disposable Firebase or Supabase project or controlled A/B sessions were available for these comparisons; a live Firebase Emulator Suite stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available.
+The live authorization comparisons below are REASONED, not demonstrated, from the cited Firebase and Supabase documentation; local shell and scan observations are scoped at their steps.
 
 ### 1. Compare unauthenticated, owner, and unrelated-user access
 
@@ -33845,7 +33845,7 @@ are **REASONED, not demonstrated**, from the cited Firebase and Supabase documen
 Seed a known row owned by user A and one owned by user B first, so an empty result is not mistaken
 for enforcement. Seed equivalent Firebase documents, RTDB nodes, and Storage objects.
 
-With only the public key/config and no signed-in user, reads and writes against protected
+REASONED: identity and ownership comparisons need disposable projects and A/B sessions, which were unavailable; a local Supabase CLI stack opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Local bash -n and ShellCheck 0.11.0 runs exited 0 without output; stub runs refused placeholders and malformed set lines, and the valid request printed synthetic http=200 exit=0 err=. Open rules or disabled RLS can admit unsigned and unrelated users; fixed rules and policies reject them and retain the intended owner control, per the guide's cited Firebase security rules, Supabase row level security and Supabase multi-factor authentication (aal1, aal2, enforcement policy). With only the public key/config and no signed-in user, reads and writes against protected
 tables/paths must be refused or return no rows and change nothing. Signed in as user A, reading
 and writing user B's rows must be refused. An authorized owner read on the same path MUST
 succeed, so denial is attributable to access controls rather than a broken request or wrong
@@ -33853,7 +33853,7 @@ endpoint. Require owner-write success only for operations the app intentionally 
 installing their grants and policies. The baseline Supabase policy above permits SELECT only.
 With the MFA restriction installed, the positive authenticated test also needs `aal2`.
 
-Compare the following requests against a disposable exposed fixture and its fixed counterpart:
+REASONED: the request matrix needs disposable projects, objects and A/B sessions, which were unavailable; a local Supabase CLI stack opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Local bash -n and ShellCheck 0.11.0 runs exited 0 without output; stub runs refused placeholders and malformed set lines, and the valid request printed synthetic http=200 exit=0 err=. For identity-based requests, exposed rules admit unauthorized requests; ownership rules deny them and permit the owner, per the guide's cited Firebase security rules and Supabase row level security. Rules tightening leaves access through an existing download token intact; token revocation denies that access while the authorized SDK direct-download control still succeeds, per Firebase Storage Admin shareable download URLs, Firebase StorageReference download-token revocation and Firebase Storage SDK direct downloads and browser CORS. Compare the following requests against a disposable exposed fixture and its fixed counterpart:
 
 | Surface | Concrete request and expected distinction |
 | --- | --- |
@@ -33863,19 +33863,19 @@ Compare the following requests against a disposable exposed fixture and its fixe
 | Firebase Storage download tokens | **REASONED:** No disposable object, existing download URL, token-revocation access, or owner session was supplied. Save an existing download URL for `users/REPLACE_WITH_USER_B_ID/probe.txt`. With caching disabled and no session, cookies, or Authorization header, send HTTP GET to that exact URL before and after tightening ownership Rules: both should return the object's bytes. Revoke its download token in the Firebase console, keep the object and Rules unchanged, and repeat GET to the same saved URL: require an HTTP denial with no object bytes. A network or CORS failure is inconclusive. Before and after revocation, B's authenticated `getBytes(ref(storage, 'users/REPLACE_WITH_USER_B_ID/probe.txt'))` must still return the bytes; configure browser CORS for the test origin. See [shareable URLs](https://firebase.google.com/docs/storage/admin/start), [token revocation](https://firebase.google.com/docs/reference/kotlin/com/google/firebase/storage/StorageReference), and [direct downloads](https://firebase.google.com/docs/storage/web/download-files). |
 | Supabase tables | **REASONED:** Request `GET /rest/v1/profiles?select=user_id&user_id=eq.REPLACE_WITH_USER_B_ID`. With matching grants and RLS disabled, B's seeded row is exposed. With the fixed grants/policies, unsigned requests and A receive no B row; B at the required assurance level receives it. For intentionally enabled writes, use POST to create a disposable profile, PATCH to change it, and DELETE to remove it; inspect persisted state as well as response status. See [select requests](https://supabase.com/docs/reference/javascript/select) and [row-security semantics](https://www.postgresql.org/docs/current/ddl-rowsecurity.html). |
 
-For the Supabase GET comparison, prepare protected header files privately, outside source control.
+REASONED: header-file preparation was exercised with a nonsecret fixture: the curl stub printed stub curl: headers=apikey: harmless-fixture. No disposable Supabase project or controlled user tokens were available; a local Supabase CLI stack opens listeners; the authoring host forbids that without an isolated network namespace, and none was available; public keys alone must not authorize protected rows, while the intended owner session must succeed, per the guide's cited Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings) and Supabase row level security. For the Supabase GET comparison, prepare protected header files privately, outside source control.
 The unsigned file contains an `apikey` header with the publishable or legacy `anon` key; the
 signed-in file also contains `Authorization: Bearer` with the test user's access token.
 Do not use a secret or service-role key for an ordinary-user test.
 
-Paste the whole block and substitute inside the single quotes. Use an unsigned HTTPS endpoint
+REASONED: live response interpretation requires an actual disposable HTTPS endpoint and controlled sessions; quoting and stdin delivery were exercised only with a stub. No disposable HTTPS endpoint or controlled sessions were available; a local Supabase CLI stack opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Local bash -n and ShellCheck 0.11.0 runs exited 0 without output; stub runs refused placeholders and malformed set lines, and the valid request printed synthetic http=200 exit=0 err=. A harmless header fixture reached stub stdin and printed stub curl: headers=apikey: harmless-fixture. Exposed requests may return another user's rows; fixed requests must withhold them while the owner control succeeds, per the guide's cited Supabase JavaScript select requests, Supabase row level security, curl curl-8_14_1 write-out fields and version requirements (checked October 2026) and curl curl-8_14_1 headers from stdin (checked October 2026). Paste the whole block and substitute inside the single quotes. Use an unsigned HTTPS endpoint
 URL, never a credential-bearing or signed URL. The response must contain only your harmless
 fixture data. Credentials enter curl through stdin, not process arguments; that does not protect
 a carelessly created header file, shell history, or tracing, and it does not hide the
 credentials from your own account's view of the process. The write-out fields require curl
 7.75.0 or newer.
 
-REASONED: following block; ordinary-user profiles and MFA comparisons follow the cited Supabase/PostgreSQL documentation; no disposable project or controlled user sessions were supplied.
+REASONED: following block; ordinary-user profiles and MFA comparisons; a local Supabase CLI stack opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Local bash -n and ShellCheck 0.11.0 runs exited 0 without output; stub runs refused placeholders and malformed set lines, and the valid request printed synthetic http=200 exit=0 err=. No disposable Supabase project or controlled user sessions were available. Exposed profiles may return another user's rows; fixed policies must deny them while the owner at the required assurance level succeeds, per the guide's cited Supabase JavaScript select requests, Supabase row level security, Supabase multi-factor authentication (aal1, aal2, enforcement policy) and PostgreSQL row-security bypasses and operations outside RLS.
 
 ```bash
 (
@@ -33904,7 +33904,7 @@ REASONED: following block; ordinary-user profiles and MFA comparisons follow the
 )
 ```
 
-A timeout, DNS failure, malformed request, or missing fixture proves nothing about authorization.
+REASONED: preceding block; this Supabase GET request block and interpretation need a disposable Supabase project and owner sessions, which were unavailable; a local Supabase CLI stack opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. The Firebase ownership note in this paragraph also needs valid App Check tokens, which were unavailable. Local bash -n and ShellCheck 0.11.0 runs exited 0 without output; stub runs refused placeholders and malformed set lines, and the valid request printed synthetic http=200 exit=0 err=. Non-HTTPS input printed use the project's HTTPS endpoint; not probing, and an absent header file printed headers file is unreadable; no conclusion. Neither synthetic success nor transport failure demonstrates authorization: exposed reads return unauthorized fixture data; fixed reads deny it while owner reads succeed, per the guide's cited Supabase JavaScript select requests, Supabase row level security, Per-product App Check enforcement, curl curl-8_14_1 write-out fields and version requirements (checked October 2026) and curl curl-8_14_1 headers from stdin (checked October 2026). A timeout, DNS failure, malformed request, or missing fixture proves nothing about authorization.
 Retain the positive owner control. Supply valid App Check tokens when testing Firebase ownership
 so an unrelated App Check rejection does not hide an open rule.
 
@@ -33986,7 +33986,7 @@ so an unrelated App Check rejection does not hide an open rule.
   must reject excluded traffic. See [App Check enforcement](https://firebase.google.com/docs/app-check/enable-enforcement)
   and [API-key restrictions](https://firebase.google.com/docs/projects/api-keys).
 
-- **REASONED:** No writable emulator fixture or second-host network fixture was supplied.
+- **REASONED:** No writable emulator fixture or second-host network fixture was supplied during authoring; a live Firebase Emulator Suite stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local JSON parsing of the firebase.json fragment passed; live open-rule access should succeed and fixed ownership rules should deny unauthorized access while retaining owner access, per the guide's cited Firebase Emulator Suite configuration, open-rule behavior, and Hub API and Emulator localhost default.
   On the emulator host, inspect `ss -ltn` and request `GET /emulators` on the local Emulator Hub
   to enumerate actual listeners. In an isolated fixture with Rules configuration omitted,
   attempt an unsigned read/write of a seeded path; repeat after loading the ownership rules.
@@ -34055,7 +34055,7 @@ Search the client bundle for possible leaked secrets:
 `grep -rlIE 'service_role|eyJ|sb_secret_' dist/` lists only files to inspect, so a full key never
 lands in a shared terminal or CI log. Use the guarded form below for the actual bundle path.
 
-Open each flagged file privately and interpret the match rather than expecting none.
+REASONED: candidate interpretation needs the deployed bundle and credential inventory, which were unavailable. Local synthetic JWT payload decoding printed role=anon and role=service_role; actual grep reported a harmless marker's filename and then exited 1 without output after removal. A public anon key may remain; a confirmed privileged credential must be removed and revoked, per the guide's cited Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings). Open each flagged file privately and interpret the match rather than expecting none.
 A literal `service_role` reference, an `eyJ` substring, or an `sb_secret_` prefix is a **review
 candidate**, not proof of a live credential. The public legacy `anon` key is itself a JWT that
 legitimately ships in the frontend; new `sb_publishable_...` keys are also intended for clients.
@@ -34063,12 +34063,12 @@ For a complete JWT candidate, decode its payload locally and inspect `role`: `an
 expected legacy public-key role, while a confirmed project `service_role` credential is a leak.
 A prefix match alone does not establish that a string is a JWT or a valid key.
 
-A confirmed `sb_secret_...` key, legacy service-role credential, or private key must not be there:
+REASONED: credential removal and retirement require an actual bundle, confirmed credential and key-lifecycle controls, which were unavailable. Local grep reported a harmless marker's filename and then exited 1 without output after removal; this does not demonstrate revocation. Exposed privileged credentials authorize privileged access; revoked credentials must fail while replacement credentials work, per the guide's cited Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings) and Supabase API-key migration and legacy-key deactivation. A confirmed `sb_secret_...` key, legacy service-role credential, or private key must not be there:
 remove the exposure and rotate or revoke the confirmed credential, not just delete it from the
 tree. Do not rotate credentials merely because a source-code word matched. See
 [API-key handling](https://supabase.com/docs/guides/api/api-keys) and [secrets.md](secrets.md).
 
-REASONED: following block; credential-candidate review follows the cited Supabase API-key documentation; no deployed client bundle or credential inventory was supplied.
+REASONED: following block; credential-candidate review. No deployed client bundle or credential inventory was available. Local bash -n and ShellCheck 0.11.0 exited 0 without output; stub grep statuses 0, 1 and 2 exercised candidate, clean and failure messages. Actual grep reported a harmless marker filename and then exited 1 without output after removal; exposed markers should be found and removed markers absent, per the guide's cited Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings).
 
 ```bash
 (
@@ -34092,7 +34092,7 @@ REASONED: following block; credential-candidate review follows the cited Supabas
 )
 ```
 
-For the demonstration, place a harmless marker containing a searched prefix in a disposable
+REASONED: preceding block; the guarded scan and review instructions need the actual bundle, build inputs, source maps and credential inventory, which were unavailable. Local bash -n and ShellCheck 0.11.0 exited 0 without output; guard fixtures printed not scanning refusals, and stub grep statuses 0, 1 and 2 printed the candidate-review, no-candidate and Scan failed; no conclusion messages. Actual grep reported the harmless marker file and then exited 1 without output after removal. A marker should be found before removal and absent afterwards; a clean scan cannot establish absence of secrets, per the guide's cited Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings). For the demonstration, place a harmless marker containing a searched prefix in a disposable
 bundle and confirm that its filename is reported; remove it and repeat. A clean result does not
 prove the absence of encoded, split, binary, or differently shaped credentials. Inspect build
 inputs, source maps, and private-key material separately.
@@ -34111,7 +34111,7 @@ was not installed in the repository, and no whole-corpus gate result is claimed.
 
 | Scope | Exposed/fixed checks and prerequisites | Status |
 | --- | --- | --- |
-| Firebase and Supabase | Check every REASONED comparison above using disposable Firebase and Supabase projects, controlled A/B accounts and mailboxes, MFA sessions, registered App Check clients, a writable emulator/service fixture, a second host, Storage objects, Realtime clients, view/RPC inventories, an outbound-request collector, a Vault canary, key-lifecycle controls, and the actual client build. Record versions, effective rules/grants/settings, requests, responses, persisted write results, positive controls, propagation intervals, and cleanup. Include all three Firebase Rules engines, Firebase Functions, Supabase Edge Functions (using deployed operation fixtures and caller/webhook credentials to compare JWT verification enabled/disabled, handler authorization, positive controls, persisted effects, and secret hygiene), emulators, API restrictions, signup (including signed-out Anonymous-provider comparisons that confirm new-account creation when enabled and rejection when disabled), Data API removal, views, every function overload, HTTP wrappers, Vault, Storage (including sessionless GET of the same saved download URL before and after Rules tightening and token revocation, with an authorized SDK direct-download positive control), both Realtime authorization paths, MFA, API-key retirement, JWT-signing-key revocation, and bundle-scan controls. | REASONED from the cited Firebase and Supabase documentation; live behavior is not demonstrated. |
+| Firebase and Supabase | Check every REASONED comparison above using disposable Firebase and Supabase projects, controlled A/B accounts and mailboxes, MFA sessions, registered App Check clients, a writable emulator/service fixture, a second host, Storage objects, Realtime clients, view/RPC inventories, an outbound-request collector, a Vault canary, key-lifecycle controls, and the actual client build. Record versions, effective rules/grants/settings, requests, responses, persisted write results, positive controls, propagation intervals, and cleanup. Include all three Firebase Rules engines, Firebase Functions, Supabase Edge Functions (using deployed operation fixtures and caller/webhook credentials to compare JWT verification enabled/disabled, handler authorization, positive controls, persisted effects, and secret hygiene), emulators, API restrictions, signup (including signed-out Anonymous-provider comparisons that confirm new-account creation when enabled and rejection when disabled), Data API removal, views, every function overload, HTTP wrappers, Vault, Storage (including sessionless GET of the same saved download URL before and after Rules tightening and token revocation, with an authorized SDK direct-download positive control), both Realtime authorization paths, MFA, API-key retirement, JWT-signing-key revocation, and bundle-scan controls. | REASONED: this comparison record requires every project, account, service, second-host, collector and lifecycle capability enumerated in this row; those live fixtures were unavailable. No disposable Firebase or Supabase project or controlled A/B sessions were available for these comparisons; a live Firebase Emulator Suite stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a local Supabase CLI stack opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Local bash -n and ShellCheck 0.11.0 runs exited 0 without output; stub runs refused placeholders and malformed set lines, and the valid request printed synthetic http=200 exit=0 err=. Local grep reported a harmless marker file and exited 1 without output after its removal; synthetic JWT decoding printed role=anon and role=service_role. The identity-based authorization comparisons require unauthorized access in the exposed state and rejection in the fixed state with intended positive controls; key retirement additionally requires old credentials to fail while replacements work, per the guide's cited Firebase security rules, Supabase row level security, Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings) and Supabase JWT signing-key rotation and revocation. Rules tightening leaves access through an existing download token intact; token revocation denies that access while the authorized SDK direct-download control still succeeds, per Firebase Storage Admin shareable download URLs, Firebase StorageReference download-token revocation and Firebase Storage SDK direct downloads and browser CORS. Each other surface named in this row rests on the Sources entry cited at its step above. Live behavior is not demonstrated. |
 
 ## Sources (checked September 2026)
 
