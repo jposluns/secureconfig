@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "34a349c69b3e02a7de2d6050467ecd9445f5346cc01b01e9d095bc4671577c13",
+  "body_sha256": "1400b64f694d524f2d3cfbfc8f02a4eee88ca09d67aaae9457915390142b5e4a",
   "components": {
     "docs": {
       "name": "n8n documentation",
@@ -203,7 +203,7 @@ ss -tlnp   # a listener inventory in THIS namespace, not a firewall/NAT check: n
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
   -w 'tls=%{http_code} exit=%{exitcode} err=%{errormsg}\n' https://n8n.example.com/
 # Public API auth, matched pair against the same URL: expect rejection without the n8n key
-# (often 401) and 200 workflow JSON with a valid key; verify both outcomes on your instance.
+# (for example 401) and 200 workflow JSON with a valid key; verify both outcomes on your instance.
 # The key is fed on stdin (-H @-), so it stays out of curl's argv; the one on the set -- line still enters shell history, so use a short-lived key and clear it.
 # Stdin closes the argv channel only: it does not hide the key from set -x tracing or your own
 # account's view of the process.
