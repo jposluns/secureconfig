@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-15
 
+- `low-code-builders.md` states the condition behind its LiteLLM rejection, from the same pinned authentication source: the Budibase sample key `budibase` (no `sk-` prefix) gets a 401 from the malformed-key branch when the proxy has a database, and a proxy with no database answers 400 before any key lookup; the fixed outcome, Sources label, citations, `verify-litellm` claim and table row now say "a 401 (or a 400 if the proxy has no database)", with real credentials still accepted (#556)
 - Backlog wording from #546 and #551 QA notes: TODO row 1.195 also names the `cloudflare.md` `verify-aop` claim; row 1.197 covers both the port-3000 and port-80 controls and is rated M; and the row 1.140 records in `DONE.md` and `DECISIONS.md` say what coturn's cited option parser shows (`-w` takes the password) and that it has no environment, stdin or file input for the password, rather than "only from `-w`" (#555)
 - The site's licence statements (the index and 404 page footers and `site/llms.txt`) write the possessive "Jeff Posluns'", and the #549 entry below quotes it the same way (#552)
 - Close backlog rows 3.30 and 1.140 by maintainer rulings of 2026-10-15: row 3.30 moves to `DONE.md` as done in #429 at its accepted structural floor (94 retained Verify units across 19 files), and row 1.140 as retired with CONTRIBUTING rule 7's third exception standing; both rulings are recorded in `DECISIONS.md` (#551)
