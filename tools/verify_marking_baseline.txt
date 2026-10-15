@@ -1,16 +1,12 @@
 # Explicit one-time seed; remove exemptions as units are marked.
 # guide<TAB>kind<TAB>sha256<TAB>count; no automatic refresh.
-README.md	list-item	06dcf4978fce342a371551dca1864bb1ea17bdf84494525ed4961563acb46cb1	1
 README.md	list-item	29098eafdc822b55edb3a55a98000a33299d44003b728f123e4e6af4998b7043	1
 README.md	list-item	4344abaff7659b19d9733e2993b2ae12d56e92638c1b23bdce8b6110814ff926	1
 README.md	list-item	4fbca332b0811065528320044e54333416a1656aa61191465d1a7ce93d3be114	1
 README.md	list-item	527ef610695a40177637631361325430091446f0976ee722455ee6b2fa5cef8e	1
-README.md	list-item	68e6ee639495991d28082ca1eaf89a9d3490c4c3139feb6759fc4ffbe4ce7fd9	1
-README.md	list-item	9526ba33ce74999d5184b86f3fa5dd311461c13a1145d687f67fae47b7d39866	1
 README.md	list-item	cc0d30e71f119f51e4c3c3a4af2fd6e1f9dcbe6cd8c2a3e38d1a361b4a89f1ac	1
 README.md	list-item	ebed234c5322eb175cf00a706087257598525505215c59cbd6efbac84f676173	1
 README.md	list-item	f144efba1fad7acf81cac58f8844f7cd3bcb1c7043db719e4bde4a81b38ac550	1
-README.md	list-item	f7a26c59f2584ba48b2bc93fdac62dff51df8bf28ec43125ac8e488672ad94bc	1
 README.md	prose	7e80e7790ad5babebdf52889e489bc44bde776aa4032a817b6da6f2b78ea5915	1
 README.md	prose	ea608fa92aa53c21eb104e47d7712909df2e53b596a807b8ed3bbd786679c645	1
 ai-infra-services.md	prose	1df333c65657b694e08e0f8e9e2bcbe34f9099f226c330efceb3025c967062dd	1
