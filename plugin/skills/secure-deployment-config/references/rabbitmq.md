@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "4da9d523a244070acf3552a628d76c6ba35efb8949e178cb8d54fef609389922",
+  "body_sha256": "02208e1c7164f30bd94a7488df842c3d2b5709113cd61925722fae35b7159460",
   "components": {
     "docs": {
       "name": "RabbitMQ documentation",
@@ -24,7 +24,8 @@ version_basis: {
         "s02ce3c777d63": "https://www.rabbitmq.com/docs/clustering-ssl",
         "sf274b2ed7c10": "https://www.rabbitmq.com/docs/man/rabbitmq-diagnostics.8",
         "sef3085ec2cc9": "https://www.rabbitmq.com/docs/queues",
-        "s008b12a42f70": "https://www.rabbitmq.com/docs/channels"
+        "s008b12a42f70": "https://www.rabbitmq.com/docs/channels",
+        "s0aa37c76e851": "https://github.com/rabbitmq/rabbitmq-website/blob/db23826ebaa810b3cdd525fd290125d65f6c3005/versioned_docs/version-4.3/management/index.md#L1365-L1381"
       }
     },
     "source": {
@@ -39,7 +40,10 @@ version_basis: {
         "s429261f04d72": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L1206-L1233",
         "s3db3e9410319": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L2008-L2025",
         "s631a5974cf74": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/scripts/rabbitmq-env#L143-L146",
-        "sb2136f9c4d1a": "https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env"
+        "sb2136f9c4d1a": "https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env",
+        "s9977401b5976": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.6",
+        "s314eda502b64": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L104-L118",
+        "s8dd5ade37995": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60"
       }
     },
     "image": {
@@ -105,13 +109,13 @@ version_basis: {
     "tls-depth": {"text": "ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED"},
     "tls-identity": {"text": "mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sffc9f05633d5"], "status": "REASONED"},
     "management-bind": {"text": "Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:s7d28cf5cc259", "docs:s73c5514e15ab", "docs:s5a539132e128"], "status": "REASONED"},
-    "management-default": {"text": "v4.3.6 starts wildcard plain HTTP 15672 when no management listener is configured.", "components": ["source"], "sources": ["source:s23753cce5d91", "source:s776b41dfa37a", "source:s2373a87402c7", "source:scde094099cd2"], "status": "REASONED"},
+    "management-default": {"text": "v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0.", "components": ["source", "docs"], "sources": ["source:s23753cce5d91", "source:s776b41dfa37a", "source:s2373a87402c7", "source:scde094099cd2", "source:s314eda502b64", "source:s8dd5ade37995", "docs:s0aa37c76e851"], "status": "REASONED"},
     "management-auth": {"text": "Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad"], "status": "REASONED"},
     "epmd": {"text": "epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains.", "components": ["docs"], "sources": ["docs:sc3e3083ffb2f"], "status": "REASONED"},
     "distribution-port": {"text": "Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it.", "components": ["source", "docs"], "sources": ["source:s429261f04d72", "source:s3db3e9410319", "docs:sc3e3083ffb2f"], "status": "REASONED"},
     "cli-ports": {"text": "CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset.", "components": ["source", "docs"], "sources": ["source:s631a5974cf74", "docs:sc3e3083ffb2f"], "status": "REASONED"},
     "cookie": {"text": "Matching owner-only cookie files grant powerful node/CLI access; protect secret delivery and restrict peer reachability.", "components": ["docs"], "sources": ["docs:sa40d365d073f"], "status": "REASONED"},
-    "distribution-tls": {"text": "Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27.", "components": ["docs", "otp", "source"], "sources": ["docs:s02ce3c777d63", "otp:s18749583e522", "source:sb2136f9c4d1a"], "status": "REASONED"},
+    "distribution-tls": {"text": "Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27.", "components": ["docs", "otp", "source"], "sources": ["docs:s02ce3c777d63", "otp:s18749583e522", "source:sb2136f9c4d1a", "source:s9977401b5976"], "status": "REASONED"},
     "distribution-identity": {"text": "Verify peer certificates both ways and outbound node hostnames; coordinate transport changes and retain cookie/firewall controls.", "components": ["otp"], "sources": ["otp:s18749583e522", "otp:s2e4092cc0780"], "status": "REASONED"},
     "topic-default": {"text": "Topic authorization dates from 3.7; absent or cleared topic permissions leave topic operations unrestricted by that layer.", "components": ["docs", "topic-min"], "sources": ["docs:s8f066afff416", "topic-min:se34f4e7886f1"], "status": "REASONED"},
     "topic-patterns": {"text": "Topic write/read regexes gate publish/binding keys; tenant1 exact keys exclude wildcard bindings, not existing queued messages.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED"},
@@ -154,7 +158,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | tls-depth: ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates. | RabbitMQ documentation unknown | REASONED |
 | tls-identity: mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured. | RabbitMQ documentation unknown | REASONED |
 | management-bind: Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management. | RabbitMQ documentation unknown | REASONED |
-| management-default: v4.3.6 starts wildcard plain HTTP 15672 when no management listener is configured. | RabbitMQ source v4.3.6 | REASONED |
+| management-default: v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
 | management-auth: Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access. | RabbitMQ documentation unknown | REASONED |
 | epmd: epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains. | RabbitMQ documentation unknown | REASONED |
 | distribution-port: Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
@@ -304,7 +308,7 @@ management.ssl.certfile = /etc/rabbitmq/tls/management.pem
 management.ssl.keyfile = /etc/rabbitmq/tls/management.key
 ```
 
-Start or restart the node through your deployment's service manager with this configuration in place BEFORE enabling the plugin. `rabbitmq.conf` changes require a node restart; editing the file alone does not update a running node. The plugin reads the effective listener configuration when it starts. Enabling it on a running broker starts it immediately; without listener restrictions, HTTP listens on all interfaces at port `15672` (as of v4.3.6 the plugin starts a plain HTTP listener on 15672 whenever no management listener is configured). See [configuration application](https://www.rabbitmq.com/docs/configure#when-will-configuration-file-changes-be-applied) and [plugin activation](https://www.rabbitmq.com/docs/plugins#different-ways-to-enable-plugins).
+Start or restart the node through your deployment's service manager with this configuration in place BEFORE enabling the plugin. `rabbitmq.conf` changes require a node restart; editing the file alone does not update a running node. The plugin reads the effective listener configuration when it starts. Enabling it on a running broker starts it immediately; as of v4.3.6, with no management listener configured, the plugin starts a plain HTTP listener on port `15672`. The v4.3.6 source sets no address, and an example configuration in the RabbitMQ 4.3 management documentation, described as setting some parameters to their default values, includes `management.tcp.ip = 0.0.0.0` (all IPv4 interfaces); set `management.tcp.ip` before enabling the plugin and check the actual listener with `ss` after startup. See [configuration application](https://www.rabbitmq.com/docs/configure#when-will-configuration-file-changes-be-applied) and [plugin activation](https://www.rabbitmq.com/docs/plugins#different-ways-to-enable-plugins).
 
 Only after that start/restart succeeds, enable the plugin if it is not already enabled:
 
@@ -788,8 +792,12 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 - Erlang/OTP 27 distribution over TLS: https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html
 - OTP 27 distribution TLS implementation (hostname verification): https://raw.githubusercontent.com/erlang/otp/OTP-27.0/lib/ssl/src/inet_tls_dist.erl
 - RabbitMQ v4.3.6 launch-variable handling (rabbitmq-env): https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env
+- RabbitMQ v4.3.6 release notes (minimum supported Erlang/OTP version 27.0): https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.6
+- RabbitMQ v4.3.6 web dispatch listener transport options (an `ip` option is passed only when configured): https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L104-L118
+- RabbitMQ v4.3.6 management schema `management.tcp.ip` mapping (no default value): https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60
 - RabbitMQ 3.7.0 release notes (topic authorization introduction): https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0
 - RabbitMQ management listeners, HTTPS, and roles: https://www.rabbitmq.com/docs/management
+- RabbitMQ 4.3 management documentation source, example configuration described as setting some parameters to their default values, which includes `management.tcp.ip = 0.0.0.0` (rabbitmq-website commit db23826e): https://github.com/rabbitmq/rabbitmq-website/blob/db23826ebaa810b3cdd525fd290125d65f6c3005/versioned_docs/version-4.3/management/index.md#L1365-L1381
 - RabbitMQ configuration files and restart requirements: https://www.rabbitmq.com/docs/configure
 - RabbitMQ plugin activation: https://www.rabbitmq.com/docs/plugins
 - RabbitMQ plugin enable command: https://www.rabbitmq.com/docs/man/rabbitmq-plugins.8
