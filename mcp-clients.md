@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e365f1361e2d7b4da560042e6796f96a67a3689cd3bc141f632b13114fe615b9",
+  "body_sha256": "21da71d3627e9da9d24eb223894e931e348cbec4640fcbad75a37be0102780df",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -65,7 +65,7 @@ version_basis: {
     "transaction": {"text": "Bind the validated expected issuer to the state/PKCE transaction; multi-AS clients MUST prevent mix-up attacks.", "components": ["rfc", "mcp"], "sources": ["rfc:s232609abe426", "mcp:s34fabf499cb7"], "status": "REASONED"},
     "issuer": {"text": "Authorization metadata issuer must exactly equal the issuer used to construct discovery, including its path; reject the document before using endpoints.", "components": ["mcp", "rfc"], "sources": ["mcp:s117c3edbfcd7", "rfc:sc1f199fd57ff"], "status": "REASONED"},
     "resource-metadata": {"text": "Validate protected-resource resource separately from authorization-server issuer; issuer equality is not SSRF protection.", "components": ["rfc"], "sources": ["rfc:s612208d893d8", "rfc:sc1f199fd57ff"], "status": "REASONED"},
-    "oidc-discovery": {"text": "OIDC discovery requires equivalent provider issuer validation; the cited Core offline-access section does not establish the discovery procedure.", "components": ["oidc"], "sources": ["oidc:s707464abc09b"], "status": "REASONED"},
+    "oidc-discovery": {"text": "OIDC discovery requires equivalent provider issuer validation; Sources has no OpenID Connect Discovery reference.", "components": ["oidc", "mcp"], "sources": ["oidc:s707464abc09b", "mcp:s117c3edbfcd7"], "status": "REASONED"},
     "cimd": {"text": "CIMD client_id uses HTTPS with a path; document client_id must exactly match its URL.", "components": ["cimd"], "sources": ["cimd:sc6ba78bdbb90"], "status": "REASONED"},
     "registration-order": {"text": "Clients SHOULD support CIMD and prefer available preregistration, then CIMD, then optional deprecated DCR.", "components": ["mcp"], "sources": ["mcp:s5655f61af2a0"], "status": "REASONED"},
     "application-type": {"text": "DCR MUST specify appropriate application_type: native SHOULD cover desktop/mobile/CLI/localhost apps; web SHOULD cover remote browser apps.", "components": ["mcp"], "sources": ["mcp:s5655f61af2a0"], "status": "REASONED"},
@@ -108,7 +108,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | transaction: Bind the validated expected issuer to the state/PKCE transaction; multi-AS clients MUST prevent mix-up attacks. | OAuth and HTTP RFCs unknown; MCP 2026-07-28 | REASONED |
 | issuer: Authorization metadata issuer must exactly equal the issuer used to construct discovery, including its path; reject the document before using endpoints. | MCP 2026-07-28; OAuth and HTTP RFCs unknown | REASONED |
 | resource-metadata: Validate protected-resource resource separately from authorization-server issuer; issuer equality is not SSRF protection. | OAuth and HTTP RFCs unknown | REASONED |
-| oidc-discovery: OIDC discovery requires equivalent provider issuer validation; the cited Core offline-access section does not establish the discovery procedure. | OpenID Connect 1.0 errata 2 | REASONED |
+| oidc-discovery: OIDC discovery requires equivalent provider issuer validation; Sources has no OpenID Connect Discovery reference. | OpenID Connect 1.0 errata 2; MCP 2026-07-28 | REASONED |
 | cimd: CIMD client_id uses HTTPS with a path; document client_id must exactly match its URL. | CIMD draft draft-ietf-oauth-client-id-metadata-document-00 | REASONED |
 | registration-order: Clients SHOULD support CIMD and prefer available preregistration, then CIMD, then optional deprecated DCR. | MCP 2026-07-28 | REASONED |
 | application-type: DCR MUST specify appropriate application_type: native SHOULD cover desktop/mobile/CLI/localhost apps; web SHOULD cover remote browser apps. | MCP 2026-07-28 | REASONED |
@@ -200,7 +200,7 @@ The controls above are the MCP-specific additions; the client still owes the bas
 - **Resource parameter.** Clients MUST send the RFC 8707 `resource` parameter in both the authorization and token requests, naming the MCP server's canonical URI, which requests an access token scoped to that resource. Preventing cross-resource replay then depends on the authorization server supporting audience binding and issuing an audience-restricted token, and on each resource server validating that it is the intended audience; sending the parameter alone does not guarantee it. See MCP Authorization.
 - **HTTPS everywhere.** Every authorization-server endpoint is contacted over HTTPS, and every redirect URI is `localhost` or HTTPS (MCP Authorization Security Considerations). Bearer and access tokens never travel in a URL query string; they go in the `Authorization` header (MCP Authorization). The authorization code, by contrast, is returned in the registered redirect URI's query by the flow itself (OAuth 2.1 section 4.1.2), so it is protected instead by PKCE and the step 1 `iss` check, and the client keeps callback URLs out of referrer headers (RFC 9700 section 4.2, with referrer suppression at section 4.2.4) and out of stored or logged URLs (RFC 9700 section 3 lists URLs stored or logged by browsers, proxy servers, and operating systems among an attacker's sources).
 
-## Verify
+## Verify (REASONED: issuer/callback, metadata, SSRF, token-storage and registration comparisons follow the cited MCP and RFC passages; no controllable authorization/discovery server, target client or live DCR capture. Local fixture observations below do not demonstrate client integration or protected credential storage)
 
 These checks are client-behaviour checks. Standing up a full malicious-authorization-server harness to drive a specific MCP client is infrastructure this repository's authoring environment does not have, so the behavioural steps below are marked **reasoned**: each names the prerequisite that is unavailable, gives the concrete request or command, and states the exposed and fixed outcomes and the source passage that distinguishes them, per the contributing rule on Verify steps. The locally feasible checks (the SSRF address test and the config grep) are run as written.
 
@@ -210,7 +210,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 3. **SSRF destinations are blocked (partially runnable).** The address-classification half is runnable now; the client-integration half is reasoned. Runnable: confirm the deny-list rejects the reserved and internal ranges a discovery URL might target, namely the cloud metadata address, loopback, and RFC 1918 space:
 
-   REASONED: following block; address classification follows RFC 9728 and MCP SSRF guidance; the guide records execution but no observed output.
+   REASONED: following block; address classification follows the cited RFC 9728 and MCP SSRF guidance, while no target client or discovery fixture is available. Python 3.14.4 ran the printed expression: 169.254.169.254, 127.0.0.1, 10.0.0.1, 192.168.0.1 and 172.16.0.1 each printed BLOCK; the same expression with 8.8.8.8 printed ALLOW. Every invocation exited 0. This classifies six literal addresses only; it does not test DNS, fetching or SSRF enforcement.
 
    ```bash
    (
@@ -224,7 +224,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
 4. **No refresh token or long-lived bearer token stored in cleartext (runnable, bounded heuristic).** This is a heuristic scan, not a proof: it searches the client's config and log paths for a refresh-token or bearer-token value in the clear, lists only the filenames (never the secret itself), and separates a clean scan from a scan error. Substitute the client's own path for the placeholder, inside the single quotes on the `set --` line:
 
-   REASONED: following block; this bounded token scan follows OAuth 2.1 confidentiality requirements; the guide records execution but no observed output.
+   REASONED: following block; the bounded scan follows the cited OAuth confidentiality requirements; no actual client configuration or protected credential store is available. Bash 5.3.9 and GNU grep 3.12 ran the complete block with a disposable directory containing only config.json. With {"refresh_token":"DUMMY_NOT_A_SECRET"}, it printed that filename and FOUND; replacing the content with {"grant_types":["refresh_token"]} printed clean. Both exited 0. Empty and unchanged-placeholder paths printed the substitution diagnostic; an absent path and a regular JSON file printed not a directory; all four also exited 0. These skips are not clean scans, and the synthetic clean result proves neither secret absence nor storage protection. All three Verify shell fences passed bash -n.
 
    ```bash
    (
@@ -259,7 +259,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 
    Save the actual captured body as `dcr-request.json` and inspect it (this native client checks for `native`; a remotely-hosted browser client checks for `web` instead):
 
-   REASONED: following block; application_type inspection follows MCP Client Registration and OIDC Registration; no live DCR request is available.
+   REASONED: following block; application_type inspection follows the cited MCP and OIDC registration requirements; no live DCR request is available. Python 3.14.4 ran the exact printed json.load/get expression with {}, {"application_type":"web"} and {"application_type":"native"} on stdin: exits 1, 1 and 0 respectively, with no output. json.loads also accepted the illustrative registration and metadata documents. These are local JSON controls, not a captured registration or server acceptance.
 
    ```bash
    python3 -c 'import json,sys; sys.exit(0 if json.load(sys.stdin).get("application_type") == "native" else 1)' < dcr-request.json

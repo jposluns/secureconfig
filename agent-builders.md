@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "0cb1768ad9069ae7bbc2147867d2890aa61fa4ac183b096218b7e78f6e5c212b",
+  "body_sha256": "3d0e9aa1cf17e8d8013ae5889dae00cf2f2fb3c552578db44f9a45d633b3e906",
   "components": {
     "dify": {
       "name": "Dify documentation",
@@ -471,6 +471,8 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The app key you substitute on the set -- line enters shell history.
   # Use a short-lived key or clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the key from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_DIFY_APP_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -532,7 +534,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - Dify plugin daemon 0.6.10 (key generation, Redis mappings, expiry refresh and lookup): https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/service/debugging_service/connection_key.go#L23-L123 ; https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/pkg/utils/cache/redis.go#L208-L230
 - Dify plugin daemon 0.6.10 (remote installation, invocation transport and request data): https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/service/install_service/controlpanel.go#L50-L85 ; https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/io.go#L18-L68 ; https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/pkg/entities/requests/tool.go#L27-L36 ; https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/pkg/entities/requests/model.go#L9-L34
 - Dify plugin daemon 0.6.10 (enable switch, server startup and debugging-key route): https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/types/app/config.go#L101-L106 ; https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/control_panel/watch_dog.go#L32-L46 ; https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/server/http_server.go#L130-L134
-- Dify console at d39d9ddb7430522e0c828c6953afdf773ba6e675 (debugging-key route and its decorators; plugin-permission default; RBAC check and its default): https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/plugin.py#L567-L585 ; https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/__init__.py#L14-L61 ; https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/common/wraps.py#L11-L32 ; https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/configs/enterprise/__init__.py#L38-L41
+- Dify console at d39d9ddb7430522e0c828c6953afdf773ba6e675 (debugging-key route and its decorators; plugin-permission default; RBAC check and its default): https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/plugin.py#L567-L585 ; <https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/__init__.py#L14-L61> ; https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/common/wraps.py#L11-L32 ; <https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/configs/enterprise/__init__.py#L38-L41>
 - Dify console prerequisites (instance setup, account initialization, active workspace and authenticated session): https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/wraps.py#L308-L321 ; https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/wraps.py#L113-L125 ; https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/libs/login.py#L47-L59 ; https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/libs/login.py#L152-L169
 - Dify plugin permission model (row default `noone`, unlike the no-row allowance above): https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/models/account.py#L402-L407
 - Dify permission-change API (admin or owner only, request defaults, create or update the permission row): https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/plugin.py#L1086-L1106 ; https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/plugin.py#L170-L172 ; https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/services/plugin/plugin_permission_service.py#L14-L36

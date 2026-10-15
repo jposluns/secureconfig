@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8ee1e0a1fb0d79cb2145de241e390b6bd46e4bc5a7e290eda639983d79535a6c",
+  "body_sha256": "5a16d74e2220ef29ebf1113b4e31fcbaa6c4bb5a68b65da24f219dd3c4a95708",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -194,7 +194,7 @@ version_basis: {
     "memberlist-policy": {"text": "Keep tls-insecure-skip-verify false, set expected server name as needed, bind privately and restrict trusted peers even with TLS.", "components": ["dskit"], "sources": ["dskit:s675104c4819c", "dskit:s99e7e34182f1"], "status": "REASONED"},
     "memberlist-advertise": {"text": "Advertise address/port affect discovery, not bind; absent overrides derive an address from the first bind and actual port.", "components": ["dskit"], "sources": ["dskit:s251174df8783", "dskit:s052e8107edad"], "status": "REASONED"},
     "loki-tenants": {"text": "auth_enabled defaults true and requires tenant headers, not credentials; false uses fake, and tenant validation checks syntax/length only.", "components": ["loki", "dskit"], "sources": ["loki:sd13fa86b20d0", "loki:sb5e56f0d6348", "dskit:s3634557bb838", "dskit:s1ca109a7a016"], "status": "REASONED"},
-    "loki-grpc-auth": {"text": "Default dskit interceptors lack credentials; Loki has tenant exemptions, and the supplied subset omits full auth-helper implementation.", "components": ["dskit", "loki"], "sources": ["dskit:s38beab6892ea", "dskit:saf57a4cbc682", "loki:s057e686b00bb", "loki:s7786b9105acc"], "status": "REASONED"},
+    "loki-grpc-auth": {"text": "Default dskit interceptors lack credentials; Loki has tenant exemptions; complete interceptor behaviour was not re-traced.", "components": ["dskit", "loki"], "sources": ["dskit:s38beab6892ea", "dskit:saf57a4cbc682", "loki:s057e686b00bb", "loki:s7786b9105acc"], "status": "REASONED"},
     "loki-push-query": {"text": "Reachable clients can push/query without credentials subject to tenant headers and ingest/query policies.", "components": ["loki"], "sources": ["loki:s9f316e1a5fef", "loki:s39c270ed878c"], "status": "REASONED"},
     "loki-config": {"text": "GET /config exposes configuration without a tenant-auth wrapper.", "components": ["loki"], "sources": ["loki:sbe0aa939a44d"], "status": "REASONED"},
     "loki-diagnostics": {"text": "Metrics and pprof routes are registered by default without a tenant-auth wrapper.", "components": ["dskit"], "sources": ["dskit:s761b46738198"], "status": "REASONED"},
@@ -211,7 +211,7 @@ version_basis: {
     "verify-loki": {"text": "A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs.", "components": ["loki", "curl"], "sources": ["loki:s70975c2655fa", "loki:s057e686b00bb", "curl:s3db522258e44"], "status": "REASONED", "verify": [2]},
     "verify-basic": {"text": "Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200.", "components": ["node", "push", "alert", "jaeger", "toolkit"], "sources": ["node:s896899f5a500", "push:s5c9f9745f42d", "alert:s120d6ecf3fcd", "jaeger:sc6f47d82b947", "toolkit:sbb86207a38e5"], "status": "DEMONSTRATED", "evidence": "The loopback runs gave exactly that pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager `/api/v2/status` and Jaeger `/api/v3/services`.", "verify": [3]},
     "verify-loki-mtls": {"text": "Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred.", "components": ["loki", "dskit"], "sources": ["loki:s70975c2655fa", "dskit:sd35a28be4391"], "status": "REASONED"},
-    "verify-secret": {"text": "Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation.", "components": ["toolkit", "curl"], "sources": ["toolkit:sbb86207a38e5", "curl:s5e1383feef7d", "curl:s82a34ee18632"], "status": "REASONED"}
+    "verify-secret": {"text": "Basic-auth stdin closes argv exposure only; shell history, tracing and your own account's view of the process can still leak the password.", "components": ["toolkit", "curl"], "sources": ["toolkit:sbb86207a38e5", "curl:s5e1383feef7d", "curl:s82a34ee18632"], "status": "REASONED"}
   }
 }
 ---
@@ -267,7 +267,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | memberlist-policy: Keep tls-insecure-skip-verify false, set expected server name as needed, bind privately and restrict trusted peers even with TLS. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | memberlist-advertise: Advertise address/port affect discovery, not bind; absent overrides derive an address from the first bind and actual port. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-tenants: auth_enabled defaults true and requires tenant headers, not credentials; false uses fake, and tenant validation checks syntax/length only. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
-| loki-grpc-auth: Default dskit interceptors lack credentials; Loki has tenant exemptions, and the supplied subset omits full auth-helper implementation. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Loki v3.7.8 | REASONED |
+| loki-grpc-auth: Default dskit interceptors lack credentials; Loki has tenant exemptions; complete interceptor behaviour was not re-traced. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Loki v3.7.8 | REASONED |
 | loki-push-query: Reachable clients can push/query without credentials subject to tenant headers and ingest/query policies. | Loki v3.7.8 | REASONED |
 | loki-config: GET /config exposes configuration without a tenant-auth wrapper. | Loki v3.7.8 | REASONED |
 | loki-diagnostics: Metrics and pprof routes are registered by default without a tenant-auth wrapper. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
@@ -284,7 +284,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-loki: A tenant-header rejection is not authentication; repeat with an arbitrary X-Scope-OrgID and test both families, gRPC and internal RPCs. | Loki v3.7.8; curl curl-8_14_1 | REASONED |
 | verify-basic: Loopback HTTPS GETs on node/Pushgateway metrics, Alertmanager status and Jaeger v3 services gave no-credential 401 and credentialed 200. | node_exporter v1.12.1; Pushgateway v1.11.3; Alertmanager v0.34.1; Jaeger v2.21.0; Exporter toolkit v0.17.1 | DEMONSTRATED |
 | verify-loki-mtls: Authorized HTTP mTLS should succeed, untrusted/missing client certs fail handshake and plaintext fail; no Loki listener/TLS run occurred. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
-| verify-secret: Basic-auth stdin closes argv exposure only; shell history and tracing can still leak the password. curl diagnostics lack a Sources citation. | Exporter toolkit v0.17.1; curl curl-8_14_1 | REASONED |
+| verify-secret: Basic-auth stdin closes argv exposure only; shell history, tracing and your own account's view of the process can still leak the password. | Exporter toolkit v0.17.1; curl curl-8_14_1 | REASONED |
 <!-- version-basis:end -->
 
 The Prometheus server has its own section in [admin-uis.md](admin-uis.md). This guide covers the pieces
@@ -498,8 +498,8 @@ dskit's tenant validation checks syntax and length, not identity or permission. 
 `auth_enabled: false`, Loki uses tenant `fake`. A missing-header rejection is not a login gate.
 dskit's default gRPC interceptor chain has no credential authentication; Loki adds its auth setup,
 with explicit tenant-check exemptions for health, frontend worker, scheduler and other internal RPCs.
-The supplied source subset lacks the auth helper implementation, so its complete interceptor
-behaviour has not been re-traced here. Do not expose gRPC on the strength of `auth_enabled`.
+The complete interceptor behaviour has not been re-traced here. Do not expose gRPC on the
+strength of `auth_enabled`.
 
 A reachable client without credentials can submit logs through `POST /loki/api/v1/push` and query
 through `/loki/api/v1/query` or `/loki/api/v1/query_range`, subject to tenant headers and ingestion
@@ -577,8 +577,8 @@ There are two fixes, and you can use both:
 
 ## Verify
 
-The non-Loki HTTP results below were demonstrated on 127.0.0.1 against the versions named at the top,
-in both the exposed state and the fixed state. All Loki checks are REASONED: the authoring host
+REASONED: following block; this introduction and the TCP and UDP listener inventory below for every port it names, per the guide's cited node_exporter v1.12.1 source, Alertmanager v0.34.1 README, Pushgateway v1.11.3 README, Jaeger v2.21.0 ports and dskit pinned wildcard listener construction entries. No second host and no isolated network namespace were available, so no wildcard bind was observed. During marking review (October 2026) the block passed bash -n under bash 5.3.9, and its two commands, run without sudo on the review host as ss -tlnp and ss -ulnp (iproute2 6.19.0), accepted their flags and showed none of the named TCP or UDP ports listening, with an empty process column, so they tested no target; the sudo form was not run. Exposed, a listed port shows a wildcard bind; fixed, loopback or a private address. The non-Loki loopback HTTP runs on 127.0.0.1 against the versions named at the top
+are declared DEMONSTRATED at the credential block below and were not repeated in this marking review. All Loki checks are REASONED: the authoring host
 forbids opening listeners without an isolated network namespace, and has none. The default
 all-interfaces binds were not observed, so they are
 reasoned: the authoring host forbids binding every interface, so each run overrode the address to
@@ -595,7 +595,7 @@ sudo ss -tlnp   # loopback or a private address only: 9100 9093 9094 9091 3100 9
 sudo ss -ulnp   # Alertmanager gossip also uses UDP 9094; Jaeger's Thrift receivers UDP 6831 and 6832
 ```
 
-Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unconfigured node_exporter,
+REASONED: preceding block; the expected inventory results for every TCP and UDP port the block names, per the same cited listener sources; no wildcard bind was observed because no isolated network namespace was available. The following block's guard was run with a stub curl: unchanged, it printed its substitute-the-service-address refusal. Exposed, the reasoned expectation is `*:9100` (or `0.0.0.0:`/`[::]:`) for an unconfigured node_exporter,
 and likewise for the others. Fixed means a loopback or private address. Then probe from a host that
 should not have access. The block refuses to run until you substitute the address.
 
@@ -618,14 +618,14 @@ REASONED: following block; external probes follow the cited listener and authent
 )
 ```
 
-Any `200` is the finding: that service answers the unauthenticated request. For a service that uses
+REASONED: preceding block; the second-host probes of node_exporter, Alertmanager, Pushgateway, Jaeger and Loki and the Loki tenant-header repeat, per the guide's cited Prometheus security model, Exporter toolkit v0.17.1 web configuration, Jaeger 2.21 security and Loki v3.7.8 authentication entries. The authoring environment had no second host and no Loki listener. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: without its set -- line it printed the paste-the-whole-block refusal, and with 203.0.113.10 substituted the stub received the five URLs in order. The expected exposed and fixed results are those stated here. Any `200` is the finding: that service answers the unauthenticated request. For a service that uses
 TLS, switch that URL to `https`. A `401` then means its authentication is on. From a host that should
 be blocked, a connection refusal or a connect timeout is consistent with isolation. Read the `err`
 text to confirm it happened while connecting, not in a local proxy or policy. The write-out fields need
 curl 7.75.0 or newer. For Loki, a `401` without a tenant header proves nothing. Repeat the Loki probe
 with `-H 'X-Scope-OrgID: anyone'` added, and treat a `200` as exposure.
 
-Run the positive control from a host that should have access, so a dead service is not read as fixed.
+REASONED: the positive-control and stdin-password instructions for the following credential pair, per the guide's cited Exporter toolkit v0.17.1 web configuration entry. The pair itself is declared below from the guide's recorded loopback runs; this marking review did not repeat them. During marking review (October 2026) that block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-URL refusal; an http:// URL drew the use-an-https-URL refusal; a user containing a colon was refused; and with dummy values the password reached curl only on stdin as an escaped user line, never in argv. Exposed, the request without credentials returns 200; fixed, 401 without and 200 with credentials. Run the positive control from a host that should have access, so a dead service is not read as fixed.
 The password reaches curl on stdin, not argv. Substitute inside the quotes, and add
 `--cacert /path/to/ca.crt` if the certificate is private.
 
@@ -657,7 +657,8 @@ Fixed, `no credentials` is `401` and `with credentials` is `200`. The loopback r
 pair over HTTPS for GETs of node_exporter `/metrics`, Pushgateway `/metrics`, Alertmanager
 `/api/v2/status` and Jaeger `/api/v3/services`. For Loki under mTLS, the REASONED equivalent is `--cert` and `--key` on an authorized client
 (`200`) against the same request without them, which fails in the handshake. This closes the argv
-channel only. The password can still reach shell history or `set -x` output.
+channel only. The password can still reach shell history or `set -x` output, and stdin does not hide it
+from your own account's view of the process.
 
 ## Sources (checked September 2026)
 

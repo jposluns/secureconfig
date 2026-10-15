@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "1133876679793449f35a393b1dcaaa2aa1e7df431a194608df92cf43a1b67715",
+  "body_sha256": "f282638ccb2cc6d5205a344657446ef07e886da3eeaadce60877b0ed024ffbbb",
   "components": {
     "runpod": {
       "name": "RunPod documentation",
@@ -86,8 +86,8 @@ version_basis: {
     "lambda-ssh": {"text": "Lambda requires an SSH key at launch; keep the private key off the instance.", "components": ["lambda"], "sources": ["lambda:sb12b4a953833"], "status": "REASONED"},
     "vast-ssh": {"text": "Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance.", "components": ["vast"], "sources": ["vast:s6e0303ef19fe"], "status": "REASONED"},
     "runpod-ssh": {"text": "RunPod recommends SSH keys and offers an optional password; use the key and skip the password.", "components": ["runpod"], "sources": ["runpod:s13c43b856d4f"], "status": "REASONED"},
-    "verify-inventory": {"text": "ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. No ss source is recorded.", "components": ["runpod", "vast", "iproute2"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850"], "status": "REASONED", "verify": [1]},
-    "verify-jupyter": {"text": "Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth but not this exact endpoint/status pair.", "components": ["jupyter"], "sources": ["jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
+    "verify-inventory": {"text": "ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. The cited ss manual sections do not cover network-namespace scope.", "components": ["runpod", "vast", "iproute2"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850"], "status": "REASONED", "verify": [1]},
+    "verify-jupyter": {"text": "Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth and the missing-token 403, but not this exact endpoint or the with-token 200.", "components": ["jupyter"], "sources": ["jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
     "verify-mapping": {"text": "Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control.", "components": ["runpod", "vast", "modal", "jupyter"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
     "remote-desktop": {"text": "Inventory template noVNC ports such as 6080 and VNC ports such as 5900/5901; check weak or empty passwords, require a strong password plus encrypted tunnel for direct VNC, or remove its public mapping. Test with a VNC client; no noVNC/VNC source is recorded here.", "components": ["runpod", "vast"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e"], "status": "REASONED"}
   }
@@ -127,8 +127,8 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | lambda-ssh: Lambda requires an SSH key at launch; keep the private key off the instance. | Lambda Public Cloud documentation unknown | REASONED |
 | vast-ssh: Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance. | Vast.ai documentation unknown | REASONED |
 | runpod-ssh: RunPod recommends SSH keys and offers an optional password; use the key and skip the password. | RunPod documentation unknown | REASONED |
-| verify-inventory: ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. No ss source is recorded. | RunPod documentation unknown; Vast.ai documentation unknown; iproute2 ss manual v6.12.0 | REASONED |
-| verify-jupyter: Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth but not this exact endpoint/status pair. | Jupyter Server security unknown | REASONED |
+| verify-inventory: ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. The cited ss manual sections do not cover network-namespace scope. | RunPod documentation unknown; Vast.ai documentation unknown; iproute2 ss manual v6.12.0 | REASONED |
+| verify-jupyter: Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth and the missing-token 403, but not this exact endpoint or the with-token 200. | Jupyter Server security unknown | REASONED |
 | verify-mapping: Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control. | RunPod documentation unknown; Vast.ai documentation unknown; Modal proxy authentication unknown; Jupyter Server security unknown | REASONED |
 | remote-desktop: Inventory template noVNC ports such as 6080 and VNC ports such as 5900/5901; check weak or empty passwords, require a strong password plus encrypted tunnel for direct VNC, or remove its public mapping. Test with a VNC client; no noVNC/VNC source is recorded here. | RunPod documentation unknown; Vast.ai documentation unknown | REASONED |
 <!-- version-basis:end -->
@@ -171,7 +171,7 @@ SSH: authenticate with your own key, not a password. Lambda requires an SSH key 
 
 ## Verify
 
-REASONED: listener inventory and direct/proxied authentication pairs; no GPU-platform deployment, workload credentials or outside probe host was supplied for this metadata review, and no run is recorded. Expected readings below follow the cited platform and Jupyter documentation; the exact Jupyter endpoint/status pair and ss semantics lack direct citations.
+REASONED: listener inventory and direct/proxied authentication pairs; no GPU-platform deployment, workload credentials or outside probe host was supplied for this metadata review, and no run is recorded. Expected readings below follow the cited platform and Jupyter documentation and the cited ss manual options; the network-namespace scope and the exact Jupyter endpoint/status pair lack direct citations.
 
 ```bash
 ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not a firewall, and not
@@ -187,6 +187,8 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The Jupyter token you substitute on the set -- line enters shell history.
   # Clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the token from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_JUPYTER_TOKEN'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -206,6 +208,8 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The token you substitute on the set -- line enters shell history.
   # Use a short-lived token or clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the token from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'https://REPLACE_WITH_POD_ID-REPLACE_WITH_PORT.proxy.runpod.net/REPLACE_WITH_PROTECTED_PATH' 'REPLACE_WITH_TOKEN'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift

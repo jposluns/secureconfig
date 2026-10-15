@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "80560753d0f8d1b1550244a8f42d8764eaee0786ee60eb04cf71926b2e29b301",
+  "body_sha256": "4dfd35a63a16c1e36dc1b89dd972dd12f78009c6ba4876f4a2ef920a7f18bfbe",
   "components": {
     "server": {
       "name": "code-server",
@@ -150,6 +150,8 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
     -w '\nunauth http=%{http_code} url=%{url_effective} exit=%{exitcode} err=%{errormsg}\n' "$1"
   # 2) Authenticated positive control: paste a cookie from a valid browser session; it enters via stdin
   #    (curl --header @-), never argv. The authenticated response must contain the editor.
+  #    The hidden prompt keeps it out of shell history and set +x keeps it out of set -x tracing. Stdin
+  #    closes the argv channel only: the account owner and root can still read it in the subshell and curl.
   { unset -n code_server_cookie && unset -v code_server_cookie; } 2>/dev/null ||
     { echo 'cannot initialize cookie input; not probing'; exit 2; }
   { unset -n IFS; } 2>/dev/null || { echo 'a readonly IFS is set in this shell; not probing'; exit 2; }
@@ -168,7 +170,7 @@ ss -tlnp   # expect 8080 on loopback or a private address; then probe the public
 # or unsuccessful positive control is inconclusive, not a pass.
 ```
 
-An unauthenticated editor in a private browser window means whoever finds the URL owns the host.
+REASONED: preceding block; listener inventory, direct-origin isolation, paired editor access and MFA, per the guide's cited code-server v4.137.0 deployment guide and HTTP controls. No editor, proxy, IdP or external probe host is available; listeners are denied locally. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics and config YAML parsed. Placeholder, missing-assignment, short, empty and embedded-placeholder inputs printed refusal messages without reaching curl stubs; substituted inputs reached the stubs; under a pseudo-terminal, empty, placeholder and control-character cookies exited 2 before the authenticated request, and a fixture cookie exited 0 and reached curl only on stdin as a `Cookie:` header. Live outcomes remain unobserved: exposed access opens the editor anonymously or bypasses MFA; fixed access isolates the origin, challenges anonymous users and requires the second factor while admitting the authenticated control. An unauthenticated editor in a private browser window means whoever finds the URL owns the host. Paste the cookie value alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
 
 ## Sources (checked September 2026)
 

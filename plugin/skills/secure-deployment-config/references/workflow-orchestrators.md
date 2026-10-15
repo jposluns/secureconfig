@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "c8bb9f0296e7047b42682a3655c0086ac7909f3755ba70716da757cd552397ac",
+  "body_sha256": "2b62664a093d80d0c169da71389171508ed1bfafcdc98d66ad5a3bb8158e0996",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -576,7 +576,7 @@ Pods can turn an exposed API into cluster compromise.
 
 ## Verify
 
-These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
+REASONED: following block; every probe in the following block (the ss inventory, the Prefect, Dagster, Airflow, Temporal, Flower and Argo anonymous and authorized calls, the Flower socket-directory stat and getfacl lines, and the guarded direct-origin probe), per the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow FAB provider, API authentication; Apache Airflow running in Docker; Temporal, self-hosted security; Flower configuration; and Argo anonymous fallback when server mode is enabled. The authoring environment has no container runtime, Kubernetes cluster or orchestrator install, and no network access to obtain one. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ShellCheck 0.11.0 and ran with stub ss, curl and temporal and no network: each illustrative probe reached only the stubs; the origin guard printed its substitute-your-origin-URL refusal unchanged, the paste-the-whole-block refusal without its set -- line, the exactly-1-value refusal when shortened and the http-or-https refusal for an ftp:// URL, and passed a substituted https:// URL to the stub. The October 2026 marking review reported piped-input helper checks, including header encoding, JSON escaping and invalid Argo tokens; these are historical observations, not new runs. In the first TODO 50 review, the unchanged and changed blocks ran from files with hidden prompts driven through a pseudo-terminal, dummy credentials, and stubs for every external command (the Python stub delegated only the known helpers to the isolated interpreter). No probe reached a service. Before the change, all three authenticated labels still ran when their helper exited 73, including after partial output. An empty terminal response produced a Basic header with an empty value for Prefect and JSON containing an empty username or password for Airflow; those helpers succeeded. Argo rejected an empty response, but its curl still ran with empty stdin. After the change, valid dummy inputs reached all three authenticated curl stubs with the expected header or JSON. Each empty credential, each helper exit 73 and each partial-output failure printed the matching credential-helper refusal and skipped only that authenticated probe; the other labelled calls were unchanged. These local runs test shell control flow, not service authentication. During marking review (October 2026), the second TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 with dummy credentials on a pseudo-terminal, stubs for every external command and only the known credential helpers delegated to the scratch interpreter. Under bash -e before that revision, each helper exit 73, partial-output failure or empty credential stopped the calling shell at that authenticated probe, so later probes did not run. In those second-review fixtures, where every other external-command stub succeeded, each refusal skipped only its authenticated request and all later probes ran. Valid credentials reached all three authenticated curl stubs with the expected header or JSON before and after, with and without bash -e. All four empty credential cases and each helper failure were also checked without errexit before and after. With PYTHONOPTIMIZE=1 and an empty Argo token, the unchanged helper sent an empty bearer header; the revised helper refused it and skipped the Argo authenticated request, with and without bash -e. In that second review, every completed sequence reached the unchanged direct-origin placeholder refusal; all files exited 2, either at the first unhandled refusal before that revision under bash -e or at the final origin guard. These runs checked shell flow and credential encoding only, not service authentication. During marking review (October 2026), the third TODO 50 review ran the unchanged and revised blocks from files under bash 5.3.9(1)-release and Python 3.14.4 through a pseudo-terminal with dummy credentials, stubs for every external command and only the three exact credential helpers delegated to the isolated scratch interpreter. No probe reached a service or read the host socket paths. Before this revision, under bash -e, exit 1 from ss, Temporal, stat or getfacl, and curl exits 6, 7 or 28 from each anonymous or default-account probe, stopped the file at that label and skipped the remaining probes. After this revision, under bash -e, those same cases reached every later label and the final origin-placeholder refusal. Each authenticated curl exit 6, 7 or 28, helper exit 73, partial-output failure and empty credential case reached all later probes before and after; helper refusals sent no authenticated request. Valid dummy credentials produced the expected Basic header, JSON and bearer header before and after. An empty Argo token was also refused with PYTHONOPTIMIZE=1 before and after. With a substituted origin URL, origin curl exits 6, 7 and 28 were reported before and after. The missing-set-line, short-set-line and ftp:// origin cases refused without an origin request before and after. The revised files exited 0 after their labelled continuation messages, including the final origin refusal; this status means the sequence continued, not that any service was secure. These stub runs establish shell flow and encoding only, not service authentication. The stat and getfacl observations are recorded after the block. These probes are reasoned, not demonstrated, because the authoring environment has no container runtime, so no
 live orchestrator was stood up in its exposed or fixed state. For Argo, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 no Kubernetes cluster is available. Its listener, TLS and authentication checks remain REASONED.
 The exception is the Flower unix-socket stat mode
@@ -591,23 +591,38 @@ anything. The write-out fields need curl 7.75.0 or newer; never use `-k`.
 ```bash
 # REASONED: orchestrator checks follow the cited vendor documentation and pinned sources; no container runtime
 # or Kubernetes cluster is available. Flower stat mode and named-ACL observations are recorded after this block.
-ss -tlnp   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8233/5555/2746): not a firewall,
+# Credential guards assume a clean shell with trusted startup files and real builtins.
+# Each capture ends with the helper status; strip it only after success, then feed curl on stdin.
+ss -tlnp || echo 'ss: exited nonzero; continuing'   # TCP listeners in THIS network namespace only (4200/3000/8080/7233/8233/5555/2746): not a firewall,
            # publication, routing, or auth check. Inspect container publications and probe external
            # reachability separately; a wildcard bind is a prompt to investigate, not proof of exposure
 
 # Prefect: an empty JSON filter. Once the auth string is set the anonymous call is 401 and the authorized call
 # returns a JSON flow list; an anonymous list, even an empty one, is the finding. Feed the auth string on stdin.
+# getpass prompts without echo on a terminal, so the auth string enters neither shell history nor set -x
+# tracing; stdin closes the argv channel only, and the account owner and root can still read it in
+# python3, the block's subshell and curl.
 # Do NOT use /api/health or /api/ready as the authentication discriminator. Current server source exempts
 # those GET paths; this behavior is version-dependent and was not present in 3.1.8.
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   -w '\nprefect-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter
-# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
-python3 -c 'import base64,getpass; print("header = \"Authorization: Basic " + base64.b64encode(getpass.getpass("Prefect username:password: ").encode()).decode() + "\"")' \
-  | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --config - \
-      -w '\nprefect-auth http=%{http_code} exit=%{exitcode}\n' \
-      -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter
+  -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter \
+  || echo 'prefect-anon: exited nonzero; continuing'
+(
+  trap - DEBUG RETURN ERR
+  set +x +a +e
+  set -- "$(python3 -I -c 'import base64,getpass,sys; s=getpass.getpass("Prefect username:password: "); s or sys.exit("empty credential"); print("header = \"Authorization: Basic " + base64.b64encode(s.encode()).decode() + "\"")'; printf '\n%s' "$?")"
+  case "$1" in
+    *$'\n0') set -- "${1%$'\n'*}" ;;
+    *) echo "prefect-auth: credential helper failed; not probing"; exit 2 ;;
+  esac
+  # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
+  printf '%s' "$1" \
+    | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --config - \
+        -w '\nprefect-auth http=%{http_code} exit=%{exitcode}\n' \
+        -H 'Content-Type: application/json' -X POST --data-binary '{}' http://prefect.internal:4200/api/flows/filter
+) || echo 'prefect-auth: skipped or failed; continuing'
 
 # Dagster has no login of its own, so test /graphql, which can read configuration and launch runs.
 # A RepositoryConnection containing nodes (including an empty nodes list) is a successful read.
@@ -618,26 +633,49 @@ python3 -c 'import base64,getpass; print("header = \"Authorization: Basic " + ba
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
   -w '\ndagster-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
   -H 'Content-Type: application/json' -X POST \
-  --data-binary '{"query":"{ repositoriesOrError { __typename ... on RepositoryConnection { nodes { name location { name } } } } }"}' http://dagster.internal:3000/graphql
+  --data-binary '{"query":"{ repositoriesOrError { __typename ... on RepositoryConnection { nodes { name location { name } } } } }"}' http://dagster.internal:3000/graphql \
+  || echo 'dagster-anon: exited nonzero; continuing'
 
 # Airflow: obtaining a token from the documented Compose account is the finding. Send the credentials as JSON
 # on stdin; FAB 3.9.0 returns 201 Created with a nonempty access_token when airflow/airflow works. Compare with a valid account on
-# the same route, and test an API read with no token then a token at the proxy and the origin. On Airflow 2 use
-# its /api/v1/ endpoint and its own auth mechanism instead.
+# the same route (the second call below), and test an API read with no token then a token at the proxy and the
+# origin. On Airflow 2 use its /api/v1/ endpoint and its own auth mechanism instead. The first call's body is
+# fixed; never type a real password into it.
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
-printf '{"username":"%s","password":"%s"}' 'airflow' 'airflow' \
+printf '%s' '{"username":"airflow","password":"airflow"}' \
   | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
       -w '\nairflow-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token
+      -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token \
+      || echo 'airflow-token: exited nonzero; continuing'
+# The valid-account comparison. getpass prompts without echo on a terminal, so the username and password enter
+# neither shell history nor set -x tracing, and json.dumps escapes any double quote, backslash or control
+# character in them, so the body stays one JSON object; stdin closes the argv channel only, and the account
+# owner and root can still read the password in python3, the block's subshell and curl.
+(
+  trap - DEBUG RETURN ERR
+  set +x +a +e
+  set -- "$(python3 -I -c 'import getpass,json,sys; u=getpass.getpass("Airflow username: "); p=getpass.getpass("Airflow password: "); (u and p) or sys.exit("empty credential"); print(json.dumps({"username": u, "password": p}))'; printf '\n%s' "$?")"
+  case "$1" in
+    *$'\n0') set -- "${1%$'\n'*}" ;;
+    *) echo "airflow-valid-token: credential helper failed; not probing"; exit 2 ;;
+  esac
+  # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
+  printf '%s' "$1" \
+    | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+        -w '\nairflow-valid-token http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        -H 'Content-Type: application/json' --data-binary @- https://airflow.example.com/auth/token
+) || echo 'airflow-valid-token: skipped or failed; continuing'
 # guard-conventions: allow probe of an illustrative example host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-  -w '\nairflow-pools-anon http=%{http_code} exit=%{exitcode}\n' https://airflow.example.com/api/v2/pools
+  -w '\nairflow-pools-anon http=%{http_code} exit=%{exitcode}\n' https://airflow.example.com/api/v2/pools \
+  || echo 'airflow-pools-anon: exited nonzero; continuing'
 
 # Temporal: a protected read against the frontend gRPC port. With an Authorizer and ClaimMapper configured this
 # is rejected without credentials (an mTLS deployment refuses the connection outright); a listing, even an empty
 # one, is the finding. Health checks, TLS errors, missing namespaces, and unavailable services do not prove
 # authorization, so use a real workflow list, not a health call, and run it with no ambient credentials set.
-temporal workflow list --address temporal.internal:7233 --namespace default --limit 1
+temporal workflow list --address temporal.internal:7233 --namespace default --limit 1 \
+  || echo 'temporal: exited nonzero; continuing'
 
 # Flower: the dashboard and the API. With Basic Auth an anonymous request is 401; with OAuth it is a 302 redirect into
 # the login flow, not 401, so inspect the redirect without following it and confirm access with a
@@ -645,10 +683,12 @@ temporal workflow list --address temporal.internal:7233 --namespace default --li
 # prove the dashboard is protected.
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
-  -w '\nflower-ui http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' http://flower.internal:5555/
+  -w '\nflower-ui http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' http://flower.internal:5555/ \
+  || echo 'flower-ui: exited nonzero; continuing'
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
-  -w '\nflower-api http=%{http_code} exit=%{exitcode}\n' http://flower.internal:5555/api/workers
+  -w '\nflower-api http=%{http_code} exit=%{exitcode}\n' http://flower.internal:5555/api/workers \
+  || echo 'flower-api: exited nonzero; continuing'
 
 # Flower on a unix socket. The stat mode and named-ACL checks were demonstrated (recorded after this block); the
 # socket line is reasoned, not demonstrated: this authoring environment has no Flower install, and the authoring
@@ -660,8 +700,10 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
 # getfacl prints #effective: without x, because a later chmod of the directory resets mask:: to its group bits.
 # default: entries set the ACL of files created inside, not access to the directory. Recheck after each reboot and
 # deployment change. Substitute your socket's directory and path.
-stat -c '%a %U:%G %u:%g %n' /run/flower /run/flower/flower.sock
-getfacl -p /run/flower
+stat -c '%a %U:%G %u:%g %n' /run/flower /run/flower/flower.sock \
+  || echo 'flower-stat: exited nonzero; continuing'
+getfacl -p /run/flower \
+  || echo 'flower-getfacl: exited nonzero; continuing'
 
 # Argo: REASONED, not demonstrated; the authoring host forbids opening listeners without an isolated
 # network namespace, and has none; no Kubernetes cluster is available.
@@ -676,14 +718,27 @@ getfacl -p /run/flower
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
   -w '\nargo-anon http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-  https://argo.internal:2746/api/v1/workflows/argo
+  https://argo.internal:2746/api/v1/workflows/argo \
+  || echo 'argo-anon: exited nonzero; continuing'
 # Enter a Kubernetes bearer token (client mode) or an Argo session token (SSO mode) with list permission in
 # this namespace. The token goes to curl on stdin, never argv.
-# guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
-python3 -c 'import getpass; t=getpass.getpass("Argo bearer token (without Bearer prefix): "); assert t and all(33 <= ord(c) <= 126 for c in t), "invalid token"; print("Authorization: Bearer " + t)' \
-  | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
-      --header @- -w '\nargo-auth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
-      https://argo.internal:2746/api/v1/workflows/argo
+# getpass prompts without echo on a terminal, so the token enters neither shell history nor set -x
+# tracing; stdin closes the argv channel only, and the account owner and root can still read it in
+# python3, the block's subshell and curl.
+(
+  trap - DEBUG RETURN ERR
+  set +x +a +e
+  set -- "$(python3 -I -c 'import getpass,sys; t=getpass.getpass("Argo bearer token (without Bearer prefix): "); (t and all(33 <= ord(c) <= 126 for c in t)) or sys.exit("invalid token"); print("Authorization: Bearer " + t)'; printf '\n%s' "$?")"
+  case "$1" in
+    *$'\n0') set -- "${1%$'\n'*}" ;;
+    *) echo "argo-auth: credential helper failed; not probing"; exit 2 ;;
+  esac
+  # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
+  printf '%s' "$1" \
+    | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --dump-header - \
+        --header @- -w '\nargo-auth http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
+        https://argo.internal:2746/api/v1/workflows/argo
+) || echo 'argo-auth: skipped or failed; continuing'
 
 # Direct-origin reachability from an UNTRUSTED vantage (run from OUTSIDE your network). Paste the whole block and
 # substitute your origin URL inside the quotes; any HTTP response means the origin is published and is itself the
@@ -697,31 +752,31 @@ python3 -c 'import getpass; t=getpass.getpass("Argo bearer token (without Bearer
   [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 value; not probing"; exit 2; }
   case "$1" in
     *REPLACE_WITH_*|"") echo "substitute your origin URL on the set -- line above; not probing"; exit 2 ;;
-    http://*|https://*) ;;
+    http://*|https://*)
+      curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
+        -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1" ;;
     *) echo "give an http:// or https:// URL; not probing"; exit 2 ;;
   esac
-  curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 -o /dev/null \
-    -w 'origin http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' "$1"
-)
+) || echo 'origin: skipped or failed; continuing'
 ```
 
-A DAG list, flow run, task graph, repository, or worker pool that renders without a credential is a finding; so
+REASONED: preceding block; every probe in the block above, summarized here as findings, per the guide's cited entries Prefect, security settings; Dagster webserver and UI; Apache Airflow running in Docker; Temporal, self-hosted security; Temporal, Web UI configuration reference; Flower configuration; and Argo anonymous fallback when server mode is enabled. It adds no probe of its own; that block's local runs are recorded in the declaration before it, and no orchestrator was available in the authoring environment to show either state. Exposed, a listing answers without a credential; fixed, the anonymous call is refused while the matched authorized call succeeds. A DAG list, flow run, task graph, repository, or worker pool that renders without a credential is a finding; so
 is a Temporal Service that answers `temporal workflow list` with no claim behind it, since the UI login does not
 cover the frontend gRPC path.
 
-The Flower unix-socket directory checks were demonstrated on the authoring host, on tmpfs, with directories only:
+DEMONSTRATED: the Flower socket-directory stat and getfacl checks in the items below, on directories only, exposed (mode 0755, or a named entry granting x) against fixed (mode 0750 with only the base entries). During marking review (October 2026) they were run again in a btrfs scratch directory with uutils stat 0.8.0 and getfacl 2.3.2 and printed the values recorded below; again no socket was created and no Flower process ran. The Flower unix-socket directory checks were demonstrated on the authoring host, on tmpfs, with directories only:
 no socket was created and no Flower process ran.
 
-- `stat -c '%a %U:%G %u:%g %n'` printed `755` for a directory created with mode `0755` and `750` for one created
+- DEMONSTRATED: the mode check, exposed 0755 against fixed 0750; the marking-review run (October 2026, btrfs, uutils stat 0.8.0, getfacl 2.3.2) printed the same values. `stat -c '%a %U:%G %u:%g %n'` printed `755` for a directory created with mode `0755` and `750` for one created
   with `0750`; `getfacl -p` on the `0750` directory listed only `user::rwx`, `group::r-x` and `other::---`.
-- After `setfacl -m u:nobody:--x` on the `0750` directory, `stat` still printed `750`. Only the trailing `+` in
+- DEMONSTRATED: a named entry on the fixed 0750 directory, before and after; the marking-review run (October 2026, btrfs, uutils stat 0.8.0, getfacl 2.3.2) printed the same values. After `setfacl -m u:nobody:--x` on the `0750` directory, `stat` still printed `750`. Only the trailing `+` in
   `ls -ld` and getfacl's `user:nobody:--x` line showed the named entry.
-- After `setfacl -m m::r--`, getfacl printed `user:nobody:--x` with `#effective:---`. While masked, `stat` printed `740`. A later
+- DEMONSTRATED: the mask and chmod interaction, compared with the fixed 0750 directory in the first item, where `getfacl -p` listed only `user::rwx`, `group::r-x` and `other::---`; the marking-review run (October 2026, btrfs, uutils stat 0.8.0, getfacl 2.3.2) printed the same values, and access as nobody was again not tested. After `setfacl -m m::r--`, getfacl printed `user:nobody:--x` with `#effective:---`. While masked, `stat` printed `740`. A later
   `chmod 0750` reset `mask::` to `r-x`, and getfacl printed `user:nobody:--x` with no `#effective:` mark, so
   under acl(5) the entry's `x` is in effect again (access as `nobody` was not tested).
 
-Not run: whether an account outside the proxy's group is refused at the directory, the socket's `777` after each
-Flower start, the `2750` setgid form, a `default:` entry, and the `%u:%g` comparison from inside a container that
+REASONED: the Flower service, cross-account and container checks remain unobserved, per the guide's cited Flower `--unix_socket` passes the fixed mode `0o777` entry (pinned v2.2.0 and v6.5.10, with unix(7), path_resolution(7), user_namespaces(7) and acl(5)). The authoring environment has no Flower install, no container runtime and no privilege to act as a second account, so neither an outside account's refusal at a 0750 directory (fixed) nor its traversal through a named x entry (exposed) was observed. During marking review (October 2026) the 2750 form and a default: entry were run in a btrfs scratch directory: after chmod 2750, uutils stat 0.8.0 printed 2750 (uutils mkdir 0.8.0 given -m 2750 had left 750); getfacl 2.3.2 listed default:user:nobody:--x beside an access ACL of only user::, group:: and other::, and a directory created inside inherited user:nobody:--x as an access entry. Not run: whether an account outside the proxy's group is refused at the directory, the socket's `777` after each
+Flower start, and the `%u:%g` comparison from inside a container that
 shares the directory.
 
 ## Common mistakes
@@ -746,7 +801,7 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Prefect 3.1.8 release announcement, Basic Auth support added to the API and UI: https://github.com/PrefectHQ/prefect/releases/tag/3.1.8
 - Prefect self-hosted server, default port 4200 (rolling documentation, checked September 2026): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
 - Dagster webserver and UI, default local port and no documented built-in auth (rolling documentation, checked September 2026): https://docs.dagster.io/guides/operate/webserver
-- Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its environment-variable routes (`DAGSTER_WEBSERVER_*` through `auto_envvar_prefix`, legacy `DAGIT_*` copied onto them, and the `dagster` CLI's `DAGSTER_CLI` prefix, which Click extends per subcommand, so `dagster dev` reads `DAGSTER_CLI_DEV_*`), and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L81-L96, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/__init__.py#L45-L50, Click's subcommand prefix rule (pinned tag 8.5.0) https://github.com/pallets/click/blob/8.5.0/src/click/core.py#L476-L484, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58
+- Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its environment-variable routes (`DAGSTER_WEBSERVER_*` through `auto_envvar_prefix`, legacy `DAGIT_*` copied onto them, and the `dagster` CLI's `DAGSTER_CLI` prefix, which Click extends per subcommand, so `dagster dev` reads `DAGSTER_CLI_DEV_*`), and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L81-L96, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351, <https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/__init__.py#L45-L50>, Click's subcommand prefix rule (pinned tag 8.5.0) https://github.com/pallets/click/blob/8.5.0/src/click/core.py#L476-L484, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58
 - Apache Airflow security overview (rolling documentation, checked September 2026): https://airflow.apache.org/docs/apache-airflow/stable/security/
 - Apache Airflow, auth manager selection (`[core] auth_manager`, `airflow config get-value core auth_manager`) (Airflow 3.3.2 documentation): https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/auth-manager/index.html
 - Apache Airflow FAB provider, API authentication (`[fab] auth_backends`, independent of the auth manager) (rolling documentation, checked September 2026): https://airflow.apache.org/docs/apache-airflow-providers-fab/stable/auth-manager/api-authentication.html

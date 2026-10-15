@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "e8ed589badae861c5523d3f00b9988f385be3eab8cde37fe6c02c2a1387c1aae",
+  "body_sha256": "61afa40371c3be4eb020d413469c8c6970e9a28a27ea6defa3c0ba95cf00df88",
   "components": {
     "spf": {
       "name": "SPF",
@@ -138,7 +138,7 @@ version_basis: {
     "failure-reports": {"text": "ruf forensic reports can expose content, recipients and reset tokens; omit initially, settle redaction/retention/access before enabling, and authorize external destinations.", "components": ["failure"], "sources": ["failure:s136bbcd8e31a"], "status": "REASONED"},
     "starttls": {"text": "587 submission upgrades with STARTTLS before authentication; an opportunistic fallback can expose credentials to stripping, so require successful validated TLS.", "components": ["submission"], "sources": ["submission:sd78efc15555c"], "status": "REASONED"},
     "implicit-tls": {"text": "465 submission starts with TLS and avoids STARTTLS stripping; RFC 8314 prefers implicit TLS going forward.", "components": ["submission"], "sources": ["submission:sd78efc15555c"], "status": "REASONED"},
-    "tls-validation": {"text": "Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997, absent from its Sources list.", "components": ["submission", "submission-update"], "sources": ["submission:sd78efc15555c", "submission-update:sb5ca35fe0d1b"], "status": "REASONED"},
+    "tls-validation": {"text": "Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997.", "components": ["submission", "submission-update"], "sources": ["submission:sd78efc15555c", "submission-update:sb5ca35fe0d1b"], "status": "REASONED"},
     "port-25": {"text": "25 is inter-server relay or provider submission; identify the endpoint role instead of assuming that port 25 implies no authentication.", "components": ["roles"], "sources": ["roles:s3f9972faf8ff"], "status": "REASONED"},
     "relay-policy": {"text": "Reject unauthenticated untrusted forwarding to non-local recipients while allowing ordinary inbound local delivery and explicitly authorized relay paths.", "components": ["relay"], "sources": ["relay:s1b9349dd99bc"], "status": "REASONED"},
     "submission-auth": {"text": "After TLS, unauthenticated or invalidly authenticated submission must fail while authorized submission succeeds.", "components": ["roles", "submission"], "sources": ["roles:s3f9972faf8ff", "submission:sd78efc15555c"], "status": "REASONED"},
@@ -183,7 +183,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | failure-reports: ruf forensic reports can expose content, recipients and reset tokens; omit initially, settle redaction/retention/access before enabling, and authorize external destinations. | DMARC failure reporting RFC 9991 | REASONED |
 | starttls: 587 submission upgrades with STARTTLS before authentication; an opportunistic fallback can expose credentials to stripping, so require successful validated TLS. | Submission TLS RFC 8314 | REASONED |
 | implicit-tls: 465 submission starts with TLS and avoids STARTTLS stripping; RFC 8314 prefers implicit TLS going forward. | Submission TLS RFC 8314 | REASONED |
-| tls-validation: Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997, absent from its Sources list. | Submission TLS RFC 8314; Submission TLS update RFC 8997 | REASONED |
+| tls-validation: Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997. | Submission TLS RFC 8314; Submission TLS update RFC 8997 | REASONED |
 | port-25: 25 is inter-server relay or provider submission; identify the endpoint role instead of assuming that port 25 implies no authentication. | SMTP submission roles RFC 6409 | REASONED |
 | relay-policy: Reject unauthenticated untrusted forwarding to non-local recipients while allowing ordinary inbound local delivery and explicitly authorized relay paths. | SMTP relay controls RFC 2505 | REASONED |
 | submission-auth: After TLS, unauthenticated or invalidly authenticated submission must fail while authorized submission succeeds. | SMTP submission roles RFC 6409; Submission TLS RFC 8314 | REASONED |
@@ -285,7 +285,7 @@ BIMI is optional display metadata that shows a brand logo in supporting clients;
 
 ## Verify
 
-Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state.
+REASONED: following block; DNS publication, submission TLS and plaintext AUTH refusal, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete and RFC 8997 section 3. No controlled DNS zone or SMTP endpoint is available, and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; openssl s_client -help exited 0 and listed -starttls, -verify_hostname, -verify_return_error and -min_protocol. Published records should match the configured policies; exposed submission accepts plaintext AUTH, while fixed submission refuses it and supports validated TLS before authorized AUTH. These live outcomes remain unobserved. Every probe below is reasoned, not demonstrated: the authoring environment has no DNS control, no SMTP endpoint, and no container runtime, so the outcomes are derived from the cited RFCs rather than observed. For the submission probes, a transport failure or a TLS error is inconclusive, never the fixed state.
 
 ```bash
 # REASONED: DNS and TLS expectations follow the cited RFCs; no DNS control, SMTP endpoint, or container runtime is available.
@@ -313,7 +313,7 @@ openssl s_client -connect smtp.example.com:465 \
   -verify_return_error -min_protocol TLSv1.2 </dev/null
 ```
 
-Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
+REASONED: preceding block; DNS/TLS inspection, message alignment and relay discrimination, per the guide's cited BIND 9.18.39 dig manual, OpenSSL 3.0 s_client, RFC 8314: Cleartext Considered Obsolete, RFC 9989: Domain-based Message Authentication, Reporting, and Conformance (DMARC), RFC 8601: Message Header Field for Indicating Message Authentication Status and RFC 2505: Anti-Spam Recommendations for SMTP MTAs. No controlled DNS, SMTP service, sender or recipient is available. Shell syntax and ShellCheck 0.11.0 exited 0 without diagnostics; local s_client help listed the TLS options. Live outcomes remain unobserved: exposed submission accepts plaintext AUTH or unauthorized relay and lacks aligned enforcement; fixed submission validates TLS, shows receiver-trusted alignment and enforcing policy, rejects external relay with 5xx and preserves authorized submission and local delivery. Prove alignment by sending one benign message to a controlled recipient and reading the receiving system's trusted `Authentication-Results` header (RFC 8601), never a header the message itself supplied: require a passing, aligned SPF or DKIM result. Confirm the enforcement target is really `p=reject` with subdomain coverage and no testing or legacy sampling. Test open-relay rejection only in an operator-controlled environment (an external `MAIL FROM` and a non-local `RCPT TO` should draw a 5xx), and compare it against an authorized submission and ordinary local delivery. These checks inspect DNS, TLS, and message authentication, not an application listener; their expected exposed and fixed outcomes are REASONED from the cited RFCs.
 
 ## Common mistakes
 

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "127e2d2f2c3a14eb944124d5941f969255073e9d7fabd3a0c6c40e42be964bfa",
+  "body_sha256": "1c79a143f4e75a643083392b9a26f97bf050eb4e0e00a375ae2d079cc5e1cffd",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -62,6 +62,13 @@ version_basis: {
         "s3767d400e364": "https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/",
         "sdac90731b97d": "https://argo-cd.readthedocs.io/en/stable/operator-manual/webhook/",
         "s9357e3b59e84": "https://argo-cd.readthedocs.io/en/stable/user-guide/projects/"
+      }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md"
       }
     },
     "flux": {
@@ -138,13 +145,13 @@ version_basis: {
     "flux-oidc": {"text": "generic-oidc, introduced in Flux 2.9, rejects secretRef and validates bearer tokens; constrain issuer validations and audience, whose default is notification-controller.", "components": ["flux", "flux-oidc"], "sources": ["flux:s35bb9a844dcf", "flux-oidc:s1ea193b2b3cc"], "status": "REASONED"},
     "flux-rbac": {"text": "Only kustomize-controller and helm-controller hold cluster-admin; other controllers still have meaningful permissions including Secret access.", "components": ["flux"], "sources": ["flux:s0669b973542c"], "status": "REASONED"},
     "flux-lockdown": {"text": "Use scoped reconciliation ServiceAccounts, --no-cross-namespace-refs and --no-remote-bases; --default-service-account fills an omission, not an explicit serviceAccountName.", "components": ["flux"], "sources": ["flux:sf3f80d9941c8"], "status": "REASONED"},
-    "verify-argo": {"text": "Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC.", "components": ["argo-docs", "argo"], "sources": ["argo-docs:sf5f1c41f89bd", "argo:s6e8c96d23e05"], "status": "REASONED", "verify": [1]},
+    "verify-argo": {"text": "Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC.", "components": ["argo-docs", "argo", "curl"], "sources": ["argo-docs:sf5f1c41f89bd", "argo:s6e8c96d23e05", "curl:s3db522258e44"], "status": "REASONED", "verify": [1]},
     "verify-bootstrap": {"text": "Absence of the bootstrap Secret proves removal of that material, not password rotation.", "components": ["argo-docs"], "sources": ["argo-docs:s2efb9ee633af"], "status": "REASONED", "verify": [1]},
     "verify-inventory": {"text": "Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation.", "components": ["argo", "flux"], "sources": ["argo:s743c8187cbd7", "flux:s493859f3b848"], "status": "REASONED", "verify": [1]},
     "verify-repo-metrics": {"text": "Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control.", "components": ["argo"], "sources": ["argo:s98b27313f615", "argo:s1a13cc06db6d"], "status": "REASONED", "verify": [2]},
     "verify-server-metrics": {"text": "Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive.", "components": ["argo"], "sources": ["argo:s028a4769d6c3", "argo:s743c8187cbd7"], "status": "REASONED"},
     "verify-profiler": {"text": "From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control.", "components": ["argo"], "sources": ["argo:sc52bbd14bff4", "argo:s028a4769d6c3"], "status": "REASONED"},
-    "verify-flux": {"text": "Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent.", "components": ["flux", "python"], "sources": ["flux:s35bb9a844dcf", "python:s7a54556e5dac", "python:s31fccd7d50e5"], "status": "REASONED", "verify": [3]},
+    "verify-flux": {"text": "Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. Sources has no curl --data-binary reference.", "components": ["flux", "python", "curl"], "sources": ["flux:s35bb9a844dcf", "python:s7a54556e5dac", "python:s31fccd7d50e5", "curl:s3db522258e44"], "status": "REASONED", "verify": [3]},
     "verify-receiver-status": {"text": "Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection.", "components": ["flux"], "sources": ["flux:s35bb9a844dcf"], "status": "REASONED"}
   }
 }
@@ -202,13 +209,13 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | flux-oidc: generic-oidc, introduced in Flux 2.9, rejects secretRef and validates bearer tokens; constrain issuer validations and audience, whose default is notification-controller. | Flux documentation unknown; Flux OIDC introduction v2.9 | REASONED |
 | flux-rbac: Only kustomize-controller and helm-controller hold cluster-admin; other controllers still have meaningful permissions including Secret access. | Flux documentation unknown | REASONED |
 | flux-lockdown: Use scoped reconciliation ServiceAccounts, --no-cross-namespace-refs and --no-remote-bases; --default-service-account fills an omission, not an explicit serviceAccountName. | Flux documentation unknown | REASONED |
-| verify-argo: Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC. | Argo CD documentation unknown; Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| verify-argo: Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC. | Argo CD documentation unknown; Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; curl curl-8_14_1 | REASONED |
 | verify-bootstrap: Absence of the bootstrap Secret proves removal of that material, not password rotation. | Argo CD documentation unknown | REASONED |
 | verify-inventory: Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Flux documentation unknown | REASONED |
 | verify-repo-metrics: Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | verify-server-metrics: Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | verify-profiler: From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| verify-flux: Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. | Flux documentation unknown; Python documentation unknown | REASONED |
+| verify-flux: Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. Sources has no curl --data-binary reference. | Flux documentation unknown; Python documentation unknown; curl curl-8_14_1 | REASONED |
 | verify-receiver-status: Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection. | Flux documentation unknown | REASONED |
 <!-- version-basis:end -->
 
@@ -245,7 +252,13 @@ The install generates an initial `admin` password and stores it in cleartext in 
 `argocd-initial-admin-secret`, in the `password` field. Rotate it and then delete the Secret:
 `argocd account update-password` changes the password, and the vendor says the Secret "can safely be
 deleted" afterward since it only holds the bootstrap value. Deleting the Secret does not by itself
-rotate the credential, so change the password first. `admin` is the only built-in user and a
+rotate the credential, so change the password first. Give `argocd account update-password` the current
+and new passwords at the tool's prompt, not as arguments: `--current-password` and `--new-password`
+would put them in its argv. Sources has no reference for the command prompting (its Argo CD user
+management entry is described as covering disabling admin and changing the password), so confirm
+that it does before relying on it. A prompt keeps the passwords out of the command text, shell
+history and shell tracing; the account owner and root can still read them in the `argocd` process
+while it runs. `admin` is the only built-in user and a
 superuser with unrestricted access; once you have configured SSO (OIDC or Dex) and granted named
 roles, disable it with `admin.enabled: "false"` in the `argocd-cm` ConfigMap, and pair Argo CD logins
 with your identity provider's MFA ([mfa.md](mfa.md)).
@@ -285,10 +298,18 @@ from unrelated pods.
 
 Redis is not passwordless in these base manifests: the `secret-init` init container runs
 `argocd admin redis-initial-password`, and Redis receives `--requirepass` from the `auth` key of the
-`argocd-redis` Secret. This is an init container, not a separate Job. No Redis TLS is configured by
-these manifests, and Argo CD's Redis client defaults to `--redis-use-tls=false`; protect that traffic
-and Secret as well as the cached data. The password initializer's implementation and the Redis
-image's bind configuration are absent from this source subset.
+`argocd-redis` Secret. This is an init container, not a separate Job. Holding the password in a
+Secret does not keep it off the command line: as an argument, it is in the Redis process's argv from
+its start until the process overwrites its arguments, if it does, readable through `ps` and
+`/proc/<pid>/cmdline` by other local accounts on the node as well as by the same account and root, and command-line auditing on the node
+can record it beyond that. Where a process overwrites its own arguments, they stay readable until
+the overwrite runs; whether the Redis image does so is not established by this source subset. Treat
+every account that can read the node's processes as able to read the Redis password. If the
+Deployment passes the value through a container environment variable, it is also readable through
+`/proc/<pid>/environ` by the same account and root while Redis runs. No Redis TLS
+is configured by these manifests, and Argo CD's Redis client defaults to `--redis-use-tls=false`;
+protect that traffic and Secret as well as the cached data. The password initializer's
+implementation and the Redis image's bind configuration are absent from this source subset.
 
 Dex's wrapper defaults to TLS for its HTTP endpoint. The generator replaces the `web`, `grpc` and
 `telemetry` mappings: `web.https` uses `/tmp/tls.crt` and `/tmp/tls.key`, or `web.http` is used with
@@ -364,7 +385,13 @@ the RBAC on the Secrets that hold them. Bootstrap credentials are separate from 
 `flux bootstrap github --token-auth` leaves the PAT in the cluster as the `flux-system` Secret in the
 `flux-system` namespace, while `--token-auth=false` provisions an SSH deploy key that is read-only by
 default; prefer the narrowly scoped key, restrict access to that Secret, and pass any bootstrap token
-through stdin or the prompt, never Git or logs. Image automation is the exception to read-only: the
+through stdin or the prompt, never Git or logs. Typed at the prompt, the token stays out of shell
+history and `set -x` tracing. Piped in, a token typed literally into the feeding command enters
+shell history, and with `set -x` on also the trace; a token the feeding command expands from a
+variable reaches the trace with `set -x` on, but history records only the variable's name, which
+does not carry its value (a command that assigned the value literally is in history itself). Either
+way stdin closes the argv channel only: the account owner and root can still read the token in the
+`flux` process. Image automation is the exception to read-only: the
 image-automation-controller commits manifest changes back to Git and needs write access (`--read-write-key=true`
 when it uses the bootstrap deploy key), so scope that credential to the one repository, protect the
 deployment branch, use a dedicated update branch, and restrict who may edit `ImageUpdateAutomation` objects. The source-controller then serves the fetched artifacts to the
@@ -397,16 +424,32 @@ platform git sources that feed the privileged controllers.
 
 ## Verify
 
-Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
+REASONED: section scope and authoring provenance; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the three Verify shell blocks, each with exit 0 and no diagnostics; the stub outcomes and expected exposed and fixed results are recorded at their individual checks, per the guide's cited Argo CD RBAC (anonymous access, policy.default in argocd-rbac-cm), Argo CD Repo-server component selectors and metrics allowance, Argo CD Server allow-all ingress policy, Argo CD Profiler paths and exact file-content gate, and Flux notification Receivers (types and payload validation) entries. A live Argo CD or Flux stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster is also required. The authoring prerequisites and inconclusive outcomes are described in the unchanged note. Every probe below is REASONED, not demonstrated: the authoring environment has no container runtime;
 also, the authoring host forbids opening listeners without an isolated network namespace, and has none;
 there is no Kubernetes cluster. None was stood up in its exposed and fixed states. Each names its expected exposed and fixed result
 so it discriminates against a live install, based on the cited vendor documentation and pinned source readings. A login page, a
 redirect, a `404`, an HTML body, a TLS error, a `kubectl` `Forbidden`, or a missing-CRD error is
 inconclusive, never the fixed state.
 
+REASONED: the backlog scope note and the token-paste instruction for the Argo CD block below; the scope
+note restates backlog row 2.28, and the paste-alone warning follows CONTRIBUTING rule 7's `read`
+exception. No container runtime, isolated network namespace or Kubernetes cluster is available, so no
+Argo CD response was observed. During marking review (October 2026) the block passed bash -n under
+bash 5.3.9 and ShellCheck 0.11.0 without diagnostics.
+In a scratch-local review, the block ran from a file with curl, kubectl, sudo and ss stubbed,
+no network and a pseudo-terminal. Unchanged placeholders and substituted dummy inputs each printed
+'stub curl' twice, 'stub kubectl' six times, 'stub sudo' and 'stub ss' (file exit 0).
+An empty token printed 'supply the token; not probing'; readonly tok printed
+'a readonly tok is set in this shell; not probing'; readonly IFS printed
+'a readonly IFS is set in this shell; not probing'. Each refusal still printed the anonymous
+'stub curl' and all inventory stub lines, and the file exited 0 after inventory continued.
+These stub outputs do not verify Argo CD authorization; the live comparison remains anonymous
+401 versus application JSON listing the expected application with a valid token.
 Backlog row 2.28 retains only the missing-source audits: controller binds, repo-server RPC authorization
 and certificate fallback, Dex runtime authentication and authorization, the Redis image bind and
 password initializer, and the RBAC fallback. Those implementations are not fully traced here.
+In the block below, paste the Argo CD bearer token alone at the hidden prompt: a multi-line paste leaves
+every line after the first for your shell to run.
 
 ```bash
 # REASONED: Argo CD API and cluster inventory checks follow the cited documentation and pinned sources;
@@ -422,6 +465,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 --cacert REPLACE_
 # Run in a subshell with tracing, allexport and errexit OFF, so an inherited `set -x` cannot echo the token,
 # an inherited `set -a` cannot export it (read -s and the stdin header prevent neither), and an inherited
 # `set -e` cannot end the block early.
+# The hidden prompt keeps the token out of shell history; stdin closes the argv channel only, so the
+# account owner and root can still read the token in the subshell and curl.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -449,7 +494,7 @@ kubectl get ingress,httproute,grpcroute,tlsroute -A   # also check NodePort Serv
 sudo ss -tlnp    # speaks only for the node and network namespace it runs in, not the whole cluster
 ```
 
-For internal isolation, inventory actual sockets in each component's network namespace with
+REASONED: following block; internal socket and policy inventory plus the repo-server metrics probe; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash with exit 0 and no diagnostics. With stubbed curl, placeholder, empty and invalid addresses printed 'supply the actual IPv4 pod address; not probing' (exit 2); shortened and wrong-marker assignments printed 'incomplete probe; not probing' (exit 2); with IFS=0 and 20 values (marker plus 19), the quoted count printed 'incomplete probe; not probing' (exit 2), while an unquoted-$# control reached the curl stub and printed 'stub curl' (exit 0); a valid fixture printed 'stub curl' (exit 0). A live repo-server stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster with a supporting CNI, actual component sockets and authorized and unrelated pod vantages is also required. The base policy should return HTTP 200 metrics at both vantages; narrowed policy should return no HTTP response at the unrelated pod while the monitoring pod still returns metrics, per the guide's cited Argo CD Repo-server HTTP metrics and health mux and Argo CD Repo-server component selectors and metrics allowance entries. For internal isolation, inventory actual sockets in each component's network namespace with
 `ss -tlnp`, including ports absent from container declarations. Review rendered policies and CNI
 enforcement; a NetworkPolicy object's presence alone proves neither reachability nor denial.
 The following probe is REASONED for the same missing isolation and cluster capabilities above. Run it inside an authorized monitoring pod and an unrelated pod in another
@@ -474,7 +519,7 @@ NetworkPolicy below supply the exposed-state basis.
 )
 ```
 
-For server metrics, repeat the guarded pod-IP probe above with the actual server pod IP and
+REASONED: preceding block; the preceding repo-server guard and this server metrics and profiler comparison; local marking review (October 2026, Bash 5.3.9) ran bash -n and ShellCheck 0.11.0 -s bash on the guard with exit 0 and no diagnostics, and its stubbed curl and rejection results are recorded in the preceding paragraph. A live Argo CD server stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a Kubernetes cluster with a supporting CNI, the mounted profiler file, and monitoring and unrelated pod vantages is also required. Base metrics should return HTTP 200 at both vantages; narrowed policy should yield no HTTP response at the unrelated pod while the monitoring pod still receives metrics. From the allowed pod the profiler should return 401 disabled, 200 for exact true, and 401 for true plus newline, with metrics still answering, per the guide's cited Argo CD Repo-server component selectors and metrics allowance, Argo CD Server unauthenticated HTTP metrics mux and profiler registration, Argo CD Server allow-all ingress policy, and Argo CD Profiler paths and exact file-content gate entries. For server metrics, repeat the guarded pod-IP probe above with the actual server pod IP and
 port `8083`, keeping `/metrics`. This check is also REASONED for the missing isolated network
 namespace and Kubernetes cluster. Before narrowing the server's allow-all policy,
 expect HTTP 200 and Prometheus metrics without credentials from both pods; afterwards only the
@@ -485,11 +530,28 @@ line when the mounted file contains exactly `true`. In an isolated demonstration
 a failed control is inconclusive. Return profiling to disabled after the demonstration. The pinned
 metrics mux, profiler wrapper and server NetworkPolicy below distinguish these states.
 
+REASONED: the paired Argo CD `401` reading for the Argo CD API block earlier in this section and the Flux receiver checks
+for the block below, per the guide's cited Argo CD anonymous-access and RBAC entries, Flux notification
+Receivers entry and Python HMAC entries, with the paste-alone warning per CONTRIBUTING rule 7's `read`
+exception. No live Argo CD or Flux installation is available, so no receiver response or reconciliation
+was observed. During marking review (October 2026) the Flux block passed bash -n under bash 5.3.9 and
+ShellCheck 0.11.0 without diagnostics.
+In a scratch-local review, the block ran from a file with curl and python3 stubbed, no network
+and a pseudo-terminal. Unchanged placeholders and substituted dummy inputs each printed
+'stub curl' twice (exit 0); an empty secret printed 'supply the HMAC secret; not probing'
+(exit 2); readonly hmac and readonly sig each printed
+'a readonly hmac or sig is set in this shell; not probing' (exit 2); readonly IFS printed
+'a readonly IFS is set in this shell; not probing' (exit 2). The python3 stub supplied a fixed
+signature, so the HMAC computation is not verified. In the local marking review, a python3 stub exiting 1 and one printing no output each printed 'signature generation failed; not probing' (exit 2). With no readable /dev/tty, stdout was empty and Bash printed `<fixture path>: line 16: /dev/tty: No such device or address` on stderr (exit 2). The stub outputs do not verify receiver
+authorization or reconciliation; the live comparison remains rejection without a signature
+versus acceptance and reconciliation with a valid signature over the same body.
 A bare `401` proves less than it looks: a fronting authentication proxy can return it while the
 underlying `users.anonymous.enabled` is still on, so pair the probe with an authenticated request
 through the same route that should succeed, and read the anonymous and `policy.default` settings from
 `argocd-cm`/`argocd-rbac-cm` directly. For Flux, test the webhook with an **unauthenticated** request, not merely an unsigned body, since a valid
-`X-Gitlab-Token` or OIDC token authenticates without a signature. For a `generic-hmac` receiver the
+`X-Gitlab-Token` or OIDC token authenticates without a signature. Paste the receiver's HMAC secret alone at the
+block's hidden prompt: a multi-line paste leaves every line after the first for your shell to run.
+For a `generic-hmac` receiver the
 signature is `X-Signature: sha256=<hex HMAC of the exact body under the receiver's secret>`; send identical
 bytes without it (must be rejected) and then with it (must be accepted and trigger the reconciliation):
 
@@ -497,6 +559,12 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
 # REASONED: Flux webhook checks follow the cited receiver documentation; no live Flux is available.
 # Read the HMAC key without echo.
 # Python's hmac reads the key from stdin; only the non-secret request body is passed in argv.
+# The hidden prompt keeps the key out of shell history and set +x keeps it out of set -x tracing.
+# Stdin closes the argv channel only: the account owner and root can still read the key in the
+# subshell and python3.
+# The signature, a replayable HMAC for that exact body, goes to curl on stdin as a header line (-H @-)
+# and the fixed, non-secret body as an argument. Stdin closes the argv channel only: the account owner
+# and root can still read the signature in the subshell and curl.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -513,8 +581,8 @@ bytes without it (must be rejected) and then with it (must be accepted and trigg
   url='https://flux-webhook.example.com/hook/REPLACE_WITH_PATH'
   printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
     -X POST --data-binary @- -w '\nno-sig http=%{http_code}\n' "$url"          # expect rejected
-  printf '%s' "$body" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
-    -X POST --data-binary @- -H "X-Signature: sha256=$sig" -w '\nsigned http=%{http_code}\n' "$url"  # expect accepted
+  printf 'X-Signature: sha256=%s\n' "$sig" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 20 \
+    -X POST --data-binary "$body" -H @- -w '\nsigned http=%{http_code}\n' "$url"  # expect accepted
 )
 ```
 
@@ -530,6 +598,7 @@ need the guarded-subshell form so an unsubstituted address cannot time out and r
 ## Sources (checked September 2026)
 
 - Python HMAC calculation and binary stdin: https://docs.python.org/3/library/hmac.html and https://docs.python.org/3/library/sys.html#sys.stdin
+- [curl curl-8_14_1 custom headers (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 
 Argo CD source claims below were checked offline at v3.5.3, commit
 `c9c369efcc5b2a0bd720803f8d14a1c3eaddf579`. Retained readthedocs links provide operational guidance;

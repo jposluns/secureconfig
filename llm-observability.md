@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "93bfdc4f83c4b909a31cccd0267de7afb7e8c5fbf7a04b4ebd5c018ba2e41dd4",
+  "body_sha256": "435c166bc69b76c305d34c8245a24ba7a75a97baa711858ea13e90cd74d00392",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -406,11 +406,12 @@ so its default is TLS off, not TLS unsupported. Later versions add per-protocol 
 (`PHOENIX_TLS_ENABLED_FOR_HTTP` and `PHOENIX_TLS_ENABLED_FOR_GRPC`, each overriding `PHOENIX_TLS_ENABLED` for
 its protocol); check your release. Either way terminate TLS deliberately (natively, or at a reverse proxy or tunnel
 per [nginx.md](nginx.md), [caddy.md](caddy.md)), and make sure any plaintext backend port a proxy forwards
-to is not separately reachable.
+to is not separately reachable. For Phoenix with an API key, the proxy or tunnel is itself a key-sending client: it
+must reach Phoenix over loopback in Phoenix's own network namespace or over TLS with verification on (see Verify).
 
 ## Verify
 
-Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
+REASONED: following block; the Collector listener inventory and every probe in the following block (the ss inventory, the Langfuse dashboard reachability check and public API key pair, and the Collector OTLP/HTTP pair), per the guide's cited OpenTelemetry Collector releases v0.161.0 shipped configs, Langfuse public API authentication and OpenTelemetry Collector Contrib basicauthextension entries. No Langfuse, Phoenix, Helicone or Collector deployment and no isolated network namespace were available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with stub curl and ss and no network: with the placeholders it printed the substitute-the-public-key refusal, a tab in the secret key drew the secret-key refusal, dummy keys reached curl only on stdin as an escaped user line, and the OTLP JSON body parsed as an empty resourceSpans list. The inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of ports 3000, 6006, 4317 and 4318 listening, with an empty process column, so it tested no target. Without credentials, expect 401 from Langfuse and 401 or 403 from the Collector, and with them 200 or a 2xx; an anonymous 2xx is the exposed state. Collector live checks remain **REASONED**: the authoring host forbids opening listeners without an
 isolated network namespace, and has none. Expected outcomes follow the cited pinned Collector configuration. Inspect the
 effective config and inventory TCP and UDP sockets in the Collector's network namespace, together
 with container publications and firewall rules. With the shipped config, expect the nine wildcard
@@ -447,6 +448,8 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # The secret key you substitute on the set -- line enters shell history.
   # Use a short-lived project key or clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the keys from set -x
+  # tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_PUBLIC_KEY' 'REPLACE_WITH_SECRET_KEY'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -460,20 +463,30 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
   printf 'user = "%s:%s"\n' "$1" "$2" | curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 \
     -w '\nprojects with-key=%{http_code} exit=%{exitcode}\n' --config - https://langfuse.example.com/api/public/projects
 )
-# Collector OTLP/HTTP, matched pair: WITHOUT the configured auth header expect 401/403; then repeat WITH it
-# (add -H 'Authorization: Bearer <token>', or -u user:pass for basicauth) and expect a 2xx - the positive
+# Collector OTLP/HTTP, matched pair: WITHOUT the configured auth header expect 401/403; then repeat the
+# probe below WITH it, on curl's stdin as described next, and expect a 2xx - the positive
 # control. Run the pair DIRECTLY against the receiver to establish RECEIVER authentication (a proxy can
 # answer 401/2xx while the receiver is open), and test the public ingress separately. Keep the JSON content
 # type (a wrong content type draws a 415 that is not an authentication result). This tests this OTLP/HTTP
 # receiver only; test each enabled OTLP/gRPC receiver separately, and note the Phoenix check further below
 # targets a DIFFERENT server, not this Collector.
+# Never add the credential with -H or -u, which put it in curl's argv, where ps and /proc/<pid>/cmdline
+# show it. For bearertokenauth, pipe printf 'Authorization: Bearer %s\n' "$1" into the probe and add
+# --header @- to its options; for basicauth, pipe printf 'user = "%s"\n' "$1" into it, with "$1" as
+# user:password, and add --config -. Keep -q as curl's first option in either case. Run that repeat in a
+# subshell built like the Langfuse block above, in a fresh, clean shell (CONTRIBUTING rule 7):
+# trap - DEBUG RETURN ERR first, the credential on its
+# set -- line, a refusal of a placeholder, an empty value or a control character, and for basicauth a
+# backslash and then a double quote escaped in "$1" before the printf. The credential on that set -- line
+# enters shell history, so clear that line afterward. Stdin closes the argv channel only: it does not
+# hide the credential from set -x tracing or your own account's view of the process.
 # guard-conventions: allow probe of an illustrative internal host; no reader-substituted placeholder in this probe's argv
 curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 15 -o /dev/null \
   -w 'otlp no-auth=%{http_code} exit=%{exitcode}\n' -H 'Content-Type: application/json' -d '{"resourceSpans":[]}' \
   https://otel-collector.internal:4318/v1/traces
 ```
 
-For Phoenix specifically, prove the default admin credential is dead and that the read API does not answer an
+REASONED: the Phoenix default-credential check and the anonymous read-API probe it introduces, per the guide's cited Arize Phoenix authentication entry (the default admin account and /v1/ REST permissions) and Arize Phoenix OAuth2 sign-up and basic-auth controls entry. No Phoenix instance is available in the authoring environment, so the manual login was not attempted; the expected exposed and fixed results are those stated here. For Phoenix specifically, prove the default admin credential is dead and that the read API does not answer an
 anonymous request. **These checks are REASONED from the cited Phoenix documentation and source, not demonstrated** (no Phoenix instance in the authoring
 environment). The credential
 check is manual, because the vendor documents only the UI login flow and a scripted guess against the wrong
@@ -501,12 +514,12 @@ anonymously (the probe prints the `exitcode` and `errormsg` write-out variables,
 )
 ```
 
-**Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
+REASONED: preceding block; the anonymous Phoenix read-API probe and these outcomes, per the guide's cited Arize Phoenix authentication entry (/v1/ REST permissions) and curl manual entry. No Phoenix instance is available. During marking review (October 2026) the block passed bash -n under bash 5.3.9 and ran with a stub curl and no network: unchanged, it printed its substitute-the-host refusal and exited 1; without its set -- line, the paste-the-whole-block refusal with exit 1; with phoenix.internal:6006 substituted, the stub received https://phoenix.internal:6006/v1/projects. **Exposed:** `/v1/projects` returns project data with no credential (a `2xx`). **Fixed:** the anonymous request
 is rejected with `401` or `403`. Anything else (a `404`, a redirect to a login page, a `415`, or a transport
 error) is inconclusive and does not prove authentication is on; fall back to the credential check above and to
 the listener inventory. Substitute a bracketed literal for an IPv6 host in the URL, for example `[::1]:6006`.
 
-The OTLP/HTTP ingestion path CAN be probed without hand-encoding a span: an empty `ExportTraceServiceRequest`
+REASONED: the OTLP/HTTP admission and OTLP gRPC Export checks, per the guide's cited Arize Phoenix authentication entry, Arize Phoenix gRPC OTLP Export authorization entry and pinned Phoenix gRPC bind entry. They need a running Phoenix and, for 4317, an OTLP gRPC client with the protobuf descriptor; the authoring environment has no Phoenix and no protobuf or gRPC Python package, so live HTTP admission, protobuf encoding and gRPC Export were not exercised. During marking review (October 2026), bash ran the HTTP recipe with a stub curl on PATH and no network, anonymously and with a dummy bearer header supplied through stdin using --header @-. In both calls the stub received --data-binary followed by an empty argument, -H followed by Content-Type: application/x-protobuf, and https://phoenix.internal:6006/v1/traces; the anonymous call had empty stdin and no authorization header, and the second received Authorization: Bearer dummy-write-key followed by a newline on stdin. Both stub calls exited 0. This checks local HTTP request construction only, not protobuf serialization, Phoenix admission or gRPC behaviour. The expected exposed and fixed results are those stated here. The OTLP/HTTP ingestion path CAN be probed without hand-encoding a span: an empty `ExportTraceServiceRequest`
 is a zero-length protobuf body, so send `--data-binary ''` with `Content-Type: application/x-protobuf` to
 `/v1/traces` on the HTTP port (6006) and read the status - anonymously it must be rejected (401/403), and
 with a WRITE-authorized `Authorization: Bearer` key (a system key, or a user key allowed to write traces,
@@ -527,7 +540,45 @@ setting: isolate it in a private container network, restrict or omit its host pu
 namespace, publications, and firewall separately from the HTTP port. A wildcard listener inside an isolated
 namespace is not by itself public exposure.
 
-A dashboard that renders traces, prompts, or provider keys without a login is a finding; so is an OTLP port
+REASONED: transport for the Phoenix API key in the OTLP checks above. The requirement applies the bearer-key
+rule in [machine-auth.md](machine-auth.md), and the Phoenix TLS entries in Sources describe only the server
+settings named here. No Phoenix instance is available, so no plaintext-versus-TLS run was made and Phoenix
+transport and authentication were not exercised. During review, only the key-handling pattern at the end of this
+paragraph was run, in bash under `bash -x` with a stub curl and a dummy key: the subshell traced only its
+`trap - DEBUG RETURN ERR` and `set +x` lines, none carrying the key; curl's argv held no key and its stdin held
+the `Authorization: Bearer` line; and a placeholder, an empty value, a line feed, a carriage return or a tab was
+refused before any curl call. With `set +x` removed, the trace showed the key on two lines, the `set --` line
+and the `printf` line, and an interactive run with history enabled kept the key in the history entry. Outside
+the one plaintext exception below, send a Phoenix API key only over TLS: use an `https://` URL for `/v1/traces`
+with certificate verification left on, and a TLS channel for the gRPC Export on 4317, terminated by Phoenix
+itself (`PHOENIX_TLS_ENABLED=True` with `PHOENIX_TLS_CERT_FILE` and `PHOENIX_TLS_KEY_FILE`, or the per-protocol
+`PHOENIX_TLS_ENABLED_FOR_HTTP` and `PHOENIX_TLS_ENABLED_FOR_GRPC` where your release has them) or by a reverse
+proxy or tunnel in front of it. Phoenix defaults to TLS off, so a plain `http://` URL or a plaintext gRPC
+channel puts the Bearer key on the wire in cleartext, and a private network is not a substitute: anyone who can
+observe that network reads the key. The plaintext exception, this guide's reasoning rather than machine-auth.md's
+rule, is a client on the Phoenix host using loopback in Phoenix's own network namespace, for example a direct
+probe of a plaintext listener behind a TLS-terminating proxy. A TLS-terminating proxy or tunnel that forwards the
+key to Phoenix is itself a client that sends the key, so it must use that loopback or TLS with verification on.
+**Exposed:** where any client sends the key other than over that loopback, the `https://` probe of the endpoint
+those clients use (Phoenix's port when Phoenix terminates TLS, otherwise the proxy or tunnel) fails the TLS
+handshake against a plaintext listener, or a client sends the key over an `http://` URL or a plaintext gRPC
+channel other than loopback in Phoenix's own network namespace. **Fixed:** that probe, where it applies,
+completes with verification on, and every client that sends the key, including each 4317 gRPC exporter, uses TLS
+with verification on, other than one using loopback in Phoenix's own network namespace (Sources names no gRPC
+client TLS option, so confirm it in that client's configuration). Sources has no Phoenix reference for an API-key
+transport requirement or for an OTLP gRPC client's TLS or CA settings, so this guide names no client option for
+them: for gRPC clients using TLS, trust the CA for the certificate presented by the endpoint your client connects
+to, whether Phoenix or the TLS-terminating proxy or tunnel. When you script the HTTP
+probe, keep the key out of argv and tracing. In a fresh, clean shell (CONTRIBUTING rule 7), build a subshell
+like the Langfuse block above and add `set +x` straight after its `trap - DEBUG RETURN ERR` line, so tracing is
+off before the key arrives on the `set --` line; refuse a placeholder, an empty value or a control character;
+then pipe `printf 'Authorization: Bearer %s\n' "$1"` into curl with `--header @-`, never `-H` with the key and
+never the key in the URL. Require exactly one value, omit the Langfuse block's two escaping lines (they apply
+only to `--config -`), send the empty `application/x-protobuf` POST described above, and delete the history
+entry for the pasted block. The key on that `set --` line enters shell history, and stdin keeps it out of argv
+only, not out of your own account's view of the process.
+
+REASONED: a summary of the findings the checks above look for, per the guide's cited Langfuse authentication and SSO, Arize Phoenix authentication and OpenTelemetry Collector security best practices entries; it adds no probe of its own, and no deployment was available to show either finding. Exposed, a dashboard or OTLP port answers without a credential; fixed, both require one. A dashboard that renders traces, prompts, or provider keys without a login is a finding; so is an OTLP port
 that accepts spans with no credential at all.
 
 ## Common mistakes

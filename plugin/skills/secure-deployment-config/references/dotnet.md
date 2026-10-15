@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "9d0e36ae7a3e5baed014b5e060adef6d2c09c78d38e8b31cf7320d856a4be63a",
+  "body_sha256": "f41362bc0a493432ee704b2a04810990bfa519aabf722dc1cac79bc3b5fd1c89",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -136,7 +136,7 @@ version_basis: {
     "authorization": {"text": "Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages.", "components": ["docs"], "sources": ["docs:sa3c22a38f4cb"], "status": "REASONED"},
     "login-limit": {"text": "NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing.", "components": ["rate-min"], "sources": ["rate-min:sd3fef8f45066"], "status": "REASONED"},
     "oidc": {"text": "Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json.", "components": ["docs"], "sources": ["docs:s592dc85bb71f"], "status": "REASONED"},
-    "mfa": {"text": "Enforce MFA at the provider or fronting identity layer per linked guides; provider MFA configuration lacks a direct listed source.", "components": ["docs"], "sources": ["docs:s592dc85bb71f", "docs:s2d5a930aac35"], "status": "REASONED"},
+    "mfa": {"text": "Enforce MFA at the provider or fronting identity layer per linked guides. The fronting identity layer's MFA option has no listed source.", "components": ["docs"], "sources": ["docs:s592dc85bb71f", "docs:s2d5a930aac35"], "status": "REASONED"},
     "client-validation": {"text": "Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback.", "components": ["docs"], "sources": ["docs:s6afc0255098f"], "status": "REASONED"},
     "client-ca": {"text": "On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots.", "components": ["runtime", "openssl", "dotnet-rolling"], "sources": ["dotnet-rolling:s640872a17a8a", "runtime:s29ee940c94b9", "openssl:scac6dada5f6a"], "status": "REASONED"},
     "developer-errors": {"text": "Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1", "net10:s61afb89034f8"], "status": "REASONED"},
@@ -221,7 +221,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | authorization: Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages. | ASP.NET Core documentation .NET 10 | REASONED |
 | login-limit: NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing. | ASP.NET Core rate-limiter minimum .NET 7 | REASONED |
 | oidc: Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json. | ASP.NET Core documentation .NET 10 | REASONED |
-| mfa: Enforce MFA at the provider or fronting identity layer per linked guides; provider MFA configuration lacks a direct listed source. | ASP.NET Core documentation .NET 10 | REASONED |
+| mfa: Enforce MFA at the provider or fronting identity layer per linked guides. The fronting identity layer's MFA option has no listed source. | ASP.NET Core documentation .NET 10 | REASONED |
 | client-validation: Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback. | ASP.NET Core documentation .NET 10 | REASONED |
 | client-ca: On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots. | NET runtime source v10.0.0; OpenSSL documentation 3.0; .NET documentation (rolling) unknown | REASONED |
 | developer-errors: Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment. | ASP.NET Core .NET 10 | REASONED |
@@ -551,7 +551,7 @@ ss -tlnp   # read every listener; dotnet: behind a proxy: 127.0.0.1 and ::1 only
 
 For the `/api` check, the route must exist, require authorization, and use the app's cookie authentication scheme for challenge and forbid. With the default .NET 10 cookie handler, known API endpoints, including `[ApiController]` endpoints, return `401` for unauthenticated requests and `403` for authenticated users denied access. This changed in .NET 10; ordinary browser-page challenges can still redirect. An OIDC challenge scheme or customized cookie events can also change the response. Confirm that an authorized request reaches the expected API before interpreting a denial.
 
-### Additional deployment checks
+### Additional deployment checks (REASONED: deployment-check scope and guarded-paste/error interpretation follow the cited .NET 10 and curl behavior; no .NET runtime, deployed application, external vantage or replicas. Bash 5.3.9 bash -n accepted all six Verify shell fences with exit 0 and no output; this is syntax only, not an observed application response; a separate local guard record for the five child-section blocks, in order from Production error disclosure through Cookie continuity across restart and replicas: Bash 5.3.9 ran each complete block with curl replaced by printf LOCAL_CURL, using https://fixture.internal/check, an empty value, the original placeholder, set -- without arguments, and bad value; the valid URL and bad value each emitted respectively 2, 2, 1, 1 and 2 markers, empty and placeholder inputs printed "substitute the value inside the single quotes; not probing", and no arguments printed "paste the whole block, including its set -- line; not probing"; those three rejected inputs emitted no marker, all 25 cases exited 0 with no stderr, and no service, listener or host was contacted; these are shell-guard observations only, not URL validation or deployment comparisons)
 
 **REASONED, .NET 10 LTS:** The following checks have not been demonstrated: the authoring environment has no .NET runtime or container runtime, and no deployed application or replica infrastructure. Expected exposed and corrected outcomes rest on the cited .NET 10 documentation. Shell checks do not establish server behavior.
 

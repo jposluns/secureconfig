@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "b288a888fa27b5512793086b4a0e52fc2634a93ec63774febcb4f85d70c73f23",
+  "body_sha256": "fe91d990b7d6e65780106bd5b6a4a26c0b626484fddc6462b5fa98fc1e78addf",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -351,7 +351,7 @@ server {
 }
 ```
 
-Substitute the hostname and certificate paths. Generate password entries with `htpasswd -B -C 12`, using its interactive password prompt and the intended password-file path and username. Bare `-B` defaults to bcrypt cost 5, below OWASP's minimum of 10; regenerate existing cost-5 hashes. Protect the password file and its backups. See [nginx Basic authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html), [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html), and [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
+Substitute the hostname and certificate paths. Generate password entries with `htpasswd -B -C 12`, using its interactive password prompt and the intended password-file path and username. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `htpasswd` process while it runs. Bare `-B` defaults to bcrypt cost 5, below OWASP's minimum of 10; regenerate existing cost-5 hashes. Protect the password file and its backups. See [nginx Basic authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html), [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html), and [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
 
 Authentication is at `server` scope so every permitted location inherits it. Do not disable it in an added inference location. A denied path or method can return 404 or 405 before authentication; those responses do not imply access to Ollama.
 
@@ -387,7 +387,7 @@ ollama.example.com {
 }
 ```
 
-Generate the hash with `caddy hash-password`. The exact matcher and fallback keep other paths private. Stock Caddy has no built-in rate-limiting directive; provide the admission and resource controls in C6 through a suitable fronting layer before publishing this alternative. See [Basic authentication](https://caddyserver.com/docs/caddyfile/directives/basic_auth), [request matchers](https://caddyserver.com/docs/caddyfile/matchers), [exclusive handles](https://caddyserver.com/docs/caddyfile/directives/handle), and [reverse proxy configuration](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy).
+Generate the hash with `caddy hash-password`. Run it without `--plaintext`, which would put the password in its arguments, and enter the password at its prompt. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `caddy` process while it runs. The exact matcher and fallback keep other paths private. Stock Caddy has no built-in rate-limiting directive; provide the admission and resource controls in C6 through a suitable fronting layer before publishing this alternative. See [Basic authentication](https://caddyserver.com/docs/caddyfile/directives/basic_auth), [request matchers](https://caddyserver.com/docs/caddyfile/matchers), [exclusive handles](https://caddyserver.com/docs/caddyfile/directives/handle), and [reverse proxy configuration](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy).
 
 ### Bearer-only clients
 
@@ -696,15 +696,15 @@ Add C4's explicit origin only if required, and remove inherited unwanted origins
 
 ## Verify
 
-All service-behavior checks below are **REASONED, not demonstrated**. The authoring environment has no Ollama, Docker, Podman, nginx, or Caddy executable in `PATH`, no Ollama runtime or GPU, and no supplied authorized deployment, external observer, credentials, or model fixtures. Filesystem and network restrictions prevent provisioning a live comparison here. **Lack of a GPU alone would not prevent listener, API, CORS, or management testing.**
+REASONED: service-comparison scope from the cited v0.34.2 sources; no authorized live deployment or external observer. No service was started or contacted for these checks. All service-behavior checks below are **REASONED, not demonstrated**. The authoring environment has no Ollama, Docker, Podman, nginx, or Caddy executable in `PATH`, no Ollama runtime or GPU, and no supplied authorized deployment, external observer, credentials, or model fixtures. Filesystem and network restrictions prevent provisioning a live comparison here. **Lack of a GPU alone would not prevent listener, API, CORS, or management testing.**
 
-Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
+REASONED: mixed local-validation evidence and unobserved service comparisons from the cited v0.34.2 sources; a fresh local run with Bash 5.3.9 bash -n and ShellCheck 0.11.0 run with -s bash accepted all four Verify shell fences with exit 0 and no output, establishing only syntax and lint results; native proxy parsing and live comparisons remain unobserved without the binaries and an authorized deployment; the following validation account is historical, including its 74-case count, guard-scanner result and drop-in gate statement, and that count was not re-established here. Local validation covered the four Bash fragments with `bash -n`, ShellCheck 0.11.0, and the repository's strict guard-convention scanner. Guard-only tests rejected 74 invalid or incomplete positional-input cases under `bash -u`; four substituted controls reached local markers in place of the operational branch. These observations establish shell and outer-guard behavior only. Native proxy parsing remains unconfirmed; every service comparison is REASONED from the cited v0.34.2 sources and vendor documentation. The whole-corpus gate suite was not run against this drop-in.
 
-Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
+REASONED: shell preparation and limitations from the printed guards and curl reference. Local Bash 5.3.9 ran bash -n on all four Verify shell fences with exit 0 and no output. For each complete subshell, operational commands were replaced with local printf markers; valid controls were ollama.service/NONE, 192.168.50.7, and https://fixture.internal/api/chat with readable disposable JSON and empty mode-0600 client configuration files, POST and application/json where applicable. Replacing the first value after the marker with an empty string or bad value, keeping the original placeholders, or using set -- without arguments produced no operational marker and exit 1. The valid controls reached their markers; V6 wrote eight LOCAL_CURL status files in a mode-0700 directory. This tests only those shell cases, not address syntax, client configuration acceptance, inference, or deployment isolation. Paste complete blocks, including the parentheses, marker, and count checks. Substitute inside the single quotes on each `set --` line; a literal apostrophe requires shell escaping. The guards assume normal shell builtins and cannot protect a fragment pasted from below them. Use curl 7.75.0 or later for the displayed `exitcode` and `errormsg` variables.
 
-Use isolated exposed and fixed deployments with disposable fixtures. Do not make production public to obtain a baseline. Record binary/image identity, effective configuration, observer location, HTTP results, completed response bodies, upstream observations, state changes, and cleanup without secrets.
+REASONED: comparison procedure from the cited service and proxy sources; isolated exposed/fixed deployments, identities and observers are unavailable. Use isolated exposed and fixed deployments with disposable fixtures. Do not make production public to obtain a baseline. Record binary/image identity, effective configuration, observer location, HTTP results, completed response bodies, upstream observations, state changes, and cleanup without secrets.
 
-### V1. Inspect the listener, identity, and store
+### V1. Inspect the listener, identity, and store (REASONED: listener, systemd/container identity, publication, ownership, ACL and writable-store comparisons, with administrative and inference positive controls, follow C1 and C5; no deployed store, service identity or external observer. Local command-marker tests above do not inspect a deployment)
 
 **REASONED:** no deployed service, container runtime, store, or test identities are available. Run this on the deployment host with enough privilege to inspect processes and sockets. Use `NONE` for a host-only deployment:
 
@@ -741,7 +741,7 @@ From an unrelated unprivileged test account, run `test -w /var/lib/ollama/models
 
 Expected behavior follows C1's [Docker publication reference](https://docs.docker.com/engine/network/port-publishing/) and C5's [Linux service instructions](https://github.com/ollama/ollama/blob/v0.34.2/docs/linux.mdx).
 
-### V2. Probe direct-backend bypass from another machine
+### V2. Probe direct-backend bypass from another machine (REASONED: direct-origin reachability and approved-proxy inference comparison follow C1 binding documentation; no live target or external observer. The local address-guard cases above establish no network outcome)
 
 **REASONED:** no deployed target or disallowed external observer is available. Use the actual deployment address, not a documentation address. For IPv6, supply the actual address enclosed in square brackets inside the quotes. Repeat for each deployed address family and publication:
 
@@ -813,7 +813,7 @@ Use the normal trust store when appropriate. Escape backslashes and double quote
 
 Inspect these files before use: allow only the intended authentication, trust, client-certificate, and test-header settings. Do not include URLs, redirects, proxy settings, insecure TLS options, extra transfers, or request/output overrides. An intentional `resolve` entry can support a hostname-negative test against the same server address. The files are trusted test inputs, not a safe format for untrusted instructions.
 
-The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
+The following reusable probe reads the client configuration on stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of curl. It supports the concrete operations in V3 through V8. Use `/dev/null` as the body for GET, HEAD, and OPTIONS. Use `application/octet-stream` for blob bytes and `application/json` for JSON fixtures.
 
 ```bash
 (
@@ -882,7 +882,7 @@ A streamed 200 alone does not prove model work succeeded. Inspect the complete r
 
 These comparisons follow C2's [authentication reference](https://docs.ollama.com/api/authentication), [nginx Basic authentication](https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html), [client-certificate verification](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_verify_client), and the [curl manual](https://curl.se/docs/manpage.html).
 
-### V4. Exercise management authorization and blob writes
+### V4. Exercise management authorization and blob writes (REASONED: management, account, experimental and blob operations, public denial and private administrative success, cleanup and public-chat controls follow C3 API methods and route registration; no isolated model store, registry, identities or proxy. Python 3.14.4 json.loads accepted the four literal JSON bodies in this table; that is syntax only. sha256sum on a disposable file containing OLLAMA_VERIFY_FIXTURE followed by LF returned 9b18adfd436acae378346d9452646db562690662d43ded1df7adceea38540c95; no blob upload or existence check ran)
 
 **REASONED:** no isolated model store, registry fixtures, administrative identity, or live proxy is available. Use V3's reusable probe against three paths: an isolated exposed catch-all proxy, the fixed public inference proxy, and the private administrative endpoint. Direct loopback requests run on the service host with an empty client configuration.
 
@@ -908,7 +908,7 @@ Use proxy upstream-status records or equivalent observation to distinguish a pro
 
 The discriminators are C3's [API methods](https://github.com/ollama/ollama/blob/v0.34.2/docs/api.md), [route registration](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go), and [create validation](https://github.com/ollama/ollama/blob/v0.34.2/server/create.go).
 
-### V5. Compare browser origins and preflights
+### V5. Compare browser origins and preflights (REASONED: required/unrelated/built-in/missing Origin, preflight, actual browser calls and authenticated/anonymous POST comparisons follow C4 AllowedOrigins and C2 proxy policies; no live backend, proxy or browser fixture. The header text was not exercised by a browser)
 
 **REASONED:** no live backend or authorized browser frontend is available. Use V3 with OPTIONS, `/dev/null`, and a client configuration containing these non-secret test headers:
 
@@ -926,9 +926,9 @@ For the C2 POST-only proxy, an OPTIONS request is not forwarded; the exact statu
 
 Repeat the actual POST with and without Origin. Removing Origin must not bypass proxy authentication; a non-browser caller with valid credentials is not constrained by CORS. The built-in origins remain as described by C4's [AllowedOrigins implementation](https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go).
 
-### V6. Exercise finite admission and resource budgets
+### V6. Exercise finite admission and resource budgets (REASONED: admission, body size, model loading, expiry, parameter overrides, queue capacity and recovery comparisons follow C6 scheduler/types and nginx limit references; no inference runtime, loaded model, capacity fixture or GPU. Local V6 marker files above demonstrate child completion only, not either limiter or successful inference)
 
-**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Use only an isolated capacity test with the same small, valid chat fixture as V3:
+**REASONED:** no inference runtime, loaded models, capacity fixture, or GPU is available. The following probe launches exactly eight requests, each bounded to 120 seconds, waits for every child, and retains separate results. Like V3's reusable probe, it reads the client configuration on each curl's stdin, keeping credentials off curl's argv. No credential is typed into the command, and the block's `set +x` turns tracing off before it reads the file, so neither shell history nor `set -x` tracing records the credentials; write the file with an editor, not a shell command, so preparing it does not put them in history either. Stdin closes the argv channel only: the account owner and root can still read the file and the memory of the block's subshell, whose placeholder check reads the file, and of each curl. Use only an isolated capacity test with the same small, valid chat fixture as V3:
 
 ```bash
 (
@@ -995,7 +995,7 @@ The public four-active-request budget may prevent a single test client from fill
 
 These comparisons follow C6's [scheduler](https://github.com/ollama/ollama/blob/v0.34.2/server/sched.go), [request override types](https://github.com/ollama/ollama/blob/v0.34.2/api/types.go), and nginx [request](https://nginx.org/en/docs/http/ngx_http_limit_req_module.html), [connection](https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html), and [body](https://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size) limits.
 
-### V7. Check provenance, cloud disablement, and administrative egress
+### V7. Check provenance, cloud disablement, and administrative egress (REASONED: digest approval, private inventory, public mutation denial, allowed/disallowed registry transfers, cloud-enabled/disabled inference and local-model controls follow C7 and C8; no approved artifacts, controlled registries, cloud identity or live server)
 
 **REASONED:** no approved artifact inventory, controlled registry, cloud credentials, or live server is available.
 
@@ -1007,7 +1007,7 @@ For C8, use V3's POST `/api/chat` with a currently authorized cloud-model fixtur
 
 Sources: C7's [model inventory](https://docs.ollama.com/api/tags) and [transfer implementation](https://github.com/ollama/ollama/blob/v0.34.2/server/images.go), and C8's [cloud-disable documentation](https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx).
 
-### V8. Inspect diagnostics, profiling, and prompt captures
+### V8. Inspect diagnostics, profiling, and prompt captures (REASONED: public/private diagnostics, actual profiling availability, public-chat controls and debug-enabled/disabled capture inspection follow C9 router/logger; no running binary, service temporary namespace or diagnostic fixtures. Python 3.14.4 json.loads accepted the literal show-request body; it establishes syntax only)
 
 **REASONED:** no running binary, diagnostic fixtures, or service temporary directory is available.
 
@@ -1031,13 +1031,13 @@ For logging, use an isolated service and a unique non-sensitive prompt. With req
 
 Expected behavior follows C9's [router](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go) and [request logger](https://github.com/ollama/ollama/blob/v0.34.2/server/inference_request_log.go).
 
-### Native proxy parsing
+### Native proxy parsing (REASONED: native acceptance and its limits follow the linked nginx/Caddy command references; neither executable is on PATH and deployment certificate/password files are unavailable. Neither native validation command ran)
 
 Parsing is an offline check, but it was **not demonstrated here** because nginx and Caddy are absent. On the deployment host, run `nginx -t` against the assembled configuration and real referenced certificate/password files before reloading. For the Caddy alternative, run `caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile`.
 
 These commands validate configuration acceptance; they do not prove authentication, management denial, TLS enforcement, or resource behavior. Avoid sharing `nginx -T` output from a bearer configuration because it contains the shared token. See the [nginx command reference](https://nginx.org/en/docs/switches.html) and [Caddy validation reference](https://caddyserver.com/docs/command-line#caddy-validate).
 
-### Verification scope and local work
+### Verification scope and local work (REASONED: service-comparison and native-parsing prerequisites from V1-V8 and the cited sources; no authorized deployment, external observer, service credentials or native proxy binaries. Historical local observations above are not new deployment evidence)
 
 | Check scope | Status | Procedure and prerequisites |
 |---|---|---|

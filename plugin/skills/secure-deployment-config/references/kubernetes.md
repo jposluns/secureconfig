@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "af67534b412cec41d692c27ec6fd7964d3b9e7a04039b56fc8672259e3a66397",
+  "body_sha256": "1e80b5ac6d9df2701bae1929db0d6cb2f9ce6416a58415b189d509640b8a44c8",
   "components": {
     "kubernetes": {
       "name": "Kubernetes documentation",
@@ -357,13 +357,16 @@ spec:
 
 ## 3. Authentication at the entry point
 
-Gateway API defines no authentication filter; each implementation adds its own. Envoy Gateway's `SecurityPolicy` attaches basic auth to a Gateway, HTTPRoute, or GRPCRoute from a Secret holding an htpasswd file. Its docs state that only SHA hashes are supported, which falls short of the bcrypt rule in [authentication.md](authentication.md): treat it as a gate over TLS with long random passwords, and keep the application's own login in place.
+Gateway API defines no authentication filter; each implementation adds its own. Envoy Gateway's `SecurityPolicy` attaches basic auth to a Gateway, HTTPRoute, or GRPCRoute from a Secret holding an htpasswd file. Its docs state that only SHA hashes are supported, which falls short of the bcrypt rule in [authentication.md](authentication.md): treat it as a gate over TLS with long random passwords, and keep the application's own login in place. At each of the block's two hidden prompts, paste the password alone: a multi-line paste feeds every line after the first to the next prompt or to your shell, which runs it.
 
 ```bash
 # -b would take the password from the command line, where `ps` and your shell history can
 # read it. Apache's own page says of it: "This option should be used with extreme care,
 # since the password is clearly visible on the command line. For script use see the -i
 # option." -i reads it from stdin instead. Envoy Gateway's example uses -b; this does not.
+# The hidden prompts keep the password out of shell history and set +x keeps it out of set -x
+# tracing. Stdin closes the argv channel only: the account owner and root can still read it in the
+# subshell and htpasswd.
 (
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   set +x +a +e
@@ -377,18 +380,38 @@ Gateway API defines no authentication filter; each implementation adds its own. 
   [ -n "$PASSWORD" ] || { echo 'no password supplied; not creating the secret'; exit 2; }
   [ "$PASSWORD" = "$confirm" ] || { echo 'the two entries differ; not creating the secret'; exit 2; }
   set -o pipefail  # so a failure anywhere in a pipeline below, not only in htpasswd, fails it
-  printf '%s' "$PASSWORD" | htpasswd -cis .htpasswd admin ||
+  # htpasswd -c writes a file. It goes in a private directory from mktemp -d (mode 0700), not the
+  # current one. The EXIT trap removes that directory when the subshell reaches its end, whatever
+  # kubectl returns, or leaves through one of the `exit` lines below, and the HUP, INT and TERM
+  # traps after it turn a hangup, Ctrl-C or SIGTERM into such an exit. SIGKILL leaves the directory
+  # and its .htpasswd behind, as can a signal before those traps are set, and in some measured runs
+  # where the shell running the block was the terminal's session leader and was itself ended by the
+  # signal (run directly as the terminal's process, without job control), so its exit hung up the
+  # terminal, a hangup or SIGTERM did too; if that happens, remove it from your temporary directory
+  # by hand.
+  set -- "$(mktemp -d)"
+  [ -d "$1" ] || { echo 'cannot create a private directory; not creating the secret'; exit 2; }
+  trap 'rm -rf -- "$1"' EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+  printf '%s' "$PASSWORD" | htpasswd -cis "$1/.htpasswd" admin ||
     { echo 'password-file creation failed; not creating the secret'; exit 2; }
   # -i does no verification, so the block asks twice and refuses a mismatch; `-vi` below then
   # confirms the file holds that value, and the secret is created only if it does. Paste the block by
   # itself: the shell reads the whole subshell before either `read` runs. Without bracketed paste,
   # lines pasted after the closing `)` feed the two prompts instead, and the block refuses unless both
   # are identical; with bracketed paste, they run as commands once the block finishes.
-  printf '%s' "$PASSWORD" | htpasswd -vi .htpasswd admin ||
+  printf '%s' "$PASSWORD" | htpasswd -vi "$1/.htpasswd" admin ||
     { echo 'htpasswd could not verify the file; not creating the secret'; exit 2; }
-  kubectl create secret generic app-basic-auth --from-file=.htpasswd
+  # Sources has no kubectl reference for the key name this gives the file in the Secret, and the
+  # runs recorded below used a stub kubectl, so before Envoy Gateway uses app-basic-auth, confirm
+  # that the Secret has a .htpasswd key, listing its key names only and never printing its value.
+  kubectl create secret generic app-basic-auth --from-file="$1/.htpasswd"
 )
 ```
+
+On 2026-10-13 (UTC), with Bash 5.3.9 on a pty, a dummy password typed at the hidden prompts, stub `htpasswd` and `kubectl` executables, and logging wrappers around the real `mktemp` and `rm`, the block removed its directory after normal completion, a refused creation, a refused verification and a failed `kubectl`, and after Ctrl-C, SIGHUP or SIGTERM sent to its process group while `kubectl` waited, both pasted into an interactive shell and run as a script; SIGKILL left the directory and its `.htpasswd` behind. Where the shell running the block was the terminal's session leader (run directly as the terminal's process, without job control), 50 repeats removed the directory after 50 Ctrl-C, 49 SIGHUP and 50 SIGTERM runs, and an earlier 20 repeats of the same commands after 20, 19 and 17; 50 repeats of the block without the HUP, INT and TERM traps removed it after 50, 2 and 1; in the SIGHUP and SIGTERM runs that shell was itself ended by the signal, so its exit hung up the terminal. The dummy password reached the `htpasswd` stub only on stdin, never in any stub's argv, the `bash -x` trace or the terminal output. Stubs stood in for the cluster, so these runs do not show which key `kubectl` gives the file in the Secret.
 
 `-s` is SHA-1, which Apache describes as "insecure by today's standards", and it is not a
 choice here: Envoy Gateway's basic auth documentation says "only SHA hash algorithm is
@@ -513,7 +536,7 @@ are retained context; this offline source audit did not recheck their current co
 
 ## Verify
 
-**REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
+REASONED: following block; workload exposure, Gateway TLS/authentication, API targeting and access, and node/kubelet scans, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Kubernetes v1.37.1 server, Amazon EKS cluster endpoint access and curl exit codes. No Kubernetes cluster or external probe hosts are available; local listeners and isolated network namespaces are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five YAML blocks parsed. The embedded endpoint parser printed expected host, port and URL for five valid cases, rejected empty input with cannot parse an API server out of: and rejected a nonnumeric port with ValueError. Live exposed and fixed outcomes described below remain unobserved. **REASONED, not demonstrated:** the live checks below need a cluster, which is unavailable;
 the authoring host forbids opening listeners without an isolated network namespace, and has none.
 The existing commands state the expected workload and API outcomes. For the node scans, an exposed
 kubelet is expected to show 10250 open and, when enabled, 10255 open; after private binding and
@@ -630,7 +653,7 @@ nmap -6 -Pn -p 6443,2379,2380,10250,10255,10256,10257,10259 REPLACE_WITH_ITS_IPV
                                                                      # containers; 2379 is the whole of etcd
 ```
 
-One name is not one address and one node is not the cluster. Repeat the scan for every node that has a
+REASONED: preceding block; Gateway/service inventory, TLS/authentication, API reachability and complete node/etcd address coverage, per the guide's cited Envoy Gateway tasks, secure gateways and TLS listener, Kubernetes ports and protocols, Kubernetes, operating etcd clusters, Nmap host discovery and Amazon EKS cluster endpoint access. No cluster, node inventory or external probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; five YAML blocks parsed and the embedded endpoint parser produced five expected host/port/URL results and two input failures. No live scan ran: exposed endpoints answer untrusted sources; fixed workloads use the authenticated Gateway and restricted infrastructure stays reachable only from allowed sources, across all listed hosts and address families. One name is not one address and one node is not the cluster. Repeat the scan for every node that has a
 public address, worker nodes included, and every address each one answers on, in both families: a host
 filtered on IPv4 while it answers on IPv6 passes every check above and is still reachable. The
 `kubectl get svc` line catches NodePort Services that exist, but nothing here probes the 30000 to 32767
@@ -639,7 +662,7 @@ public addresses. And a cluster whose etcd runs on its own machines has hosts th
 never lists, because they carry no kubelet; take their client and peer addresses from wherever you
 configured them and scan those too.
 
-Be clear about what a pass here is worth. It says that this host, at this moment, over this address
+REASONED: multi-vantage corroboration and effective provider ranges, per the guide's cited Amazon EKS cluster endpoint access, GKE control plane network isolation, including how authorized networks work and AKS API server authorized IP ranges. No cluster configuration or separate probe networks are available. Related shell checks exited 0 without diagnostics; the endpoint parser produced the expected host, port and URL for five valid fixtures and rejected two invalid inputs. No live reachability was observed: exposed configuration admits an untrusted source; fixed configuration restricts every intended boundary while an allowed control still works. A failed probe alone remains inconclusive. Be clear about what a pass here is worth. It says that this host, at this moment, over this address
 family, could not reach that endpoint. It does not say the cluster is restricted, because your own
 egress, a stale kubeconfig context, a resolver, a tunnel that is down, or a transient failure at the far
 end all produce the same result, and because an allowlist that admits one network you forgot about is

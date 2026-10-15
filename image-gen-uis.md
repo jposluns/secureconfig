@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "13e13f7a200ccb110bcfd611bd098dda031d197e169a20d1b3d2518da2633104",
+  "body_sha256": "49ea970f55cd616853fcf1e52aa83de8e57fb6b76cccb2b4b8664d7aecc8b0b7",
   "components": {
     "comfy": {
       "name": "ComfyUI",
@@ -102,6 +102,14 @@ version_basis: {
         "s2b2686afaf41": "https://curl.se/docs/manpage.html"
       }
     },
+    "linux": {
+      "name": "Linux permissions and tools",
+      "basis": "unknown",
+      "sources": {
+        "s31f41c54750c": "https://man7.org/linux/man-pages/man5/acl.5.html",
+        "s08902025e5f9": "https://man7.org/linux/man-pages/man1/getfacl.1.html"
+      }
+    },
     "comfy-rolling": {
       "name": "ComfyUI documentation (rolling)",
       "basis": "unknown",
@@ -151,7 +159,7 @@ version_basis: {
     "api-input": {"text": "API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth.", "components": ["webui"], "sources": ["webui:s82803810022a", "webui:s914278bcbf70", "webui:sb59e633133f6", "webui:sf3f6d5cafad0", "webui:sbfd3d01539c3"], "status": "REASONED"},
     "api-leak": {"text": "cmd-flags reveals all options; API auth users can read API passwords, unauthenticated API can expose UI argv credentials.", "components": ["webui"], "sources": ["webui:sb59e633133f6", "webui:s57d98254f09d", "webui:s256946a60534"], "status": "REASONED"},
     "argv": {"text": "COMMANDLINE_ARGS becomes argv; launcher prints credentials and local argv/environment readers may read them.", "components": ["webui"], "sources": ["webui:s914278bcbf70", "webui:s5b2e23d1781d", "webui:sfa27f3a86456"], "status": "REASONED"},
-    "file-create": {"text": "Create-once owner-only credential file uses hex password and clean-shell guards; ACLs, directory races, backups and plaintext storage limit protection. Shell/filesystem versions are unrecorded.", "components": ["webui"], "sources": ["webui:s0195caed3cb9"], "status": "REASONED"},
+    "file-create": {"text": "Create-once owner-only credential file uses hex password and clean-shell guards, refuses a default ACL or missing getfacl and checks mode 0600 after the write; directory races, backups and plaintext storage limit protection. Filesystem is unrecorded.", "components": ["webui", "linux"], "sources": ["webui:s0195caed3cb9", "linux:s31f41c54750c", "linux:s08902025e5f9"], "status": "REASONED"},
     "file-launch": {"text": "Clear inherited launch/bind variables, validate regular non-symlink credential file, reject empty/malformed/duplicate entries and read failures. Shell/grep/awk versions are unrecorded.", "components": ["webui", "gradio"], "sources": ["webui:s0195caed3cb9", "gradio:s2ec1c2a1d665"], "status": "REASONED"},
     "webui-bind": {"text": "Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback.", "components": ["webui", "gradio"], "sources": ["webui:s370f032e0497", "webui:saf69abeba189", "gradio:s1bd30a313ec9"], "status": "REASONED"},
     "sysinfo": {"text": "Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix.", "components": ["webui", "gradio"], "sources": ["webui:sebe977aeb6f3", "webui:sc9117bccdef5", "gradio:sf85e6083e02e"], "status": "REASONED"},
@@ -193,7 +201,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | api-input: API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth. | AUTOMATIC1111 v1.10.1 | REASONED |
 | api-leak: cmd-flags reveals all options; API auth users can read API passwords, unauthenticated API can expose UI argv credentials. | AUTOMATIC1111 v1.10.1 | REASONED |
 | argv: COMMANDLINE_ARGS becomes argv; launcher prints credentials and local argv/environment readers may read them. | AUTOMATIC1111 v1.10.1 | REASONED |
-| file-create: Create-once owner-only credential file uses hex password and clean-shell guards; ACLs, directory races, backups and plaintext storage limit protection. Shell/filesystem versions are unrecorded. | AUTOMATIC1111 v1.10.1 | REASONED |
+| file-create: Create-once owner-only credential file uses hex password and clean-shell guards, refuses a default ACL or missing getfacl and checks mode 0600 after the write; directory races, backups and plaintext storage limit protection. Filesystem is unrecorded. | AUTOMATIC1111 v1.10.1; Linux permissions and tools unknown | REASONED |
 | file-launch: Clear inherited launch/bind variables, validate regular non-symlink credential file, reject empty/malformed/duplicate entries and read failures. Shell/grep/awk versions are unrecorded. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
 | webui-bind: Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
 | sysinfo: Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
@@ -253,11 +261,21 @@ Do not put a credential on the command line or in `COMMANDLINE_ARGS`. `--gradio-
   case "$1" in *[!0123456789abcdef]*) echo 'password generation failed; nothing written'; exit 2 ;; esac
   mkdir -p -- "$HOME/.config/stable-diffusion-webui"
   chmod 700 -- "$HOME/.config/stable-diffusion-webui"
+  command -v getfacl >/dev/null || { echo 'getfacl not found, so a default ACL on ~/.config/stable-diffusion-webui cannot be ruled out; install the acl package; nothing written'; exit 2; }
+  case "$(getfacl -d -c -p -- "$HOME/.config/stable-diffusion-webui"; echo "getfacl-status=$?")" in
+    getfacl-status=0) ;;
+    *getfacl-status=0) echo 'the directory ~/.config/stable-diffusion-webui has a default ACL, which a new file inherits in place of umask 077; nothing written'; exit 2 ;;
+    *) echo 'getfacl could not read the ACL of ~/.config/stable-diffusion-webui; nothing written'; exit 2 ;;
+  esac
   printf 'admin:%s\n' "$1" > "$HOME/.config/stable-diffusion-webui/gradio-auth"
+  case "$(ls -ln -- "$HOME/.config/stable-diffusion-webui/gradio-auth")" in
+    '-rw------- '*|'-rw-------.'*) ;;
+    *) echo 'gradio-auth is not mode 0600, so other accounts may read it; delete ~/.config/stable-diffusion-webui/gradio-auth and do not use the password in it'; exit 2 ;;
+  esac
 )
 ```
 
-The block refuses to run when `~/.config/stable-diffusion-webui/gradio-auth` already exists in any form, a dangling symlink included, before it generates anything. `set -C` adds overwrite protection for an existing regular file only, not for every kind of target, and the existence check runs before the write rather than atomically with it, so both hold only in directories that no other account can write to or replace: `$HOME`, `~/.config` and the owner-only directory the block creates. `umask 077` creates the directory mode `0700` and the file mode `0600`, unless the directory, or the parent it is created in, carries a default ACL: new files inherit that ACL in place of the umask, and `chmod 700` on the directory does not remove it. Check with `getfacl` before running the block; backlog row 1.141 tracks making the block refuse that case. The block writes nothing unless the generated password is 64 hex characters, because at v1.10.1 the reader splits each entry once on `:`, so a line of `admin:` would be the user `admin` with an empty password; hex holds no comma or colon for the file format to split on. The password passes only through the subshell's positional parameters and the builtin `printf`, never a command line, and the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read it. Read the password back from the file privately when you need it: it is plaintext at rest, readable by that account, by root and by any backup that copies it, so keep it and its backups out of source control ([secrets.md](secrets.md)). A further user is another `user:password` line. Start the WebUI from the file:
+The block refuses to run when `~/.config/stable-diffusion-webui/gradio-auth` already exists in any form, a dangling symlink included, before it generates anything. `set -C` adds overwrite protection for an existing regular file only, not for every kind of target, and the existence check runs before the write rather than atomically with it, so both hold only in directories that no other account can write to or replace: `$HOME`, `~/.config` and the owner-only directory the block creates. `umask 077` creates the directory mode `0700` and the file mode `0600`, unless the directory, or the parent it is created in, carries a default ACL: new files inherit that ACL in place of the umask, and `chmod 700` on the directory does not remove it. So once it has created the directory, the block runs `getfacl -d -c -p` on it, which prints the directory's default ACL and nothing else, and writes nothing when that prints anything, when `getfacl` fails, or when `getfacl` is not installed, leaving the directory behind; remove a default ACL you do not need with `setfacl -k ~/.config/stable-diffusion-webui` and run the block again. A missing `getfacl` fails closed because the block then cannot tell, before the write, whether the file would be private; `getfacl` comes from the `acl` package, and where it is not installed the block refuses to run. After the write the block reads the file's permission field from `ls -ln` and fails unless it is exactly `-rw-------` followed by a space or a `.`; any other field fails the check, including the `+`-marked field a named ACL entry produced in the recorded runs. If the check fails, delete the file and do not use the password in it. Without these checks, the block wrote `gradio-auth` mode `0644` when `~/.config` carried a default ACL (run in a scratch home directory with bash 5.3.9, acl 2.3.2 and `openssl` stubbed). The block writes nothing unless the generated password is 64 hex characters, because at v1.10.1 the reader splits each entry once on `:`, so a line of `admin:` would be the user `admin` with an empty password; hex holds no comma or colon for the file format to split on. The password passes only through the subshell's positional parameters and the builtin `printf`, never a command line, and the block clears inherited traps first because a DEBUG, RETURN or ERR trap from your shell could otherwise read it. Read the password back from the file privately when you need it: it is plaintext at rest, readable by that account, by root and by any backup that copies it, so keep it and its backups out of source control ([secrets.md](secrets.md)). A further user is another `user:password` line. Start the WebUI from the file:
 
 ```bash
 (
@@ -344,7 +362,7 @@ Build the image from the pinned checkout and run that local build, not the GHCR 
 
 The image build excludes `auth.json`, so mount it read-only at `/content/app/auth.json`: `-v /srv/fooocus/auth.json:/content/app/auth.json:ro` with `docker run`, or `- /srv/fooocus/auth.json:/content/app/auth.json:ro` under the service's `volumes:` in `docker-compose.yml`. Fooocus runs in the image as its unprivileged `user` account, so the host file must be owned by that account's uid and readable by no other account. Read the uid from the image you built: on the `docker build . -t fooocus` path, `docker run --rm --entrypoint id fooocus -u user` prints it; on the Compose path, run `docker compose build` and then `docker run --rm --entrypoint id ghcr.io/lllyasviel/fooocus -u user`, which reads the local build Compose tagged with that name. Then `sudo chown` the file to that uid and `sudo chmod 0400` it. Read from the source and not observed on a running server (above), an unreadable file should stop Fooocus from starting, and a malformed file or an empty list should start it with no login, so check for the login prompt. Under rootless Docker or user-namespace remapping the host-side owner differs; this guide has not checked that case.
 
-## Verify
+## Verify (REASONED: all listener inventories, IPv4/IPv6 external probes, local positive controls, InvokeAI boards authentication, proxy TLS/browser login and Fooocus host/container comparisons follow the cited sources below; no authorized service, isolated listener namespace, container runtime or external observer. Historical Fooocus parsing is not a live-service result. Python 3.14.4 argparse with the printed listen definition returned 127.0.0.1 for [] and 0.0.0.0 for [--listen]. Bash 5.3.9 bash -n accepted the shell fence. In the extracted port-loop subshell with curl replaced by printf LOCAL_CURL, 192.168.50.7 and bad value each emitted four markers; empty input, the original placeholder and set -- without arguments emitted only guard diagnostics. All exited 0, so neither exit status nor this guard validates an address or service exposure)
 
 None of this guide's live Verify checks has a recorded demonstration. The missing capability is an isolated host or network namespace in which the services and their proxy may open listeners, as described for Fooocus below. The checks remain REASONED from the cited vendor documentation and pinned sources, as detailed below.
 
@@ -451,3 +469,5 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - Compose Specification, `pull_policy` (`build`: "Compose builds the image"; and "The `latest` tag is always pulled even when the `missing` pull policy is used"; pinned commit 914ec15d1fa4): https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/05-services.md#L1816-L1832
 - Compose Specification, a service with both `build` and `image` (Compose "follows the rules defined by the `pull_policy` attribute"; if it is missing, "Compose attempts to pull the image first and then builds from source if the image isn't found", and a built image takes the `image` name, as the example shows; pinned commit 914ec15d1fa4): https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/build.md#L21-L23 and https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/build.md#L50-L62
 - `docker compose up --build` ("Build images before starting containers"; pinned tag v2.32.4): https://github.com/docker/compose/blob/v2.32.4/cmd/compose/up.go#L147
+- Linux ACLs, acl(5): default ACL inheritance and how a default ACL takes the place of the umask for new files (man-pages; checked against the local acl 2.3.2 manual, October 2026): https://man7.org/linux/man-pages/man5/acl.5.html
+- getfacl(1): `-d` (default ACL), `-c` (omit the header) and `-p` (keep leading `/`) options (man-pages; checked against the local acl 2.3.2 manual, October 2026): https://man7.org/linux/man-pages/man1/getfacl.1.html

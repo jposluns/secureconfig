@@ -17,6 +17,15 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Band 5 position in the queue, 2026-10-13 (#499).** The maintainer ruled, through AskUser, that band 5
+  (Priority 5: Site and adopters) is worked last: after bands 2 and 3, and only when bands 1 to 4 are clear.
+  The "Queue order" ruling below placed bands 1 to 4 but not band 5. This supersedes, for band 5, the "Order"
+  ruling below, whose interleave by severity across the remaining bands would otherwise include it.
+- **Pull request bodies carry no AI attribution line, 2026-10-12 (#453).** The maintainer ruled, through AskUser,
+  to record here what the 2026-09-26 pre-launch repository cleanup established: a pull request description in this
+  repository carries no AI attribution line, such as a "Generated with Claude Code" footer. This supersedes the
+  clause "The attribution line in a GitHub pull request body is unaffected" in the 2026-09-19 `Co-Authored-By`
+  ruling below, which otherwise stands as recorded.
 - **Version-basis per-item check scope, 2026-09-27 (#420).** The maintainer ruled, through AskUser,
   to ship the per-item check with its line grammar, fix the cheap gaps found in review round 7,
   document the remaining exotic-construct residuals in CONTRIBUTING, and track a parser-based check

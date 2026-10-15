@@ -11,14 +11,28 @@ It also catches a careless measurement of that gap. The first attempt matched a 
 `(#N)` and silently missed `(#38, #41)`, reporting a larger gap than existed. A gate does
 not get to be approximately right.
 
-WHAT IT CHECKS: every pull request number appearing as a `(#N)` suffix on a commit
-subject must appear somewhere in CHANGELOG.md as `#N`.
+WHAT IT CHECKS: every merged pull request must appear somewhere in CHANGELOG.md as
+`#N`. A commit subject records a merged pull request in one of two shapes, and the gate
+reads both:
 
-THE ONE EXEMPTION: the highest-numbered merged pull request. A pull request cannot
-reference its own number until it is opened, and the convention here is that a content
-change may be followed by a separate bookkeeping change that records it. Exempting the
-newest one leaves room for exactly that, and no more: let a second pull request merge
-without its entry and this gate goes red.
+- a squash merge, whose subject ends in a `(#N)` suffix; the early history used these;
+- a merge commit, whose subject begins `Merge pull request #N from `; this repository
+  has merged that way since #299.
+
+Reading only the first shape left merge-commit pull requests unchecked while the gate
+still reported a pass. It still caught #303 and #306, but only because a commit on each
+one's branch, which reached main with the merge, ended in that pull request's `(#N)`.
+A merge of one branch into another, such as
+`Merge remote-tracking branch 'origin/main' into ...`, is neither shape and does not
+count, nor does a `#N` anywhere else in a subject.
+
+THE ONE EXEMPTION: the highest-numbered merged pull request, even when a lower-numbered
+one merged after it. A pull request cannot reference its own number until it is opened,
+so the highest-numbered one may be missing its entry. That is a tolerance, not a
+convention: CONTRIBUTING.md's "Shipping a change" section says to record the change in
+`CHANGELOG.md` "in the same pull request, not in a later bookkeeping one". The
+exemption covers exactly one: let a second pull request merge without its entry and this
+gate goes red.
 
 WHY IT FAILS ON A SHALLOW CLONE rather than skipping: `actions/checkout` fetches one
 commit by default, and with one commit this gate would find nothing missing and report a
@@ -40,6 +54,11 @@ CHANGELOG = "CHANGELOG.md"
 # suffix. Anchored at end of line so a number mentioned mid-subject is not a merge.
 MERGE_SUFFIX = re.compile(r"\(#(\d+)\)$")
 
+# A merge commit puts it at the start, in the subject GitHub writes. Anchored at start
+# of line for the same reason, and requiring ` from ` so a subject that merely begins
+# with the phrase is not read as one.
+MERGE_COMMIT = re.compile(r"^Merge pull request #(\d+) from ")
+
 # Any `#N` token in the changelog counts as a reference. Deliberately looser than the
 # merge pattern: `(#38, #41)`, `#45`, and `see #12` are all references, and a gate that
 # recognised only one shape is what produced the mismeasurement described above.
@@ -52,14 +71,24 @@ def run(args, root):
     ).stdout
 
 
+def merged_number(subject):
+    """The pull request a commit subject records as merged, or None.
+
+    A merge-commit prefix is read first: its number is the one GitHub wrote, whatever
+    the branch name after it happens to end with.
+    """
+    m = MERGE_COMMIT.match(subject) or MERGE_SUFFIX.search(subject)
+    return int(m.group(1)) if m else None
+
+
 def merged_pull_requests(root):
-    """Every pull request number that appears as a squash-merge suffix, with its subject."""
+    """Every pull request number a commit subject records as merged, with its subject."""
     out = run(["git", "log", "--format=%s"], root)
     found = {}
     for line in out.splitlines():
-        m = MERGE_SUFFIX.search(line.strip())
-        if m:
-            found.setdefault(int(m.group(1)), line.strip())
+        number = merged_number(line.strip())
+        if number is not None:
+            found.setdefault(number, line.strip())
     return found
 
 

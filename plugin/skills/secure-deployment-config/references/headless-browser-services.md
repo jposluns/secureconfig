@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "8295e348dbc18710f8e9396c52d9b6c72bc66c30c4cf9dd34b10752b71fe3530",
+  "body_sha256": "83eb3c90295cb9d91e397cfa9e10e498bcf3591cc59ea0b23a98e47d7021298b",
   "components": {
     "chromium": {
       "name": "Chromium",
@@ -274,10 +274,25 @@ event messages, but it is carried in those messages rather than encrypting the t
 not make a reachable bus safe on its own: run the bus on a private, trusted network with matching
 secrets on every component.
 
+`--password` and `--registration-secret` are command-line values: each puts its secret in the argv
+of every process that receives it, from its start until the process overwrites its arguments, if it
+does, readable through `ps` and `/proc/<pid>/cmdline` by other local accounts as well as by the same
+account and root, and command-line auditing on the host can record it beyond that. Sources has no
+reference for a Grid input outside argv for either secret. Do not assume `SE_ROUTER_PASSWORD`
+avoids this. Sources has no reference for how the Docker images' start scripts pass that variable
+to the Router, so it may still reach the `java` command line as `--password`; read the start script
+in the image you run before relying on the variable. Wherever either secret reaches a command line (always for the flags; for `SE_ROUTER_PASSWORD` unless the start script shows otherwise), run Grid components only on
+hosts where every local account other than the one running them and root is trusted with these
+secrets. A secret that does stay in a process's environment is still readable through
+`/proc/<pid>/environ` by the same account and root while that process, or any process that inherited it, runs.
+
 The Docker browser images add two more listeners: they start VNC by default (`SE_START_VNC` defaults to
 `true`) on `5900` with noVNC on `7900`, and the vendor's own example connects with the password
 `secret`; change it with `SE_VNC_PASSWORD`, disable the prompt deliberately only with
-`SE_VNC_NO_PASSWORD`, or turn VNC off with `SE_START_VNC=false`. Selenium can terminate TLS itself with
+`SE_VNC_NO_PASSWORD`, or turn VNC off with `SE_START_VNC=false`. `SE_VNC_PASSWORD` is an environment
+credential: it is readable through `/proc/<pid>/environ` by the same account and root while any process
+holding it runs, and Sources has no reference for how the image passes it to the VNC server, so, as with `SE_ROUTER_PASSWORD`, it may reach a command line; read the image's start script before relying on the variable, and apply the trusted-host condition above if it does.
+Selenium can terminate TLS itself with
 `--https-certificate` and `--https-private-key`, but it is not enabled by default, and the Router's
 basic auth travels in clear text without it; enabling native HTTPS or, more commonly, fronting the Grid
 per [nginx.md](nginx.md), [caddy.md](caddy.md) and [fronting-auth.md](fronting-auth.md) is what protects
@@ -292,7 +307,7 @@ The current Docker configuration reference agrees; the older quickstart's genera
 does not match this release. The current reference documents the same default for Enterprise,
 but its private image was not inspected or run here, so equivalence is not source-verified.
 Always set a long, randomized `TOKEN` (never a vendor sample, never committed), and publish the port to
-loopback (`-p 127.0.0.1:3000:3000`) or keep it on an internal container network with no host mapping.
+loopback (`-p 127.0.0.1:3000:3000`) or keep it on an internal container network with no host mapping. `TOKEN` reaches the server through its environment, which keeps it out of the server's argv (a value typed on a launcher's command line, such as after `-e TOKEN=`, is in that launcher's argv instead) but not out of reach: it is readable through `/proc/<pid>/environ` by the same account and root for as long as the server, or any process that inherited it, runs.
 The token is presented in the connection URL, so proxy and access logs become credential stores; front
 the service with TLS so it is unreadable in transit, and handle the token as [secrets.md](secrets.md)
 describes.
@@ -337,7 +352,7 @@ unpublished wherever these run.
 
 ## Verify
 
-Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
+REASONED: following block; this introduction and the listener inventory below for every DevTools, Grid, browserless, VNC and Playwright port it names, per the guide's cited Selenium Grid getting started, Selenium Docker images env vars, browserless Docker configuration and Chromium 154.0.8037.57 browser and headless-shell loopback factory entries. No isolated network namespace was available for a live listener, so no exposed or fixed service ran. During marking review (October 2026) both Verify blocks passed bash -n under bash 5.3.9, and the inventory's command, run without sudo on the review host as ss -tlnp (iproute2 6.19.0), showed none of these ports listening, with an empty process column, so it tested no target. Exposed, a listed port shows a wildcard or public bind; fixed, loopback or an internal address only. Every live check below is **REASONED**, not demonstrated: the authoring host forbids opening listeners
 without an isolated network namespace, and has none. No exposed or fixed service was run.
 Each names its expected exposed and fixed result so
 it discriminates when run against a live instance, based on the cited vendor documentation and pinned sources. Run each
@@ -356,14 +371,14 @@ curl 7.75.0 or newer, and an IPv6 literal needs brackets in the URL.
 ss -tlnp   # read every listener; 9222/4442/4443/4444/5555/3000/5900/7900: loopback or internal only
 ```
 
-**REASONED DevTools listener check:** for the pinned stock browser and headless shell, expect only
+REASONED: preceding block; the listener inventory above for every port it names, and this DevTools TCP listener check, per the guide's cited Chromium 154.0.8037.57 entries for the browser loopback factories, the headless-shell loopback factory and the actual bound address and DevToolsActivePort output, plus its Selenium Grid getting started, Selenium Docker images env vars and browserless Docker configuration entries for the other ports. A google-chrome binary of unchecked version is present in the authoring environment, but no isolated network namespace was available (creating one was refused), so no DevTools listener or forwarder was started and neither state was observed; the expected exposed and fixed results are those stated here. **REASONED DevTools listener check:** for the pinned stock browser and headless shell, expect only
 `127.0.0.1` or `::1` for the DevTools TCP listener. Inspect both address families and every actual
 port, including ephemeral ports, plus forwarders in the host and container network namespaces.
 Exposed, a forwarder supplies a reachable non-loopback listener; fixed, no unauthenticated external
 path remains while the local browser endpoint still answers. The pinned socket factories and HTTP
 handler below establish these expected results.
 
-For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
+REASONED: the guard and substitution instructions for the DevTools, Grid, browserless and Playwright probes, per the guide's cited curl diagnostic variables entry (pinned tag curl-8_14_1) and Chromium 154.0.8037.57 host check entry. During marking review (October 2026) the guarded block ran in bash 5.3.9 with a stub curl and no network: unchanged, it printed its substitute-your-own-address refusal; without its set -- line, the paste-the-whole-block refusal; with two values, the exactly-1-value refusal; with 203.0.113.10 substituted, the stub received http://203.0.113.10:9222/json/version, and the 4444/status and 3000/pressure edits reached it as written. No endpoint was probed, so the exposed and fixed results below remain unobserved. For the DevTools, Grid, browserless and Playwright ports, guard the address in the block below so it
 forces a real substitution, and read the write-out. Replace `9222` in the curl URL with the actual
 externally forwarded port if different. For the local positive control, run the same guarded block
 inside the browser's network namespace with its actual loopback address and DevTools port.
@@ -386,7 +401,7 @@ REASONED: following block; external discovery/authentication probes and local po
 )
 ```
 
-**REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
+REASONED: preceding block; the external DevTools, Selenium Grid Router and Node, browserless and Playwright probes and their local positive controls, per the guide's cited Chromium 154.0.8037.57 host check, JSON discovery, approval-mode 404 and browser WebSocket URL entry, Selenium Grid CLI options, browserless 2.56.7 TOKEN initialization and HTTP and WebSocket authentication rejection entries, browserless pressure API entry, Playwright Docker entry, Playwright BrowserType.launchServer and connect entry, Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2) entry, and curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1) entry. No container runtime or isolated network namespace was available, so no service ran. During marking review (October 2026) the guard branches ran with a stub curl as recorded above, and the token configuration pattern, run as an author-built block following this paragraph's instructions (the guide prints no such block) with a stub curl and a dummy token holding a double quote and a backslash, kept the token out of argv and sent the escaped url line on stdin. The expected exposed and fixed results are those stated here. **REASONED command-line DevTools port probe:** exposed through an unauthenticated forwarder, it returns
 a `200` JSON body containing `webSocketDebuggerUrl`. Fixed, the external request cannot reach that
 endpoint while the local positive control still returns it. A `404` from approval mode is not a pass.
 A connection refused or a timeout that happened during the connect is consistent with
@@ -402,12 +417,22 @@ These are REASONED expectations from the cited configuration, API documentation 
 handler, not live observations; this authoring environment has no container runtime and cannot
 fetch runtime dependencies. A `401` establishes authentication, not network isolation: the fixed
 deployment must also deny the external path while an authorized internal control still succeeds.
-Pass the correct token through curl's stdin configuration, not a literal URL in shell history or
-argv. For the Playwright server on the port you configured (`launchServer` uses an ephemeral port
-unless you set one; `run-server` takes `--port`), any HTTP answer means the port is reachable and
-is already the finding. The distinguishing behaviour for each is in the cited vendor pages.
+Pass the correct token through curl's stdin configuration, as a `url = "...?token=..."` line fed to
+`--config -`, not a literal URL in shell history or argv. Because the config value is double-quoted,
+escape a backslash and then a double quote in the token before substituting it, and refuse a token
+containing a control character, so a pasted newline cannot inject a second directive. Enter the
+token at a hidden prompt in a clean shell under the `read` exception guards of
+CONTRIBUTING rule 7 (`search-engines.md`'s paired block is the model): `trap - DEBUG RETURN ERR`
+first, then `set +x +a +e` before the read, `unset -n` and then `unset -v` on the variable, failing
+closed if either fails, and a refusal of a readonly `IFS`. Without `+a`, an inherited `set -a` would
+export the token. A token typed into the command still enters shell history and `set -x` tracing,
+and stdin closes the argv channel only, so the token stays visible to the account owner and root.
+For the Playwright server on the port you configured
+(`launchServer` uses an ephemeral port unless you set one; `run-server` takes `--port`), any HTTP
+answer means the port is reachable and is already the finding. The distinguishing behaviour for
+each is in the cited vendor pages.
 
-**REASONED browserless file-protocol check:** no live instance was tested: the authoring host forbids
+REASONED: browserless Playwright WebSocket file-protocol enforcement on every enabled route, per the guide's cited browserless 2.51.0 Playwright WebSocket route table, browserless 2.51.0 Playwright WebSocket enforcement and blocked-URL policy close, and Browserless ALLOW_FILE_PROTOCOL configuration and false default entries. It needs a running browserless 2.51.0 container and a compatible Playwright client; the authoring environment has no container runtime, no Playwright or browserless package and no network to fetch them, and the check has no shell block, so nothing here ran locally. Exposed, page.evaluate returns the canary contents; fixed, the navigation is refused with a blocked-URL policy close. **REASONED browserless file-protocol check:** no live instance was tested: the authoring host forbids
 opening listeners without an isolated network namespace, and has none. With
 `ALLOW_FILE_PROTOCOL=false`, use a valid token and a compatible Playwright client on each enabled
 Playwright WebSocket route. The v2.51.0

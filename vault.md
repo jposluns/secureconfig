@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e000470f2a50f6f45b5a7d7e5c559a5a6ecd52d696237272aedaa821ee0f7000",
+  "body_sha256": "c0cc4cc8e447a97ecaf2d7468cc3b61f66ab601a32ecad3bd7ff8c892b95d894",
   "components": {
     "docs": {
       "name": "Vault documentation",
@@ -307,7 +307,9 @@ and [Integrated Storage configuration](https://developer.hashicorp.com/vault/doc
 A fresh server starts sealed: the storage is encrypted and Vault cannot read it until it is unsealed,
 and the seal you pick decides who or what does that. Shamir splits the unseal capability into key
 shares (`vault operator init -key-shares=5 -key-threshold=3`), and a threshold of custodians must each
-supply a share at the hidden prompt to unseal; never pass a share on the command line. Auto-unseal
+supply a share at the hidden prompt to unseal; never pass a share on the command line. The prompt
+keeps the share out of the command text, shell history and tracing; the account owner and root can
+still read it in the `vault` process. Auto-unseal
 uses the configured external seal service, such as AWS KMS (`seal "awskms" { ... }`) or another
 Vault's Transit secrets engine, and instead emits recovery keys for privileged operations.
 Transit auto-unseal is available in Community; seal wrapping requires Enterprise.
@@ -372,7 +374,9 @@ See [token behavior](https://developer.hashicorp.com/vault/docs/concepts/tokens)
 [root generation](https://developer.hashicorp.com/vault/docs/commands/operator/generate-root).
 
 For CLI authentication, select tokens through a securely injected `VAULT_TOKEN` environment variable
-or a token helper. Enter interactive login credentials and unseal shares at the prompt.
+or a token helper. `VAULT_TOKEN` moves a token out of argv, not out of reach: while exported it is in the environment of every program the shell starts, readable through `/proc/<pid>/environ` by the same account and root, and where the shell received it at startup, in the shell's own. Enter interactive login credentials and unseal shares at the prompt.
+The prompt keeps them out of the command text, shell history and tracing; the account owner and
+root can still read them in the `vault` process.
 Never put credentials in command arguments, URLs, shell history, or build logs.
 See [CLI authentication](https://developer.hashicorp.com/vault/docs/commands) and
 [login prompts](https://developer.hashicorp.com/vault/docs/commands/login).
@@ -484,6 +488,12 @@ vault write -format=json sys/wrapping/lookup - \
   < /run/secrets/payments-wrapping-lookup.json
 ```
 
+The wrapping token reaches `vault` from the request file on its stdin, so it is not in the
+command's arguments, and because the command never types it or expands a variable holding it,
+neither shell history nor `set -x` tracing records it from this command, provided the delivery
+mechanism, not a shell command containing the token, writes the file. Stdin closes the argv channel only: the account
+owner and root can still read the file and the `vault` process's memory.
+
 Check `data.creation_path`, `data.creation_time`, and `data.creation_ttl`; the latter is the
 original TTL, not the remaining lifetime. Confirm the token is still within that lifetime before
 proceeding. Protect and remove the request file when finished.
@@ -496,6 +506,15 @@ token argument:
 ```bash
 vault unwrap
 ```
+
+No token is typed into this command, so the wrapping token is not in `vault`'s arguments, and
+neither shell history nor `set -x` tracing records it from this command. `VAULT_TOKEN` moves it out
+of argv, not out of reach: while the variable is exported, the token is in the environment of every
+program the shell starts, including `vault`, readable through `/proc/<pid>/environ` by the same
+account and root while each runs, and where the shell received `VAULT_TOKEN` in its initial
+environment, that file also shows it for the shell itself. Whoever reads it there before the unwrap
+can unwrap it first, which leaves the recipient's unwrap failing on a consumed token; investigate
+that as above. The opportunity to unwrap ends when the token is consumed or expires; its bytes can remain exposed in process environments afterward.
 
 Protect the output, which contains the SecretID. Response wrapping is available in Community;
 this example targets current behavior. The conceptual reference notes that some wrapping-token
@@ -564,17 +583,22 @@ host has no second network). These expectations follow the cited Vault documenta
 host has no `sudo`, so the first block's `sudo ss -tlnp` ran through a stand-in
 that runs `ss` without it; as the same account, `ss` still showed the Vault process.
 
-The curl `exitcode` and `errormsg` write-out fields require curl 7.75.0 or newer.
+REASONED: curl result interpretation: transport or TLS failure is inconclusive, and only matched authenticated controls support a fixed outcome. Per the guide's cited curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The curl `exitcode` and `errormsg` write-out fields require curl 7.75.0 or newer.
 For authenticated and on-host checks, transport failure, TLS failure, an unexpected redirect, or a
 missing positive control is inconclusive, never the fixed state.
 See [curl write-out fields](https://curl.se/docs/manpage.html#-w).
 
+REASONED: from the Vault CLI environment and token-helper documentation and the curl manual page
+cited in Sources, and from the guards in the blocks below, not from the loopback runs, which record
+no run with altered shell builtins, an apostrophe in a placeholder, or inherited proxy settings or
+Vault proxy overrides. The `VAULT_TOKEN` environment exposure rests on the stubbed QA runs recorded
+at the wrapping-lookup blocks below (same-account observers, no real `vault` client, root not tested).
 Paste whole blocks and substitute inside the single quotes. Use the base HTTPS URL without a
 trailing slash where a block appends an API path. Never embed credentials in a URL. These guards
 assume ordinary shell builtins; do not insert a literal apostrophe into a single-quoted placeholder.
 Use a clean shell without inherited HTTP proxy settings or Vault proxy overrides for direct CLI
 checks. Select each CLI identity through securely injected `VAULT_TOKEN` or its token helper;
-do not paste token values into commands. Keep credential-bearing CLI output out of recordings and
+do not paste token values into commands. An exported `VAULT_TOKEN` is still readable through process environments (section 6). Keep credential-bearing CLI output out of recordings and
 build logs.
 
 **Listener, health, audit, root revocation, and role inspection (demonstrated on loopback):** run
@@ -647,16 +671,16 @@ and read the example AppRole:
 )
 ```
 
-Interpret the checks separately; the block's final exit status does not summarize them:
+REASONED: preceding block; all listener, health, audit, root-token and AppRole inspection commands: require intended private sockets, verified TLS, initialized and unsealed status, delivered audit records, revoked-root lookup denial and the section 7 role bounds; unintended listeners, absent logs, successful revoked-root lookup or missing bounds are findings. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault sys/health status codes; Vault status command (JSON output and exit codes); Vault audit devices (fail-closed, HMAC default, exempt endpoints); Vault audit entry schema (request IDs and token-use fields); Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. In this follow-up review, both inspection blocks ran with every external command stubbed: `vault status -format=json` returned 2, while all other stub commands returned 0; the subsequent curl health request, audit list, both token lookups and AppRole read still ran, and each block exited 0. These stub results do not establish live Vault behavior. Interpret the checks separately; the block's final exit status does not summarize them:
 
-- **Bind and TLS (demonstrated, TLS in both states; a wildcard bind, `ss` as root and the firewall
+- REASONED: bind and TLS comparison: unintended listeners are findings; intended private binds with verified TLS and matched firewall controls are required. The parenthetical host limitations below describe the historical run. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault production hardening (root token, swap, core dumps). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **Bind and TLS (demonstrated, TLS in both states; a wildcard bind, `ss` as root and the firewall
   REASONED: the host forbids binding every interface, has no `sudo`, and has no second network):** read the whole socket table. Confirm `8200` is bound to the intended
   private address and `8201` to the cluster address, with nothing unexpected. A wildcard or unintended
   listener is a finding. The TLS health request must reach the intended server with certificate
   verification enabled. `ss` shows the bind, not the firewall; "only between nodes" is a firewall
   property. Confirm it with firewall rules and the permitted/forbidden-source probes below.
   See the [listener reference](https://developer.hashicorp.com/vault/docs/configuration/listener/tcp).
-- **Server state (demonstrated for `501`, `503` and `200`; the standby and removed-node codes
+- REASONED: status and health interpretation: initialized and unsealed is the intended operating state; sealed, uninitialized and standby responses must be distinguished as specified here, without treating health as proof of hardening. Per the guide's cited Vault status command (JSON output and exit codes); Vault sys/health status codes. Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Server state (demonstrated for `501`, `503` and `200`; the standby and removed-node codes
   REASONED, since no multi-node cluster was set up):** status should report `initialized: true` and `sealed: false`.
   Status exit code `2` means sealed; an unsealed standby returns `0`; `1` means an error.
   Health codes `200` active, `429` standby, `501` uninitialized, and `503` sealed are common
@@ -666,7 +690,7 @@ Interpret the checks separately; the block's final exit status does not summariz
   returned codes. A healthy response is a connectivity control, not proof of hardening.
   See [status](https://developer.hashicorp.com/vault/docs/commands/status) and the
   [health API](https://developer.hashicorp.com/vault/api-docs/system/health).
-- **Audit configuration and delivery (demonstrated for an empty list and for one and two file devices; a
+- REASONED: audit configuration and delivery: no devices or missing delivery is a finding; require the matching request ID at both independent destinations. The parenthetical host limitation below describes the historical run. Per the guide's cited Vault audit devices (fail-closed, HMAC default, exempt endpoints); Vault audit list command; Vault audit entry schema (request IDs and token-use fields). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **Audit configuration and delivery (demonstrated for an empty list and for one and two file devices; a
   second device in a separate failure domain REASONED, since the host has no second network):** an empty audit list means requests are served
   unlogged. The fixed configuration lists the intended independent devices. Correlate the successful
   non-root JSON token lookup's `request_id` with `request.id` in the collected audit entries;
@@ -677,7 +701,7 @@ Interpret the checks separately; the block's final exit status does not summariz
   See [audit availability and exemptions](https://developer.hashicorp.com/vault/docs/audit),
   [audit listing](https://developer.hashicorp.com/vault/docs/commands/audit/list), and the
   [audit schema](https://developer.hashicorp.com/vault/docs/audit/schema).
-- **Root revocation (demonstrated):** the scoped-admin token lookup is the positive control. Log that
+- REASONED: root revocation: a revoked root lookup must fail while an independently authenticated scoped admin succeeds; successful root lookup is the exposed outcome. Per the guide's cited Vault token lookup command (selected-token lookup and JSON output); Vault token revoke command (self-revocation); Vault token concepts (token prefixes, parent and child revocation, root tokens, TTLs, service and batch behavior). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Root revocation (demonstrated):** the scoped-admin token lookup is the positive control. Log that
   admin in through an auth method: a non-orphan token made with `vault token create` while the root
   token is selected is the root token's child and is revoked with it.
   Repeat the guarded block with the revoked initial root credential still selected and judge its
@@ -687,7 +711,7 @@ Interpret the checks separately; the block's final exit status does not summariz
   or generate a live root credential for testing.
   See [token lookup](https://developer.hashicorp.com/vault/docs/commands/token/lookup) and
   [self-revocation](https://developer.hashicorp.com/vault/docs/commands/token/revoke).
-- **AppRole configuration (demonstrated):** compare the role read with every parameter in section 7,
+- REASONED: AppRole inspection: require every section 7 bound; absent limits or broader policies are findings, while denied inspection is inconclusive. Per the guide's cited Vault AppRole API (role parameters, SecretID generation, and login). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **AppRole configuration (demonstrated):** compare the role read with every parameter in section 7,
   including both CIDR restrictions, SecretID TTL/use limits, service-token type, token TTL/max TTL/
   explicit max TTL, zero period, use limit, and exclusion of the default policy. Durations may be
   returned in seconds. A missing role or denied inspection is inconclusive; zero use limits,
@@ -715,10 +739,18 @@ exit=7 err=Failed to connect ...` with the server stopped; with two file audit d
 socket table also showed `127.0.0.2:8200` and `127.0.0.2:8201`, an unintended listener with its own
 cluster port, because `cluster_address` defaults to one port above `address`.
 
-**Application ACLs and authenticated monitoring (demonstrated on loopback):** for API authentication, provision an
+REASONED: header-file preparation for the ACL and monitoring comparisons: use the intended identity's actual header; the paired requests must distinguish authorized success from anonymous or cross-application denial. Stub arguments contained the header-file path, not its dummy token. Per the guide's cited curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields); Vault KV v2 API (data paths and read operations); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **Application ACLs and authenticated monitoring (demonstrated on loopback):** for API authentication, provision an
 owner-readable header file containing the selected identity's `X-Vault-Token` header through a
 protected mechanism. The file must contain the actual header, not a shell variable reference.
 Use only the intended authentication header, and remove the file when finished.
+
+REASONED: from curl's header-file input in the manual page cited in Sources, not from the loopback
+runs, which did not observe it. In the two blocks below, of the credential, only the header file's path enters curl's
+argv, through `--header "@$3"`; curl reads the `X-Vault-Token` header from the file. The blocks
+never type the token or expand a variable holding it, so neither shell history nor `set -x` tracing
+records it from the blocks, provided the file is prepared through protected delivery rather than by
+a shell command that contains the token. A header file closes the argv channel only: the account
+owner and root can still read the file and the memory of each curl process while it runs.
 
 Run this block for each full endpoint URL and identity described below. It reports an anonymous
 request followed by the same request with the selected credential; response bodies are discarded
@@ -796,13 +828,13 @@ to avoid printing secrets or profiles.
 
 | Check | Request and identity | Fixed outcome and matched positive control | Exposed outcome |
 | --- | --- | --- | --- |
-| Application's own secret | `GET /v1/kv/data/payments/config`, payments application token | Authenticated `200` for an existing, readable test fixture | Failure makes the cross-application denial inconclusive |
-| Another application's secret | `GET /v1/kv/data/inventory/config`, payments application token | Application receives `403`; repeat the same URL with a fixture-reader identity authorized for that existing path and require `200` | Application receives `200` |
-| Metrics | `GET /v1/sys/metrics`, metrics collector token, directly on the active node | Anonymous `403`, collector `200`, on each API listener of the active node | Anonymous `200` |
-| Profiling | `GET /v1/sys/pprof/`, separate operator with `read` on `sys/pprof/*`, directly on the active node | Anonymous `403`, authorized operator `200`, on each API listener of the active node | Anonymous `200` |
-| Collector isolation | `GET /v1/kv/data/payments/config`, metrics collector token | Collector receives `403`; payments application receives `200` for the same existing fixture | Collector receives `200` |
+| REASONED: own-secret positive control: expect authenticated 200 for the existing fixture; failure makes the cross-application comparison inconclusive. Per the guide's cited Vault KV v2 API (data paths and read operations); Vault policies and tokens. Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Application's own secret | `GET /v1/kv/data/payments/config`, payments application token | Authenticated `200` for an existing, readable test fixture | Failure makes the cross-application denial inconclusive |
+| REASONED: cross-application denial: expect application 403 and fixture-reader 200 for the same path; application 200 is exposed. Per the guide's cited Vault KV v2 API (data paths and read operations); Vault policies and tokens. Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Another application's secret | `GET /v1/kv/data/inventory/config`, payments application token | Application receives `403`; repeat the same URL with a fixture-reader identity authorized for that existing path and require `200` | Application receives `200` |
+| REASONED: active-node metrics: expect anonymous 403 and collector 200; anonymous 200 is exposed. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault metrics API (GET, JSON format, and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Metrics | `GET /v1/sys/metrics`, metrics collector token, directly on the active node | Anonymous `403`, collector `200`, on each API listener of the active node | Anonymous `200` |
+| REASONED: active-node profiling: expect anonymous 403 and authorized operator 200; anonymous 200 is exposed. Per the guide's cited Vault TCP listener (address defaults, tls_disable, cluster_address); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Profiling | `GET /v1/sys/pprof/`, separate operator with `read` on `sys/pprof/*`, directly on the active node | Anonymous `403`, authorized operator `200`, on each API listener of the active node | Anonymous `200` |
+| REASONED: collector isolation: expect collector 403 and payments application 200 on the same fixture; collector 200 is exposed. Per the guide's cited Vault KV v2 API (data paths and read operations); Vault policies and tokens. Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Collector isolation | `GET /v1/kv/data/payments/config`, metrics collector token | Collector receives `403`; payments application receives `200` for the same existing fixture | Collector receives `200` |
 
-Use non-sensitive fixtures in an isolated test deployment. A `404` is not proof of an ACL denial.
+REASONED: fixture and active-node controls: require the authorized 200 control before counting a 403 denial; a 404 or standby selection is inconclusive. Per the guide's cited Vault KV v2 API (data paths and read operations); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Use non-sensitive fixtures in an isolated test deployment. A `404` is not proof of an ACL denial.
 For metrics, use the default JSON representation so the positive control does not depend on enabling
 Prometheus output. For both monitoring checks, target the active node directly, or the sole server
 in a single-node deployment. Confirm its role with the guarded status/health check above before
@@ -817,7 +849,7 @@ read policy got `200` on the inventory secret: the exposed outcomes. In the run 
 configuration and its anonymous-access settings left `false`, a collector whose policy added
 `kv/data/*` got `200` on the payments secret, the collector-isolation exposed outcome.
 
-**REASONED (no multi-node cluster was set up for these runs):** authenticated metrics and profiling use local-only HTTP handlers. An ordinary HA standby returns
+REASONED: HA monitoring: expect an ordinary standby's 307 redirect or the documented local-only forwarding rejection, neither an authentication pass; repeat on the active node for anonymous 403 and authorized 200. No multi-node environment was available. Per the guide's cited Vault HA redirect implementation (pinned v1.21.0); Vault local-only forwarding implementation (pinned v1.20.0); Vault metrics API (GET, JSON format, and root namespace); Vault profiling API (index path and root namespace). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. **REASONED (no multi-node cluster was set up for these runs):** authenticated metrics and profiling use local-only HTTP handlers. An ordinary HA standby returns
 `307` to the active node's advertised API address when a leader is available; that redirect is not
 an authentication result. Performance standbys can serve local requests, but the local-only handler
 rejects requests that require forwarding with `400` in the inspected implementation. Do not follow
@@ -829,7 +861,7 @@ Keep both anonymous-access settings disabled on every node's API listeners. Insp
 configuration and repeat the paired checks on each node when it is active during an authorized HA
 test; a pair on the current active node does not verify other nodes' listener settings.
 
-A collector's metrics-only policy is not a positive control for profiling; use the separately
+REASONED: separate profiling authorization: collector credentials do not establish a profiling control; require the profiling operator's 200 against anonymous 403, with anonymous 200 the exposed state. Per the guide's cited Vault policies and tokens; Vault profiling API (index path and root namespace); Vault metrics API (GET, JSON format, and root namespace); Vault KV v2 API (data paths and read operations); Vault TCP listener (address defaults, tls_disable, cluster_address). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. A collector's metrics-only policy is not a positive control for profiling; use the separately
 authorized operator. HashiCorp's [debug permissions](https://developer.hashicorp.com/vault/docs/commands/debug#permissions)
 grant `read` on `sys/pprof/*`, covering the trailing-slash index and profiling subpaths without
 `sudo`. Leave the collector's policy unchanged. These checks follow the
@@ -838,6 +870,32 @@ grant `read` on `sys/pprof/*`, covering the trailing-slash index and profiling s
 [listener authentication settings](https://developer.hashicorp.com/vault/docs/configuration/listener/tcp#telemetry-parameters),
 [metrics API](https://developer.hashicorp.com/vault/api-docs/system/metrics), and
 [profiling API](https://developer.hashicorp.com/vault/api-docs/system/pprof).
+
+REASONED: from the shell behaviour of file input on stdin, not from the loopback runs below, which
+did not test it. What was run: on 2026-10-13 UTC a QA review ran the following block under `bash -x`
+with its external commands stubbed and a dummy secret as the credential; no trace line carried the
+dummy secret, while a positive control that printed the file with a traced builtin `printf` did.
+A second run the same day pasted the block into Bash 5.3.9 (`bash --noprofile --norc -i`) on a
+pseudo-terminal with history enabled, with a `vault` stub that read stdin and slept four seconds
+and the observing and inspected processes under the same account: the history file held no
+contents of the JSON request file, and neither `/proc/<pid>/cmdline` (the stub's arguments were
+`write -format=json auth/approle/login -`) nor `/proc/<pid>/environ` of the stub and the block's
+subshell contained the dummy secret. In that run the observer was an ancestor of the inspected
+processes. A third run the same day, on the QA review's evaluation host, repeated the observation
+with same-account observers that were siblings of the block's shells rather than ancestors: neither
+`/proc/<pid>/cmdline` nor `/proc/<pid>/environ` of any sampled process, including the `vault`
+recording stub, the block's subshell and the outer shell, contained the dummy secret. What was not
+run: the contents of process memory are unknown, because every attempt by those observers to open
+`/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
+`/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the
+evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
+was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
+evaluation host's PATH. The following
+login request takes `role_id` and `secret_id` from the request file on
+`vault`'s stdin: no credential is typed into the command or held in a shell variable, so neither
+shell history nor `set -x` tracing records it, provided the file is prepared through protected
+delivery rather than by a shell command that contains the credentials. Stdin closes the argv
+channel only: the account owner and root can still read the file and the `vault` process's memory.
 
 **Bounded credentials and tokens (demonstrated on loopback):** prepare an owner-readable
 JSON request file containing `role_id` and `secret_id` through protected delivery. The following
@@ -880,7 +938,7 @@ handle it only in a protected session.
 Use separate credentials for independent cases so consuming a SecretID or token does not confound
 another test:
 
-- **SecretID use limit (demonstrated):** a fresh SecretID succeeds once from an allowed source.
+- REASONED: SecretID single use: require first-login success, reuse rejection and fresh-SecretID success; successful reuse is exposed. Python parsed a dummy role_id/secret_id JSON fixture; no live credentials were used. Per the guide's cited Vault AppRole API (role parameters, SecretID generation, and login); Vault AppRole authentication (setup, token choice, and child-token constraints). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The demonstrated label below records the historical loopback run, not this review. **SecretID use limit (demonstrated):** a fresh SecretID succeeds once from an allowed source.
   An immediate repeat with the same request file must fail with a Vault authentication error;
   another freshly delivered SecretID must succeed. Successful reuse is the exposed state. On the loopback
   run, the section 7 role refused the reuse with `400`, and a role with `secret_id_num_uses=0` accepted
@@ -924,7 +982,7 @@ another test:
   role with no TTL a `lease_duration` of `2764800`, the exposed halves of the type and lease checks. With `token_ttl=10s`, a read at about 15 seconds got `403`,
   while a token from a role with no token TTL (the default lifetime) got `200`.
 
-The discriminators come from the
+REASONED: credential and token discriminators: fresh allowed credentials succeed while reused credentials, SecretIDs past the stated expiry margin or disallowed-source credentials fail; token access must stop at the specified use and lifetime bounds. Python parsed the dummy login JSON fixture. Per the guide's cited Vault AppRole API (role parameters, SecretID generation, and login); Vault AppRole authentication (setup, token choice, and child-token constraints); Vault token concepts (token prefixes, parent and child revocation, root tokens, TTLs, service and batch behavior). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. The discriminators come from the
 [AppRole credential and role parameters](https://developer.hashicorp.com/vault/api-docs/auth/approle),
 [AppRole constraints](https://developer.hashicorp.com/vault/docs/auth/approle), and
 [token lifetime rules](https://developer.hashicorp.com/vault/docs/concepts/tokens).
@@ -984,6 +1042,40 @@ sixty-one-second request succeeded: the exposed comparison. In the follow-up run
 state, and both `FINDING` lines in the exposed state.
 See [required wrapping TTLs](https://developer.hashicorp.com/vault/docs/concepts/policies#required-response-wrapping-ttls)
 and [wrapping requests](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
+
+REASONED: from the shell behaviour of file input on stdin, not from the loopback lookup runs,
+which did not test it. What was run: on 2026-10-13 UTC a QA review ran both wrapping-lookup blocks
+below under `bash -x` with their external commands stubbed and a dummy secret as the token; no
+trace line carried the dummy secret, while a positive control that printed the file with a traced
+builtin `printf` did. A second run the same day pasted both blocks into Bash 5.3.9
+(`bash --noprofile --norc -i`) on a pseudo-terminal with history enabled, with a `vault` stub that
+read stdin and slept four seconds, the dummy token placed in the shell's initial environment as
+`VAULT_TOKEN`, and the observing and inspected processes under the same account: the history file
+held no token value and `/proc/<pid>/cmdline` did not contain it, but `/proc/<pid>/environ` of
+both the stub and the block's subshell contained `VAULT_TOKEN` set to the dummy token. In that run
+the observer was an ancestor of the inspected processes. A third run the same day, on the QA
+review's evaluation host, repeated the observation with same-account observers that were siblings
+of the block's shells rather than ancestors: `/proc/<pid>/cmdline` of no sampled process contained
+the dummy token, but `/proc/<pid>/environ` of the `vault` recording stub, the block's subshell and
+the outer shell, which held `VAULT_TOKEN` in its initial environment, all contained it. What was
+not run: the contents of process memory are unknown, because every attempt by those observers to
+open `/proc/<pid>/mem` was refused with EACCES (Permission denied) on the evaluation host, where
+`/proc/sys/kernel/yama/ptrace_scope` read `1`; root was not tested as the observer, because the
+evaluation host refused privilege elevation (`sudo -n id` failed because the no-new-privileges flag
+was set); and no real `vault` client or live Vault service ran, because `vault` was not on the
+evaluation host's PATH. This applies to both wrapping-lookup
+blocks below, the demonstrated lookup and the recipient-validation lookup. Each passes the
+protected lookup request, wrapping token included, to `vault` from a file on its stdin. Neither
+block types the token or expands a variable holding it, so neither shell history nor `set -x`
+tracing records it from the block, provided the file is prepared through protected delivery
+rather than by a shell command that contains the token. Stdin closes the argv channel only: the
+account owner and root can still read the file and the `vault` process's memory, and where
+`VAULT_TOKEN` holds the same token, as the next paragraph asks, the token is also in the
+environment of every program the shell starts while `VAULT_TOKEN` is exported, including `vault`,
+readable through `/proc/<pid>/environ` by the same account and root while each runs. Where the
+shell received `VAULT_TOKEN` in its initial environment, as in the runs above, that file also shows
+it for the shell itself and the block's subshell; a shell that sets `VAULT_TOKEN` only after it
+starts was not tested.
 
 **Recipient validation (the lookup demonstrated; the recipient's own check REASONED, since it
 belongs to the receiving application):** prepare the
@@ -1066,6 +1158,17 @@ creation time, and a lookup of the consumed token failed with `wrapping token is
 not exist`. A wrapping token looked up three seconds after its two-second TTL failed the same way.
 See [wrapping lookup fields](https://developer.hashicorp.com/vault/api-docs/system/wrapping-lookup)
 and [recipient validation](https://developer.hashicorp.com/vault/docs/concepts/response-wrapping).
+
+REASONED: from the environment behaviour recorded above for the wrapping-lookup blocks, not from
+the loopback unwrap runs, which did not observe it. The single-use unwrap block below takes the
+wrapping token from `VAULT_TOKEN`, not from its arguments or a file: the block never types the
+token or expands a variable holding it, so neither shell history nor `set -x` tracing records it
+from the block. That closes the argv channel only. While `VAULT_TOKEN` is exported, the token is in
+the environment of every program the shell starts, including `vault`, readable through
+`/proc/<pid>/environ` by the same account and root while each runs; where the shell received
+`VAULT_TOKEN` in its initial environment, that file also shows it for the shell itself and the
+block's subshell. A wrapping token read there before the first unwrap can be unwrapped by its
+reader, so a first unwrap that fails is a finding to investigate, not a pass.
 
 **Single-use unwrap (demonstrated on loopback):** only after the preceding
 validation, run this block with that same wrapping token selected. The first unwrap must succeed;
@@ -1159,7 +1262,7 @@ non-zero `time_connect` and curl's certificate-verification error (exit `60`), t
 and against 127.0.0.2, where nothing listens, `time_connect=0.000000` and `Could not connect to
 server` (exit `7`), the refused shape.
 
-Pair the forbidden-source check with the same destination and port from a permitted host:
+REASONED: external isolation control: require a TCP connection from the permitted source and refusal from the forbidden source to the same destination; forbidden-source connectivity is exposed and a failed permitted control is inconclusive. No permitted/forbidden deployment pair was available. Per the guide's cited Vault production hardening (root token, swap, core dumps); Vault HA communication (advertised addresses and cluster TLS); curl options (write-out fields require 7.75.0; header files, TLS verification, direct connections, and write-out fields). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Pair the forbidden-source check with the same destination and port from a permitted host:
 the positive control must establish a TCP connection. For `8201`, use a permitted Vault node.
 If the permitted source cannot route to that destination, the matched control is unavailable;
 record the limitation instead of claiming this probe demonstrates isolation. Confirm the firewall
@@ -1170,7 +1273,7 @@ See [production firewall guidance](https://developer.hashicorp.com/vault/docs/co
 
 | Check scope | Status | Deployment comparison and prerequisites |
 | --- | --- | --- |
-| Checks beyond the recorded loopback runs | REASONED from the cited Vault documentation; not demonstrated | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot: HA standby behavior (the `429`, `474` and `530` health and status codes, and the monitoring checks' redirects and local-only handlers), a second audit device in a separate failure domain with delivery to both destinations, a wildcard bind and `ss` run as root, recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
+| REASONED: deployment comparisons in this row: require the specified HA responses, delivery to both independent audit destinations, intended binds, unexpected-path rejection by the recipient, and denied external access with a working permitted-source control; missing delivery, unintended binds, accepted unexpected paths and forbidden-source connectivity are findings. No multi-node deployment, recipient implementation or external source pair was available. Per the guide's cited Vault sys/health status codes; Vault HA redirect implementation (pinned v1.21.0); Vault local-only forwarding implementation (pinned v1.20.0); Vault audit devices (fail-closed, HMAC default, exempt endpoints); Vault TCP listener (address defaults, tls_disable, cluster_address); Vault response wrapping (single use, delivery, validation, and historical 0.8 version note); Vault wrapping lookup API (creation path, time, and original TTL); Vault production hardening (root token, swap, core dumps); Vault HA communication (advertised addresses and cluster TLS). Related Verify blocks passed `bash -n` and ShellCheck 0.11.0 silently; written placeholders printed `substitute value 1; not probing` (exit 1), and substituted fixtures printed stub calls (exit 0). This marking review used stubs: a live Vault stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Checks beyond the recorded loopback runs | REASONED from the cited Vault documentation; not demonstrated | In an authorized isolated Vault deployment, demonstrate what a single loopback node cannot: HA standby behavior (the `429`, `474` and `530` health and status codes, and the monitoring checks' redirects and local-only handlers), a second audit device in a separate failure domain with delivery to both destinations, a wildcard bind and `ss` run as root, recipient-side rejection of an unexpected creation path, and the external isolation probe from real permitted and forbidden sources against 8200 and 8201. Record the Vault version and edition, effective settings, requests, errors, and matched positive controls without credentials. |
 
 ## Sources (checked September 2026)
 

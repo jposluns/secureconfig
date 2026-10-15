@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "580906eef700b827600cbfb61873eccc074b864216a9f8f5e1dc9293b22188ff",
+  "body_sha256": "722b38adeb8cecd2010d7911c4573ec51811f5b8ffe66da7590b48d13877711d",
   "components": {
     "docs": {
       "name": "MLflow documentation",
@@ -104,7 +104,7 @@ version_basis: {
     "artifact-proxy": {"text": "--serve-artifacts defaults on; --artifacts-destination s3://bucket lets the server proxy reads/writes for proxied experiments, holding storage credentials so clients need none.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
     "artifact-existing": {"text": "Pre-existing experiments and explicit direct artifact locations retain their locations outside tracking-server permission enforcement; inspect locations and apply storage IAM directly.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
     "artifact-direct": {"text": "With --no-serve-artifacts every client needs storage credentials and tracking-server permissions no longer gate artifacts; use environment or instance-role credentials, not repository/Compose secrets.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
-    "verify-bind": {"text": "Read every listener and require 5000 on 127.0.0.1; ss itself has no vendor citation here.", "components": ["source", "iproute2"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850"], "status": "REASONED", "verify": [1]},
+    "verify-bind": {"text": "Read every listener and require 5000 on 127.0.0.1.", "components": ["source", "iproute2"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850"], "status": "REASONED", "verify": [1]},
     "verify-network": {"text": "Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive.", "components": ["curl", "docs"], "sources": ["curl:s2b2686afaf41", "docs:s5b79d1871e0b"], "status": "REASONED", "verify": [1]},
     "verify-public-auth": {"text": "POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass.", "components": ["docs", "curl"], "sources": ["docs:scbbc07258943", "docs:s996e587e947a", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-backend-auth": {"text": "Repeat anonymous 401/admin 200 directly on loopback with Host: mlflow.example.com; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s5b79d1871e0b", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]},
@@ -150,7 +150,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | artifact-proxy: --serve-artifacts defaults on; --artifacts-destination s3://bucket lets the server proxy reads/writes for proxied experiments, holding storage credentials so clients need none. | MLflow documentation unknown | REASONED |
 | artifact-existing: Pre-existing experiments and explicit direct artifact locations retain their locations outside tracking-server permission enforcement; inspect locations and apply storage IAM directly. | MLflow documentation unknown | REASONED |
 | artifact-direct: With --no-serve-artifacts every client needs storage credentials and tracking-server permissions no longer gate artifacts; use environment or instance-role credentials, not repository/Compose secrets. | MLflow documentation unknown | REASONED |
-| verify-bind: Read every listener and require 5000 on 127.0.0.1; ss itself has no vendor citation here. | MLflow pinned source v3.16.1; iproute2 ss manual v6.12.0 | REASONED |
+| verify-bind: Read every listener and require 5000 on 127.0.0.1. | MLflow pinned source v3.16.1; iproute2 ss manual v6.12.0 | REASONED |
 | verify-network: Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive. | curl minimum write-out version 7.75.0; MLflow documentation unknown | REASONED |
 | verify-public-auth: POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass. | MLflow documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
 | verify-backend-auth: Repeat anonymous 401/admin 200 directly on loopback with Host: mlflow.example.com; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement. | MLflow documentation unknown | REASONED |
@@ -218,6 +218,8 @@ admin_password = REPLACE_WITH_LONG_RANDOM_VALUE
   trap - DEBUG RETURN ERR  # assumes a clean shell (CONTRIBUTING rule 7): no inherited DEBUG trap, extdebug, function or alias
   # Both passwords you substitute on the set -- line enter shell history.
   # Clear that history line afterward.
+  # Stdin closes the argv channel only: it does not hide the passwords from
+  # set -x tracing or your own account's view of the process.
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_CURRENT_ADMIN_PASSWORD' 'REPLACE_WITH_LONG_RANDOM_VALUE'
   [ "${1-}" = PASTE_WHOLE_BLOCK ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
   shift
@@ -275,7 +277,8 @@ ss -tlnp   # read every listener; 5000: 127.0.0.1 only
 # credentials (its service-token headers), and a denial from that proxy is distinct from MLflow's own
 # backend 401/403. The credentials below reach curl through a config file on stdin (curl --config -),
 # never argv, because -u user:password is world-readable via ps / /proc/<pid>/cmdline; stdin protects
-# the argv channel only, not shell history or set -x tracing. Substitute each password INSIDE the
+# the argv channel only, not shell history, set -x tracing, or your own
+# account's view of the process. Substitute each password INSIDE the
 # single quotes on the set -- line; a password containing a literal apostrophe must be written '\'' there.
 (
   # Each credential reaches curl on stdin via a config file (curl --config -), never
@@ -334,7 +337,7 @@ REASONED: preceding block; listener inventory, external TCP reachability, proxy/
 - Docker, port publishing (loopback publishing) (loopback-only reach assumes Docker 28.0.0 or later): https://docs.docker.com/engine/network/port-publishing/
 - curl manual (`--connect-timeout` bounds the connection phase only; the `time_connect`, `exitcode`, and `errormsg` write-out variables, the last two added in curl 7.75.0): https://curl.se/docs/manpage.html
 - MLflow `--host` option, default `127.0.0.1`, and `--port`, default `5000`, which the `MLFLOW_HOST` and `MLFLOW_PORT` environment variables override (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/cli_args.py#L162-L180
-- MLflow's tracking-server command, `def server`, takes those `--host` and `--port` options (pinned tag v3.16.1): https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541
+- MLflow's tracking-server command, `def server`, takes those `--host` and `--port` options (pinned tag v3.16.1): <https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541>
 - nginx release-1.28.0 proxy directive registration (checked October 2026; `proxy_pass` takes one upstream argument): https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_proxy_module.c#L305-L310
 - Caddy v2.11.4 `reverse_proxy` parser (checked October 2026): [directive registration](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L40) and [upstream syntax](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L58-L62).
 - iproute2 v6.12.0 `ss` manual (checked October 2026): [numeric output](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34), [listening sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44), [process display](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163), and [TCP sockets](https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375).

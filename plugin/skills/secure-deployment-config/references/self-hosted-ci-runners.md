@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "c8d6b476ca0e74eff1bf7a9d2d33a186d5a77ce4579223654d32e90db84744cf",
+  "body_sha256": "72e6c5e6e8aa98cd95989f98eb383a327daaecd20809fcb2d24aea181dee4f4e",
   "components": {
     "github": {
       "name": "GitHub Actions documentation",
@@ -95,9 +95,9 @@ version_basis: {
     "verify-eligibility": {"text": "Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review.", "components": ["github-api"], "sources": ["github-api:sd36db9ea1031", "github-api:s8217448953a4"], "status": "REASONED", "verify": [1]},
     "verify-permissions": {"text": "Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate.", "components": ["github"], "sources": ["github:s4561d20e7042", "github:s80fe11d8c90d"], "status": "REASONED", "verify": [2]},
     "verify-assignment": {"text": "A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive.", "components": ["github-api", "github"], "sources": ["github-api:sbeee4a47110c", "github:s92e8e4820392"], "status": "REASONED", "verify": [3]},
-    "verify-config": {"text": "Python 3.11+ TOML inspection reports executor controls without tokens; null means absent, and empty output or parse/read errors are inconclusive. No fixture outcome is recorded.", "components": ["python", "gitlab"], "sources": ["python:s37be9e98ea29", "gitlab:s47b236d63dc4", "gitlab:s1579c499c75b"], "status": "REASONED", "verify": [4]},
-    "verify-daemon": {"text": "Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone.", "components": ["gitlab", "docker"], "sources": ["gitlab:s265254bc5592", "docker:s18f59818e451"], "status": "REASONED", "verify": [4]},
-    "verify-autoscaler": {"text": "For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly; absent or other values are findings.", "components": ["gitlab"], "sources": ["gitlab:sde661ff4762e"], "status": "REASONED", "verify": [4]},
+    "verify-config": {"text": "Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status.", "components": ["python", "gitlab"], "sources": ["python:s37be9e98ea29", "gitlab:s47b236d63dc4", "gitlab:s1579c499c75b"], "status": "DEMONSTRATED", "verify": [4], "evidence": "the extracted Python program ran without sudo on 20 synthetic config.toml cases using Python 3.14.4. Docker fixtures printed true/true, a socket mount and a TCP host versus false/false, empty volumes and a null host; both exited 0. Autoscaler limits printed null/null, 1/2 and 2/1 versus 1/1, all exit 0. Kubernetes fixtures printed true versus false for the three booleans and the supplied service_account. Wrong-type strings, booleans and floats retained their JSON types; misplaced privileged printed docker.privileged null. Empty and runner-less files printed nothing and exited 0. Missing files, malformed TOML and wrong section types exited 1; the second-runner structure error followed one printed runner. Two valid runners printed indices 0 and 1. The runner token key was omitted; a dummy token copied into service_account was printed. These observations cover file inspection only."},
+    "verify-daemon": {"text": "Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone.", "components": ["gitlab", "docker"], "sources": ["gitlab:s265254bc5592", "docker:s18f59818e451"], "status": "REASONED"},
+    "verify-autoscaler": {"text": "For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly as integers; absent or other values are findings.", "components": ["gitlab"], "sources": ["gitlab:sde661ff4762e"], "status": "REASONED"},
     "verify-gitlab-api": {"text": "Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only.", "components": ["gitlab"], "sources": ["gitlab:s699c1c198119", "gitlab:seb30e3937183"], "status": "REASONED", "verify": [5]},
     "verify-lifecycle": {"text": "Check complete deregistration listings and infrastructure disposal; persistent-worker canary must survive in the control, but absence alone does not prove destruction or clean shared caches.", "components": ["github-api", "gitlab", "github"], "sources": ["github-api:s8217448953a4", "gitlab:sde661ff4762e", "github:s215dc07e3642"], "status": "REASONED"},
     "verify-listeners": {"text": "Inventory namespaces and publications, require the permitted-client response, then test disallowed access; any HTTP response proves reachability, failure needs corroborating firewall denial.", "components": ["gitlab"], "sources": ["gitlab:sbc009ff2866a", "gitlab:s47b236d63dc4"], "status": "REASONED", "verify": [6]}
@@ -111,7 +111,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -146,9 +146,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-eligibility: Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review. | GitHub REST API 2026-03-10 | REASONED |
 | verify-permissions: Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate. | GitHub Actions documentation unknown | REASONED |
 | verify-assignment: A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive. | GitHub REST API 2026-03-10; GitHub Actions documentation unknown | REASONED |
-| verify-config: Python 3.11+ TOML inspection reports executor controls without tokens; null means absent, and empty output or parse/read errors are inconclusive. No fixture outcome is recorded. | Python tomllib minimum 3.11; GitLab rolling documentation unknown | REASONED |
+| verify-config: Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status. | Python tomllib minimum 3.11; GitLab rolling documentation unknown | DEMONSTRATED |
 | verify-daemon: Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone. | GitLab rolling documentation unknown; Docker Engine documentation unknown | REASONED |
-| verify-autoscaler: For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly; absent or other values are findings. | GitLab rolling documentation unknown | REASONED |
+| verify-autoscaler: For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly as integers; absent or other values are findings. | GitLab rolling documentation unknown | REASONED |
 | verify-gitlab-api: Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only. | GitLab rolling documentation unknown | REASONED |
 | verify-lifecycle: Check complete deregistration listings and infrastructure disposal; persistent-worker canary must survive in the control, but absence alone does not prove destruction or clean shared caches. | GitHub REST API 2026-03-10; GitLab rolling documentation unknown; GitHub Actions documentation unknown | REASONED |
 | verify-listeners: Inventory namespaces and publications, require the permitted-client response, then test disallowed access; any HTTP response proves reachability, failure needs corroborating firewall denial. | GitLab rolling documentation unknown | REASONED |
@@ -257,15 +257,15 @@ clients. Enable neither unless needed, and firewall each to the clients that nee
 
 ## Verify
 
-Both runners are outbound-only job pollers, so most checks are posture and REST audits, not reachability
+REASONED: Both runners are outbound-only job pollers, so most checks are posture and REST audits, not reachability
 probes. Every check that needs a live registered runner or worker is reasoned, not demonstrated: the authoring
 environment has no container runtime, registered test runner, or cloud test infrastructure, so those outcomes
-are derived from the cited vendor pages rather than observed. Backlog row 2.29 retains only the offline
-`tomllib` config inspection against exposed and fixed fixtures.
+are derived from the cited vendor pages rather than observed. Offline outcomes are recorded below: `tomllib` fixtures,
+jq filters on synthetic REST-shaped JSON, a PyYAML parse of the probe workflow, a stub `glab` run, the canary commands, plain ss -tln without sudo listing this host's listeners, the guarded listener block with stub `sudo` and `curl`, and bash -n and ShellCheck syntax checks; row 2.29 retains finding and verifying a pinned source for `pid_mode`.
 Require successful, complete listings; authentication errors, unavailable endpoints, and incomplete pagination
 are inconclusive. Run the REST and config checks from an administrator workstation using stored CLI credentials.
 
-GitHub eligibility: `visibility: all` does not by itself mean public access, and `allows_public_repositories`
+REASONED: eligibility semantics per the guide's cited GitHub self-hosted runner groups REST API and runner groups and access entries; no GitHub organization or registered test runner is available in the authoring environment, so no listing was read. At marking time the three jq filters in the block below, run with jq 1.8.1 on synthetic REST-shaped JSON, printed the named fields, including allows_public_repositories true for an exposed group and false for a fixed one; the gh client's own --jq handling was not exercised. GitHub eligibility: `visibility: all` does not by itself mean public access, and `allows_public_repositories`
 is a separate control, so list every runner group, then each selected group's repositories, then every public
 repository's own runners (a repository-level runner belongs to no group).
 
@@ -277,7 +277,7 @@ gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /orgs/REPLACE_WIT
 gh api -X GET --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /repos/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/actions/runners --jq '.runners[] | {id, name, status}'
 ```
 
-Check every selected repository's visibility and trust level, including inherited groups: a public repository
+REASONED: following block; the repository review in this paragraph and the organization and repository workflow-permission reads in the block below, per the guide's cited GitHub GITHUB_TOKEN permissions and GitHub self-hosted runner groups and access entries; no GitHub organization or repository is available in the authoring environment, so no setting was read. At marking time the block passed bash -n and ShellCheck 0.11.0, and its jq filter on synthetic JSON printed write and true for an exposed posture and read and false for a fixed one. Check every selected repository's visibility and trust level, including inherited groups: a public repository
 must have neither a repository-level self-hosted runner nor access through a group, and private or internal
 repositories still need review of who can submit executable workflow code. Then confirm the default token
 posture and that workflow approval of pull requests is off unless required (a workflow can still raise its own
@@ -303,7 +303,7 @@ jobs:
       - run: printf '%s\n' eligibility-probe
 ```
 
-Assign `ci-audit-probe` to the test runner. With eligibility deliberately exposed the approved run must execute
+REASONED: preceding block; the eligibility-probe workflow above and the assignment comparison in this paragraph, per the guide's cited GitHub self-hosted runner groups and access, workflow-jobs REST API and events that trigger workflows entries; no isolated test organization, public test repository or disposable runner is available in the authoring environment, so no fork run was assigned or refused. At marking time PyYAML 6.0.3 parsed the workflow with empty permissions and the self-hosted and ci-audit-probe labels, reading its on key as boolean true under YAML 1.1, so this checked structure only, and the job-listing jq filter below printed a runner_id for an assigned synthetic job and null for an unassigned one. Assign `ci-audit-probe` to the test runner. With eligibility deliberately exposed the approved run must execute
 on it; after applying the private-repository restriction an equivalent fork run must not be assigned to it, and
 the same harmless job from an allowed private repository confirms the runner is still available. Inspect the
 assignment, and treat a skipped workflow, pending approval, offline runner, or queue timeout as inconclusive:
@@ -314,18 +314,19 @@ REASONED: following block; assignment discrimination follows the cited workflow-
 gh api --paginate -H 'X-GitHub-Api-Version: 2026-03-10' /repos/REPLACE_WITH_OWNER/REPLACE_WITH_REPO/actions/runs/REPLACE_WITH_RUN_ID/jobs --jq '.jobs[] | {id, status, conclusion, runner_id, runner_group_id}'
 ```
 
-For GitLab, inspect the configuration each runner service actually loads (custom paths and
-deployment-generated config included). This Python 3.11+ inspection decodes TOML and preserves the runner block
-without printing tokens; `null` means absent, and empty output, read errors, or parse errors are inconclusive.
-`privileged = true`, `services_privileged = true`, or a host Docker socket mounted into a job is a finding. The
+REASONED: following the cited GitLab and Docker documentation, inspect the configuration each runner service actually loads (custom paths and
+deployment-generated config included); no live runner or daemon was tested. The inspection omits the runner `token` key, but reported fields are not redacted.
+`null` means absent from the inspected table only, not a secure default. Unexpected types are inconclusive until corrected, except for the two autoscaler keys, where anything other than integer `1` is flagged. Empty output, read/parse/structure errors and partial output before an error are inconclusive; exit 0 alone is not a safety verdict.
+`privileged = true`, `services_privileged = true`, or a host Docker socket mounted into a job is a finding. Unset `services_privileged` inherits `privileged`, so its `null` does not mean unprivileged services. The
 reported `docker.host` selects the runner manager's Docker endpoint; resolve an absent value through the
 service's `DOCKER_HOST` environment or the default Unix socket. Inspect the daemon's privilege, authentication
 and network controls, and compare access from the actual job environment with an authorized management client.
 Flag job access to a rootful daemon; a `tcp://` value alone does not establish that access. For an Instance or
-Docker Autoscaler executor, flag either `capacity_per_instance` or `max_use_count` being absent or unequal to
-`1`; require both explicitly set to `1`.
+Docker Autoscaler executor, flag either `capacity_per_instance` or `max_use_count` being absent or not integer
+`1`; require both explicitly set to integer `1`, not a boolean, float or string.
+For Kubernetes, flag `privileged = true`; require `allow_privilege_escalation`, and where jobs do not need tokens `automount_service_account_token`, explicitly set to boolean `false` (a printed `null` means the key is unset, so the requirement is not met); check the `service_account` name against the intended RBAC restrictions.
 
-REASONED: following block; TOML inspection follows the cited Python and GitLab configuration documentation; no exposed/fixed fixture outcome is recorded.
+DEMONSTRATED: following block; the extracted Python program ran without sudo on 20 synthetic config.toml cases using Python 3.14.4. Docker fixtures printed true/true, a socket mount and a TCP host versus false/false, empty volumes and a null host; both exited 0. Autoscaler limits printed null/null, 1/2 and 2/1 versus 1/1, all exit 0. Kubernetes fixtures printed true versus false for the three booleans and the supplied service_account. Wrong-type strings, booleans and floats retained their JSON types; misplaced privileged printed docker.privileged null. Empty and runner-less files printed nothing and exited 0. Missing files, malformed TOML and wrong section types exited 1; the second-runner structure error followed one printed runner. Two valid runners printed indices 0 and 1. The runner token key was omitted; a dummy token copied into service_account was printed. These observations cover file inspection only.
 
 ```bash
 sudo python3 - /etc/gitlab-runner/config.toml <<'PYTOML'
@@ -345,7 +346,7 @@ for index, runner in enumerate(config.get("runners", [])):
 PYTOML
 ```
 
-Read the GitLab job-token allowlist and runner scope from the API and require a release runner's `access_level`
+REASONED: following block; the ref_protected requirement in this paragraph and the job-token scope, allowlist and runner reads in the block below, per the guide's cited GitLab project job-token scopes API and GitLab Runner security entries; no GitLab instance, project or registered runner is available in the authoring environment, so nothing was read. At marking time the block passed bash -n and ShellCheck 0.11.0 and, against a stub glab, made four calls with its placeholders passed through unchanged, as it has no guard. A release runner at not_protected is the exposed state and ref_protected the fixed one. Read the GitLab job-token allowlist and runner scope from the API and require a release runner's `access_level`
 to be `ref_protected`, comparing against an isolated control with unrestricted inbound access or `not_protected`;
 `gitlab-runner verify` only confirms authentication, nothing about isolation.
 
@@ -357,7 +358,7 @@ glab api --hostname REPLACE_WITH_GITLAB_HOST --paginate projects/REPLACE_WITH_PR
 glab api --hostname REPLACE_WITH_GITLAB_HOST runners/REPLACE_WITH_RUNNER_ID
 ```
 
-Lifecycle and contamination are REASONED from the cited vendor pages: an ephemeral or JIT GitHub runner should be gone
+REASONED: preceding block; the GitLab reads in the block above, per the guide's cited GitLab project job-token scopes API and GitLab Runner security entries, and the lifecycle and contamination checks in this paragraph, per the cited GitHub self-hosted runners REST API, GitLab Instance and Docker Autoscaler executors, and GitHub Actions security hardening entries; no registered runner, worker infrastructure or GitLab instance is available in the authoring environment. At marking time both canary commands passed bash -n and ShellCheck 0.11.0, and with job A and job B sharing one home directory job B printed its FAIL line and exited 1, while in a fresh home directory it printed the canary-absent line and exited 0; this exercises the marker logic only, not worker reuse or destruction. Lifecycle and contamination are REASONED from the cited vendor pages: an ephemeral or JIT GitHub runner should be gone
 from a fully paginated `gh api /orgs/REPLACE_WITH_ORG/actions/runners` after a harmless job, but deregistration
 is not proof the machine was destroyed, and a GitLab runner manager can stay registered while its workers are
 replaced, so verify termination and storage disposal through the infrastructure provider. Test reuse with two
@@ -366,7 +367,7 @@ B runs `if test -e "$HOME/.ci-isolation-canary"; then echo 'FAIL: previous job s
 the hardened case uses a newly provisioned worker with disposal records and no marker. Marker absence alone is
 insufficient, and worker destruction does not remove shared caches or artifacts, so review those separately.
 
-Finally, `ss` is an inventory only; inspect the relevant container and pod namespaces and published ports too.
+REASONED: listener inventory and reachability comparison per the guide's cited GitLab Runner monitoring and advanced configuration entries; no deployed metrics or session-server endpoint and no external vantage are available in the authoring environment, so no probe was sent. At marking time plain ss -tln without sudo listed this host's listeners, and the guarded block below passed bash -n and ShellCheck 0.11.0 and, run with stub sudo and curl under bash and bash -u, refused the unsubstituted, empty, embedded-placeholder, ftp, two-value and missing set -- line cases with its not-probing messages and exit 2, and passed http and https URLs to the stub curl. Finally, `ss` is an inventory only; inspect the relevant container and pod namespaces and published ports too.
 If a metrics or session-server listener is enabled, run the guarded block against the exact configured URL from
 its permitted client network: monitoring for metrics, GitLab for the session server. Configure trusted
 certificate verification for HTTPS, including the runner-generated session-server certificate. Require the
@@ -411,7 +412,7 @@ Version boundary: GitHub.com documentation checked 18 September 2026, with REST 
 - GitLab CI_JOB_TOKEN and the job-token allowlist: https://docs.gitlab.com/ci/jobs/ci_job_token/
 - GitLab runner authentication tokens and the creation workflow: https://docs.gitlab.com/ci/runners/new_creation_workflow/
 - GitLab Runner monitoring (metrics port 9252, no built-in authorization): https://docs.gitlab.com/runner/monitoring/
-- GitLab Runner advanced configuration (session_server): https://docs.gitlab.com/runner/configuration/advanced-configuration/
+- GitLab Runner advanced configuration (session_server, Docker controls and autoscaler limits): https://docs.gitlab.com/runner/configuration/advanced-configuration/ A partial automated page read dated 2026-10-12, not a recheck of this September 2026 list, corroborated the inspected Docker and autoscaler keys except `pid_mode`, which was reported only from rolling GitLab Runner `common/config.go` on `main`; a pinned vendor source for `pid_mode` remains open (row 2.29).
 - GitHub self-hosted runner groups REST API (group visibility, allows_public_repositories, group repositories) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/self-hosted-runner-groups
 - GitHub Actions OIDC (id-token permission, issuer/audience/subject claims): https://docs.github.com/en/actions/reference/security/oidc
 - GitHub workflow-jobs REST API (runner assignment: runner_id, runner_group_id) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/workflow-jobs

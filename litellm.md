@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8933988c612e6a7a2db2a9e1dffec9aaa89de39b36908b3e51c268e8797d61bb",
+  "body_sha256": "2a5e3014404a2d45329664d113112b9a482ab9426c3c2c0da18d404541b2b3e6",
   "components": {
     "docs": {
       "name": "LiteLLM documentation",
@@ -205,7 +205,7 @@ At the time of writing, current LiteLLM refuses to start when the resolved maste
 
 Virtual keys need a PostgreSQL database: set `DATABASE_URL=postgresql://user:password@host:5432/dbname` in the environment (or `database_url` under `general_settings`) before `/key/generate` will work.
 
-The original alias-only request below illustrates issuance and attribution. It does not establish least privilege: use the restricted request body below for application keys. This block assumes a clean Bash shell. Substitute your actual HTTPS origin inside the single quotes (an apostrophe needs shell escaping), paste the whole block, and enter the master key at the hidden prompt. The key stays in an unexported subshell variable, is sent to curl on stdin, and is unset on exit; no ambient master key is used. The response contains the newly issued virtual key, so keep the output private.
+The original alias-only request below illustrates issuance and attribution. It does not establish least privilege: use the restricted request body below for application keys. This block assumes a clean Bash shell. Substitute your actual HTTPS origin inside the single quotes (an apostrophe needs shell escaping), paste the whole block, and enter the master key at the hidden prompt. Paste the key there alone: a multi-line paste leaves every line after the first for your shell to run. The key stays in an unexported subshell variable, is sent to curl on stdin, and is unset on exit; no ambient master key is used. The response contains the newly issued virtual key, so keep the output private.
 
 ```bash
 (
@@ -482,7 +482,7 @@ ss -tlnp   # a listener inventory in THIS network namespace, not a firewall/NAT/
 
 The `/v1/models` comparison tests authentication and listing, not successful inference or model authorization. Complete the inference comparisons below too. Inspect IPv4 and IPv6 reachability, published container ports, and any separate metrics listener.
 
-### Protected requests for the comparisons
+### Protected requests for the comparisons (REASONED: protected GET/POST preparation, private responses and input-guard limitations follow the cited endpoint documentation; no live service or credentials. Bash 5.3.9 bash -n accepted both Verify shell fences. With curl replaced by a printf LOCAL_CURL marker, the complete request subshell accepted https://fixture.internal/api/chat, POST, an empty mode-0600 header file and a readable JSON file, printing a private response directory and one marker, exit 0. Empty endpoint, original placeholders, set -- without arguments and bad value as endpoint printed guard diagnostics without a marker, exit 1. These observations establish neither file-content validation nor API acceptance)
 
 **REASONED:** The live deployment and test credentials described above are unavailable. Use this request block for the concrete comparisons below; a successful curl transport alone is never a pass. Inspect its private response body and headers for the specified LiteLLM result.
 
@@ -534,7 +534,7 @@ Use `http://127.0.0.1:4000/...` on the backend host, or your actual HTTPS endpoi
 
 This guard checks substituted arguments, not the contents of the input files. Inspect those files before a mutation. Delete the private response directories and test credential files after recording the necessary redacted evidence.
 
-### Model access, limits, expiry, and revocation
+### Model access, limits, expiry, and revocation (REASONED: model authorization, key/team budgets, RPM/TPM/concurrency, expiry, block/unblock/delete and fail-closed dependency/recovery comparisons follow the linked key, users and Redis references; no running proxy, database-backed keys/teams, Redis or provider allowance. Python 3.14.4 json.loads accepted the printed inference JSON; this does not show provider acceptance, accounting or any enforcement)
 
 **REASONED:** These comparisons need a running proxy, disposable database-backed keys and teams, shared Redis, and an approved provider test allowance, none of which is available here. Use the protected POST block with `/v1/chat/completions` and this body, choosing a configured chat model that supports the request:
 
@@ -565,7 +565,7 @@ Do not extrapolate the RPM result to TPM or concurrency: each needs its own matc
 
 **REASONED:** Fail-closed testing additionally needs an isolated deployment where Redis/database failures can be injected without affecting production. Repeat the same budgeted inference request with spend verification unavailable and `fail_closed_budget_enforcement` enabled: expect 503 and no provider call. Restore the dependencies and confirm a below-budget request succeeds. Compare the flag-disabled state to identify any admission on unverifiable spend. Test batch and unestimable-cost routes separately; their successful admission does not establish an absolute cap. See [fail-closed enforcement and reservation limitations](https://docs.litellm.ai/docs/proxy/users).
 
-### Administrative routes, public surfaces, destinations, and logs
+### Administrative routes, public surfaces, destinations, and logs (REASONED: application/admin and licence comparisons, docs/health/metrics, ingress, pass-through methods/subpaths, destination overrides, content logs and UI login/cookies follow the linked endpoint and pinned source references; no deployed ingress, licensed fixture, test identities, controlled upstream, log collector or browser login)
 
 **REASONED:** These comparisons require the deployed ingress, installed LiteLLM release, test identities, controlled upstream endpoints, and collected logs, which are unavailable here. Use the protected request block for the GET and POST requests below. Keep any deliberately exposed comparison private and isolated.
 
@@ -581,7 +581,7 @@ Do not extrapolate the RPM result to TPM or concurrency: each needs its own matc
 
 **REASONED:** UI testing needs a live UI and configured personal-login or SSO identities. Open the actual HTTPS `/ui` in a fresh browser session: establish that the intended personal login works, then confirm the old environment login is refused after `disable_env_credential_login` and restart. Inspect the session cookie's `Secure` attribute. If the UI is disabled, confirm it no longer serves the admin interface while an authorized inference request still works. See [UI login settings](https://docs.litellm.ai/docs/proxy/ui), [SSO](https://docs.litellm.ai/docs/proxy/admin_ui_sso), and [cookie security](https://docs.litellm.ai/docs/proxy/security_best_practices).
 
-### REASONED service checks
+### REASONED service checks (REASONED: full service comparison inventory and startup-key controls from the cited LiteLLM documentation and pinned sources; no two-worker deployment, database, Redis, provider allowance or second host. No deployment behavior was observed)
 
 The checks below remain REASONED from the cited LiteLLM documentation and pinned sources. Service behavior in this replacement is not demonstrated.
 
