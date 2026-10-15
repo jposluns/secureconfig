@@ -17,6 +17,16 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Row 3.30 Verify-marking baseline end state, 2026-10-15 (#551).** The maintainer ruled, through AskUser, that
+  the remaining Verify-marking baseline is the intended structural floor: 94 retained units across 19 files (41
+  list items, 1 table row and 52 prose units). The #429 gate and its ratchet stay in force; any remaining work
+  that changes a guide goes through its own guide-change row, not a continued row 3.30 burn-down.
+- **Row 1.140 retired, 2026-10-15 (#551).** The maintainer ruled, through AskUser, that row 1.140 closes with
+  CONTRIBUTING rule 7's third exception standing: neither TURN client checked takes the password outside argv
+  (coturn's `turnutils_uclient` option parser takes the password as `-w` and the REST API shared secret as `-W`,
+  with no environment, stdin or file input for the password;
+  master `mainuclient.c` fetched 2026-10-15; pion/turn v4.0.0's example client takes `user=pass` on argv), and
+  shipping a probe program in the guide to avoid argv was declined.
 - **Band 5 position in the queue, 2026-10-13 (#499).** The maintainer ruled, through AskUser, that band 5
   (Priority 5: Site and adopters) is worked last: after bands 2 and 3, and only when bands 1 to 4 are clear.
   The "Queue order" ruling below placed bands 1 to 4 but not band 5. This supersedes, for band 5, the "Order"
