@@ -44,9 +44,9 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.195 | `cloudflare.md`: the AOP item's inline 443 `curl` (no-tunnel origin check) lacks `--noproxy '*'` and `-g`; bring it to rule 6 shape, and say a firewall drop is inconclusive even when the service-token GET answers; isolation rests on the effective-inbound-policy check, from #546 QA. (M, XS) | `[gap]` |
+| 1.195 | `cloudflare.md`: the AOP item's inline 443 `curl` (no-tunnel origin check) lacks `--noproxy '*'` and `-g`; bring it to rule 6 shape, and say a firewall drop is inconclusive even when the service-token GET answers (in the item and in the `verify-aop` claim and its table row, which say firewall drops prove a layer); isolation rests on the effective-inbound-policy check, from #546 QA. (M, XS) | `[gap]` |
 | 1.196 | `cloudflare.md`: the port-3000 direct-origin probe is plain `http://`, but a remote origin uses HTTPS on the `cloudflared` hop (`service: https://...`), so an exposed HTTPS origin can read as inconclusive; cover HTTPS remote origins in the probe, and define the CA input when no `caPool` is set or `originServerName` differs from the URL host, from #546 QA. (M, S) | `[gap]` |
-| 1.197 | `cloudflare.md`: the port-80 control (the service-token GET) reaches the origin through Cloudflare, so it shows the origin is up but not that the probed address is the origin; a refusal from a wrong or stale address would read as fixed. Say the control does not confirm the probed address, or add an address check, from #546 QA. (L, XS) | `[gap]` |
+| 1.197 | `cloudflare.md`: the port-3000 and port-80 controls (the tunnel-host loopback request and the service-token GET) show the app or origin is up but not that the probed public address is that host or origin; a refusal from a wrong or stale address would read as fixed. Say the controls do not confirm the probed address, or add an address check, from #546 QA. (M, XS) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 
