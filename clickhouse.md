@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "ef580efdf43101c13d8b5ec8edeac807e7fdb162609e8959348b7e68e9676328",
+  "body_sha256": "8188d58309cf5e2fffbd79eaf8ee74d8c33dd6e8ef4752b8974d89aff026d6b9",
   "components": {
     "docs": {
       "name": "ClickHouse documentation",
@@ -65,7 +65,17 @@ version_basis: {
       "name": "ClickHouse server config source",
       "basis": "9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6",
       "sources": {
-        "s5bcf465239d6": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml"
+        "s5bcf465239d6": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml",
+        "s0c01b74057d5": "https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/Server.cpp#L644-L652"
+      }
+    },
+    "docker": {
+      "name": "ClickHouse Docker source",
+      "basis": "9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6",
+      "sources": {
+        "s401d0e9b66f2": "https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/docker_related_config.xml#L1-L5",
+        "sb640b3bea2f7": "https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/Dockerfile.ubuntu#L160-L161",
+        "sb4af84056917": "https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/entrypoint.sh#L45-L159"
       }
     },
     "users": {
@@ -105,9 +115,9 @@ version_basis: {
     }
   },
   "claims": {
-    "listen-default": {"text": "Shipped config tries IPv4/IPv6 localhost; widening listen_host can expose services; inspect merged overrides.", "components": ["docs", "config"], "sources": ["docs:sd76f8dcfe61f", "config:s5bcf465239d6"], "status": "REASONED"},
+    "listen-default": {"text": "Base config comments out listen_host; server code falls back to IPv4/IPv6 loopback when unset; widening listeners can expose services.", "components": ["config"], "sources": ["config:s5bcf465239d6", "config:s0c01b74057d5"], "status": "REASONED"},
     "default-user": {"text": "Upstream default has empty password, ::/0 origins and access_management; full bootstrap needs additional capabilities.", "components": ["users"], "sources": ["users:s20eec88438df"], "status": "REASONED"},
-    "docker-default": {"text": "Official image disables default network access when all three documented initialization variables are unset.", "components": ["docs"], "sources": ["docs:s8d4bf69ecb45"], "status": "REASONED"},
+    "docker-default": {"text": "Official image installs wildcard listeners; entrypoint restricts default to loopback only when user setup is not skipped, no named user/password/access-management change is requested, and default is unchanged.", "components": ["docker"], "sources": ["docker:s401d0e9b66f2", "docker:sb640b3bea2f7", "docker:sb4af84056917"], "status": "REASONED"},
     "ports": {"text": "8123 HTTP, 9000 native, 9004 MySQL, 9005 PostgreSQL and 9009 interserver are documented, not necessarily active.", "components": ["docs"], "sources": ["docs:sd891987369e6", "docs:sd156261650ee"], "status": "REASONED"},
     "interserver-bind": {"text": "interserver_listen_host defaults to listen_host but can independently widen replica exposure.", "components": ["docs"], "sources": ["docs:sd156261650ee"], "status": "REASONED"},
     "xml-merge": {"text": "config.d/users.d retain clickhouse roots; remove/replace inherited entries explicitly and inspect merged configuration.", "components": ["docs"], "sources": ["docs:sfd95effa4d9b"], "status": "REASONED"},
@@ -172,9 +182,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| listen-default: Shipped config tries IPv4/IPv6 localhost; widening listen_host can expose services; inspect merged overrides. | ClickHouse documentation unknown; ClickHouse server config source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6 | REASONED |
+| listen-default: Base config comments out listen_host; server code falls back to IPv4/IPv6 loopback when unset; widening listeners can expose services. | ClickHouse server config source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6 | REASONED |
 | default-user: Upstream default has empty password, ::/0 origins and access_management; full bootstrap needs additional capabilities. | ClickHouse users source b40982f9416bb4bc2d423d7e75ec384e79494b99 | REASONED |
-| docker-default: Official image disables default network access when all three documented initialization variables are unset. | ClickHouse documentation unknown | REASONED |
+| docker-default: Official image installs wildcard listeners; entrypoint restricts default to loopback only when user setup is not skipped, no named user/password/access-management change is requested, and default is unchanged. | ClickHouse Docker source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6 | REASONED |
 | ports: 8123 HTTP, 9000 native, 9004 MySQL, 9005 PostgreSQL and 9009 interserver are documented, not necessarily active. | ClickHouse documentation unknown | REASONED |
 | interserver-bind: interserver_listen_host defaults to listen_host but can independently widen replica exposure. | ClickHouse documentation unknown | REASONED |
 | xml-merge: config.d/users.d retain clickhouse roots; remove/replace inherited entries explicitly and inspect merged configuration. | ClickHouse documentation unknown | REASONED |
@@ -227,11 +237,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-totp: Fixed XML human account rejects missing/invalid OTP and accepts password with fresh code; do not reuse positive code. | ClickHouse documentation unknown | REASONED |
 <!-- version-basis:end -->
 
-ClickHouse listens on localhost only until you set `listen_host`, but the upstream base configuration ships a `default` user that has an empty password, may connect from any address (`<ip>::/0</ip>`), and holds `access_management`, so widening `listen_host` to `::` or `0.0.0.0` can publish a passwordless administrative account on plaintext HTTP 8123 and native TCP 9000. Packaging, container initialization, and configuration overrides can change these defaults (the official Docker image, for one, disables the `default` user's network access when none of `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, or `CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT` is set), so inspect the effective configuration of the version you run rather than assuming either behaviour. Complete the account and TLS setup before widening access. The full administrator bootstrap needs the additional capabilities in step 2. [Access control](https://clickhouse.com/docs/concepts/features/security/access-rights), [Docker default-user behaviour](https://clickhouse.com/docs/get-started/setup/self-managed/docker#managing-default-user).
+With no `listen_host` configured, the pinned server code falls back to `::1` and `127.0.0.1`; the pinned base `config.xml` comments out all its listener examples. The pinned `users.xml` defines `default` with an empty password, `<ip>::/0</ip>` networks and `access_management=1`. Together, a wildcard listener and this user configuration can expose a passwordless account on enabled plaintext interfaces. The official image instead copies a config.d override with `::` and `0.0.0.0` listeners. Its entrypoint writes a loopback-only `default` networks override only when `CLICKHOUSE_SKIP_USER_SETUP` is not `1`, no non-default `CLICKHOUSE_USER`, nonempty `CLICKHOUSE_PASSWORD`, or nonzero `CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT` requests user creation, and the processed `default` user matches the original. If those conditions differ, inspect the effective listener and user configuration; the entrypoint can create a user with `::/0` networks or leave a customized `default` untouched. Complete account and TLS setup before allowing remote access. The full administrator bootstrap needs the additional capabilities in step 2. [Server fallback](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/Server.cpp#L644-L652), [base configuration](https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml), [shipped user configuration](https://raw.githubusercontent.com/ClickHouse/ClickHouse/b40982f9416bb4bc2d423d7e75ec384e79494b99/programs/server/users.xml), [image override](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/docker_related_config.xml#L1-L5), [image copy](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/Dockerfile.ubuntu#L160-L161), [entrypoint](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/entrypoint.sh#L45-L159).
 
 ## 1. Keep `listen_host` narrow
 
-The shipped `config.xml` comments out the `listen_host` examples and defaults to trying IPv4 and IPv6 localhost. For remote clients, name the one private address rather than `::`. Keep only loopback while preparing authentication and TLS; add the private address afterwards. The following shows the relevant children of the existing `<clickhouse>` root, not a replacement for the entire base file:
+The pinned base `config.xml` comments out every `listen_host` example; when no listener is configured, `getListenHosts` supplies `::1` and `127.0.0.1`. The official image adds wildcard listeners through its config.d override, so remove those inherited entries before using this narrow example. [Base listener examples](https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml), [server fallback](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/Server.cpp#L644-L652), [image override](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/docker_related_config.xml#L1-L5). For remote clients, name the one private address rather than `::`. Keep only loopback while preparing authentication and TLS; add the private address afterwards. The following shows the relevant children of the existing `<clickhouse>` root, not a replacement for the entire base file:
 
 ```xml
 <clickhouse>
@@ -248,7 +258,7 @@ Inventory the listeners actually enabled. Documented port numbers include HTTP 8
 
 ## 2. Put a password on `default`, and create real users
 
-Replace the inherited empty password with the SHA-256 hash of a long, separately generated random password, and restrict the bootstrap account to loopback. Install `/etc/clickhouse-server/users.d/default-hardening.xml`:
+Replace the empty password in the pinned shipped `users.xml` with the SHA-256 hash of a long, separately generated random password, and restrict the bootstrap account to loopback. Install `/etc/clickhouse-server/users.d/default-hardening.xml`:
 
 ```xml
 <clickhouse>
@@ -833,8 +843,8 @@ SHOW CREATE TABLE system.session_log;
 
 ## Common mistakes
 
-- `<listen_host>::</listen_host>` uncommented to reach the server from a laptop, with `default` still passwordless.
-- A password set on `default` while `<networks>` still says `::/0`, leaving a privileged account reachable from anywhere.
+- A wildcard listener enabled manually or inherited from the official image, while the effective `default` user remains passwordless and reachable from remote networks.
+- A password set on `default` while its effective `<networks>` still says `::/0`, leaving a privileged account reachable from anywhere the listener and firewall allow.
 - `https_port` added while `http_port` 8123 stays open beside it.
 - Client TLS enabled while plaintext replication 9009 remains inherited, or replication HTTPS enabled without private binding and interserver credentials.
 - Commenting out a setting in an override and expecting the inherited setting to disappear.
@@ -848,6 +858,10 @@ SHOW CREATE TABLE system.session_log;
 - Listen address settings: https://clickhouse.com/docs/reference/settings/server-settings/settings/listen#listen_host
 - Shipped server configuration and localhost default: https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml
 - Shipped default-user configuration: https://raw.githubusercontent.com/ClickHouse/ClickHouse/b40982f9416bb4bc2d423d7e75ec384e79494b99/programs/server/users.xml
+- Server listener fallback: https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/Server.cpp#L644-L652
+- Official image listener override: https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/docker_related_config.xml#L1-L5
+- Official image copy into config.d: https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/Dockerfile.ubuntu#L160-L161
+- Official image default-user initialization: https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/entrypoint.sh#L45-L159
 - User settings, password hashes, networks, and bootstrap capabilities: https://clickhouse.com/docs/concepts/features/configuration/settings/settings-users
 - Administrator bootstrap and account management: https://clickhouse.com/docs/concepts/features/security/access-rights
 - SQL access storage: https://clickhouse.com/docs/reference/settings/server-settings/settings/access-control#access_control_path
