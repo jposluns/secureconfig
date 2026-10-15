@@ -59,7 +59,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 2.28 | `gitops-controllers.md`: Complete the missing-source audit of controller binds, repo-server RPC authorization and certificate fallback, Dex runtime authentication and authorization, the Redis image bind and password initializer, and the RBAC fallback before claiming those fully traced. (M, M) | `[gap]` |
 | 2.29 | `self-hosted-ci-runners.md`: offline inspection outcomes are recorded in the guide. Remaining: verify and cite a pinned vendor source for the `[runners.docker]` `pid_mode` TOML key, corroborated only in rolling GitLab Runner source. (M, M) | `[gap]` |
 | 1.117 | `search-engines.md` Verify (#285): the reviewed tools/scan_credential.sh searches client output and local refs/HEAD/reflog commit trees, with tools/test_scan_credential.py retaining dummy positive/negative controls and documented limits. Still open: run a real client pipeline in a disposable copy with a known dummy admin, master or bootstrap key, require detection, then remove it and rebuild cleanly and require scoped absence; retain a separate old-commit positive control and record the stated coverage limits. No real application build was available for the hand-built fixtures. (M, M) | `[gap]` |
-| 1.140 | `realtime-voice-infra.md`: evaluate a TURN allocation client that takes the password outside argv (stdin, a file or the environment), verified at a pinned tag, to replace `turnutils_uclient -w` in the allocation test, as CONTRIBUTING rule 7's third exception asks (from #354, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 
 ## Priority 3: Add missing content
 
@@ -74,7 +73,6 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.30 | Extend the fenced-block Verify-marking gate planned in #389 to list items, table rows and prose units, with the same baseline-and-ratchet mechanism (maintainer ruling, 2026-09-26). (M, L) | `[gap]` |
 | 3.39 | Render Sources with a pinned CommonMark parser in `tools/version_basis.py` (for example markdown-it-py, installed and SHA-verified in CI like shellcheck; local runs SKIP with an advisory when absent) and check rendered link targets against component URLs, replacing the line-grammar approximation of #420. Seven review rounds on #420 each found a new exotic construct the regex approach missed; residuals are listed in CONTRIBUTING. (M, M) | `[gap]` |
 
 ## Decisions
