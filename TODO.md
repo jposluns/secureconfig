@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.196**, **2.48**, **3.41**, **4.12**.
+Next ids: **1.197**, **2.48**, **3.41**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -44,7 +44,8 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.195 | `cloudflare.md`: the AOP item's inline 443 `curl` (no-tunnel origin check) lacks `--noproxy '*'` and `-g`; bring it to rule 6 shape, from #546 QA. (M, XS) | `[gap]` |
+| 1.195 | `cloudflare.md`: the AOP item's inline 443 `curl` (no-tunnel origin check) lacks `--noproxy '*'` and `-g`; bring it to rule 6 shape, and say a firewall drop alone is inconclusive unless the service-token GET answers, from #546 QA. (M, XS) | `[gap]` |
+| 1.196 | `cloudflare.md`: the port-3000 direct-origin probe is plain `http://`, but a remote origin uses HTTPS on the `cloudflared` hop (`service: https://...`), so an exposed HTTPS origin can read as inconclusive; cover HTTPS remote origins in the probe, and define the CA input when no `caPool` is set or `originServerName` differs from the URL host, from #546 QA. (M, S) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 
