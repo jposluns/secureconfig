@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "4afe1e81cfe32a6c5b6ec5e0a123d7a5219b014ab259a8a71e4e0f8939cd46a9",
+  "body_sha256": "c28088369a93d3d4220180c97262f34b6a11e07150e55d971ab09cfd629ce3ba",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -505,7 +505,7 @@ REASONED: following block; Budibase v3.46.0 sample environment supplies the samp
 
 REASONED: Exposed and fixed outcomes below are expectations, not live observations. Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. Exposed, either line gets `200`, which means the sample secret is live. Fixed, the CouchDB sample login
 gets `401` ("Username or password wasn't recognized", per CouchDB's `/_session` reference) and the
-LiteLLM sample key gets a 401 (or a 400 if the proxy has no database) (per the LiteLLM authentication source; compare the `/v1/models` check in [litellm.md](litellm.md)). Confirm each
+LiteLLM sample key gets a 401 (or a 400 if the proxy has no database), per the LiteLLM authentication source; compare the `/v1/models` check in [litellm.md](litellm.md). Confirm each
 service answers your real credentials as the positive control. Budibase's first-run admin route has no
 equivalent probe: its request validation runs before the "already initialised" check, so a request
 either fails validation in both states or, with a valid body on a fresh instance, creates the admin.
