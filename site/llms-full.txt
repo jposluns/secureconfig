@@ -6743,7 +6743,7 @@ its absence does not close a pod socket.
 
 For v3.5.3, the base command-parameters ConfigMap omits both server switches; their CLI defaults
 are false. The base RBAC ConfigMap omits `policy.default` rather than declaring a role.
-The fetched RBAC loader passes the ConfigMap `policy.default` value to the enforcer; an omitted key yields an empty string, so this enforcer skips its additive default-role check. Server-side wiring and effective runtime overrides were not fetched or tested.
+The fetched RBAC loader passes the ConfigMap `policy.default` value to the enforcer; an omitted key yields an empty string, so this enforcer skips its additive default-role check. Server-side wiring and effective runtime overrides were not traced or tested.
 Two settings decide who reaches the API without an account. Anonymous access is disabled by default
 (`users.anonymous.enabled`); keep it off, because an anonymous caller is granted whatever role
 `policy.default` names. Leave `policy.default` empty, as in the base
@@ -7018,6 +7018,7 @@ they were not rechecked online. Remaining source limits are identified above.
 - Redis TCP listener bind handoff: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2983-L2996
 - Redis optional bind prefix handling: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2651-L2673
 - RBAC default role storage and enforcement handoff: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L314-L346
+- RBAC policy ConfigMap key names (`policy.default`): https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L35-L42
 - RBAC ConfigMap loader: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L454-L467
 - RBAC default-role value: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L539-L547
 - RBAC default-role enforcement: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L399-L425
