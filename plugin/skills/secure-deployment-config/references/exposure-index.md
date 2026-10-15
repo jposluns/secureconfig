@@ -88,7 +88,7 @@ Open the guide before relying on either, because defaults change between release
 | 5600 | vLLM NIXL handshake base port; adds the data-parallel index | No authentication on this listener | [model-servers.md](model-servers.md) |
 | 5601 | Kibana, which defaults to HTTP on `localhost:5601` with `server.ssl.enabled: false` (its Docker image changes the host default to `0.0.0.0`), and OpenSearch Dashboards, whose 3.8.0 sample configuration also uses localhost and port 5601 with server TLS disabled | not stated | [elasticsearch.md](elasticsearch.md) |
 | 5671, 5672 | AMQP over TLS, and AMQP plaintext | `guest`/`guest`, usable only from localhost, except in the official Docker image as shipped, which sets `loopback_users.guest = false` | [rabbitmq.md](rabbitmq.md) |
-| 5678 | n8n | Owner account set up on first run; unclaimed instance open to first visitor | [n8n.md](n8n.md) |
+| 5678 | n8n | Owner setup endpoint skips authentication (2.40.6); finish owner setup before exposure | [n8n.md](n8n.md) |
 | 5766 | coturn telnet CLI, disabled by default and bound to loopback when enabled | Off by default; loopback when enabled; authenticated by `cli-password`, separately from the web admin | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 5778, 5779 | Jaeger v2 remote sampling, HTTP and gRPC, on localhost in the all-in-one configuration unless `JAEGER_LISTEN_HOST` is set (the official image sets `0.0.0.0`, every interface) | not stated | [observability-components.md](observability-components.md) |
 | 5900, 7900 | VNC and noVNC in the Selenium Docker browser images, started by default with the vendor example password `secret` | VNC on by default; vendor example password `secret` | [headless-browser-services.md](headless-browser-services.md) |
