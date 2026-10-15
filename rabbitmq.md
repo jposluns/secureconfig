@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "b7565b60d37095d3c4505e507520ec2a49ddf03d2a130acfe5b9d47937da75e6",
+  "body_sha256": "02208e1c7164f30bd94a7488df842c3d2b5709113cd61925722fae35b7159460",
   "components": {
     "docs": {
       "name": "RabbitMQ documentation",
@@ -109,7 +109,7 @@ version_basis: {
     "tls-depth": {"text": "ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED"},
     "tls-identity": {"text": "mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sffc9f05633d5"], "status": "REASONED"},
     "management-bind": {"text": "Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:s7d28cf5cc259", "docs:s73c5514e15ab", "docs:s5a539132e128"], "status": "REASONED"},
-    "management-default": {"text": "v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting parameters to their default values includes management.tcp.ip = 0.0.0.0.", "components": ["source", "docs"], "sources": ["source:s23753cce5d91", "source:s776b41dfa37a", "source:s2373a87402c7", "source:scde094099cd2", "source:s314eda502b64", "source:s8dd5ade37995", "docs:s0aa37c76e851"], "status": "REASONED"},
+    "management-default": {"text": "v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0.", "components": ["source", "docs"], "sources": ["source:s23753cce5d91", "source:s776b41dfa37a", "source:s2373a87402c7", "source:scde094099cd2", "source:s314eda502b64", "source:s8dd5ade37995", "docs:s0aa37c76e851"], "status": "REASONED"},
     "management-auth": {"text": "Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad"], "status": "REASONED"},
     "epmd": {"text": "epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains.", "components": ["docs"], "sources": ["docs:sc3e3083ffb2f"], "status": "REASONED"},
     "distribution-port": {"text": "Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it.", "components": ["source", "docs"], "sources": ["source:s429261f04d72", "source:s3db3e9410319", "docs:sc3e3083ffb2f"], "status": "REASONED"},
@@ -158,7 +158,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | tls-depth: ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates. | RabbitMQ documentation unknown | REASONED |
 | tls-identity: mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured. | RabbitMQ documentation unknown | REASONED |
 | management-bind: Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management. | RabbitMQ documentation unknown | REASONED |
-| management-default: v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting parameters to their default values includes management.tcp.ip = 0.0.0.0. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
+| management-default: v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
 | management-auth: Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access. | RabbitMQ documentation unknown | REASONED |
 | epmd: epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains. | RabbitMQ documentation unknown | REASONED |
 | distribution-port: Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
@@ -797,7 +797,7 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 - RabbitMQ v4.3.6 management schema `management.tcp.ip` mapping (no default value): https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60
 - RabbitMQ 3.7.0 release notes (topic authorization introduction): https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0
 - RabbitMQ management listeners, HTTPS, and roles: https://www.rabbitmq.com/docs/management
-- RabbitMQ 4.3 management documentation source, example configuration setting parameters to their default values, including `management.tcp.ip = 0.0.0.0` (rabbitmq-website commit db23826e): https://github.com/rabbitmq/rabbitmq-website/blob/db23826ebaa810b3cdd525fd290125d65f6c3005/versioned_docs/version-4.3/management/index.md#L1365-L1381
+- RabbitMQ 4.3 management documentation source, example configuration described as setting some parameters to their default values, which includes `management.tcp.ip = 0.0.0.0` (rabbitmq-website commit db23826e): https://github.com/rabbitmq/rabbitmq-website/blob/db23826ebaa810b3cdd525fd290125d65f6c3005/versioned_docs/version-4.3/management/index.md#L1365-L1381
 - RabbitMQ configuration files and restart requirements: https://www.rabbitmq.com/docs/configure
 - RabbitMQ plugin activation: https://www.rabbitmq.com/docs/plugins
 - RabbitMQ plugin enable command: https://www.rabbitmq.com/docs/man/rabbitmq-plugins.8

@@ -16197,7 +16197,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | tls-depth: ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates. | RabbitMQ documentation unknown | REASONED |
 | tls-identity: mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured. | RabbitMQ documentation unknown | REASONED |
 | management-bind: Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management. | RabbitMQ documentation unknown | REASONED |
-| management-default: v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting parameters to their default values includes management.tcp.ip = 0.0.0.0. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
+| management-default: v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
 | management-auth: Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access. | RabbitMQ documentation unknown | REASONED |
 | epmd: epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains. | RabbitMQ documentation unknown | REASONED |
 | distribution-port: Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
@@ -16836,7 +16836,7 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 - RabbitMQ v4.3.6 management schema `management.tcp.ip` mapping (no default value): https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60
 - RabbitMQ 3.7.0 release notes (topic authorization introduction): https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0
 - RabbitMQ management listeners, HTTPS, and roles: https://www.rabbitmq.com/docs/management
-- RabbitMQ 4.3 management documentation source, example configuration setting parameters to their default values, including `management.tcp.ip = 0.0.0.0` (rabbitmq-website commit db23826e): https://github.com/rabbitmq/rabbitmq-website/blob/db23826ebaa810b3cdd525fd290125d65f6c3005/versioned_docs/version-4.3/management/index.md#L1365-L1381
+- RabbitMQ 4.3 management documentation source, example configuration described as setting some parameters to their default values, which includes `management.tcp.ip = 0.0.0.0` (rabbitmq-website commit db23826e): https://github.com/rabbitmq/rabbitmq-website/blob/db23826ebaa810b3cdd525fd290125d65f6c3005/versioned_docs/version-4.3/management/index.md#L1365-L1381
 - RabbitMQ configuration files and restart requirements: https://www.rabbitmq.com/docs/configure
 - RabbitMQ plugin activation: https://www.rabbitmq.com/docs/plugins
 - RabbitMQ plugin enable command: https://www.rabbitmq.com/docs/man/rabbitmq-plugins.8
