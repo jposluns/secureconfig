@@ -17,6 +17,12 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **ai-infra-services.md check 1 marked DEMONSTRATED, 2026-10-15 (#553).** The maintainer ruled, through AskUser,
+  that the check 1 **Broken:** and **Fixed:** paragraphs are marked DEMONSTRATED on the exposed and fixed fixture
+  runs the guide records, with the GNU grep 3.12 exit-status source #550 added. Because the gate rejects
+  DEMONSTRATED paragraphs beside a REASONED block declaration, the block declaration and the `verify-placeholder`
+  claim became DEMONSTRATED too, with a renewed stub-grep review recording every guard branch in Bash, dash and
+  BusyBox ash; the real-grep observations remain those the guide's earlier record shows.
 - **Row 3.30 Verify-marking baseline end state, 2026-10-15 (#551).** The maintainer ruled, through AskUser, that
   the remaining Verify-marking baseline is the intended structural floor: 94 retained units across 19 files (41
   list items, 1 table row and 52 prose units). The #429 gate and its ratchet stay in force; any remaining work
