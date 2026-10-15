@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "edc8195096e3aaade2857f980d8779b107bfd67990088b5f8aef1477cd2d3358",
+  "body_sha256": "91358f3ee7e5ca5ba33606a4b46c12bec14a29e5041f1de20a8f491d178f87d0",
   "components": {
     "q": {
       "name": "Qdrant source",
@@ -196,7 +196,24 @@ version_basis: {
         "sed8aad199780": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L39-L45",
         "s3a1c76cdd7f8": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L114-L134",
         "s09652c32f56a": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179",
-        "s784a0e779949": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229"
+        "s784a0e779949": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229",
+        "se936b62a1a3d": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L139-L142",
+        "sc65518ba38d0": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/auth/mod.rs#L120-L164",
+        "s62cd8db9e61a": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L457-L486"
+      }
+    },
+    "pc": {
+      "name": "Pinecone organization documentation",
+      "basis": "unknown",
+      "sources": {
+        "s1696db54b028": "https://docs.pinecone.io/guides/organizations/understanding-organizations"
+      }
+    },
+    "qc": {
+      "name": "Qdrant Cloud documentation",
+      "basis": "unknown",
+      "sources": {
+        "sc72e09d8f7e6": "https://qdrant.tech/documentation/cloud/"
       }
     },
     "cd": {
@@ -358,10 +375,10 @@ version_basis: {
     "milvus-eventlog": {"text": "First successful eventlog request opens an unauthenticated, non-TLS wildcard gRPC listener on a random port; repeat inventory after requests.", "components": ["m2", "m3"], "sources": ["m2:se193bc422269", "m3:s50ffed832d11", "m2:s108ca53f9ce3", "m3:s19e44f8baa1c"], "status": "REASONED"},
     "milvus-health": {"text": "Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings.", "components": ["m2", "m3"], "sources": ["m2:s978d2f09057a", "m3:sdb5a4b72da10"], "status": "REASONED"},
     "chroma-bind": {"text": "Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000.", "components": ["chroma"], "sources": ["chroma:s7eb7610f68c1", "chroma:s6d6708278bef", "chroma:s59912a4c7e11", "chroma:sed8aad199780", "chroma:s3a1c76cdd7f8", "chroma:s09652c32f56a", "chroma:s784a0e779949"], "status": "REASONED"},
-    "chroma-auth": {"text": "Built-in authentication was removed in v1.0.0; obsolete AUTHN variables do not protect the server. Use private binding and authenticated TLS fronting.", "components": ["cd"], "sources": ["cd:s60ad33c4b715"], "status": "REASONED"},
+    "chroma-auth": {"text": "Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting.", "components": ["cd", "chroma"], "sources": ["cd:s60ad33c4b715", "chroma:se936b62a1a3d", "chroma:sc65518ba38d0", "chroma:s62cd8db9e61a"], "status": "REASONED"},
     "pgvector": {"text": "pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.", "components": ["pg"], "sources": ["pg:saab3b3092223"], "status": "REASONED"},
     "pgvector-rls": {"text": "Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k.", "components": ["pg"], "sources": ["pg:se9846041ce1f"], "status": "REASONED"},
-    "hosted-mfa": {"text": "Hosted keys stay secret and clients use vendor HTTPS; human MFA belongs on hosted consoles, Weaviate OIDC or the fronting layer, not a self-hosted API key.", "components": ["qd", "wd"], "sources": ["qd:s753402e46eed", "wd:s51c9c4c6b4c0"], "status": "REASONED"},
+    "hosted-mfa": {"text": "Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity provider on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it.", "components": ["qc", "pc", "wd"], "sources": ["qc:sc72e09d8f7e6", "pc:s1696db54b028", "wd:s51c9c4c6b4c0"], "status": "REASONED"},
     "verify-inventory": {"text": "Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure.", "components": ["qd", "docker"], "sources": ["qd:s753402e46eed", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]},
     "verify-peer": {"text": "Probe real backend 6333/6334/6335 from non-peers; require connection failure with filtering evidence and a positive peer control for 6335; auth/TLS rejection is still reachability.", "components": ["qd", "curl-docs"], "sources": ["qd:s753402e46eed", "curl-docs:s2b2686afaf41", "curl-docs:s596c6f706038"], "status": "REASONED", "verify": [2]},
     "verify-curl": {"text": "exit 3/6 is invalid input; 7 or a five-second 28 needs corroboration; nonzero HTTP, 52/56 or a twenty-second 28 indicates reachability, including HTTP 000 cases.", "components": ["curl-docs"], "sources": ["curl-docs:s2b2686afaf41", "curl-docs:s596c6f706038"], "status": "REASONED", "verify": [2]},
@@ -427,10 +444,10 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 | milvus-eventlog: First successful eventlog request opens an unauthenticated, non-TLS wildcard gRPC listener on a random port; repeat inventory after requests. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
 | milvus-health: Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
 | chroma-bind: Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000. | Chroma source 1.5.9 | REASONED |
-| chroma-auth: Built-in authentication was removed in v1.0.0; obsolete AUTHN variables do not protect the server. Use private binding and authenticated TLS fronting. | Chroma migration documentation v1.0.0 | REASONED |
+| chroma-auth: Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting. | Chroma migration documentation v1.0.0; Chroma source 1.5.9 | REASONED |
 | pgvector: pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles. | pgvector and PostgreSQL documentation unknown | REASONED |
 | pgvector-rls: Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k. | pgvector and PostgreSQL documentation unknown | REASONED |
-| hosted-mfa: Hosted keys stay secret and clients use vendor HTTPS; human MFA belongs on hosted consoles, Weaviate OIDC or the fronting layer, not a self-hosted API key. | Qdrant security documentation unknown; Weaviate documentation unknown | REASONED |
+| hosted-mfa: Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity provider on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it. | Qdrant Cloud documentation unknown; Pinecone organization documentation unknown; Weaviate documentation unknown | REASONED |
 | verify-inventory: Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure. | Qdrant security documentation unknown; Docker documentation unknown | REASONED |
 | verify-peer: Probe real backend 6333/6334/6335 from non-peers; require connection failure with filtering evidence and a positive peer control for 6335; auth/TLS rejection is still reachability. | Qdrant security documentation unknown; curl documentation (rolling) unknown | REASONED |
 | verify-curl: exit 3/6 is invalid input; 7 or a five-second 28 needs corroboration; nonzero HTTP, 52/56 or a twenty-second 28 indicates reachability, including HTTP 000 cases. | curl documentation (rolling) unknown | REASONED |
@@ -575,7 +592,7 @@ Chart 5.0.30 declares `appVersion: "3.0.1"`, so the chart claim concerns its Ser
 
 ## 5. Chroma: no native authentication since 1.0
 
-Chroma's migration notes for v1.0.0 state that "Chroma no longer provides built-in authentication implementations". A self-hosted `chroma run --path /db_path` server (port 8000) therefore accepts every request, and the older `CHROMA_SERVER_AUTHN_PROVIDER` / `CHROMA_SERVER_AUTHN_CREDENTIALS` variables from the 2024 auth overhaul no longer do anything; do not paste them from old tutorials and assume protection. Keep Chroma on loopback and expose it only through an authenticated TLS proxy (bearer-token or basic-auth block per [nginx.md](nginx.md) / [caddy.md](caddy.md)), a Cloudflare Tunnel with Access ([cloudflare.md](cloudflare.md)), or a tailnet ([tailscale.md](tailscale.md)).
+Chroma's migration notes for v1.0.0 state that "Chroma no longer provides built-in authentication implementations". In Chroma 1.5.9, `chroma run --path /db_path` (port 8000) starts with the unit authenticator, whose authentication and authorization methods return the default identity when the server calls them, and the older `CHROMA_SERVER_AUTHN_PROVIDER` / `CHROMA_SERVER_AUTHN_CREDENTIALS` variables from the 2024 auth overhaul no longer do anything; do not paste them from old tutorials and assume protection. Keep Chroma on loopback and expose it only through an authenticated TLS proxy (bearer-token or basic-auth block per [nginx.md](nginx.md) / [caddy.md](caddy.md)), a Cloudflare Tunnel with Access ([cloudflare.md](cloudflare.md)), or a tailnet ([tailscale.md](tailscale.md)).
 
 ## 6. pgvector: it is PostgreSQL
 
@@ -583,7 +600,7 @@ pgvector is an extension (`CREATE EXTENSION vector;`, PostgreSQL 13 and later), 
 
 ## 7. Hosted services and MFA
 
-Pinecone, Qdrant Cloud, Weaviate Cloud, and Zilliz authenticate with API keys: those are secrets under [secrets.md](secrets.md), one per environment, never committed, rotated on leak. The vendor terminates TLS, so the client-side check is that the SDK is pointed at the `https://` endpoint the console gives you. None of the self-hosted servers has a human login with a second factor; MFA exists only on the vendor console for the hosted tiers, at the identity provider when Weaviate uses OIDC, or on the fronting layer (Access policy, Authelia-style portal) for everything else ([mfa.md](mfa.md)).
+Qdrant Cloud documents API keys for requests; treat them as secrets under [secrets.md](secrets.md), use one per environment, never commit them, and rotate them on leak. Point each SDK at the vendor-provided `https://` endpoint. Pinecone documents organization SSO through an organization’s identity management solution on Standard and Enterprise plans; for SSO organizations, console sessions are re-authenticated at least every 24 hours. This does not establish that Pinecone enforces MFA. The fetched Qdrant Cloud, Weaviate Cloud, and Zilliz pages do not establish a console MFA arrangement; check each vendor’s account security settings. The native API-key configurations described here do not establish human MFA. Weaviate OIDC can delegate authentication to an identity provider where MFA can be enforced; an MFA-capable fronting layer (Access policy or Authelia-style portal) is another option ([mfa.md](mfa.md)).
 
 ## Verify
 
@@ -702,6 +719,9 @@ REASONED: tenant isolation and bypass positive control. A live PostgreSQL with p
 - Milvus standalone Compose at v2.6.24 and v3.0.2: selected image tags, standalone command, localhost healthcheck, explicit publications of 19530 and 9091, and default network: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/deployments/docker/standalone/docker-compose.yml#L39-L66 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/deployments/docker/standalone/docker-compose.yml#L39-L66
 - Milvus log-level handler dependency (zap v1.27.0, GET reads and PUT changes the level): https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/log/log.go#L278-L280, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/mlog/level.go#L72-L74, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/go.mod#L47, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/go.mod#L43 and https://github.com/uber-go/zap/blob/v1.27.0/http_handler.go#L69-L103
 - Docker port publication: default host binding, explicit loopback mapping, same-network and host access, direct-routing and older-engine caveats: https://docs.docker.com/engine/network/port-publishing/
+- Pinecone organization SSO (Standard and Enterprise plans; identity provider; 24-hour console re-authentication), rolling page captured October 15, 2026: https://docs.pinecone.io/guides/organizations/understanding-organizations
+- Qdrant Cloud API key per request, rolling page captured October 15, 2026: https://qdrant.tech/documentation/cloud/
+- Chroma 1.5.9 `chroma run` unit authenticator, default-identity authentication and authorization, and server delegation: https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L139-L142, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/auth/mod.rs#L120-L164 and https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L457-L486
 - Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables): https://docs.trychroma.com/docs/overview/migration ; client-server mode (`chroma run --path`, port 8000): https://docs.trychroma.com/docs/run-chroma/client-server
 - Chroma `chroma run`: the `--host` default `localhost` applied only without a config file, the config-file branch, the `listen_address` and `port` defaults `0.0.0.0` and 8000, `CHROMA_` variables merged when a file is loaded, the server's bind of `listen_address:port`, and the release image (`rust/Dockerfile` target `cli`, `chroma run /config.yaml` from `docker_single_node.yaml`) (pinned tag 1.5.9): https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L39-L45, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L60-L73, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L114-L134, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L140-L146, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L415-L417, https://github.com/chroma-core/chroma/blob/1.5.9/rust/Dockerfile#L85-L93, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/sample_configs/docker_single_node.yaml and https://github.com/chroma-core/chroma/blob/1.5.9/.github/workflows/_build_release_container.yml#L101-L106
 - pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later; v0.8.2 README): https://github.com/pgvector/pgvector/blob/v0.8.2/README.md
