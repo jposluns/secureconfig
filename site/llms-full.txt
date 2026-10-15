@@ -7016,7 +7016,7 @@ they were not rechecked online. Remaining source limits are identified above.
 - Redis default bind addresses: https://github.com/redis/redis/blob/8.2.3/src/server.h#L142-L143
 - Redis default bind initialization: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2199-L2221
 - Redis TCP listener bind handoff: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2983-L2996
-- Redis optional bind prefix handling: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2651-L2673
+- Redis optional bind prefix handling: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2638-L2673
 - RBAC default role storage and enforcement handoff: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L314-L346
 - RBAC policy ConfigMap key names (`policy.default`): https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L35-L42
 - RBAC ConfigMap loader: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L454-L467

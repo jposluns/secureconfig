@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "c53258d3128e78e4d0b548105c66a5d80ca961e6a1bc83fb15b8c1678c503ba6",
+  "body_sha256": "b158153728c84055ad07ac40aef30d5debffd04a1faa42c2cab665877e2fb2be",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -83,7 +83,7 @@ version_basis: {
       "sources": {
         "s667fc16bf18f": "https://github.com/redis/redis/blob/8.2.3/src/server.h#L142-L143",
         "saa497d27f72f": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2199-L2221",
-        "s581ec797dc22": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2651-L2673",
+        "s0f96763525b7": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2638-L2673",
         "s9b50a7c52721": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2983-L2996"
       }
     },
@@ -163,7 +163,7 @@ version_basis: {
     "dex-http": {"text": "Dex starts only with nonempty generated configuration; HTTP defaults to TLS on 0.0.0.0:5556 using /tmp/tls.crt and /tmp/tls.key.", "components": ["argo"], "sources": ["argo:s8efcc66f9cb4", "argo:s30c391d9dc23", "argo:se477de2fdfa0"], "status": "REASONED"},
     "dex-grpc": {"text": "Generated Dex gRPC uses 0.0.0.0:5557 without TLS or client-auth settings; Dex v2.45.1 source sets no transport credentials or authentication interceptor for this configuration, while API method authorization is unverified; this assumes the deployed ghcr.io/dexidp/dex:v2.45.1 tag was built from Dex v2.45.1.", "components": ["argo", "dex"], "sources": ["argo:se477de2fdfa0", "argo:s56c41c02ba8b", "argo:s7c7bf274e3ef", "dex:s3b9512b79dea", "dex:s46eb2feaa84f", "dex:s55b453f266f3"], "status": "REASONED"},
     "dex-telemetry": {"text": "Dex telemetry uses HTTP on 0.0.0.0:5558; all three Dex ports have Services.", "components": ["argo"], "sources": ["argo:se477de2fdfa0", "argo:s56c41c02ba8b"], "status": "REASONED"},
-    "redis-password": {"text": "Redis receives --requirepass from argocd-redis/auth; secret-init generates and checks that Secret. The redis:8.2.3-alpine tag, taken as built from docker-library-redis v8.2.3, uses Redis wildcard bind defaults and patches protected mode off.", "components": ["argo", "redis-image", "redis-source"], "sources": ["argo:s996c72c5db28", "argo:s08939ffb906f", "redis-image:s67a2f7553c9a", "redis-image:s30643c91686d", "redis-image:sd04db8453288", "redis-source:s667fc16bf18f", "redis-source:saa497d27f72f", "redis-source:s581ec797dc22", "redis-source:s9b50a7c52721"], "status": "REASONED"},
+    "redis-password": {"text": "Redis receives --requirepass from argocd-redis/auth; secret-init generates and checks that Secret. The redis:8.2.3-alpine tag, taken as built from docker-library-redis v8.2.3, uses Redis wildcard bind defaults and patches protected mode off.", "components": ["argo", "redis-image", "redis-source"], "sources": ["argo:s996c72c5db28", "argo:s08939ffb906f", "redis-image:s67a2f7553c9a", "redis-image:s30643c91686d", "redis-image:sd04db8453288", "redis-source:s667fc16bf18f", "redis-source:saa497d27f72f", "redis-source:s0f96763525b7", "redis-source:s9b50a7c52721"], "status": "REASONED"},
     "redis-tls": {"text": "Base manifests configure no Redis TLS and the Argo Redis client defaults --redis-use-tls=false; protect traffic, Secret and cache.", "components": ["argo"], "sources": ["argo:s996c72c5db28", "argo:s34909d7a1932"], "status": "REASONED"},
     "component-policies": {"text": "Base policies restrict repo gRPC, Redis and Dex callers by component; enforcement needs a supporting CNI.", "components": ["argo"], "sources": ["argo:s1a13cc06db6d", "argo:s4bbf38e83770", "argo:sadccbbcffcd8"], "status": "REASONED"},
     "broad-policies": {"text": "Server policy allows all ingress; other metrics and ApplicationSet webhook allowances admit every namespace. Narrow existing additive allowances and egress separately.", "components": ["argo"], "sources": ["argo:s743c8187cbd7", "argo:s49f63c21c3cd", "argo:sa258c4109d24", "argo:sa49c30e332ed"], "status": "REASONED"},
@@ -651,7 +651,7 @@ they were not rechecked online. Remaining source limits are identified above.
 - Redis default bind addresses: https://github.com/redis/redis/blob/8.2.3/src/server.h#L142-L143
 - Redis default bind initialization: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2199-L2221
 - Redis TCP listener bind handoff: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2983-L2996
-- Redis optional bind prefix handling: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2651-L2673
+- Redis optional bind prefix handling: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2638-L2673
 - RBAC default role storage and enforcement handoff: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L314-L346
 - RBAC policy ConfigMap key names (`policy.default`): https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L35-L42
 - RBAC ConfigMap loader: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L454-L467
