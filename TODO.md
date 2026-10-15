@@ -44,9 +44,9 @@ many.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.195 | `cloudflare.md`: the AOP item's inline 443 `curl` (no-tunnel origin check) lacks `--noproxy '*'` and `-g`; bring it to rule 6 shape, and say a firewall drop is inconclusive even when the service-token GET answers; isolation rests on the effective-inbound-policy check, from #546 QA. (M, XS) | `[gap]` |
+| 1.195 | `cloudflare.md`: the AOP item's inline 443 `curl` (no-tunnel origin check) lacks `--noproxy '*'` and `-g`; bring it to rule 6 shape, and say a firewall drop is inconclusive even when the service-token GET answers (in the item and in the `verify-aop` claim and its table row, which say firewall drops prove a layer); isolation rests on the effective-inbound-policy check, from #546 QA. (M, XS) | `[gap]` |
 | 1.196 | `cloudflare.md`: the port-3000 direct-origin probe is plain `http://`, but a remote origin uses HTTPS on the `cloudflared` hop (`service: https://...`), so an exposed HTTPS origin can read as inconclusive; cover HTTPS remote origins in the probe, and define the CA input when no `caPool` is set or `originServerName` differs from the URL host, from #546 QA. (M, S) | `[gap]` |
-| 1.197 | `cloudflare.md`: the port-80 control (the service-token GET) reaches the origin through Cloudflare, so it shows the origin is up but not that the probed address is the origin; a refusal from a wrong or stale address would read as fixed. Say the control does not confirm the probed address, or add an address check, from #546 QA. (L, XS) | `[gap]` |
+| 1.197 | `cloudflare.md`: the port-3000 and port-80 controls (the tunnel-host loopback request, or for a remote origin the `cloudflared`-host service-URL request, and the service-token GET) show the app or origin is up but not that the probed public address is that host or origin; a refusal from a wrong or stale address would read as fixed. Say the controls do not confirm the probed address, or add an address check, from #546 QA. (M, XS) | `[gap]` |
 
 ## Priority 2: Deepen existing guides
 
@@ -58,7 +58,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 2.28 | `gitops-controllers.md`: Complete the missing-source audit of controller binds, repo-server RPC authorization and certificate fallback, Dex runtime authentication and authorization, the Redis image bind and password initializer, and the RBAC fallback before claiming those fully traced. (M, M) | `[gap]` |
 | 2.29 | `self-hosted-ci-runners.md`: offline inspection outcomes are recorded in the guide. Remaining: verify and cite a pinned vendor source for the `[runners.docker]` `pid_mode` TOML key, corroborated only in rolling GitLab Runner source. (M, M) | `[gap]` |
 | 1.117 | `search-engines.md` Verify (#285): the reviewed tools/scan_credential.sh searches client output and local refs/HEAD/reflog commit trees, with tools/test_scan_credential.py retaining dummy positive/negative controls and documented limits. Still open: run a real client pipeline in a disposable copy with a known dummy admin, master or bootstrap key, require detection, then remove it and rebuild cleanly and require scoped absence; retain a separate old-commit positive control and record the stated coverage limits. No real application build was available for the hand-built fixtures. (M, M) | `[gap]` |
-| 1.140 | `realtime-voice-infra.md`: evaluate a TURN allocation client that takes the password outside argv (stdin, a file or the environment), verified at a pinned tag, to replace `turnutils_uclient -w` in the allocation test, as CONTRIBUTING rule 7's third exception asks (from #354, maintainer ruling 2026-09-25). (L, S) | `[gap]` |
 
 ## Priority 3: Add missing content
 
@@ -73,7 +72,6 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.30 | Extend the fenced-block Verify-marking gate planned in #389 to list items, table rows and prose units, with the same baseline-and-ratchet mechanism (maintainer ruling, 2026-09-26). (M, L) | `[gap]` |
 | 3.39 | Render Sources with a pinned CommonMark parser in `tools/version_basis.py` (for example markdown-it-py, installed and SHA-verified in CI like shellcheck; local runs SKIP with an advisory when absent) and check rendered link targets against component URLs, replacing the line-grammar approximation of #420. Seven review rounds on #420 each found a new exotic construct the regex approach missed; residuals are listed in CONTRIBUTING. (M, M) | `[gap]` |
 
 ## Decisions
