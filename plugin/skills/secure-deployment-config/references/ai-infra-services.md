@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "7321e44f3262a9fe51c7157f91030a508077cdaa2e7aae2b565c53d7f81118bb",
+  "body_sha256": "3498eb0f6aa6921156fc6665b741b6c48dcb4ab925edf7f5c4d2228cc8d818ea",
   "components": {
     "searx": {
       "name": "SearxNG documentation",
@@ -659,9 +659,9 @@ REASONED: Credentialed HTTPS success and header transport, per the guide's cited
 
 REASONED: Credentialed HTTPS success and header transport, per the guide's cited curl manual, LocalAI getting started, Text Embeddings Inference CLI arguments, Text Embeddings Inference HTTP server at v1.9.0, Mem0 REST API and Onyx basic authentication. Bash 5.3.9 bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. Placeholder, empty-value, marker, count and scheme fixtures stopped before stub curl; body and no-body requests reached it. One and two fixture headers appeared only on stdin; LF, CR and placeholders in either header were refused before a stub call. Historical authoring note: no container runtime, TLS exchange or browser flow was available. A live SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0 or Onyx stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Expect anonymous rejection paired with authorized application output when fixed; success alone, errors and login pages cannot establish protection. Stub calls do not establish authentication. Credentialed success can also occur on an exposed service. It only completes the verification when the negative checks above pass.
 
-For browser access, use a fresh session subject to the MFA policy. **Broken:** password-only access reaches the protected application when the policy requires a second factor. **Fixed:** the configured MFA challenge appears before access, and completing it opens the intended application.
+For browser access, follow the MFA enforcement check in [mfa.md](mfa.md) against a protected operation. **Broken:** the protected operation succeeds with only a password when policy requires a second factor. **Fixed:** the password-only attempt is refused and completing the second factor allows the operation. This browser outcome is reasoned rather than demonstrated here.
 
-If the deployment trusts identity headers from a proxy, also perform the forged-header check in [fronting-auth.md](fronting-auth.md). **Broken:** a direct request carrying the forged identity reaches the application. **Fixed:** the direct connection is refused at the network boundary, and legitimate authenticated access works through the proxy. This browser and identity-header verification is also reasoned rather than demonstrated here.
+If the deployment trusts identity headers from a proxy, follow the direct-origin, header-overwrite and authenticated-through-proxy checks in [fronting-auth.md](fronting-auth.md). **Broken:** a direct forged identity header reaches the app, or a forged trusted header sent through the proxy appears as the forged identity in the app log. **Fixed:** the direct forged-header request is refused at the network boundary; a valid authenticated session reaches the app through the proxy, and the app log shows the real identity after a forged trusted header is sent through it. These identity-header outcomes are reasoned rather than demonstrated here.
 
 ## Common mistakes
 
