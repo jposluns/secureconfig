@@ -42,7 +42,7 @@ python3 tools/version_basis.py --check
 {
   echo "# secureconfig.ai: all guides in one file"
   echo
-  echo "> Generated from https://github.com/jposluns/secureconfig (CC0 1.0)."
+  echo "> Generated from https://github.com/jposluns/secureconfig (CC0 1.0, except the AIQT Guardrails material listed in .aiqt/PIN, Apache-2.0)."
   echo "> Per-guide index: https://secureconfig.ai/llms.txt"
   for f in "${files[@]}"; do
     echo

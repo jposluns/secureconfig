@@ -1,6 +1,6 @@
 # secureconfig.ai: all guides in one file
 
-> Generated from https://github.com/jposluns/secureconfig (CC0 1.0).
+> Generated from https://github.com/jposluns/secureconfig (CC0 1.0, except the AIQT Guardrails material listed in .aiqt/PIN, Apache-2.0).
 > Per-guide index: https://secureconfig.ai/llms.txt
 
 ======================================================================
