@@ -6565,7 +6565,7 @@ allowed ranges out of the provider's own configuration rather than inferring the
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -6583,22 +6583,22 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | argo-profiler-file: ARGOCD_ENABLE_PROFILER_FILE_PATH defaults to /home/argocd/params/profiler.enabled; the server mounts ConfigMap key server.profile.enabled there. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | repo-grpc: Repo-server gRPC binds 0.0.0.0:8081 with TLS by default; mTLS is skipped without the client CA, separate from the serving certificate. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | repo-http: Repo-server HTTP metrics and health bind 0.0.0.0:8084 without an authentication wrapper. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| repo-limits: Repo-server RPC authorization and certificate fallback implementations were absent from the inspected subset; isolate cached manifests and operations. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Argo CD documentation unknown | REASONED |
-| controller-metrics: Application-controller metrics and health use 8082; the inspected subset does not establish the bind address. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| repo-limits: Repo-server requires verified client certificates with a loaded client CA; missing or unstatable serving files trigger a session self-signed certificate, while an invalid present pair errors. No authorization interceptor appears; service method authorization is unverified. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| controller-metrics: Application-controller metrics and health use 8082; the command passes that port to the controller, but the fetched files do not establish the bind address. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | applicationset-webhook: ApplicationSet webhook binds :7000; its container and Service declare 7000. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | applicationset-metrics: ApplicationSet metrics bind :8080; its container and Service declare 8080. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | applicationset-health: ApplicationSet health probes bind :8081 without a container or Service port declaration; missing declarations do not close sockets. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | notifications: Notifications HTTP metrics bind 0.0.0.0:9001 without authentication; a metrics Service and TCP liveness probe exist without containerPort. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | dex-http: Dex starts only with nonempty generated configuration; HTTP defaults to TLS on 0.0.0.0:5556 using /tmp/tls.crt and /tmp/tls.key. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| dex-grpc: Generated Dex gRPC uses 0.0.0.0:5557 with no TLS or client-auth settings; runtime authentication and authorization remain unverified. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| dex-grpc: Generated Dex gRPC uses 0.0.0.0:5557 without TLS or client-auth settings; Dex v2.45.1 source sets no transport credentials or authentication interceptor for this configuration, while API method authorization is unverified; this assumes the deployed ghcr.io/dexidp/dex:v2.45.1 tag was built from Dex v2.45.1. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Dex v2.45.1 source v2.45.1 | REASONED |
 | dex-telemetry: Dex telemetry uses HTTP on 0.0.0.0:5558; all three Dex ports have Services. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| redis-password: Redis 6379 receives --requirepass from argocd-redis/auth, initialized by secret-init; image bind and initializer implementation were not inspected. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
+| redis-password: Redis receives --requirepass from argocd-redis/auth; secret-init generates and checks that Secret. The redis:8.2.3-alpine tag, taken as built from docker-library-redis v8.2.3, uses Redis wildcard bind defaults and patches protected mode off. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; docker-library-redis v8.2.3 source bcbc692165ce2241e194035041c5b5e01d2e1a5f; Redis 8.2.3 source 8.2.3 | REASONED |
 | redis-tls: Base manifests configure no Redis TLS and the Argo Redis client defaults --redis-use-tls=false; protect traffic, Secret and cache. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | component-policies: Base policies restrict repo gRPC, Redis and Dex callers by component; enforcement needs a supporting CNI. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | broad-policies: Server policy allows all ingress; other metrics and ApplicationSet webhook allowances admit every namespace. Narrow existing additive allowances and egress separately. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
 | argo-anonymous: users.anonymous.enabled defaults off; anonymous callers otherwise inherit policy.default. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Argo CD documentation unknown | REASONED |
 | argo-disable-auth: server.disable.auth defaults false; inspect effective args and environment because anonymous-off does not compensate for disabled authentication. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| argo-default-role: Base RBAC ConfigMap omits policy.default; keep it empty and grant explicit policy.csv roles/groups. Default-role grants cannot be revoked by later subject rules; fallback was not traced. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Argo CD documentation unknown | REASONED |
+| argo-default-role: Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings. Server-side wiring remains unverified. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Argo CD documentation unknown | REASONED |
 | argo-webhook: /api/webhook accepts unauthenticated refresh events without a shared secret; configure one to limit spoofed reconciliation and resource exhaustion. | Argo CD documentation unknown | REASONED |
 | argo-projects: Restrict AppProjects including the built-in default project; project constraints do not reduce a compromised controller's Kubernetes credentials. | Argo CD documentation unknown | REASONED |
 | argo-cluster-rbac: Reduce controller and registered-cluster argocd-manager write permissions to needed namespaces/resources while retaining required read access. | Argo CD documentation unknown | REASONED |
@@ -6682,20 +6682,18 @@ ClusterIP is not a pod-network access control. The v3.5.3 component inventory al
 | Component | Listener and bind evidence | Base manifest exposure |
 | --- | --- | --- |
 | Repo-server | gRPC `0.0.0.0:8081`; HTTP metrics and health `0.0.0.0:8084` | Both container ports and Service ports |
-| Application controller | Metrics and health on port `8082`; the supplied source subset lacks the bind implementation | Container port and `argocd-metrics` Service |
+| Application controller | Metrics and health on port `8082`; the fetched command passes port `8082` to the controller, but its listener implementation and bind address remain unverified | Container port and `argocd-metrics` Service |
 | ApplicationSet controller | Webhook `:7000`, metrics `:8080`, health probes `:8081`; empty hosts are wildcard binds | Container and Service ports `7000` and `8080`; probe port `8081` has neither declaration |
 | Notifications controller | HTTP metrics `0.0.0.0:9001` | Metrics Service and TCP liveness probe; no `containerPort` declaration |
 | Dex | Generated `web.https` (or `web.http` with TLS disabled) `0.0.0.0:5556`, `grpc.addr` `0.0.0.0:5557` and telemetry `http` `0.0.0.0:5558` | All three container and Service ports; the wrapper starts Dex only with a nonempty generated configuration |
-| Redis | Port `6379`; no bind override in the Deployment, so the address is inherited from the Redis image and not established by this source subset | Container port and Service |
+| Redis | Port `6379`; the Deployment has no bind override, and the `redis:8.2.3-alpine` tag, taken as built from docker-library-redis bcbc6921 (tag v8.2.3), uses Redis defaults of IPv4 wildcard (`*`) and optional IPv6 wildcard (`-::*`), with protected mode patched off | Container port and Service |
 
 Repo-server's metrics/health mux and notifications' metrics handler have no authentication wrapper
 and use HTTP, so a reachable pod-network peer can request them without an Argo CD login. Repo-server
 gRPC defaults to TLS (`--disable-tls=false`), but the command documents skipping mTLS when
 `/app/config/reposerver/mtls/client-ca.crt` is absent. The base Deployment optionally mounts
 `argocd-repo-server-mtls` for that client CA, separately from `argocd-repo-server-tls` for the serving
-certificate. A serving certificate alone does not require a client identity. The RPC implementation
-and certificate fallback helper are absent from this source subset, so method-level authorization
-and certificate fallback are not verified here. Isolate repository operations and cached manifests
+certificate. A serving certificate alone does not require a client identity. The server requires and verifies client certificates when a client CA is loaded; without that CA it uses TLS without client-certificate authentication. If either serving certificate file is missing or cannot be stat'ed, the helper generates a session self-signed certificate; a present but invalid pair fails loading. The gRPC interceptor chain shows logging, metrics, recovery and unary error sanitization, with no authorization interceptor. Method-level authorization inside the registered service remains unverified. Isolate repository operations and cached manifests
 from unrelated pods.
 
 Redis is not passwordless in these base manifests: the `secret-init` init container runs
@@ -6705,21 +6703,18 @@ Secret does not keep it off the command line: as an argument, it is in the Redis
 its start until the process overwrites its arguments, if it does, readable through `ps` and
 `/proc/<pid>/cmdline` by other local accounts on the node as well as by the same account and root, and command-line auditing on the node
 can record it beyond that. Where a process overwrites its own arguments, they stay readable until
-the overwrite runs; whether the Redis image does so is not established by this source subset. Treat
+the overwrite runs; whether Redis overwrites the password argument remains unverified by these fetched files. Treat
 every account that can read the node's processes as able to read the Redis password. If the
 Deployment passes the value through a container environment variable, it is also readable through
 `/proc/<pid>/environ` by the same account and root while Redis runs. No Redis TLS
 is configured by these manifests, and Argo CD's Redis client defaults to `--redis-use-tls=false`;
-protect that traffic and Secret as well as the cached data. The password initializer's
-implementation and the Redis image's bind configuration are absent from this source subset.
+protect that traffic and Secret as well as the cached data. The initializer generates a 16-character random password, creates the Secret if absent, then checks that its password key exists. The `redis:8.2.3-alpine` tag, taken as built from docker-library-redis bcbc6921 (tag v8.2.3), starts Redis without a config file; Redis 8.2.3 defines `CONFIG_DEFAULT_BINDADDR` as `*` and `-::*` and initializes its bind list from it. The `-` makes an unavailable IPv6 address optional, and the image build patches protected mode off. This is a source-derived default, not a live socket observation.
 
 Dex's wrapper defaults to TLS for its HTTP endpoint. The generator replaces the `web`, `grpc` and
 `telemetry` mappings: `web.https` uses `/tmp/tls.crt` and `/tmp/tls.key`, or `web.http` is used with
 `--disable-tls`; `grpc` contains only `addr: 0.0.0.0:5557`, with no TLS or client-authentication
 settings, and telemetry uses HTTP on `0.0.0.0:5558`. HTTP TLS does not secure the gRPC listener.
-Dex's own server and handler implementations are absent from this source subset, so gRPC runtime
-authentication and method-level authorization remain unverified; the generated configuration
-provides neither TLS nor client-authentication settings for them.
+The `ghcr.io/dexidp/dex:v2.45.1` tag, taken as built from Dex v2.45.1, has a `GRPC` struct that maps `TLSCert` to the `tlsCert` configuration key; its server creates gRPC transport credentials only when that field is set. Argo CD's generated `grpc` mapping contains only `addr`. Its gRPC options therefore show no TLS or authentication interceptor for this configuration. Authorization inside the registered Dex API methods remains unverified because their handlers were not fetched.
 
 Server metrics on `8083` use a plain HTTP server whose `/metrics` handler is registered through
 `promhttp` with no authentication wrapper. The socket binds to `server.ListenHost`, following
@@ -6748,12 +6743,11 @@ its absence does not close a pod socket.
 
 For v3.5.3, the base command-parameters ConfigMap omits both server switches; their CLI defaults
 are false. The base RBAC ConfigMap omits `policy.default` rather than declaring a role.
-The RBAC fallback implementation is absent from this source subset; the empty-default-role advice
-below retains the vendor RBAC guidance, rather than claiming that fallback was traced here.
+The fetched RBAC loader passes the ConfigMap `policy.default` value to the enforcer; an omitted key yields an empty string, so this enforcer skips its additive default-role check. Server-side wiring and effective runtime overrides were not traced or tested.
 Two settings decide who reaches the API without an account. Anonymous access is disabled by default
 (`users.anonymous.enabled`); keep it off, because an anonymous caller is granted whatever role
-`policy.default` names. Leave `policy.default` empty, which is its safe default in the
-`argocd-rbac-cm` ConfigMap: an authenticated user who matches no role then gets no access, and access
+`policy.default` names. Leave `policy.default` empty, as in the base
+`argocd-rbac-cm` ConfigMap: the inspected enforcer grants no default-role permissions to a user who matches no role, and access
 is granted through explicit roles and group mappings instead. Anonymous access is not the only client-auth switch: keep `server.disable.auth: "false"` in the `argocd-cmd-params-cm` ConfigMap (its default), and inspect the running server's effective arguments and environment for any override that turns client authentication off, because disabling anonymous access does not compensate for authentication being disabled outright. Argo CD RBAC grants through the default
 role are additive and cannot be revoked by a later subject rule, so a permissive default is
 especially hard to walk back. Define the actual permissions in `policy.csv` in `argocd-rbac-cm`: a `p` rule such as `p, role:team, applications, get, team-project/*, allow` and a `g` rule mapping the intended IdP group to that role, then confirm the group reaches its project and not an unrelated one. Separately, `argocd-server` serves an inbound git-webhook handler at
@@ -6847,9 +6841,9 @@ An empty token printed 'supply the token; not probing'; readonly tok printed
 'stub curl' and all inventory stub lines, and the file exited 0 after inventory continued.
 These stub outputs do not verify Argo CD authorization; the live comparison remains anonymous
 401 versus application JSON listing the expected application with a valid token.
-Backlog row 2.28 retains only the missing-source audits: controller binds, repo-server RPC authorization
-and certificate fallback, Dex runtime authentication and authorization, the Redis image bind and
-password initializer, and the RBAC fallback. Those implementations are not fully traced here.
+Backlog row 2.28 retains the remaining source limits: image tag-to-build mapping (Redis, Dex), application-controller bind address,
+repo-server service method authorization, Dex API method authorization, whether Redis overwrites
+its password in argv, and RBAC server-side wiring. Those implementations are not fully traced here.
 In the block below, paste the Argo CD bearer token alone at the hidden prompt: a multi-line paste leaves
 every line after the first for your shell to run.
 
@@ -7003,9 +6997,31 @@ need the guarded-subshell form so an unsubstituted address cannot time out and r
 - [curl curl-8_14_1 custom headers (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 
 Argo CD source claims below were checked offline at v3.5.3, commit
-`c9c369efcc5b2a0bd720803f8d14a1c3eaddf579`. Retained readthedocs links provide operational guidance;
-they were not rechecked online. Missing source implementations are identified above.
+`c9c369efcc5b2a0bd720803f8d14a1c3eaddf579`. Dex v2.45.1, Redis 8.2.3 and docker-library-redis v8.2.3 (commit `bcbc692165ce2241e194035041c5b5e01d2e1a5f`) were checked offline in October 2026. Retained readthedocs links provide operational guidance;
+they were not rechecked online. Remaining source limits are identified above.
 
+- Application-controller metrics port handoff: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-application-controller/commands/argocd_application_controller.go#L192-L209
+- Application-controller metrics flag: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-application-controller/commands/argocd_application_controller.go#L272-L273
+- Repo-server TLS and client CA setup: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/server.go#L49-L85
+- Repo-server gRPC interceptor chain and registration: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/server.go#L94-L150
+- Repo-server certificate fallback: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/tls/tls.go#L428-L506
+- Dex image tag: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/dex/argocd-dex-server-deployment.yaml#L38-L42
+- Dex gRPC configuration field and JSON tag: https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/config.go#L255-L265
+- Dex gRPC TLS options: https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L151-L199
+- Dex gRPC listener and registration: https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L553-L572
+- Redis initial password implementation: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd/commands/admin/redis_initial_password.go#L22-L89
+- Redis image protected-mode patch: https://github.com/redis/docker-library-redis/blob/bcbc692165ce2241e194035041c5b5e01d2e1a5f/alpine/Dockerfile#L81-L87
+- Redis image entrypoint and command: https://github.com/redis/docker-library-redis/blob/bcbc692165ce2241e194035041c5b5e01d2e1a5f/alpine/Dockerfile#L151-L154
+- Redis entrypoint argument handling: https://github.com/redis/docker-library-redis/blob/bcbc692165ce2241e194035041c5b5e01d2e1a5f/alpine/docker-entrypoint.sh#L93-L111
+- Redis default bind addresses: https://github.com/redis/redis/blob/8.2.3/src/server.h#L142-L143
+- Redis default bind initialization: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2199-L2221
+- Redis TCP listener bind handoff: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2983-L2996
+- Redis optional bind prefix handling: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2638-L2673
+- RBAC default role storage and enforcement handoff: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L314-L346
+- RBAC policy ConfigMap key names (`policy.default`): https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L35-L42
+- RBAC ConfigMap loader: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L454-L467
+- RBAC default-role value: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L539-L547
+- RBAC default-role enforcement: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L399-L425
 - Argo CD Listener constants: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/common/common.go#L75-L92
 - Argo CD Server CLI bind, TLS and authentication defaults: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-server/commands/argocd_server.go#L307-L323
 - Argo CD Server main and metrics socket binding: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L512-L535
@@ -18359,9 +18375,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| listen-default: Shipped config tries IPv4/IPv6 localhost; widening listen_host can expose services; inspect merged overrides. | ClickHouse documentation unknown; ClickHouse server config source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6 | REASONED |
+| listen-default: Base config comments out listen_host; server code falls back to IPv4/IPv6 loopback when unset; widening listeners can expose services. | ClickHouse server config source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6; ClickHouse documentation unknown | REASONED |
 | default-user: Upstream default has empty password, ::/0 origins and access_management; full bootstrap needs additional capabilities. | ClickHouse users source b40982f9416bb4bc2d423d7e75ec384e79494b99 | REASONED |
-| docker-default: Official image disables default network access when all three documented initialization variables are unset. | ClickHouse documentation unknown | REASONED |
+| docker-default: Official image installs wildcard listeners; with no arguments or a first argument starting --, entrypoint writes a loopback-only default networks override only when setup is not skipped, no non-default user, nonempty password (an existing password file replaces the variable), or nonempty access-management value other than 0 is requested, and default is unchanged; other commands bypass this setup. | ClickHouse Docker source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6 | REASONED |
 | ports: 8123 HTTP, 9000 native, 9004 MySQL, 9005 PostgreSQL and 9009 interserver are documented, not necessarily active. | ClickHouse documentation unknown | REASONED |
 | interserver-bind: interserver_listen_host defaults to listen_host but can independently widen replica exposure. | ClickHouse documentation unknown | REASONED |
 | xml-merge: config.d/users.d retain clickhouse roots; remove/replace inherited entries explicitly and inspect merged configuration. | ClickHouse documentation unknown | REASONED |
@@ -18414,11 +18430,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-totp: Fixed XML human account rejects missing/invalid OTP and accepts password with fresh code; do not reuse positive code. | ClickHouse documentation unknown | REASONED |
 <!-- version-basis:end -->
 
-ClickHouse listens on localhost only until you set `listen_host`, but the upstream base configuration ships a `default` user that has an empty password, may connect from any address (`<ip>::/0</ip>`), and holds `access_management`, so widening `listen_host` to `::` or `0.0.0.0` can publish a passwordless administrative account on plaintext HTTP 8123 and native TCP 9000. Packaging, container initialization, and configuration overrides can change these defaults (the official Docker image, for one, disables the `default` user's network access when none of `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`, or `CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT` is set), so inspect the effective configuration of the version you run rather than assuming either behaviour. Complete the account and TLS setup before widening access. The full administrator bootstrap needs the additional capabilities in step 2. [Access control](https://clickhouse.com/docs/concepts/features/security/access-rights), [Docker default-user behaviour](https://clickhouse.com/docs/get-started/setup/self-managed/docker#managing-default-user).
+With no `listen_host` configured, the pinned server code falls back to `::1` and `127.0.0.1`; the pinned base `config.xml` comments out all its listener examples. A separately pinned upstream `users.xml` defines `default` with an empty password, `<ip>::/0</ip>` networks and `access_management=1`. Together, a wildcard listener and this user configuration can expose a passwordless account on enabled plaintext interfaces. The official image instead copies a config.d override with `::` and `0.0.0.0` listeners. When the container gets no arguments or its first argument starts with `--`, its entrypoint writes a loopback-only `default` networks override only when `CLICKHOUSE_SKIP_USER_SETUP` is not `1`, no non-default `CLICKHOUSE_USER`, nonempty password (an existing `CLICKHOUSE_PASSWORD_FILE` replaces `CLICKHOUSE_PASSWORD`), or `CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT` with a nonempty value other than `0` requests user creation, and the processed `default` user matches the original. With another command, the entrypoint runs `exec "$@"` without user setup. If those conditions differ, inspect the effective listener and user configuration; the entrypoint can create a user with `::/0` networks or leave a customized `default` untouched. For other packages, images, or versions, inspect the effective merged configuration. Complete account and TLS setup before allowing remote access. The full administrator bootstrap needs the additional capabilities in step 2. [Server fallback](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/Server.cpp#L644-L652), [base configuration](https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml), [separately pinned user configuration](https://raw.githubusercontent.com/ClickHouse/ClickHouse/b40982f9416bb4bc2d423d7e75ec384e79494b99/programs/server/users.xml), [image override](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/docker_related_config.xml#L1-L5), [image copy](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/Dockerfile.ubuntu#L160-L168), [entrypoint](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/entrypoint.sh#L45-L270).
 
 ## 1. Keep `listen_host` narrow
 
-The shipped `config.xml` comments out the `listen_host` examples and defaults to trying IPv4 and IPv6 localhost. For remote clients, name the one private address rather than `::`. Keep only loopback while preparing authentication and TLS; add the private address afterwards. The following shows the relevant children of the existing `<clickhouse>` root, not a replacement for the entire base file:
+The pinned base `config.xml` comments out every `listen_host` example; when no listener is configured, `getListenHosts` supplies `::1` and `127.0.0.1`. The official image adds wildcard listeners through its config.d override, so remove those inherited entries before using this narrow example. [Base listener examples](https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml), [server fallback](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/Server.cpp#L644-L652), [image override](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/docker_related_config.xml#L1-L5). For remote clients, name the one private address rather than `::`. Keep only loopback while preparing authentication and TLS; add the private address afterwards. The following shows the relevant children of the existing `<clickhouse>` root, not a replacement for the entire base file:
 
 ```xml
 <clickhouse>
@@ -18435,7 +18451,7 @@ Inventory the listeners actually enabled. Documented port numbers include HTTP 8
 
 ## 2. Put a password on `default`, and create real users
 
-Replace the inherited empty password with the SHA-256 hash of a long, separately generated random password, and restrict the bootstrap account to loopback. Install `/etc/clickhouse-server/users.d/default-hardening.xml`:
+Replace the empty password in the separately pinned upstream `users.xml` with the SHA-256 hash of a long, separately generated random password, and restrict the bootstrap account to loopback. Install `/etc/clickhouse-server/users.d/default-hardening.xml`:
 
 ```xml
 <clickhouse>
@@ -19020,8 +19036,8 @@ SHOW CREATE TABLE system.session_log;
 
 ## Common mistakes
 
-- `<listen_host>::</listen_host>` uncommented to reach the server from a laptop, with `default` still passwordless.
-- A password set on `default` while `<networks>` still says `::/0`, leaving a privileged account reachable from anywhere.
+- A wildcard listener enabled manually or inherited from the official image, while the effective `default` user remains passwordless and reachable from remote networks.
+- A password set on `default` while its effective `<networks>` still says `::/0`, leaving a privileged account reachable from anywhere the listener and firewall allow.
 - `https_port` added while `http_port` 8123 stays open beside it.
 - Client TLS enabled while plaintext replication 9009 remains inherited, or replication HTTPS enabled without private binding and interserver credentials.
 - Commenting out a setting in an override and expecting the inherited setting to disappear.
@@ -19033,8 +19049,12 @@ SHOW CREATE TABLE system.session_log;
 ## Sources (checked September 2026)
 
 - Listen address settings: https://clickhouse.com/docs/reference/settings/server-settings/settings/listen#listen_host
-- Shipped server configuration and localhost default: https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml
-- Shipped default-user configuration: https://raw.githubusercontent.com/ClickHouse/ClickHouse/b40982f9416bb4bc2d423d7e75ec384e79494b99/programs/server/users.xml
+- Base server configuration with commented-out listener examples: https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml
+- Separately pinned upstream default-user configuration: https://raw.githubusercontent.com/ClickHouse/ClickHouse/b40982f9416bb4bc2d423d7e75ec384e79494b99/programs/server/users.xml
+- Server listener fallback: https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/Server.cpp#L644-L652
+- Official image listener override: https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/docker_related_config.xml#L1-L5
+- Official image copy into config.d and entrypoint: https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/Dockerfile.ubuntu#L160-L168
+- Official image default-user initialization: https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/entrypoint.sh#L45-L270
 - User settings, password hashes, networks, and bootstrap capabilities: https://clickhouse.com/docs/concepts/features/configuration/settings/settings-users
 - Administrator bootstrap and account management: https://clickhouse.com/docs/concepts/features/security/access-rights
 - SQL access storage: https://clickhouse.com/docs/reference/settings/server-settings/settings/access-control#access_control_path
@@ -19059,7 +19079,6 @@ SHOW CREATE TABLE system.session_log;
 - Configuring TLS: https://clickhouse.com/docs/concepts/features/security/tls/configuring-tls
 - OpenSSL certificate and hostname verification: https://clickhouse.com/docs/reference/settings/server-settings/settings/other#openSSL
 - Configuration merging, remove, and replace: https://clickhouse.com/docs/concepts/features/configuration/server-config/configuration-files
-- Docker default-user network access: https://clickhouse.com/docs/get-started/setup/self-managed/docker#managing-default-user
 - Native client options and configuration: https://clickhouse.com/docs/concepts/features/interfaces/client
 - HTTP interface and authentication: https://clickhouse.com/docs/concepts/features/interfaces/http
 - curl empty-valued headers and header input from stdin: https://curl.se/docs/manpage.html#-H
@@ -27915,7 +27934,7 @@ Point that block at Sentry's `http://tracker.example.com:9000/`: because the bun
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -27939,7 +27958,7 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 | weaviate-raft: Raft 8300 and RPC 8301 bind nonempty CLUSTER_BIND_ADDR, then CLUSTER_ADVERTISE_ADDR, then memberlist private advertise address; keep peer-only. | Weaviate source v1.39.6; memberlist (Weaviate v1.39.6 go.mod) v0.5.4 | REASONED |
 | weaviate-auth: Anonymous access defaults true; disable it and enable API keys with positional key-to-user mapping. | Weaviate documentation unknown | REASONED |
 | weaviate-rbac: Enable RBAC, root only the admin, and scope app roles to collections; RBAC is stated generally available from v1.29 and cannot combine with admin-list authorization. | Weaviate documentation unknown | REASONED |
-| weaviate-oidc: OIDC issuer/client settings delegate human authentication and MFA to the IdP; authentication alone is not authorization. | Weaviate documentation unknown | REASONED |
+| weaviate-oidc: OIDC issuer/client settings delegate human authentication to the IdP, where MFA can be enforced; authentication alone is not authorization. | Weaviate documentation unknown | REASONED |
 | milvus-config: Compose mounts only data; mount user.yaml and TLS files read-only under /milvus, accounting for MILVUSCONF and milvus.yaml/_test.yaml/default.yaml/user.yaml precedence. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
 | milvus-env: Environment formatter lowercases, strips leading milvus. and removes slash/underscore/dot; use COMMON_SECURITY_* and TLS_* names, remove conflicting sources and recreate changed mounts/environment. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
 | milvus-user: v3.0.2 Ubuntu image runs as milvus; make config/certificates readable and restrict the private key to the service and trusted administrators. | Milvus v3.0.2 | REASONED |
@@ -27962,10 +27981,10 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 | milvus-eventlog: First successful eventlog request opens an unauthenticated, non-TLS wildcard gRPC listener on a random port; repeat inventory after requests. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
 | milvus-health: Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
 | chroma-bind: Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000. | Chroma source 1.5.9 | REASONED |
-| chroma-auth: Built-in authentication was removed in v1.0.0; obsolete AUTHN variables do not protect the server. Use private binding and authenticated TLS fronting. | Chroma migration documentation v1.0.0 | REASONED |
+| chroma-auth: Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting. | Chroma migration documentation v1.0.0; Chroma source 1.5.9 | REASONED |
 | pgvector: pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles. | pgvector and PostgreSQL documentation unknown | REASONED |
 | pgvector-rls: Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k. | pgvector and PostgreSQL documentation unknown | REASONED |
-| hosted-mfa: Hosted keys stay secret and clients use vendor HTTPS; human MFA belongs on hosted consoles, Weaviate OIDC or the fronting layer, not a self-hosted API key. | Qdrant security documentation unknown; Weaviate documentation unknown | REASONED |
+| hosted-mfa: Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity management solution on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it. | Qdrant Cloud documentation unknown; Pinecone organization documentation unknown; Weaviate documentation unknown | REASONED |
 | verify-inventory: Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure. | Qdrant security documentation unknown; Docker documentation unknown | REASONED |
 | verify-peer: Probe real backend 6333/6334/6335 from non-peers; require connection failure with filtering evidence and a positive peer control for 6335; auth/TLS rejection is still reachability. | Qdrant security documentation unknown; curl documentation (rolling) unknown | REASONED |
 | verify-curl: exit 3/6 is invalid input; 7 or a five-second 28 needs corroboration; nonzero HTTP, 52/56 or a twenty-second 28 indicates reachability, including HTTP 000 cases. | curl documentation (rolling) unknown | REASONED |
@@ -28039,7 +28058,7 @@ environment:
   AUTHORIZATION_RBAC_ROOT_USERS: 'admin-user'
 ```
 
-Keys map to users by position, so the first key belongs to `admin-user` and the second to `app-user`. Only `admin-user` is a root user with full access; give `app-user` a custom role limited to its collections, created with the admin key through the RBAC API as the [RBAC configuration page](https://docs.weaviate.io/deploy/configuration/configuring-rbac) describes, and keep the admin key off the application host. Authentication alone lets any key holder do anything; add authorization with either RBAC (above, generally available from v1.29 per the authorization page) or the simpler admin list (`AUTHORIZATION_ADMINLIST_ENABLED`, `AUTHORIZATION_ADMINLIST_USERS`, `AUTHORIZATION_ADMINLIST_READONLY_USERS`; it cannot be combined with RBAC). For human logins, `AUTHENTICATION_OIDC_ENABLED` with `AUTHENTICATION_OIDC_ISSUER` and `AUTHENTICATION_OIDC_CLIENT_ID` delegates to an identity provider, where MFA is enforced ([mfa.md](mfa.md)). The documented deployment starts Weaviate with `--scheme http` and points to a reverse proxy for domain access, forwarding both 8080 and 50051; give the proxy the certificate ([free-certificates.md](free-certificates.md)) and do not expose the plain ports.
+Keys map to users by position, so the first key belongs to `admin-user` and the second to `app-user`. Only `admin-user` is a root user with full access; give `app-user` a custom role limited to its collections, created with the admin key through the RBAC API as the [RBAC configuration page](https://docs.weaviate.io/deploy/configuration/configuring-rbac) describes, and keep the admin key off the application host. Authentication alone lets any key holder do anything; add authorization with either RBAC (above, generally available from v1.29 per the authorization page) or the simpler admin list (`AUTHORIZATION_ADMINLIST_ENABLED`, `AUTHORIZATION_ADMINLIST_USERS`, `AUTHORIZATION_ADMINLIST_READONLY_USERS`; it cannot be combined with RBAC). For human logins, `AUTHENTICATION_OIDC_ENABLED` with `AUTHENTICATION_OIDC_ISSUER` and `AUTHENTICATION_OIDC_CLIENT_ID` delegates to an identity provider, where MFA can be enforced ([mfa.md](mfa.md)). The documented deployment starts Weaviate with `--scheme http` and points to a reverse proxy for domain access, forwarding both 8080 and 50051; give the proxy the certificate ([free-certificates.md](free-certificates.md)) and do not expose the plain ports.
 
 ## 4. Milvus: enable authentication, change root, add TLS
 
@@ -28110,7 +28129,7 @@ Chart 5.0.30 declares `appVersion: "3.0.1"`, so the chart claim concerns its Ser
 
 ## 5. Chroma: no native authentication since 1.0
 
-Chroma's migration notes for v1.0.0 state that "Chroma no longer provides built-in authentication implementations". A self-hosted `chroma run --path /db_path` server (port 8000) therefore accepts every request, and the older `CHROMA_SERVER_AUTHN_PROVIDER` / `CHROMA_SERVER_AUTHN_CREDENTIALS` variables from the 2024 auth overhaul no longer do anything; do not paste them from old tutorials and assume protection. Keep Chroma on loopback and expose it only through an authenticated TLS proxy (bearer-token or basic-auth block per [nginx.md](nginx.md) / [caddy.md](caddy.md)), a Cloudflare Tunnel with Access ([cloudflare.md](cloudflare.md)), or a tailnet ([tailscale.md](tailscale.md)).
+Chroma's migration notes for v1.0.0 state that "Chroma no longer provides built-in authentication implementations". In Chroma 1.5.9, `chroma run --path /db_path` (port 8000) starts with the unit authenticator, whose authentication and authorization methods return the default identity when the server calls them, and the older `CHROMA_SERVER_AUTHN_PROVIDER` / `CHROMA_SERVER_AUTHN_CREDENTIALS` variables from the 2024 auth overhaul no longer do anything; do not paste them from old tutorials and assume protection. Keep Chroma on loopback and expose it only through an authenticated TLS proxy (bearer-token or basic-auth block per [nginx.md](nginx.md) / [caddy.md](caddy.md)), a Cloudflare Tunnel with Access ([cloudflare.md](cloudflare.md)), or a tailnet ([tailscale.md](tailscale.md)).
 
 ## 6. pgvector: it is PostgreSQL
 
@@ -28118,7 +28137,7 @@ pgvector is an extension (`CREATE EXTENSION vector;`, PostgreSQL 13 and later), 
 
 ## 7. Hosted services and MFA
 
-Pinecone, Qdrant Cloud, Weaviate Cloud, and Zilliz authenticate with API keys: those are secrets under [secrets.md](secrets.md), one per environment, never committed, rotated on leak. The vendor terminates TLS, so the client-side check is that the SDK is pointed at the `https://` endpoint the console gives you. None of the self-hosted servers has a human login with a second factor; MFA exists only on the vendor console for the hosted tiers, at the identity provider when Weaviate uses OIDC, or on the fronting layer (Access policy, Authelia-style portal) for everything else ([mfa.md](mfa.md)).
+Qdrant Cloud documents API keys for requests; treat them as secrets under [secrets.md](secrets.md), use one per environment, never commit them, and rotate them on leak. Pinecone documents organization SSO through an organization's identity management solution on Standard and Enterprise plans; for SSO organizations, console sessions are re-authenticated at least every 24 hours. This does not establish that Pinecone enforces MFA. No page cited here establishes a console MFA arrangement for Qdrant Cloud, Weaviate Cloud, or Zilliz; check each vendor's account security settings. The native API-key configurations described here do not establish human MFA. Weaviate OIDC can delegate authentication to an identity provider where MFA can be enforced; an MFA-capable fronting layer (Access policy or Authelia-style portal) is another option ([mfa.md](mfa.md)).
 
 ## Verify
 
@@ -28237,6 +28256,9 @@ REASONED: tenant isolation and bypass positive control. A live PostgreSQL with p
 - Milvus standalone Compose at v2.6.24 and v3.0.2: selected image tags, standalone command, localhost healthcheck, explicit publications of 19530 and 9091, and default network: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/deployments/docker/standalone/docker-compose.yml#L39-L66 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/deployments/docker/standalone/docker-compose.yml#L39-L66
 - Milvus log-level handler dependency (zap v1.27.0, GET reads and PUT changes the level): https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/log/log.go#L278-L280, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/mlog/level.go#L72-L74, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/go.mod#L47, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/go.mod#L43 and https://github.com/uber-go/zap/blob/v1.27.0/http_handler.go#L69-L103
 - Docker port publication: default host binding, explicit loopback mapping, same-network and host access, direct-routing and older-engine caveats: https://docs.docker.com/engine/network/port-publishing/
+- Pinecone organization SSO (Standard and Enterprise plans; identity management solution; 24-hour console re-authentication), rolling page captured October 15, 2026: https://docs.pinecone.io/guides/organizations/understanding-organizations
+- Qdrant Cloud API key per request, rolling page captured October 15, 2026: https://qdrant.tech/documentation/cloud/
+- Chroma 1.5.9 `chroma run` unit authenticator, default-identity authentication and authorization, and server delegation: https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L139-L142, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/auth/mod.rs#L102-L164 and https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/lib.rs#L60-L156, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L229-L255, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L457-L486
 - Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables): https://docs.trychroma.com/docs/overview/migration ; client-server mode (`chroma run --path`, port 8000): https://docs.trychroma.com/docs/run-chroma/client-server
 - Chroma `chroma run`: the `--host` default `localhost` applied only without a config file, the config-file branch, the `listen_address` and `port` defaults `0.0.0.0` and 8000, `CHROMA_` variables merged when a file is loaded, the server's bind of `listen_address:port`, and the release image (`rust/Dockerfile` target `cli`, `chroma run /config.yaml` from `docker_single_node.yaml`) (pinned tag 1.5.9): https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L39-L45, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L60-L73, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L114-L134, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L140-L146, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L415-L417, https://github.com/chroma-core/chroma/blob/1.5.9/rust/Dockerfile#L85-L93, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/sample_configs/docker_single_node.yaml and https://github.com/chroma-core/chroma/blob/1.5.9/.github/workflows/_build_release_container.yml#L101-L106
 - pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later; v0.8.2 README): https://github.com/pgvector/pgvector/blob/v0.8.2/README.md
