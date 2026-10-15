@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-12",
+  "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "91358f3ee7e5ca5ba33606a4b46c12bec14a29e5041f1de20a8f491d178f87d0",
+  "body_sha256": "c99e384933d2d946d9fec263866be69b39ec81d9e9ed6cb4b8aea8f8df6a77cd",
   "components": {
     "q": {
       "name": "Qdrant source",
@@ -198,7 +198,9 @@ version_basis: {
         "s09652c32f56a": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179",
         "s784a0e779949": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229",
         "se936b62a1a3d": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L139-L142",
-        "sc65518ba38d0": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/auth/mod.rs#L120-L164",
+        "sbc1dd27a9bf2": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/auth/mod.rs#L102-L164",
+        "s50b8158f3388": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L229-L255",
+        "sfaa2ea8a0399": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/lib.rs#L136-L141",
         "s62cd8db9e61a": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L457-L486"
       }
     },
@@ -352,7 +354,7 @@ version_basis: {
     "weaviate-raft": {"text": "Raft 8300 and RPC 8301 bind nonempty CLUSTER_BIND_ADDR, then CLUSTER_ADVERTISE_ADDR, then memberlist private advertise address; keep peer-only.", "components": ["w", "ml"], "sources": ["w:s8c05965785ea", "w:s8ea0dac76b07", "w:s8c15def0d8e9", "w:s59b824177541", "w:sd40da03c7dea", "w:sdbd8b8fd06da", "ml:s8b9a9e831368"], "status": "REASONED"},
     "weaviate-auth": {"text": "Anonymous access defaults true; disable it and enable API keys with positional key-to-user mapping.", "components": ["wd"], "sources": ["wd:s51c9c4c6b4c0", "wd:se90546c311e1"], "status": "REASONED"},
     "weaviate-rbac": {"text": "Enable RBAC, root only the admin, and scope app roles to collections; RBAC is stated generally available from v1.29 and cannot combine with admin-list authorization.", "components": ["wd"], "sources": ["wd:sb87f55ae205e", "wd:sd5185e505828"], "status": "REASONED"},
-    "weaviate-oidc": {"text": "OIDC issuer/client settings delegate human authentication and MFA to the IdP; authentication alone is not authorization.", "components": ["wd"], "sources": ["wd:s51c9c4c6b4c0"], "status": "REASONED"},
+    "weaviate-oidc": {"text": "OIDC issuer/client settings delegate human authentication to the IdP, where MFA can be enforced; authentication alone is not authorization.", "components": ["wd"], "sources": ["wd:s51c9c4c6b4c0"], "status": "REASONED"},
     "milvus-config": {"text": "Compose mounts only data; mount user.yaml and TLS files read-only under /milvus, accounting for MILVUSCONF and milvus.yaml/_test.yaml/default.yaml/user.yaml precedence.", "components": ["m2", "m3"], "sources": ["m2:sd95a54e97bc1", "m3:sb8bac089fe22"], "status": "REASONED"},
     "milvus-env": {"text": "Environment formatter lowercases, strips leading milvus. and removes slash/underscore/dot; use COMMON_SECURITY_* and TLS_* names, remove conflicting sources and recreate changed mounts/environment.", "components": ["m2", "m3"], "sources": ["m2:s111382ba0af1", "m3:s3631fa007c49"], "status": "REASONED"},
     "milvus-user": {"text": "v3.0.2 Ubuntu image runs as milvus; make config/certificates readable and restrict the private key to the service and trusted administrators.", "components": ["m3"], "sources": ["m3:s230001e47ba1", "m3:s555248062673", "m3:sbc585d4a0f5f"], "status": "REASONED"},
@@ -375,7 +377,7 @@ version_basis: {
     "milvus-eventlog": {"text": "First successful eventlog request opens an unauthenticated, non-TLS wildcard gRPC listener on a random port; repeat inventory after requests.", "components": ["m2", "m3"], "sources": ["m2:se193bc422269", "m3:s50ffed832d11", "m2:s108ca53f9ce3", "m3:s19e44f8baa1c"], "status": "REASONED"},
     "milvus-health": {"text": "Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings.", "components": ["m2", "m3"], "sources": ["m2:s978d2f09057a", "m3:sdb5a4b72da10"], "status": "REASONED"},
     "chroma-bind": {"text": "Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000.", "components": ["chroma"], "sources": ["chroma:s7eb7610f68c1", "chroma:s6d6708278bef", "chroma:s59912a4c7e11", "chroma:sed8aad199780", "chroma:s3a1c76cdd7f8", "chroma:s09652c32f56a", "chroma:s784a0e779949"], "status": "REASONED"},
-    "chroma-auth": {"text": "Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting.", "components": ["cd", "chroma"], "sources": ["cd:s60ad33c4b715", "chroma:se936b62a1a3d", "chroma:sc65518ba38d0", "chroma:s62cd8db9e61a"], "status": "REASONED"},
+    "chroma-auth": {"text": "Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting.", "components": ["cd", "chroma"], "sources": ["cd:s60ad33c4b715", "chroma:se936b62a1a3d", "chroma:sbc1dd27a9bf2", "chroma:s62cd8db9e61a", "chroma:s50b8158f3388", "chroma:sfaa2ea8a0399"], "status": "REASONED"},
     "pgvector": {"text": "pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.", "components": ["pg"], "sources": ["pg:saab3b3092223"], "status": "REASONED"},
     "pgvector-rls": {"text": "Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k.", "components": ["pg"], "sources": ["pg:se9846041ce1f"], "status": "REASONED"},
     "hosted-mfa": {"text": "Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity provider on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it.", "components": ["qc", "pc", "wd"], "sources": ["qc:sc72e09d8f7e6", "pc:s1696db54b028", "wd:s51c9c4c6b4c0"], "status": "REASONED"},
@@ -397,7 +399,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -421,7 +423,7 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 | weaviate-raft: Raft 8300 and RPC 8301 bind nonempty CLUSTER_BIND_ADDR, then CLUSTER_ADVERTISE_ADDR, then memberlist private advertise address; keep peer-only. | Weaviate source v1.39.6; memberlist (Weaviate v1.39.6 go.mod) v0.5.4 | REASONED |
 | weaviate-auth: Anonymous access defaults true; disable it and enable API keys with positional key-to-user mapping. | Weaviate documentation unknown | REASONED |
 | weaviate-rbac: Enable RBAC, root only the admin, and scope app roles to collections; RBAC is stated generally available from v1.29 and cannot combine with admin-list authorization. | Weaviate documentation unknown | REASONED |
-| weaviate-oidc: OIDC issuer/client settings delegate human authentication and MFA to the IdP; authentication alone is not authorization. | Weaviate documentation unknown | REASONED |
+| weaviate-oidc: OIDC issuer/client settings delegate human authentication to the IdP, where MFA can be enforced; authentication alone is not authorization. | Weaviate documentation unknown | REASONED |
 | milvus-config: Compose mounts only data; mount user.yaml and TLS files read-only under /milvus, accounting for MILVUSCONF and milvus.yaml/_test.yaml/default.yaml/user.yaml precedence. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
 | milvus-env: Environment formatter lowercases, strips leading milvus. and removes slash/underscore/dot; use COMMON_SECURITY_* and TLS_* names, remove conflicting sources and recreate changed mounts/environment. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
 | milvus-user: v3.0.2 Ubuntu image runs as milvus; make config/certificates readable and restrict the private key to the service and trusted administrators. | Milvus v3.0.2 | REASONED |
@@ -521,7 +523,7 @@ environment:
   AUTHORIZATION_RBAC_ROOT_USERS: 'admin-user'
 ```
 
-Keys map to users by position, so the first key belongs to `admin-user` and the second to `app-user`. Only `admin-user` is a root user with full access; give `app-user` a custom role limited to its collections, created with the admin key through the RBAC API as the [RBAC configuration page](https://docs.weaviate.io/deploy/configuration/configuring-rbac) describes, and keep the admin key off the application host. Authentication alone lets any key holder do anything; add authorization with either RBAC (above, generally available from v1.29 per the authorization page) or the simpler admin list (`AUTHORIZATION_ADMINLIST_ENABLED`, `AUTHORIZATION_ADMINLIST_USERS`, `AUTHORIZATION_ADMINLIST_READONLY_USERS`; it cannot be combined with RBAC). For human logins, `AUTHENTICATION_OIDC_ENABLED` with `AUTHENTICATION_OIDC_ISSUER` and `AUTHENTICATION_OIDC_CLIENT_ID` delegates to an identity provider, where MFA is enforced ([mfa.md](mfa.md)). The documented deployment starts Weaviate with `--scheme http` and points to a reverse proxy for domain access, forwarding both 8080 and 50051; give the proxy the certificate ([free-certificates.md](free-certificates.md)) and do not expose the plain ports.
+Keys map to users by position, so the first key belongs to `admin-user` and the second to `app-user`. Only `admin-user` is a root user with full access; give `app-user` a custom role limited to its collections, created with the admin key through the RBAC API as the [RBAC configuration page](https://docs.weaviate.io/deploy/configuration/configuring-rbac) describes, and keep the admin key off the application host. Authentication alone lets any key holder do anything; add authorization with either RBAC (above, generally available from v1.29 per the authorization page) or the simpler admin list (`AUTHORIZATION_ADMINLIST_ENABLED`, `AUTHORIZATION_ADMINLIST_USERS`, `AUTHORIZATION_ADMINLIST_READONLY_USERS`; it cannot be combined with RBAC). For human logins, `AUTHENTICATION_OIDC_ENABLED` with `AUTHENTICATION_OIDC_ISSUER` and `AUTHENTICATION_OIDC_CLIENT_ID` delegates to an identity provider, where MFA can be enforced ([mfa.md](mfa.md)). The documented deployment starts Weaviate with `--scheme http` and points to a reverse proxy for domain access, forwarding both 8080 and 50051; give the proxy the certificate ([free-certificates.md](free-certificates.md)) and do not expose the plain ports.
 
 ## 4. Milvus: enable authentication, change root, add TLS
 
@@ -600,7 +602,7 @@ pgvector is an extension (`CREATE EXTENSION vector;`, PostgreSQL 13 and later), 
 
 ## 7. Hosted services and MFA
 
-Qdrant Cloud documents API keys for requests; treat them as secrets under [secrets.md](secrets.md), use one per environment, never commit them, and rotate them on leak. Point each SDK at the vendor-provided `https://` endpoint. Pinecone documents organization SSO through an organization’s identity management solution on Standard and Enterprise plans; for SSO organizations, console sessions are re-authenticated at least every 24 hours. This does not establish that Pinecone enforces MFA. The fetched Qdrant Cloud, Weaviate Cloud, and Zilliz pages do not establish a console MFA arrangement; check each vendor’s account security settings. The native API-key configurations described here do not establish human MFA. Weaviate OIDC can delegate authentication to an identity provider where MFA can be enforced; an MFA-capable fronting layer (Access policy or Authelia-style portal) is another option ([mfa.md](mfa.md)).
+Qdrant Cloud documents API keys for requests; treat them as secrets under [secrets.md](secrets.md), use one per environment, never commit them, and rotate them on leak. Pinecone documents organization SSO through an organization's identity management solution on Standard and Enterprise plans; for SSO organizations, console sessions are re-authenticated at least every 24 hours. This does not establish that Pinecone enforces MFA. The fetched Qdrant Cloud, Weaviate Cloud, and Zilliz pages do not establish a console MFA arrangement; check each vendor's account security settings. The native API-key configurations described here do not establish human MFA. Weaviate OIDC can delegate authentication to an identity provider where MFA can be enforced; an MFA-capable fronting layer (Access policy or Authelia-style portal) is another option ([mfa.md](mfa.md)).
 
 ## Verify
 
@@ -721,7 +723,7 @@ REASONED: tenant isolation and bypass positive control. A live PostgreSQL with p
 - Docker port publication: default host binding, explicit loopback mapping, same-network and host access, direct-routing and older-engine caveats: https://docs.docker.com/engine/network/port-publishing/
 - Pinecone organization SSO (Standard and Enterprise plans; identity provider; 24-hour console re-authentication), rolling page captured October 15, 2026: https://docs.pinecone.io/guides/organizations/understanding-organizations
 - Qdrant Cloud API key per request, rolling page captured October 15, 2026: https://qdrant.tech/documentation/cloud/
-- Chroma 1.5.9 `chroma run` unit authenticator, default-identity authentication and authorization, and server delegation: https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L139-L142, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/auth/mod.rs#L120-L164 and https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L457-L486
+- Chroma 1.5.9 `chroma run` unit authenticator, default-identity authentication and authorization, and server delegation: https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L139-L142, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/auth/mod.rs#L102-L164 and https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/lib.rs#L136-L141, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L229-L255, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L457-L486
 - Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables): https://docs.trychroma.com/docs/overview/migration ; client-server mode (`chroma run --path`, port 8000): https://docs.trychroma.com/docs/run-chroma/client-server
 - Chroma `chroma run`: the `--host` default `localhost` applied only without a config file, the config-file branch, the `listen_address` and `port` defaults `0.0.0.0` and 8000, `CHROMA_` variables merged when a file is loaded, the server's bind of `listen_address:port`, and the release image (`rust/Dockerfile` target `cli`, `chroma run /config.yaml` from `docker_single_node.yaml`) (pinned tag 1.5.9): https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L39-L45, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L60-L73, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L114-L134, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L140-L146, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L415-L417, https://github.com/chroma-core/chroma/blob/1.5.9/rust/Dockerfile#L85-L93, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/sample_configs/docker_single_node.yaml and https://github.com/chroma-core/chroma/blob/1.5.9/.github/workflows/_build_release_container.yml#L101-L106
 - pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later; v0.8.2 README): https://github.com/pgvector/pgvector/blob/v0.8.2/README.md
