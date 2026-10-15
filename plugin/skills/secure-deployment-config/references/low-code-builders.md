@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "26f57e8cab8be5eb6d1f88701447ad02ec5e3517b253420ed931d1e5d91f1348",
+  "body_sha256": "2bbad341b601f3ab06805953fb815a799a5b513cccfa570ab0c17953bc9abff3",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -95,6 +95,13 @@ version_basis: {
         "s34292991c4ec": "https://github.com/apache/couchdb/blob/3.5.2/src/docs/src/api/server/authn.rst"
       }
     },
+    "litellm": {
+      "name": "LiteLLM authentication source",
+      "basis": "6ef7b86748118ceecd95271727c2fa167ce55fec",
+      "sources": {
+        "sbe6fa0b81017": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/user_api_key_auth.py"
+      }
+    },
     "windmill": {
       "name": "Windmill",
       "basis": "v1.817.0",
@@ -157,7 +164,7 @@ version_basis: {
     "nocodb-key-logic": {"text": "A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated.", "components": ["docker"], "sources": ["docker:sd34e76a09f6c"], "status": "DEMONSTRATED", "evidence": "With a stand-in for `docker exec`, the block printed \"non-empty\" for a set key, \"EMPTY or unset\" for an empty and an unset one, and \"not checked\" when the container was missing;"},
     "verify-windmill-control": {"text": "Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed.", "components": ["windmill"], "sources": ["windmill:s91439e21d4ac"], "status": "REASONED"},
     "verify-couchdb": {"text": "Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control.", "components": ["budibase", "couchdb"], "sources": ["budibase:s735ead81ce9c", "budibase:s7fbf706a4c8f", "couchdb:s34292991c4ec"], "status": "REASONED", "verify": [5]},
-    "verify-litellm": {"text": "Sample Bearer budibase at /v1/models should return 200 exposed/401 fixed; confirm real credentials. Endpoint discrimination is cross-referenced to litellm.md, not directly sourced here.", "components": ["budibase"], "sources": ["budibase:s735ead81ce9c", "budibase:s74d858053d12"], "status": "REASONED", "verify": [5]},
+    "verify-litellm": {"text": "Sample Bearer budibase at /v1/models should return 200 exposed/401 fixed; confirm real credentials. The pinned authentication source rejects invalid or unknown keys with 401; the exposed 200 still requires live comparison.", "components": ["budibase", "litellm"], "sources": ["budibase:s735ead81ce9c", "budibase:s74d858053d12", "litellm:sbe6fa0b81017"], "status": "REASONED", "verify": [5]},
     "verify-tcp-outcomes": {"text": "Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "On loopback it printed \"connected\" for the control and an open port, \"timed out\" for a port whose accept queue was full (standing in for a filtered one) and \"refused\" for a closed port, and it stopped when the control was closed.", "verify": [6]},
     "verify-tcp-inputs": {"text": "Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "`::ffff:0:0` and `::ffff:7f00:1` passed and connected to a listener bound to 127.0.0.1", "verify": [6]}
   }
@@ -222,7 +229,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | nocodb-key-logic: A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated. | Docker docs unknown | DEMONSTRATED |
 | verify-windmill-control: Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed. | Windmill v1.817.0 | REASONED |
 | verify-couchdb: Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control. | Budibase v3.46.0; CouchDB 3.5.2 | REASONED |
-| verify-litellm: Sample Bearer budibase at /v1/models should return 200 exposed/401 fixed; confirm real credentials. Endpoint discrimination is cross-referenced to litellm.md, not directly sourced here. | Budibase v3.46.0 | REASONED |
+| verify-litellm: Sample Bearer budibase at /v1/models should return 200 exposed/401 fixed; confirm real credentials. The pinned authentication source rejects invalid or unknown keys with 401; the exposed 200 still requires live comparison. | Budibase v3.46.0; LiteLLM authentication source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
 | verify-tcp-outcomes: Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated. | Baserow 2.3.4; Budibase v3.46.0; Windmill v1.817.0 | DEMONSTRATED |
 | verify-tcp-inputs: Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control. | Baserow 2.3.4; Budibase v3.46.0; Windmill v1.817.0 | DEMONSTRATED |
 <!-- version-basis:end -->
@@ -473,10 +480,10 @@ Exposed, the default login gets `200` with a token; fixed, it gets `400` (both o
 on the loopback run). Before trusting a `400`, log in once with your real credentials, so that a dead
 service is not read as fixed.
 
-For Budibase, two reasoned requests use the published sample values, which are not secrets. Substitute
+REASONED: The two sample-value requests are based on Budibase v3.46.0 sample environment, Budibase v3.46.0 proxy configuration (`/db/`), Apache CouchDB 3.5.2 `/_session` reference and LiteLLM authentication source: invalid or unknown keys are rejected with 401 (checked October 2026); live exposed and fixed comparisons were unavailable as stated with the block. For Budibase, two reasoned requests use the published sample values, which are not secrets. Substitute
 the proxy URL (`http://HOST:10000` in the sample setup) and the LiteLLM URL inside the single quotes.
 
-REASONED: following block; Budibase samples, CouchDB session documentation and the litellm.md comparison support the 200/401 expectations below. No Budibase/LiteLLM containers ran; the recorded host has no container runtime.
+REASONED: following block; Budibase v3.46.0 sample environment, Budibase v3.46.0 proxy configuration (`/db/`), Apache CouchDB 3.5.2 `/_session` reference and LiteLLM authentication source: invalid or unknown keys are rejected with 401 (checked October 2026) support the stated sample inputs and 401 rejection expectations. The exposed 200 outcomes still require live comparison. No Budibase/LiteLLM containers ran; the recorded host has no container runtime. Local marking review (October 2026, Bash 5.3.9 and ShellCheck 0.11.0) checked syntax and guard fixtures with a curl stub; no service response was observed. Bash -n and ShellCheck 0.11.0 each exited 0 with no output. In that local marking review, missing marker printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); missing set -- line printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); short assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls); long assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls). Placeholder, first empty, second empty, first option-like, second option-like, first spaced, second spaced, embedded placeholder, tab, LF, CR and DEL each printed "substitute both URLs on the set -- line above; not probing" (each exit 0, 0 stub calls). The valid fixture exited 0 with 2 stub calls and printed, in order, `stub couchdb url=<BUDIBASE_URL>/db/_session?basic=true`, `couchdb sample login: http=200 exit=0 err=fixture ok`, `stub litellm url=<LITELLM_URL>/v1/models` and `litellm sample key: http=200 exit=0 err=fixture ok`.
 
 ```bash
 (
@@ -485,7 +492,7 @@ REASONED: following block; Budibase samples, CouchDB session documentation and t
   shift
   [ "$#" -eq 2 ] || { echo "the set -- line needs exactly 2 values; not probing"; exit; }
   case "$1|$2" in
-    *REPLACE_WITH_*|"|"*|*"|"|*[[:cntrl:]]*) echo "substitute both URLs on the set -- line above; not probing" ;;
+    *REPLACE_WITH_*|"|"*|*"|"|-*|*'|-'*|*" "*|*[[:cntrl:]]*) echo "substitute both URLs on the set -- line above; not probing" ;;
     *) printf 'user = "budibase:budibase"\n' | curl -q -g -sS -o /dev/null --noproxy '*' --connect-timeout 5 \
          --max-time 15 --config - -w 'couchdb sample login: http=%{http_code} exit=%{exitcode} err=%{errormsg}\n' \
          "$1/db/_session?basic=true"
@@ -496,7 +503,7 @@ REASONED: following block; Budibase samples, CouchDB session documentation and t
 )
 ```
 
-Exposed, either line gets `200`, which means the sample secret is live. Fixed, the CouchDB sample login
+REASONED: Exposed and fixed outcomes below are expectations, not live observations: Budibase v3.46.0 sample environment and Budibase v3.46.0 proxy configuration (`/db/`) identify the sample paths and values; Apache CouchDB 3.5.2 `/_session` reference and LiteLLM authentication source: invalid or unknown keys are rejected with 401 (checked October 2026) distinguish rejected credentials. No Budibase/LiteLLM containers ran; the recorded host has no container runtime. Exposed, either line gets `200`, which means the sample secret is live. Fixed, the CouchDB sample login
 gets `401` ("Username or password wasn't recognized", per CouchDB's `/_session` reference) and the
 LiteLLM sample key gets `401` (the `/v1/models` comparison in [litellm.md](litellm.md)). Confirm each
 service answers your real credentials as the positive control. Budibase's first-run admin route has no
@@ -619,6 +626,7 @@ mean to publish is the finding.
 - Budibase v3.46.0 admin init: https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/controllers/global/users.ts
 - Budibase v3.46.0 admin init route and its validation: https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts
 - Apache CouchDB 3.5.2 `/_session` reference: https://github.com/apache/couchdb/blob/3.5.2/src/docs/src/api/server/authn.rst
+- LiteLLM authentication source: invalid or unknown keys are rejected with 401 (checked October 2026): https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/user_api_key_auth.py
 - Windmill v1.817.0 README (default credentials): https://github.com/windmill-labs/windmill/blob/v1.817.0/README.md
 - Windmill v1.817.0 server defaults: https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/src/main.rs
 - Windmill v1.817.0 worker (`DISABLE_NSJAIL`): https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/windmill-worker/src/worker.rs
