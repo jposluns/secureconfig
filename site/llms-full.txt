@@ -27804,7 +27804,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | glitchtip-secret: Use a unique SECRET_KEY for Django signing and keep it out of version control. | GlitchTip documentation unknown | REASONED |
 | glitchtip-mfa: Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version. | GlitchTip MFA announcement unknown | REASONED |
 | glitchtip-stores: Keep PostgreSQL and optional Valkey or Redis internal. | GlitchTip documentation unknown | REASONED |
-| membership: Sentry single-organization signups join the default organization; GlitchTip accounts and membership differ. The GlitchTip membership implementation is not cited. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
+| membership: Sentry single-organization signups join the default organization; at GlitchTip backend v6.2.6, on login the signal adds a user with a linked social provider to an organization linked to that provider, with the first member of a memberless organization becoming owner. | Sentry and self-hosted distribution 26.8.0; GlitchTip backend v6.2.6 | REASONED |
 | verify-listeners: Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
 | verify-sentry: Follow the single-organization login redirect and inspect the create-account path; HTTP 200 alone cannot distinguish registration. | Sentry and self-hosted distribution 26.8.0 | REASONED |
 | verify-glitchtip: On an operator-controlled fixture, signup succeeds with registration True and is refused with False after the first user. | GlitchTip documentation unknown | REASONED |
@@ -27873,7 +27873,7 @@ Unverified until checked: the exact host bind in your Compose sample, whether MF
 ## Shared exposures
 
 - **The event data itself.** Both tools store stack traces with source context, request payloads, and user identifiers. An exposed backing store is reachable with the credentials the compose ships and expects on its internal network, so publishing it is a direct disclosure of every event it holds; an exposed web or API discloses to the degree an attacker can authenticate to it, which is why the registration default and the intake scrubbing both matter. Scrub at intake and keep the stores private.
-- **Open registration.** GlitchTip ships it on; Sentry ships it off. What a self-registered stranger then reaches differs by tool: Sentry's single-organization mode adds new sign-ups to the default organization, while a GlitchTip account is separate from organization membership, so confirm your own membership and project permissions rather than assuming either extreme. Confirm the live setting rather than trusting the default.
+- **Open registration.** GlitchTip ships it on; Sentry ships it off. What a self-registered stranger then reaches differs by tool: Sentry's single-organization mode adds new sign-ups to the default organization, while at GlitchTip backend v6.2.6 [the login signal](https://gitlab.com/glitchtip/glitchtip-backend/-/blob/v6.2.6/apps/users/signals.py#L16-45) adds a user with a linked social provider to an organization linked to that provider on login, with the first member of a memberless organization becoming owner. Confirm your own membership and project permissions rather than assuming a new account has none or all. Confirm the live setting rather than trusting the default.
 - **The public DSN misread as a secret.** Rotating a DSN does not protect the tracker; authenticating its web and API does. Do not treat a leaked DSN as the incident.
 - **Plaintext.** Neither serves TLS natively, so an instance reachable without a terminating proxy sends session cookies and the event UI in the clear.
 
@@ -27929,6 +27929,7 @@ Point that block at Sentry's `http://tracker.example.com:9000/`: because the bun
 - Sentry DSN explainer (a DSN is public and allows only event submission, not read access): https://docs.sentry.io/concepts/key-terms/dsn-explainer/
 - GlitchTip installation (port `8000`, `ENABLE_USER_REGISTRATION` default and behavior): https://glitchtip.com/documentation/install
 - GlitchTip two-factor authentication (available since v1.8): https://glitchtip.com/blog/2021-09-17-glitchtip-1-8/
+- [GlitchTip backend v6.2.6 organization membership on login for a user with a linked social account (checked October 2026)](https://gitlab.com/glitchtip/glitchtip-backend/-/blob/v6.2.6/apps/users/signals.py#L16-45).
 - [Sentry 26.8.0 secret-key generator command (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/runner/commands/config.py).
 - [Sentry self-hosted 26.8.0 bundled nginx forwarded scheme (checked October 2026)](https://github.com/getsentry/self-hosted/blob/26.8.0/nginx.conf#L63).
 - [Sentry 26.8.0 registration and single-organization membership (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/web/frontend/auth_login.py).
@@ -31650,7 +31651,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 | fronting: Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress. | Apache Airflow 3.3.2; Argo Workflows documentation release-3.7; Temporal documentation (rolling) unknown | REASONED |
 | prefect-auth: Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
 | prefect-key: Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
-| prefect-secrets: Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
+| prefect-secrets: Protect the auth string and credential-bearing Blocks; Prefect 3.1.8 block-document read routes accept include_secrets, and Secret.get() returns the underlying value. Restrict API and worker access; UI masking does not enforce authorization. | Prefect Blocks source 3.1.8; Prefect documentation (rolling) unknown | REASONED |
 | prefect-port: The self-hosted Prefect server uses port 4200. | Prefect documentation (rolling) unknown | REASONED |
 | dagster-bind: Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback when the port is unset or 0; explicitly bind the private origin. | Dagster OSS 1.13.24 | REASONED |
 | dagster-helm: The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default. | Dagster OSS 1.13.24 | REASONED |
@@ -31661,19 +31662,19 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 | airflow-fab: For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | airflow-api: Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | airflow-all-admins: Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin. | Apache Airflow 3.3.2 | REASONED |
-| fab-public-role: Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors. | Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
+| fab-public-role: Leave [fab] auth_role_public and legacy AUTH_ROLE_PUBLIC unset; a configured public role can make FAB treat an anonymous visitor as logged in and supply that role's permissions. | Apache Airflow FAB provider source providers-fab/3.9.0 | REASONED |
 | airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
 | airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
 | airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
 | airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
-| airflow-fernet: Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets. | Apache Airflow documentation (rolling) unknown | REASONED |
+| airflow-fernet: Protect Connections, Variables, database and Fernet keys; an empty [core] FERNET_KEY selects a no-encryption implementation for new values, while configured comma-separated keys use MultiFernet. Preserve keys needed to decrypt existing values; authorized workloads still use secrets. | Apache Airflow crypto source 3.3.2; Apache Airflow documentation (rolling) unknown | REASONED |
 | airflow-port: Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer. | Apache Airflow documentation (rolling) unknown | REASONED |
 | temporal-authorizer: Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience. | Temporal documentation (rolling) unknown | REASONED |
 | temporal-claims: Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS. | Temporal documentation (rolling) unknown | REASONED |
 | temporal-health: The built-in default authorizer permits health checks without claims; health is not an authorization discriminator. | Temporal documentation (rolling) unknown | REASONED |
 | temporal-ui: UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP. | Temporal documentation (rolling) unknown | REASONED |
 | temporal-tls: Internode and frontend mTLS are separate from UI login and API authorization. | Temporal documentation (rolling) unknown | REASONED |
-| temporal-payloads: Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls. | Temporal documentation (rolling) unknown | REASONED |
+| temporal-payloads: Keep plaintext credentials out of persisted inputs/results/history; the Temporal Go SDK v1.28.0 codec HTTP handler accepts encode/decode POSTs without an authentication check, so authenticate and restrict a deployed Codec Server separately. | Temporal documentation (rolling) unknown; Temporal Go SDK codec source v1.28.0 | REASONED |
 | temporal-ports: Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference. | Temporal documentation (rolling) unknown | REASONED |
 | flower-bind: Flower defaults to wildcard address and 5555 unless Unix socket, FLOWER_ variables or implicit working-directory flowerconfig.py override; bind loopback explicitly. | Flower v2.2.0; Tornado v6.5.10 | REASONED |
 | flower-api: Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection. | Flower documentation (rolling) unknown | REASONED |
@@ -31732,9 +31733,9 @@ is unrelated to Prefect Cloud: `PREFECT_API_KEY` authenticates only to Prefect C
 set alongside `PREFECT_API_AUTH_STRING` on a client talking to a self-hosted server, the key takes precedence
 and the request fails with 401. Store the auth string in a secret manager or a private `.env` file, never in
 the repository ([secrets.md](secrets.md)). Treat access to the server API as access to credential-bearing Blocks
-and workflow controls: a block-document request can ask for stored secret values, and UI masking is not an
-authorization boundary, so keep credentials out of flow parameters and logs and give each worker its own
-narrowly scoped credentials.
+and workflow controls: Prefect 3.1.8 block-document read routes accept `include_secrets`, and
+`Secret.get()` returns the underlying value. These source files do not establish per-caller authorization
+for `include_secrets`; restrict API and worker access, and keep credentials out of flow parameters and logs.
 
 ## Dagster (OSS)
 
@@ -31767,9 +31768,9 @@ the FAB auth manager instead: install the FAB provider, then set `[core] auth_ma
 authentication backends for the FAB API, not the auth manager. Point FAB at LDAP, OAuth, or another real identity backend,
 and put MFA at that identity provider ([mfa.md](mfa.md), [identity-providers.md](identity-providers.md)). Keep
 `[core] simple_auth_manager_all_admins` unset or `False`, since setting it disables login and treats every
-visitor as an admin, and with FAB leave `AUTH_ROLE_PUBLIC` unset in `webserver_config.py`, since setting it
-(for example to `Admin`) grants unauthenticated visitors that role; check the effective configuration and
-anonymous API behavior after deployment.
+visitor as an admin, and with FAB leave `[fab] auth_role_public` and legacy `AUTH_ROLE_PUBLIC` in `webserver_config.py` unset.
+A configured public role can make the FAB logged-in check pass for an anonymous visitor and can supply that
+role's permissions; check the effective configuration and anonymous API behavior after deployment.
 
 The official `docker-compose.yaml` takes the right first step and the wrong second one: it selects the FAB
 auth manager, then seeds it with a known admin, `_AIRFLOW_WWW_USER_USERNAME` and `_AIRFLOW_WWW_USER_PASSWORD`
@@ -31786,8 +31787,8 @@ on 2.11.0, `[api] secret_key` on 3.3.2): provision a strong value for it too, be
 secure the other. Keep configuration exposure off as well (`AIRFLOW__WEBSERVER__EXPOSE_CONFIG=False` on 2.11.0,
 `AIRFLOW__API__EXPOSE_CONFIG=False` on 3.3.2). An exposed Airflow is also a credential store: its Connections
 and Variables hold credentials for the systems your DAGs reach, protected at rest by the `[core] fernet_key`
-(an effectively empty key disables encryption for newly stored values; normal initialization generates a key,
-and removing an existing key prevents decryption of existing ciphertext), so restrict permissions on Connections and
+(an empty key selects `_NullFernet`, which does not encrypt newly stored values; configured
+comma-separated keys use `MultiFernet`; preserve keys needed to decrypt existing ciphertext), so restrict permissions on Connections and
 Variables and protect the metadata database, the Fernet key, and any secrets backend, since encryption at rest
 and UI masking do not stop an authorized workload from using them. Keep every secret out of the repository
 ([secrets.md](secrets.md)), and publish 8080 to loopback for the proxy (`127.0.0.1:8080:8080`) rather than to
@@ -31813,7 +31814,8 @@ internode and frontend traffic separately again. Set up both layers; MFA comes f
 provider the UI's OIDC settings point at. Temporal also
 persists workflow inputs, results, and history, so keep plaintext credentials out of them and fetch operational
 secrets inside authorized workers; if you encrypt payloads with a Payload Codec, authenticate and restrict any
-Codec Server independently of the UI and the frontend, because an exposed Codec Server can decode that data.
+Codec Server independently of the UI and the frontend. The Temporal Go SDK v1.28.0 codec HTTP handler
+accepts encode/decode POSTs without an authentication check; a deployed server needs its own access control.
 
 ## Flower (for Celery)
 
@@ -32116,7 +32118,7 @@ shares the directory.
 - Storing credentials in Airflow Connections and Variables, Prefect Blocks, or Temporal payloads without
   restricting who can retrieve or use them. UI masking and database encryption do not enforce caller
   authorization. Temporal client-side payload encryption adds a separate boundary: decoding requires the key or
-  access to an authorized Codec Server.
+  access to a Codec Server, so authenticate and restrict any Codec Server separately.
 
 ## Sources (checked October 2026)
 
@@ -32125,6 +32127,10 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Prefect, security settings (`PREFECT_SERVER_API_AUTH_STRING`, `PREFECT_API_AUTH_STRING`, Cloud API keys
   taking precedence and causing 401) (rolling documentation, checked September 2026): https://docs.prefect.io/v3/advanced/security-settings
 - Prefect 3.1.8 release announcement, Basic Auth support added to the API and UI: https://github.com/PrefectHQ/prefect/releases/tag/3.1.8
+- Prefect 3.1.8 block-document filter and ID read routes accept `include_secrets`, and `Secret.get()` returns the underlying value: https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/server/api/block_documents.py#L47-L70, https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/server/api/block_documents.py#L101-L119 and https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/blocks/system.py#L154-L159
+- Apache Airflow FAB provider 3.9.0 reads `[fab] auth_role_public` with legacy `AUTH_ROLE_PUBLIC` fallback, attaches the public role's permissions to an anonymous user when that role exists, and pins Flask-AppBuilder 5.2.2: https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/src/airflow/providers/fab/auth_manager/fab_auth_manager.py#L327-L381 and https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/pyproject.toml#L75-L81
+- Apache Airflow 3.3.2 `_NullFernet` and `get_fernet()` key selection: https://github.com/apache/airflow/blob/3.3.2/airflow-core/src/airflow/models/crypto.py#L47-L68 and https://github.com/apache/airflow/blob/3.3.2/airflow-core/src/airflow/models/crypto.py#L154-L173
+- Temporal Go SDK v1.28.0 codec HTTP handler POST encode/decode paths and construction: https://github.com/temporalio/sdk-go/blob/v1.28.0/converter/codec.go#L284-L350
 - Prefect self-hosted server, default port 4200 (rolling documentation, checked September 2026): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
 - Dagster webserver and UI, default local port and no documented built-in auth (rolling documentation, checked September 2026): https://docs.dagster.io/guides/operate/webserver
 - Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its environment-variable routes (`DAGSTER_WEBSERVER_*` through `auto_envvar_prefix`, legacy `DAGIT_*` copied onto them, and the `dagster` CLI's `DAGSTER_CLI` prefix, which Click extends per subcommand, so `dagster dev` reads `DAGSTER_CLI_DEV_*`), and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L81-L96, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351, <https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/__init__.py#L45-L50>, Click's subcommand prefix rule (pinned tag 8.5.0) https://github.com/pallets/click/blob/8.5.0/src/click/core.py#L476-L484, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58
@@ -34839,7 +34845,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | webhook-secret: Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs. | GitHub webhooks documentation unknown; OWASP guidance unknown | REASONED |
 | stripe-secrets: Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ. | Stripe webhooks documentation unknown | REASONED |
 | sender-ip: Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain. | GitHub webhooks documentation unknown | REASONED |
-| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown; nginx source release-1.26.3; HAProxy 3.0 | REASONED |
+| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; at Caddy v2.11.4 request_body max_size returns 413 on excess and the standard HTTP module list imports no rate-limit handler; confirm other proxy capabilities in their guides and current vendor sources. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown; nginx source release-1.26.3; HAProxy 3.0; Caddy source v2.11.4 | REASONED |
 | message-limits: After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs. | OWASP guidance unknown | REASONED |
 | ssrf: Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials. | OWASP guidance unknown | REASONED |
 | verify-handshake: Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
@@ -34884,7 +34890,7 @@ Apply the shared lesson everywhere: use a distinct secret per endpoint (rotating
 
 ## 5. Bound the expensive endpoints too
 
-Inference, upload, and job-submission endpoints are usually the ones behind these transports, and an authenticated caller can still exhaust them. Two layers need separate limits. At the proxy in front of the app: a maximum request or body size, a connection concurrency cap per client, and a request timeout matched to realistic response time bound the HTTP connection itself; the [nginx](nginx.md), [Caddy](caddy.md), [HAProxy](haproxy.md) and [Traefik](traefik.md) guides here each have a "Bound the expensive endpoints" section covering what that proxy's guide documents natively: nginx's carries all four controls, Traefik's carries body size, concurrency and rate, HAProxy's carries timeouts and an aggregate connection cap with a header-based body check, and Caddy's carries body size (Caddy has no rate limiting in its standard build). Confirm the current timeout and rate options in each proxy's own documentation before relying on their absence. After a WebSocket upgrade, a single accepted connection can still carry unlimited messages or job submissions, which the connection-level limits above do not touch; OWASP's WebSocket Security Cheat Sheet calls for message-level authorization (checking that each individual message is allowed, not only the handshake) and message-level rate limiting (capping messages per connection per time window) as the separate control that applies once the socket is open. [authentication.md](authentication.md) covers the identity side these limits key off.
+Inference, upload, and job-submission endpoints are usually the ones behind these transports, and an authenticated caller can still exhaust them. Two layers need separate limits. At the proxy in front of the app: a maximum request or body size, a connection concurrency cap per client, and a request timeout matched to realistic response time bound the HTTP connection itself; the [nginx](nginx.md), [Caddy](caddy.md), [HAProxy](haproxy.md) and [Traefik](traefik.md) guides here each have a "Bound the expensive endpoints" section covering what that proxy's guide documents natively: nginx's carries all four controls, Traefik's carries body size, concurrency and rate, HAProxy's carries timeouts and an aggregate connection cap with a header-based body check, and Caddy's carries body size: at v2.11.4, [`request_body` `max_size`](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L35-L39) bounds bytes read from the body using [`http.MaxBytesReader`](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L83-L84) and returns 413 on excess. The [standard HTTP module list](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/standard/imports.go#L3-L25), [imported by the standard module list](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/standard/imports.go#L3-L18), imports no rate-limit handler at v2.11.4. Confirm the current timeout and rate options in each proxy's own documentation before relying on their absence. After a WebSocket upgrade, a single accepted connection can still carry unlimited messages or job submissions, which the connection-level limits above do not touch; OWASP's WebSocket Security Cheat Sheet calls for message-level authorization (checking that each individual message is allowed, not only the handshake) and message-level rate limiting (capping messages per connection per time window) as the separate control that applies once the socket is open. [authentication.md](authentication.md) covers the identity side these limits key off.
 
 ## 6. Restrict relay destinations
 
@@ -35080,6 +35086,8 @@ Scope and revisions: browser behavior follows RFC 6455 and the HTML and Fetch li
 - OWASP Secrets Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
 - Traefik v3.5 entryPoint timeouts: https://doc.traefik.io/traefik/v3.5/reference/install-configuration/entrypoints/
 - Caddy server timeouts: https://caddyserver.com/docs/caddyfile/options#timeouts
+- [Caddy v2.11.4 request body max_size and 413 behavior (checked October 2026)](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L35-L39), [MaxBytesReader application](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L83-L84).
+- [Caddy v2.11.4 standard HTTP module imports (checked October 2026)](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/standard/imports.go#L3-L25), [standard module imports](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/standard/imports.go#L3-L18).
 - nginx `proxy_read_timeout`: https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout
 - curl manual (`--connect-to`, `--noproxy`, write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 - Python `os.fdopen`, for reading and closing the secret pipe: https://docs.python.org/3/library/os.html#os.fdopen
@@ -36656,7 +36664,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | pb-mfa: For superusers retain password auth and enable both OTP and MFA; empty mfa.rule applies to everyone. OTP alone is not a second factor. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-logout: Stateless authentication means clearing pb.authStore removes only the local copy, not a stolen token. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-encryption: Settings default to plaintext JSON; select a 32-character environment secret with --encryptionEnv. This encrypts settings, not the whole database or files. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
-| pb-backups: Backups default local with empty cron (automatic backups off); schedule/retain deliberately, protect archives and back up S3 objects separately. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
+| pb-backups: Backups default local with empty cron (automatic backups off); archives contain main and logs databases plus remaining pb_data, excluding the backups directory and tracked exclusions; uploaded collection files on S3 require manual backup. Schedule/retain deliberately and protect archives. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-backup-auth: Backup downloads require a superuser file token and obey superuser IP restrictions; ordinary auth/file tokens do not suffice. | PocketBase v0.40.4 | REASONED |
 | pb-limiter: Native limits exist from v0.23.0 but default disabled at v0.40.4; enable rateLimits.enabled. | PocketBase v0.40.4; PocketBase documentation (rolling) unknown | REASONED |
 | pb-limit-rules: Seeded limits are *:auth 2/3s, *:create 20/5s, /api/batch 3/1s and /api/ 300/10s. | PocketBase v0.40.4 | REASONED |
@@ -36669,8 +36677,8 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | appwrite-mfa: Enroll and verify operator TOTP, protect recovery codes; at 2.2.0 enabled MFA with a verified factor requires a second session factor. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | appwrite-dev-env: Development env disables root-only registration, abuse and router protection and carries placeholders; do not inherit it for production. | Appwrite 2.2.0 | REASONED |
 | appwrite-recreate: Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior. | Appwrite documentation (rolling) unknown | REASONED |
-| appwrite-permissions: Collection and document grants are additive; explicitly enable documentSecurity for document grants, whose default remains unverified. | Appwrite documentation (rolling) unknown | REASONED |
-| appwrite-creation: Omitted Client SDK permissions can grant creator read/update/delete; Server SDK/Console omission grants no ordinary access. Use specific users/teams for private data. | Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-permissions: Collection and document grants are additive according to legacy documentation; documentSecurity defaults false in Appwrite 2.2.0 and must be enabled for document grants. The pinned parameter description states the need for one permission level. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
+| appwrite-creation: For null or omitted document permissions, the pinned aggregate helper preserves null before the handler assigns read/update/delete user grants to a nonprivileged requester with a user ID, or an empty list otherwise. API-key classification skips role validation but does not itself determine the default list. Use specific users/teams for private data. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown; utopia-php/database 7.3.9 | REASONED |
 | appwrite-keys: Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | appwrite-encryption: Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets. | Appwrite 2.2.0; Appwrite documentation (rolling) unknown | REASONED |
 | appwrite-backups: Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation. | Appwrite documentation (rolling) unknown | REASONED |
@@ -36703,7 +36711,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | verify-bundle: Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning. | PocketBase documentation (rolling) unknown; Appwrite documentation (rolling) unknown | REASONED |
 | local-guards: Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning. | PocketBase documentation (rolling) unknown; Appwrite documentation (rolling) unknown | DEMONSTRATED |
 | local-syntax: All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body. | Appwrite 2.2.0; PocketBase documentation (rolling) unknown; Appwrite documentation (rolling) unknown | DEMONSTRATED |
-| source-limits: Pin-specific Appwrite legacy permissions/creator defaults and PocketBase CLI/backup archive tracing remain incomplete; documentSecurity and --dev defaults are not established. | Appwrite documentation (rolling) unknown; PocketBase documentation (rolling) unknown | REASONED |
+| source-limits: PocketBase CLI wrapper and Appwrite document read-authorization internals remain untraced; requester privileged/API-key classification remains untraced; the --dev default is not established. | Appwrite documentation (rolling) unknown; PocketBase documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
 
 Like Firebase and Supabase ([firebase-supabase.md](firebase-supabase.md)), these backends hand a
@@ -36863,9 +36871,10 @@ access, and retain the encryption key separately. See
 [persistence code](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/core/settings_model.go).
 
 Backups are local by default, and `backups.cron` defaults to empty, so automatic backups are
-off. Configure a schedule and retention deliberately. Archives include local uploaded files
-but **exclude files stored in S3**; protect and back up that storage separately. See
-[backup contents](https://pocketbase.io/docs/going-to-production/) and
+off. Configure a schedule and retention deliberately. Archives contain the main and logs
+databases plus the rest of `pb_data`, excluding the backups directory and tracked exclusions.
+The source says uploaded collection files on S3 are outside `pb_data` and need manual backup;
+protect that storage separately. See [backup archive implementation](https://github.com/pocketbase/pocketbase/blob/v0.40.4/core/backup_create.go#L36-L60) and
 [backup settings](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/core/settings_model.go).
 
 Backup downloads require a **superuser file token**, and the superuser IP restriction also
@@ -36968,17 +36977,25 @@ Check effective behavior after recreation. See
 
 ### 3. Make permissions explicit and keep server keys off clients
 
-Set collection and document `permissions` deliberately. Enable `documentSecurity` explicitly
-when using document-level grants; **its default was not verified here**. Access granted at
+Set collection and document `permissions` deliberately. In Appwrite 2.2.0,
+`documentSecurity` defaults to `false`; enable it for document-level grants. Access granted at
 **either collection or document level** is sufficient. A broad collection grant therefore
-defeats an intended document restriction. See [legacy database permissions](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions) and the
-[legacy API reference](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
+defeats an intended document restriction. See [legacy database permissions](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions).
+The [collection create parameter](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L82-L84) states the requirement for one of the two permission levels.
 
-Omitted permissions do not have one universal result: resources created through a Client SDK
-can grant their creator read, update, and delete access; omitted permissions through a Server
-SDK or Console grant nobody ordinary resource access. Use specific user identities or team
+For a document with null or omitted `permissions`, the Appwrite 2.2.0 create handler
+calls `Permission::aggregate` first. The pinned helper returns null for null input, so
+`permissions` remains null and reaches the handler's default branch. The handler assigns
+read/update/delete user grants when the requester has a user ID and is not privileged;
+otherwise it assigns an empty list. API-key requests skip subsequent role validation, but
+the key check alone does not set that default list. Use specific user identities or team
 roles, such as `Role.user(...)` or `Role.team(..., ...)`, rather than `Role.any()` for private
-data. See [permission defaults and roles](https://appwrite.io/docs/advanced/security/permissions).
+data. See [document create parameter](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Create.php#L129-L134),
+[requester classification](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Create.php#L211-L212),
+[null-permissions handling](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Create.php#L237-L287),
+[pinned dependency](https://github.com/appwrite/appwrite/blob/2.2.0/composer.lock#L3461-L3471),
+[pinned aggregate helper](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Helpers/Permission.php#L151-L155), and
+[permission roles](https://appwrite.io/docs/advanced/security/permissions).
 
 Properly scoped server API keys **bypass resource permissions**. A successful server-key test
 does not establish that an ordinary user is authorized. Scopes are selected per key and still
@@ -37286,7 +37303,7 @@ service result or deployed-bundle scan is claimed.
 | Check scope or source-work ID | Procedure and prerequisites | Status |
 | --- | --- | --- |
 | Service comparisons | Demonstrate every REASONED comparison above on PocketBase v0.40.4 and Appwrite 2.2.0, recording binary/image identity, commands, response bodies, denied and allowed identities, disposable-data cleanup, and effective settings. Requires writable service fixtures, a container runtime, controlled accounts and mailboxes, S3 and backup fixtures, ClamAV, function execution, a second-host ingress fixture, and the actual client build. Include all five PocketBase actions, manageRule, file-token issuance versus protected downloads (unrelated-user and unsigned-guest denial, permitted-user bytes), realtime, bootstrap-token handling, MFA, verification, retained-token behavior, additive Appwrite permissions, server-key scopes, registration, console MFA (fresh password-only denial and successful TOTP completion), TLS, proxy trust, limits, encrypted recovery, uploads, and executor privacy. | REASONED: full service-comparison inventory; a live PocketBase or Appwrite stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. This comparison still requires the writable service, container, account, mailbox, S3, backup, scanner, function, second-host ingress, and actual-build prerequisites named in this row. All three Verify shell blocks passed bash -n and ShellCheck 0.11.0 with exit 0 and no output. With curl and grep stubbed, written and embedded placeholders, example.com, angle brackets, empty values, and omitted or shortened set -- lines printed their refusal messages without invoking either stub. The signup JSON parsed as four expected string fields; valid curl stubs printed arguments and protected input separately. The grep stub exercised match, no-match, and error branches; real grep on a disposable marker printed only client.js with exit 0 and, after removal, no output with exit 1. None establishes the listed live outcomes. Exposed public authorization should admit unintended access and fixed authorization should deny or filter it while retaining permitted controls; the other expected outcomes remain those in the individual comparisons, per the guide’s cited PocketBase API rules and filters (rolling documentation, checked September 2026); Appwrite legacy collection/document permissions (rolling documentation, checked October 2026); Appwrite 2.2.0 console registration handler; PocketBase v0.40.4 auth defaults, manageRule validation, and MFA; PocketBase v0.40.4 file-token and download authorization; PocketBase v0.40.4 realtime authorization; PocketBase v0.40.4 authentication and superuser IP middleware; PocketBase v0.40.4 settings, encryption, proxy trust, SMTP, backups, and rate defaults; PocketBase v0.40.4 backup download authorization; PocketBase v0.40.4 rate limiter and exemptions; PocketBase v0.40.4 listener and origin flags; Appwrite 2.2.0 API-key authorization, scopes, MFA enforcement, and abuse exemptions; Appwrite 2.2.0 hostname routing and HTTPS enforcement; Appwrite email delivery (rolling documentation, checked September 2026); Appwrite self-hosted backups and encryption-key preservation (rolling documentation, checked September 2026); Appwrite 2.2.0 bucket defaults and upload controls; Appwrite 2.2.0 function execute roles, execution-key scopes, and enablement; Appwrite 2.2.0 Compose console path, persistent volumes, and Docker socket mounts; PocketBase authentication (rolling documentation, checked September 2026); Appwrite project API keys (rolling documentation, checked September 2026); PocketBase v0.40.4 installer and bootstrap-token lifetime; PocketBase v0.40.4 record CRUD handlers; PocketBase v0.40.4 record authorization and token validation; PocketBase v0.40.4 native TLS and ACME listener; Appwrite console MFA enrollment and recovery codes (rolling documentation, checked September 2026); Appwrite rate limits (rolling documentation, checked September 2026); and Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026). REASONED from the cited vendor documentation and available pinned sources; live behavior is not demonstrated. |
-| SELFHOSTED-BACKEND-SOURCE-1 | Complete pin-specific tracing for the Appwrite legacy collection/document implementation and creator permission defaults, and the PocketBase CLI wrapper and backup archive implementation. Vendor documentation was opened for these controls, but the corresponding implementation files could not all be retrieved at the requested tags. Do not infer the documentSecurity or --dev flag default. | Open; complete pinned-source verification is not claimed. |
+| SELFHOSTED-BACKEND-SOURCE-1 | Complete pin-specific tracing for the Appwrite document read-authorization internals and PocketBase CLI wrapper. Requester privileged/API-key classification remains untraced. The pinned collection default, document-create permission branch, and backup archive are now cited above; the --dev flag default remains unverified. | Open; complete pinned-source verification is not claimed. |
 
 ## Sources (checked September 2026)
 
@@ -37309,10 +37326,16 @@ service result or deployed-bundle scan is claimed.
 - [PocketBase v0.40.4 file-token and download authorization](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/file.go).
 - [PocketBase v0.40.4 realtime authorization](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/realtime.go).
 - [PocketBase v0.40.4 backup download authorization](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/backup.go).
+- [PocketBase v0.40.4 backup archive implementation](https://github.com/pocketbase/pocketbase/blob/v0.40.4/core/backup_create.go#L36-L60).
 - [PocketBase v0.40.4 rate limiter and exemptions](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/middlewares_rate_limit.go).
+- [Appwrite 2.2.0 collection create parameters](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L82-L84).
+- [Appwrite 2.2.0 document create parameters](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Create.php#L129-L134).
+- [Appwrite 2.2.0 requester classification](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Create.php#L211-L212).
+- [Appwrite 2.2.0 document create permission handling](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Create.php#L237-L287).
+- [Appwrite 2.2.0 composer.lock pinned database dependency](https://github.com/appwrite/appwrite/blob/2.2.0/composer.lock#L3461-L3471).
+- [utopia-php/database 7.3.9 pinned aggregate helper](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Helpers/Permission.php#L151-L155).
 - [Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/permissions).
 - [Appwrite legacy collection/document permissions (rolling documentation, checked October 2026)](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions).
-- [Appwrite legacy Databases API (rolling documentation, checked September 2026)](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
 - [Appwrite environment reference and HTTPS deprecation wording (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
 - [Appwrite rate limits (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/rate-limits).
 - [Appwrite email delivery (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/email).
