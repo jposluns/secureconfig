@@ -5068,7 +5068,7 @@ sudo bash -c 'umask 077; tmp=$(mktemp /etc/haproxy/certs/.pem.XXXXXX) || exit 1
   mv "$tmp" /etc/haproxy/certs/example.com.pem'
 ```
 
-With Certbot v2.3.0, run the concatenation and reload HAProxy after a successful renewal using `certbot renew --deploy-hook /path/to/deploy-hook-script` or an executable in `/etc/letsencrypt/renewal-hooks/deploy`.
+With Certbot v2.3.0, run the concatenation and reload HAProxy after a successful renewal using `certbot renew --deploy-hook /path/to/deploy-hook-script` or an executable in `/etc/letsencrypt/renewal-hooks/deploy` (with the default `/etc/letsencrypt` configuration directory, on `certbot renew`).
 
 ## 1. Terminate TLS and redirect HTTP
 
@@ -5330,7 +5330,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | verify-auth: Unauthenticated HTTPS should return 401 once auth is attached. | Traefik documentation (rolling) unknown | REASONED |
 | verify-size: Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal. | Traefik middleware documentation unknown; Traefik documentation (rolling) unknown | REASONED |
 | observed-429: The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established. | Traefik middleware documentation unknown | DEMONSTRATED |
-| verify-rate: Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled. | Traefik middleware documentation unknown | REASONED |
+| verify-rate: Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled. | Traefik middleware documentation unknown; Traefik BasicAuth source v3.5.0 | REASONED |
 | verify-isolation: Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik. | Traefik Docker provider unknown | REASONED |
 | verify-acme: Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT. | Traefik documentation (rolling) unknown | REASONED |
 | canary-route: On a disposable deployment, unlabelled traefik/whoami has one HTTP port; use its generated Host rule and plain HTTP even on :443 because the generated router requests no TLS. | Traefik Docker provider unknown; Traefik documentation (rolling) unknown | REASONED |
@@ -5491,7 +5491,8 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 )
 seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/ | sort | uniq -c
                                      # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
-                                     # middleware chain (section 4); Traefik v3.5.0 BasicAuth does not call its next handler on failure, so an unauthenticated flood is counted by the
+                                     # middleware chain (section 4); Traefik v3.5.0 BasicAuth does not call its
+                                     # next handler on failure, so an unauthenticated flood is counted by the
                                      # limiter, keyed on the client source. A 429 appeared. That is all this shows.
                                      # inflightreq also returns
                                      # 429, and an upstream under load can too, so this does not

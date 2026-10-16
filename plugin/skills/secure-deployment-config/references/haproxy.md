@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "dc2707842d367400f724c4c7ddf729d230b749aac129d77e4ca8f3abcf3faabd",
+  "body_sha256": "bdc0256fc16d0691b60d39984b503ff54a778ae3df80b47c2c9950c53ecc5f44",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -143,7 +143,7 @@ sudo bash -c 'umask 077; tmp=$(mktemp /etc/haproxy/certs/.pem.XXXXXX) || exit 1
   mv "$tmp" /etc/haproxy/certs/example.com.pem'
 ```
 
-With Certbot v2.3.0, run the concatenation and reload HAProxy after a successful renewal using `certbot renew --deploy-hook /path/to/deploy-hook-script` or an executable in `/etc/letsencrypt/renewal-hooks/deploy`.
+With Certbot v2.3.0, run the concatenation and reload HAProxy after a successful renewal using `certbot renew --deploy-hook /path/to/deploy-hook-script` or an executable in `/etc/letsencrypt/renewal-hooks/deploy` (with the default `/etc/letsencrypt` configuration directory, on `certbot renew`).
 
 ## 1. Terminate TLS and redirect HTTP
 

@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "3711d236de91bcbb5cb037ad81e599b90ec9383255eb15dc1daba88d17f4b198",
+  "body_sha256": "aac661357effc89cf9b208294d0f255b4fb31c03428609d9756c4fa69347809c",
   "components": {
     "traefik-docs": {
       "name": "Traefik documentation (rolling)",
@@ -118,7 +118,7 @@ version_basis: {
     "verify-auth": {"text": "Unauthenticated HTTPS should return 401 once auth is attached.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
     "verify-size": {"text": "Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal.", "components": ["middleware", "traefik-docs"], "sources": ["middleware:sd987195d64dd", "traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
     "observed-429": {"text": "The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca"], "status": "DEMONSTRATED", "evidence": "A 429 appeared. That is all this shows."},
-    "verify-rate": {"text": "Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca"], "status": "REASONED", "verify": [1]},
+    "verify-rate": {"text": "Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled.", "components": ["middleware", "traefik-basicauth-source"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca", "traefik-basicauth-source:s5f9a13d720c8"], "status": "REASONED", "verify": [1]},
     "verify-isolation": {"text": "Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED", "verify": [1]},
     "verify-acme": {"text": "Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
     "canary-route": {"text": "On a disposable deployment, unlabelled traefik/whoami has one HTTP port; use its generated Host rule and plain HTTP even on :443 because the generated router requests no TLS.", "components": ["docker", "traefik-docs"], "sources": ["docker:se23fe4fe79fa", "traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [2]},
@@ -162,7 +162,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | verify-auth: Unauthenticated HTTPS should return 401 once auth is attached. | Traefik documentation (rolling) unknown | REASONED |
 | verify-size: Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal. | Traefik middleware documentation unknown; Traefik documentation (rolling) unknown | REASONED |
 | observed-429: The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established. | Traefik middleware documentation unknown | DEMONSTRATED |
-| verify-rate: Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled. | Traefik middleware documentation unknown | REASONED |
+| verify-rate: Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled. | Traefik middleware documentation unknown; Traefik BasicAuth source v3.5.0 | REASONED |
 | verify-isolation: Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik. | Traefik Docker provider unknown | REASONED |
 | verify-acme: Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT. | Traefik documentation (rolling) unknown | REASONED |
 | canary-route: On a disposable deployment, unlabelled traefik/whoami has one HTTP port; use its generated Host rule and plain HTTP even on :443 because the generated router requests no TLS. | Traefik Docker provider unknown; Traefik documentation (rolling) unknown | REASONED |
@@ -323,7 +323,8 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 )
 seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/ | sort | uniq -c
                                      # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
-                                     # middleware chain (section 4); Traefik v3.5.0 BasicAuth does not call its next handler on failure, so an unauthenticated flood is counted by the
+                                     # middleware chain (section 4); Traefik v3.5.0 BasicAuth does not call its
+                                     # next handler on failure, so an unauthenticated flood is counted by the
                                      # limiter, keyed on the client source. A 429 appeared. That is all this shows.
                                      # inflightreq also returns
                                      # 429, and an upstream under load can too, so this does not
