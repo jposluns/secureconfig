@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "2b62664a093d80d0c169da71389171508ed1bfafcdc98d66ad5a3bb8158e0996",
+  "body_sha256": "4f2c59651bfb304dc6ae614920a5a19adf051f6d87c77da79a086448e679a4cb",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -236,6 +236,38 @@ version_basis: {
         "sb1ba69f79c9b": "https://flower.readthedocs.io/en/latest/config.html"
       }
     },
+    "prefect-blocks": {
+      "name": "Prefect Blocks source",
+      "basis": "3.1.8",
+      "sources": {
+        "s56081101d16a": "https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/server/api/block_documents.py#L47-L70",
+        "s1eae2c5f9f5e": "https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/server/api/block_documents.py#L101-L119",
+        "s46e69a2090c4": "https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/blocks/system.py#L154-L159"
+      }
+    },
+    "fab-source": {
+      "name": "Apache Airflow FAB provider source",
+      "basis": "providers-fab/3.9.0",
+      "sources": {
+        "s3c94f0f7176a": "https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/src/airflow/providers/fab/auth_manager/fab_auth_manager.py#L327-L381",
+        "s5552a28ab9d8": "https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/pyproject.toml#L75-L81"
+      }
+    },
+    "airflow-crypto": {
+      "name": "Apache Airflow crypto source",
+      "basis": "3.3.2",
+      "sources": {
+        "sdeaf2f54c054": "https://github.com/apache/airflow/blob/3.3.2/airflow-core/src/airflow/models/crypto.py#L47-L68",
+        "s70ea7631e820": "https://github.com/apache/airflow/blob/3.3.2/airflow-core/src/airflow/models/crypto.py#L154-L173"
+      }
+    },
+    "temporal-codec": {
+      "name": "Temporal Go SDK codec source",
+      "basis": "v1.28.0",
+      "sources": {
+        "s24435f531da0": "https://github.com/temporalio/sdk-go/blob/v1.28.0/converter/codec.go#L284-L350"
+      }
+    },
     "fab-rolling": {
       "name": "Apache Airflow FAB provider documentation (rolling)",
       "basis": "unknown",
@@ -248,7 +280,7 @@ version_basis: {
     "fronting": {"text": "Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress.", "components": ["airflow", "argo-docs", "temporal-rolling"], "sources": ["airflow:s1d0b86fe4334", "temporal-rolling:s06d4f0dbd0c8", "argo-docs:s6c8e78288632"], "status": "REASONED"},
     "prefect-auth": {"text": "Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI.", "components": ["prefect", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-rolling:s0ef73a227667"], "status": "REASONED"},
     "prefect-key": {"text": "Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server.", "components": ["prefect", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-rolling:s0ef73a227667"], "status": "REASONED"},
-    "prefect-secrets": {"text": "Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials.", "components": ["prefect", "prefect-rolling"], "sources": ["prefect:s12416d1a0d69", "prefect-rolling:s0ef73a227667"], "status": "REASONED"},
+    "prefect-secrets": {"text": "Protect the auth string and credential-bearing Blocks; Prefect 3.1.8 block-document read routes accept include_secrets, and Secret.get() returns the underlying value. Restrict API and worker access; UI masking does not enforce authorization.", "components": ["prefect-blocks", "prefect-rolling"], "sources": ["prefect-blocks:s56081101d16a", "prefect-blocks:s1eae2c5f9f5e", "prefect-blocks:s46e69a2090c4", "prefect-rolling:s0ef73a227667"], "status": "REASONED"},
     "prefect-port": {"text": "The self-hosted Prefect server uses port 4200.", "components": ["prefect-rolling"], "sources": ["prefect-rolling:sbe64d51110a2"], "status": "REASONED"},
     "dagster-bind": {"text": "Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback when the port is unset or 0; explicitly bind the private origin.", "components": ["dagster"], "sources": ["dagster:sab1b42d92f27", "dagster:s6bc57f86dfe1", "dagster:s2455602a504b", "dagster:s3c7d8f17f245", "dagster:s469c458c4a71"], "status": "REASONED"},
     "dagster-helm": {"text": "The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default.", "components": ["dagster"], "sources": ["dagster:s695dfd19dcca", "dagster:sf6f027e96a0d", "dagster:seda3a1b24425"], "status": "REASONED"},
@@ -259,19 +291,19 @@ version_basis: {
     "airflow-fab": {"text": "For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA.", "components": ["airflow", "fab-rolling"], "sources": ["airflow:s3be3e4616150", "fab-rolling:s989f09d05161"], "status": "REASONED"},
     "airflow-api": {"text": "Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager.", "components": ["airflow", "fab-rolling"], "sources": ["airflow:s3be3e4616150", "fab-rolling:s989f09d05161", "airflow:s963b49f58a13"], "status": "REASONED"},
     "airflow-all-admins": {"text": "Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin.", "components": ["airflow"], "sources": ["airflow:sad02a49561a0", "airflow:s78c661193a1a"], "status": "REASONED"},
-    "fab-public-role": {"text": "Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors.", "components": ["fab-rolling"], "sources": ["fab-rolling:s989f09d05161"], "status": "REASONED"},
+    "fab-public-role": {"text": "Leave [fab] auth_role_public and legacy AUTH_ROLE_PUBLIC unset; a configured public role can make FAB treat an anonymous visitor as logged in and supply that role's permissions.", "components": ["fab-source"], "sources": ["fab-source:s3c94f0f7176a", "fab-source:s5552a28ab9d8"], "status": "REASONED"},
     "airflow-compose-account": {"text": "Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately.", "components": ["airflow-rolling", "fab-rolling", "airflow"], "sources": ["airflow-rolling:s39bfd91c507b", "fab-rolling:s989f09d05161", "airflow:s705f1eb5de00"], "status": "REASONED"},
     "airflow-jwt": {"text": "Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery.", "components": ["airflow-rolling", "airflow"], "sources": ["airflow-rolling:s39bfd91c507b", "airflow:s705f1eb5de00"], "status": "REASONED"},
     "airflow-secret-key": {"text": "Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2.", "components": ["airflow-two", "airflow-rolling", "airflow"], "sources": ["airflow-rolling:s2d1891641c91", "airflow-two:sabb71378ad74", "airflow:sdfcfd543928c"], "status": "REASONED"},
     "airflow-config": {"text": "Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2.", "components": ["airflow-two", "airflow-rolling", "airflow"], "sources": ["airflow-rolling:s2d1891641c91", "airflow-two:s6813801b7880", "airflow:s4ed64009ed8f"], "status": "REASONED"},
-    "airflow-fernet": {"text": "Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets.", "components": ["airflow-rolling"], "sources": ["airflow-rolling:s2d1891641c91"], "status": "REASONED"},
+    "airflow-fernet": {"text": "Protect Connections, Variables, database and Fernet keys; an empty [core] FERNET_KEY selects a no-encryption implementation for new values, while configured comma-separated keys use MultiFernet. Preserve keys needed to decrypt existing values; authorized workloads still use secrets.", "components": ["airflow-crypto", "airflow-rolling"], "sources": ["airflow-crypto:sdeaf2f54c054", "airflow-crypto:s70ea7631e820", "airflow-rolling:s2d1891641c91"], "status": "REASONED"},
     "airflow-port": {"text": "Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer.", "components": ["airflow-rolling"], "sources": ["airflow-rolling:s39bfd91c507b"], "status": "REASONED"},
     "temporal-authorizer": {"text": "Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8"], "status": "REASONED"},
     "temporal-claims": {"text": "Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8"], "status": "REASONED"},
     "temporal-health": {"text": "The built-in default authorizer permits health checks without claims; health is not an authorization discriminator.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8"], "status": "REASONED"},
     "temporal-ui": {"text": "UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:sa9d5614385ca"], "status": "REASONED"},
     "temporal-tls": {"text": "Internode and frontend mTLS are separate from UI login and API authorization.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8"], "status": "REASONED"},
-    "temporal-payloads": {"text": "Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s06d4f0dbd0c8"], "status": "REASONED"},
+    "temporal-payloads": {"text": "Keep plaintext credentials out of persisted inputs/results/history; the Temporal Go SDK v1.28.0 codec HTTP handler accepts encode/decode POSTs without an authentication check, so authenticate and restrict a deployed Codec Server separately.", "components": ["temporal-rolling", "temporal-codec"], "sources": ["temporal-rolling:s06d4f0dbd0c8", "temporal-codec:s24435f531da0"], "status": "REASONED"},
     "temporal-ports": {"text": "Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference.", "components": ["temporal-rolling"], "sources": ["temporal-rolling:s12f2c64ad396"], "status": "REASONED"},
     "flower-bind": {"text": "Flower defaults to wildcard address and 5555 unless Unix socket, FLOWER_ variables or implicit working-directory flowerconfig.py override; bind loopback explicitly.", "components": ["flower", "tornado"], "sources": ["flower:s25760fae7152", "flower:s1f72a8415337", "flower:s4dd518442b7f", "flower:s4e49ebc71dc1", "tornado:sc503b4425831"], "status": "REASONED"},
     "flower-api": {"text": "Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection.", "components": ["flower-rolling"], "sources": ["flower-rolling:sb1ba69f79c9b"], "status": "REASONED"},
@@ -324,7 +356,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 | fronting: Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress. | Apache Airflow 3.3.2; Argo Workflows documentation release-3.7; Temporal documentation (rolling) unknown | REASONED |
 | prefect-auth: Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
 | prefect-key: Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
-| prefect-secrets: Protect the auth string and credential-bearing Blocks; block-document reads can request secrets, so masking is not authorization and workers need scoped credentials. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
+| prefect-secrets: Protect the auth string and credential-bearing Blocks; Prefect 3.1.8 block-document read routes accept include_secrets, and Secret.get() returns the underlying value. Restrict API and worker access; UI masking does not enforce authorization. | Prefect Blocks source 3.1.8; Prefect documentation (rolling) unknown | REASONED |
 | prefect-port: The self-hosted Prefect server uses port 4200. | Prefect documentation (rolling) unknown | REASONED |
 | dagster-bind: Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback when the port is unset or 0; explicitly bind the private origin. | Dagster OSS 1.13.24 | REASONED |
 | dagster-helm: The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default. | Dagster OSS 1.13.24 | REASONED |
@@ -335,19 +367,19 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 | airflow-fab: For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | airflow-api: Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
 | airflow-all-admins: Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin. | Apache Airflow 3.3.2 | REASONED |
-| fab-public-role: Leave FAB AUTH_ROLE_PUBLIC unset; a configured role grants that access to anonymous visitors. | Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
+| fab-public-role: Leave [fab] auth_role_public and legacy AUTH_ROLE_PUBLIC unset; a configured public role can make FAB treat an anonymous visitor as logged in and supply that role's permissions. | Apache Airflow FAB provider source providers-fab/3.9.0 | REASONED |
 | airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
 | airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
 | airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
 | airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
-| airflow-fernet: Protect Connections, Variables, database and Fernet key; an empty key disables new-value encryption, while removing an existing key prevents decryption. Authorized workloads still use secrets. | Apache Airflow documentation (rolling) unknown | REASONED |
+| airflow-fernet: Protect Connections, Variables, database and Fernet keys; an empty [core] FERNET_KEY selects a no-encryption implementation for new values, while configured comma-separated keys use MultiFernet. Preserve keys needed to decrypt existing values; authorized workloads still use secrets. | Apache Airflow crypto source 3.3.2; Apache Airflow documentation (rolling) unknown | REASONED |
 | airflow-port: Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer. | Apache Airflow documentation (rolling) unknown | REASONED |
 | temporal-authorizer: Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience. | Temporal documentation (rolling) unknown | REASONED |
 | temporal-claims: Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS. | Temporal documentation (rolling) unknown | REASONED |
 | temporal-health: The built-in default authorizer permits health checks without claims; health is not an authorization discriminator. | Temporal documentation (rolling) unknown | REASONED |
 | temporal-ui: UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP. | Temporal documentation (rolling) unknown | REASONED |
 | temporal-tls: Internode and frontend mTLS are separate from UI login and API authorization. | Temporal documentation (rolling) unknown | REASONED |
-| temporal-payloads: Keep plaintext credentials out of persisted inputs/results/history; payload encryption and an independently authenticated Codec Server form separate controls. | Temporal documentation (rolling) unknown | REASONED |
+| temporal-payloads: Keep plaintext credentials out of persisted inputs/results/history; the Temporal Go SDK v1.28.0 codec HTTP handler accepts encode/decode POSTs without an authentication check, so authenticate and restrict a deployed Codec Server separately. | Temporal documentation (rolling) unknown; Temporal Go SDK codec source v1.28.0 | REASONED |
 | temporal-ports: Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference. | Temporal documentation (rolling) unknown | REASONED |
 | flower-bind: Flower defaults to wildcard address and 5555 unless Unix socket, FLOWER_ variables or implicit working-directory flowerconfig.py override; bind loopback explicitly. | Flower v2.2.0; Tornado v6.5.10 | REASONED |
 | flower-api: Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection. | Flower documentation (rolling) unknown | REASONED |
@@ -406,9 +438,9 @@ is unrelated to Prefect Cloud: `PREFECT_API_KEY` authenticates only to Prefect C
 set alongside `PREFECT_API_AUTH_STRING` on a client talking to a self-hosted server, the key takes precedence
 and the request fails with 401. Store the auth string in a secret manager or a private `.env` file, never in
 the repository ([secrets.md](secrets.md)). Treat access to the server API as access to credential-bearing Blocks
-and workflow controls: a block-document request can ask for stored secret values, and UI masking is not an
-authorization boundary, so keep credentials out of flow parameters and logs and give each worker its own
-narrowly scoped credentials.
+and workflow controls: Prefect 3.1.8 block-document read routes accept `include_secrets`, and
+`Secret.get()` returns the underlying value. These source files do not establish per-caller authorization
+for `include_secrets`; restrict API and worker access, and keep credentials out of flow parameters and logs.
 
 ## Dagster (OSS)
 
@@ -441,9 +473,9 @@ the FAB auth manager instead: install the FAB provider, then set `[core] auth_ma
 authentication backends for the FAB API, not the auth manager. Point FAB at LDAP, OAuth, or another real identity backend,
 and put MFA at that identity provider ([mfa.md](mfa.md), [identity-providers.md](identity-providers.md)). Keep
 `[core] simple_auth_manager_all_admins` unset or `False`, since setting it disables login and treats every
-visitor as an admin, and with FAB leave `AUTH_ROLE_PUBLIC` unset in `webserver_config.py`, since setting it
-(for example to `Admin`) grants unauthenticated visitors that role; check the effective configuration and
-anonymous API behavior after deployment.
+visitor as an admin, and with FAB leave `[fab] auth_role_public` and legacy `AUTH_ROLE_PUBLIC` in `webserver_config.py` unset.
+A configured public role can make the FAB logged-in check pass for an anonymous visitor and supplies that
+role's permissions; check the effective configuration and anonymous API behavior after deployment.
 
 The official `docker-compose.yaml` takes the right first step and the wrong second one: it selects the FAB
 auth manager, then seeds it with a known admin, `_AIRFLOW_WWW_USER_USERNAME` and `_AIRFLOW_WWW_USER_PASSWORD`
@@ -460,8 +492,8 @@ on 2.11.0, `[api] secret_key` on 3.3.2): provision a strong value for it too, be
 secure the other. Keep configuration exposure off as well (`AIRFLOW__WEBSERVER__EXPOSE_CONFIG=False` on 2.11.0,
 `AIRFLOW__API__EXPOSE_CONFIG=False` on 3.3.2). An exposed Airflow is also a credential store: its Connections
 and Variables hold credentials for the systems your DAGs reach, protected at rest by the `[core] fernet_key`
-(an effectively empty key disables encryption for newly stored values; normal initialization generates a key,
-and removing an existing key prevents decryption of existing ciphertext), so restrict permissions on Connections and
+(an empty key selects `_NullFernet`, which does not encrypt newly stored values; configured
+comma-separated keys use `MultiFernet`, so preserve keys needed to decrypt existing ciphertext), so restrict permissions on Connections and
 Variables and protect the metadata database, the Fernet key, and any secrets backend, since encryption at rest
 and UI masking do not stop an authorized workload from using them. Keep every secret out of the repository
 ([secrets.md](secrets.md)), and publish 8080 to loopback for the proxy (`127.0.0.1:8080:8080`) rather than to
@@ -487,7 +519,8 @@ internode and frontend traffic separately again. Set up both layers; MFA comes f
 provider the UI's OIDC settings point at. Temporal also
 persists workflow inputs, results, and history, so keep plaintext credentials out of them and fetch operational
 secrets inside authorized workers; if you encrypt payloads with a Payload Codec, authenticate and restrict any
-Codec Server independently of the UI and the frontend, because an exposed Codec Server can decode that data.
+Codec Server independently of the UI and the frontend. The Temporal Go SDK v1.28.0 codec HTTP handler
+accepts encode/decode POSTs without an authentication check; a deployed server needs its own access control.
 
 ## Flower (for Celery)
 
@@ -790,7 +823,7 @@ shares the directory.
 - Storing credentials in Airflow Connections and Variables, Prefect Blocks, or Temporal payloads without
   restricting who can retrieve or use them. UI masking and database encryption do not enforce caller
   authorization. Temporal client-side payload encryption adds a separate boundary: decoding requires the key or
-  access to an authorized Codec Server.
+  access to a Codec Server with its own authentication and access restrictions.
 
 ## Sources (checked October 2026)
 
@@ -799,6 +832,10 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 - Prefect, security settings (`PREFECT_SERVER_API_AUTH_STRING`, `PREFECT_API_AUTH_STRING`, Cloud API keys
   taking precedence and causing 401) (rolling documentation, checked September 2026): https://docs.prefect.io/v3/advanced/security-settings
 - Prefect 3.1.8 release announcement, Basic Auth support added to the API and UI: https://github.com/PrefectHQ/prefect/releases/tag/3.1.8
+- Prefect 3.1.8 block-document filter and ID read routes accept `include_secrets`, and `Secret.get()` returns the underlying value: https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/server/api/block_documents.py#L47-L70, https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/server/api/block_documents.py#L101-L119 and https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/blocks/system.py#L154-L159
+- Apache Airflow FAB provider 3.9.0 reads `[fab] auth_role_public` with legacy `AUTH_ROLE_PUBLIC` fallback, applies public-role permissions to an anonymous user, and pins Flask-AppBuilder 5.2.2: https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/src/airflow/providers/fab/auth_manager/fab_auth_manager.py#L327-L381 and https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/pyproject.toml#L75-L81
+- Apache Airflow 3.3.2 `_NullFernet` and `get_fernet()` key selection: https://github.com/apache/airflow/blob/3.3.2/airflow-core/src/airflow/models/crypto.py#L47-L68 and https://github.com/apache/airflow/blob/3.3.2/airflow-core/src/airflow/models/crypto.py#L154-L173
+- Temporal Go SDK v1.28.0 codec HTTP handler POST encode/decode paths and construction: https://github.com/temporalio/sdk-go/blob/v1.28.0/converter/codec.go#L284-L350
 - Prefect self-hosted server, default port 4200 (rolling documentation, checked September 2026): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
 - Dagster webserver and UI, default local port and no documented built-in auth (rolling documentation, checked September 2026): https://docs.dagster.io/guides/operate/webserver
 - Dagster webserver `DEFAULT_WEBSERVER_HOST` "127.0.0.1" and port 3000 with the free-port fallback, `dagster dev` forwarding `--host` only when one is given, its environment-variable routes (`DAGSTER_WEBSERVER_*` through `auto_envvar_prefix`, legacy `DAGIT_*` copied onto them, and the `dagster` CLI's `DAGSTER_CLI` prefix, which Click extends per subcommand, so `dagster dev` reads `DAGSTER_CLI_DEV_*`), and the Helm chart's webserver command, which hardcodes `-h 0.0.0.0` and takes the port from `dagsterWebserver.service.port` (80 by default, Service type `ClusterIP` by default) (pinned tag 1.13.24): https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L41-L42, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L81-L96, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L306-L311, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/dev.py#L251-L252, https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster-webserver/dagster_webserver/cli.py#L339-L351, <https://github.com/dagster-io/dagster/blob/1.13.24/python_modules/dagster/dagster/_cli/__init__.py#L45-L50>, Click's subcommand prefix rule (pinned tag 8.5.0) https://github.com/pallets/click/blob/8.5.0/src/click/core.py#L476-L484, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_deployment-webserver.tpl#L86-L90, https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/templates/helpers/_helpers.tpl#L55 and https://github.com/dagster-io/dagster/blob/1.13.24/helm/dagster/values.yaml#L54-L58
