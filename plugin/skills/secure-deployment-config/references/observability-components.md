@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "362d7ec0cc7a03566811713de5a5c19eb1b9b38f38d4cda5042369f6030d6060",
+  "body_sha256": "fa0e6708956dc9ce60c3495b75d2910e2cadd52b16b2e06e259f3893f7fcc6fb",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -608,7 +608,8 @@ There are two fixes, and you can use both:
   filtering is enabled. Loopback remains a recommendation for this configuration, not a guarantee for
   every single-binary deployment: verify effective
   advertised and dial addresses, worker/frontend/scheduler settings, successful pushes and queries,
-  and any compactor calls. The supplied snapshots do not show DNS/ring watcher internals, the dskit ring read path (`ring/ring.go`),
+  and any compactor calls. The supplied snapshots do not show DNS/ring watcher internals, the dskit ring read path (`ring/ring.go`), service start-up wiring, the KV-store write path,
+  `ring.DoUntilQuorum`, the non-default Kafka-only and partition-ingester paths,
   ingester and frontend client pool internals, worker-service address wiring
   (`pkg/querier/worker_service.go`), the processor manager
   (`pkg/querier/worker/processor_manager.go`), every RPC hop, or live reachability. Remote components need a private address
