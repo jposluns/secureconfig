@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8dcc6f81af8ec725a12ae4e2aef1ad598364c08fa6cd67e7546b0867d84317b4",
+  "body_sha256": "a1352e0b28964f85a1f3a0de1c89e5e95afe80e0a6386c794e57ee88b70a1138",
   "components": {
     "sentry": {
       "name": "Sentry and self-hosted distribution",
@@ -40,6 +40,13 @@ version_basis: {
       "sources": {
         "sb4f6be6e6b48": "https://glitchtip.com/blog/2021-09-17-glitchtip-1-8/"
       }
+    },
+    "glitchtip-backend": {
+      "name": "GlitchTip backend",
+      "basis": "v6.2.6",
+      "sources": {
+        "s32daf6ef6011": "https://gitlab.com/glitchtip/glitchtip-backend/-/blob/v6.2.6/apps/users/signals.py#L16-45"
+      }
     }
   },
   "claims": {
@@ -60,7 +67,7 @@ version_basis: {
     "glitchtip-secret": {"text": "Use a unique SECRET_KEY for Django signing and keep it out of version control.", "components": ["glitchtip"], "sources": ["glitchtip:seb7debbdfdf4"], "status": "REASONED"},
     "glitchtip-mfa": {"text": "Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version.", "components": ["glitchtip-mfa"], "sources": ["glitchtip-mfa:sb4f6be6e6b48"], "status": "REASONED"},
     "glitchtip-stores": {"text": "Keep PostgreSQL and optional Valkey or Redis internal.", "components": ["glitchtip"], "sources": ["glitchtip:seb7debbdfdf4"], "status": "REASONED"},
-    "membership": {"text": "Sentry single-organization signups join the default organization; GlitchTip accounts and membership differ. The GlitchTip membership implementation is not cited.", "components": ["sentry", "glitchtip"], "sources": ["sentry:sf2294c9468b9", "glitchtip:seb7debbdfdf4", "sentry:se4a92c571e6f"], "status": "REASONED"},
+    "membership": {"text": "Sentry single-organization signups join the default organization; at GlitchTip backend v6.2.6, on login the signal adds a user with a linked social provider to an organization linked to that provider, with the first member of a memberless organization becoming owner.", "components": ["sentry", "glitchtip-backend"], "sources": ["sentry:sf2294c9468b9", "sentry:se4a92c571e6f", "glitchtip-backend:s32daf6ef6011"], "status": "REASONED"},
     "verify-listeners": {"text": "Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets.", "components": ["sentry", "glitchtip"], "sources": ["sentry:sd29b3662378f", "glitchtip:seb7debbdfdf4"], "status": "REASONED", "verify": [1]},
     "verify-sentry": {"text": "Follow the single-organization login redirect and inspect the create-account path; HTTP 200 alone cannot distinguish registration.", "components": ["sentry"], "sources": ["sentry:sd576440e137e", "sentry:sf2294c9468b9"], "status": "REASONED", "verify": [2]},
     "verify-glitchtip": {"text": "On an operator-controlled fixture, signup succeeds with registration True and is refused with False after the first user.", "components": ["glitchtip"], "sources": ["glitchtip:seb7debbdfdf4"], "status": "REASONED", "verify": [2]},
@@ -97,7 +104,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | glitchtip-secret: Use a unique SECRET_KEY for Django signing and keep it out of version control. | GlitchTip documentation unknown | REASONED |
 | glitchtip-mfa: Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version. | GlitchTip MFA announcement unknown | REASONED |
 | glitchtip-stores: Keep PostgreSQL and optional Valkey or Redis internal. | GlitchTip documentation unknown | REASONED |
-| membership: Sentry single-organization signups join the default organization; GlitchTip accounts and membership differ. The GlitchTip membership implementation is not cited. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
+| membership: Sentry single-organization signups join the default organization; at GlitchTip backend v6.2.6, on login the signal adds a user with a linked social provider to an organization linked to that provider, with the first member of a memberless organization becoming owner. | Sentry and self-hosted distribution 26.8.0; GlitchTip backend v6.2.6 | REASONED |
 | verify-listeners: Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
 | verify-sentry: Follow the single-organization login redirect and inspect the create-account path; HTTP 200 alone cannot distinguish registration. | Sentry and self-hosted distribution 26.8.0 | REASONED |
 | verify-glitchtip: On an operator-controlled fixture, signup succeeds with registration True and is refused with False after the first user. | GlitchTip documentation unknown | REASONED |
@@ -166,7 +173,7 @@ Unverified until checked: the exact host bind in your Compose sample, whether MF
 ## Shared exposures
 
 - **The event data itself.** Both tools store stack traces with source context, request payloads, and user identifiers. An exposed backing store is reachable with the credentials the compose ships and expects on its internal network, so publishing it is a direct disclosure of every event it holds; an exposed web or API discloses to the degree an attacker can authenticate to it, which is why the registration default and the intake scrubbing both matter. Scrub at intake and keep the stores private.
-- **Open registration.** GlitchTip ships it on; Sentry ships it off. What a self-registered stranger then reaches differs by tool: Sentry's single-organization mode adds new sign-ups to the default organization, while a GlitchTip account is separate from organization membership, so confirm your own membership and project permissions rather than assuming either extreme. Confirm the live setting rather than trusting the default.
+- **Open registration.** GlitchTip ships it on; Sentry ships it off. What a self-registered stranger then reaches differs by tool: Sentry's single-organization mode adds new sign-ups to the default organization, while at GlitchTip backend v6.2.6 [the login signal](https://gitlab.com/glitchtip/glitchtip-backend/-/blob/v6.2.6/apps/users/signals.py#L16-45) adds a user with a linked social provider to an organization linked to that provider on login, with the first member of a memberless organization becoming owner. Confirm your own membership and project permissions rather than assuming a new account has none or all. Confirm the live setting rather than trusting the default.
 - **The public DSN misread as a secret.** Rotating a DSN does not protect the tracker; authenticating its web and API does. Do not treat a leaked DSN as the incident.
 - **Plaintext.** Neither serves TLS natively, so an instance reachable without a terminating proxy sends session cookies and the event UI in the clear.
 
@@ -222,6 +229,7 @@ Point that block at Sentry's `http://tracker.example.com:9000/`: because the bun
 - Sentry DSN explainer (a DSN is public and allows only event submission, not read access): https://docs.sentry.io/concepts/key-terms/dsn-explainer/
 - GlitchTip installation (port `8000`, `ENABLE_USER_REGISTRATION` default and behavior): https://glitchtip.com/documentation/install
 - GlitchTip two-factor authentication (available since v1.8): https://glitchtip.com/blog/2021-09-17-glitchtip-1-8/
+- [GlitchTip backend v6.2.6 organization membership on login for a user with a linked social account (checked October 2026)](https://gitlab.com/glitchtip/glitchtip-backend/-/blob/v6.2.6/apps/users/signals.py#L16-45).
 - [Sentry 26.8.0 secret-key generator command (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/runner/commands/config.py).
 - [Sentry self-hosted 26.8.0 bundled nginx forwarded scheme (checked October 2026)](https://github.com/getsentry/self-hosted/blob/26.8.0/nginx.conf#L63).
 - [Sentry 26.8.0 registration and single-organization membership (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/web/frontend/auth_login.py).
