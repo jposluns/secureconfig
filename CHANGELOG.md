@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-16
+
+- `n8n.md` sources its row 1.179 facts in n8n 2.40.6 files: Execute Command excluded by default (`NODES_EXCLUDE`), the `$env` access guard, the editor's `POST /login` under the default `rest` prefix, the public API's authentication handler, and the webhook node's missing-credential codes (401 for Basic and JWT, 403 for Header) and HTTP response write; claims the fetched files do not establish (owner claim by the first visitor, the public API's 401/200 codes, complete environment isolation) are narrowed; the `exposure-index.md` n8n row now says the owner setup endpoint skips authentication (2.40.6) (#564)
+
 ## 2026-10-15
 
 - `streamlit.md` sources its Google `hd` statements in Google's OpenID Connect documentation (the ID-token `hd` claim is present only for accounts in a Google Cloud organization and must be checked when restricting access by domain; the `hd` request parameter only optimizes account selection) and cites Streamlit 1.64.0 source for `st.login()` storing the provider's claims without a domain check; consumer and `gmail.com` wording now follows Google's hosted-domain terms (row 1.179) (#563)
