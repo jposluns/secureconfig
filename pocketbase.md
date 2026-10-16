@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c4c57ea301fed1e28a01281d57a909b22e9d2938e32f3e6ec601971b0d6d2965",
+  "body_sha256": "0e8e7b8e26f4ef9d8d28f094f761036b36568ccfc917e643aeed266bc52aec59",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -65,7 +65,6 @@ version_basis: {
         "saa37bb5d4d7e": "https://appwrite.io/docs/partners/project/api-keys",
         "sa0bd132f7968": "https://appwrite.io/docs/advanced/security/permissions",
         "s58ad28816c5d": "https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions",
-        "se308ccf94aac": "https://appwrite.io/docs/references/cloud/server-nodejs/databases",
         "s2bf9a4746d28": "https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables",
         "s000d05106450": "https://appwrite.io/docs/advanced/security/rate-limits",
         "s38a1efa0c7d2": "https://appwrite.io/docs/advanced/self-hosting/configuration/email",
@@ -873,7 +872,6 @@ service result or deployed-bundle scan is claimed.
 - [utopia-php/database 7.3.9 pinned aggregate helper](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Helpers/Permission.php#L151-L155).
 - [Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/permissions).
 - [Appwrite legacy collection/document permissions (rolling documentation, checked October 2026)](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions).
-- [Appwrite legacy Databases API (rolling documentation, checked September 2026)](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
 - [Appwrite environment reference and HTTPS deprecation wording (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
 - [Appwrite rate limits (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/rate-limits).
 - [Appwrite email delivery (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/email).

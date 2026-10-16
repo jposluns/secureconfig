@@ -37296,7 +37296,6 @@ service result or deployed-bundle scan is claimed.
 - [utopia-php/database 7.3.9 pinned aggregate helper](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Helpers/Permission.php#L151-L155).
 - [Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/permissions).
 - [Appwrite legacy collection/document permissions (rolling documentation, checked October 2026)](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions).
-- [Appwrite legacy Databases API (rolling documentation, checked September 2026)](https://appwrite.io/docs/references/cloud/server-nodejs/databases).
 - [Appwrite environment reference and HTTPS deprecation wording (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
 - [Appwrite rate limits (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/rate-limits).
 - [Appwrite email delivery (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/email).
