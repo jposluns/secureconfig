@@ -7883,12 +7883,14 @@ kubectl exec app -- sh -c 'id; grep -E "NoNewPrivs|Seccomp|CapEff|CapBnd" /proc/
 # the policy were not enforcing anything
 DBIP=$(kubectl get svc db -o jsonpath='{.spec.clusterIP}')
 
-# This guide's advice: give a probe pod its own admission-compliant securityContext under the restricted PSA level, and make a
-# real TCP connect to the db's actual port (a Postgres port does not speak HTTP, so wget cannot test it).
+# A probe pod needs its own admission-compliant securityContext under the restricted PSA level (Pod Security
+# Standards). This guide's advice: make a real TCP connect to the db's actual port (a Postgres port does not
+# speak HTTP, so wget cannot test it).
 # This guide's advice: quote the address into the JSON: unquoted, `10.96.0.5` is a bare token and the array is not valid
 # JSON, so kubectl rejects the override and neither probe below runs. Keep the override's container name
-# matching the pod name (this guide's advice): kubectl v1.34.0 uses an RFC 7396 JSON merge patch by default
-# (`--override-type=merge`), which replaces the whole `containers` array with the one in your override.
+# matching the pod name (this guide's advice): kubectl v1.34.0 `kubectl run --overrides` uses an RFC 7396 JSON
+# merge patch by default (`--override-type=merge`), which replaces the whole `containers` array with the one in your override, so the
+# override's container name is the one that remains (RFC 7396).
 # kubectl run passes the pod name to its generator, generates the Pod, then applies the override; run.go
 # does not show the generator's container-naming rule. Keep the names matching to avoid confusion (this guide's advice).
 # BusyBox 1.36.1 source offers -z (zero-I/O scanning) in the 1.10-compatible nc applet with NC_EXTRA, and -w sets
@@ -7935,8 +7937,8 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
 - kubectl 1.34.0 source, default override method (checked October 2026): https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/util/override_options.go#L29-L90
 - RFC 7396, JSON Merge Patch section 2 (checked October 2026): https://www.rfc-editor.org/rfc/rfc7396#section-2
 - BusyBox 1.36.1 source, nc configuration and compatibility path (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59
-- BusyBox 1.36.1 source, compatible nc options (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L79-L93
-- BusyBox 1.36.1 source, compatible nc connect and exit behaviour (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L890-L921
+- BusyBox 1.36.1 source, compatible nc options (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93
+- BusyBox 1.36.1 source, compatible nc connect and exit behaviour (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L888-L922
 
 ======================================================================
 ==> nextjs.md

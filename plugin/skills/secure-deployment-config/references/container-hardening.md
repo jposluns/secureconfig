@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "468e191a83dca01fb659c667d01315857b2652492d5e0b8c7807b40ff7c9ae89",
+  "body_sha256": "66d4e72aba688369b0ad378593763c2aff8088cd4c7ecc2d688bb4c93f10cf08",
   "components": {
     "docker": {
       "name": "Docker documentation",
@@ -52,8 +52,8 @@ version_basis: {
       "basis": "1.36.1",
       "sources": {
         "s14b89daa008d": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59",
-        "sb9efa970fe1b": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L79-L93",
-        "sf62c067a193b": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L890-L921"
+        "s34bdee292f79": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93",
+        "s8a53fb647996": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L888-L922"
       }
     }
   },
@@ -78,7 +78,7 @@ version_basis: {
     "verify-user": {"text": "Compose exec app id must report a nonzero UID; the service name is project-scoped, unlike docker exec container names.", "components": ["docker"], "sources": ["docker:s6ca35cbd69e7", "docker:s8b7485a246e4"], "status": "REASONED", "verify": [1]},
     "verify-rootfs": {"text": "touch must first print WRITABLE on an owned existing path with read_only false, then blocked after recreation with true; ENOENT/EACCES or exit 0 do not discriminate.", "components": ["docker"], "sources": ["docker:s8b7485a246e4"], "status": "REASONED", "verify": [1]},
     "verify-context": {"text": "kubectl get reads declared context; inspect the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities, avoiding pause PID 1 in shared namespaces.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308"], "status": "REASONED", "verify": [1]},
-    "verify-probe": {"text": "Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified.", "components": ["kubernetes", "kubectl-134", "rfc7396", "busybox-1361"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7", "kubernetes:s953450b4076f", "kubectl-134:s0906dc78482b", "kubectl-134:sc98b92ba3ebf", "kubectl-134:s2ffc04de1d63", "rfc7396:sda39f95d0890", "busybox-1361:s14b89daa008d", "busybox-1361:sb9efa970fe1b", "busybox-1361:sf62c067a193b"], "status": "REASONED", "verify": [1]},
+    "verify-probe": {"text": "Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified.", "components": ["kubernetes", "kubectl-134", "rfc7396", "busybox-1361"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7", "kubernetes:s953450b4076f", "kubectl-134:s0906dc78482b", "kubectl-134:sc98b92ba3ebf", "kubectl-134:s2ffc04de1d63", "rfc7396:sda39f95d0890", "busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s8a53fb647996"], "status": "REASONED", "verify": [1]},
     "verify-segmentation": {"text": "The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED", "verify": [1]}
   }
 }
@@ -237,12 +237,14 @@ kubectl exec app -- sh -c 'id; grep -E "NoNewPrivs|Seccomp|CapEff|CapBnd" /proc/
 # the policy were not enforcing anything
 DBIP=$(kubectl get svc db -o jsonpath='{.spec.clusterIP}')
 
-# This guide's advice: give a probe pod its own admission-compliant securityContext under the restricted PSA level, and make a
-# real TCP connect to the db's actual port (a Postgres port does not speak HTTP, so wget cannot test it).
+# A probe pod needs its own admission-compliant securityContext under the restricted PSA level (Pod Security
+# Standards). This guide's advice: make a real TCP connect to the db's actual port (a Postgres port does not
+# speak HTTP, so wget cannot test it).
 # This guide's advice: quote the address into the JSON: unquoted, `10.96.0.5` is a bare token and the array is not valid
 # JSON, so kubectl rejects the override and neither probe below runs. Keep the override's container name
-# matching the pod name (this guide's advice): kubectl v1.34.0 uses an RFC 7396 JSON merge patch by default
-# (`--override-type=merge`), which replaces the whole `containers` array with the one in your override.
+# matching the pod name (this guide's advice): kubectl v1.34.0 `kubectl run --overrides` uses an RFC 7396 JSON
+# merge patch by default (`--override-type=merge`), which replaces the whole `containers` array with the one in your override, so the
+# override's container name is the one that remains (RFC 7396).
 # kubectl run passes the pod name to its generator, generates the Pod, then applies the override; run.go
 # does not show the generator's container-naming rule. Keep the names matching to avoid confusion (this guide's advice).
 # BusyBox 1.36.1 source offers -z (zero-I/O scanning) in the 1.10-compatible nc applet with NC_EXTRA, and -w sets
@@ -289,5 +291,5 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
 - kubectl 1.34.0 source, default override method (checked October 2026): https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/util/override_options.go#L29-L90
 - RFC 7396, JSON Merge Patch section 2 (checked October 2026): https://www.rfc-editor.org/rfc/rfc7396#section-2
 - BusyBox 1.36.1 source, nc configuration and compatibility path (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59
-- BusyBox 1.36.1 source, compatible nc options (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L79-L93
-- BusyBox 1.36.1 source, compatible nc connect and exit behaviour (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L890-L921
+- BusyBox 1.36.1 source, compatible nc options (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93
+- BusyBox 1.36.1 source, compatible nc connect and exit behaviour (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L888-L922
