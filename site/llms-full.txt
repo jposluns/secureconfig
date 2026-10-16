@@ -32831,6 +32831,7 @@ from your own account's view of the process.
 - Loki v3.7.8 querier ingester client factory: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L58-L74
 - Loki v3.7.8 querier ingester call: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L187-L220
 - Loki v3.7.8 distributor ingester client factory: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L249-L253
+- Loki v3.7.8 distributor ingester client factory use: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L344
 - Loki v3.7.8 distributor client and ring parameters: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L231-L236
 - Loki v3.7.8 distributor push dispatch: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L900-L921
 - Loki v3.7.8 distributor per-ingester push task: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L1216-L1231
@@ -32866,6 +32867,7 @@ from your own account's view of the process.
 - dskit pinned gRPC dial options: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/grpcclient/grpcclient.go#L125-L134
 - dskit pinned ring lifecycler advertised address: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L189-L229
 - dskit pinned ring lifecycler registration: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L709-L723
+- dskit pinned lifecycler ring entry update: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L778-L781
 - dskit pinned lifecycler loop calling ring initialization: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L541-L544
 - dskit pinned lifecycler ring initialization entry: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L681
 - dskit pinned remote-state merging and codec validation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1577-L1672
