@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "db452ce63dfbf9f676b56a570f5dc4904bed821a855a357b542d4ae21aaf8607",
+  "body_sha256": "67a9621da5e49e7e1f879c5251a675552a9d60326a3bd0c975f5a2529ce7c904",
   "components": {
     "oauth": {
       "name": "OAuth security BCP and PKCE",
@@ -307,7 +307,7 @@ Use a maintained library; do not hand-parse JWTs. The snippets are from each lib
 
 Your app does not run the second factor; the provider does, under its policy: Conditional Access in Entra (**Entra ID > Conditional Access > Policies**, grant **Require authentication strength**; a P1 feature per [identity-providers.md](identity-providers.md)), 2-Step Verification in the Google Admin console (**Security > Authentication > 2-step verification**, Enforcement **On** for every user who signs in to the app, as this guide advises), and authentication policies plus the global session policy in Okta. Ordering and options in [mfa.md](mfa.md).
 
-An app can additionally refuse a session whose ID token shows no second factor, where the provider documents the claim. Okta's `amr` array carries values such as `pwd`, `mfa`, `otp`, and `hwk`. For Entra, check the ID token claims reference and the optional claims reference for the `amr` claim and its `mfa` value before relying on it. For Google, super administrators can enforce 2-Step Verification in the Admin console for all users, or for a selected organizational unit or configuration group. Guide advice: set Enforcement **On** for every user who signs in to the app; no ID token MFA claim was verified for this guide. GitHub OAuth has no ID token. An active organization membership check establishes membership only; inference from GitHub's 2FA policy: membership alone does not prove MFA because members without 2FA retain membership while required 2FA blocks organization resources. Guide assessment: MFA depends on the organization's effective 2FA requirement and whether it is enabled. Guide advice: verify that requirement before relying on it for MFA. This guide has not established that a member without 2FA fails the app's membership check; test with such an account before relying on it.
+An app can additionally refuse a session whose ID token shows no second factor, where the provider documents the claim. Okta's `amr` array carries values such as `pwd`, `mfa`, `otp`, and `hwk`. For Entra, check the ID token claims reference and the optional claims reference for the `amr` claim and its `mfa` value before relying on it. For Google Workspace, super administrators can enforce 2-Step Verification in the Admin console for all users, or for a selected organizational unit or configuration group. Guide advice: set Enforcement **On** for every user who signs in to the app; no ID token MFA claim was verified for this guide. GitHub OAuth has no ID token. An active organization membership check establishes membership only; inference from GitHub's 2FA policy: membership alone does not prove MFA because members without 2FA retain membership while required 2FA blocks organization resources. Guide assessment: MFA depends on the organization's effective 2FA requirement and whether it is enabled. Guide advice: verify that requirement before relying on it for MFA. This guide has not established that a member without 2FA fails the app's membership check; test with such an account before relying on it.
 
 ## Verify
 
