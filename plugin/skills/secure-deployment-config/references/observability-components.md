@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "5a16d74e2220ef29ebf1113b4e31fcbaa6c4bb5a68b65da24f219dd3c4a95708",
+  "body_sha256": "69918b754f67fc76c7c1871663ff52f11470bd4d6ccc20ed4a66659bb191d220",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -106,6 +106,25 @@ version_basis: {
         "s6b2f01173a97": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1241-L1262",
         "s44e7547da37d": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2532-L2561",
         "s33f320afa73a": "https://github.com/grafana/loki/blob/v3.7.8/go.mod#L55",
+        "s3ff15746c2c9": "https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/tenant_request_handler.go#L10-L34",
+        "s14f65483dd4d": "https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/request_handler.go#L49-L110",
+        "s0bde2f8abe97": "https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/request_handler.go#L134-L190",
+        "saf8f37e04b71": "https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/request_handler.go#L259-L303",
+        "s6feced2aa907": "https://github.com/grafana/loki/blob/v3.7.8/pkg/validation/limits.go#L450-L453",
+        "se1440b6eb37a": "https://github.com/grafana/loki/blob/v3.7.8/pkg/validation/limits.go#L1128-L1132",
+        "s79ea72562a9f": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L117-L182",
+        "s634e6599df5e": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L222-L245",
+        "s10b95cd4cab8": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L297-L310",
+        "s82a976e6b93c": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/frontend_processor.go#L49-L80",
+        "s47c05209cd31": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L87-L164",
+        "s1d59e1184191": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L246-L335",
+        "s9d106cc379de": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/client/client.go#L65-L91",
+        "s8b3d57f01355": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L358-L365",
+        "s88661a4514b3": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L58-L74",
+        "sb0ae3e30f690": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L187-L220",
+        "s074f98761044": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L249-L253",
+        "s51e0f640a169": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L879-L893",
+        "sa19fa92e5d02": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L1258-L1271",
         "s7786b9105acc": "https://raw.githubusercontent.com/grafana/loki/v3.7.8/pkg/util/fakeauth/fake_auth.go"
       }
     },
@@ -131,6 +150,9 @@ version_basis: {
         "s675104c4819c": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/crypto/tls/tls.go#L27-L64",
         "s99e7e34182f1": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/crypto/tls/tls.go#L86-L175",
         "s69c68f3d3e6a": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1383-L1470",
+        "sb0955f4c2ebd": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/grpcclient/grpcclient.go#L125-L134",
+        "s74daabf65e98": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L189-L229",
+        "s172528a7c1bf": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L709-L723",
         "s1b539b8100a3": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1577-L1672"
       }
     },
@@ -199,11 +221,11 @@ version_basis: {
     "loki-config": {"text": "GET /config exposes configuration without a tenant-auth wrapper.", "components": ["loki"], "sources": ["loki:sbe0aa939a44d"], "status": "REASONED"},
     "loki-diagnostics": {"text": "Metrics and pprof routes are registered by default without a tenant-auth wrapper.", "components": ["dskit"], "sources": ["dskit:s761b46738198"], "status": "REASONED"},
     "loki-maintenance": {"text": "Ingester flush/shutdown accept GET/POST; prepare_shutdown accepts POST/GET/DELETE, without tenant-auth wrappers.", "components": ["loki"], "sources": ["loki:sc2b013001317"], "status": "REASONED"},
-    "loki-delete": {"text": "Non-worker compactor deletion routes need a supported shipper index, retention and delete-request-store; tenant/policy middleware applies and omitted handlers limit the trace.", "components": ["loki"], "sources": ["loki:s4f3a19f7f08c", "loki:s3d51e1213e70", "loki:s38c1e77fe01e", "loki:s1f38431776f2"], "status": "REASONED"},
+    "loki-delete": {"text": "Non-worker deletion routes require a supported shipper index, retention and a delete-request store; tenant middleware gates traced create/list/cancel handlers; exact mode-to-allow mapping remains unverified.", "components": ["loki"], "sources": ["loki:s4f3a19f7f08c", "loki:s3d51e1213e70", "loki:s38c1e77fe01e", "loki:s1f38431776f2", "loki:s3ff15746c2c9", "loki:s14f65483dd4d", "loki:s0bde2f8abe97", "loki:saf8f37e04b71", "loki:s6feced2aa907", "loki:se1440b6eb37a"], "status": "REASONED"},
     "loki-grpc-bridge": {"text": "Single-binary ingester RPC and HTTP-over-gRPC expose paths that HTTP-only TLS/proxying does not protect.", "components": ["loki", "dskit"], "sources": ["loki:sc2b013001317", "dskit:s5fd7b12bfcf1"], "status": "REASONED"},
     "loki-mtls": {"text": "HTTP/gRPC TLS defaults empty and requires a cert/key pair; configure client CA plus RequireAndVerifyClientCert, not CA alone.", "components": ["dskit"], "sources": ["dskit:sb19d54a19636", "dskit:s0dc9a01e591a", "dskit:sd35a28be4391"], "status": "REASONED"},
     "loki-ring": {"text": "Single-binary overlay uses inmemory ring, loopback instance address and replication_factor 1 instead of default 3; check no gossip listener remains.", "components": ["loki"], "sources": ["loki:s8f06ddfa5291", "loki:s8cf14a90ec61", "loki:sfb3d52071e7c"], "status": "REASONED"},
-    "loki-internal": {"text": "Loopback gRPC is a configuration-specific recommendation; verify advertised/dial addresses and successful internal worker, ingester and compactor calls.", "components": ["loki"], "sources": ["loki:s765907d2b4ee", "loki:sfb3d52071e7c", "loki:scf12ae06cdc4", "loki:s970473c2dcdb", "loki:s6b2f01173a97", "loki:s44e7547da37d"], "status": "REASONED"},
+    "loki-internal": {"text": "Worker frontend/scheduler and distributor/querier ingester dial sites are traced; loopback gRPC remains configuration-specific, with compactor calls and live reachability to verify.", "components": ["loki", "dskit"], "sources": ["loki:s765907d2b4ee", "loki:sfb3d52071e7c", "loki:s8cf14a90ec61", "loki:scf12ae06cdc4", "loki:s970473c2dcdb", "loki:s6b2f01173a97", "loki:s44e7547da37d", "loki:s79ea72562a9f", "loki:s634e6599df5e", "loki:s10b95cd4cab8", "loki:s82a976e6b93c", "loki:s47c05209cd31", "loki:s1d59e1184191", "loki:s9d106cc379de", "loki:s8b3d57f01355", "loki:s88661a4514b3", "loki:sb0ae3e30f690", "loki:s074f98761044", "loki:s51e0f640a169", "loki:sa19fa92e5d02", "dskit:sb0955f4c2ebd", "dskit:s74daabf65e98", "dskit:s172528a7c1bf", "dskit:scf57b6b1f148"], "status": "REASONED"},
     "loki-grpc-tls": {"text": "gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers.", "components": ["dskit", "loki"], "sources": ["dskit:sd35a28be4391", "loki:s70975c2655fa"], "status": "REASONED"},
     "loki-proxy": {"text": "An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki.", "components": ["loki"], "sources": ["loki:s70975c2655fa"], "status": "REASONED"},
     "verify-inventory": {"text": "Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed.", "components": ["node", "alert", "push", "jaeger", "dskit"], "sources": ["node:s896899f5a500", "alert:s0fd66cba968e", "push:s5c9f9745f42d", "jaeger:s5619bba2be59", "dskit:sb19d54a19636", "dskit:s23d81aeedf07"], "status": "REASONED", "verify": [1]},
@@ -272,11 +294,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | loki-config: GET /config exposes configuration without a tenant-auth wrapper. | Loki v3.7.8 | REASONED |
 | loki-diagnostics: Metrics and pprof routes are registered by default without a tenant-auth wrapper. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-maintenance: Ingester flush/shutdown accept GET/POST; prepare_shutdown accepts POST/GET/DELETE, without tenant-auth wrappers. | Loki v3.7.8 | REASONED |
-| loki-delete: Non-worker compactor deletion routes need a supported shipper index, retention and delete-request-store; tenant/policy middleware applies and omitted handlers limit the trace. | Loki v3.7.8 | REASONED |
+| loki-delete: Non-worker deletion routes require a supported shipper index, retention and a delete-request store; tenant middleware gates traced create/list/cancel handlers; exact mode-to-allow mapping remains unverified. | Loki v3.7.8 | REASONED |
 | loki-grpc-bridge: Single-binary ingester RPC and HTTP-over-gRPC expose paths that HTTP-only TLS/proxying does not protect. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-mtls: HTTP/gRPC TLS defaults empty and requires a cert/key pair; configure client CA plus RequireAndVerifyClientCert, not CA alone. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-ring: Single-binary overlay uses inmemory ring, loopback instance address and replication_factor 1 instead of default 3; check no gossip listener remains. | Loki v3.7.8 | REASONED |
-| loki-internal: Loopback gRPC is a configuration-specific recommendation; verify advertised/dial addresses and successful internal worker, ingester and compactor calls. | Loki v3.7.8 | REASONED |
+| loki-internal: Worker frontend/scheduler and distributor/querier ingester dial sites are traced; loopback gRPC remains configuration-specific, with compactor calls and live reachability to verify. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-grpc-tls: gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Loki v3.7.8 | REASONED |
 | loki-proxy: An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki. | Loki v3.7.8 | REASONED |
 | verify-inventory: Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed. | node_exporter v1.12.1; Alertmanager v0.34.1; Pushgateway v1.11.3; Jaeger v2.21.0; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
@@ -509,9 +531,20 @@ registered by default. These routes have no tenant-auth wrapper. When the ingest
 that wrapper; `/ingester/prepare_shutdown` also accepts `POST`, `GET` and `DELETE`.
 When the compactor runs outside its worker mode (which returns before these routes are registered), with a TSDB or boltdb-shipper index in the schema (without one it logs that it is not starting and registers nothing, with no error) and `retention_enabled: true` (which also requires `compactor.delete-request-store`, or startup fails), `/loki/api/v1/delete` accepts
 `PUT`/`POST` to request deletion, `GET` to list requests and `DELETE` to cancel one.
-Those deletion routes do have tenant-header and deletion tenant-policy middleware; availability
-does not mean unconditional deletion. The supplied subset lacks those policy and handler
-implementations. The gRPC listener registers ingester push/query services in single-binary mode
+Those routes wrap HTTP tenant middleware and deletion `TenantMiddleware`. The latter rejects a
+missing/invalid tenant or policy error with HTTP 400, and a tenant for which `validDeletionLimit`
+returns false with HTTP 403. A caller reaching the route with a tenant context that passes this
+check may use the handlers; tenant headers alone do not authenticate the caller. Limits name
+`disabled`, `filter-only` and `filter-and-delete`, default to `filter-and-delete`, and expose
+per-tenant overrides. The flag help says the API is available for `filter-only` and
+`filter-and-delete` when retention is on. The fetched files omit the
+`validDeletionLimit` implementation, so its exact mode-to-allow rule is unverified. A permitted
+`PUT`/`POST` validates the query and time range, returns HTTP 400 for bad inputs or 500 for store
+failure, and returns HTTP 204 with `X-Delete-Request-ID` after the request is stored. `GET` lists
+that tenant's requests as JSON, with 500 on store failure. `DELETE` looks up a request under the
+tenant ID: missing ID returns 404; processed requests return 400; partially completed or overdue
+requests return 400 unless `force=true`; store failure returns 500; removal returns 204. A stored
+request does not establish eventual deletion. The gRPC listener registers ingester push/query services in single-binary mode
 and an HTTP-over-gRPC bridge to the HTTP router. HTTP-only TLS or a proxy in front of 3100 therefore
 does not protect all paths to these services. These exposure consequences are REASONED, not live
 attack results.
@@ -547,14 +580,21 @@ There are two fixes, and you can use both:
   ```
 
   `common.instance_addr` supplies common ring and frontend addresses; explicit component settings
-  can override it. The ingester advertises the server gRPC port, and distributor and querier
-  construction receive the ingester ring and client configuration. The querier worker receives the
-  gRPC listen address and port. A single-binary compactor client uses that listen address and port
-  when deletion filtering is enabled. The supplied source subset omits the worker and ingester
-  client implementations, so the complete dial path is not established here. Loopback is a
-  recommendation for this configuration, not a guarantee for every single-binary deployment:
-  verify advertised addresses, worker/frontend/scheduler settings, successful pushes and queries,
-  and any compactor calls. Remote components need a private address reachable from their hosts.
+  can override it. The ingester lifecycler selects an address and port, registers that address in
+  the ring, and distributor and querier construction receive the ring and ingester client settings.
+  Distributors select ingester ring entries for writes; queriers select ring entries for reads.
+  Both obtain clients by each entry's advertised address, and the ingester client calls `grpc.Dial`
+  with dskit gRPC client options. The querier worker chooses scheduler ring, explicit scheduler
+  address, or explicit frontend address; watchers supply targets to `grpc.DialContext`. A direct
+  frontend worker opens a frontend stream; a scheduler worker opens a scheduler stream and dials
+  the frontend address in the scheduler response to send results. `common.instance_addr` also
+  supplies memberlist's advertise address when set; memberlist gossip is separate from these gRPC
+  calls. A single-binary compactor client uses the server gRPC listen address and port when deletion
+  filtering is enabled. Loopback remains a recommendation for this configuration: verify effective
+  advertised and dial addresses, worker/frontend/scheduler settings, successful pushes and queries,
+  and compactor calls. The supplied snapshots do not show DNS/ring watcher internals, ingester pool
+  internals, every RPC hop, or live reachability. Remote components need a private address
+  reachable from their hosts.
 
   Keep gRPC restricted to trusted callers: plaintext loopback is still reachable by local users.
   Enabling `grpc_tls_config` also requires compatible TLS settings on every internal gRPC client,
@@ -696,6 +736,25 @@ from your own account's view of the process.
 - Loki v3.7.8 config route: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L533-L540
 - Loki v3.7.8 ingester gRPC services and maintenance routes: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L751-L790
 - Loki v3.7.8 conditional deletion routes and middleware (compactor worker mode returns first): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1866-L1869 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1880-L1883 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1899-L1908 ; https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1935-L1952
+- Loki v3.7.8 deletion tenant-policy middleware: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/tenant_request_handler.go#L10-L34
+- Loki v3.7.8 deletion create handler: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/request_handler.go#L49-L110
+- Loki v3.7.8 deletion list handler: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/request_handler.go#L134-L190
+- Loki v3.7.8 deletion cancel handler: https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletion/request_handler.go#L259-L303
+- Loki v3.7.8 deletion mode defaults: https://github.com/grafana/loki/blob/v3.7.8/pkg/validation/limits.go#L450-L453
+- Loki v3.7.8 tenant deletion mode override: https://github.com/grafana/loki/blob/v3.7.8/pkg/validation/limits.go#L1128-L1132
+- Loki v3.7.8 worker address selection and discovery: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L117-L182
+- Loki v3.7.8 worker gRPC dial: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L222-L245
+- Loki v3.7.8 worker gRPC dial options: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L297-L310
+- Loki v3.7.8 frontend stream: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/frontend_processor.go#L49-L80
+- Loki v3.7.8 scheduler stream: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L87-L164
+- Loki v3.7.8 scheduler response gRPC dial: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L246-L335
+- Loki v3.7.8 ingester client dial: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/client/client.go#L65-L91
+- Loki v3.7.8 ingester lifecycler construction: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L358-L365
+- Loki v3.7.8 querier ingester client factory: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L58-L74
+- Loki v3.7.8 querier ingester call: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L187-L220
+- Loki v3.7.8 distributor ingester client factory: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L249-L253
+- Loki v3.7.8 distributor ring selection: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L879-L893
+- Loki v3.7.8 distributor ingester push: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L1258-L1271
 - Loki v3.7.8 worker connection inputs: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L571-L580
 - Loki v3.7.8 common ring propagation to ingester: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go#L193-L248
 - Loki v3.7.8 ingester clients receive ring configuration: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L373-L390
@@ -721,6 +780,9 @@ from your own account's view of the process.
 - dskit pinned TLS construction (RootCAs and certificates; ClientAuth and ClientCAs unset): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/crypto/tls/tls.go#L86-L175
 - Go TLS ClientAuthType (NoClientCert default and RequireAndVerifyClientCert semantics): https://pkg.go.dev/crypto/tls#ClientAuthType
 - dskit pinned incoming KV updates and propagation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1383-L1470
+- dskit pinned gRPC dial options: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/grpcclient/grpcclient.go#L125-L134
+- dskit pinned ring lifecycler advertised address: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L189-L229
+- dskit pinned ring lifecycler registration: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L709-L723
 - dskit pinned remote-state merging and codec validation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1577-L1672
 - Go `net.Listen` (an empty host listens on all addresses): https://pkg.go.dev/net#Listen
 - [Loki v3.7.8 tenant middleware, fake tenant, and gRPC exemptions (checked October 2026)](https://raw.githubusercontent.com/grafana/loki/v3.7.8/pkg/util/fakeauth/fake_auth.go).
