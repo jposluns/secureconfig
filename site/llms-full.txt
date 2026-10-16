@@ -4401,19 +4401,19 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | --- | --- | --- |
 | certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. | nginx documentation unknown; Certbot nginx configurator v2.3.0 | REASONED |
 | tls: 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off. | nginx documentation unknown | REASONED |
-| http2: http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed. | nginx documentation unknown | REASONED |
+| http2: At nginx release-1.26.3, http2 on is the HTTP/2 module directive; nginx 1.25.1 introduced it and deprecated the older listen 443 ssl http2 parameter. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
 | tokens: server_tokens off suppresses nginx version in headers and error pages. | nginx documentation unknown | REASONED |
-| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. | nginx documentation unknown; HSTS specification RFC 6797; nginx header-filter source release-1.26.3 | REASONED |
-| hsts-inheritance: A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. This claim cites no source for add_header inheritance. | nginx documentation unknown; nginx header-filter source release-1.26.3 | REASONED |
+| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. | nginx documentation unknown; HSTS specification RFC 6797; nginx source release-1.26.3 | REASONED |
+| hsts-inheritance: At nginx release-1.26.3, a location add_header replaces inherited server headers; always changes response-code coverage, not inheritance. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
 | proxy: Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host. | nginx documentation unknown | REASONED |
 | forwarded-host: Overwrite X-Forwarded-Host: client-set values otherwise pass upstream. | nginx documentation unknown | REASONED |
 | cipher-policy: Use Mozilla for explicit cipher policy; retain the stated protocol floor. | nginx documentation unknown; Mozilla TLS policy unknown | REASONED |
-| tickets: ssl_session_tickets defaults on; disable tickets or use a shared cache on nginx 1.23.2+ for automatic key rotation. The SSL module source is not listed. | nginx documentation unknown | REASONED |
+| tickets: At nginx release-1.26.3, ssl_session_tickets defaults on; nginx 1.23.2 introduced automatic ticket-key rotation with a shared ssl_session_cache. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
 | redirect: Port 80 on IPv4/IPv6 redirects with 301; a default server reflecting $host can redirect unmatched hosts off-site, so use 444 or a canonical host. | nginx documentation unknown | REASONED |
-| password-file: Install apache2-utils and create the bcrypt password file at cost 12; bare -B cost 5 and OWASP minimum 10 are not directly sourced here. | nginx documentation unknown | REASONED |
+| password-file: At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils. | nginx documentation unknown; Apache httpd source 2.4.69; OWASP Password Storage Cheat Sheet commit 72865b1e; Debian apache2 packaging 2.4.69-1 | REASONED |
 | basic: auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers. | nginx documentation unknown | REASONED |
-| mtls: ssl_client_certificate and ssl_verify_client on require trusted client certificates; the SSL module source is not listed. | nginx documentation unknown | REASONED |
-| mfa: Basic is single-factor; the guide proposes auth_request with Authelia/oauth2-proxy or Cloudflare Access. Integration sources are not listed. | nginx documentation unknown | REASONED |
+| mtls: At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
+| mfa: At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia, oauth2-proxy and Cloudflare Access integration claims remain unsourced by these snapshots. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
 | body-limit: client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check. | nginx documentation unknown | REASONED |
 | rate-limit: Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503. | nginx documentation unknown | REASONED |
 | connection-limit: limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503. | nginx documentation unknown | REASONED |
@@ -4461,7 +4461,9 @@ server {
 }
 ```
 
-For explicit cipher lists, generate them with the [Mozilla SSL Configuration Generator](https://ssl-config.mozilla.org/) instead of copying from old tutorials; the protocol floor above is the part that must not be omitted. nginx defaults `ssl_session_tickets on`, and un-rotated ticket keys weaken forward secrecy: either set `ssl_session_tickets off`, or on nginx 1.23.2+ give it a shared `ssl_session_cache` so it rotates the ticket keys automatically.
+At nginx release-1.26.3, the HTTP/2 module provides `http2 on`; the 1.25.1 changelog introduced it and deprecated the older `listen ... http2` parameter ([module](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/v2/ngx_http_v2_module.c#L76-L81), [changelog](https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L470-L480), [listen parser](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L4181-L4188)).
+
+For explicit cipher lists, generate them with the [Mozilla SSL Configuration Generator](https://ssl-config.mozilla.org/) instead of copying from old tutorials; the protocol floor above is the part that must not be omitted. nginx defaults `ssl_session_tickets on`, and un-rotated ticket keys weaken forward secrecy: either set `ssl_session_tickets off`, or on nginx 1.23.2+ give it a shared `ssl_session_cache` so it rotates the ticket keys automatically. At nginx release-1.26.3, the default-on setting and shared-cache rotation are supported by the [SSL module](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L857-L862), [1.23.2 changelog](https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L769-L775) and [rotation code](https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576).
 
 ## 2. Redirect HTTP to HTTPS
 
@@ -4485,6 +4487,8 @@ sudo apt install apache2-utils          # provides htpasswd
 sudo htpasswd -B -C 12 -c /etc/nginx/.htpasswd admin   # -C 12 sets bcrypt cost; bare -B is 5, below the OWASP minimum of 10
 ```
 
+At httpd 2.4.69, `htpasswd -B` selects bcrypt, `-C` sets its cost, and omitting `-C` uses cost 5 ([htpasswd usage](https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128), [default constant](https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45), [bcrypt call](https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295), [cost option](https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L382)). The OWASP cheat sheet at commit 72865b1e recommends a work factor of at least 10 for legacy bcrypt ([OWASP recommendation](https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13)). Debian's apache2 packaging at 2.4.69-1 lists `htpasswd` among the programs in `apache2-utils` ([package description](https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-101)); other distributions may package it differently.
+
 ```nginx
     # this is section 1's `location /`, now also carrying the auth directives - do not paste a second
     # `location /`; the proxy_set_header lines must stay, or the app loses Host / the forwarded headers
@@ -4506,7 +4510,9 @@ Mutual TLS for machine-to-machine access:
     ssl_verify_client on;
 ```
 
-Basic authentication is single-factor. For human-facing sites, add MFA with the `auth_request` mechanism pointed at an [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy) portal, or front the site with Cloudflare Access; options in [mfa.md](mfa.md).
+At nginx release-1.26.3, these directives configure client-certificate verification ([directive definitions](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L153-L172)), and `ssl_verify_client on` or `optional` without `ssl_client_certificate` fails the [configuration check](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802) ("no ssl_client_certificate for ssl_verify_client"); `optional_no_ca` is exempt.
+
+Basic authentication is single-factor. For human-facing sites, add MFA with the `auth_request` mechanism pointed at an [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy) portal, or front the site with Cloudflare Access; options in [mfa.md](mfa.md). At nginx release-1.26.3, `auth_request` accepts a 2xx subrequest response, returns 401 or 403, and treats other statuses as errors ([module handler](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182)). The fetched files do not verify the Authelia, oauth2-proxy or Cloudflare Access integrations.
 
 ## 4. Bound the expensive endpoints
 
@@ -4611,7 +4617,7 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 ## Common mistakes
 
 - The app still listens on `0.0.0.0:3000` next to the proxy, so the proxy's TLS and auth are bypassed. Bind the app to `127.0.0.1` and confirm with `ss -tlnp`.
-- `add_header` in a `location` block silently drops ALL headers inherited from `server`. That is inheritance, which `always` does not change (`always` changes which response codes the header is added to, not inheritance). Keep HSTS at the `server` level, and if a `location` needs its own `add_header`, re-declare HSTS inside it too.
+- `add_header` in a `location` block silently drops ALL headers inherited from `server`. That is inheritance, which `always` does not change (`always` changes which response codes the header is added to, not inheritance). Keep HSTS at the `server` level, and if a `location` needs its own `add_header`, re-declare HSTS inside it too. At nginx release-1.26.3, the [header merge code](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687) inherits parent headers only when the child has no header list.
 - A default `server` block that still serves plain HTTP for unmatched hosts; give the catch-all `default_server` a `return 444;` (or a redirect to the literal canonical host), not the `$host`-reflecting redirect above.
 - `auth_basic` on `/` but a later `location` (for example `/static`) that re-opens access; `auth_basic off` should be a deliberate exception, not an accident.
 
@@ -4628,6 +4634,22 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 - Certbot v2.3.0 nginx server-block installation (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot-nginx/certbot_nginx/_internal/configurator.py#L711
 - RFC 6797 HSTS policy lifetime and subdomains (checked October 2026): https://www.rfc-editor.org/rfc/rfc6797.html#section-6.1.2
 - nginx release-1.26.3 header-filter `always` handling (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218
+- nginx release-1.26.3 changes http2 (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L470-L480
+- nginx release-1.26.3 changes tickets (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L769-L775
+- nginx release-1.26.3 http2 (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/v2/ngx_http_v2_module.c#L76-L81
+- nginx release-1.26.3 listen http2 (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L4181-L4188
+- nginx release-1.26.3 ssl tickets (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L857-L862
+- nginx release-1.26.3 ssl mtls (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L153-L172
+- nginx release-1.26.3 ssl mtls check (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802
+- nginx release-1.26.3 headers merge (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687
+- nginx release-1.26.3 auth request (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182
+- nginx release-1.26.3 ticket rotation (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576
+- Apache httpd 2.4.69 htpasswd (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128
+- Apache httpd 2.4.69 bcrypt default (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45
+- Apache httpd 2.4.69 bcrypt use (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295
+- Apache httpd 2.4.69 bcrypt cost (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L382
+- Debian apache2 2.4.69-1 `apache2-utils` package description listing htpasswd (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-101
+- OWASP Password Storage Cheat Sheet at commit 72865b1e (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
 
 ======================================================================
 ==> lighttpd.md
