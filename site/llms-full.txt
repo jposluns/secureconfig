@@ -32665,7 +32665,7 @@ There are two fixes, and you can use both:
   every single-binary deployment: verify effective
   advertised and dial addresses, worker/frontend/scheduler settings, successful pushes and queries,
   and any compactor calls. The supplied snapshots do not show DNS/ring watcher internals, the dskit ring read path (`ring/ring.go`), service start-up wiring, the KV-store write path,
-  `ring.DoUntilQuorum`, the non-default Kafka-only and partition-ingester paths, the querier and
+  `ring.DoUntilQuorum`, the Kafka-only and partition-ingester paths, the querier and
   distributor request-path callers (`pkg/querier/querier.go`, push handlers),
   ingester and frontend client pool internals, worker-service address wiring
   (`pkg/querier/worker_service.go`), the processor manager
@@ -32831,7 +32831,7 @@ from your own account's view of the process.
 - Loki v3.7.8 querier ingester client factory: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L58-L74
 - Loki v3.7.8 querier ingester call: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L187-L220
 - Loki v3.7.8 distributor ingester client factory: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L249-L253
-- Loki v3.7.8 distributor ingester client factory use: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L344
+- Loki v3.7.8 distributor ingester ring assignment: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L344
 - Loki v3.7.8 distributor client and ring parameters: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L231-L236
 - Loki v3.7.8 distributor push dispatch: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L900-L921
 - Loki v3.7.8 distributor per-ingester push task: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L1216-L1231
@@ -32842,6 +32842,7 @@ from your own account's view of the process.
 - Loki v3.7.8 worker service initializer call: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L734-L740
 - Loki v3.7.8 common ring propagation to ingester: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go#L193-L248
 - Loki v3.7.8 ingester clients receive ring configuration: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L373-L390
+- Loki v3.7.8 ingester ring built from the lifecycler ring configuration and ring key: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L271-L272
 - Loki v3.7.8 querier ingester-client construction: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1130-L1138
 - Loki v3.7.8 single-binary compactor address: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1241-L1262
 - Loki v3.7.8 conditional compactor gRPC client: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2532-L2561
