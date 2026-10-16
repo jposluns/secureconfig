@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "76352c5663e3b52ede6e53bc5099bdb1b679377667102622df8b43b1d0b6eb93",
+  "body_sha256": "0ff3aa43f4e57306816621af7dfec0ffbddfe8eb8d68c74ad8d30b3b5cdbe6e7",
   "components": {
     "totp": {
       "name": "TOTP standard",
@@ -83,12 +83,26 @@ version_basis: {
         "sef2c27817118": "https://www.w3.org/TR/webauthn-2/"
       }
     },
-    "identity-layers": {
-      "name": "authentik, Keycloak and oauth2-proxy MFA (citation gap)",
-      "basis": "unknown",
+    "authentik-source": {
+      "name": "authentik source",
+      "basis": "version/2026.8.3",
       "sources": {
-        "s3190460e5d2d": "https://www.rfc-editor.org/info/rfc6238/",
-        "sef2c27817118": "https://www.w3.org/TR/webauthn-2/"
+        "sfd7b2978321d": "https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/stages/authenticator_validate/stage.py#L87-L108"
+      }
+    },
+    "keycloak-source": {
+      "name": "Keycloak documentation",
+      "basis": "26.7.4",
+      "sources": {
+        "s1e55f7daaa0d": "https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc#L2-L21"
+      }
+    },
+    "oauth2-proxy-source": {
+      "name": "oauth2-proxy documentation",
+      "basis": "v7.15.4",
+      "sources": {
+        "sa403e3d826b4": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L94-L108",
+        "se7a200583def": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L274"
       }
     },
     "entra-docs": {
@@ -245,7 +259,7 @@ version_basis: {
     "factor-changes": {"text": "Require re-verification of the existing factor before disabling or replacing it or minting new recovery codes, so a password-only or stolen session cannot remove MFA.", "components": ["totp", "owasp-docs"], "sources": ["totp:s3190460e5d2d", "owasp-docs:s2940f630fb71"], "status": "REASONED"},
     "admin-factors": {"text": "Give administrators a phishing-resistant passkey or FIDO2 key wherever offered; TOTP is the floor and SMS is unacceptable for administrator accounts. General WebAuthn source; no administrator-policy reference in Sources.", "components": ["webauthn"], "sources": ["webauthn:sef2c27817118"], "status": "REASONED"},
     "authelia-factors": {"text": "The body lists TOTP, WebAuthn/passkeys and mobile push for Authelia. The pinned Authelia source names WebAuthn security keys, not passkeys.", "components": ["authelia", "authelia-source"], "sources": ["authelia:s1409ac8fe3d9", "authelia-source:sfeb54a05c30d"], "status": "REASONED"},
-    "identity-layer-factors": {"text": "The body lists authentik OIDC/SAML with TOTP and WebAuthn, Keycloak OIDC/SAML with built-in OTP enrollment, and oauth2-proxy with MFA inherited from its upstream provider's enforcement. General TOTP/WebAuthn standards only; Sources has no vendor references for these product capabilities.", "components": ["identity-layers"], "sources": ["identity-layers:s3190460e5d2d", "identity-layers:sef2c27817118"], "status": "REASONED"},
+    "identity-layer-factors": {"text": "The authentik validation stage accepts allowed TOTP, static, SMS and email code classes, WebAuthn responses and Duo challenges; Keycloak documents OTP policy and QR-code setup for TOTP/HOTP; oauth2-proxy configures an OAuth provider and routes to upstream endpoints. Requiring MFA in each protected login flow or provider policy and testing second-factor enforcement is this guide's advice; these sources do not demonstrate automatic MFA inheritance or a deployed policy.", "components": ["authentik-source", "keycloak-source", "oauth2-proxy-source"], "sources": ["authentik-source:sfd7b2978321d", "keycloak-source:s1e55f7daaa0d", "oauth2-proxy-source:sa403e3d826b4", "oauth2-proxy-source:se7a200583def"], "status": "REASONED"},
     "totp-libraries": {"text": "The body lists pyotp with qrcode and django-otp, Node otplib with qrcode, and pquerna/otp with QR generation as RFC 6238 implementation options.", "components": ["totp", "pyotp-source", "python-qrcode-source", "django-otp-source", "otplib-source", "node-qrcode-source", "otp-source"], "sources": ["totp:s3190460e5d2d", "pyotp-source:sff126dae123b", "python-qrcode-source:s9481cd1c5c1c", "django-otp-source:s3b66277026d8", "otplib-source:s1cfb4a0cb98d", "node-qrcode-source:s427c06d742cf", "otp-source:s9dc96c06d6a0"], "status": "REASONED"},
     "ssh-pam-enforcement": {"text": "Make SSH PAM MFA mandatory with UsePAM yes, KbdInteractiveAuthentication yes and AuthenticationMethods publickey,keyboard-interactive:pam; :pam pins the second step to PAM and the public-key-first sequence still runs it for key-based login.", "components": ["ssh-pam", "openssh-source"], "sources": ["ssh-pam:s3190460e5d2d", "openssh-source:sf299a4e3603a", "openssh-source:s862f0df9ce84"], "status": "REASONED"},
     "ssh-nullok": {"text": "Remove nullok after rollout so unenrolled users are denied; the body identifies google-authenticator-libpam as per-user TOTP for SSH and console login with terminal QR enrollment. General TOTP standard only; Sources has no PAM-module vendor reference.", "components": ["ssh-pam"], "sources": ["ssh-pam:s3190460e5d2d"], "status": "REASONED"},
@@ -292,7 +306,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | factor-changes: Require re-verification of the existing factor before disabling or replacing it or minting new recovery codes, so a password-only or stolen session cannot remove MFA. | TOTP standard unknown; OWASP cheat sheets 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | admin-factors: Give administrators a phishing-resistant passkey or FIDO2 key wherever offered; TOTP is the floor and SMS is unacceptable for administrator accounts. General WebAuthn source; no administrator-policy reference in Sources. | WebAuthn standard unknown | REASONED |
 | authelia-factors: The body lists TOTP, WebAuthn/passkeys and mobile push for Authelia. The pinned Authelia source names WebAuthn security keys, not passkeys. | Authelia proxy support unknown; Authelia source v4.39.28 | REASONED |
-| identity-layer-factors: The body lists authentik OIDC/SAML with TOTP and WebAuthn, Keycloak OIDC/SAML with built-in OTP enrollment, and oauth2-proxy with MFA inherited from its upstream provider's enforcement. General TOTP/WebAuthn standards only; Sources has no vendor references for these product capabilities. | authentik, Keycloak and oauth2-proxy MFA (citation gap) unknown | REASONED |
+| identity-layer-factors: The authentik validation stage accepts allowed TOTP, static, SMS and email code classes, WebAuthn responses and Duo challenges; Keycloak documents OTP policy and QR-code setup for TOTP/HOTP; oauth2-proxy configures an OAuth provider and routes to upstream endpoints. Requiring MFA in each protected login flow or provider policy and testing second-factor enforcement is this guide's advice; these sources do not demonstrate automatic MFA inheritance or a deployed policy. | authentik source version/2026.8.3; Keycloak documentation 26.7.4; oauth2-proxy documentation v7.15.4 | REASONED |
 | totp-libraries: The body lists pyotp with qrcode and django-otp, Node otplib with qrcode, and pquerna/otp with QR generation as RFC 6238 implementation options. | TOTP standard unknown; PyOTP source cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1; Python qrcode source f92c007498d796e4825638b7d50c14ea51e5457a; django-otp source 88cf4970423b11f29d6840311f53378d007a3d63; otplib source c5c11be2a50fd864b587854bff6d97c5f8aa9c84; Node qrcode source 3848ed2c17de5bcdead487417dbf14c5dd017f8d; pquerna/otp source 617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870 | REASONED |
 | ssh-pam-enforcement: Make SSH PAM MFA mandatory with UsePAM yes, KbdInteractiveAuthentication yes and AuthenticationMethods publickey,keyboard-interactive:pam; :pam pins the second step to PAM and the public-key-first sequence still runs it for key-based login. | SSH and PAM MFA (citation gap) unknown; OpenSSH portable source V_9_9_P2 | REASONED |
 | ssh-nullok: Remove nullok after rollout so unenrolled users are denied; the body identifies google-authenticator-libpam as per-user TOTP for SSH and console login with terminal QR enrollment. General TOTP standard only; Sources has no PAM-module vendor reference. | SSH and PAM MFA (citation gap) unknown | REASONED |
@@ -327,9 +341,9 @@ Passwords fail through phishing, reuse, and credential stuffing; a second factor
 ## Identity layers and auth proxies (open source)
 
 - **Authelia**: authentication portal that sits in front of a reverse proxy; per its support matrix it integrates with nginx (`auth_request`), Traefik (`forwardAuth`), Caddy (`forward_auth`, 2.5.1 and later), HAProxy (through a Lua module), and Envoy, while Apache and IIS are documented as unsupported. Second factors: TOTP, WebAuthn/passkeys, and mobile push. https://www.authelia.com/
-- **authentik**: self-hosted identity provider (OIDC and SAML) with TOTP and WebAuthn factors; apps behind it inherit its MFA. https://goauthentik.io/
-- **Keycloak**: full OIDC/SAML identity provider with built-in OTP enrolment; the standard choice when you also need user federation and roles. https://www.keycloak.org/
-- **oauth2-proxy**: puts any upstream behind an OIDC/OAuth2 provider; MFA is whatever that provider enforces. https://github.com/oauth2-proxy/oauth2-proxy
+- **authentik**: its authenticator-validation stage accepts TOTP, static, SMS and email codes, WebAuthn responses and Duo challenges when those device classes are allowed. Guide advice: require the validation stage in each protected login flow and test that a first-factor-only attempt is denied. https://goauthentik.io/
+- **Keycloak**: its OTP policy configures TOTP/HOTP generators and QR-code setup for authenticator apps. Guide advice: require OTP in each protected authentication flow and test enforcement after enrollment. https://www.keycloak.org/
+- **oauth2-proxy**: configures an OAuth provider for login and routes requests to configured upstream endpoints. Guide advice: require MFA in the provider policy for this login and test that access without the second factor is denied. https://github.com/oauth2-proxy/oauth2-proxy
 
 ## App-level TOTP libraries
 
@@ -377,6 +391,10 @@ Unattended machine connections (service-to-service database and model-server API
 - WebAuthn: https://www.w3.org/TR/webauthn-2/
 - Authelia proxy support matrix (Caddy 2.5.1 and later): https://www.authelia.com/integration/proxies/support/
 - Duo editions and pricing: https://duo.com/editions-and-pricing
+- authentik source `version/2026.8.3`, authenticator-validation stage and allowed device classes (checked October 2026): https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/stages/authenticator_validate/stage.py#L87-L108
+- Keycloak documentation `26.7.4`, OTP policy and QR-code setup (checked October 2026): https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc#L2-L21
+- oauth2-proxy documentation `v7.15.4`, configured OAuth provider (checked October 2026): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L94-L108
+- oauth2-proxy documentation `v7.15.4`, configured upstream endpoints (checked October 2026): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L274
 - Microsoft Entra documentation `231747abc59ae3d50c74e215c1cdd592eb980723`, application session revocation (checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/users/users-revoke-access.md#L58-L62
 - OWASP cheat sheets `668ba7db3d0da5868b8a0305c259f7f6914a6ecd`, revocation of unneeded or compromised secrets (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Secrets_Management_Cheat_Sheet.md#L218
 - pquerna/otp source `617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870`, TOTP enrollment validation (checked October 2026): https://github.com/pquerna/otp/blob/617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870/README.md#L27-L30
