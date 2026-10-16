@@ -3,8 +3,17 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "d21cf42fab94eb3e33faa1126b9d96e660a69fb66f7d85338e2bb2d919cf8596",
+  "body_sha256": "77cd719535a388d224339c22eb7d691821529ab938a9bfec1293ba7585a601ce",
   "components": {
+    "docker-build": {
+      "name": "Docker build and image history documentation",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "sd8afa286c173": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/variables.md#L17-L52",
+        "s07e00829f121": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22",
+        "s7752baa2c7bc": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L115"
+      }
+    },
     "engine": {
       "name": "Docker Engine networking",
       "basis": "unknown",
@@ -85,7 +94,7 @@ version_basis: {
     "tls": {"text": "Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates.", "components": ["compose", "caddy-image", "caddy"], "sources": ["compose:sae565a19136c", "caddy-image:sbbb7746f7545", "caddy-image:sb126b380b9cf", "caddy-image:seea3a2adc92a", "caddy:s5520ee906a7f", "caddy:sfa5c7dc047dc"], "status": "REASONED"},
     "alternate-entry": {"text": "Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "auth": {"text": "Proxy authentication and human MFA supplement application login; no authentication-provider source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
-    "secrets": {"text": "Use runtime environment files or Compose secrets, exclude .env from Git, and avoid image ENV/build-argument secrets; no direct secret-handling source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "secrets": {"text": "Use runtime environment files or Compose secrets, exclude .env from Git, and never put secrets in Dockerfile ENV/ARG; use temporary build secret mounts. Docker build and history behaviour is sourced, but no direct source for the runtime delivery methods is listed.", "components": ["compose", "docker-build"], "sources": ["compose:sae565a19136c", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s7752baa2c7bc"], "status": "REASONED"},
     "workload": {"text": "Use a non-root USER and the linked capability, no-new-privileges, read-only-root and Docker-socket guidance; no workload-control source is listed here.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "database": {"text": "Database TLS and authentication remain necessary for connections from outside the Compose network; database vendor sources are in linked guides.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "verify-publish": {"text": "Compose ps is project-scoped; inventory every host container and TCP/UDP socket, including IPv6. Socket visibility alone does not prove reachability.", "components": ["compose", "engine"], "sources": ["compose:sae565a19136c", "engine:s1e53417c513d"], "status": "REASONED", "verify": [1]},
@@ -125,7 +134,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates. | Compose networking unknown; Caddy image fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Caddy v2.11.4 | REASONED |
 | alternate-entry: Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed. | Compose networking unknown | REASONED |
 | auth: Proxy authentication and human MFA supplement application login; no authentication-provider source is listed. | Compose networking unknown | REASONED |
-| secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and avoid image ENV/build-argument secrets; no direct secret-handling source is listed. | Compose networking unknown | REASONED |
+| secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and never put secrets in Dockerfile ENV/ARG; use temporary build secret mounts. Docker build and history behaviour is sourced, but no direct source for the runtime delivery methods is listed. | Compose networking unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | workload: Use a non-root USER and the linked capability, no-new-privileges, read-only-root and Docker-socket guidance; no workload-control source is listed here. | Compose networking unknown | REASONED |
 | database: Database TLS and authentication remain necessary for connections from outside the Compose network; database vendor sources are in linked guides. | Compose networking unknown | REASONED |
 | verify-publish: Compose ps is project-scoped; inventory every host container and TCP/UDP socket, including IPv6. Socket visibility alone does not prove reachability. | Compose networking unknown; Docker Engine networking unknown | REASONED |
@@ -213,7 +222,7 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 ## 3. Authentication and secrets
 
 - The proxy is the natural place for a first authentication gate (basic auth per the proxy guides, or Cloudflare Access); the application still needs its own login for anything multi-user ([authentication.md](authentication.md)). The proxy is also where MFA attaches for human-facing services ([mfa.md](mfa.md)).
-- Pass secrets at runtime through environment files or Docker/Compose secrets. Never bake them into the image: `ENV API_KEY=...` in a Dockerfile ships the key to every registry the image touches, and `docker history` shows build arguments.
+- Pass secrets at runtime through environment files or Docker/Compose secrets. Never put secrets in Dockerfile `ENV` or `ARG`: `ENV` persists in containers from the image, and build arguments may persist in image metadata, provenance attestations and image history. `docker image history` shows the image's history, including creation commands; it does not establish that every argument value is shown. For build-time secrets, use a temporary secret mount for the build instruction and do not copy or print the secret into the image.
 - Keep `.env` in `.gitignore`, and run containers as a non-root user (`USER` in the Dockerfile) so a compromised app is not root in the container. Non-root is the start, not the whole of workload hardening: dropping capabilities, `--security-opt no-new-privileges`, a read-only root filesystem, and never mounting the Docker socket are in [container-hardening.md](container-hardening.md).
 - Databases in containers still need their own TLS and authentication when anything outside the Compose network connects: see [postgresql.md](postgresql.md), [mysql.md](mysql.md), [mongodb.md](mongodb.md), and [redis.md](redis.md).
 
@@ -234,6 +243,9 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 
 ## Sources (checked September 2026)
 
+- Docker build variables (`ENV` persists in containers; build arguments may persist in metadata, provenance and history), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/variables.md#L17-L52
+- Docker build secrets (temporary mounts for build instructions), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22
+- Docker image history command (image history and creation-command output), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L115
 - Docker packet filtering and firewalls: https://docs.docker.com/engine/network/packet-filtering-firewalls/
 - Docker with iptables, for the `DOCKER-USER` chain (processed before Docker's own rules; matches container addresses after DNAT): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker Engine 28.0 release notes, for the published-port and loopback-mapping hardening: https://docs.docker.com/engine/release-notes/28/
