@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "e1f155bb7966e03029f2ce627db343a5bc0bb811c450b069ce7181d970068da5",
+  "body_sha256": "19196681a14c3a2dec8c4de17497c5d2aea76123dd54757f0226865cc501069a",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -589,7 +589,7 @@ There are two fixes, and you can use both:
   Both obtain clients by each entry's advertised address, and the ingester client calls `grpc.Dial`
   with dskit gRPC client options. `modules.go` builds the server gRPC listen address and port,
   target flags, scheduler ring and worker configuration into the worker service configuration and
-  passes it to `querier.InitWorkerService`. The querier worker chooses scheduler
+  passes it to `querier.InitWorkerService`. The querier worker chooses scheduler ring, explicit scheduler
   address, or explicit frontend address; watchers supply targets to `grpc.DialContext`. A direct
   frontend worker opens a frontend stream; a scheduler worker opens a scheduler stream and dials
   the frontend address in the scheduler response to send results. `common.instance_addr` also
