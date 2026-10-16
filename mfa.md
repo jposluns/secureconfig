@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "53ecc4c334b08ad25d7d74e1f71b3ff9164a8ba69effdf5a3fecd668480fe15e",
+  "body_sha256": "3a9c1a9a55044424c37efb6c54ce88a54958a489d1e01415ed11988765b42855",
   "components": {
     "totp": {
       "name": "TOTP standard",
@@ -55,12 +55,24 @@ version_basis: {
       }
     },
     "ssh-pam": {
-      "name": "SSH and PAM MFA",
+      "name": "SSH and PAM MFA (citation gap)",
       "basis": "unknown",
       "sources": {
-        "s3190460e5d2d": "https://www.rfc-editor.org/info/rfc6238/",
+        "s3190460e5d2d": "https://www.rfc-editor.org/info/rfc6238/"
+      }
+    },
+    "google-authenticator-libpam-source": {
+      "name": "google-authenticator-libpam source",
+      "basis": "1.11",
+      "sources": {
         "s7df1bfd61fef": "https://github.com/google/google-authenticator-libpam/blob/1.11/README.md#L45-L70",
-        "s9ad5ca394e81": "https://github.com/google/google-authenticator-libpam/blob/1.11/man/pam_google_authenticator.8.md#L16-L29",
+        "s9ad5ca394e81": "https://github.com/google/google-authenticator-libpam/blob/1.11/man/pam_google_authenticator.8.md#L16-L29"
+      }
+    },
+    "google-authenticator-libpam-packages": {
+      "name": "google-authenticator-libpam package records",
+      "basis": "unknown",
+      "sources": {
         "sf33e01264f1d": "https://packages.debian.org/trixie/libpam-google-authenticator",
         "s598691ba0908": "https://packages.ubuntu.com/noble/libpam-google-authenticator"
       }
@@ -280,10 +292,10 @@ version_basis: {
     "identity-layer-factors": {"text": "The authentik validation stage rejects a response unless the login's device challenges include a compatible class: code responses check TOTP, static, SMS and email as one group, while WebAuthn and Duo each check their own class; Keycloak documents OTP policy and QR-code setup for time-based (TOTP) and counter-based generators; oauth2-proxy configures an OAuth provider and routes to upstream endpoints. Requiring MFA in each protected login flow or provider policy and testing second-factor enforcement is this guide's advice; these sources do not demonstrate automatic MFA inheritance or a deployed policy.", "components": ["authentik-source", "keycloak-source", "oauth2-proxy-source"], "sources": ["authentik-source:s18275a7072e9", "keycloak-source:s1e55f7daaa0d", "oauth2-proxy-source:sa403e3d826b4", "oauth2-proxy-source:se7a200583def"], "status": "REASONED"},
     "totp-libraries": {"text": "The body lists pyotp with qrcode and django-otp, Node otplib with qrcode, and pquerna/otp with QR generation as RFC 6238 implementation options.", "components": ["totp", "pyotp-source", "python-qrcode-source", "django-otp-source", "otplib-source", "node-qrcode-source", "otp-source"], "sources": ["totp:s3190460e5d2d", "pyotp-source:sff126dae123b", "python-qrcode-source:s9481cd1c5c1c", "django-otp-source:s3b66277026d8", "otplib-source:s1cfb4a0cb98d", "node-qrcode-source:s427c06d742cf", "otp-source:s9dc96c06d6a0"], "status": "REASONED"},
     "ssh-pam-enforcement": {"text": "Make SSH PAM MFA mandatory with UsePAM yes, KbdInteractiveAuthentication yes and AuthenticationMethods publickey,keyboard-interactive:pam; :pam pins the second step to PAM and the public-key-first sequence still runs it for key-based login.", "components": ["ssh-pam", "openssh-source"], "sources": ["ssh-pam:s3190460e5d2d", "openssh-source:sf299a4e3603a", "openssh-source:s862f0df9ce84"], "status": "REASONED"},
-    "ssh-nullok": {"text": "Guide advice: remove nullok after rollout so accounts without a secret file are denied by this PAM module. google-authenticator-libpam supports per-account TOTP, and its setup command displays a QR code when libqrencode is available. Debian trixie and Ubuntu noble list libpam-google-authenticator; protected login paths depend on the PAM service configuration.", "components": ["ssh-pam"], "sources": ["ssh-pam:s7df1bfd61fef", "ssh-pam:s9ad5ca394e81", "ssh-pam:sf33e01264f1d", "ssh-pam:s598691ba0908"], "status": "REASONED"},
+    "ssh-nullok": {"text": "Guide advice: remove nullok after rollout so accounts without a secret file are denied by this PAM module. google-authenticator-libpam is a PAM module supporting per-account TOTP. Guide assessment: it protects only the logins whose PAM services include it. Its setup command displays a QR code when libqrencode is available. Debian trixie and Ubuntu noble list libpam-google-authenticator as 20191231-based builds; the behavior above is cited at tag 1.11.", "components": ["google-authenticator-libpam-source", "google-authenticator-libpam-packages"], "sources": ["google-authenticator-libpam-source:s7df1bfd61fef", "google-authenticator-libpam-source:s9ad5ca394e81", "google-authenticator-libpam-packages:sf33e01264f1d", "google-authenticator-libpam-packages:s598691ba0908"], "status": "REASONED"},
     "duo-unix-failmode": {"text": "Duo Unix pam_duo adds SSH push MFA; set failmode=secure for mandatory MFA because default safe grants access when Duo is unreachable, and keep a separately controlled emergency path.", "components": ["duo", "duo-unix-source"], "sources": ["duo:sb2b87daf72f0", "duo-unix-source:s1ea7669082c6"], "status": "REASONED"},
     "supabase-assurance": {"text": "Supabase admits an aal1 session unless app and database policies require aal2; enrollment or enabling a factor is not enforcement, so inspect and test the effective policy.", "components": ["supabase", "supabase-docs"], "sources": ["supabase:s3190460e5d2d", "supabase-docs:sfae0cdf9b1b6", "supabase-docs:s4fe1e36a064b"], "status": "REASONED"},
-    "google-workspace-enforcement": {"text": "Google Workspace administrators can require 2-Step Verification for selected users or groups; guide advice is to inspect and test the effective policy for each protected sign-in.", "components": ["google-workspace-docs"], "sources": ["google-workspace-docs:s4e673839253c"], "status": "REASONED"},
+    "google-workspace-enforcement": {"text": "Google Workspace administrators can require 2-Step Verification for selected users or groups. Guide assessment: an app using a hosted provider is protected only when its effective provider or app policy requires the second factor for that sign-in. Guide advice: inspect and test the effective policy for each protected sign-in.", "components": ["google-workspace-docs"], "sources": ["google-workspace-docs:s4e673839253c"], "status": "REASONED"},
     "duo-proxy": {"text": "Duo Authentication Proxy receives requests from devices and applications via RADIUS or LDAP and contacts Duo for secondary authentication; whether a given service is protected depends on its integration and configuration.", "components": ["duo-proxy-docs"], "sources": ["duo-proxy-docs:s4fa84e377f72"], "status": "REASONED"},
     "access-mfa": {"text": "An Access emailed one-time PIN proves mailbox control only; require MFA at the connected IdP for this login or Access independent MFA with TOTP or a WebAuthn key.", "components": ["access", "cf-docs"], "sources": ["access:s3190460e5d2d", "access:sef2c27817118", "cf-docs:s9f8bead847d2", "cf-docs:s7e793d13cf31"], "status": "REASONED"},
     "webauthn-library": {"text": "Use a maintained WebAuthn library rather than hand-parsing attestation. General WebAuthn standard; no library-specific reference in Sources.", "components": ["webauthn"], "sources": ["webauthn:sef2c27817118"], "status": "REASONED"},
@@ -327,11 +339,11 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | authelia-factors: The body lists TOTP, WebAuthn/passkeys and mobile push for Authelia. The pinned Authelia source names WebAuthn security keys, not passkeys. | Authelia proxy support unknown; Authelia source v4.39.28 | REASONED |
 | identity-layer-factors: The authentik validation stage rejects a response unless the login's device challenges include a compatible class: code responses check TOTP, static, SMS and email as one group, while WebAuthn and Duo each check their own class; Keycloak documents OTP policy and QR-code setup for time-based (TOTP) and counter-based generators; oauth2-proxy configures an OAuth provider and routes to upstream endpoints. Requiring MFA in each protected login flow or provider policy and testing second-factor enforcement is this guide's advice; these sources do not demonstrate automatic MFA inheritance or a deployed policy. | authentik source version/2026.8.3; Keycloak documentation 26.7.4; oauth2-proxy documentation v7.15.4 | REASONED |
 | totp-libraries: The body lists pyotp with qrcode and django-otp, Node otplib with qrcode, and pquerna/otp with QR generation as RFC 6238 implementation options. | TOTP standard unknown; PyOTP source cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1; Python qrcode source f92c007498d796e4825638b7d50c14ea51e5457a; django-otp source 88cf4970423b11f29d6840311f53378d007a3d63; otplib source c5c11be2a50fd864b587854bff6d97c5f8aa9c84; Node qrcode source 3848ed2c17de5bcdead487417dbf14c5dd017f8d; pquerna/otp source 617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870 | REASONED |
-| ssh-pam-enforcement: Make SSH PAM MFA mandatory with UsePAM yes, KbdInteractiveAuthentication yes and AuthenticationMethods publickey,keyboard-interactive:pam; :pam pins the second step to PAM and the public-key-first sequence still runs it for key-based login. | SSH and PAM MFA unknown; OpenSSH portable source V_9_9_P2 | REASONED |
-| ssh-nullok: Guide advice: remove nullok after rollout so accounts without a secret file are denied by this PAM module. google-authenticator-libpam supports per-account TOTP, and its setup command displays a QR code when libqrencode is available. Debian trixie and Ubuntu noble list libpam-google-authenticator; protected login paths depend on the PAM service configuration. | SSH and PAM MFA unknown | REASONED |
+| ssh-pam-enforcement: Make SSH PAM MFA mandatory with UsePAM yes, KbdInteractiveAuthentication yes and AuthenticationMethods publickey,keyboard-interactive:pam; :pam pins the second step to PAM and the public-key-first sequence still runs it for key-based login. | SSH and PAM MFA (citation gap) unknown; OpenSSH portable source V_9_9_P2 | REASONED |
+| ssh-nullok: Guide advice: remove nullok after rollout so accounts without a secret file are denied by this PAM module. google-authenticator-libpam is a PAM module supporting per-account TOTP. Guide assessment: it protects only the logins whose PAM services include it. Its setup command displays a QR code when libqrencode is available. Debian trixie and Ubuntu noble list libpam-google-authenticator as 20191231-based builds; the behavior above is cited at tag 1.11. | google-authenticator-libpam source 1.11; google-authenticator-libpam package records unknown | REASONED |
 | duo-unix-failmode: Duo Unix pam_duo adds SSH push MFA; set failmode=secure for mandatory MFA because default safe grants access when Duo is unreachable, and keep a separately controlled emergency path. | Duo editions unknown; Duo Unix source 91e3c987f256afdb166b26be777cef6e1ab2af11 | REASONED |
 | supabase-assurance: Supabase admits an aal1 session unless app and database policies require aal2; enrollment or enabling a factor is not enforcement, so inspect and test the effective policy. | Supabase Auth MFA (citation gap) unknown; Supabase documentation 10c7379c970ae4d2f30f3158194061cf5ffb8fc5 | REASONED |
-| google-workspace-enforcement: Google Workspace administrators can require 2-Step Verification for selected users or groups; guide advice is to inspect and test the effective policy for each protected sign-in. | Google Workspace 2SV documentation unknown | REASONED |
+| google-workspace-enforcement: Google Workspace administrators can require 2-Step Verification for selected users or groups. Guide assessment: an app using a hosted provider is protected only when its effective provider or app policy requires the second factor for that sign-in. Guide advice: inspect and test the effective policy for each protected sign-in. | Google Workspace 2SV documentation unknown | REASONED |
 | duo-proxy: Duo Authentication Proxy receives requests from devices and applications via RADIUS or LDAP and contacts Duo for secondary authentication; whether a given service is protected depends on its integration and configuration. | Duo Authentication Proxy documentation unknown | REASONED |
 | access-mfa: An Access emailed one-time PIN proves mailbox control only; require MFA at the connected IdP for this login or Access independent MFA with TOTP or a WebAuthn key. | Cloudflare Access MFA (citation gap) unknown; Cloudflare documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | webauthn-library: Use a maintained WebAuthn library rather than hand-parsing attestation. General WebAuthn standard; no library-specific reference in Sources. | WebAuthn standard unknown | REASONED |
@@ -375,9 +387,9 @@ Each generates and verifies RFC 6238 codes and pairs with a QR library so users 
 
 ## SSH and host logins
 
-- [google-authenticator-libpam](https://github.com/google/google-authenticator-libpam): PAM module supporting per-account TOTP where it is configured in a PAM service. Its `google-authenticator` setup command displays a QR code in the terminal when libqrencode is available. Debian trixie and Ubuntu noble list the `libpam-google-authenticator` package.
+- [google-authenticator-libpam](https://github.com/google/google-authenticator-libpam): PAM module supporting per-account TOTP. Guide assessment: it protects only the logins whose PAM services include it. Its `google-authenticator` setup command displays a QR code when libqrencode is available. Debian trixie and Ubuntu noble list the `libpam-google-authenticator` package as 20191231-based builds; the behavior above is cited at tag `1.11`.
 - Duo Unix (`pam_duo`) adds push-approval MFA to SSH: https://duo.com/docs/duounix
-- Make the PAM factor mandatory, or it is not enforced: with `UsePAM yes` and `KbdInteractiveAuthentication yes`, set `AuthenticationMethods publickey,keyboard-interactive:pam` in sshd (the `:pam` device pins the second step to the PAM stack, since a bare `keyboard-interactive` can route to another backend, and requiring the public key first means a key-based login still runs it), guide advice: drop `nullok` once rollout is done so this module rejects accounts without a secret file, and set Duo's `failmode=secure` (its default `safe` grants access when Duo is unreachable) with a separately controlled emergency path.
+- Make the PAM factor mandatory, or it is not enforced: with `UsePAM yes` and `KbdInteractiveAuthentication yes`, set `AuthenticationMethods publickey,keyboard-interactive:pam` in sshd (the `:pam` device pins the second step to the PAM stack, since a bare `keyboard-interactive` can route to another backend, and requiring the public key first means a key-based login still runs it). Guide advice: drop `nullok` once rollout is done so this module rejects accounts without a secret file. Set Duo's `failmode=secure` (its default `safe` grants access when Duo is unreachable) with a separately controlled emergency path.
 
 ## Hosted MFA
 
@@ -413,8 +425,8 @@ Unattended machine connections (service-to-service database and model-server API
 - Duo editions and pricing: https://duo.com/editions-and-pricing
 - google-authenticator-libpam `1.11`, per-account OTP and conditional QR enrolment (checked October 2026): https://github.com/google/google-authenticator-libpam/blob/1.11/README.md#L45-L70
 - google-authenticator-libpam `1.11`, per-account secret and `nullok` behavior (checked October 2026): https://github.com/google/google-authenticator-libpam/blob/1.11/man/pam_google_authenticator.8.md#L16-L29
-- Debian trixie `libpam-google-authenticator` package (rolling package record, checked October 2026): https://packages.debian.org/trixie/libpam-google-authenticator
-- Ubuntu noble `libpam-google-authenticator` package (rolling package record, checked October 2026): https://packages.ubuntu.com/noble/libpam-google-authenticator
+- Debian trixie `libpam-google-authenticator` package, `20191231-2.1` (rolling package record, checked October 2026): https://packages.debian.org/trixie/libpam-google-authenticator
+- Ubuntu noble `libpam-google-authenticator` package, `20191231-2build1` (rolling package record, checked October 2026): https://packages.ubuntu.com/noble/libpam-google-authenticator
 - Duo Authentication Proxy RADIUS and LDAP modes (rolling documentation, checked October 2026): https://duo.com/docs/authproxy-reference
 - Google Workspace 2-Step Verification policy (rolling documentation, checked October 2026): https://knowledge.workspace.google.com/admin/security/deploy-2-step-verification
 - authentik source `version/2026.8.3`, authenticator-validation stage and allowed device classes (checked October 2026): https://github.com/goauthentik/authentik/blob/version/2026.8.3/authentik/stages/authenticator_validate/stage.py#L80-L108
