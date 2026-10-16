@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "a93c49de14451ea79c734709cb98ef982d3c9ff4f29dff6f57209dfe6750b895",
+  "body_sha256": "a8737ae124a7d9afbdd40bc9a1823ae3d270f163cd0eccfad3ee70f3536d2c0f",
   "components": {
     "docker-build": {
       "name": "Docker build and image history documentation",
@@ -185,6 +185,69 @@ version_basis: {
       "sources": {
         "se354d6243027": "https://github.com/DopplerHQ/cli/blob/3.76.6/README.md#L3"
       }
+    },
+    "owasp-password": {
+      "name": "OWASP Password Storage Cheat Sheet",
+      "basis": "1a78ae3e443cef156e947f87e892efbcc62876ee",
+      "sources": {
+        "scfb73a9d1029": "https://github.com/OWASP/CheatSheetSeries/blob/1a78ae3e443cef156e947f87e892efbcc62876ee/cheatsheets/Password_Storage_Cheat_Sheet.md#L21-L47"
+      }
+    },
+    "owasp-secrets": {
+      "name": "OWASP Secrets Management Cheat Sheet",
+      "basis": "1a78ae3e443cef156e947f87e892efbcc62876ee",
+      "sources": {
+        "s3acb98020188": "https://github.com/OWASP/CheatSheetSeries/blob/1a78ae3e443cef156e947f87e892efbcc62876ee/cheatsheets/Secrets_Management_Cheat_Sheet.md#L5-L7"
+      }
+    },
+    "aws-store": {
+      "name": "AWS Secrets Manager overview",
+      "basis": "unknown",
+      "sources": {
+        "s81b41c17ad57": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+      }
+    },
+    "google-store": {
+      "name": "Google Cloud Secret Manager overview",
+      "basis": "unknown",
+      "sources": {
+        "scd27be211781": "https://docs.cloud.google.com/secret-manager/docs/overview"
+      }
+    },
+    "azure-store": {
+      "name": "Azure Key Vault overview",
+      "basis": "unknown",
+      "sources": {
+        "seb86b29f4951": "https://learn.microsoft.com/en-us/azure/key-vault/general/overview"
+      }
+    },
+    "openbao-release": {
+      "name": "OpenBao README",
+      "basis": "v2.7.1",
+      "sources": {
+        "sdb9d182ed195": "https://github.com/openbao/openbao/blob/v2.7.1/README.md#L47-L51"
+      }
+    },
+    "openbao-site": {
+      "name": "OpenBao website",
+      "basis": "unknown",
+      "sources": {
+        "s76158fafba22": "https://openbao.org/"
+      }
+    },
+    "onepassword": {
+      "name": "1Password Secrets Automation",
+      "basis": "unknown",
+      "sources": {
+        "s96e614a22cd0": "https://www.1password.dev/secrets-automation/"
+      }
+    },
+    "bitwarden": {
+      "name": "Bitwarden Secrets Manager",
+      "basis": "unknown",
+      "sources": {
+        "se179d6bd5c04": "https://bitwarden.com/help/secrets-manager-overview/"
+      }
     }
   },
   "claims": {
@@ -192,7 +255,7 @@ version_basis: {
     "key-lifetime": {"text": "Give keys expiries and scheduled rotation with a short overlap for continuity.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
     "bearer-transport": {"text": "Send bearer keys in Authorization headers over mandatory TLS; URLs leak through history and logs.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
     "constant-time": {"text": "Use hmac.compare_digest or crypto.timingSafeEqual rather than plain equality; the guide requires equal byte lengths.", "components": ["python", "node"], "sources": ["python:s7a54556e5dac", "node:s96b80e6816a2"], "status": "REASONED"},
-    "key-hash": {"text": "Where only verification is needed, store key hashes and show plaintext once; this is guide advice, without a hash-implementation source in Sources.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
+    "key-hash": {"text": "Where only verification is needed, store hashes of randomly generated keys and show plaintext once; as this guide's advice, a database dump does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing. Sources has no API-key hash-implementation reference specifying the algorithm, encoding, comparison, or key-generation entropy.", "components": ["bearer", "owasp-password", "owasp-secrets"], "sources": ["bearer:sefd3dd623da3", "owasp-password:scfb73a9d1029", "owasp-secrets:s3acb98020188"], "status": "REASONED"},
     "client-grant": {"text": "Confidential clients authenticate with grant_type=client_credentials for access tokens; refresh tokens SHOULD NOT be issued, so re-authenticate.", "components": ["oauth"], "sources": ["oauth:s65b02b1812cc"], "status": "REASONED"},
     "token-scope": {"text": "Request the narrowest scope or provider audience and bound access-token lifetime and reach.", "components": ["oauth", "bearer"], "sources": ["oauth:s65b02b1812cc", "bearer:sefd3dd623da3"], "status": "REASONED"},
     "jwt-validation": {"text": "Validate access-token signature, reject alg none, check exact issuer, API audience and expiry, require at+jwt for JWT access tokens, and enforce scopes.", "components": ["jwt"], "sources": ["jwt:sc36d79fcad94"], "status": "REASONED"},
@@ -218,7 +281,7 @@ version_basis: {
     "subject-format": {"text": "The guide records an immutable default subject with owner/repository IDs for repositories created after July 15, 2026; inspect the actual claim before writing trust.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d"], "status": "REASONED"},
     "action-pins": {"text": "Pin actions to full commit SHAs; tags and branches can move to different code.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d", "github:s653a0d94dd2f", "github:sa8ed4c86a8ea", "github:s80d46a4f675c"], "status": "REASONED"},
     "workload-attestation": {"text": "SPIFFE/SPIRE provides attested short-lived workload identities without a stored secret.", "components": ["spiffe"], "sources": ["spiffe:s96e9b9e2739d", "spiffe:sfa39616d8260"], "status": "REASONED"},
-    "secret-store": {"text": "Store unavoidable machine secrets in the listed secret managers and use platform identity to authenticate, avoiding another long-lived bootstrap key.", "components": ["azure", "google", "aws", "vault", "infisical", "doppler-cli"], "sources": ["azure:sb7a38a36ac47", "google:s03844cd0246a", "aws:s6fff7087bca4", "vault:sc7513679fe7e", "infisical:s725a4ac24a82", "doppler-cli:se354d6243027"], "status": "REASONED"},
+    "secret-store": {"text": "Store unavoidable machine secrets in the listed secret managers. As this guide's advice, authenticate with platform identity where the selected store and workload support it, so access need not depend on another long-lived bootstrap key; otherwise protect the required store credential.", "components": ["azure", "google", "aws", "vault", "infisical", "doppler-cli", "owasp-secrets", "aws-store", "google-store", "azure-store", "openbao-release", "openbao-site", "onepassword", "bitwarden"], "sources": ["azure:sb7a38a36ac47", "google:s03844cd0246a", "aws:s6fff7087bca4", "vault:sc7513679fe7e", "infisical:s725a4ac24a82", "doppler-cli:se354d6243027", "owasp-secrets:s3acb98020188", "aws-store:s81b41c17ad57", "google-store:scd27be211781", "azure-store:seb86b29f4951", "openbao-release:sdb9d182ed195", "openbao-site:s76158fafba22", "onepassword:s96e614a22cd0", "bitwarden:se179d6bd5c04"], "status": "REASONED"},
     "verify-scope": {"text": "A protected header-file staging key must receive 401/403 in production while succeeding in staging; otherwise denial does not establish environment scoping.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
     "verify-expiry": {"text": "Revoked or expired credentials must be rejected with a service-log record identifying the client.", "components": ["bearer", "jwt"], "sources": ["bearer:sefd3dd623da3", "jwt:sc36d79fcad94"], "status": "REASONED"},
     "verify-ci": {"text": "Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write.", "components": ["github"], "sources": ["github:s65bfc1e3ee0d", "github:s653a0d94dd2f", "github:sa8ed4c86a8ea", "github:s80d46a4f675c"], "status": "REASONED"},
@@ -243,7 +306,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | key-lifetime: Give keys expiries and scheduled rotation with a short overlap for continuity. | Bearer token guidance unknown | REASONED |
 | bearer-transport: Send bearer keys in Authorization headers over mandatory TLS; URLs leak through history and logs. | Bearer token guidance unknown | REASONED |
 | constant-time: Use hmac.compare_digest or crypto.timingSafeEqual rather than plain equality; the guide requires equal byte lengths. | Python hmac unknown; Node.js crypto unknown | REASONED |
-| key-hash: Where only verification is needed, store key hashes and show plaintext once; this is guide advice, without a hash-implementation source in Sources. | Bearer token guidance unknown | REASONED |
+| key-hash: Where only verification is needed, store hashes of randomly generated keys and show plaintext once; as this guide's advice, a database dump does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing. Sources has no API-key hash-implementation reference specifying the algorithm, encoding, comparison, or key-generation entropy. | Bearer token guidance unknown; OWASP Password Storage Cheat Sheet 1a78ae3e443cef156e947f87e892efbcc62876ee; OWASP Secrets Management Cheat Sheet 1a78ae3e443cef156e947f87e892efbcc62876ee | REASONED |
 | client-grant: Confidential clients authenticate with grant_type=client_credentials for access tokens; refresh tokens SHOULD NOT be issued, so re-authenticate. | OAuth client credentials unknown | REASONED |
 | token-scope: Request the narrowest scope or provider audience and bound access-token lifetime and reach. | OAuth client credentials unknown; Bearer token guidance unknown | REASONED |
 | jwt-validation: Validate access-token signature, reject alg none, check exact issuer, API audience and expiry, require at+jwt for JWT access tokens, and enforce scopes. | JWT access-token profile unknown | REASONED |
@@ -269,7 +332,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | subject-format: The guide records an immutable default subject with owner/repository IDs for repositories created after July 15, 2026; inspect the actual claim before writing trust. | GitHub Actions OIDC unknown | REASONED |
 | action-pins: Pin actions to full commit SHAs; tags and branches can move to different code. | GitHub Actions OIDC unknown | REASONED |
 | workload-attestation: SPIFFE/SPIRE provides attested short-lived workload identities without a stored secret. | SPIFFE and SPIRE unknown | REASONED |
-| secret-store: Store unavoidable machine secrets in the listed secret managers and use platform identity to authenticate, avoiding another long-lived bootstrap key. | Azure federation and login unknown; Google Cloud federation and auth action unknown; AWS IAM and credential action unknown; HashiCorp Vault v1.20.0; Infisical v0.165.16; Doppler CLI 3.76.6 | REASONED |
+| secret-store: Store unavoidable machine secrets in the listed secret managers. As this guide's advice, authenticate with platform identity where the selected store and workload support it, so access need not depend on another long-lived bootstrap key; otherwise protect the required store credential. | Azure federation and login unknown; Google Cloud federation and auth action unknown; AWS IAM and credential action unknown; HashiCorp Vault v1.20.0; Infisical v0.165.16; Doppler CLI 3.76.6; OWASP Secrets Management Cheat Sheet 1a78ae3e443cef156e947f87e892efbcc62876ee; AWS Secrets Manager overview unknown; Google Cloud Secret Manager overview unknown; Azure Key Vault overview unknown; OpenBao README v2.7.1; OpenBao website unknown; 1Password Secrets Automation unknown; Bitwarden Secrets Manager unknown | REASONED |
 | verify-scope: A protected header-file staging key must receive 401/403 in production while succeeding in staging; otherwise denial does not establish environment scoping. | Bearer token guidance unknown | REASONED |
 | verify-expiry: Revoked or expired credentials must be rejected with a service-log record identifying the client. | Bearer token guidance unknown; JWT access-token profile unknown | REASONED |
 | verify-ci: Repository Actions secrets should hold no long-lived cloud credentials and the workflow must declare id-token: write. | GitHub Actions OIDC unknown | REASONED |
@@ -288,7 +351,7 @@ The simplest machine credential and the one that leaks most. When your service i
 - Give every key an expiry and rotate on a schedule, with a short overlap during which both keys work, so rotation is routine rather than an outage.
 - Send keys only in a header (`Authorization: Bearer ...`) over TLS, never in a URL. RFC 6750 makes TLS mandatory for bearer tokens and says they "SHOULD NOT be passed in page URLs", because URLs land in browser history, proxy logs, and server logs.
 - Compare the presented key in constant time: `hmac.compare_digest()` in Python, `crypto.timingSafeEqual()` in Node.js (both arguments must have the same byte length). A plain `==` stops at the first differing byte and leaks timing.
-- Where the service only needs to verify the key, store a hash of it and compare against the hash of the presented key. Show the plaintext once at creation; a database dump then yields no usable keys.
+- Where the service only needs to verify the key, as this guide's advice, issue a randomly generated key, store a hash of it and compare against the hash of the presented key. Show the plaintext once at creation; a database dump then does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing. Sources has no API-key hash-implementation reference specifying the algorithm, encoding, comparison, or key-generation entropy.
 
 ## 2. OAuth 2.0 client credentials
 
@@ -329,7 +392,7 @@ Two cautions. GitHub documents an immutable default `sub` format that includes o
 
 ## 5. Store the machine credentials that must exist
 
-API keys, client secrets, and client-certificate keys that cannot be federated away go in a secret manager or the platform's own store ([secrets.md](secrets.md)): AWS Secrets Manager (https://aws.amazon.com/secrets-manager/), Google Cloud Secret Manager (https://docs.cloud.google.com/secret-manager/docs/overview), Azure Key Vault (https://azure.microsoft.com/en-us/products/key-vault), HashiCorp Vault ([vault.md](vault.md); https://developer.hashicorp.com/vault) or OpenBao, its open-source fork under the Linux Foundation (https://openbao.org/), Infisical (https://infisical.com/), Doppler (https://www.doppler.com/), 1Password Secrets Automation (https://www.1password.dev/secrets-automation/), and Bitwarden Secrets Manager (https://bitwarden.com/products/secrets-manager/). The workload should authenticate to the store with its platform identity (an instance role, a managed identity, or the federation above) so the store does not become one more long-lived key.
+API keys, client secrets, and client-certificate keys that cannot be federated away go in a secret manager or the platform's own store ([secrets.md](secrets.md)): AWS Secrets Manager (https://aws.amazon.com/secrets-manager/), Google Cloud Secret Manager (https://docs.cloud.google.com/secret-manager/docs/overview), Azure Key Vault (https://azure.microsoft.com/en-us/products/key-vault), HashiCorp Vault ([vault.md](vault.md); https://developer.hashicorp.com/vault) or OpenBao, its open-source fork under the Linux Foundation (https://openbao.org/), Infisical (https://infisical.com/), Doppler (https://www.doppler.com/), 1Password Secrets Automation (https://www.1password.dev/secrets-automation/), and Bitwarden Secrets Manager (https://bitwarden.com/products/secrets-manager/). As this guide's advice, the workload should authenticate to the store with its platform identity (an instance role, a managed identity, or the federation above) where the selected store and workload support it, so access need not depend on one more long-lived bootstrap key; otherwise protect the store credential as a machine secret.
 
 ## Verify
 
@@ -359,6 +422,15 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 - SPIFFE and SPIRE: https://spiffe.io/ and https://spiffe.io/docs/latest/spire-about/
 - RFC 5280 (certificate revocation): https://www.rfc-editor.org/info/rfc5280/
 - Secret manager vendor pages: linked inline in section 5.
+- OWASP Password Storage Cheat Sheet (hashes can be guessed; password guidance is not an API-key hash implementation), at 1a78ae3e443cef156e947f87e892efbcc62876ee: https://github.com/OWASP/CheatSheetSeries/blob/1a78ae3e443cef156e947f87e892efbcc62876ee/cheatsheets/Password_Storage_Cheat_Sheet.md#L21-L47
+- OWASP Secrets Management Cheat Sheet (central storage and management), at 1a78ae3e443cef156e947f87e892efbcc62876ee: https://github.com/OWASP/CheatSheetSeries/blob/1a78ae3e443cef156e947f87e892efbcc62876ee/cheatsheets/Secrets_Management_Cheat_Sheet.md#L5-L7
+- AWS Secrets Manager overview (rolling): https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
+- Google Cloud Secret Manager overview (rolling): https://docs.cloud.google.com/secret-manager/docs/overview
+- Azure Key Vault overview (rolling): https://learn.microsoft.com/en-us/azure/key-vault/general/overview
+- OpenBao README (secret storage), v2.7.1: https://github.com/openbao/openbao/blob/v2.7.1/README.md#L47-L51
+- OpenBao website (fork and Linux Foundation OpenSSF attribution; rolling): https://openbao.org/
+- 1Password Secrets Automation (rolling): https://www.1password.dev/secrets-automation/
+- Bitwarden Secrets Manager overview (rolling): https://bitwarden.com/help/secrets-manager-overview/
 - nginx release-1.28.0 `ssl_verify_client` directive and `on` value (checked October 2026): https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L76-L78 ; https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L162-L167
 - Apache 2.4 `SSLVerifyClient require` (checked October 2026): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslverifyclient
 - PostgreSQL 17 certificate authentication and `clientcert=verify-full` (checked October 2026): https://www.postgresql.org/docs/17/auth-cert.html

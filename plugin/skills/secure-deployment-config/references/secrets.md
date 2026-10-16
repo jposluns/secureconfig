@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "d58e86fef230e400a4d68fd447a85b628ae0ef927c15599486489e6c64caa739",
+  "body_sha256": "fecccfea5710e1cd4c002183464376e9447d5ec1467de5e80d82178b8ebce748",
   "components": {
     "docker-build": {
       "name": "Docker build and image history documentation",
@@ -173,11 +173,32 @@ version_basis: {
       "sources": {
         "sba07c9b57bd9": "https://v6.vite.dev/guide/env-and-mode"
       }
+    },
+    "aws-store": {
+      "name": "AWS Secrets Manager overview",
+      "basis": "unknown",
+      "sources": {
+        "s81b41c17ad57": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+      }
+    },
+    "google-store": {
+      "name": "Google Cloud Secret Manager overview",
+      "basis": "unknown",
+      "sources": {
+        "scd27be211781": "https://docs.cloud.google.com/secret-manager/docs/overview"
+      }
+    },
+    "azure-store": {
+      "name": "Azure Key Vault overview",
+      "basis": "unknown",
+      "sources": {
+        "seb86b29f4951": "https://learn.microsoft.com/en-us/azure/key-vault/general/overview"
+      }
     }
   },
   "claims": {
     "gitignore": {"text": "Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.", "components": ["owasp", "next", "git-ignore"], "sources": ["owasp:s26a987a1053b", "next:s964651d4eed4", "git-ignore:s90ce7c8605d9"], "status": "REASONED"},
-    "runtime-storage": {"text": "Load secrets from environment or a secret manager; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value.", "components": ["owasp", "docker-build"], "sources": ["owasp:s26a987a1053b", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s6283b172a5c6"], "status": "REASONED"},
+    "runtime-storage": {"text": "Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value.", "components": ["owasp", "docker-build", "aws-store", "google-store", "azure-store"], "sources": ["owasp:s26a987a1053b", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s6283b172a5c6", "aws-store:s81b41c17ad57", "google-store:scd27be211781", "azure-store:seb86b29f4951"], "status": "REASONED"},
     "random": {"text": "Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.", "components": ["owasp", "openssl-rand", "python-secrets"], "sources": ["owasp:s26a987a1053b", "openssl-rand:s11d11381b080", "python-secrets:sd2e8196eaa96"], "status": "REASONED"},
     "scanners": {"text": "Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:s18cdf0069eb9", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
     "argv": {"text": "Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.", "components": ["proc", "apache"], "sources": ["proc:s801d5f1ee88d", "apache:scde9004bb967"], "status": "REASONED"},
@@ -213,7 +234,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | gitignore: Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked. | OWASP secret handling unknown; Next.js unknown; Git ignore patterns 2.42.0 | REASONED |
-| runtime-storage: Load secrets from environment or a secret manager; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value. | OWASP secret handling unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
+| runtime-storage: Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value. | OWASP secret handling unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f; AWS Secrets Manager overview unknown; Google Cloud Secret Manager overview unknown; Azure Key Vault overview unknown | REASONED |
 | random: Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials. | OWASP secret handling unknown; OpenSSL random bytes 3.0; Python secrets 3.13 | REASONED |
 | scanners: Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner. | gitleaks command minimum 8.19+; TruffleHog unknown | REASONED |
 | argv: Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history. | Linux procfs unknown; htpasswd unknown | REASONED |
@@ -305,6 +326,9 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 - Docker build secrets (temporary mounts for build instructions), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22
 - Docker image history command (image history and creation-command output), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118
 - OWASP Secrets Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
+- AWS Secrets Manager overview (rolling): https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
+- Google Cloud Secret Manager overview (rolling): https://docs.cloud.google.com/secret-manager/docs/overview
+- Azure Key Vault overview (rolling): https://learn.microsoft.com/en-us/azure/key-vault/general/overview
 - gitleaks (git/dir need 8.19+; v8.19.0 README): https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md
 - trufflehog: https://github.com/trufflesecurity/trufflehog
 - sops: https://github.com/getsops/sops and age: https://github.com/FiloSottile/age
