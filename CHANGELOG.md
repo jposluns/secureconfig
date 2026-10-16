@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-16
 
+- `self-hosted-error-trackers.md` cites GlitchTip backend v6.2.6 for its membership statement (a user who logs in through a social provider linked to an organization social app is added to that organization), and `realtime-webhooks.md` cites Caddy v2.11.4 for the `request_body` `max_size` body limit (413 on excess) and for the standard HTTP module list importing no rate-limit handler (row 1.179) (#569)
 - `supabase-self-hosted.md` sources its row 1.179 `.env.example` defaults line by line at commit eabe06be (database, JWT, dashboard, S3, encryption, pooler, signup and Functions values; the demo `ANON_KEY` and `SERVICE_ROLE_KEY` verified locally as HS256-signed with the demo `JWT_SECRET`), cites the Compose and Kong lines that wire them, and narrows the dashboard-route statement the fetched files do not establish (#565)
 - `n8n.md` sources its row 1.179 facts in n8n 2.40.6 files: Execute Command excluded by default (`NODES_EXCLUDE`), the `$env` access guard, the editor's `POST /login` under the default `rest` prefix, the public API's authentication handler, and the webhook node's missing-credential codes (401 for Basic and JWT, 403 for Header) and HTTP response write; claims the fetched files do not establish (owner claim by the first visitor, the public API's 401/200 codes, complete environment isolation) are narrowed; the `exposure-index.md` n8n row now says the owner setup endpoint skips authentication (2.40.6) (#564)
 
