@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-16
 
-- `workflow-orchestrators.md` sources its row 1.179 facts in pinned upstream code: Prefect 3.1.8 block-document reads accept `include_secrets`, the Airflow FAB provider 3.9.0 reads `[fab] auth_role_public` (or the legacy `AUTH_ROLE_PUBLIC`) for its public-role checks, Airflow 3.3.2 uses no encryption when the Fernet key is empty, and the Temporal Go SDK v1.28.0 codec HTTP handler does no authentication itself; the key-generation statement the fetched files do not establish is removed (#567)
+- `workflow-orchestrators.md` sources four of its row 1.179 facts in pinned upstream code: Prefect 3.1.8 block-document reads accept `include_secrets`, the Airflow FAB provider 3.9.0 reads `[fab] auth_role_public` (or the legacy `AUTH_ROLE_PUBLIC`) for its public-role checks, Airflow 3.3.2 uses no encryption when the Fernet key is empty, and the Temporal Go SDK v1.28.0 codec HTTP handler does no authentication itself; the key-generation statement the fetched files do not establish is removed (#567)
 
 ## 2026-10-15
 

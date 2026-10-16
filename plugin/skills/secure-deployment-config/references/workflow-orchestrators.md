@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "ad056f0d9f96daa19f5844465f6a7ccb67fd374f27be783b4c7900ce17f8d955",
+  "body_sha256": "fa18bb5bca5189881826e754d7d45b7a5179143b73c35dd0f654f46b3e7945b1",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -833,7 +833,7 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
   taking precedence and causing 401) (rolling documentation, checked September 2026): https://docs.prefect.io/v3/advanced/security-settings
 - Prefect 3.1.8 release announcement, Basic Auth support added to the API and UI: https://github.com/PrefectHQ/prefect/releases/tag/3.1.8
 - Prefect 3.1.8 block-document filter and ID read routes accept `include_secrets`, and `Secret.get()` returns the underlying value: https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/server/api/block_documents.py#L47-L70, https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/server/api/block_documents.py#L101-L119 and https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/blocks/system.py#L154-L159
-- Apache Airflow FAB provider 3.9.0 reads `[fab] auth_role_public` with legacy `AUTH_ROLE_PUBLIC` fallback, applies public-role permissions to an anonymous user, and pins Flask-AppBuilder 5.2.2: https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/src/airflow/providers/fab/auth_manager/fab_auth_manager.py#L327-L381 and https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/pyproject.toml#L75-L81
+- Apache Airflow FAB provider 3.9.0 reads `[fab] auth_role_public` with legacy `AUTH_ROLE_PUBLIC` fallback, attaches the public role's permissions to an anonymous user when that role exists, and pins Flask-AppBuilder 5.2.2: https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/src/airflow/providers/fab/auth_manager/fab_auth_manager.py#L327-L381 and https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/pyproject.toml#L75-L81
 - Apache Airflow 3.3.2 `_NullFernet` and `get_fernet()` key selection: https://github.com/apache/airflow/blob/3.3.2/airflow-core/src/airflow/models/crypto.py#L47-L68 and https://github.com/apache/airflow/blob/3.3.2/airflow-core/src/airflow/models/crypto.py#L154-L173
 - Temporal Go SDK v1.28.0 codec HTTP handler POST encode/decode paths and construction: https://github.com/temporalio/sdk-go/blob/v1.28.0/converter/codec.go#L284-L350
 - Prefect self-hosted server, default port 4200 (rolling documentation, checked September 2026): https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
