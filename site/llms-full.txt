@@ -1353,7 +1353,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | enumeration: Keep login, registration and reset responses uniform in message and timing. | OWASP authentication and password storage unknown | REASONED |
 | auth-logging: Log authentication successes and failures with account and source address; retain logs for investigation. | OWASP authentication and password storage unknown | REASONED |
 | privilege: Separate administrative and daily-use accounts; restrict database and OS service accounts to the rights the application uses. | OWASP authentication and password storage unknown | REASONED |
-| authorization: A federated identity still needs an application allowlist before access is granted. | OpenID Connect Core 1.0; OAuth security BCP RFC 9700 | REASONED |
+| authorization: A federated identity still needs an application allowlist before access is granted. The allowlist is this guide's recommendation. | OpenID Connect Core 1.0; OAuth security BCP RFC 9700 | REASONED |
 | code-pkce: Use authorization code flow with PKCE S256, never plain. | OAuth security BCP RFC 9700 | REASONED |
 | redirects: Require exact-match redirect URIs. | OAuth security BCP RFC 9700 | REASONED |
 | state-nonce: Generate fresh state and nonce for each transaction, verify both and bind them to the initiating browser session. | OAuth security BCP RFC 9700; OpenID Connect Core 1.0 | REASONED |

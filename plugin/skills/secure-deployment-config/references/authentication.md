@@ -170,7 +170,7 @@ version_basis: {
     "enumeration": {"text": "Keep login, registration and reset responses uniform in message and timing.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
     "auth-logging": {"text": "Log authentication successes and failures with account and source address; retain logs for investigation.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
     "privilege": {"text": "Separate administrative and daily-use accounts; restrict database and OS service accounts to the rights the application uses.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
-    "authorization": {"text": "A federated identity still needs an application allowlist before access is granted.", "components": ["oidc", "oauth"], "sources": ["oidc:scfd2790a544c", "oauth:s4e6d674bf887"], "status": "REASONED"},
+    "authorization": {"text": "A federated identity still needs an application allowlist before access is granted. The allowlist is this guide's recommendation.", "components": ["oidc", "oauth"], "sources": ["oidc:scfd2790a544c", "oauth:s4e6d674bf887"], "status": "REASONED"},
     "code-pkce": {"text": "Use authorization code flow with PKCE S256, never plain.", "components": ["oauth"], "sources": ["oauth:s4e6d674bf887"], "status": "REASONED"},
     "redirects": {"text": "Require exact-match redirect URIs.", "components": ["oauth"], "sources": ["oauth:s4e6d674bf887"], "status": "REASONED"},
     "state-nonce": {"text": "Generate fresh state and nonce for each transaction, verify both and bind them to the initiating browser session.", "components": ["oauth", "oidc"], "sources": ["oauth:s4e6d674bf887", "oidc:scfd2790a544c"], "status": "REASONED"},
@@ -233,7 +233,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | enumeration: Keep login, registration and reset responses uniform in message and timing. | OWASP authentication and password storage unknown | REASONED |
 | auth-logging: Log authentication successes and failures with account and source address; retain logs for investigation. | OWASP authentication and password storage unknown | REASONED |
 | privilege: Separate administrative and daily-use accounts; restrict database and OS service accounts to the rights the application uses. | OWASP authentication and password storage unknown | REASONED |
-| authorization: A federated identity still needs an application allowlist before access is granted. | OpenID Connect Core 1.0; OAuth security BCP RFC 9700 | REASONED |
+| authorization: A federated identity still needs an application allowlist before access is granted. The allowlist is this guide's recommendation. | OpenID Connect Core 1.0; OAuth security BCP RFC 9700 | REASONED |
 | code-pkce: Use authorization code flow with PKCE S256, never plain. | OAuth security BCP RFC 9700 | REASONED |
 | redirects: Require exact-match redirect URIs. | OAuth security BCP RFC 9700 | REASONED |
 | state-nonce: Generate fresh state and nonce for each transaction, verify both and bind them to the initiating browser session. | OAuth security BCP RFC 9700; OpenID Connect Core 1.0 | REASONED |
