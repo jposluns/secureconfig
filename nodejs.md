@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "9637a374fead62f714c3e9b4dd913cb2c49023ed66708df2f31fb7eddb08b00f",
+  "body_sha256": "a15115cdcb72d586526cedf1b8254feccc4480d71fe475ec96d1448704bd222a",
   "components": {
     "node": {
       "name": "Node.js documentation",
@@ -54,6 +54,20 @@ version_basis: {
       "sources": {
         "sc505636608da": "https://github.com/soldair/node-qrcode/blob/v1.5.4/README.md#L125-L129"
       }
+    },
+    "node-v24": {
+      "name": "Node.js API documentation",
+      "basis": "v24.22.0",
+      "sources": {
+        "s670c858d43f0": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/process.md#L1563-L1581",
+        "s2f3ecf558ce7": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/crypto.md#L6678-L6717",
+        "s703bf6f857a7": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3568-L3587",
+        "sbfee17929443": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3940-L3944",
+        "s623b3be4ffa9": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1780-L1790",
+        "s5502c1348338": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L70-L102",
+        "s0b0f0083c83b": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L459-L472",
+        "s81adeb1a7a97": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L535-L548"
+      }
     }
   },
   "claims": {
@@ -70,10 +84,10 @@ version_basis: {
     "store": {"text": "Default MemoryStore is development-only, leaks memory and cannot scale past one process; supply a production store.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
     "expiry": {"text": "No cookie maximum age is set by default; set cookie.maxAge.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
     "login-limit": {"text": "Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls.", "components": ["rate"], "sources": ["rate:s303dcc57a0df"], "status": "REASONED"},
-    "tokens": {"text": "Load API tokens from process.env and compare with crypto.timingSafeEqual; these APIs are not covered by listed Sources.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
+    "tokens": {"text": "This guide advises loading API keys and tokens from process.env, never from source literals, and comparing self-checked secret values with crypto.timingSafeEqual using equal-byte-length byte inputs; process.env exposes the user environment, while timingSafeEqual's input requirements and surrounding-code limit are documented.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:s670c858d43f0", "node-v24:s2f3ecf558ce7"], "status": "REASONED"},
     "mfa": {"text": "Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; the fronting identity layer is not covered by listed Sources.", "components": ["session", "otplib", "qrcode"], "sources": ["session:safd9f9d15304", "otplib:sdb2cd721be64", "qrcode:sc505636608da"], "status": "REASONED"},
-    "tls-validation": {"text": "Never disable validation with NODE_TLS_REJECT_UNAUTHORIZED=0 process-wide or rejectUnauthorized=false per connection/shared agent; the environment-variable rule lacks a listed source.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
-    "client-ca": {"text": "Use NODE_EXTRA_CA_CERTS for an internal CA; this variable is not covered by listed Sources.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
+    "tls-validation": {"text": "This guide advises never setting NODE_TLS_REJECT_UNAUTHORIZED=0 for the Node.js process's TLS connections or rejectUnauthorized=false for a client TLS connection or an HTTPS agent whose requests use it; Node.js documents the TLS validation effects, and the agent reach is this guide's assessment of the documented options flow.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:sbfee17929443", "node-v24:s623b3be4ffa9", "node-v24:s5502c1348338", "node-v24:s0b0f0083c83b", "node-v24:s81adeb1a7a97"], "status": "REASONED"},
+    "client-ca": {"text": "This guide advises setting NODE_EXTRA_CA_CERTS to a PEM file before launching Node.js for an internal CA or self-signed server; it extends well-known roots, is read only at launch, and is ignored with explicit ca options or when Node.js runs as setuid root or with Linux file capabilities.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:s703bf6f857a7"], "status": "REASONED"},
     "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED", "verify": [1]},
     "verify-tls": {"text": "HTTPS must succeed without -k and show Helmet headers.", "components": ["node", "helmet"], "sources": ["node:s87db42190978", "helmet:sc1865315478e"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED", "verify": [1]},
@@ -106,10 +120,10 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | store: Default MemoryStore is development-only, leaks memory and cannot scale past one process; supply a production store. | express-session documentation unknown | REASONED |
 | expiry: No cookie maximum age is set by default; set cookie.maxAge. | express-session documentation unknown | REASONED |
 | login-limit: Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls. | express-rate-limit minimum v8 | REASONED |
-| tokens: Load API tokens from process.env and compare with crypto.timingSafeEqual; these APIs are not covered by listed Sources. | Node.js documentation unknown | REASONED |
+| tokens: This guide advises loading API keys and tokens from process.env, never from source literals, and comparing self-checked secret values with crypto.timingSafeEqual using equal-byte-length byte inputs; process.env exposes the user environment, while timingSafeEqual's input requirements and surrounding-code limit are documented. | Node.js documentation unknown; Node.js API documentation v24.22.0 | REASONED |
 | mfa: Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; the fronting identity layer is not covered by listed Sources. | express-session documentation unknown; otplib v12.0.1; qrcode v1.5.4 | REASONED |
-| tls-validation: Never disable validation with NODE_TLS_REJECT_UNAUTHORIZED=0 process-wide or rejectUnauthorized=false per connection/shared agent; the environment-variable rule lacks a listed source. | Node.js documentation unknown | REASONED |
-| client-ca: Use NODE_EXTRA_CA_CERTS for an internal CA; this variable is not covered by listed Sources. | Node.js documentation unknown | REASONED |
+| tls-validation: This guide advises never setting NODE_TLS_REJECT_UNAUTHORIZED=0 for the Node.js process's TLS connections or rejectUnauthorized=false for a client TLS connection or an HTTPS agent whose requests use it; Node.js documents the TLS validation effects, and the agent reach is this guide's assessment of the documented options flow. | Node.js documentation unknown; Node.js API documentation v24.22.0 | REASONED |
+| client-ca: This guide advises setting NODE_EXTRA_CA_CERTS to a PEM file before launching Node.js for an internal CA or self-signed server; it extends well-known roots, is read only at launch, and is ignored with explicit ca options or when Node.js runs as setuid root or with Linux file capabilities. | Node.js documentation unknown; Node.js API documentation v24.22.0 | REASONED |
 | verify-redirect: HTTP should return 301 with an HTTPS Location. | Node.js documentation unknown | REASONED |
 | verify-tls: HTTPS must succeed without -k and show Helmet headers. | Node.js documentation unknown; Helmet documentation unknown | REASONED |
 | verify-auth: A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial. | express-session documentation unknown | REASONED |
@@ -207,14 +221,14 @@ const rateLimit = require('express-rate-limit');
 app.use('/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 20 }));
 ```
 
-API keys and tokens come from `process.env`, never from literals in the source. Generate them per [authentication.md](authentication.md) and compare with `crypto.timingSafeEqual` where you check them yourself.
+This guide advises: load API keys and tokens from `process.env`, never from literals in the source. Generate them per [authentication.md](authentication.md). Where you check them yourself, compare equal-byte-length byte inputs with `crypto.timingSafeEqual`; it accepts `ArrayBuffer`, `Buffer`, `TypedArray` or `DataView` inputs, throws on different byte lengths, and does not make surrounding code timing-safe. The use of `process.env` for secrets and the ban on source literals are this guide's advice; Node.js documents `process.env` as the user environment and the comparison API's input requirements.
 
 MFA: add TOTP with [otplib](https://github.com/yeojz/otplib) plus the [qrcode](https://www.npmjs.com/package/qrcode) package for enrolment QR codes, or front the app with an identity layer; requirements and options in [mfa.md](mfa.md).
 
 ## 4. Client-side TLS discipline
 
-- Never set `NODE_TLS_REJECT_UNAUTHORIZED=0`, which disables certificate validation process-wide, and never pass `rejectUnauthorized: false`, which disables it for that connection and any connection sharing an agent configured with it.
-- For an internal CA or self-signed server, point Node at the CA instead: `NODE_EXTRA_CA_CERTS=/path/ca.crt` (see [self-signed.md](self-signed.md)).
+- This guide advises: never set `NODE_TLS_REJECT_UNAUTHORIZED=0`, which disables certificate validation for TLS connections in the Node.js process, and never pass `rejectUnauthorized: false`, which disables server-certificate verification for that client connection. Never configure an `https.Agent` with `rejectUnauthorized: false`: requests using that agent inherit its TLS option. The agent reach is this guide's assessment of Node.js's documented request, agent and TLS options.
+- For an internal CA or self-signed server, this guide advises instead: set `NODE_EXTRA_CA_CERTS=/path/ca.crt` before starting Node.js, pointing at a PEM file of trusted certificates (see [self-signed.md](self-signed.md)). Node.js adds these to its well-known root CAs at launch; changing the variable at runtime has no effect on the current process. An explicit `ca` option prevents use of both the well-known and extra CAs for that TLS or HTTPS client or server, and Node.js ignores the variable when run as setuid root or with Linux file capabilities.
 
 ## 5. Verify (REASONED: TLS, headers, authentication, listener and proxy-header expectations follow the Sources below and linked deployment guidance; no deployment run or outcome is recorded in this guide. This metadata-only review has no deployed Node application, proxy or managed ingress to test.)
 
@@ -256,3 +270,11 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 - Node HTTP `message.url` and the caution to validate a client-supplied `Host` header: https://nodejs.org/api/http.html
 - otplib TOTP enrolment and QR-code generation (v12.0.1, checked October 2026): https://github.com/yeojz/otplib/blob/v12.0.1/README.md#L371-L372
 - qrcode enrolment image generation (v1.5.4, checked October 2026): https://github.com/soldair/node-qrcode/blob/v1.5.4/README.md#L125-L129
+- Node.js `process.env` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/process.md#L1563-L1581
+- Node.js `crypto.timingSafeEqual` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/crypto.md#L6678-L6717
+- Node.js `NODE_EXTRA_CA_CERTS` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3568-L3587
+- Node.js `NODE_TLS_REJECT_UNAUTHORIZED` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3940-L3944
+- Node.js `tls.connect` client `rejectUnauthorized` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1780-L1790
+- Node.js `https.Agent` options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L70-L102
+- Node.js `https.request` TLS options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L459-L472
+- Node.js HTTPS agent example (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L535-L548
