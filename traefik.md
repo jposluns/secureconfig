@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "fc7b918b67e7957c9129dcc2f26a7d0f30d4686f1b766bf7f8a51f7279728463",
+  "body_sha256": "aac661357effc89cf9b208294d0f255b4fb31c03428609d9756c4fa69347809c",
   "components": {
     "traefik-docs": {
       "name": "Traefik documentation (rolling)",
@@ -60,6 +60,37 @@ version_basis: {
       "sources": {
         "s0e08b0bdcb35": "https://github.com/traefik/traefik/blob/v3.5.0/pkg/provider/acme/local_store.go#L125"
       }
+    },
+    "httpd-source": {
+      "name": "Apache httpd htpasswd source",
+      "basis": "2.4.69",
+      "sources": {
+        "sf711558bdf3c": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45",
+        "s4aa0f7f341fb": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L292-L295",
+        "s4482c55d79a2": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L382",
+        "s309ecdd34379": "https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128"
+      }
+    },
+    "owasp-source": {
+      "name": "OWASP Password Storage Cheat Sheet",
+      "basis": "72865b1e3b5754246a101778dc00b37f9c233373",
+      "sources": {
+        "s4531e65b6502": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13"
+      }
+    },
+    "cloudflare-source": {
+      "name": "Cloudflare Access MFA documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "sdcac732541da": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81"
+      }
+    },
+    "traefik-basicauth-source": {
+      "name": "Traefik BasicAuth source",
+      "basis": "v3.5.0",
+      "sources": {
+        "s5f9a13d720c8": "https://github.com/traefik/traefik/blob/v3.5.0/pkg/middlewares/auth/basic_auth.go#L67-L99"
+      }
     }
   },
   "claims": {
@@ -72,22 +103,22 @@ version_basis: {
     "tls-floor": {"text": "Dynamic default TLS options set minVersion VersionTLS12.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s25d849b2d428"], "status": "REASONED"},
     "route": {"text": "Docker labels select the app host, websecure, letsencrypt resolver and backend port 3000.", "components": ["traefik-docs", "docker"], "sources": ["traefik-docs:scbc0f2135c78", "docker:se23fe4fe79fa"], "status": "REASONED"},
     "backend-isolation": {"text": "Publish only Traefik 80/443, not the app's 3000, to prevent middleware/TLS bypass.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED"},
-    "basic": {"text": "Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s5d7a6940f1dd"], "status": "REASONED"},
+    "basic": {"text": "Attach bcrypt basicAuth to the router; Apache httpd 2.4.69 htpasswd -nB defaults to bcrypt cost 5, while -C 12 selects cost 12; OWASP at 72865b1e recommends 10 or more for legacy bcrypt.", "components": ["traefik-docs", "traefik-v3", "httpd-source", "owasp-source"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s5d7a6940f1dd", "httpd-source:sf711558bdf3c", "httpd-source:s4aa0f7f341fb", "httpd-source:s4482c55d79a2", "httpd-source:s309ecdd34379", "owasp-source:s4531e65b6502"], "status": "REASONED"},
     "compose-hash": {"text": "Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s5d7a6940f1dd"], "status": "REASONED"},
     "file-provider": {"text": "Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s3acb3f5b1778"], "status": "REASONED"},
-    "mfa": {"text": "Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s3cf7d994a56a"], "status": "REASONED"},
+    "mfa": {"text": "Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization).", "components": ["traefik-docs", "traefik-v3", "cloudflare-source"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s3cf7d994a56a", "cloudflare-source:sdcac732541da"], "status": "REASONED"},
     "body-limit": {"text": "Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size.", "components": ["middleware"], "sources": ["middleware:sd987195d64dd"], "status": "REASONED"},
     "buffer-storage": {"text": "memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size.", "components": ["middleware"], "sources": ["middleware:sd987195d64dd"], "status": "REASONED"},
     "rate-limit": {"text": "average=10 and burst=20 configure a rate cap, per source by default.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d"], "status": "REASONED"},
     "inflight": {"text": "inflightreq.amount=10 bounds concurrent requests; sourceCriterion defaults to request host rather than client, so configure a per-client cap explicitly.", "components": ["middleware"], "sources": ["middleware:sd20dcba7ebca"], "status": "REASONED"},
-    "middleware-order": {"text": "Rate/inflight precede auth to count rejected logins; buffering follows admission controls to avoid buffering rejected uploads.", "components": ["traefik-docs", "middleware"], "sources": ["traefik-docs:scbc0f2135c78", "middleware:sd987195d64dd", "middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca"], "status": "REASONED"},
+    "middleware-order": {"text": "Rate/inflight precede auth to count rejected logins: Traefik v3.5.0 BasicAuth returns on failure without calling the next handler; buffering follows admission controls to avoid buffering rejected uploads.", "components": ["traefik-docs", "middleware", "traefik-basicauth-source"], "sources": ["traefik-docs:scbc0f2135c78", "middleware:sd987195d64dd", "middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca", "traefik-basicauth-source:s5f9a13d720c8"], "status": "REASONED"},
     "dashboard": {"text": "Keep api.insecure and unprotected api@internal routers off public entry points or protect the dashboard with auth.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED"},
     "swarm": {"text": "Standalone Docker guidance does not cover Swarm; v3 uses providers.swarm and its separate exposedByDefault also defaults true.", "components": ["swarm"], "sources": ["swarm:s256d46f3f558"], "status": "REASONED"},
     "verify-redirect": {"text": "HTTP should redirect to HTTPS.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "Unauthenticated HTTPS should return 401 once auth is attached.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
     "verify-size": {"text": "Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal.", "components": ["middleware", "traefik-docs"], "sources": ["middleware:sd987195d64dd", "traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
     "observed-429": {"text": "The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca"], "status": "DEMONSTRATED", "evidence": "A 429 appeared. That is all this shows."},
-    "verify-rate": {"text": "Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca"], "status": "REASONED", "verify": [1]},
+    "verify-rate": {"text": "Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled.", "components": ["middleware", "traefik-basicauth-source"], "sources": ["middleware:scf1b1e35ef5d", "middleware:sd20dcba7ebca", "traefik-basicauth-source:s5f9a13d720c8"], "status": "REASONED", "verify": [1]},
     "verify-isolation": {"text": "Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik.", "components": ["docker"], "sources": ["docker:se23fe4fe79fa"], "status": "REASONED", "verify": [1]},
     "verify-acme": {"text": "Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT.", "components": ["traefik-docs"], "sources": ["traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [1]},
     "canary-route": {"text": "On a disposable deployment, unlabelled traefik/whoami has one HTTP port; use its generated Host rule and plain HTTP even on :443 because the generated router requests no TLS.", "components": ["docker", "traefik-docs"], "sources": ["docker:se23fe4fe79fa", "traefik-docs:scbc0f2135c78"], "status": "REASONED", "verify": [2]},
@@ -116,22 +147,22 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | tls-floor: Dynamic default TLS options set minVersion VersionTLS12. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | route: Docker labels select the app host, websecure, letsencrypt resolver and backend port 3000. | Traefik documentation (rolling) unknown; Traefik Docker provider unknown | REASONED |
 | backend-isolation: Publish only Traefik 80/443, not the app's 3000, to prevent middleware/TLS bypass. | Traefik Docker provider unknown | REASONED |
-| basic: Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| basic: Attach bcrypt basicAuth to the router; Apache httpd 2.4.69 htpasswd -nB defaults to bcrypt cost 5, while -C 12 selects cost 12; OWASP at 72865b1e recommends 10 or more for legacy bcrypt. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Apache httpd htpasswd source 2.4.69; OWASP Password Storage Cheat Sheet 72865b1e3b5754246a101778dc00b37f9c233373 | REASONED |
 | compose-hash: Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | file-provider: Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
-| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization). | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Cloudflare Access MFA documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | body-limit: Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size. | Traefik middleware documentation unknown | REASONED |
 | buffer-storage: memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size. | Traefik middleware documentation unknown | REASONED |
 | rate-limit: average=10 and burst=20 configure a rate cap, per source by default. | Traefik middleware documentation unknown | REASONED |
 | inflight: inflightreq.amount=10 bounds concurrent requests; sourceCriterion defaults to request host rather than client, so configure a per-client cap explicitly. | Traefik middleware documentation unknown | REASONED |
-| middleware-order: Rate/inflight precede auth to count rejected logins; buffering follows admission controls to avoid buffering rejected uploads. | Traefik documentation (rolling) unknown; Traefik middleware documentation unknown | REASONED |
+| middleware-order: Rate/inflight precede auth to count rejected logins: Traefik v3.5.0 BasicAuth returns on failure without calling the next handler; buffering follows admission controls to avoid buffering rejected uploads. | Traefik documentation (rolling) unknown; Traefik middleware documentation unknown; Traefik BasicAuth source v3.5.0 | REASONED |
 | dashboard: Keep api.insecure and unprotected api@internal routers off public entry points or protect the dashboard with auth. | Traefik documentation (rolling) unknown | REASONED |
 | swarm: Standalone Docker guidance does not cover Swarm; v3 uses providers.swarm and its separate exposedByDefault also defaults true. | Traefik Swarm provider unknown | REASONED |
 | verify-redirect: HTTP should redirect to HTTPS. | Traefik documentation (rolling) unknown | REASONED |
 | verify-auth: Unauthenticated HTTPS should return 401 once auth is attached. | Traefik documentation (rolling) unknown | REASONED |
 | verify-size: Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal. | Traefik middleware documentation unknown; Traefik documentation (rolling) unknown | REASONED |
 | observed-429: The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established. | Traefik middleware documentation unknown | DEMONSTRATED |
-| verify-rate: Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled. | Traefik middleware documentation unknown | REASONED |
+| verify-rate: Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled. | Traefik middleware documentation unknown; Traefik BasicAuth source v3.5.0 | REASONED |
 | verify-isolation: Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik. | Traefik Docker provider unknown | REASONED |
 | verify-acme: Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT. | Traefik documentation (rolling) unknown | REASONED |
 | canary-route: On a disposable deployment, unlabelled traefik/whoami has one HTTP port; use its generated Host rule and plain HTTP even on :443 because the generated router requests no TLS. | Traefik Docker provider unknown; Traefik documentation (rolling) unknown | REASONED |
@@ -211,7 +242,7 @@ Do not also publish the app's port with `ports:`; only Traefik publishes 80 and 
 
 ## 3. Require authentication
 
-Application-level login is preferable ([authentication.md](authentication.md)). At the proxy, attach a basicAuth middleware with bcrypt entries from `htpasswd -nB -C 12 admin` (a bare `-nB` defaults to cost 5, below the OWASP minimum of 10 that [authentication.md](authentication.md) sets):
+Application-level login is preferable ([authentication.md](authentication.md)). At the proxy, attach a basicAuth middleware with bcrypt entries from `htpasswd -nB -C 12 admin`. In Apache httpd 2.4.69, bare `-nB` defaults to bcrypt cost 5 and `-C 12` selects cost 12; OWASP at 72865b1e recommends a work factor of 10 or more for legacy bcrypt:
 
 ```yaml
     labels:
@@ -230,7 +261,7 @@ http:
           - "admin:$2y$12$REPLACE_WITH_HASH"
 ```
 
-Load that dynamic file with `providers.file.directory` (or `providers.file.filename`) in the static config, and when a Docker-labelled router references a file-defined middleware, qualify it as `app-auth@file`. basicAuth is single-factor. For human-facing sites, add MFA with the `forwardAuth` middleware pointed at [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy), or front the site with Cloudflare Access; options in [mfa.md](mfa.md).
+Load that dynamic file with `providers.file.directory` (or `providers.file.filename`) in the static config, and when a Docker-labelled router references a file-defined middleware, qualify it as `app-auth@file`. basicAuth is single-factor. For human-facing sites, add MFA with the `forwardAuth` middleware pointed at [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy), or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization); options in [mfa.md](mfa.md).
 
 ## 4. Bound the expensive endpoints
 
@@ -250,7 +281,7 @@ Three middlewares, attached to the router alongside the auth middleware from sec
       - traefik.http.routers.app.middlewares=app-rate,app-inflight,app-auth,app-body
 ```
 
-Order matters here. `app-rate` and `app-inflight` come before `app-auth` so they bound failed-login attempts: basicAuth short-circuits with a 401 before any middleware listed after it runs, so a limiter placed after auth never counts a rejected attempt. `buffering` reads the request into memory or disk before forwarding it, so it must
+Order matters here. `app-rate` and `app-inflight` come before `app-auth` so they bound failed-login attempts: Traefik v3.5.0 BasicAuth returns on failed credentials without calling its next handler, so a limiter placed after auth cannot count a rejected attempt. `buffering` reads the request into memory or disk before forwarding it, so it must
 come after the admission controls; placed first, an accepted upload consumes the buffer before
 `ratelimit` or `inflightreq` has considered it. `maxRequestBodyBytes` sets the largest body accepted;
 `memRequestBodyBytes`, which defaults to 1048576, is the separate threshold at which buffering moves
@@ -292,7 +323,8 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 )
 seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/ | sort | uniq -c
                                      # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
-                                     # middleware chain (section 4), so an unauthenticated flood is counted by the
+                                     # middleware chain (section 4); Traefik v3.5.0 BasicAuth does not call its
+                                     # next handler on failure, so an unauthenticated flood is counted by the
                                      # limiter, keyed on the client source. A 429 appeared. That is all this shows.
                                      # inflightreq also returns
                                      # 429, and an upstream under load can too, so this does not
@@ -380,3 +412,10 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 - Traefik v3.5 file-provider configuration (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/providers/others/file/
 - Traefik v3.5 BasicAuth and Compose dollar-sign escaping (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/basicauth/
 - Traefik v3.5 ForwardAuth delegation (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/forwardauth/
+- Traefik v3.5.0 BasicAuth failure and next-handler path (checked October 2026): https://github.com/traefik/traefik/blob/v3.5.0/pkg/middlewares/auth/basic_auth.go#L67-L99
+- Apache httpd 2.4.69 htpasswd bcrypt default cost (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45
+- Apache httpd 2.4.69 htpasswd default cost applied (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L292-L295
+- Apache httpd 2.4.69 htpasswd `-C` cost option (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L382
+- Apache httpd 2.4.69 htpasswd usage (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128
+- OWASP Password Storage Cheat Sheet at 72865b1e3b5754246a101778dc00b37f9c233373, legacy bcrypt work factor (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
+- Cloudflare Access MFA documentation at c896795b8e8bab68d05ae78d64c9cbcda1fdb104, application or policy MFA (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81
