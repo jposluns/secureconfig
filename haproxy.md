@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c5a820789a98a0a7fbd2c4e51e0b31d288cc20df984318835255c0c7b7912494",
+  "body_sha256": "a64424fb6da832582d87cbe563a9dece06b05addf1043fa5c01acd062ab8f08d",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -36,12 +36,26 @@ version_basis: {
       "sources": {
         "s3b2ccc45875a": "https://docs.openssl.org/3.0/man1/openssl-passwd/"
       }
+    },
+    "certbot-source": {
+      "name": "Certbot deploy hook documentation",
+      "basis": "v2.3.0",
+      "sources": {
+        "sd39028a759a7": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L659-L675"
+      }
+    },
+    "cloudflare-source": {
+      "name": "Cloudflare Access MFA documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "sdcac732541da": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81"
+      }
     }
   },
   "claims": {
     "scope": {"text": "Examples target a maintained HAProxy 3.0 installation and treat frontend, stats, runtime API and direct backend as separate surfaces.", "components": ["haproxy", "docs"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493", "docs:s2be90eb936bd"], "status": "REASONED"},
     "pem": {"text": "Use matching chain/key in a combined PEM, built via a root-only temporary file and rename; separate key loading is also supported.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
-    "renewal": {"text": "Rebuild the combined PEM on certificate renewal via a certbot deploy hook and reload HAProxy; Sources omit certbot hook syntax.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493"], "status": "REASONED"},
+    "renewal": {"text": "Rebuild the combined PEM and reload HAProxy after successful renewal using Certbot v2.3.0 --deploy-hook or an executable in /etc/letsencrypt/renewal-hooks/deploy.", "components": ["haproxy", "certbot-source"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493", "certbot-source:sd39028a759a7"], "status": "REASONED"},
     "tls": {"text": "Frontend :443 loads the PEM with ssl and ssl-min-ver TLSv1.2; :80 redirects to HTTPS with 301.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
     "ciphers": {"text": "ssl-default-bind-ciphers governs TLS 1.2 and -ciphersuites TLS 1.3; Mozilla is policy guidance, not HAProxy syntax authority.", "components": ["haproxy", "docs"], "sources": ["haproxy:s5792e6ff4990", "docs:s529b0eabe2ed"], "status": "REASONED"},
     "privileges": {"text": "Preserve service hardening; root-started workers drop to haproxy user/group and chroot into a provisioned root-owned directory.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
@@ -51,7 +65,7 @@ version_basis: {
     "remote-backend": {"text": "Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
     "basic": {"text": "Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext.", "components": ["haproxy", "openssl-cli"], "sources": ["haproxy:s5792e6ff4990", "openssl-cli:s3b2ccc45875a"], "status": "REASONED"},
     "mtls": {"text": "For machine access, bind verify required with ca-file requires trusted client certificates.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
-    "mfa": {"text": "Basic is single-factor; Authelia uses its HAProxy Lua integration, or use Cloudflare Access for human MFA.", "components": ["docs"], "sources": ["docs:s192d42dd9feb"], "status": "REASONED"},
+    "mfa": {"text": "Basic is single-factor; Authelia uses its HAProxy Lua integration, or front the site with Cloudflare Access and require MFA in its application or policy.", "components": ["docs", "cloudflare-source"], "sources": ["docs:s192d42dd9feb", "cloudflare-source:sdcac732541da"], "status": "REASONED"},
     "maxconn": {"text": "Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
     "body-guard": {"text": "No single request-body-size directive: req.body_size reads advertised Content-Length; deny_status 413 rejects values above 10485760 without buffering.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
     "body-buffering": {"text": "Do not add http-buffer-request for this guard: it waits for a complete body or full request buffer.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
@@ -85,7 +99,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | --- | --- | --- |
 | scope: Examples target a maintained HAProxy 3.0 installation and treat frontend, stats, runtime API and direct backend as separate surfaces. | HAProxy 3.0; Supporting documentation unknown | REASONED |
 | pem: Use matching chain/key in a combined PEM, built via a root-only temporary file and rename; separate key loading is also supported. | HAProxy 3.0 | REASONED |
-| renewal: Rebuild the combined PEM on certificate renewal via a certbot deploy hook and reload HAProxy; Sources omit certbot hook syntax. | HAProxy 3.0 | REASONED |
+| renewal: Rebuild the combined PEM and reload HAProxy after successful renewal using Certbot v2.3.0 --deploy-hook or an executable in /etc/letsencrypt/renewal-hooks/deploy. | HAProxy 3.0; Certbot deploy hook documentation v2.3.0 | REASONED |
 | tls: Frontend :443 loads the PEM with ssl and ssl-min-ver TLSv1.2; :80 redirects to HTTPS with 301. | HAProxy 3.0 | REASONED |
 | ciphers: ssl-default-bind-ciphers governs TLS 1.2 and -ciphersuites TLS 1.3; Mozilla is policy guidance, not HAProxy syntax authority. | HAProxy 3.0; Supporting documentation unknown | REASONED |
 | privileges: Preserve service hardening; root-started workers drop to haproxy user/group and chroot into a provisioned root-owned directory. | HAProxy 3.0 | REASONED |
@@ -95,7 +109,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | remote-backend: Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name. | HAProxy 3.0 | REASONED |
 | basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. | HAProxy 3.0; OpenSSL password command 3.0 | REASONED |
 | mtls: For machine access, bind verify required with ca-file requires trusted client certificates. | HAProxy 3.0 | REASONED |
-| mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or use Cloudflare Access for human MFA. | Supporting documentation unknown | REASONED |
+| mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or front the site with Cloudflare Access and require MFA in its application or policy. | Supporting documentation unknown; Cloudflare Access MFA documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | maxconn: Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend. | HAProxy 3.0 | REASONED |
 | body-guard: No single request-body-size directive: req.body_size reads advertised Content-Length; deny_status 413 rejects values above 10485760 without buffering. | HAProxy 3.0 | REASONED |
 | body-buffering: Do not add http-buffer-request for this guard: it waits for a complete body or full request buffer. | HAProxy 3.0 | REASONED |
@@ -129,7 +143,7 @@ sudo bash -c 'umask 077; tmp=$(mktemp /etc/haproxy/certs/.pem.XXXXXX) || exit 1
   mv "$tmp" /etc/haproxy/certs/example.com.pem'
 ```
 
-Re-run the concatenation from a certbot deploy hook so renewals reach HAProxy.
+With Certbot v2.3.0, run the concatenation and reload HAProxy after a successful renewal using `certbot renew --deploy-hook /path/to/deploy-hook-script` or an executable in `/etc/letsencrypt/renewal-hooks/deploy`.
 
 ## 1. Terminate TLS and redirect HTTP
 
@@ -182,7 +196,7 @@ backend app
 
 `openssl passwd -6` prompts for the password. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `openssl` process while it runs. Hashed `password` entries rely on the system's crypt(3); `$6$` works on glibc-based Linux. Avoid `insecure-password`, which stores the password in cleartext in the configuration file. For machine-to-machine access, client certificates are stronger: add `verify required ca-file /etc/ssl/certs/internal-ca.crt` to the `bind :443` line.
 
-Basic authentication here is single-factor. For human-facing sites, add MFA with an [Authelia](https://www.authelia.com/) portal (HAProxy is supported through Authelia's Lua module) or by fronting the site with Cloudflare Access; options in [mfa.md](mfa.md).
+Basic authentication here is single-factor. For human-facing sites, add MFA with an [Authelia](https://www.authelia.com/) portal (HAProxy is supported through Authelia's Lua module) or by fronting the site with Cloudflare Access and requiring MFA in its application or policy; options in [mfa.md](mfa.md).
 
 ## 3. Bound the expensive endpoints
 
@@ -349,3 +363,5 @@ sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorize
 - Authelia HAProxy integration (MFA portal): https://www.authelia.com/integration/proxies/haproxy/
 - Mozilla SSL Configuration Generator (TLS policy, not HAProxy syntax): https://ssl-config.mozilla.org/
 - OpenSSL 3.0 `passwd -6` SHA-512 crypt and terminal prompting (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-passwd/
+- Certbot v2.3.0 deploy hooks after successful renewal (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L659-L675
+- Cloudflare Access MFA documentation at c896795b8e8bab68d05ae78d64c9cbcda1fdb104, application or policy MFA (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81
