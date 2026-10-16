@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6e0ec76c8f062dacda5e27519b80935e0299a6aa33a74f144472e42731d3bb70",
+  "body_sha256": "8d80d8d2d8a522710c99dfca39ca3937641c6afddaec75362c61cc834932edae",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -118,6 +118,7 @@ version_basis: {
         "s10b95cd4cab8": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L297-L310",
         "s82a976e6b93c": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/frontend_processor.go#L49-L80",
         "s47c05209cd31": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L87-L164",
+        "s18cd3a035b38": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L183-L244",
         "s1d59e1184191": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L246-L335",
         "s5b3705652693": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L57",
         "s9d106cc379de": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/client/client.go#L65-L91",
@@ -228,7 +229,7 @@ version_basis: {
     "loki-grpc-bridge": {"text": "Single-binary ingester RPC and HTTP-over-gRPC expose paths that HTTP-only TLS/proxying does not protect.", "components": ["loki", "dskit"], "sources": ["loki:sc2b013001317", "dskit:s5fd7b12bfcf1"], "status": "REASONED"},
     "loki-mtls": {"text": "HTTP/gRPC TLS defaults empty and requires a cert/key pair; configure client CA plus RequireAndVerifyClientCert, not CA alone.", "components": ["dskit"], "sources": ["dskit:sb19d54a19636", "dskit:s0dc9a01e591a", "dskit:sd35a28be4391"], "status": "REASONED"},
     "loki-ring": {"text": "Single-binary overlay uses inmemory ring, loopback instance address and replication_factor 1 instead of default 3; check no gossip listener remains.", "components": ["loki"], "sources": ["loki:s8f06ddfa5291", "loki:s8cf14a90ec61", "loki:sfb3d52071e7c"], "status": "REASONED"},
-    "loki-internal": {"text": "The server gRPC listen address and port, target flags, scheduler ring and worker configuration are passed to the querier worker service initializer; the ingester lifecycler listen port is set to the server gRPC listen port; worker frontend/scheduler and distributor/querier ingester dial sites are traced; loopback gRPC remains a configuration-specific recommendation, with advertised/dial addresses, successful internal worker and ingester calls, any compactor calls and live reachability to verify.", "components": ["loki", "dskit"], "sources": ["loki:s5b3705652693", "loki:sfc4788e520b8", "loki:sc2b013001317", "loki:s765907d2b4ee", "loki:sf3955ae90da4", "loki:sfb3d52071e7c", "loki:s8cf14a90ec61", "loki:scf12ae06cdc4", "loki:s970473c2dcdb", "loki:s6b2f01173a97", "loki:s44e7547da37d", "loki:s79ea72562a9f", "loki:s634e6599df5e", "loki:s10b95cd4cab8", "loki:s82a976e6b93c", "loki:s47c05209cd31", "loki:s1d59e1184191", "loki:s9d106cc379de", "loki:s8b3d57f01355", "loki:s88661a4514b3", "loki:sb0ae3e30f690", "loki:s074f98761044", "loki:s51e0f640a169", "loki:sa19fa92e5d02", "dskit:sb0955f4c2ebd", "dskit:s74daabf65e98", "dskit:s172528a7c1bf", "dskit:scf57b6b1f148"], "status": "REASONED"},
+    "loki-internal": {"text": "The server gRPC listen address and port, target flags, scheduler ring and worker configuration are passed to the querier worker service initializer; the ingester lifecycler listen port is set to the server gRPC listen port; worker frontend/scheduler and distributor/querier ingester dial sites are traced; loopback gRPC remains a configuration-specific recommendation, with advertised/dial addresses, successful internal worker and ingester calls, any compactor calls and live reachability to verify.", "components": ["loki", "dskit"], "sources": ["loki:s18cd3a035b38", "loki:s5b3705652693", "loki:sfc4788e520b8", "loki:sc2b013001317", "loki:s765907d2b4ee", "loki:sf3955ae90da4", "loki:sfb3d52071e7c", "loki:s8cf14a90ec61", "loki:scf12ae06cdc4", "loki:s970473c2dcdb", "loki:s6b2f01173a97", "loki:s44e7547da37d", "loki:s79ea72562a9f", "loki:s634e6599df5e", "loki:s10b95cd4cab8", "loki:s82a976e6b93c", "loki:s47c05209cd31", "loki:s1d59e1184191", "loki:s9d106cc379de", "loki:s8b3d57f01355", "loki:s88661a4514b3", "loki:sb0ae3e30f690", "loki:s074f98761044", "loki:s51e0f640a169", "loki:sa19fa92e5d02", "dskit:sb0955f4c2ebd", "dskit:s74daabf65e98", "dskit:s172528a7c1bf", "dskit:scf57b6b1f148"], "status": "REASONED"},
     "loki-grpc-tls": {"text": "gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers.", "components": ["dskit", "loki"], "sources": ["dskit:sd35a28be4391", "loki:s70975c2655fa"], "status": "REASONED"},
     "loki-proxy": {"text": "An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki.", "components": ["loki"], "sources": ["loki:s70975c2655fa"], "status": "REASONED"},
     "verify-inventory": {"text": "Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed.", "components": ["node", "alert", "push", "jaeger", "dskit"], "sources": ["node:s896899f5a500", "alert:s0fd66cba968e", "push:s5c9f9745f42d", "jaeger:s5619bba2be59", "dskit:sb19d54a19636", "dskit:s23d81aeedf07"], "status": "REASONED", "verify": [1]},
@@ -758,6 +759,7 @@ from your own account's view of the process.
 - Loki v3.7.8 worker gRPC dial options: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L297-L310
 - Loki v3.7.8 frontend stream: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/frontend_processor.go#L49-L80
 - Loki v3.7.8 scheduler stream: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L87-L164
+- Loki v3.7.8 scheduler request handling and reply to the frontend address: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L183-L244
 - Loki v3.7.8 scheduler response gRPC dial: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L246-L335
 - Loki v3.7.8 frontend client pool construction: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L57
 - Loki v3.7.8 ingester client dial: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/client/client.go#L65-L91
