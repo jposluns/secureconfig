@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "6080452ef1167bfa3c1236016052b5b73eef4b0bc1829e784a0e4ea3e04f2b9a",
+  "body_sha256": "c5f777a2556c42ad1478c4b3419cd4f79941243c30e7f2e02f50cdce0d361469",
   "components": {
     "docker": {
       "name": "Docker documentation",
@@ -33,10 +33,10 @@ version_basis: {
     },
     "kubectl-134": {
       "name": "kubectl source",
-      "basis": "1.34.0",
+      "basis": "v1.34.0",
       "sources": {
         "s0906dc78482b": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L293-L310",
-        "s637f22f61d4f": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L173-L194",
+        "s1adb8cde69c0": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L103-L194",
         "sc98b92ba3ebf": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L591-L622",
         "s2ffc04de1d63": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/util/override_options.go#L29-L90"
       }
@@ -50,7 +50,7 @@ version_basis: {
     },
     "busybox-1361": {
       "name": "BusyBox source",
-      "basis": "1.36.1",
+      "basis": "1_36_1",
       "sources": {
         "s14b89daa008d": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59",
         "s34bdee292f79": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93",
@@ -79,7 +79,7 @@ version_basis: {
     "verify-user": {"text": "Compose exec app id must report a nonzero UID; the service name is project-scoped, unlike docker exec container names.", "components": ["docker"], "sources": ["docker:s6ca35cbd69e7", "docker:s8b7485a246e4"], "status": "REASONED", "verify": [1]},
     "verify-rootfs": {"text": "touch must first print WRITABLE on an owned existing path with read_only false, then blocked after recreation with true; ENOENT/EACCES or exit 0 do not discriminate.", "components": ["docker"], "sources": ["docker:s8b7485a246e4"], "status": "REASONED", "verify": [1]},
     "verify-context": {"text": "kubectl get reads declared context; inspect the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities, avoiding pause PID 1 in shared namespaces.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308"], "status": "REASONED", "verify": [1]},
-    "verify-probe": {"text": "Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified.", "components": ["kubernetes", "kubectl-134", "rfc7396", "busybox-1361"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7", "kubernetes:s953450b4076f", "kubectl-134:s0906dc78482b", "kubectl-134:s637f22f61d4f", "kubectl-134:sc98b92ba3ebf", "kubectl-134:s2ffc04de1d63", "rfc7396:sda39f95d0890", "busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s8a53fb647996"], "status": "REASONED", "verify": [1]},
+    "verify-probe": {"text": "Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified.", "components": ["kubernetes", "kubectl-134", "rfc7396", "busybox-1361"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7", "kubernetes:s953450b4076f", "kubectl-134:s0906dc78482b", "kubectl-134:s1adb8cde69c0", "kubectl-134:sc98b92ba3ebf", "kubectl-134:s2ffc04de1d63", "rfc7396:sda39f95d0890", "busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s8a53fb647996"], "status": "REASONED", "verify": [1]},
     "verify-segmentation": {"text": "The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED", "verify": [1]}
   }
 }
@@ -115,7 +115,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | verify-user: Compose exec app id must report a nonzero UID; the service name is project-scoped, unlike docker exec container names. | Docker documentation unknown | REASONED |
 | verify-rootfs: touch must first print WRITABLE on an owned existing path with read_only false, then blocked after recreation with true; ENOENT/EACCES or exit 0 do not discriminate. | Docker documentation unknown | REASONED |
 | verify-context: kubectl get reads declared context; inspect the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities, avoiding pause PID 1 in shared namespaces. | Kubernetes documentation unknown | REASONED |
-| verify-probe: Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified. | Kubernetes documentation unknown; kubectl source 1.34.0; JSON Merge Patch RFC 7396; BusyBox source 1.36.1 | REASONED |
+| verify-probe: Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified. | Kubernetes documentation unknown; kubectl source v1.34.0; JSON Merge Patch RFC 7396; BusyBox source 1_36_1 | REASONED |
 | verify-segmentation: The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently. | Kubernetes documentation unknown | REASONED |
 <!-- version-basis:end -->
 
@@ -288,7 +288,7 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
 - Kubernetes 1.34 Pod Security Admission enforcement (checked October 2026): https://v1-34.docs.kubernetes.io/docs/concepts/security/pod-security-admission/
 - Kubernetes 1.34 namespace labels and warnings for existing Pods (checked October 2026): https://v1-34.docs.kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/
 - kubectl 1.34.0 source, run name parameter (checked October 2026): https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L293-L310
-- kubectl 1.34.0 source, kubectl run registers the override flags (checked October 2026): https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L173-L194
+- kubectl 1.34.0 source, kubectl run registers the override flags (checked October 2026): https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L103-L194
 - kubectl 1.34.0 source, generation before override (checked October 2026): https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L591-L622
 - kubectl 1.34.0 source, default override method (checked October 2026): https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/util/override_options.go#L29-L90
 - RFC 7396, JSON Merge Patch section 2 (checked October 2026): https://www.rfc-editor.org/rfc/rfc7396#section-2
