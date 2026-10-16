@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "6b82fdb942b422182b643319ce1c508ad5dc220a9b473e74f53d13ad2bfc2468",
+  "body_sha256": "446edd1549806436e87b7ff775f5c0f205941e91653c81bf0df7016b6a03ec79",
   "components": {
     "sentry": {
       "name": "Sentry and self-hosted distribution",
@@ -173,7 +173,7 @@ Unverified until checked: the exact host bind in your Compose sample, whether MF
 ## Shared exposures
 
 - **The event data itself.** Both tools store stack traces with source context, request payloads, and user identifiers. An exposed backing store is reachable with the credentials the compose ships and expects on its internal network, so publishing it is a direct disclosure of every event it holds; an exposed web or API discloses to the degree an attacker can authenticate to it, which is why the registration default and the intake scrubbing both matter. Scrub at intake and keep the stores private.
-- **Open registration.** GlitchTip ships it on; Sentry ships it off. What a self-registered stranger then reaches differs by tool: Sentry's single-organization mode adds new sign-ups to the default organization, while at GlitchTip backend v6.2.6 [the login signal](https://gitlab.com/glitchtip/glitchtip-backend/-/blob/v6.2.6/apps/users/signals.py#L16-45) adds a user with a linked social provider to an organization linked to that provider on login, with the first member of a memberless organization becoming owner. Confirm your own membership and project permissions rather than assuming either extreme. Confirm the live setting rather than trusting the default.
+- **Open registration.** GlitchTip ships it on; Sentry ships it off. What a self-registered stranger then reaches differs by tool: Sentry's single-organization mode adds new sign-ups to the default organization, while at GlitchTip backend v6.2.6 [the login signal](https://gitlab.com/glitchtip/glitchtip-backend/-/blob/v6.2.6/apps/users/signals.py#L16-45) adds a user with a linked social provider to an organization linked to that provider on login, with the first member of a memberless organization becoming owner. Confirm your own membership and project permissions rather than assuming a new account has none or all. Confirm the live setting rather than trusting the default.
 - **The public DSN misread as a secret.** Rotating a DSN does not protect the tracker; authenticating its web and API does. Do not treat a leaked DSN as the incident.
 - **Plaintext.** Neither serves TLS natively, so an instance reachable without a terminating proxy sends session cookies and the event UI in the clear.
 
