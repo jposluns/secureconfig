@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "5999a81b25ecf7e3c1ecc08840edbdf5acc912af5d6eca546ff842cff95caf99",
+  "body_sha256": "0a29199a86c7502ca1904826f3ef39a380536028669e713632c4abb25fa98093",
   "components": {
     "docker-build": {
       "name": "Docker build and image history documentation",
@@ -151,7 +151,7 @@ version_basis: {
   },
   "claims": {
     "gitignore": {"text": "Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.", "components": ["owasp", "next", "git-ignore"], "sources": ["owasp:s26a987a1053b", "next:s964651d4eed4", "git-ignore:s90ce7c8605d9"], "status": "REASONED"},
-    "runtime-storage": {"text": "Load runtime secrets from environment or a secret manager; never put build secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build steps.", "components": ["owasp", "docker-build"], "sources": ["owasp:s26a987a1053b", "docker-build:sd8afa286c173", "docker-build:s07e00829f121"], "status": "REASONED"},
+    "runtime-storage": {"text": "Load secrets from environment or a secret manager; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. Docker image history shows image history; as this guide's assessment, it does not show every secret value.", "components": ["owasp", "docker-build"], "sources": ["owasp:s26a987a1053b", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s7752baa2c7bc"], "status": "REASONED"},
     "random": {"text": "Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.", "components": ["owasp", "openssl-rand", "python-secrets"], "sources": ["owasp:s26a987a1053b", "openssl-rand:s11d11381b080", "python-secrets:sd2e8196eaa96"], "status": "REASONED"},
     "scanners": {"text": "Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:s18cdf0069eb9", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
     "argv": {"text": "Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.", "components": ["proc", "apache"], "sources": ["proc:s801d5f1ee88d", "apache:scde9004bb967"], "status": "REASONED"},
@@ -187,7 +187,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | gitignore: Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked. | OWASP secret handling unknown; Next.js unknown; Git ignore patterns 2.42.0 | REASONED |
-| runtime-storage: Load runtime secrets from environment or a secret manager; never put build secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build steps. | OWASP secret handling unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
+| runtime-storage: Load secrets from environment or a secret manager; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. Docker image history shows image history; as this guide's assessment, it does not show every secret value. | OWASP secret handling unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | random: Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials. | OWASP secret handling unknown; OpenSSL random bytes 3.0; Python secrets 3.13 | REASONED |
 | scanners: Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner. | gitleaks command minimum 8.19+; TruffleHog unknown | REASONED |
 | argv: Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history. | Linux procfs unknown; htpasswd unknown | REASONED |
@@ -215,7 +215,7 @@ Leaked API keys and credentials in public repositories are the most common secur
 ## Rules
 
 1. **Secrets never enter version control.** Add `.env`, `.env.*` (frameworks such as Next.js load `.env.local` and `.env.production`, so ignoring `.env` alone leaves those committable), `*.key`, and `*.pem` to `.gitignore` before the first commit, allowlisting only a no-secret template such as `!.env.example`; `.gitignore` does not untrack a file that is already committed. Load secrets from environment variables or a secret manager (AWS Secrets Manager, Google Secret Manager, Azure Key Vault, or your platform's store per [paas.md](paas.md)).
-2. **Secrets never enter images or build logs.** Never put secrets in Dockerfile `ENV` or `ARG`: `ENV` persists in containers from the image, while build arguments may persist in image metadata, provenance attestations and image history. `docker image history` shows an image's history, not every secret value. Pass runtime secrets separately ([docker.md](docker.md)); for a secret needed during a build, use a temporary secret mount for that build instruction and do not copy or print it into the image. Do not print secrets in application or CI logs.
+2. **Secrets never enter images or build logs.** Never put secrets in Dockerfile `ENV` or `ARG`: Docker documents that both are exposed in the final image; `ENV` also persists in containers from the image, while build arguments may persist in image metadata, provenance attestations and image history. `docker image history` shows an image's history; as this guide's assessment, it does not show every secret value. Pass runtime secrets at runtime ([docker.md](docker.md)); for a secret needed during a build, use a temporary secret mount for that build instruction and do not copy or print it into the image. Do not print secrets in application or CI logs.
 3. **Generate secrets randomly** (`openssl rand -base64 32`; `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`), 1 per service and environment, never shared between staging and production.
 4. **Scan before every push.** [gitleaks](https://github.com/gitleaks/gitleaks) or [trufflehog](https://github.com/trufflesecurity/trufflehog) as a pre-commit hook and in CI:
    ```bash
