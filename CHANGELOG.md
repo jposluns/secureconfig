@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-16
 
+- `machine-auth.md` cites the OWASP password-storage and secrets-management cheat sheets, the OpenBao `v2.7.1` README and the AWS, Google Cloud, Azure, OpenBao, 1Password and Bitwarden product pages for API-key hashing and secret stores, and states the conditions under which hashed keys and platform identity give the protection described; `secrets.md` cites the AWS, Google Cloud and Azure overviews for its secret-store examples (row 1.179) (#590)
 - `secrets.md` cites the GNU Bash `bash-5.3` reference manual for hidden `read` input, tracing, allexport, `unset` and the `EXIT` trap, and the GNU grep manual pages for the supplementary scan's flags and exit status, and labels the history, argv and environment outcomes and the scan's limits as this guide's advice and assessment (row 1.179) (#587)
 - `self-hosted-idp.md` cites authentik `version/2026.8.3` core URL routes and the unversioned Docker Engine security and rootless-mode pages for its administration-routing and daemon-privilege statements, and labels listener topology, path-separation difficulty, rootful-socket host-root equivalence and the rootless blast radius as this guide's assessment (row 1.179) (#585)
 - `nodejs.md` cites Node.js `v24.22.0` documentation for `process.env`, `crypto.timingSafeEqual`, `NODE_TLS_REJECT_UNAUTHORIZED`, `rejectUnauthorized` and `NODE_EXTRA_CA_CERTS`, and labels the secret-storage advice and the HTTPS agent reach as this guide's advice and assessment (row 1.179) (#586)
