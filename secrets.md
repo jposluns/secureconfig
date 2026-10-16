@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "fecccfea5710e1cd4c002183464376e9447d5ec1467de5e80d82178b8ebce748",
+  "body_sha256": "e99f0fcc1524b98e1393a25a36ea06a29235918c450bb6ed4e012584b2ed41c9",
   "components": {
     "docker-build": {
       "name": "Docker build and image history documentation",
@@ -326,9 +326,9 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 - Docker build secrets (temporary mounts for build instructions), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22
 - Docker image history command (image history and creation-command output), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118
 - OWASP Secrets Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
-- AWS Secrets Manager overview (rolling): https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
-- Google Cloud Secret Manager overview (rolling): https://docs.cloud.google.com/secret-manager/docs/overview
-- Azure Key Vault overview (rolling): https://learn.microsoft.com/en-us/azure/key-vault/general/overview
+- AWS Secrets Manager overview (rolling, checked October 2026): https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
+- Google Cloud Secret Manager overview (rolling, checked October 2026): https://docs.cloud.google.com/secret-manager/docs/overview
+- Azure Key Vault overview (rolling, checked October 2026): https://learn.microsoft.com/en-us/azure/key-vault/general/overview
 - gitleaks (git/dir need 8.19+; v8.19.0 README): https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md
 - trufflehog: https://github.com/trufflesecurity/trufflehog
 - sops: https://github.com/getsops/sops and age: https://github.com/FiloSottile/age

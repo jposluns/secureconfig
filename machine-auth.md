@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "a8737ae124a7d9afbdd40bc9a1823ae3d270f163cd0eccfad3ee70f3536d2c0f",
+  "body_sha256": "26eb4bbc768da72f87e925ca41fb01e9eed85f931ea55dd6f8f38efcb0ba3fc9",
   "components": {
     "docker-build": {
       "name": "Docker build and image history documentation",
@@ -255,7 +255,7 @@ version_basis: {
     "key-lifetime": {"text": "Give keys expiries and scheduled rotation with a short overlap for continuity.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
     "bearer-transport": {"text": "Send bearer keys in Authorization headers over mandatory TLS; URLs leak through history and logs.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
     "constant-time": {"text": "Use hmac.compare_digest or crypto.timingSafeEqual rather than plain equality; the guide requires equal byte lengths.", "components": ["python", "node"], "sources": ["python:s7a54556e5dac", "node:s96b80e6816a2"], "status": "REASONED"},
-    "key-hash": {"text": "Where only verification is needed, store hashes of randomly generated keys and show plaintext once; as this guide's advice, a database dump does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing. Sources has no API-key hash-implementation reference specifying the algorithm, encoding, comparison, or key-generation entropy.", "components": ["bearer", "owasp-password", "owasp-secrets"], "sources": ["bearer:sefd3dd623da3", "owasp-password:scfb73a9d1029", "owasp-secrets:s3acb98020188"], "status": "REASONED"},
+    "key-hash": {"text": "As this guide's advice, where only verification is needed, store hashes of randomly generated keys and show plaintext once; as this guide's inference, a database dump does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing. Sources has no API-key hash-implementation reference specifying the algorithm, encoding, comparison, or key-generation entropy.", "components": ["bearer", "owasp-password", "owasp-secrets"], "sources": ["bearer:sefd3dd623da3", "owasp-password:scfb73a9d1029", "owasp-secrets:s3acb98020188"], "status": "REASONED"},
     "client-grant": {"text": "Confidential clients authenticate with grant_type=client_credentials for access tokens; refresh tokens SHOULD NOT be issued, so re-authenticate.", "components": ["oauth"], "sources": ["oauth:s65b02b1812cc"], "status": "REASONED"},
     "token-scope": {"text": "Request the narrowest scope or provider audience and bound access-token lifetime and reach.", "components": ["oauth", "bearer"], "sources": ["oauth:s65b02b1812cc", "bearer:sefd3dd623da3"], "status": "REASONED"},
     "jwt-validation": {"text": "Validate access-token signature, reject alg none, check exact issuer, API audience and expiry, require at+jwt for JWT access tokens, and enforce scopes.", "components": ["jwt"], "sources": ["jwt:sc36d79fcad94"], "status": "REASONED"},
@@ -306,7 +306,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | key-lifetime: Give keys expiries and scheduled rotation with a short overlap for continuity. | Bearer token guidance unknown | REASONED |
 | bearer-transport: Send bearer keys in Authorization headers over mandatory TLS; URLs leak through history and logs. | Bearer token guidance unknown | REASONED |
 | constant-time: Use hmac.compare_digest or crypto.timingSafeEqual rather than plain equality; the guide requires equal byte lengths. | Python hmac unknown; Node.js crypto unknown | REASONED |
-| key-hash: Where only verification is needed, store hashes of randomly generated keys and show plaintext once; as this guide's advice, a database dump does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing. Sources has no API-key hash-implementation reference specifying the algorithm, encoding, comparison, or key-generation entropy. | Bearer token guidance unknown; OWASP Password Storage Cheat Sheet 1a78ae3e443cef156e947f87e892efbcc62876ee; OWASP Secrets Management Cheat Sheet 1a78ae3e443cef156e947f87e892efbcc62876ee | REASONED |
+| key-hash: As this guide's advice, where only verification is needed, store hashes of randomly generated keys and show plaintext once; as this guide's inference, a database dump does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing. Sources has no API-key hash-implementation reference specifying the algorithm, encoding, comparison, or key-generation entropy. | Bearer token guidance unknown; OWASP Password Storage Cheat Sheet 1a78ae3e443cef156e947f87e892efbcc62876ee; OWASP Secrets Management Cheat Sheet 1a78ae3e443cef156e947f87e892efbcc62876ee | REASONED |
 | client-grant: Confidential clients authenticate with grant_type=client_credentials for access tokens; refresh tokens SHOULD NOT be issued, so re-authenticate. | OAuth client credentials unknown | REASONED |
 | token-scope: Request the narrowest scope or provider audience and bound access-token lifetime and reach. | OAuth client credentials unknown; Bearer token guidance unknown | REASONED |
 | jwt-validation: Validate access-token signature, reject alg none, check exact issuer, API audience and expiry, require at+jwt for JWT access tokens, and enforce scopes. | JWT access-token profile unknown | REASONED |
@@ -351,7 +351,7 @@ The simplest machine credential and the one that leaks most. When your service i
 - Give every key an expiry and rotate on a schedule, with a short overlap during which both keys work, so rotation is routine rather than an outage.
 - Send keys only in a header (`Authorization: Bearer ...`) over TLS, never in a URL. RFC 6750 makes TLS mandatory for bearer tokens and says they "SHOULD NOT be passed in page URLs", because URLs land in browser history, proxy logs, and server logs.
 - Compare the presented key in constant time: `hmac.compare_digest()` in Python, `crypto.timingSafeEqual()` in Node.js (both arguments must have the same byte length). A plain `==` stops at the first differing byte and leaks timing.
-- Where the service only needs to verify the key, as this guide's advice, issue a randomly generated key, store a hash of it and compare against the hash of the presented key. Show the plaintext once at creation; a database dump then does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing. Sources has no API-key hash-implementation reference specifying the algorithm, encoding, comparison, or key-generation entropy.
+- Where the service only needs to verify the key, as this guide's advice, issue a randomly generated key, store a hash of it and compare against the hash of the presented key. As this guide's advice, show the plaintext once at creation; as this guide's inference, a database dump then does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing. Sources has no API-key hash-implementation reference specifying the algorithm, encoding, comparison, or key-generation entropy.
 
 ## 2. OAuth 2.0 client credentials
 
@@ -422,15 +422,15 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 - SPIFFE and SPIRE: https://spiffe.io/ and https://spiffe.io/docs/latest/spire-about/
 - RFC 5280 (certificate revocation): https://www.rfc-editor.org/info/rfc5280/
 - Secret manager vendor pages: linked inline in section 5.
-- OWASP Password Storage Cheat Sheet (hashes can be guessed; password guidance is not an API-key hash implementation), at 1a78ae3e443cef156e947f87e892efbcc62876ee: https://github.com/OWASP/CheatSheetSeries/blob/1a78ae3e443cef156e947f87e892efbcc62876ee/cheatsheets/Password_Storage_Cheat_Sheet.md#L21-L47
-- OWASP Secrets Management Cheat Sheet (central storage and management), at 1a78ae3e443cef156e947f87e892efbcc62876ee: https://github.com/OWASP/CheatSheetSeries/blob/1a78ae3e443cef156e947f87e892efbcc62876ee/cheatsheets/Secrets_Management_Cheat_Sheet.md#L5-L7
-- AWS Secrets Manager overview (rolling): https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
-- Google Cloud Secret Manager overview (rolling): https://docs.cloud.google.com/secret-manager/docs/overview
-- Azure Key Vault overview (rolling): https://learn.microsoft.com/en-us/azure/key-vault/general/overview
-- OpenBao README (secret storage), v2.7.1: https://github.com/openbao/openbao/blob/v2.7.1/README.md#L47-L51
-- OpenBao website (fork and Linux Foundation OpenSSF attribution; rolling): https://openbao.org/
-- 1Password Secrets Automation (rolling): https://www.1password.dev/secrets-automation/
-- Bitwarden Secrets Manager overview (rolling): https://bitwarden.com/help/secrets-manager-overview/
+- OWASP Password Storage Cheat Sheet (hashes can be guessed; password guidance is not an API-key hash implementation), at 1a78ae3e443cef156e947f87e892efbcc62876ee (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/1a78ae3e443cef156e947f87e892efbcc62876ee/cheatsheets/Password_Storage_Cheat_Sheet.md#L21-L47
+- OWASP Secrets Management Cheat Sheet (central storage and management), at 1a78ae3e443cef156e947f87e892efbcc62876ee (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/1a78ae3e443cef156e947f87e892efbcc62876ee/cheatsheets/Secrets_Management_Cheat_Sheet.md#L5-L7
+- AWS Secrets Manager overview (rolling, checked October 2026): https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
+- Google Cloud Secret Manager overview (rolling, checked October 2026): https://docs.cloud.google.com/secret-manager/docs/overview
+- Azure Key Vault overview (rolling, checked October 2026): https://learn.microsoft.com/en-us/azure/key-vault/general/overview
+- OpenBao README (secret storage), v2.7.1 (checked October 2026): https://github.com/openbao/openbao/blob/v2.7.1/README.md#L47-L51
+- OpenBao website (fork and Linux Foundation OpenSSF attribution; rolling, checked October 2026): https://openbao.org/
+- 1Password Secrets Automation (rolling, checked October 2026): https://www.1password.dev/secrets-automation/
+- Bitwarden Secrets Manager overview (rolling, checked October 2026): https://bitwarden.com/help/secrets-manager-overview/
 - nginx release-1.28.0 `ssl_verify_client` directive and `on` value (checked October 2026): https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L76-L78 ; https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_ssl_module.c#L162-L167
 - Apache 2.4 `SSLVerifyClient require` (checked October 2026): https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslverifyclient
 - PostgreSQL 17 certificate authentication and `clientcert=verify-full` (checked October 2026): https://www.postgresql.org/docs/17/auth-cert.html
