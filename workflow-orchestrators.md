@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-10",
-  "body_sha256": "4f2c59651bfb304dc6ae614920a5a19adf051f6d87c77da79a086448e679a4cb",
+  "body_sha256": "ad056f0d9f96daa19f5844465f6a7ccb67fd374f27be783b4c7900ce17f8d955",
   "components": {
     "prefect": {
       "name": "Prefect Basic Auth minimum",
@@ -474,7 +474,7 @@ authentication backends for the FAB API, not the auth manager. Point FAB at LDAP
 and put MFA at that identity provider ([mfa.md](mfa.md), [identity-providers.md](identity-providers.md)). Keep
 `[core] simple_auth_manager_all_admins` unset or `False`, since setting it disables login and treats every
 visitor as an admin, and with FAB leave `[fab] auth_role_public` and legacy `AUTH_ROLE_PUBLIC` in `webserver_config.py` unset.
-A configured public role can make the FAB logged-in check pass for an anonymous visitor and supplies that
+A configured public role can make the FAB logged-in check pass for an anonymous visitor and can supply that
 role's permissions; check the effective configuration and anonymous API behavior after deployment.
 
 The official `docker-compose.yaml` takes the right first step and the wrong second one: it selects the FAB
@@ -493,7 +493,7 @@ secure the other. Keep configuration exposure off as well (`AIRFLOW__WEBSERVER__
 `AIRFLOW__API__EXPOSE_CONFIG=False` on 3.3.2). An exposed Airflow is also a credential store: its Connections
 and Variables hold credentials for the systems your DAGs reach, protected at rest by the `[core] fernet_key`
 (an empty key selects `_NullFernet`, which does not encrypt newly stored values; configured
-comma-separated keys use `MultiFernet`, so preserve keys needed to decrypt existing ciphertext), so restrict permissions on Connections and
+comma-separated keys use `MultiFernet`; preserve keys needed to decrypt existing ciphertext), so restrict permissions on Connections and
 Variables and protect the metadata database, the Fernet key, and any secrets backend, since encryption at rest
 and UI masking do not stop an authorized workload from using them. Keep every secret out of the repository
 ([secrets.md](secrets.md)), and publish 8080 to loopback for the proxy (`127.0.0.1:8080:8080`) rather than to
@@ -823,7 +823,7 @@ shares the directory.
 - Storing credentials in Airflow Connections and Variables, Prefect Blocks, or Temporal payloads without
   restricting who can retrieve or use them. UI masking and database encryption do not enforce caller
   authorization. Temporal client-side payload encryption adds a separate boundary: decoding requires the key or
-  access to a Codec Server with its own authentication and access restrictions.
+  access to a Codec Server, so authenticate and restrict any Codec Server separately.
 
 ## Sources (checked October 2026)
 
