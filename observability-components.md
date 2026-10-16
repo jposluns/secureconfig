@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "8d80d8d2d8a522710c99dfca39ca3937641c6afddaec75362c61cc834932edae",
+  "body_sha256": "5048ccbdababc07c1629523eb5eecdb3cf369502436993368a274dc886ac3fc6",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -605,7 +605,8 @@ There are two fixes, and you can use both:
   advertised and dial addresses, worker/frontend/scheduler settings, successful pushes and queries,
   and any compactor calls. The supplied snapshots do not show DNS/ring watcher internals,
   ingester and frontend client pool internals, worker-service address wiring
-  (`pkg/querier/worker_service.go`), every RPC hop, or live reachability. Remote components need a private address
+  (`pkg/querier/worker_service.go`), the processor manager
+  (`pkg/querier/worker/processor_manager.go`), every RPC hop, or live reachability. Remote components need a private address
   reachable from their hosts.
 
   Keep gRPC restricted to trusted callers: plaintext loopback is still reachable by local users.
