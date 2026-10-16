@@ -4302,13 +4302,13 @@ Application-level login is preferable ([authentication.md](authentication.md)). 
 sudo htpasswd -B -C 12 -c /etc/apache2/.htpasswd admin     # suggested Debian/Ubuntu path; /etc/httpd/conf/.htpasswd is the suggested RHEL/Fedora choice. -C 12 sets bcrypt cost; -c creates the file only for the first user
 ```
 
-Debian apache2 2.4.69-1 provides `htpasswd` in `apache2-utils`; Fedora f44 httpd packaging at commit 6df70d39 puts it in `httpd-tools`. In httpd 2.4.69, `-B` selects bcrypt, `-C` sets its cost, and the default bcrypt cost is 5. The OWASP cheat sheet at commit 72865b1e recommends a work factor of at least 10 for legacy bcrypt; 12 is this guide's choice. Both password-file paths above are guide choices. (https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-102; https://src.fedoraproject.org/rpms/httpd/blob/6df70d392dace11a7c01ceffc5d8a929de0b7a35/f/httpd.spec#_819-824; https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L43-L45; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295; https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13)
+Debian apache2 2.4.69-1 provides `htpasswd` in `apache2-utils`; Fedora f44 httpd packaging at commit 6df70d39 puts it in `httpd-tools`. In httpd 2.4.69, `-B` selects bcrypt, `-C` sets its cost, and the default bcrypt cost is 5. The OWASP cheat sheet at commit 72865b1e recommends a work factor of at least 10 for legacy bcrypt; 12 is this guide's choice. Both password-file paths above are guide choices. (https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1; https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-102; https://src.fedoraproject.org/rpms/httpd/blob/6df70d392dace11a7c01ceffc5d8a929de0b7a35/f/httpd.spec#_819-824; https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L43-L45; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295; https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13)
 
 ```apache
 <Location "/">
     AuthType Basic
     AuthName "Restricted"
-    # Debian/Ubuntu path; on RHEL/Fedora use /etc/httpd/conf/.htpasswd (match the htpasswd -c path above)
+    # suggested Debian/Ubuntu path; on RHEL/Fedora use /etc/httpd/conf/.htpasswd (match the htpasswd -c path above)
     AuthUserFile /etc/apache2/.htpasswd
     Require valid-user
 </Location>

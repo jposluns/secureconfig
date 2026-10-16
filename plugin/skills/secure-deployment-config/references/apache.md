@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "daf600be895b9cb611274a72bc448d3a1d9de3fa0458d3c1d10940d100059766",
+  "body_sha256": "2c408ae9ceaad3948b3b8beff6573a002d1f78e2a50140925ceeb11f30c423e5",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
@@ -122,7 +122,7 @@ version_basis: {
     "hsts": {"text": "Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere.", "components": ["apache"], "sources": ["apache:sde155f1667f3", "apache:s1dbb2636d050"], "status": "REASONED"},
     "cipher-policy": {"text": "Generate explicit cipher policy with Mozilla rather than copying old lists.", "components": ["policy"], "sources": ["policy:s529b0eabe2ed"], "status": "REASONED"},
     "redirect": {"text": "The 80 vhost sends a permanent redirect to the canonical HTTPS host; retain only redirects and needed ACME HTTP-01 paths.", "components": ["apache"], "sources": ["apache:sc07f97af99e3", "apache:sde155f1667f3"], "status": "REASONED"},
-    "password-file": {"text": "Create a bcrypt htpasswd file with cost 12 and -c only for its first user; httpd 2.4.69 defaults bcrypt cost to 5 and OWASP recommends at least 10 for legacy bcrypt. Both password-file paths are guide choices.", "components": ["apache", "debian-packaging", "fedora-packaging", "htpasswd", "owasp"], "sources": ["apache:s99dcb49d86a4", "debian-packaging:sd1c9de6b39aa", "fedora-packaging:s4479577a2e6a", "htpasswd:s309ecdd34379", "htpasswd:s7850e1e9dfa1", "htpasswd:s1c1a101a70e7", "owasp:s4531e65b6502"], "status": "REASONED"},
+    "password-file": {"text": "Create a bcrypt htpasswd file with cost 12 and -c only for its first user; httpd 2.4.69 defaults bcrypt cost to 5 and OWASP recommends at least 10 for legacy bcrypt. Both password-file paths are guide choices.", "components": ["apache", "debian-packaging", "fedora-packaging", "htpasswd", "owasp"], "sources": ["apache:s99dcb49d86a4", "debian-packaging:s62f6ed2866ab", "debian-packaging:sd1c9de6b39aa", "fedora-packaging:s4479577a2e6a", "htpasswd:s309ecdd34379", "htpasswd:s7850e1e9dfa1", "htpasswd:s1c1a101a70e7", "owasp:s4531e65b6502"], "status": "REASONED"},
     "basic": {"text": "AuthType Basic, AuthName, AuthUserFile and Require valid-user protect the chosen site/path over TLS; enumerate every public path.", "components": ["apache"], "sources": ["apache:s99dcb49d86a4"], "status": "REASONED"},
     "mtls": {"text": "A separate machine-client 443 vhost requires a trusted certificate with SSLVerifyClient require and depth 2; SSLCACertificateFile is server/vhost scoped.", "components": ["apache"], "sources": ["apache:scf804f4940d7"], "status": "REASONED"},
     "mfa": {"text": "Basic is single-factor; Authelia v4.39.28 says Apache is unsupported for its proxy integration, and mod_auth_openidc v2.4.20.3 is an OIDC relying party. Provider MFA is guide advice; Cloudflare Access is unsourced here.", "components": ["apache", "authelia", "openidc"], "sources": ["apache:s99dcb49d86a4", "authelia:s1de7fe72d011", "openidc:s01e183d16f03"], "status": "REASONED"},
@@ -229,13 +229,13 @@ Application-level login is preferable ([authentication.md](authentication.md)). 
 sudo htpasswd -B -C 12 -c /etc/apache2/.htpasswd admin     # suggested Debian/Ubuntu path; /etc/httpd/conf/.htpasswd is the suggested RHEL/Fedora choice. -C 12 sets bcrypt cost; -c creates the file only for the first user
 ```
 
-Debian apache2 2.4.69-1 provides `htpasswd` in `apache2-utils`; Fedora f44 httpd packaging at commit 6df70d39 puts it in `httpd-tools`. In httpd 2.4.69, `-B` selects bcrypt, `-C` sets its cost, and the default bcrypt cost is 5. The OWASP cheat sheet at commit 72865b1e recommends a work factor of at least 10 for legacy bcrypt; 12 is this guide's choice. Both password-file paths above are guide choices. (https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-102; https://src.fedoraproject.org/rpms/httpd/blob/6df70d392dace11a7c01ceffc5d8a929de0b7a35/f/httpd.spec#_819-824; https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L43-L45; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295; https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13)
+Debian apache2 2.4.69-1 provides `htpasswd` in `apache2-utils`; Fedora f44 httpd packaging at commit 6df70d39 puts it in `httpd-tools`. In httpd 2.4.69, `-B` selects bcrypt, `-C` sets its cost, and the default bcrypt cost is 5. The OWASP cheat sheet at commit 72865b1e recommends a work factor of at least 10 for legacy bcrypt; 12 is this guide's choice. Both password-file paths above are guide choices. (https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1; https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-102; https://src.fedoraproject.org/rpms/httpd/blob/6df70d392dace11a7c01ceffc5d8a929de0b7a35/f/httpd.spec#_819-824; https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L43-L45; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295; https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13)
 
 ```apache
 <Location "/">
     AuthType Basic
     AuthName "Restricted"
-    # Debian/Ubuntu path; on RHEL/Fedora use /etc/httpd/conf/.htpasswd (match the htpasswd -c path above)
+    # suggested Debian/Ubuntu path; on RHEL/Fedora use /etc/httpd/conf/.htpasswd (match the htpasswd -c path above)
     AuthUserFile /etc/apache2/.htpasswd
     Require valid-user
 </Location>
