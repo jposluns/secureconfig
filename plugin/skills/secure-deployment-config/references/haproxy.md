@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "a64424fb6da832582d87cbe563a9dece06b05addf1043fa5c01acd062ab8f08d",
+  "body_sha256": "dc2707842d367400f724c4c7ddf729d230b749aac129d77e4ca8f3abcf3faabd",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -65,7 +65,7 @@ version_basis: {
     "remote-backend": {"text": "Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
     "basic": {"text": "Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext.", "components": ["haproxy", "openssl-cli"], "sources": ["haproxy:s5792e6ff4990", "openssl-cli:s3b2ccc45875a"], "status": "REASONED"},
     "mtls": {"text": "For machine access, bind verify required with ca-file requires trusted client certificates.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
-    "mfa": {"text": "Basic is single-factor; Authelia uses its HAProxy Lua integration, or front the site with Cloudflare Access and require MFA in its application or policy.", "components": ["docs", "cloudflare-source"], "sources": ["docs:s192d42dd9feb", "cloudflare-source:sdcac732541da"], "status": "REASONED"},
+    "mfa": {"text": "Basic is single-factor; Authelia uses its HAProxy Lua integration, or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization).", "components": ["docs", "cloudflare-source"], "sources": ["docs:s192d42dd9feb", "cloudflare-source:sdcac732541da"], "status": "REASONED"},
     "maxconn": {"text": "Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
     "body-guard": {"text": "No single request-body-size directive: req.body_size reads advertised Content-Length; deny_status 413 rejects values above 10485760 without buffering.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
     "body-buffering": {"text": "Do not add http-buffer-request for this guard: it waits for a complete body or full request buffer.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
@@ -109,7 +109,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | remote-backend: Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name. | HAProxy 3.0 | REASONED |
 | basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. | HAProxy 3.0; OpenSSL password command 3.0 | REASONED |
 | mtls: For machine access, bind verify required with ca-file requires trusted client certificates. | HAProxy 3.0 | REASONED |
-| mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or front the site with Cloudflare Access and require MFA in its application or policy. | Supporting documentation unknown; Cloudflare Access MFA documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
+| mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization). | Supporting documentation unknown; Cloudflare Access MFA documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | maxconn: Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend. | HAProxy 3.0 | REASONED |
 | body-guard: No single request-body-size directive: req.body_size reads advertised Content-Length; deny_status 413 rejects values above 10485760 without buffering. | HAProxy 3.0 | REASONED |
 | body-buffering: Do not add http-buffer-request for this guard: it waits for a complete body or full request buffer. | HAProxy 3.0 | REASONED |
@@ -196,7 +196,7 @@ backend app
 
 `openssl passwd -6` prompts for the password. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `openssl` process while it runs. Hashed `password` entries rely on the system's crypt(3); `$6$` works on glibc-based Linux. Avoid `insecure-password`, which stores the password in cleartext in the configuration file. For machine-to-machine access, client certificates are stronger: add `verify required ca-file /etc/ssl/certs/internal-ca.crt` to the `bind :443` line.
 
-Basic authentication here is single-factor. For human-facing sites, add MFA with an [Authelia](https://www.authelia.com/) portal (HAProxy is supported through Authelia's Lua module) or by fronting the site with Cloudflare Access and requiring MFA in its application or policy; options in [mfa.md](mfa.md).
+Basic authentication here is single-factor. For human-facing sites, add MFA with an [Authelia](https://www.authelia.com/) portal (HAProxy is supported through Authelia's Lua module) or by fronting the site with Cloudflare Access and requiring MFA in its governing Access setting (policy over application over organization); options in [mfa.md](mfa.md).
 
 ## 3. Bound the expensive endpoints
 

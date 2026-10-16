@@ -5034,7 +5034,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | remote-backend: Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name. | HAProxy 3.0 | REASONED |
 | basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. | HAProxy 3.0; OpenSSL password command 3.0 | REASONED |
 | mtls: For machine access, bind verify required with ca-file requires trusted client certificates. | HAProxy 3.0 | REASONED |
-| mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or front the site with Cloudflare Access and require MFA in its application or policy. | Supporting documentation unknown; Cloudflare Access MFA documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
+| mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization). | Supporting documentation unknown; Cloudflare Access MFA documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | maxconn: Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend. | HAProxy 3.0 | REASONED |
 | body-guard: No single request-body-size directive: req.body_size reads advertised Content-Length; deny_status 413 rejects values above 10485760 without buffering. | HAProxy 3.0 | REASONED |
 | body-buffering: Do not add http-buffer-request for this guard: it waits for a complete body or full request buffer. | HAProxy 3.0 | REASONED |
@@ -5121,7 +5121,7 @@ backend app
 
 `openssl passwd -6` prompts for the password. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `openssl` process while it runs. Hashed `password` entries rely on the system's crypt(3); `$6$` works on glibc-based Linux. Avoid `insecure-password`, which stores the password in cleartext in the configuration file. For machine-to-machine access, client certificates are stronger: add `verify required ca-file /etc/ssl/certs/internal-ca.crt` to the `bind :443` line.
 
-Basic authentication here is single-factor. For human-facing sites, add MFA with an [Authelia](https://www.authelia.com/) portal (HAProxy is supported through Authelia's Lua module) or by fronting the site with Cloudflare Access and requiring MFA in its application or policy; options in [mfa.md](mfa.md).
+Basic authentication here is single-factor. For human-facing sites, add MFA with an [Authelia](https://www.authelia.com/) portal (HAProxy is supported through Authelia's Lua module) or by fronting the site with Cloudflare Access and requiring MFA in its governing Access setting (policy over application over organization); options in [mfa.md](mfa.md).
 
 ## 3. Bound the expensive endpoints
 
@@ -5318,7 +5318,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | basic: Attach bcrypt basicAuth to the router; Apache httpd 2.4.69 htpasswd -nB defaults to bcrypt cost 5, while -C 12 selects cost 12; OWASP at 72865b1e recommends 10 or more for legacy bcrypt. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Apache httpd htpasswd source 2.4.69; OWASP Password Storage Cheat Sheet 72865b1e3b5754246a101778dc00b37f9c233373 | REASONED |
 | compose-hash: Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | file-provider: Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
-| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access and require MFA in its application or policy. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Cloudflare Access MFA documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
+| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization). | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Cloudflare Access MFA documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | body-limit: Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size. | Traefik middleware documentation unknown | REASONED |
 | buffer-storage: memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size. | Traefik middleware documentation unknown | REASONED |
 | rate-limit: average=10 and burst=20 configure a rate cap, per source by default. | Traefik middleware documentation unknown | REASONED |
@@ -5429,7 +5429,7 @@ http:
           - "admin:$2y$12$REPLACE_WITH_HASH"
 ```
 
-Load that dynamic file with `providers.file.directory` (or `providers.file.filename`) in the static config, and when a Docker-labelled router references a file-defined middleware, qualify it as `app-auth@file`. basicAuth is single-factor. For human-facing sites, add MFA with the `forwardAuth` middleware pointed at [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy), or front the site with Cloudflare Access and require MFA in its application or policy; options in [mfa.md](mfa.md).
+Load that dynamic file with `providers.file.directory` (or `providers.file.filename`) in the static config, and when a Docker-labelled router references a file-defined middleware, qualify it as `app-auth@file`. basicAuth is single-factor. For human-facing sites, add MFA with the `forwardAuth` middleware pointed at [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy), or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization); options in [mfa.md](mfa.md).
 
 ## 4. Bound the expensive endpoints
 

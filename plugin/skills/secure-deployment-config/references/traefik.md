@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2be5ac9067f42aa718f6142f9a15a601a47422da1e0a61c917ae2ebf25f52771",
+  "body_sha256": "3711d236de91bcbb5cb037ad81e599b90ec9383255eb15dc1daba88d17f4b198",
   "components": {
     "traefik-docs": {
       "name": "Traefik documentation (rolling)",
@@ -106,7 +106,7 @@ version_basis: {
     "basic": {"text": "Attach bcrypt basicAuth to the router; Apache httpd 2.4.69 htpasswd -nB defaults to bcrypt cost 5, while -C 12 selects cost 12; OWASP at 72865b1e recommends 10 or more for legacy bcrypt.", "components": ["traefik-docs", "traefik-v3", "httpd-source", "owasp-source"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s5d7a6940f1dd", "httpd-source:sf711558bdf3c", "httpd-source:s4aa0f7f341fb", "httpd-source:s4482c55d79a2", "httpd-source:s309ecdd34379", "owasp-source:s4531e65b6502"], "status": "REASONED"},
     "compose-hash": {"text": "Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s5d7a6940f1dd"], "status": "REASONED"},
     "file-provider": {"text": "Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file.", "components": ["traefik-docs", "traefik-v3"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s3acb3f5b1778"], "status": "REASONED"},
-    "mfa": {"text": "Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access and require MFA in its application or policy.", "components": ["traefik-docs", "traefik-v3", "cloudflare-source"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s3cf7d994a56a", "cloudflare-source:sdcac732541da"], "status": "REASONED"},
+    "mfa": {"text": "Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization).", "components": ["traefik-docs", "traefik-v3", "cloudflare-source"], "sources": ["traefik-docs:scbc0f2135c78", "traefik-v3:s3cf7d994a56a", "cloudflare-source:sdcac732541da"], "status": "REASONED"},
     "body-limit": {"text": "Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size.", "components": ["middleware"], "sources": ["middleware:sd987195d64dd"], "status": "REASONED"},
     "buffer-storage": {"text": "memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size.", "components": ["middleware"], "sources": ["middleware:sd987195d64dd"], "status": "REASONED"},
     "rate-limit": {"text": "average=10 and burst=20 configure a rate cap, per source by default.", "components": ["middleware"], "sources": ["middleware:scf1b1e35ef5d"], "status": "REASONED"},
@@ -150,7 +150,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | basic: Attach bcrypt basicAuth to the router; Apache httpd 2.4.69 htpasswd -nB defaults to bcrypt cost 5, while -C 12 selects cost 12; OWASP at 72865b1e recommends 10 or more for legacy bcrypt. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Apache httpd htpasswd source 2.4.69; OWASP Password Storage Cheat Sheet 72865b1e3b5754246a101778dc00b37f9c233373 | REASONED |
 | compose-hash: Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | file-provider: Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
-| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access and require MFA in its application or policy. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Cloudflare Access MFA documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
+| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization). | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Cloudflare Access MFA documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | body-limit: Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size. | Traefik middleware documentation unknown | REASONED |
 | buffer-storage: memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size. | Traefik middleware documentation unknown | REASONED |
 | rate-limit: average=10 and burst=20 configure a rate cap, per source by default. | Traefik middleware documentation unknown | REASONED |
@@ -261,7 +261,7 @@ http:
           - "admin:$2y$12$REPLACE_WITH_HASH"
 ```
 
-Load that dynamic file with `providers.file.directory` (or `providers.file.filename`) in the static config, and when a Docker-labelled router references a file-defined middleware, qualify it as `app-auth@file`. basicAuth is single-factor. For human-facing sites, add MFA with the `forwardAuth` middleware pointed at [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy), or front the site with Cloudflare Access and require MFA in its application or policy; options in [mfa.md](mfa.md).
+Load that dynamic file with `providers.file.directory` (or `providers.file.filename`) in the static config, and when a Docker-labelled router references a file-defined middleware, qualify it as `app-auth@file`. basicAuth is single-factor. For human-facing sites, add MFA with the `forwardAuth` middleware pointed at [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy), or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization); options in [mfa.md](mfa.md).
 
 ## 4. Bound the expensive endpoints
 
