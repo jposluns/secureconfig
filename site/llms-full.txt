@@ -5728,7 +5728,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | tokens: This guide advises loading API keys and tokens from process.env, never from source literals, and comparing self-checked secret values with crypto.timingSafeEqual using equal-byte-length byte inputs; process.env exposes the user environment, while timingSafeEqual's input requirements and surrounding-code limit are documented. | Node.js documentation unknown; Node.js API documentation v24.22.0 | REASONED |
 | mfa: Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; the fronting identity layer is not covered by listed Sources. | express-session documentation unknown; otplib v12.0.1; qrcode v1.5.4 | REASONED |
 | tls-validation: This guide advises never setting NODE_TLS_REJECT_UNAUTHORIZED=0 for the Node.js process's TLS connections or rejectUnauthorized=false for a client TLS connection or an HTTPS agent whose requests use it; Node.js documents the TLS validation effects, and the agent reach is this guide's assessment of the documented options flow. | Node.js documentation unknown; Node.js API documentation v24.22.0 | REASONED |
-| client-ca: This guide advises setting NODE_EXTRA_CA_CERTS to a PEM file before launching Node.js for an internal CA or self-signed server; it extends well-known roots, is read only at launch, and is ignored with explicit ca options or when Node.js runs as setuid root or with Linux file capabilities. | Node.js documentation unknown; Node.js API documentation v24.22.0 | REASONED |
+| client-ca: This guide advises setting NODE_EXTRA_CA_CERTS to a PEM file before launching Node.js for an internal CA or self-signed server; it extends well-known roots, is read only at launch, and is ignored when Node.js runs as setuid root or with Linux file capabilities; neither it nor the well-known roots is used by a TLS or HTTPS client or server given an explicit ca option. | Node.js documentation unknown; Node.js API documentation v24.22.0 | REASONED |
 | verify-redirect: HTTP should return 301 with an HTTPS Location. | Node.js documentation unknown | REASONED |
 | verify-tls: HTTPS must succeed without -k and show Helmet headers. | Node.js documentation unknown; Helmet documentation unknown | REASONED |
 | verify-auth: A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial. | express-session documentation unknown | REASONED |
@@ -5877,10 +5877,10 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 - qrcode enrolment image generation (v1.5.4, checked October 2026): https://github.com/soldair/node-qrcode/blob/v1.5.4/README.md#L125-L129
 - Node.js `process.env` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/process.md#L1563-L1581
 - Node.js `crypto.timingSafeEqual` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/crypto.md#L6678-L6717
-- Node.js `NODE_EXTRA_CA_CERTS` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3568-L3587
+- Node.js `NODE_EXTRA_CA_CERTS` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3568-L3588
 - Node.js `NODE_TLS_REJECT_UNAUTHORIZED` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3940-L3944
-- Node.js `tls.connect` client `rejectUnauthorized` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1780-L1790
-- Node.js `https.Agent` options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L70-L102
+- Node.js `tls.connect` client `rejectUnauthorized` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1786-L1789
+- Node.js `https.Agent` options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L70-L103
 - Node.js `https.request` TLS options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L459-L472
 - Node.js HTTPS agent example (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L535-L548
 
