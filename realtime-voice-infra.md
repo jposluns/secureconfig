@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-12",
   "documentation_checked": "2026-09",
-  "body_sha256": "6af40ac45b7fc28594fd4311e72d94063028afd2b1496c07e0473fdab67a89cc",
+  "body_sha256": "cd41435cc43bcb961b5c0fda11f767286cebcab38099835c588b9bbb4bd14682",
   "components": {
     "livekit": {
       "name": "LiveKit",
@@ -17,7 +17,22 @@ version_basis: {
         "sdbaff31c14ce": "https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L181-L193",
         "s48a6c1203218": "https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L261-L266",
         "s646f86dd5bd7": "https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/turn.go#L315-L325",
-        "sdd5650ac94ff": "https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/rtcservice.go#L147-L149"
+        "sdd5650ac94ff": "https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/rtcservice.go#L147-L149",
+        "s8bb3ce9cd9a0": "https://github.com/livekit/livekit/blob/v1.13.7/go.mod#L24",
+        "s8a75ad33ca82": "https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/wire.go#L163-L172"
+      }
+    },
+    "livekit-protocol": {
+      "name": "LiveKit protocol",
+      "basis": "a4f4b5c0c23f167d0c07de1e1d7652125882e73c",
+      "sources": {
+        "sd50b1ad9e41a": "https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/notifier.go#L29-L101",
+        "s2a9e386b6f91": "https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/url_notifier.go#L267-L291",
+        "s56e3ca89a351": "https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/consts.go#L24-L33",
+        "s7bf1e6a499b7": "https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/verifier.go#L31-L66",
+        "sb9ab959afab6": "https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/auth/verifier.go#L37-L84",
+        "s7fcefd30e452": "https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/auth/accesstoken.go#L188-L199",
+        "s34f549cb9c10": "https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/auth/grants.go#L175-L177"
       }
     },
     "livekit-docs": {
@@ -108,7 +123,7 @@ version_basis: {
     "livekit-metrics": {"text": "Enabled metrics are unauthenticated unless prometheus.username/password are set.", "components": ["livekit"], "sources": ["livekit:s15a5a2b0b78b", "livekit:sc52b46730181", "livekit:s81618482f092"], "status": "REASONED"},
     "livekit-debug": {"text": "Debug/pprof, goroutine and room routes lack grant checks and can use debug_handler.port.", "components": ["livekit"], "sources": ["livekit:s15a5a2b0b78b", "livekit:sc52b46730181", "livekit:sdbaff31c14ce", "livekit:s48a6c1203218"], "status": "REASONED"},
     "livekit-turn-secret": {"text": "Embedded TURN derives credentials from the API secret.", "components": ["livekit"], "sources": ["livekit:sc52b46730181", "livekit:s646f86dd5bd7"], "status": "REASONED"},
-    "livekit-webhook": {"text": "Webhook receivers must verify the signing token and SHA-256 body hash; the webhook verifier is not cited.", "components": ["livekit-docs"], "sources": ["livekit-docs:sb6a31fba4f62"], "status": "REASONED"},
+    "livekit-webhook": {"text": "LiveKit signs webhook Authorization JWTs with the configured webhook API key's secret; the sha256 claim holds the base64 SHA-256 body hash; receivers verify both as webhook.Receive does.", "components": ["livekit", "livekit-protocol"], "sources": ["livekit:s8bb3ce9cd9a0", "livekit:s8a75ad33ca82", "livekit-protocol:sd50b1ad9e41a", "livekit-protocol:s2a9e386b6f91", "livekit-protocol:s56e3ca89a351", "livekit-protocol:s7bf1e6a499b7", "livekit-protocol:sb9ab959afab6", "livekit-protocol:s7fcefd30e452", "livekit-protocol:s34f549cb9c10"], "status": "REASONED"},
     "coturn-listeners": {"text": "STUN/TURN use UDP/TCP 3478 and TLS 5349; enabled interfaces are enumerated, not loopback-only.", "components": ["coturn"], "sources": ["coturn:sc4178412962b", "coturn:s5ec265938c96"], "status": "REASONED"},
     "coturn-dtls": {"text": "DTLS on 5349 is opt-in since 4.17.0 and requires dtls.", "components": ["dtls"], "sources": ["dtls:s24abe2486071"], "status": "REASONED"},
     "coturn-relays": {"text": "On-demand relay endpoints use min-port/max-port 49152-65535.", "components": ["coturn"], "sources": ["coturn:s5ec265938c96"], "status": "REASONED"},
@@ -172,7 +187,7 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 | livekit-metrics: Enabled metrics are unauthenticated unless prometheus.username/password are set. | LiveKit v1.13.7 | REASONED |
 | livekit-debug: Debug/pprof, goroutine and room routes lack grant checks and can use debug_handler.port. | LiveKit v1.13.7 | REASONED |
 | livekit-turn-secret: Embedded TURN derives credentials from the API secret. | LiveKit v1.13.7 | REASONED |
-| livekit-webhook: Webhook receivers must verify the signing token and SHA-256 body hash; the webhook verifier is not cited. | LiveKit documentation unknown | REASONED |
+| livekit-webhook: LiveKit signs webhook Authorization JWTs with the configured webhook API key's secret; the sha256 claim holds the base64 SHA-256 body hash; receivers verify both as webhook.Receive does. | LiveKit v1.13.7; LiveKit protocol a4f4b5c0c23f167d0c07de1e1d7652125882e73c | REASONED |
 | coturn-listeners: STUN/TURN use UDP/TCP 3478 and TLS 5349; enabled interfaces are enumerated, not loopback-only. | coturn 4.18.0 | REASONED |
 | coturn-dtls: DTLS on 5349 is opt-in since 4.17.0 and requires dtls. | coturn DTLS opt-in introduction 4.17.0 | REASONED |
 | coturn-relays: On-demand relay endpoints use min-port/max-port 49152-65535. | coturn 4.18.0 | REASONED |
@@ -243,7 +258,7 @@ rtc:
 REPLACE_WITH_GENERATED_API_KEY: "REPLACE_WITH_GENERATED_RANDOM_SECRET"
 ```
 
-LiveKit refuses a key file that grants any permission to others (it checks the world/other bits), so a world-readable `0644` file stops the server from starting; a group-readable `0640` passes that check, so create the file `0600` owned by the service account to keep the group out as well. Signaling TLS terminates at a reverse proxy or load balancer: the core server calls `Serve`, not `ServeTLS`, and there is no top-level signaling TLS flag, so front it with the [fronting-auth.md](fronting-auth.md) pattern and connect over `wss://`. A few surfaces are easy to leave open beside the main port: Prometheus metrics, when enabled, serve unauthenticated unless you set `prometheus.username`/`password`; the debug and profiling routes (`/debug/pprof/`, `/debug/goroutine`, `/debug/rooms`) carry no grant check and, with `debug_handler.port` set, listen on their own port; and the embedded TURN service derives its credentials from the same API secret, so a leaked secret also undermines TURN. Webhook receivers must verify both the signing token and the SHA-256 body hash, not merely accept TLS.
+LiveKit refuses a key file that grants any permission to others (it checks the world/other bits), so a world-readable `0644` file stops the server from starting; a group-readable `0640` passes that check, so create the file `0600` owned by the service account to keep the group out as well. Signaling TLS terminates at a reverse proxy or load balancer: the core server calls `Serve`, not `ServeTLS`, and there is no top-level signaling TLS flag, so front it with the [fronting-auth.md](fronting-auth.md) pattern and connect over `wss://`. A few surfaces are easy to leave open beside the main port: Prometheus metrics, when enabled, serve unauthenticated unless you set `prometheus.username`/`password`; the debug and profiling routes (`/debug/pprof/`, `/debug/goroutine`, `/debug/rooms`) carry no grant check and, with `debug_handler.port` set, listen on their own port; and the embedded TURN service derives its credentials from the same API secret, so a leaked secret also undermines TURN. LiveKit sends a webhook JWT in `Authorization`, signed with the configured `webhook.api_key` secret; its `sha256` claim holds the standard-base64 SHA-256 hash of the JSON body. Receivers must verify the JWT signature and compare that claim with a fresh hash of the received body, as protocol `webhook.Receive` does.
 
 Unverified until checked in your deployment: whether a Helm chart or package generator creates or overrides keys and binds, the effective bind of a distribution's sample config, and the JWT-library version your build pins.
 
@@ -514,6 +529,15 @@ REASONED: preceding block; what a deployment run of the s_client command does no
 - LiveKit v1.13.7 debug routes, separate server and listener (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L181-L193, https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L261-L266
 - LiveKit v1.13.7 embedded TURN password derivation from the API secret (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/turn.go#L315-L325
 - LiveKit v1.13.7 missing-grants HTTP 401 branch (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/rtcservice.go#L147-L149
+- LiveKit v1.13.7 protocol dependency (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/go.mod#L24
+- LiveKit v1.13.7 webhook API key lookup and notifier wiring (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/wire.go#L163-L172
+- LiveKit protocol webhook key and secret passed to URL notifiers (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/notifier.go#L29-L101
+- LiveKit protocol webhook JWT and standard-base64 SHA-256 body hash in `Authorization` (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/url_notifier.go#L267-L291
+- LiveKit protocol `Authorization` header name (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/consts.go#L24-L33
+- LiveKit protocol `webhook.Receive` token and body-hash verification (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/verifier.go#L31-L66
+- LiveKit protocol JWT issuer key lookup and HS256 verification (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/auth/verifier.go#L37-L84
+- LiveKit protocol HS256 token signing with API secret (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/auth/accesstoken.go#L188-L199
+- LiveKit protocol `sha256` claim name (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/auth/grants.go#L175-L177
 - coturn 4.18.0 Docker configuration enables lt-cred-mech (checked October 2026): https://github.com/coturn/coturn/blob/4.18.0/docker/coturn/turnserver.conf#L184
 - OpenSSL 3.0 s_client hostname, CA and fatal verification options (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
 - coturn 4.18.0 turnadmin key/password options and example (checked October 2026; lines 59, 105-110 and 125): https://raw.githubusercontent.com/coturn/coturn/4.18.0/README.turnadmin
