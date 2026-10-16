@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "fabcd977fd849010acba66c24503baf02db4fe0a6f84fc820b017135dc51d23d",
+  "body_sha256": "54ab38b5021e1755263e430e602d91b6b92852fbf93c27e7a14e736ca5864712",
   "components": {
     "ng": {
       "name": "nginx documentation",
@@ -53,6 +53,7 @@ version_basis: {
         "sabb195c173d5": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802",
         "sa930199b563a": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L74-L80",
         "seb1f8a9d91f9": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687",
+        "sf6eac8f6749d": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796",
         "s3df6e64cd6a3": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182",
         "sced570e33c0f": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138",
         "sfafe27857e33": "https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576"
@@ -90,7 +91,7 @@ version_basis: {
     "http2": {"text": "At nginx release-1.26.3, http2 on is the HTTP/2 module directive; nginx 1.25.1 introduced it and deprecated the older listen 443 ssl http2 parameter.", "components": ["ng", "nginx-source"], "sources": ["ng:s40bdf1af1596", "nginx-source:s002242c2d0cd", "nginx-source:sbea253fd242b", "nginx-source:s936193a42402"], "status": "REASONED"},
     "tokens": {"text": "server_tokens off suppresses nginx version in headers and error pages.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
     "hsts": {"text": "Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age.", "components": ["ng", "hsts", "nginx-source"], "sources": ["ng:s6a0728ca7609", "hsts:s3f5af5f440f9", "nginx-source:s0ae4e9bc8d07"], "status": "REASONED"},
-    "hsts-inheritance": {"text": "At nginx release-1.26.3, a location add_header replaces inherited server headers; always changes response-code coverage, not inheritance.", "components": ["ng", "nginx-source"], "sources": ["ng:s40bdf1af1596", "nginx-source:s0ae4e9bc8d07", "nginx-source:seb1f8a9d91f9"], "status": "REASONED"},
+    "hsts-inheritance": {"text": "At nginx release-1.26.3, a location add_header replaces inherited server headers; always changes response-code coverage, not inheritance.", "components": ["ng", "nginx-source"], "sources": ["ng:s40bdf1af1596", "nginx-source:s0ae4e9bc8d07", "nginx-source:seb1f8a9d91f9", "nginx-source:sf6eac8f6749d"], "status": "REASONED"},
     "proxy": {"text": "Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
     "forwarded-host": {"text": "Overwrite X-Forwarded-Host: client-set values otherwise pass upstream.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
     "cipher-policy": {"text": "Use Mozilla for explicit cipher policy; retain the stated protocol floor.", "components": ["ng", "policy"], "sources": ["ng:s6a0728ca7609", "policy:s529b0eabe2ed"], "status": "REASONED"},
@@ -345,7 +346,7 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 ## Common mistakes
 
 - The app still listens on `0.0.0.0:3000` next to the proxy, so the proxy's TLS and auth are bypassed. Bind the app to `127.0.0.1` and confirm with `ss -tlnp`.
-- `add_header` in a `location` block silently drops ALL headers inherited from `server`. That is inheritance, which `always` does not change (`always` changes which response codes the header is added to, not inheritance). Keep HSTS at the `server` level, and if a `location` needs its own `add_header`, re-declare HSTS inside it too. At nginx release-1.26.3, the [header merge code](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687) inherits parent headers only when the child has no header list.
+- `add_header` in a `location` block silently drops ALL headers inherited from `server`. That is inheritance, which `always` does not change (`always` changes which response codes the header is added to, not inheritance). Keep HSTS at the `server` level, and if a `location` needs its own `add_header`, re-declare HSTS inside it too. At nginx release-1.26.3, the [header merge code](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687) inherits parent headers only when the child has no header list, and each `add_header` creates that level's own list ([directive handler](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796)).
 - A default `server` block that still serves plain HTTP for unmatched hosts; give the catch-all `default_server` a `return 444;` (or a redirect to the literal canonical host), not the `$host`-reflecting redirect above.
 - `auth_basic` on `/` but a later `location` (for example `/static`) that re-opens access; `auth_basic off` should be a deliberate exception, not an accident.
 
@@ -371,6 +372,7 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 - nginx release-1.26.3 ssl mtls check (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802
 - nginx release-1.26.3 ssl_verify_client values (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L74-L80
 - nginx release-1.26.3 headers merge (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687
+- nginx release-1.26.3 add_header list creation (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796
 - nginx release-1.26.3 auth request (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182
 - nginx release-1.26.3 HTTP status codes (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138
 - nginx release-1.26.3 ticket rotation (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576
