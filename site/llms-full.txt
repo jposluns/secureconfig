@@ -4221,7 +4221,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | certbot: The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off. | Apache HTTP Server 2.4; Certbot Apache installation v2.3.0 | REASONED |
-| modules: Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; package-command sources are absent. | Apache HTTP Server 2.4 | REASONED |
+| modules: Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; pinned packaging shows a2enmod, a2ensite (a link to a2enmod), default-ssl, and Fedora package names. | Apache HTTP Server 2.4; Debian apache2 packaging 2.4.69-1; Fedora f44 httpd packaging commit 6df70d39 | REASONED |
 | tls: The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only. | Apache HTTP Server 2.4 | REASONED |
 | tls-version: TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1. | Apache HTTP Server 2.4; Apache TLSv1.3 minimum 2.4.36+; OpenSSL qualification 1.1.1+ | REASONED |
 | vhost-floor: Independent per-vhost SSLProtocol needs Apache 2.4.42+, OpenSSL 1.1.1+ and client SNI; older builds also need the floor in global/base config. | Apache HTTP Server 2.4; Apache per-vhost protocol minimum 2.4.42+; OpenSSL qualification 1.1.1+ | REASONED |
@@ -4229,10 +4229,10 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | hsts: Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere. | Apache HTTP Server 2.4 | REASONED |
 | cipher-policy: Generate explicit cipher policy with Mozilla rather than copying old lists. | Mozilla TLS policy unknown | REASONED |
 | redirect: The 80 vhost sends a permanent redirect to the canonical HTTPS host; retain only redirects and needed ACME HTTP-01 paths. | Apache HTTP Server 2.4 | REASONED |
-| password-file: Create a bcrypt htpasswd file with cost 12 and -c only for its first user; paths differ by distribution. Cost defaults and OWASP guidance are not directly cited. | Apache HTTP Server 2.4 | REASONED |
+| password-file: Create a bcrypt htpasswd file with cost 12 and -c only for its first user; httpd 2.4.69 defaults bcrypt cost to 5 and OWASP recommends at least 10 for legacy bcrypt. Both password-file paths are guide choices. | Apache HTTP Server 2.4; Debian apache2 packaging 2.4.69-1; Fedora f44 httpd packaging commit 6df70d39; httpd htpasswd 2.4.69; OWASP password storage cheat sheet commit 72865b1e | REASONED |
 | basic: AuthType Basic, AuthName, AuthUserFile and Require valid-user protect the chosen site/path over TLS; enumerate every public path. | Apache HTTP Server 2.4 | REASONED |
 | mtls: A separate machine-client 443 vhost requires a trusted certificate with SSLVerifyClient require and depth 2; SSLCACertificateFile is server/vhost scoped. | Apache HTTP Server 2.4 | REASONED |
-| mfa: Basic is single-factor; the guide says Authelia does not support Apache and proposes mod_auth_openidc with IdP MFA or Cloudflare Access. Integration sources are absent. | Apache HTTP Server 2.4 | REASONED |
+| mfa: Basic is single-factor; Authelia v4.39.28 says Apache is unsupported for its proxy integration, and mod_auth_openidc v2.4.20.3 is an OIDC relying party. Provider MFA is guide advice; Cloudflare Access is unsourced here. | Apache HTTP Server 2.4; Authelia proxy support v4.39.28; mod_auth_openidc v2.4.20.3 | REASONED |
 | key-permissions: Keep private keys root-owned and mode 0600. | Apache HTTP Server 2.4 | REASONED |
 | verify-config: Run apachectl configtest before service reload; no outcome is recorded. | Apache HTTP Server 2.4 | REASONED |
 | verify-redirect: HTTP should return 301 with an HTTPS Location. | Apache HTTP Server 2.4 | REASONED |
@@ -4254,6 +4254,8 @@ sudo a2ensite default-ssl        # or your own :443 vhost file
 # RHEL/Fedora
 sudo dnf install mod_ssl httpd-tools
 ```
+
+Debian apache2 2.4.69-1 installs `a2enmod`, links `a2ensite` to it, and ships the `default-ssl` configuration. Fedora f44 httpd packaging at commit 6df70d39 defines the `mod_ssl` and `httpd-tools` packages. These packaging citations do not establish every Debian/Ubuntu or RHEL release. (https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1; https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.install#L1-7; https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.links#L7; https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/config-dir/sites-available/default-ssl.conf#L1-4; https://src.fedoraproject.org/rpms/httpd/blob/6df70d392dace11a7c01ceffc5d8a929de0b7a35/f/httpd.spec#_204-212)
 
 ## 2. Configure the HTTPS virtual host
 
@@ -4297,14 +4299,16 @@ Keep port 80 serving only this redirect (and ACME HTTP-01 challenges if certbot 
 Application-level login is preferable ([authentication.md](authentication.md)). To gate a whole site or path at the server, use basic authentication over TLS with bcrypt-hashed entries:
 
 ```bash
-sudo htpasswd -B -C 12 -c /etc/apache2/.htpasswd admin     # Debian/Ubuntu path; on RHEL/Fedora use /etc/httpd/conf/.htpasswd. -C 12 sets bcrypt cost (bare -B is 5, below the OWASP minimum of 10); -c only for the first user
+sudo htpasswd -B -C 12 -c /etc/apache2/.htpasswd admin     # suggested Debian/Ubuntu path; /etc/httpd/conf/.htpasswd is the suggested RHEL/Fedora choice. -C 12 sets bcrypt cost; -c creates the file only for the first user
 ```
+
+Debian apache2 2.4.69-1 provides `htpasswd` in `apache2-utils`; Fedora f44 httpd packaging at commit 6df70d39 puts it in `httpd-tools`. In httpd 2.4.69, `-B` selects bcrypt, `-C` sets its cost, and the default bcrypt cost is 5. The OWASP cheat sheet at commit 72865b1e recommends a work factor of at least 10 for legacy bcrypt; 12 is this guide's choice. Both password-file paths above are guide choices. (https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1; https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-102; https://src.fedoraproject.org/rpms/httpd/blob/6df70d392dace11a7c01ceffc5d8a929de0b7a35/f/httpd.spec#_819-824; https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L43-L45; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295; https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13)
 
 ```apache
 <Location "/">
     AuthType Basic
     AuthName "Restricted"
-    # Debian/Ubuntu path; on RHEL/Fedora use /etc/httpd/conf/.htpasswd (match the htpasswd -c path above)
+    # suggested Debian/Ubuntu path; on RHEL/Fedora use /etc/httpd/conf/.htpasswd (match the htpasswd -c path above)
     AuthUserFile /etc/apache2/.htpasswd
     Require valid-user
 </Location>
@@ -4318,7 +4322,7 @@ SSLVerifyClient require
 SSLVerifyDepth 2
 ```
 
-Basic authentication is single-factor, and Authelia documents Apache as unsupported for its portal. For human-facing sites, add MFA by making Apache an OIDC client with [mod_auth_openidc](https://github.com/OpenIDC/mod_auth_openidc), with MFA enforced at the identity provider, or by fronting the site with Cloudflare Access; options in [mfa.md](mfa.md).
+Basic authentication is single-factor. Authelia v4.39.28 says Apache is unsupported for its proxy integration (https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L112-L115). For human-facing sites, use [mod_auth_openidc](https://github.com/OpenIDC/mod_auth_openidc) v2.4.20.3 to make Apache an OIDC relying party (https://github.com/OpenIDC/mod_auth_openidc/blob/v2.4.20.3/README.md#L11-L20), and configure MFA at the identity provider as this guide advises. Cloudflare Access is another suggested option, but it is unsourced here; see [mfa.md](mfa.md).
 
 ## 5. Verify (REASONED: all Verify scenarios follow the cited Apache documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment fixture.)
 
@@ -4383,6 +4387,14 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 - Certbot v2.3.0 redirect default and enhancement application (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L646 ; https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L674-L677
 - Certbot v2.3.0 redirect and opt-in HSTS defaults (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/constants.py#L66-L68
 - Apache 2.4 `Header always set` response-header handling (checked October 2026): https://httpd.apache.org/docs/2.4/mod/mod_headers.html
+- Debian apache2 packaging version 2.4.69-1 (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1
+- Debian apache2 2.4.69-1 helper, `a2ensite` link and default SSL configuration: https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.install#L1-7 ; https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.links#L7 ; https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/config-dir/sites-available/default-ssl.conf#L1-4
+- Debian apache2 2.4.69-1 `apache2-utils` package: https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-102
+- Fedora f44 httpd packaging at commit 6df70d39 package definitions and `htpasswd` file list: https://src.fedoraproject.org/rpms/httpd/blob/6df70d392dace11a7c01ceffc5d8a929de0b7a35/f/httpd.spec#_204-212 ; https://src.fedoraproject.org/rpms/httpd/blob/6df70d392dace11a7c01ceffc5d8a929de0b7a35/f/httpd.spec#_819-824
+- httpd 2.4.69 `htpasswd` options and bcrypt default: https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128 ; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L43-L45 ; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295
+- OWASP cheat sheet at commit 72865b1e legacy bcrypt guidance: https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
+- Authelia v4.39.28 Apache proxy support: https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L112-L115
+- mod_auth_openidc v2.4.20.3 relying-party description: https://github.com/OpenIDC/mod_auth_openidc/blob/v2.4.20.3/README.md#L11-L20
 
 ======================================================================
 ==> nginx.md
@@ -4401,19 +4413,19 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | --- | --- | --- |
 | certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. | nginx documentation unknown; Certbot nginx configurator v2.3.0 | REASONED |
 | tls: 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off. | nginx documentation unknown | REASONED |
-| http2: http2 on requires nginx 1.25.1+; older versions use listen 443 ssl http2. No HTTP/2 module source is listed. | nginx documentation unknown | REASONED |
+| http2: At nginx release-1.26.3, http2 on is the HTTP/2 module directive; nginx 1.25.1 introduced it and deprecated the older listen 443 ssl http2 parameter. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
 | tokens: server_tokens off suppresses nginx version in headers and error pages. | nginx documentation unknown | REASONED |
-| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. | nginx documentation unknown; HSTS specification RFC 6797; nginx header-filter source release-1.26.3 | REASONED |
-| hsts-inheritance: A location add_header drops inherited server headers; always changes response-code coverage, not inheritance. This claim cites no source for add_header inheritance. | nginx documentation unknown; nginx header-filter source release-1.26.3 | REASONED |
+| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. | nginx documentation unknown; HSTS specification RFC 6797; nginx source release-1.26.3 | REASONED |
+| hsts-inheritance: At nginx release-1.26.3, a location add_header replaces inherited server headers; always changes response-code coverage, not inheritance. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
 | proxy: Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host. | nginx documentation unknown | REASONED |
 | forwarded-host: Overwrite X-Forwarded-Host: client-set values otherwise pass upstream. | nginx documentation unknown | REASONED |
 | cipher-policy: Use Mozilla for explicit cipher policy; retain the stated protocol floor. | nginx documentation unknown; Mozilla TLS policy unknown | REASONED |
-| tickets: ssl_session_tickets defaults on; disable tickets or use a shared cache on nginx 1.23.2+ for automatic key rotation. The SSL module source is not listed. | nginx documentation unknown | REASONED |
+| tickets: At nginx release-1.26.3, ssl_session_tickets defaults on; nginx 1.23.2 introduced automatic ticket-key rotation with a shared ssl_session_cache. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
 | redirect: Port 80 on IPv4/IPv6 redirects with 301; a default server reflecting $host can redirect unmatched hosts off-site, so use 444 or a canonical host. | nginx documentation unknown | REASONED |
-| password-file: Install apache2-utils and create the bcrypt password file at cost 12; bare -B cost 5 and OWASP minimum 10 are not directly sourced here. | nginx documentation unknown | REASONED |
+| password-file: At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils. | nginx documentation unknown; Apache httpd source 2.4.69; OWASP Password Storage Cheat Sheet commit 72865b1e; Debian apache2 packaging 2.4.69-1 | REASONED |
 | basic: auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers. | nginx documentation unknown | REASONED |
-| mtls: ssl_client_certificate and ssl_verify_client on require trusted client certificates; the SSL module source is not listed. | nginx documentation unknown | REASONED |
-| mfa: Basic is single-factor; the guide proposes auth_request with Authelia/oauth2-proxy or Cloudflare Access. Integration sources are not listed. | nginx documentation unknown | REASONED |
+| mtls: At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
+| mfa: At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia, oauth2-proxy and Cloudflare Access integration claims are not covered by the nginx source cited here. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
 | body-limit: client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check. | nginx documentation unknown | REASONED |
 | rate-limit: Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503. | nginx documentation unknown | REASONED |
 | connection-limit: limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503. | nginx documentation unknown | REASONED |
@@ -4461,7 +4473,9 @@ server {
 }
 ```
 
-For explicit cipher lists, generate them with the [Mozilla SSL Configuration Generator](https://ssl-config.mozilla.org/) instead of copying from old tutorials; the protocol floor above is the part that must not be omitted. nginx defaults `ssl_session_tickets on`, and un-rotated ticket keys weaken forward secrecy: either set `ssl_session_tickets off`, or on nginx 1.23.2+ give it a shared `ssl_session_cache` so it rotates the ticket keys automatically.
+At nginx release-1.26.3, the HTTP/2 module provides `http2 on`; nginx 1.25.1 introduced it and deprecated the older `listen ... http2` parameter ([module](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/v2/ngx_http_v2_module.c#L76-L81), [changelog](https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L470-L480), [listen parser](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L4181-L4188)).
+
+For explicit cipher lists, generate them with the [Mozilla SSL Configuration Generator](https://ssl-config.mozilla.org/) instead of copying from old tutorials; the protocol floor above is the part that must not be omitted. nginx defaults `ssl_session_tickets on`, and un-rotated ticket keys weaken forward secrecy: either set `ssl_session_tickets off`, or on nginx 1.23.2+ give it a shared `ssl_session_cache` so it rotates the ticket keys automatically. At nginx release-1.26.3, the default-on setting and shared-cache rotation are supported by the [SSL module](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L857-L862), [1.23.2 changelog](https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L739-L775) and [rotation code](https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576).
 
 ## 2. Redirect HTTP to HTTPS
 
@@ -4485,6 +4499,8 @@ sudo apt install apache2-utils          # provides htpasswd
 sudo htpasswd -B -C 12 -c /etc/nginx/.htpasswd admin   # -C 12 sets bcrypt cost; bare -B is 5, below the OWASP minimum of 10
 ```
 
+At httpd 2.4.69, `htpasswd -B` selects bcrypt, `-C` sets its cost, and omitting `-C` uses cost 5 ([htpasswd usage](https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128), [default constant](https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45), [bcrypt call](https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295), [cost option](https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L382)). The OWASP cheat sheet at commit 72865b1e recommends a work factor of at least 10 for legacy bcrypt ([OWASP recommendation](https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13)). Debian's apache2 packaging at 2.4.69-1 ([changelog](https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1)) lists `htpasswd` among the programs in `apache2-utils` ([package description](https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-101)); other distributions may package it differently.
+
 ```nginx
     # this is section 1's `location /`, now also carrying the auth directives - do not paste a second
     # `location /`; the proxy_set_header lines must stay, or the app loses Host / the forwarded headers
@@ -4506,7 +4522,9 @@ Mutual TLS for machine-to-machine access:
     ssl_verify_client on;
 ```
 
-Basic authentication is single-factor. For human-facing sites, add MFA with the `auth_request` mechanism pointed at an [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy) portal, or front the site with Cloudflare Access; options in [mfa.md](mfa.md).
+At nginx release-1.26.3, these directives configure client-certificate verification ([directive definitions](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L153-L172)), and `ssl_verify_client on` or `optional` without `ssl_client_certificate` fails the [configuration check](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802) ("no ssl_client_certificate for ssl_verify_client"); `optional_no_ca` ([enum value 3](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L74-L80)) is exempt.
+
+Basic authentication is single-factor. For human-facing sites, add MFA with the `auth_request` mechanism pointed at an [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy) portal, or front the site with Cloudflare Access; options in [mfa.md](mfa.md). At nginx release-1.26.3, `auth_request` accepts a subrequest status from `NGX_HTTP_OK` (200) up to `NGX_HTTP_SPECIAL_RESPONSE` (300, exclusive), returns 401 or 403 as received, and answers any other status with 500 ([module handler](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182), [status codes](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138)). The nginx source cited here does not cover the Authelia, oauth2-proxy or Cloudflare Access integrations.
 
 ## 4. Bound the expensive endpoints
 
@@ -4611,7 +4629,7 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 ## Common mistakes
 
 - The app still listens on `0.0.0.0:3000` next to the proxy, so the proxy's TLS and auth are bypassed. Bind the app to `127.0.0.1` and confirm with `ss -tlnp`.
-- `add_header` in a `location` block silently drops ALL headers inherited from `server`. That is inheritance, which `always` does not change (`always` changes which response codes the header is added to, not inheritance). Keep HSTS at the `server` level, and if a `location` needs its own `add_header`, re-declare HSTS inside it too.
+- `add_header` in a `location` block silently drops ALL headers inherited from `server`. That is inheritance, which `always` does not change (`always` changes which response codes the header is added to, not inheritance). Keep HSTS at the `server` level, and if a `location` needs its own `add_header`, re-declare HSTS inside it too. At nginx release-1.26.3, the [header merge code](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687) inherits parent headers only when the child has no header list, and the first `add_header` at a level creates that level's own list ([directive handler](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796)).
 - A default `server` block that still serves plain HTTP for unmatched hosts; give the catch-all `default_server` a `return 444;` (or a redirect to the literal canonical host), not the `$host`-reflecting redirect above.
 - `auth_basic` on `/` but a later `location` (for example `/static`) that re-opens access; `auth_basic off` should be a deliberate exception, not an accident.
 
@@ -4628,6 +4646,26 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 - Certbot v2.3.0 nginx server-block installation (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot-nginx/certbot_nginx/_internal/configurator.py#L711
 - RFC 6797 HSTS policy lifetime and subdomains (checked October 2026): https://www.rfc-editor.org/rfc/rfc6797.html#section-6.1.2
 - nginx release-1.26.3 header-filter `always` handling (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218
+- nginx release-1.26.3 changes http2 (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L470-L480
+- nginx release-1.26.3 changes tickets (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L739-L775
+- nginx release-1.26.3 http2 (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/v2/ngx_http_v2_module.c#L76-L81
+- nginx release-1.26.3 listen http2 (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L4181-L4188
+- nginx release-1.26.3 ssl tickets (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L857-L862
+- nginx release-1.26.3 ssl mtls (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L153-L172
+- nginx release-1.26.3 ssl mtls check (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802
+- nginx release-1.26.3 ssl_verify_client values (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L74-L80
+- nginx release-1.26.3 headers merge (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687
+- nginx release-1.26.3 add_header list creation (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796
+- nginx release-1.26.3 auth request (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182
+- nginx release-1.26.3 HTTP status codes (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138
+- nginx release-1.26.3 ticket rotation (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576
+- Apache httpd 2.4.69 htpasswd (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128
+- Apache httpd 2.4.69 bcrypt default (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45
+- Apache httpd 2.4.69 bcrypt use (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295
+- Apache httpd 2.4.69 bcrypt cost (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L382
+- Debian apache2 2.4.69-1 `apache2-utils` package description listing htpasswd (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-101
+- Debian apache2 packaging version 2.4.69-1 (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1
+- OWASP Password Storage Cheat Sheet at commit 72865b1e (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
 
 ======================================================================
 ==> lighttpd.md
@@ -27809,7 +27847,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | glitchtip-secret: Use a unique SECRET_KEY for Django signing and keep it out of version control. | GlitchTip documentation unknown | REASONED |
 | glitchtip-mfa: Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version. | GlitchTip MFA announcement unknown | REASONED |
 | glitchtip-stores: Keep PostgreSQL and optional Valkey or Redis internal. | GlitchTip documentation unknown | REASONED |
-| membership: Sentry single-organization signups join the default organization; GlitchTip accounts and membership differ. The GlitchTip membership implementation is not cited. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
+| membership: Sentry single-organization signups join the default organization; at GlitchTip backend v6.2.6, on login the signal adds a user with a linked social provider to an organization linked to that provider, with the first member of a memberless organization becoming owner. | Sentry and self-hosted distribution 26.8.0; GlitchTip backend v6.2.6 | REASONED |
 | verify-listeners: Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
 | verify-sentry: Follow the single-organization login redirect and inspect the create-account path; HTTP 200 alone cannot distinguish registration. | Sentry and self-hosted distribution 26.8.0 | REASONED |
 | verify-glitchtip: On an operator-controlled fixture, signup succeeds with registration True and is refused with False after the first user. | GlitchTip documentation unknown | REASONED |
@@ -27878,7 +27916,7 @@ Unverified until checked: the exact host bind in your Compose sample, whether MF
 ## Shared exposures
 
 - **The event data itself.** Both tools store stack traces with source context, request payloads, and user identifiers. An exposed backing store is reachable with the credentials the compose ships and expects on its internal network, so publishing it is a direct disclosure of every event it holds; an exposed web or API discloses to the degree an attacker can authenticate to it, which is why the registration default and the intake scrubbing both matter. Scrub at intake and keep the stores private.
-- **Open registration.** GlitchTip ships it on; Sentry ships it off. What a self-registered stranger then reaches differs by tool: Sentry's single-organization mode adds new sign-ups to the default organization, while a GlitchTip account is separate from organization membership, so confirm your own membership and project permissions rather than assuming either extreme. Confirm the live setting rather than trusting the default.
+- **Open registration.** GlitchTip ships it on; Sentry ships it off. What a self-registered stranger then reaches differs by tool: Sentry's single-organization mode adds new sign-ups to the default organization, while at GlitchTip backend v6.2.6 [the login signal](https://gitlab.com/glitchtip/glitchtip-backend/-/blob/v6.2.6/apps/users/signals.py#L16-45) adds a user with a linked social provider to an organization linked to that provider on login, with the first member of a memberless organization becoming owner. Confirm your own membership and project permissions rather than assuming a new account has none or all. Confirm the live setting rather than trusting the default.
 - **The public DSN misread as a secret.** Rotating a DSN does not protect the tracker; authenticating its web and API does. Do not treat a leaked DSN as the incident.
 - **Plaintext.** Neither serves TLS natively, so an instance reachable without a terminating proxy sends session cookies and the event UI in the clear.
 
@@ -27934,6 +27972,7 @@ Point that block at Sentry's `http://tracker.example.com:9000/`: because the bun
 - Sentry DSN explainer (a DSN is public and allows only event submission, not read access): https://docs.sentry.io/concepts/key-terms/dsn-explainer/
 - GlitchTip installation (port `8000`, `ENABLE_USER_REGISTRATION` default and behavior): https://glitchtip.com/documentation/install
 - GlitchTip two-factor authentication (available since v1.8): https://glitchtip.com/blog/2021-09-17-glitchtip-1-8/
+- [GlitchTip backend v6.2.6 organization membership on login for a user with a linked social account (checked October 2026)](https://gitlab.com/glitchtip/glitchtip-backend/-/blob/v6.2.6/apps/users/signals.py#L16-45).
 - [Sentry 26.8.0 secret-key generator command (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/runner/commands/config.py).
 - [Sentry self-hosted 26.8.0 bundled nginx forwarded scheme (checked October 2026)](https://github.com/getsentry/self-hosted/blob/26.8.0/nginx.conf#L63).
 - [Sentry 26.8.0 registration and single-organization membership (checked October 2026)](https://raw.githubusercontent.com/getsentry/sentry/26.8.0/src/sentry/web/frontend/auth_login.py).
@@ -30281,7 +30320,7 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 | livekit-metrics: Enabled metrics are unauthenticated unless prometheus.username/password are set. | LiveKit v1.13.7 | REASONED |
 | livekit-debug: Debug/pprof, goroutine and room routes lack grant checks and can use debug_handler.port. | LiveKit v1.13.7 | REASONED |
 | livekit-turn-secret: Embedded TURN derives credentials from the API secret. | LiveKit v1.13.7 | REASONED |
-| livekit-webhook: Webhook receivers must verify the signing token and SHA-256 body hash; the webhook verifier is not cited. | LiveKit documentation unknown | REASONED |
+| livekit-webhook: For static webhook.urls, LiveKit signs webhook Authorization JWTs with webhook.api_key's secret; an extra webhook may use a different SigningKey and secret; the sha256 claim holds the base64 SHA-256 body hash; receivers verify both as webhook.Receive does. | LiveKit v1.13.7; LiveKit protocol a4f4b5c0c23f167d0c07de1e1d7652125882e73c | REASONED |
 | coturn-listeners: STUN/TURN use UDP/TCP 3478 and TLS 5349; enabled interfaces are enumerated, not loopback-only. | coturn 4.18.0 | REASONED |
 | coturn-dtls: DTLS on 5349 is opt-in since 4.17.0 and requires dtls. | coturn DTLS opt-in introduction 4.17.0 | REASONED |
 | coturn-relays: On-demand relay endpoints use min-port/max-port 49152-65535. | coturn 4.18.0 | REASONED |
@@ -30352,7 +30391,7 @@ rtc:
 REPLACE_WITH_GENERATED_API_KEY: "REPLACE_WITH_GENERATED_RANDOM_SECRET"
 ```
 
-LiveKit refuses a key file that grants any permission to others (it checks the world/other bits), so a world-readable `0644` file stops the server from starting; a group-readable `0640` passes that check, so create the file `0600` owned by the service account to keep the group out as well. Signaling TLS terminates at a reverse proxy or load balancer: the core server calls `Serve`, not `ServeTLS`, and there is no top-level signaling TLS flag, so front it with the [fronting-auth.md](fronting-auth.md) pattern and connect over `wss://`. A few surfaces are easy to leave open beside the main port: Prometheus metrics, when enabled, serve unauthenticated unless you set `prometheus.username`/`password`; the debug and profiling routes (`/debug/pprof/`, `/debug/goroutine`, `/debug/rooms`) carry no grant check and, with `debug_handler.port` set, listen on their own port; and the embedded TURN service derives its credentials from the same API secret, so a leaked secret also undermines TURN. Webhook receivers must verify both the signing token and the SHA-256 body hash, not merely accept TLS.
+LiveKit refuses a key file that grants any permission to others (it checks the world/other bits), so a world-readable `0644` file stops the server from starting; a group-readable `0640` passes that check, so create the file `0600` owned by the service account to keep the group out as well. Signaling TLS terminates at a reverse proxy or load balancer: the core server calls `Serve`, not `ServeTLS`, and there is no top-level signaling TLS flag, so front it with the [fronting-auth.md](fronting-auth.md) pattern and connect over `wss://`. A few surfaces are easy to leave open beside the main port: Prometheus metrics, when enabled, serve unauthenticated unless you set `prometheus.username`/`password`; the debug and profiling routes (`/debug/pprof/`, `/debug/goroutine`, `/debug/rooms`) carry no grant check and, with `debug_handler.port` set, listen on their own port; and the embedded TURN service derives its credentials from the same API secret, so a leaked secret also undermines TURN. For static `webhook.urls`, LiveKit sends a webhook JWT in `Authorization`, signed with the configured `webhook.api_key` secret; its `sha256` claim holds the standard-base64 SHA-256 hash of the JSON body. An extra webhook may select a different `SigningKey` and secret. Receivers must verify the JWT signature and compare that claim with a fresh hash of the received body, as protocol `webhook.Receive` does.
 
 Unverified until checked in your deployment: whether a Helm chart or package generator creates or overrides keys and binds, the effective bind of a distribution's sample config, and the JWT-library version your build pins.
 
@@ -30623,6 +30662,18 @@ REASONED: preceding block; what a deployment run of the s_client command does no
 - LiveKit v1.13.7 debug routes, separate server and listener (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L181-L193, https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/server.go#L261-L266
 - LiveKit v1.13.7 embedded TURN password derivation from the API secret (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/turn.go#L315-L325
 - LiveKit v1.13.7 missing-grants HTTP 401 branch (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/rtcservice.go#L147-L149
+- LiveKit v1.13.7 protocol dependency (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/go.mod#L24
+- LiveKit v1.13.7 top-level `webhook` YAML key (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/config/config.go#L93
+- LiveKit v1.13.7 webhook API key lookup and notifier wiring (checked October 2026): https://github.com/livekit/livekit/blob/v1.13.7/pkg/service/wire_gen.go#L224-L233
+- LiveKit protocol static webhook key and secret passed to ResourceURLNotifier (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/notifier.go#L29-L101
+- LiveKit protocol extra webhook SigningKey secret selection (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/notifier.go#L129-L153
+- LiveKit protocol ResourceURLNotifier extra webhook key and secret override (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/resource_url_notifier.go#L215-L230
+- LiveKit protocol ResourceURLNotifier JWT and standard-base64 SHA-256 body hash in `Authorization` (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/resource_url_notifier.go#L358-L385
+- LiveKit protocol `Authorization` header name (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/consts.go#L24-L33
+- LiveKit protocol `webhook.Receive` token and body-hash verification (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/webhook/verifier.go#L31-L66
+- LiveKit protocol JWT issuer key lookup and HS256 verification (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/auth/verifier.go#L27-L84
+- LiveKit protocol HS256 token signing with API secret (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/auth/accesstoken.go#L188-L199
+- LiveKit protocol `sha256` claim name (checked October 2026): https://github.com/livekit/protocol/blob/a4f4b5c0c23f167d0c07de1e1d7652125882e73c/auth/grants.go#L175-L177
 - coturn 4.18.0 Docker configuration enables lt-cred-mech (checked October 2026): https://github.com/coturn/coturn/blob/4.18.0/docker/coturn/turnserver.conf#L184
 - OpenSSL 3.0 s_client hostname, CA and fatal verification options (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
 - coturn 4.18.0 turnadmin key/password options and example (checked October 2026; lines 59, 105-110 and 125): https://raw.githubusercontent.com/coturn/coturn/4.18.0/README.turnadmin
@@ -34837,7 +34888,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | webhook-secret: Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs. | GitHub webhooks documentation unknown; OWASP guidance unknown | REASONED |
 | stripe-secrets: Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ. | Stripe webhooks documentation unknown | REASONED |
 | sender-ip: Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain. | GitHub webhooks documentation unknown | REASONED |
-| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown; nginx source release-1.26.3; HAProxy 3.0 | REASONED |
+| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; at Caddy v2.11.4 request_body max_size returns 413 on excess and the standard HTTP module list imports no rate-limit handler; confirm other proxy capabilities in their guides and current vendor sources. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown; nginx source release-1.26.3; HAProxy 3.0; Caddy source v2.11.4 | REASONED |
 | message-limits: After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs. | OWASP guidance unknown | REASONED |
 | ssrf: Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials. | OWASP guidance unknown | REASONED |
 | verify-handshake: Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
@@ -34882,7 +34933,7 @@ Apply the shared lesson everywhere: use a distinct secret per endpoint (rotating
 
 ## 5. Bound the expensive endpoints too
 
-Inference, upload, and job-submission endpoints are usually the ones behind these transports, and an authenticated caller can still exhaust them. Two layers need separate limits. At the proxy in front of the app: a maximum request or body size, a connection concurrency cap per client, and a request timeout matched to realistic response time bound the HTTP connection itself; the [nginx](nginx.md), [Caddy](caddy.md), [HAProxy](haproxy.md) and [Traefik](traefik.md) guides here each have a "Bound the expensive endpoints" section covering what that proxy's guide documents natively: nginx's carries all four controls, Traefik's carries body size, concurrency and rate, HAProxy's carries timeouts and an aggregate connection cap with a header-based body check, and Caddy's carries body size (Caddy has no rate limiting in its standard build). Confirm the current timeout and rate options in each proxy's own documentation before relying on their absence. After a WebSocket upgrade, a single accepted connection can still carry unlimited messages or job submissions, which the connection-level limits above do not touch; OWASP's WebSocket Security Cheat Sheet calls for message-level authorization (checking that each individual message is allowed, not only the handshake) and message-level rate limiting (capping messages per connection per time window) as the separate control that applies once the socket is open. [authentication.md](authentication.md) covers the identity side these limits key off.
+Inference, upload, and job-submission endpoints are usually the ones behind these transports, and an authenticated caller can still exhaust them. Two layers need separate limits. At the proxy in front of the app: a maximum request or body size, a connection concurrency cap per client, and a request timeout matched to realistic response time bound the HTTP connection itself; the [nginx](nginx.md), [Caddy](caddy.md), [HAProxy](haproxy.md) and [Traefik](traefik.md) guides here each have a "Bound the expensive endpoints" section covering what that proxy's guide documents natively: nginx's carries all four controls, Traefik's carries body size, concurrency and rate, HAProxy's carries timeouts and an aggregate connection cap with a header-based body check, and Caddy's carries body size: at v2.11.4, [`request_body` `max_size`](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L35-L39) bounds bytes read from the body using [`http.MaxBytesReader`](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L83-L84) and returns 413 on excess. The [standard HTTP module list](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/standard/imports.go#L3-L25), [imported by the standard module list](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/standard/imports.go#L3-L18), imports no rate-limit handler at v2.11.4. Confirm the current timeout and rate options in each proxy's own documentation before relying on their absence. After a WebSocket upgrade, a single accepted connection can still carry unlimited messages or job submissions, which the connection-level limits above do not touch; OWASP's WebSocket Security Cheat Sheet calls for message-level authorization (checking that each individual message is allowed, not only the handshake) and message-level rate limiting (capping messages per connection per time window) as the separate control that applies once the socket is open. [authentication.md](authentication.md) covers the identity side these limits key off.
 
 ## 6. Restrict relay destinations
 
@@ -35078,6 +35129,8 @@ Scope and revisions: browser behavior follows RFC 6455 and the HTML and Fetch li
 - OWASP Secrets Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
 - Traefik v3.5 entryPoint timeouts: https://doc.traefik.io/traefik/v3.5/reference/install-configuration/entrypoints/
 - Caddy server timeouts: https://caddyserver.com/docs/caddyfile/options#timeouts
+- [Caddy v2.11.4 request body max_size and 413 behavior (checked October 2026)](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L35-L39), [MaxBytesReader application](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L83-L84).
+- [Caddy v2.11.4 standard HTTP module imports (checked October 2026)](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/standard/imports.go#L3-L25), [standard module imports](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/standard/imports.go#L3-L18).
 - nginx `proxy_read_timeout`: https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout
 - curl manual (`--connect-to`, `--noproxy`, write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 - Python `os.fdopen`, for reading and closing the secret pipe: https://docs.python.org/3/library/os.html#os.fdopen
