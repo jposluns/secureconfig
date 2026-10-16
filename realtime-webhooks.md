@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "605e33ef8f1c17c2d0ac7cdfacbbab05ddf70e46cac6042bf4c0f2505445eddc",
+  "body_sha256": "f083b5e938f178a90956c4b0afa73f75a8c9aa4038c07ab2a3031bbc8047fc7a",
   "components": {
     "browser": {
       "name": "Browser API and living standards",
@@ -89,6 +89,16 @@ version_basis: {
         "s7cc695452ecc": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout"
       }
     },
+    "caddy-source": {
+      "name": "Caddy source",
+      "basis": "v2.11.4",
+      "sources": {
+        "sd8185d2844da": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L35-L39",
+        "se8aeb08b0cf1": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L83-L84",
+        "s4ca9ad45ef73": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/standard/imports.go#L3-L25",
+        "sf9da74db9a07": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/standard/imports.go#L3-L18"
+      }
+    },
     "curl": {
       "name": "curl minimum write-out version",
       "basis": "7.75.0",
@@ -146,7 +156,7 @@ version_basis: {
     "webhook-secret": {"text": "Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs.", "components": ["github", "owasp"], "sources": ["github:seccc4a52ea14", "owasp:s26a987a1053b"], "status": "REASONED"},
     "stripe-secrets": {"text": "Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ.", "components": ["stripe"], "sources": ["stripe:s197f8ab6b63f"], "status": "REASONED"},
     "sender-ip": {"text": "Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain.", "components": ["github"], "sources": ["github:seccc4a52ea14"], "status": "REASONED"},
-    "proxy-limits": {"text": "Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation.", "components": ["traefik", "proxy", "nginx-source", "haproxy"], "sources": ["traefik:sd6ad276040b7", "proxy:sf22449866dac", "proxy:s7cc695452ecc", "nginx-source:s80c7f2e4622c", "nginx-source:s0ac063f54b7d", "nginx-source:s86004e697595", "traefik:scad09024d298", "traefik:s5888553b0970", "traefik:s437d7eb2ec16", "haproxy:se90dfdfcf910"], "status": "REASONED"},
+    "proxy-limits": {"text": "Bound HTTP body size, concurrency and timeouts separately; at Caddy v2.11.4 request_body max_size returns 413 on excess and the standard HTTP module list imports no rate-limit handler; confirm other proxy capabilities in their guides and current vendor sources.", "components": ["traefik", "proxy", "nginx-source", "haproxy", "caddy-source"], "sources": ["traefik:sd6ad276040b7", "proxy:sf22449866dac", "proxy:s7cc695452ecc", "nginx-source:s80c7f2e4622c", "nginx-source:s0ac063f54b7d", "nginx-source:s86004e697595", "traefik:scad09024d298", "traefik:s5888553b0970", "traefik:s437d7eb2ec16", "haproxy:se90dfdfcf910", "caddy-source:sd8185d2844da", "caddy-source:se8aeb08b0cf1", "caddy-source:s4ca9ad45ef73", "caddy-source:sf9da74db9a07"], "status": "REASONED"},
     "message-limits": {"text": "After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs.", "components": ["owasp"], "sources": ["owasp:sfbb0cddfdc41"], "status": "REASONED"},
     "ssrf": {"text": "Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials.", "components": ["owasp"], "sources": ["owasp:s7eb820e1e53b"], "status": "REASONED"},
     "verify-handshake": {"text": "Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive.", "components": ["owasp", "websocket"], "sources": ["owasp:sfbb0cddfdc41", "websocket:sbdde15b3166d"], "status": "REASONED", "verify": [1]},
@@ -196,7 +206,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | webhook-secret: Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs. | GitHub webhooks documentation unknown; OWASP guidance unknown | REASONED |
 | stripe-secrets: Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ. | Stripe webhooks documentation unknown | REASONED |
 | sender-ip: Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain. | GitHub webhooks documentation unknown | REASONED |
-| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; proxy capability summaries refer to local guides and need current vendor confirmation. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown; nginx source release-1.26.3; HAProxy 3.0 | REASONED |
+| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; at Caddy v2.11.4 request_body max_size returns 413 on excess and the standard HTTP module list imports no rate-limit handler; confirm other proxy capabilities in their guides and current vendor sources. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown; nginx source release-1.26.3; HAProxy 3.0; Caddy source v2.11.4 | REASONED |
 | message-limits: After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs. | OWASP guidance unknown | REASONED |
 | ssrf: Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials. | OWASP guidance unknown | REASONED |
 | verify-handshake: Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
@@ -241,7 +251,7 @@ Apply the shared lesson everywhere: use a distinct secret per endpoint (rotating
 
 ## 5. Bound the expensive endpoints too
 
-Inference, upload, and job-submission endpoints are usually the ones behind these transports, and an authenticated caller can still exhaust them. Two layers need separate limits. At the proxy in front of the app: a maximum request or body size, a connection concurrency cap per client, and a request timeout matched to realistic response time bound the HTTP connection itself; the [nginx](nginx.md), [Caddy](caddy.md), [HAProxy](haproxy.md) and [Traefik](traefik.md) guides here each have a "Bound the expensive endpoints" section covering what that proxy's guide documents natively: nginx's carries all four controls, Traefik's carries body size, concurrency and rate, HAProxy's carries timeouts and an aggregate connection cap with a header-based body check, and Caddy's carries body size (Caddy has no rate limiting in its standard build). Confirm the current timeout and rate options in each proxy's own documentation before relying on their absence. After a WebSocket upgrade, a single accepted connection can still carry unlimited messages or job submissions, which the connection-level limits above do not touch; OWASP's WebSocket Security Cheat Sheet calls for message-level authorization (checking that each individual message is allowed, not only the handshake) and message-level rate limiting (capping messages per connection per time window) as the separate control that applies once the socket is open. [authentication.md](authentication.md) covers the identity side these limits key off.
+Inference, upload, and job-submission endpoints are usually the ones behind these transports, and an authenticated caller can still exhaust them. Two layers need separate limits. At the proxy in front of the app: a maximum request or body size, a connection concurrency cap per client, and a request timeout matched to realistic response time bound the HTTP connection itself; the [nginx](nginx.md), [Caddy](caddy.md), [HAProxy](haproxy.md) and [Traefik](traefik.md) guides here each have a "Bound the expensive endpoints" section covering what that proxy's guide documents natively: nginx's carries all four controls, Traefik's carries body size, concurrency and rate, HAProxy's carries timeouts and an aggregate connection cap with a header-based body check, and Caddy's carries body size: at v2.11.4, [`request_body` `max_size`](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L35-L39) bounds bytes read from the body using [`http.MaxBytesReader`](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L83-L84) and returns 413 on excess. The [standard HTTP module list](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/standard/imports.go#L3-L25), [imported by the standard module list](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/standard/imports.go#L3-L18), imports no rate-limit handler at v2.11.4. Confirm the current timeout and rate options in each proxy's own documentation before relying on their absence. After a WebSocket upgrade, a single accepted connection can still carry unlimited messages or job submissions, which the connection-level limits above do not touch; OWASP's WebSocket Security Cheat Sheet calls for message-level authorization (checking that each individual message is allowed, not only the handshake) and message-level rate limiting (capping messages per connection per time window) as the separate control that applies once the socket is open. [authentication.md](authentication.md) covers the identity side these limits key off.
 
 ## 6. Restrict relay destinations
 
@@ -437,6 +447,8 @@ Scope and revisions: browser behavior follows RFC 6455 and the HTML and Fetch li
 - OWASP Secrets Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
 - Traefik v3.5 entryPoint timeouts: https://doc.traefik.io/traefik/v3.5/reference/install-configuration/entrypoints/
 - Caddy server timeouts: https://caddyserver.com/docs/caddyfile/options#timeouts
+- [Caddy v2.11.4 request body max_size and 413 behavior (checked October 2026)](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L35-L39), [MaxBytesReader application](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/requestbody/requestbody.go#L83-L84).
+- [Caddy v2.11.4 standard HTTP module imports (checked October 2026)](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/standard/imports.go#L3-L25), [standard module imports](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/standard/imports.go#L3-L18).
 - nginx `proxy_read_timeout`: https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout
 - curl manual (`--connect-to`, `--noproxy`, write-out variables require 7.75.0+): https://curl.se/docs/manpage.html
 - Python `os.fdopen`, for reading and closing the secret pipe: https://docs.python.org/3/library/os.html#os.fdopen
