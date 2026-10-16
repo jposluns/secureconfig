@@ -5881,8 +5881,8 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 - Node.js `NODE_TLS_REJECT_UNAUTHORIZED` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3940-L3944
 - Node.js `tls.connect` client `rejectUnauthorized` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1786-L1789
 - Node.js `https.Agent` options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L70-L103
-- Node.js `https.request` TLS options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L459-L472
-- Node.js HTTPS agent example (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L535-L548
+- Node.js `https.request` TLS options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L458-L472
+- Node.js HTTPS agent example (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L533-L549
 
 ======================================================================
 ==> python.md

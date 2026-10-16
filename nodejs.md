@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "6c9c9e3b06300fa1b8856086c000e2fd88d218a78a8f075ed49d81ea897669d2",
+  "body_sha256": "e85e3fadbe6375f6eb8730ebe3de5769c48c60794dccc0e629572d926c764abf",
   "components": {
     "node": {
       "name": "Node.js documentation",
@@ -65,8 +65,8 @@ version_basis: {
         "sbfee17929443": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3940-L3944",
         "s684a71cf8b6e": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1786-L1789",
         "sea85e903cce0": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L70-L103",
-        "s0b0f0083c83b": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L459-L472",
-        "s81adeb1a7a97": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L535-L548"
+        "sd0e5679b6277": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L458-L472",
+        "sd9044fe58c3e": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L533-L549"
       }
     }
   },
@@ -86,7 +86,7 @@ version_basis: {
     "login-limit": {"text": "Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls.", "components": ["rate"], "sources": ["rate:s303dcc57a0df"], "status": "REASONED"},
     "tokens": {"text": "This guide advises loading API keys and tokens from process.env, never from source literals, and comparing self-checked secret values with crypto.timingSafeEqual using equal-byte-length byte inputs; process.env exposes the user environment, while timingSafeEqual's input requirements and surrounding-code limit are documented.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:s670c858d43f0", "node-v24:s2f3ecf558ce7"], "status": "REASONED"},
     "mfa": {"text": "Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; the fronting identity layer is not covered by listed Sources.", "components": ["session", "otplib", "qrcode"], "sources": ["session:safd9f9d15304", "otplib:sdb2cd721be64", "qrcode:sc505636608da"], "status": "REASONED"},
-    "tls-validation": {"text": "This guide advises never setting NODE_TLS_REJECT_UNAUTHORIZED=0 for the Node.js process's TLS connections or rejectUnauthorized=false for a client TLS connection or an HTTPS agent whose requests use it; Node.js documents the TLS validation effects, and the agent reach is this guide's assessment of the documented options flow.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:sbfee17929443", "node-v24:s684a71cf8b6e", "node-v24:sea85e903cce0", "node-v24:s0b0f0083c83b", "node-v24:s81adeb1a7a97"], "status": "REASONED"},
+    "tls-validation": {"text": "This guide advises never setting NODE_TLS_REJECT_UNAUTHORIZED=0 for the Node.js process's TLS connections or rejectUnauthorized=false for a client TLS connection or an HTTPS agent whose requests use it; Node.js documents the TLS validation effects, and the agent reach is this guide's assessment of the documented options flow.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:sbfee17929443", "node-v24:s684a71cf8b6e", "node-v24:sea85e903cce0", "node-v24:sd0e5679b6277", "node-v24:sd9044fe58c3e"], "status": "REASONED"},
     "client-ca": {"text": "This guide advises setting NODE_EXTRA_CA_CERTS to a PEM file before launching Node.js for an internal CA or self-signed server; it extends well-known roots, is read only at launch, and is ignored when Node.js runs as setuid root or with Linux file capabilities; neither it nor the well-known roots is used by a TLS or HTTPS client or server given an explicit ca option.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:s7fbb99765dc4"], "status": "REASONED"},
     "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED", "verify": [1]},
     "verify-tls": {"text": "HTTPS must succeed without -k and show Helmet headers.", "components": ["node", "helmet"], "sources": ["node:s87db42190978", "helmet:sc1865315478e"], "status": "REASONED", "verify": [1]},
@@ -276,5 +276,5 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 - Node.js `NODE_TLS_REJECT_UNAUTHORIZED` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3940-L3944
 - Node.js `tls.connect` client `rejectUnauthorized` (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1786-L1789
 - Node.js `https.Agent` options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L70-L103
-- Node.js `https.request` TLS options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L459-L472
-- Node.js HTTPS agent example (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L535-L548
+- Node.js `https.request` TLS options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L458-L472
+- Node.js HTTPS agent example (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L533-L549
