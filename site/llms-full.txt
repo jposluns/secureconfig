@@ -32363,7 +32363,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | loki-grpc-bridge: Single-binary ingester RPC and HTTP-over-gRPC expose paths that HTTP-only TLS/proxying does not protect. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-mtls: HTTP/gRPC TLS defaults empty and requires a cert/key pair; configure client CA plus RequireAndVerifyClientCert, not CA alone. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-ring: Single-binary overlay uses inmemory ring, loopback instance address and replication_factor 1 instead of default 3; check no gossip listener remains. | Loki v3.7.8 | REASONED |
-| loki-internal: Worker frontend/scheduler and distributor/querier ingester dial sites are traced; loopback gRPC remains configuration-specific, with compactor calls and live reachability to verify. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-internal: The server gRPC listen address and port, target flags, and scheduler ring are passed to the querier worker service initializer; worker frontend/scheduler and distributor/querier ingester dial sites are traced; loopback gRPC remains configuration-specific, with compactor calls and live reachability to verify. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-grpc-tls: gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Loki v3.7.8 | REASONED |
 | loki-proxy: An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki. | Loki v3.7.8 | REASONED |
 | verify-inventory: Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed. | node_exporter v1.12.1; Alertmanager v0.34.1; Pushgateway v1.11.3; Jaeger v2.21.0; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
@@ -32606,8 +32606,10 @@ per-tenant overrides. The flag help says the API is available for `filter-only` 
 `validDeletionLimit` implementation, so its exact mode-to-allow rule is unverified. A permitted
 `PUT`/`POST` validates the query and time range, returns HTTP 400 for bad inputs or 500 for store
 failure, and returns HTTP 204 with `X-Delete-Request-ID` after the request is stored. `GET` lists
-that tenant's requests as JSON, with 500 on store failure. `DELETE` looks up a request under the
-tenant ID: missing ID returns 404; processed requests return 400; partially completed or overdue
+that tenant's requests as JSON, with 500 on store failure. When both `start` and `end`
+are supplied, an invalid value writes HTTP 400 without stopping the handler. `DELETE` looks
+up a request under the tenant ID: an ID the store does not find returns 404; processed
+requests return 400; partially completed or overdue
 requests return 400 unless `force=true`; store failure returns 500; removal returns 204. A stored
 request does not establish eventual deletion. The gRPC listener registers ingester push/query services in single-binary mode
 and an HTTP-over-gRPC bridge to the HTTP router. HTTP-only TLS or a proxy in front of 3100 therefore
@@ -32649,7 +32651,8 @@ There are two fixes, and you can use both:
   the ring, and distributor and querier construction receive the ring and ingester client settings.
   Distributors select ingester ring entries for writes; queriers select ring entries for reads.
   Both obtain clients by each entry's advertised address, and the ingester client calls `grpc.Dial`
-  with dskit gRPC client options. The querier worker chooses scheduler ring, explicit scheduler
+  with dskit gRPC client options. `modules.go` passes the server gRPC listen address and port,
+  target flags, and scheduler ring to `querier.InitWorkerService`. The querier worker chooses scheduler
   address, or explicit frontend address; watchers supply targets to `grpc.DialContext`. A direct
   frontend worker opens a frontend stream; a scheduler worker opens a scheduler stream and dials
   the frontend address in the scheduler response to send results. `common.instance_addr` also
@@ -32657,8 +32660,9 @@ There are two fixes, and you can use both:
   calls. A single-binary compactor client uses the server gRPC listen address and port when deletion
   filtering is enabled. Loopback remains a recommendation for this configuration: verify effective
   advertised and dial addresses, worker/frontend/scheduler settings, successful pushes and queries,
-  and compactor calls. The supplied snapshots do not show DNS/ring watcher internals, ingester pool
-  internals, every RPC hop, or live reachability. Remote components need a private address
+  and compactor calls. The supplied snapshots do not show DNS/ring watcher internals,
+  ingester and frontend client pool internals, worker-service address wiring
+  (`pkg/querier/worker_service.go`), every RPC hop, or live reachability. Remote components need a private address
   reachable from their hosts.
 
   Keep gRPC restricted to trusted callers: plaintext loopback is still reachable by local users.

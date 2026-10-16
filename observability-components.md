@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "69918b754f67fc76c7c1871663ff52f11470bd4d6ccc20ed4a66659bb191d220",
+  "body_sha256": "9abcfc9fd6bcfb806de2532f85f604fb284b2cba0d4f5744a2fb8e48b9c6179a",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -225,7 +225,7 @@ version_basis: {
     "loki-grpc-bridge": {"text": "Single-binary ingester RPC and HTTP-over-gRPC expose paths that HTTP-only TLS/proxying does not protect.", "components": ["loki", "dskit"], "sources": ["loki:sc2b013001317", "dskit:s5fd7b12bfcf1"], "status": "REASONED"},
     "loki-mtls": {"text": "HTTP/gRPC TLS defaults empty and requires a cert/key pair; configure client CA plus RequireAndVerifyClientCert, not CA alone.", "components": ["dskit"], "sources": ["dskit:sb19d54a19636", "dskit:s0dc9a01e591a", "dskit:sd35a28be4391"], "status": "REASONED"},
     "loki-ring": {"text": "Single-binary overlay uses inmemory ring, loopback instance address and replication_factor 1 instead of default 3; check no gossip listener remains.", "components": ["loki"], "sources": ["loki:s8f06ddfa5291", "loki:s8cf14a90ec61", "loki:sfb3d52071e7c"], "status": "REASONED"},
-    "loki-internal": {"text": "Worker frontend/scheduler and distributor/querier ingester dial sites are traced; loopback gRPC remains configuration-specific, with compactor calls and live reachability to verify.", "components": ["loki", "dskit"], "sources": ["loki:s765907d2b4ee", "loki:sfb3d52071e7c", "loki:s8cf14a90ec61", "loki:scf12ae06cdc4", "loki:s970473c2dcdb", "loki:s6b2f01173a97", "loki:s44e7547da37d", "loki:s79ea72562a9f", "loki:s634e6599df5e", "loki:s10b95cd4cab8", "loki:s82a976e6b93c", "loki:s47c05209cd31", "loki:s1d59e1184191", "loki:s9d106cc379de", "loki:s8b3d57f01355", "loki:s88661a4514b3", "loki:sb0ae3e30f690", "loki:s074f98761044", "loki:s51e0f640a169", "loki:sa19fa92e5d02", "dskit:sb0955f4c2ebd", "dskit:s74daabf65e98", "dskit:s172528a7c1bf", "dskit:scf57b6b1f148"], "status": "REASONED"},
+    "loki-internal": {"text": "The server gRPC listen address and port, target flags, and scheduler ring are passed to the querier worker service initializer; worker frontend/scheduler and distributor/querier ingester dial sites are traced; loopback gRPC remains configuration-specific, with compactor calls and live reachability to verify.", "components": ["loki", "dskit"], "sources": ["loki:s765907d2b4ee", "loki:sfb3d52071e7c", "loki:s8cf14a90ec61", "loki:scf12ae06cdc4", "loki:s970473c2dcdb", "loki:s6b2f01173a97", "loki:s44e7547da37d", "loki:s79ea72562a9f", "loki:s634e6599df5e", "loki:s10b95cd4cab8", "loki:s82a976e6b93c", "loki:s47c05209cd31", "loki:s1d59e1184191", "loki:s9d106cc379de", "loki:s8b3d57f01355", "loki:s88661a4514b3", "loki:sb0ae3e30f690", "loki:s074f98761044", "loki:s51e0f640a169", "loki:sa19fa92e5d02", "dskit:sb0955f4c2ebd", "dskit:s74daabf65e98", "dskit:s172528a7c1bf", "dskit:scf57b6b1f148"], "status": "REASONED"},
     "loki-grpc-tls": {"text": "gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers.", "components": ["dskit", "loki"], "sources": ["dskit:sd35a28be4391", "loki:s70975c2655fa"], "status": "REASONED"},
     "loki-proxy": {"text": "An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki.", "components": ["loki"], "sources": ["loki:s70975c2655fa"], "status": "REASONED"},
     "verify-inventory": {"text": "Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed.", "components": ["node", "alert", "push", "jaeger", "dskit"], "sources": ["node:s896899f5a500", "alert:s0fd66cba968e", "push:s5c9f9745f42d", "jaeger:s5619bba2be59", "dskit:sb19d54a19636", "dskit:s23d81aeedf07"], "status": "REASONED", "verify": [1]},
@@ -298,7 +298,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | loki-grpc-bridge: Single-binary ingester RPC and HTTP-over-gRPC expose paths that HTTP-only TLS/proxying does not protect. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-mtls: HTTP/gRPC TLS defaults empty and requires a cert/key pair; configure client CA plus RequireAndVerifyClientCert, not CA alone. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-ring: Single-binary overlay uses inmemory ring, loopback instance address and replication_factor 1 instead of default 3; check no gossip listener remains. | Loki v3.7.8 | REASONED |
-| loki-internal: Worker frontend/scheduler and distributor/querier ingester dial sites are traced; loopback gRPC remains configuration-specific, with compactor calls and live reachability to verify. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-internal: The server gRPC listen address and port, target flags, and scheduler ring are passed to the querier worker service initializer; worker frontend/scheduler and distributor/querier ingester dial sites are traced; loopback gRPC remains configuration-specific, with compactor calls and live reachability to verify. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-grpc-tls: gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Loki v3.7.8 | REASONED |
 | loki-proxy: An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki. | Loki v3.7.8 | REASONED |
 | verify-inventory: Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed. | node_exporter v1.12.1; Alertmanager v0.34.1; Pushgateway v1.11.3; Jaeger v2.21.0; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
@@ -541,8 +541,10 @@ per-tenant overrides. The flag help says the API is available for `filter-only` 
 `validDeletionLimit` implementation, so its exact mode-to-allow rule is unverified. A permitted
 `PUT`/`POST` validates the query and time range, returns HTTP 400 for bad inputs or 500 for store
 failure, and returns HTTP 204 with `X-Delete-Request-ID` after the request is stored. `GET` lists
-that tenant's requests as JSON, with 500 on store failure. `DELETE` looks up a request under the
-tenant ID: missing ID returns 404; processed requests return 400; partially completed or overdue
+that tenant's requests as JSON, with 500 on store failure. When both `start` and `end`
+are supplied, an invalid value writes HTTP 400 without stopping the handler. `DELETE` looks
+up a request under the tenant ID: an ID the store does not find returns 404; processed
+requests return 400; partially completed or overdue
 requests return 400 unless `force=true`; store failure returns 500; removal returns 204. A stored
 request does not establish eventual deletion. The gRPC listener registers ingester push/query services in single-binary mode
 and an HTTP-over-gRPC bridge to the HTTP router. HTTP-only TLS or a proxy in front of 3100 therefore
@@ -584,7 +586,8 @@ There are two fixes, and you can use both:
   the ring, and distributor and querier construction receive the ring and ingester client settings.
   Distributors select ingester ring entries for writes; queriers select ring entries for reads.
   Both obtain clients by each entry's advertised address, and the ingester client calls `grpc.Dial`
-  with dskit gRPC client options. The querier worker chooses scheduler ring, explicit scheduler
+  with dskit gRPC client options. `modules.go` passes the server gRPC listen address and port,
+  target flags, and scheduler ring to `querier.InitWorkerService`. The querier worker chooses scheduler
   address, or explicit frontend address; watchers supply targets to `grpc.DialContext`. A direct
   frontend worker opens a frontend stream; a scheduler worker opens a scheduler stream and dials
   the frontend address in the scheduler response to send results. `common.instance_addr` also
@@ -592,8 +595,9 @@ There are two fixes, and you can use both:
   calls. A single-binary compactor client uses the server gRPC listen address and port when deletion
   filtering is enabled. Loopback remains a recommendation for this configuration: verify effective
   advertised and dial addresses, worker/frontend/scheduler settings, successful pushes and queries,
-  and compactor calls. The supplied snapshots do not show DNS/ring watcher internals, ingester pool
-  internals, every RPC hop, or live reachability. Remote components need a private address
+  and compactor calls. The supplied snapshots do not show DNS/ring watcher internals,
+  ingester and frontend client pool internals, worker-service address wiring
+  (`pkg/querier/worker_service.go`), every RPC hop, or live reachability. Remote components need a private address
   reachable from their hosts.
 
   Keep gRPC restricted to trusted callers: plaintext loopback is still reachable by local users.
