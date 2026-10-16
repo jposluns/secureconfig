@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "8e802d7b7ad237769269f3f63090ef7a9db991ad348ea64232ae4e31b85789e6",
+  "body_sha256": "563ac133a362a672f756866955c529bffcd0ecd2dbe19ca50b78fddcad692f55",
   "components": {
     "python": {
       "name": "Python http.server documentation",
@@ -118,10 +118,10 @@ version_basis: {
       "name": "HTTPX source and documentation",
       "basis": "0.28.1",
       "sources": {
-        "s95c717db03ae": "https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L3-L9",
+        "s52608d6c5e47": "https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L3-L7",
         "sd33b79237122": "https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L9-L53",
-        "s552482053bd9": "https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L12-L16",
-        "s62a31c16c993": "https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L72-L85",
+        "s928d85a8d13e": "https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L12-L17",
+        "s3734fbccdf40": "https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L72-L86",
         "s30dd14bf172e": "https://github.com/encode/httpx/blob/0.28.1/httpx/_config.py#L23-L40",
         "s4a1f3b43f184": "https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L133-L154",
         "sc5a61a9b2f64": "https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L278-L298"
@@ -134,7 +134,7 @@ version_basis: {
         "sbac049853cda": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L390-L405",
         "s6dcc06feaaaf": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L542-L548",
         "s4d7f143c9456": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L730-L736",
-        "s0fec3a875f34": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L744-L750",
+        "s4a1cd173d596": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L744-L754",
         "s79d6191e12eb": "https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L421-L433",
         "s82c72b9a971a": "https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L1642-L1649"
       }
@@ -143,7 +143,7 @@ version_basis: {
       "name": "OpenSSL documentation",
       "basis": "openssl-4.0.3",
       "sources": {
-        "s681a3853dba5": "https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man3/SSL_CTX_load_verify_locations.pod#L44-L49"
+        "s592eb65718de": "https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man3/SSL_CTX_load_verify_locations.pod#L39-L49"
       }
     }
   },
@@ -163,8 +163,8 @@ version_basis: {
     "oidc": {"text": "OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately.", "components": ["fastapi", "oidc-stub"], "sources": ["fastapi:s077aff608a5c", "oidc-stub:s876e3d51e7ac"], "status": "REASONED"},
     "login-limit": {"text": "Rate-limit login routes; a proxy-level limit is this guide's advice. slowapi v0.1.10 documents limits for Starlette/FastAPI HTTP endpoints; endpoints using its limit decorator must take an explicit request argument, and WebSocket endpoints are not supported.", "components": ["fastapi", "slowapi"], "sources": ["fastapi:s077aff608a5c", "slowapi:sf150aa58aa31", "slowapi:s4ca3e1e80817"], "status": "REASONED"},
     "mfa": {"text": "Use pyotp and qrcode, django-otp for Django, or linked MFA guidance.", "components": ["django", "pyotp", "qrcode", "django-otp"], "sources": ["django:s7289e1c111ae", "pyotp:sc118b8ed3bdd", "qrcode:s8247ddfed3d3", "django-otp:sa5c0f7097219"], "status": "REASONED"},
-    "client-validation": {"text": "Never ship requests/httpx verify=False or ssl._create_unverified_context; HTTPX documents verify=False and CPython defines _create_unverified_context. The prohibition is this guide's advice.", "components": ["python", "requests", "httpx", "cpython-ssl"], "sources": ["python:s8fae94406709", "requests:s17c5a0a7ffb2", "httpx:s552482053bd9", "cpython-ssl:s0fec3a875f34"], "status": "REASONED"},
-    "client-ca": {"text": "REQUESTS_CA_BUNDLE selects a requests CA. HTTPX 0.28.1's transport passes verify and trust_env to create_ssl_context, which reads SSL_CERT_FILE when verify=True and trust_env=True; its SSL guide contradicts that source. Its environment guide says environment variables are used by default but does not list SSL_CERT_FILE. CPython's ssl module reports OpenSSL default verify paths; with no CA specified and verification enabled, ssl.create_default_context() tries to load default CAs, which may fail silently. OpenSSL names SSL_CERT_FILE as an environment override for its default CA file; CPython's cited files do not name that variable, so whether a given ssl configuration uses it remains unverified. The export and explicit-context choices are this guide's advice.", "components": ["python", "requests", "httpx", "cpython-ssl", "openssl"], "sources": ["python:s8fae94406709", "requests:s21c6be6f6df4", "httpx:s95c717db03ae", "httpx:sd33b79237122", "httpx:s62a31c16c993", "httpx:s30dd14bf172e", "httpx:s4a1f3b43f184", "httpx:sc5a61a9b2f64", "cpython-ssl:sbac049853cda", "cpython-ssl:s6dcc06feaaaf", "cpython-ssl:s4d7f143c9456", "cpython-ssl:s79d6191e12eb", "cpython-ssl:s82c72b9a971a", "openssl:s681a3853dba5"], "status": "REASONED"},
+    "client-validation": {"text": "Never ship requests/httpx verify=False or ssl._create_unverified_context; HTTPX documents verify=False and CPython defines _create_unverified_context. The prohibition is this guide's advice.", "components": ["python", "requests", "httpx", "cpython-ssl"], "sources": ["python:s8fae94406709", "requests:s17c5a0a7ffb2", "httpx:s928d85a8d13e", "cpython-ssl:s4a1cd173d596"], "status": "REASONED"},
+    "client-ca": {"text": "REQUESTS_CA_BUNDLE selects a requests CA. HTTPX 0.28.1's transport passes verify and trust_env to create_ssl_context, which reads SSL_CERT_FILE when verify=True and trust_env=True; its SSL guide contradicts that source. Its environment guide says environment variables are used by default but does not list SSL_CERT_FILE. CPython's ssl module reports OpenSSL default verify paths; with no CA specified and verification enabled, ssl.create_default_context() tries to load default CAs, which may fail silently. OpenSSL names SSL_CERT_FILE as an environment override for its default CA file; CPython's cited files do not name that variable, so whether a given ssl configuration uses it remains unverified. The export and explicit-context choices are this guide's advice.", "components": ["python", "requests", "httpx", "cpython-ssl", "openssl"], "sources": ["python:s8fae94406709", "requests:s21c6be6f6df4", "httpx:s52608d6c5e47", "httpx:sd33b79237122", "httpx:s3734fbccdf40", "httpx:s30dd14bf172e", "httpx:s4a1f3b43f184", "httpx:sc5a61a9b2f64", "cpython-ssl:sbac049853cda", "cpython-ssl:s6dcc06feaaaf", "cpython-ssl:s4d7f143c9456", "cpython-ssl:s79d6191e12eb", "cpython-ssl:s82c72b9a971a", "openssl:s592eb65718de"], "status": "REASONED"},
     "http-server-bind": {"text": "As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000.", "components": ["python-pin"], "sources": ["python-pin:s0038729960a0", "python-pin:sa3111578d65d"], "status": "REASONED"},
     "http-server-files": {"text": "http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel.", "components": ["python"], "sources": ["python:s8fae94406709"], "status": "REASONED"},
     "verify-tls": {"text": "Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation.", "components": ["gunicorn", "uvicorn"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9"], "status": "REASONED", "verify": [1]},
@@ -285,7 +285,7 @@ export REQUESTS_CA_BUNDLE=/path/ca.crt   # requests
 export SSL_CERT_FILE=/path/ca.crt        # HTTPX with verify=True and trust_env=True; OpenSSL default CA file for ssl when its default verify paths apply (see caveat below)
 ```
 
-HTTPX 0.28.1's SSL guide says `SSL_CERT_FILE` and `SSL_CERT_DIR` are not automatically used and shows an explicit context, while its environment guide says environment variables are used by default but does not list `SSL_CERT_FILE`. Its sync and async transports pass `verify` and `trust_env` to `create_ssl_context`, which reads `SSL_CERT_FILE` when both are true. This guide's advice: use the export above for that HTTPX code path; pass an explicit CA context for other configurations. With no CA specified and verification enabled, CPython's `ssl.create_default_context()` tries to load default CAs (CPython notes this may fail silently). `ssl.get_default_verify_paths()` reports OpenSSL's environment key for a CA file; OpenSSL names `SSL_CERT_FILE` as an override for its default CA file. CPython's cited files do not name `SSL_CERT_FILE`, so whether a given `ssl` configuration uses that override remains unverified.
+HTTPX 0.28.1's SSL guide says `SSL_CERT_FILE` and `SSL_CERT_DIR` are not automatically used and shows an explicit context; its code path contradicts that: its sync and async transports pass `verify` and `trust_env` to `create_ssl_context`, which reads `SSL_CERT_FILE` when both are true. Its environment guide says environment variables are used by default but does not list `SSL_CERT_FILE`. This guide's advice: use the export above for that HTTPX code path; pass an explicit CA context for other configurations. With no CA specified and verification enabled, CPython's `ssl.create_default_context()` tries to load default CAs (CPython notes this may fail silently). `ssl.get_default_verify_paths()` reports OpenSSL's environment key for a CA file; OpenSSL names `SSL_CERT_FILE` as an override for its default CA file. CPython's cited files do not name `SSL_CERT_FILE`, so whether a given `ssl` configuration uses that override remains unverified.
 
 ## 5. Do not quick-share files with `http.server`
 
@@ -329,18 +329,18 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 - Requests REQUESTS_CA_BUNDLE trust roots (v2.32.3, checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239
 - slowapi Starlette/FastAPI scope (v0.1.10, checked October 2026): https://github.com/laurentS/slowapi/blob/v0.1.10/README.md#L1-L3
 - slowapi limit decorator, endpoint request argument and WebSocket limitation (v0.1.10, checked October 2026): https://github.com/laurentS/slowapi/blob/v0.1.10/README.md#L24-L50
-- HTTPX environment-variable default and trust_env (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L3-L9
+- HTTPX environment-variable default and trust_env (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L3-L7
 - HTTPX environment guide variable list, which omits SSL_CERT_FILE (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L9-L53
-- HTTPX SSL guide, verify=False example (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L12-L16
-- HTTPX SSL guide, conflicting SSL_CERT_FILE statement (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L72-L85
+- HTTPX SSL guide, verify=False example (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L12-L17
+- HTTPX SSL guide, conflicting SSL_CERT_FILE statement (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L72-L86
 - HTTPX SSL context selection with verify=True and trust_env=True (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/httpx/_config.py#L23-L40
 - HTTPX sync transport passes verify and trust_env to create_ssl_context (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L133-L154
 - HTTPX async transport passes verify and trust_env to create_ssl_context (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L278-L298
 - CPython ssl get_default_verify_paths (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L390-L405
 - CPython ssl load_default_certs (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L542-L548
 - CPython ssl create_default_context conditional default-CA load (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L730-L736
-- CPython ssl _create_unverified_context (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L744-L750
+- CPython ssl _create_unverified_context (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L744-L754
 - CPython ssl documentation for default verify paths and OpenSSL environment keys (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L421-L433
 - CPython ssl documentation for default CAs and silent failure (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L1642-L1649
-- OpenSSL default CA file environment override (openssl-4.0.3, checked October 2026): https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man3/SSL_CTX_load_verify_locations.pod#L44-L49
+- OpenSSL default CA file environment override (openssl-4.0.3, checked October 2026): https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man3/SSL_CTX_load_verify_locations.pod#L39-L49
 - Requests verify=False disables certificate verification (v2.32.3, checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L241-L243

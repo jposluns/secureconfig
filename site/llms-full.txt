@@ -5992,7 +5992,7 @@ export REQUESTS_CA_BUNDLE=/path/ca.crt   # requests
 export SSL_CERT_FILE=/path/ca.crt        # HTTPX with verify=True and trust_env=True; OpenSSL default CA file for ssl when its default verify paths apply (see caveat below)
 ```
 
-HTTPX 0.28.1's SSL guide says `SSL_CERT_FILE` and `SSL_CERT_DIR` are not automatically used and shows an explicit context, while its environment guide says environment variables are used by default but does not list `SSL_CERT_FILE`. Its sync and async transports pass `verify` and `trust_env` to `create_ssl_context`, which reads `SSL_CERT_FILE` when both are true. This guide's advice: use the export above for that HTTPX code path; pass an explicit CA context for other configurations. With no CA specified and verification enabled, CPython's `ssl.create_default_context()` tries to load default CAs (CPython notes this may fail silently). `ssl.get_default_verify_paths()` reports OpenSSL's environment key for a CA file; OpenSSL names `SSL_CERT_FILE` as an override for its default CA file. CPython's cited files do not name `SSL_CERT_FILE`, so whether a given `ssl` configuration uses that override remains unverified.
+HTTPX 0.28.1's SSL guide says `SSL_CERT_FILE` and `SSL_CERT_DIR` are not automatically used and shows an explicit context; its code path contradicts that: its sync and async transports pass `verify` and `trust_env` to `create_ssl_context`, which reads `SSL_CERT_FILE` when both are true. Its environment guide says environment variables are used by default but does not list `SSL_CERT_FILE`. This guide's advice: use the export above for that HTTPX code path; pass an explicit CA context for other configurations. With no CA specified and verification enabled, CPython's `ssl.create_default_context()` tries to load default CAs (CPython notes this may fail silently). `ssl.get_default_verify_paths()` reports OpenSSL's environment key for a CA file; OpenSSL names `SSL_CERT_FILE` as an override for its default CA file. CPython's cited files do not name `SSL_CERT_FILE`, so whether a given `ssl` configuration uses that override remains unverified.
 
 ## 5. Do not quick-share files with `http.server`
 
@@ -6036,20 +6036,20 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 - Requests REQUESTS_CA_BUNDLE trust roots (v2.32.3, checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239
 - slowapi Starlette/FastAPI scope (v0.1.10, checked October 2026): https://github.com/laurentS/slowapi/blob/v0.1.10/README.md#L1-L3
 - slowapi limit decorator, endpoint request argument and WebSocket limitation (v0.1.10, checked October 2026): https://github.com/laurentS/slowapi/blob/v0.1.10/README.md#L24-L50
-- HTTPX environment-variable default and trust_env (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L3-L9
+- HTTPX environment-variable default and trust_env (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L3-L7
 - HTTPX environment guide variable list, which omits SSL_CERT_FILE (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L9-L53
-- HTTPX SSL guide, verify=False example (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L12-L16
-- HTTPX SSL guide, conflicting SSL_CERT_FILE statement (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L72-L85
+- HTTPX SSL guide, verify=False example (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L12-L17
+- HTTPX SSL guide, conflicting SSL_CERT_FILE statement (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L72-L86
 - HTTPX SSL context selection with verify=True and trust_env=True (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/httpx/_config.py#L23-L40
 - HTTPX sync transport passes verify and trust_env to create_ssl_context (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L133-L154
 - HTTPX async transport passes verify and trust_env to create_ssl_context (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L278-L298
 - CPython ssl get_default_verify_paths (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L390-L405
 - CPython ssl load_default_certs (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L542-L548
 - CPython ssl create_default_context conditional default-CA load (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L730-L736
-- CPython ssl _create_unverified_context (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L744-L750
+- CPython ssl _create_unverified_context (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L744-L754
 - CPython ssl documentation for default verify paths and OpenSSL environment keys (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L421-L433
 - CPython ssl documentation for default CAs and silent failure (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L1642-L1649
-- OpenSSL default CA file environment override (openssl-4.0.3, checked October 2026): https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man3/SSL_CTX_load_verify_locations.pod#L44-L49
+- OpenSSL default CA file environment override (openssl-4.0.3, checked October 2026): https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man3/SSL_CTX_load_verify_locations.pod#L39-L49
 - Requests verify=False disables certificate verification (v2.32.3, checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L241-L243
 
 ======================================================================
