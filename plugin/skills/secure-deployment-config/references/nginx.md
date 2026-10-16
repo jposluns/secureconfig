@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "54ab38b5021e1755263e430e602d91b6b92852fbf93c27e7a14e736ca5864712",
+  "body_sha256": "b8637a3fc7beaa4a5236b58450b9b6c13809f830ad9ae2b3146045113e4058ed",
   "components": {
     "ng": {
       "name": "nginx documentation",
@@ -346,7 +346,7 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 ## Common mistakes
 
 - The app still listens on `0.0.0.0:3000` next to the proxy, so the proxy's TLS and auth are bypassed. Bind the app to `127.0.0.1` and confirm with `ss -tlnp`.
-- `add_header` in a `location` block silently drops ALL headers inherited from `server`. That is inheritance, which `always` does not change (`always` changes which response codes the header is added to, not inheritance). Keep HSTS at the `server` level, and if a `location` needs its own `add_header`, re-declare HSTS inside it too. At nginx release-1.26.3, the [header merge code](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687) inherits parent headers only when the child has no header list, and each `add_header` creates that level's own list ([directive handler](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796)).
+- `add_header` in a `location` block silently drops ALL headers inherited from `server`. That is inheritance, which `always` does not change (`always` changes which response codes the header is added to, not inheritance). Keep HSTS at the `server` level, and if a `location` needs its own `add_header`, re-declare HSTS inside it too. At nginx release-1.26.3, the [header merge code](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687) inherits parent headers only when the child has no header list, and the first `add_header` at a level creates that level's own list ([directive handler](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796)).
 - A default `server` block that still serves plain HTTP for unmatched hosts; give the catch-all `default_server` a `return 444;` (or a redirect to the literal canonical host), not the `$host`-reflecting redirect above.
 - `auth_basic` on `/` but a later `location` (for example `/static`) that re-opens access; `auth_basic off` should be a deliberate exception, not an accident.
 
