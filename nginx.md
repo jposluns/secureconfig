@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "25e7ba3fa378ceef2bce0b748657a36db047f7d0a0cf12c63178e674af5a81b8",
+  "body_sha256": "fabcd977fd849010acba66c24503baf02db4fe0a6f84fc820b017135dc51d23d",
   "components": {
     "ng": {
       "name": "nginx documentation",
@@ -45,14 +45,16 @@ version_basis: {
       "sources": {
         "s0ae4e9bc8d07": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218",
         "s002242c2d0cd": "https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L470-L480",
-        "sc4e1ac64893d": "https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L769-L775",
+        "s305b7194043c": "https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L739-L775",
         "sbea253fd242b": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/v2/ngx_http_v2_module.c#L76-L81",
         "s936193a42402": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L4181-L4188",
         "sac3cbbf7fc48": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L857-L862",
         "s66c86979411e": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L153-L172",
         "sabb195c173d5": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802",
+        "sa930199b563a": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L74-L80",
         "seb1f8a9d91f9": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687",
         "s3df6e64cd6a3": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182",
+        "sced570e33c0f": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138",
         "sfafe27857e33": "https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576"
       }
     },
@@ -70,7 +72,8 @@ version_basis: {
       "name": "Debian apache2 packaging",
       "basis": "2.4.69-1",
       "sources": {
-        "sc2a26b3a7af5": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-101"
+        "sc2a26b3a7af5": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-101",
+        "s62f6ed2866ab": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1"
       }
     },
     "owasp": {
@@ -91,12 +94,12 @@ version_basis: {
     "proxy": {"text": "Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
     "forwarded-host": {"text": "Overwrite X-Forwarded-Host: client-set values otherwise pass upstream.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
     "cipher-policy": {"text": "Use Mozilla for explicit cipher policy; retain the stated protocol floor.", "components": ["ng", "policy"], "sources": ["ng:s6a0728ca7609", "policy:s529b0eabe2ed"], "status": "REASONED"},
-    "tickets": {"text": "At nginx release-1.26.3, ssl_session_tickets defaults on; nginx 1.23.2 introduced automatic ticket-key rotation with a shared ssl_session_cache.", "components": ["ng", "nginx-source"], "sources": ["ng:s6a0728ca7609", "nginx-source:sac3cbbf7fc48", "nginx-source:sc4e1ac64893d", "nginx-source:sfafe27857e33"], "status": "REASONED"},
+    "tickets": {"text": "At nginx release-1.26.3, ssl_session_tickets defaults on; nginx 1.23.2 introduced automatic ticket-key rotation with a shared ssl_session_cache.", "components": ["ng", "nginx-source"], "sources": ["ng:s6a0728ca7609", "nginx-source:sac3cbbf7fc48", "nginx-source:s305b7194043c", "nginx-source:sfafe27857e33"], "status": "REASONED"},
     "redirect": {"text": "Port 80 on IPv4/IPv6 redirects with 301; a default server reflecting $host can redirect unmatched hosts off-site, so use 444 or a canonical host.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
-    "password-file": {"text": "At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils.", "components": ["ng", "httpd", "owasp", "debian-apache2"], "sources": ["ng:sf32ce2956917", "debian-apache2:sc2a26b3a7af5", "httpd:s309ecdd34379", "httpd:sf711558bdf3c", "httpd:s1c1a101a70e7", "httpd:s4482c55d79a2", "owasp:s4531e65b6502"], "status": "REASONED"},
+    "password-file": {"text": "At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils.", "components": ["ng", "httpd", "owasp", "debian-apache2"], "sources": ["ng:sf32ce2956917", "debian-apache2:sc2a26b3a7af5", "debian-apache2:s62f6ed2866ab", "httpd:s309ecdd34379", "httpd:sf711558bdf3c", "httpd:s1c1a101a70e7", "httpd:s4482c55d79a2", "owasp:s4531e65b6502"], "status": "REASONED"},
     "basic": {"text": "auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers.", "components": ["ng"], "sources": ["ng:sf32ce2956917", "ng:sf3430c5a0b22"], "status": "REASONED"},
-    "mtls": {"text": "At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification.", "components": ["ng", "nginx-source"], "sources": ["ng:s6a0728ca7609", "nginx-source:s66c86979411e", "nginx-source:sabb195c173d5"], "status": "REASONED"},
-    "mfa": {"text": "At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia, oauth2-proxy and Cloudflare Access integration claims remain unsourced by these snapshots.", "components": ["ng", "nginx-source"], "sources": ["ng:sf32ce2956917", "nginx-source:s3df6e64cd6a3"], "status": "REASONED"},
+    "mtls": {"text": "At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification.", "components": ["ng", "nginx-source"], "sources": ["ng:s6a0728ca7609", "nginx-source:s66c86979411e", "nginx-source:sabb195c173d5", "nginx-source:sa930199b563a"], "status": "REASONED"},
+    "mfa": {"text": "At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia, oauth2-proxy and Cloudflare Access integration claims are not covered by the nginx source cited here.", "components": ["ng", "nginx-source"], "sources": ["ng:sf32ce2956917", "nginx-source:s3df6e64cd6a3", "nginx-source:sced570e33c0f"], "status": "REASONED"},
     "body-limit": {"text": "client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
     "rate-limit": {"text": "Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503.", "components": ["ng"], "sources": ["ng:sb3bee9429629"], "status": "REASONED"},
     "connection-limit": {"text": "limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503.", "components": ["ng"], "sources": ["ng:sddc43aac8779"], "status": "REASONED"},
@@ -138,7 +141,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | password-file: At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils. | nginx documentation unknown; Apache httpd source 2.4.69; OWASP Password Storage Cheat Sheet commit 72865b1e; Debian apache2 packaging 2.4.69-1 | REASONED |
 | basic: auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers. | nginx documentation unknown | REASONED |
 | mtls: At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
-| mfa: At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia, oauth2-proxy and Cloudflare Access integration claims remain unsourced by these snapshots. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
+| mfa: At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia, oauth2-proxy and Cloudflare Access integration claims are not covered by the nginx source cited here. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
 | body-limit: client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check. | nginx documentation unknown | REASONED |
 | rate-limit: Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503. | nginx documentation unknown | REASONED |
 | connection-limit: limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503. | nginx documentation unknown | REASONED |
@@ -186,9 +189,9 @@ server {
 }
 ```
 
-At nginx release-1.26.3, the HTTP/2 module provides `http2 on`; the 1.25.1 changelog introduced it and deprecated the older `listen ... http2` parameter ([module](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/v2/ngx_http_v2_module.c#L76-L81), [changelog](https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L470-L480), [listen parser](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L4181-L4188)).
+At nginx release-1.26.3, the HTTP/2 module provides `http2 on`; nginx 1.25.1 introduced it and deprecated the older `listen ... http2` parameter ([module](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/v2/ngx_http_v2_module.c#L76-L81), [changelog](https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L470-L480), [listen parser](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L4181-L4188)).
 
-For explicit cipher lists, generate them with the [Mozilla SSL Configuration Generator](https://ssl-config.mozilla.org/) instead of copying from old tutorials; the protocol floor above is the part that must not be omitted. nginx defaults `ssl_session_tickets on`, and un-rotated ticket keys weaken forward secrecy: either set `ssl_session_tickets off`, or on nginx 1.23.2+ give it a shared `ssl_session_cache` so it rotates the ticket keys automatically. At nginx release-1.26.3, the default-on setting and shared-cache rotation are supported by the [SSL module](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L857-L862), [1.23.2 changelog](https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L769-L775) and [rotation code](https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576).
+For explicit cipher lists, generate them with the [Mozilla SSL Configuration Generator](https://ssl-config.mozilla.org/) instead of copying from old tutorials; the protocol floor above is the part that must not be omitted. nginx defaults `ssl_session_tickets on`, and un-rotated ticket keys weaken forward secrecy: either set `ssl_session_tickets off`, or on nginx 1.23.2+ give it a shared `ssl_session_cache` so it rotates the ticket keys automatically. At nginx release-1.26.3, the default-on setting and shared-cache rotation are supported by the [SSL module](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L857-L862), [1.23.2 changelog](https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L739-L775) and [rotation code](https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576).
 
 ## 2. Redirect HTTP to HTTPS
 
@@ -212,7 +215,7 @@ sudo apt install apache2-utils          # provides htpasswd
 sudo htpasswd -B -C 12 -c /etc/nginx/.htpasswd admin   # -C 12 sets bcrypt cost; bare -B is 5, below the OWASP minimum of 10
 ```
 
-At httpd 2.4.69, `htpasswd -B` selects bcrypt, `-C` sets its cost, and omitting `-C` uses cost 5 ([htpasswd usage](https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128), [default constant](https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45), [bcrypt call](https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295), [cost option](https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L382)). The OWASP cheat sheet at commit 72865b1e recommends a work factor of at least 10 for legacy bcrypt ([OWASP recommendation](https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13)). Debian's apache2 packaging at 2.4.69-1 lists `htpasswd` among the programs in `apache2-utils` ([package description](https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-101)); other distributions may package it differently.
+At httpd 2.4.69, `htpasswd -B` selects bcrypt, `-C` sets its cost, and omitting `-C` uses cost 5 ([htpasswd usage](https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128), [default constant](https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45), [bcrypt call](https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295), [cost option](https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L382)). The OWASP cheat sheet at commit 72865b1e recommends a work factor of at least 10 for legacy bcrypt ([OWASP recommendation](https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13)). Debian's apache2 packaging at 2.4.69-1 ([changelog](https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1)) lists `htpasswd` among the programs in `apache2-utils` ([package description](https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-101)); other distributions may package it differently.
 
 ```nginx
     # this is section 1's `location /`, now also carrying the auth directives - do not paste a second
@@ -235,9 +238,9 @@ Mutual TLS for machine-to-machine access:
     ssl_verify_client on;
 ```
 
-At nginx release-1.26.3, these directives configure client-certificate verification ([directive definitions](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L153-L172)), and `ssl_verify_client on` or `optional` without `ssl_client_certificate` fails the [configuration check](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802) ("no ssl_client_certificate for ssl_verify_client"); `optional_no_ca` is exempt.
+At nginx release-1.26.3, these directives configure client-certificate verification ([directive definitions](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L153-L172)), and `ssl_verify_client on` or `optional` without `ssl_client_certificate` fails the [configuration check](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802) ("no ssl_client_certificate for ssl_verify_client"); `optional_no_ca` ([enum value 3](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L74-L80)) is exempt.
 
-Basic authentication is single-factor. For human-facing sites, add MFA with the `auth_request` mechanism pointed at an [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy) portal, or front the site with Cloudflare Access; options in [mfa.md](mfa.md). At nginx release-1.26.3, `auth_request` accepts a 2xx subrequest response, returns 401 or 403, and treats other statuses as errors ([module handler](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182)). The fetched files do not verify the Authelia, oauth2-proxy or Cloudflare Access integrations.
+Basic authentication is single-factor. For human-facing sites, add MFA with the `auth_request` mechanism pointed at an [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy) portal, or front the site with Cloudflare Access; options in [mfa.md](mfa.md). At nginx release-1.26.3, `auth_request` accepts a subrequest status from `NGX_HTTP_OK` (200) up to `NGX_HTTP_SPECIAL_RESPONSE` (300, exclusive), returns 401 or 403 as received, and answers any other status with 500 ([module handler](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182), [status codes](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138)). The nginx source cited here does not cover the Authelia, oauth2-proxy or Cloudflare Access integrations.
 
 ## 4. Bound the expensive endpoints
 
@@ -360,18 +363,21 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 - RFC 6797 HSTS policy lifetime and subdomains (checked October 2026): https://www.rfc-editor.org/rfc/rfc6797.html#section-6.1.2
 - nginx release-1.26.3 header-filter `always` handling (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218
 - nginx release-1.26.3 changes http2 (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L470-L480
-- nginx release-1.26.3 changes tickets (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L769-L775
+- nginx release-1.26.3 changes tickets (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L739-L775
 - nginx release-1.26.3 http2 (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/v2/ngx_http_v2_module.c#L76-L81
 - nginx release-1.26.3 listen http2 (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L4181-L4188
 - nginx release-1.26.3 ssl tickets (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L857-L862
 - nginx release-1.26.3 ssl mtls (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L153-L172
 - nginx release-1.26.3 ssl mtls check (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802
+- nginx release-1.26.3 ssl_verify_client values (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L74-L80
 - nginx release-1.26.3 headers merge (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687
 - nginx release-1.26.3 auth request (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182
+- nginx release-1.26.3 HTTP status codes (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138
 - nginx release-1.26.3 ticket rotation (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576
 - Apache httpd 2.4.69 htpasswd (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128
 - Apache httpd 2.4.69 bcrypt default (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45
 - Apache httpd 2.4.69 bcrypt use (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295
 - Apache httpd 2.4.69 bcrypt cost (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L382
 - Debian apache2 2.4.69-1 `apache2-utils` package description listing htpasswd (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-101
+- Debian apache2 packaging version 2.4.69-1 (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1
 - OWASP Password Storage Cheat Sheet at commit 72865b1e (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
