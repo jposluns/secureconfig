@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "66d4e72aba688369b0ad378593763c2aff8088cd4c7ecc2d688bb4c93f10cf08",
+  "body_sha256": "6080452ef1167bfa3c1236016052b5b73eef4b0bc1829e784a0e4ea3e04f2b9a",
   "components": {
     "docker": {
       "name": "Docker documentation",
@@ -36,6 +36,7 @@ version_basis: {
       "basis": "1.34.0",
       "sources": {
         "s0906dc78482b": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L293-L310",
+        "s637f22f61d4f": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L173-L194",
         "sc98b92ba3ebf": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L591-L622",
         "s2ffc04de1d63": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/util/override_options.go#L29-L90"
       }
@@ -78,7 +79,7 @@ version_basis: {
     "verify-user": {"text": "Compose exec app id must report a nonzero UID; the service name is project-scoped, unlike docker exec container names.", "components": ["docker"], "sources": ["docker:s6ca35cbd69e7", "docker:s8b7485a246e4"], "status": "REASONED", "verify": [1]},
     "verify-rootfs": {"text": "touch must first print WRITABLE on an owned existing path with read_only false, then blocked after recreation with true; ENOENT/EACCES or exit 0 do not discriminate.", "components": ["docker"], "sources": ["docker:s8b7485a246e4"], "status": "REASONED", "verify": [1]},
     "verify-context": {"text": "kubectl get reads declared context; inspect the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities, avoiding pause PID 1 in shared namespaces.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308"], "status": "REASONED", "verify": [1]},
-    "verify-probe": {"text": "Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified.", "components": ["kubernetes", "kubectl-134", "rfc7396", "busybox-1361"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7", "kubernetes:s953450b4076f", "kubectl-134:s0906dc78482b", "kubectl-134:sc98b92ba3ebf", "kubectl-134:s2ffc04de1d63", "rfc7396:sda39f95d0890", "busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s8a53fb647996"], "status": "REASONED", "verify": [1]},
+    "verify-probe": {"text": "Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified.", "components": ["kubernetes", "kubectl-134", "rfc7396", "busybox-1361"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7", "kubernetes:s953450b4076f", "kubectl-134:s0906dc78482b", "kubectl-134:s637f22f61d4f", "kubectl-134:sc98b92ba3ebf", "kubectl-134:s2ffc04de1d63", "rfc7396:sda39f95d0890", "busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s8a53fb647996"], "status": "REASONED", "verify": [1]},
     "verify-segmentation": {"text": "The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED", "verify": [1]}
   }
 }
@@ -287,6 +288,7 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
 - Kubernetes 1.34 Pod Security Admission enforcement (checked October 2026): https://v1-34.docs.kubernetes.io/docs/concepts/security/pod-security-admission/
 - Kubernetes 1.34 namespace labels and warnings for existing Pods (checked October 2026): https://v1-34.docs.kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/
 - kubectl 1.34.0 source, run name parameter (checked October 2026): https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L293-L310
+- kubectl 1.34.0 source, kubectl run registers the override flags (checked October 2026): https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L173-L194
 - kubectl 1.34.0 source, generation before override (checked October 2026): https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L591-L622
 - kubectl 1.34.0 source, default override method (checked October 2026): https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/util/override_options.go#L29-L90
 - RFC 7396, JSON Merge Patch section 2 (checked October 2026): https://www.rfc-editor.org/rfc/rfc7396#section-2
