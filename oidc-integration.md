@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "319a6b54b5dba732a9194fef0d90f4f61e74e7ea11b5900a8f997318e668d00a",
+  "body_sha256": "8a9269eba42d22b031dd757c2be376a9772ec6f67d7bee6b6e0c4a13bd40bba6",
   "components": {
     "oauth": {
       "name": "OAuth security BCP and PKCE",
@@ -52,6 +52,13 @@ version_basis: {
         "s6bed41a98a09": "https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app",
         "s21141e7818fc": "https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc",
         "s78a2bccc8dab": "https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-all-users-mfa-strength"
+      }
+    },
+    "github-2fa": {
+      "name": "GitHub organization two-factor authentication policy",
+      "basis": "cb051611377a0d2904411e6157154e9b4953d870",
+      "sources": {
+        "sa57ab4061d3c": "https://github.com/github/docs/blob/cb051611377a0d2904411e6157154e9b4953d870/content/organizations/keeping-your-organization-secure/managing-two-factor-authentication-for-your-organization/requiring-two-factor-authentication-in-your-organization.md#L22-L35"
       }
     },
     "github": {
@@ -149,7 +156,7 @@ version_basis: {
     "authlib-config": {"text": "Authlib registration uses Google discovery, openid profile email and S256; authorize_redirect and authorize_access_token implement the callback flow.", "components": ["authlib"], "sources": ["authlib:s8e3650e799b8"], "status": "REASONED"},
     "go-oidc-verifier": {"text": "go-oidc verifies signature, issuer, audience and expiry; compare idToken.Nonce separately and leave SkipIssuerCheck off.", "components": ["go-oidc"], "sources": ["go-oidc:s60cc1d7a8fe6"], "status": "REASONED"},
     "entra-mfa": {"text": "Require authentication strength through Entra Conditional Access; check ID-token and optional-claims documentation before relying on amr=mfa.", "components": ["entra"], "sources": ["entra:s78a2bccc8dab", "entra:sc592f9f58893", "entra:s46eca003125d"], "status": "REASONED"},
-    "google-mfa": {"text": "Enforce Workspace 2-Step Verification in policy; no Google ID-token MFA claim was verified for this guide.", "components": ["google"], "sources": ["google:s4e673839253c"], "status": "REASONED"},
+    "google-mfa": {"text": "Enforce Workspace 2-Step Verification for the selected users or groups in policy; no Google ID-token MFA claim was verified for this guide.", "components": ["google"], "sources": ["google:s4e673839253c"], "status": "REASONED"},
     "okta-mfa": {"text": "Use Okta authentication and global-session policies; its amr includes pwd, mfa, otp and hwk.", "components": ["okta"], "sources": ["okta:s2935e4fa2dea", "okta:s380f2ddc93a1"], "status": "REASONED"},
     "verify-discovery": {"text": "The discovery probe reads Google issuer and jwks_uri; this does not demonstrate application authorization.", "components": ["google", "discovery"], "sources": ["google:s4f815acc2976", "discovery:s85a922f6cf28"], "status": "REASONED", "verify": [1]},
     "verify-anonymous": {"text": "Unauthenticated /admin must return 401 or a 302 to provider/login, never 200 or protected content; an unrelated redirect is not success.", "components": ["core"], "sources": ["core:scfd2790a544c"], "status": "REASONED", "verify": [1]},
@@ -161,7 +168,7 @@ version_basis: {
     "server-session": {"text": "After token validation and allowlist authorization, create a server-side session and give the browser only a session cookie marked Secure, HttpOnly and SameSite.", "components": ["authjs", "owasp-docs"], "sources": ["authjs:s57969fbce700", "owasp-docs:s0562e4dc23f2"], "status": "REASONED"},
     "browser-token-storage": {"text": "Do not store ID or access tokens in localStorage or script-readable cookies; this server-side login recipe has no browser need for them.", "components": ["oauth", "owasp-docs"], "sources": ["oauth:sde329701b60c", "owasp-docs:s41cb2204a4e2", "owasp-docs:s4f0aa80b1ef6"], "status": "REASONED"},
     "client-secret-storage": {"text": "Keep the client secret in an environment variable or secret manager, never a repository or image. General OAuth security source; no dedicated secret-storage reference in Sources.", "components": ["oauth"], "sources": ["oauth:sde329701b60c"], "status": "REASONED"},
-    "github-org-mfa": {"text": "GitHub OAuth has no ID token, so MFA depends on what the organization requires of its members. OAuth authorization and organization-membership references only; Sources has no GitHub organization-MFA-policy reference.", "components": ["github"], "sources": ["github:sce29d52054f5", "github:s06cab1763f65"], "status": "REASONED"},
+    "github-org-mfa": {"text": "GitHub OAuth has no ID token. An active organization membership check establishes membership only; inference from the pinned 2FA policy: membership alone does not prove MFA because a member without 2FA retains membership when required 2FA blocks resource access. MFA depends on the organization’s effective 2FA requirement and whether it is enabled; guide advice: verify that requirement.", "components": ["github", "github-2fa"], "sources": ["github:sce29d52054f5", "github:s06cab1763f65", "github-2fa:sa57ab4061d3c"], "status": "REASONED"},
     "authjs-session-storage": {"text": "Auth.js stores an encrypted JWT or database session ID in an HttpOnly cookie; use database sessions or a server blocklist when copied-cookie revocation is required.", "components": ["authjs"], "sources": ["authjs:s57969fbce700"], "status": "REASONED"},
     "mfa-session-check": {"text": "An app may additionally refuse an ID-token session showing no second factor only where the provider documents that claim; do not assume a portable MFA claim across providers.", "components": ["entra", "okta"], "sources": ["entra:sc592f9f58893", "entra:s46eca003125d", "okta:s380f2ddc93a1"], "status": "REASONED"}
   }
@@ -210,7 +217,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | authlib-config: Authlib registration uses Google discovery, openid profile email and S256; authorize_redirect and authorize_access_token implement the callback flow. | Authlib unknown | REASONED |
 | go-oidc-verifier: go-oidc verifies signature, issuer, audience and expiry; compare idToken.Nonce separately and leave SkipIssuerCheck off. | go-oidc unknown | REASONED |
 | entra-mfa: Require authentication strength through Entra Conditional Access; check ID-token and optional-claims documentation before relying on amr=mfa. | Microsoft Entra documentation unknown | REASONED |
-| google-mfa: Enforce Workspace 2-Step Verification in policy; no Google ID-token MFA claim was verified for this guide. | Google identity documentation unknown | REASONED |
+| google-mfa: Enforce Workspace 2-Step Verification for the selected users or groups in policy; no Google ID-token MFA claim was verified for this guide. | Google identity documentation unknown | REASONED |
 | okta-mfa: Use Okta authentication and global-session policies; its amr includes pwd, mfa, otp and hwk. | Okta documentation unknown | REASONED |
 | verify-discovery: The discovery probe reads Google issuer and jwks_uri; this does not demonstrate application authorization. | Google identity documentation unknown; OpenID Connect Discovery 1.0 | REASONED |
 | verify-anonymous: Unauthenticated /admin must return 401 or a 302 to provider/login, never 200 or protected content; an unrelated redirect is not success. | OpenID Connect Core 1.0 | REASONED |
@@ -222,7 +229,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | server-session: After token validation and allowlist authorization, create a server-side session and give the browser only a session cookie marked Secure, HttpOnly and SameSite. | Auth.js unknown; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | browser-token-storage: Do not store ID or access tokens in localStorage or script-readable cookies; this server-side login recipe has no browser need for them. | OAuth security BCP and PKCE unknown; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
 | client-secret-storage: Keep the client secret in an environment variable or secret manager, never a repository or image. General OAuth security source; no dedicated secret-storage reference in Sources. | OAuth security BCP and PKCE unknown | REASONED |
-| github-org-mfa: GitHub OAuth has no ID token, so MFA depends on what the organization requires of its members. OAuth authorization and organization-membership references only; Sources has no GitHub organization-MFA-policy reference. | GitHub OAuth and REST documentation unknown | REASONED |
+| github-org-mfa: GitHub OAuth has no ID token. An active organization membership check establishes membership only; inference from the pinned 2FA policy: membership alone does not prove MFA because a member without 2FA retains membership when required 2FA blocks resource access. MFA depends on the organization’s effective 2FA requirement and whether it is enabled; guide advice: verify that requirement. | GitHub OAuth and REST documentation unknown; GitHub organization two-factor authentication policy cb051611377a0d2904411e6157154e9b4953d870 | REASONED |
 | authjs-session-storage: Auth.js stores an encrypted JWT or database session ID in an HttpOnly cookie; use database sessions or a server blocklist when copied-cookie revocation is required. | Auth.js unknown | REASONED |
 | mfa-session-check: An app may additionally refuse an ID-token session showing no second factor only where the provider documents that claim; do not assume a portable MFA claim across providers. | Microsoft Entra documentation unknown; Okta documentation unknown | REASONED |
 <!-- version-basis:end -->
@@ -298,9 +305,9 @@ Use a maintained library; do not hand-parse JWTs. The snippets are from each lib
 
 ## 5. Where MFA comes from
 
-Your app does not run the second factor; the provider does, under its policy: Conditional Access in Entra (**Entra ID > Conditional Access > Policies**, grant **Require authentication strength**; a P1 feature per [identity-providers.md](identity-providers.md)), 2-Step Verification in the Google Admin console (**Security > Authentication > 2-step verification**, Enforcement **On**), and authentication policies plus the global session policy in Okta. Ordering and options in [mfa.md](mfa.md).
+Your app does not run the second factor; the provider does, under its policy: Conditional Access in Entra (**Entra ID > Conditional Access > Policies**, grant **Require authentication strength**; a P1 feature per [identity-providers.md](identity-providers.md)), 2-Step Verification in the Google Admin console (**Security > Authentication > 2-step verification**, Enforcement **On** for the selected users or groups), and authentication policies plus the global session policy in Okta. Ordering and options in [mfa.md](mfa.md).
 
-An app can additionally refuse a session whose ID token shows no second factor, where the provider documents the claim. Okta's `amr` array carries values such as `pwd`, `mfa`, `otp`, and `hwk`. For Entra, check the ID token claims reference and the optional claims reference for the `amr` claim and its `mfa` value before relying on it. For Google, enforce 2SV in Workspace; no ID token MFA claim was verified for this guide. GitHub OAuth has no ID token, so MFA is whatever the organization requires of its members.
+An app can additionally refuse a session whose ID token shows no second factor, where the provider documents the claim. Okta's `amr` array carries values such as `pwd`, `mfa`, `otp`, and `hwk`. For Entra, check the ID token claims reference and the optional claims reference for the `amr` claim and its `mfa` value before relying on it. For Google, enforce 2SV in Workspace for the selected users or groups; no ID token MFA claim was verified for this guide. GitHub OAuth has no ID token. An active organization membership check establishes membership only; inference from GitHub’s 2FA policy: membership alone does not prove MFA because members without 2FA retain membership while required 2FA blocks organization resources. Guide advice: verify the organization’s effective 2FA requirement is enabled before relying on it for MFA.
 
 ## Verify
 
@@ -332,6 +339,7 @@ REASONED: preceding block; the discovery and anonymous-admin probes in the block
 - Microsoft Entra Conditional Access: require MFA for all users: https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-all-users-mfa-strength
 - GitHub OAuth apps: authorizing: https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps ; creating: https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app ; scopes: https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps
 - GitHub REST: organization members: https://docs.github.com/en/rest/orgs/members ; team members: https://docs.github.com/en/rest/teams/members
+- GitHub organization required 2FA (pinned commit cb051611377a0d2904411e6157154e9b4953d870, checked October 2026): https://github.com/github/docs/blob/cb051611377a0d2904411e6157154e9b4953d870/content/organizations/keeping-your-organization-secure/managing-two-factor-authentication-for-your-organization/requiring-two-factor-authentication-in-your-organization.md#L22-L35
 - Okta: OAuth 2.0 and OpenID Connect overview: https://developer.okta.com/docs/concepts/oauth-openid/ ; OIDC API reference (discovery, issuer, `amr`, `groups`): https://developer.okta.com/docs/api/openapi/okta-oauth/guides/overview
 - Okta: add a groups claim: https://developer.okta.com/docs/guides/customize-tokens-groups-claim/main/ ; sign users in to your web application: https://developer.okta.com/docs/guides/sign-into-web-app-redirect/-/main/ ; policies concept: https://developer.okta.com/docs/concepts/policies/
 - openid-client: https://github.com/panva/openid-client
