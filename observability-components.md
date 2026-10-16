@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "3592c6b167bec138ae093f66de855c98d8bdcfd59142a22005880ee78d4b23a8",
+  "body_sha256": "2d90416f2da803d6d03b31f50519c6bee20e3ccdf079337e55e110fb7333850d",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -606,7 +606,7 @@ There are two fixes, and you can use both:
   address, or explicit frontend address; watchers supply targets to `grpc.DialContext`. A direct
   frontend worker opens a frontend stream; a scheduler worker opens a scheduler stream and dials
   the frontend address in the scheduler message to send results. `common.instance_addr` also
-  supplies memberlist's advertise address when set; memberlist gossip is separate from these gRPC
+  sets memberlist's `advertise_addr` setting when set; memberlist gossip is separate from these gRPC
   calls. A single-binary compactor client uses the server gRPC listen address and port when deletion
   filtering is enabled. Loopback remains a recommendation for this configuration, not a guarantee for
   every single-binary deployment: verify effective
