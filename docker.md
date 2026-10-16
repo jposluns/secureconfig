@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "94b0002cb9a7343ed20cd7cc968eddbc21e81a7f5a28802f040a52dee7fc679b",
+  "body_sha256": "341933ce64b66e3a9c45957f10e9be9ed68f6e5c897a47cf599b943ff7b40671",
   "components": {
     "docker-build": {
       "name": "Docker build and image history documentation",
@@ -11,7 +11,7 @@ version_basis: {
       "sources": {
         "sd8afa286c173": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/variables.md#L17-L52",
         "s07e00829f121": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22",
-        "s7752baa2c7bc": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L115"
+        "s6283b172a5c6": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118"
       }
     },
     "engine": {
@@ -94,7 +94,7 @@ version_basis: {
     "tls": {"text": "Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates.", "components": ["compose", "caddy-image", "caddy"], "sources": ["compose:sae565a19136c", "caddy-image:sbbb7746f7545", "caddy-image:sb126b380b9cf", "caddy-image:seea3a2adc92a", "caddy:s5520ee906a7f", "caddy:sfa5c7dc047dc"], "status": "REASONED"},
     "alternate-entry": {"text": "Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "auth": {"text": "Proxy authentication and human MFA supplement application login; no authentication-provider source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
-    "secrets": {"text": "Use runtime environment files or Compose secrets, exclude .env from Git, and never put secrets in Dockerfile ENV/ARG; use temporary build secret mounts. Docker build and history behaviour is sourced; as this guide's assessment, never bake secrets into images and scan for copied secrets. No direct source for the runtime delivery methods or the .env exclusion from Git is listed.", "components": ["compose", "docker-build"], "sources": ["compose:sae565a19136c", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s7752baa2c7bc"], "status": "REASONED"},
+    "secrets": {"text": "Use runtime environment files or Compose secrets, exclude .env from Git, and never put secrets in Dockerfile ENV/ARG; use temporary build secret mounts. Docker build and history behaviour is sourced; as this guide's assessment, never bake secrets into images and do not copy or print build-time secrets into the image. No direct source for the runtime delivery methods or the .env exclusion from Git is listed.", "components": ["compose", "docker-build"], "sources": ["compose:sae565a19136c", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s6283b172a5c6"], "status": "REASONED"},
     "workload": {"text": "Use a non-root USER and the linked capability, no-new-privileges, read-only-root and Docker-socket guidance; no workload-control source is listed here.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "database": {"text": "Database TLS and authentication remain necessary for connections from outside the Compose network; database vendor sources are in linked guides.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "verify-publish": {"text": "Compose ps is project-scoped; inventory every host container and TCP/UDP socket, including IPv6. Socket visibility alone does not prove reachability.", "components": ["compose", "engine"], "sources": ["compose:sae565a19136c", "engine:s1e53417c513d"], "status": "REASONED", "verify": [1]},
@@ -134,7 +134,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates. | Compose networking unknown; Caddy image fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Caddy v2.11.4 | REASONED |
 | alternate-entry: Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed. | Compose networking unknown | REASONED |
 | auth: Proxy authentication and human MFA supplement application login; no authentication-provider source is listed. | Compose networking unknown | REASONED |
-| secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and never put secrets in Dockerfile ENV/ARG; use temporary build secret mounts. Docker build and history behaviour is sourced; as this guide's assessment, never bake secrets into images and scan for copied secrets. No direct source for the runtime delivery methods or the .env exclusion from Git is listed. | Compose networking unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
+| secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and never put secrets in Dockerfile ENV/ARG; use temporary build secret mounts. Docker build and history behaviour is sourced; as this guide's assessment, never bake secrets into images and do not copy or print build-time secrets into the image. No direct source for the runtime delivery methods or the .env exclusion from Git is listed. | Compose networking unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | workload: Use a non-root USER and the linked capability, no-new-privileges, read-only-root and Docker-socket guidance; no workload-control source is listed here. | Compose networking unknown | REASONED |
 | database: Database TLS and authentication remain necessary for connections from outside the Compose network; database vendor sources are in linked guides. | Compose networking unknown | REASONED |
 | verify-publish: Compose ps is project-scoped; inventory every host container and TCP/UDP socket, including IPv6. Socket visibility alone does not prove reachability. | Compose networking unknown; Docker Engine networking unknown | REASONED |
@@ -245,7 +245,7 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 
 - Docker build variables (`ENV` persists in containers; build arguments may persist in metadata, provenance and history), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/variables.md#L17-L52
 - Docker build secrets (temporary mounts for build instructions), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22
-- Docker image history command (image history and creation-command output), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L115
+- Docker image history command (image history and creation-command output), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118
 - Docker packet filtering and firewalls: https://docs.docker.com/engine/network/packet-filtering-firewalls/
 - Docker with iptables, for the `DOCKER-USER` chain (processed before Docker's own rules; matches container addresses after DNAT): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker Engine 28.0 release notes, for the published-port and loopback-mapping hardening: https://docs.docker.com/engine/release-notes/28/
