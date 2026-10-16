@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "bdc0256fc16d0691b60d39984b503ff54a778ae3df80b47c2c9950c53ecc5f44",
+  "body_sha256": "afa78827cbab9d1fd7020200e3a50b28da524fc31cba3550243a014cbe4363a9",
   "components": {
     "haproxy": {
       "name": "HAProxy",
@@ -55,7 +55,7 @@ version_basis: {
   "claims": {
     "scope": {"text": "Examples target a maintained HAProxy 3.0 installation and treat frontend, stats, runtime API and direct backend as separate surfaces.", "components": ["haproxy", "docs"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493", "docs:s2be90eb936bd"], "status": "REASONED"},
     "pem": {"text": "Use matching chain/key in a combined PEM, built via a root-only temporary file and rename; separate key loading is also supported.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
-    "renewal": {"text": "Rebuild the combined PEM and reload HAProxy after successful renewal using Certbot v2.3.0 --deploy-hook or an executable in /etc/letsencrypt/renewal-hooks/deploy.", "components": ["haproxy", "certbot-source"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493", "certbot-source:sd39028a759a7"], "status": "REASONED"},
+    "renewal": {"text": "Rebuild the combined PEM and reload HAProxy after successful renewal using Certbot v2.3.0 --deploy-hook or an executable in /etc/letsencrypt/renewal-hooks/deploy (if the configuration directory is /etc/letsencrypt; certbot renew only).", "components": ["haproxy", "certbot-source"], "sources": ["haproxy:s5792e6ff4990", "haproxy:s9c32621d6493", "certbot-source:sd39028a759a7"], "status": "REASONED"},
     "tls": {"text": "Frontend :443 loads the PEM with ssl and ssl-min-ver TLSv1.2; :80 redirects to HTTPS with 301.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
     "ciphers": {"text": "ssl-default-bind-ciphers governs TLS 1.2 and -ciphersuites TLS 1.3; Mozilla is policy guidance, not HAProxy syntax authority.", "components": ["haproxy", "docs"], "sources": ["haproxy:s5792e6ff4990", "docs:s529b0eabe2ed"], "status": "REASONED"},
     "privileges": {"text": "Preserve service hardening; root-started workers drop to haproxy user/group and chroot into a provisioned root-owned directory.", "components": ["haproxy"], "sources": ["haproxy:s5792e6ff4990"], "status": "REASONED"},
@@ -99,7 +99,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | --- | --- | --- |
 | scope: Examples target a maintained HAProxy 3.0 installation and treat frontend, stats, runtime API and direct backend as separate surfaces. | HAProxy 3.0; Supporting documentation unknown | REASONED |
 | pem: Use matching chain/key in a combined PEM, built via a root-only temporary file and rename; separate key loading is also supported. | HAProxy 3.0 | REASONED |
-| renewal: Rebuild the combined PEM and reload HAProxy after successful renewal using Certbot v2.3.0 --deploy-hook or an executable in /etc/letsencrypt/renewal-hooks/deploy. | HAProxy 3.0; Certbot deploy hook documentation v2.3.0 | REASONED |
+| renewal: Rebuild the combined PEM and reload HAProxy after successful renewal using Certbot v2.3.0 --deploy-hook or an executable in /etc/letsencrypt/renewal-hooks/deploy (if the configuration directory is /etc/letsencrypt; certbot renew only). | HAProxy 3.0; Certbot deploy hook documentation v2.3.0 | REASONED |
 | tls: Frontend :443 loads the PEM with ssl and ssl-min-ver TLSv1.2; :80 redirects to HTTPS with 301. | HAProxy 3.0 | REASONED |
 | ciphers: ssl-default-bind-ciphers governs TLS 1.2 and -ciphersuites TLS 1.3; Mozilla is policy guidance, not HAProxy syntax authority. | HAProxy 3.0; Supporting documentation unknown | REASONED |
 | privileges: Preserve service hardening; root-started workers drop to haproxy user/group and chroot into a provisioned root-owned directory. | HAProxy 3.0 | REASONED |
@@ -143,7 +143,7 @@ sudo bash -c 'umask 077; tmp=$(mktemp /etc/haproxy/certs/.pem.XXXXXX) || exit 1
   mv "$tmp" /etc/haproxy/certs/example.com.pem'
 ```
 
-With Certbot v2.3.0, run the concatenation and reload HAProxy after a successful renewal using `certbot renew --deploy-hook /path/to/deploy-hook-script` or an executable in `/etc/letsencrypt/renewal-hooks/deploy` (with the default `/etc/letsencrypt` configuration directory, on `certbot renew`).
+With Certbot v2.3.0, run the concatenation and reload HAProxy after a successful renewal using `certbot renew --deploy-hook /path/to/deploy-hook-script` or an executable in `/etc/letsencrypt/renewal-hooks/deploy` (assuming the `/etc/letsencrypt` configuration directory, on `certbot renew`).
 
 ## 1. Terminate TLS and redirect HTTP
 
