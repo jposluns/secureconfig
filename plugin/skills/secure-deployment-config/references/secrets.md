@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "0cc9cc5531679f801adc23be7de5f571702111c3d8e6e078981bc68b22008165",
+  "body_sha256": "733fa5899d392231eeb8007f67e434caaf68c62742d26011e759f19981502fbe",
   "components": {
     "docker-build": {
       "name": "Docker build and image history documentation",
@@ -215,7 +215,7 @@ Leaked API keys and credentials in public repositories are the most common secur
 ## Rules
 
 1. **Secrets never enter version control.** Add `.env`, `.env.*` (frameworks such as Next.js load `.env.local` and `.env.production`, so ignoring `.env` alone leaves those committable), `*.key`, and `*.pem` to `.gitignore` before the first commit, allowlisting only a no-secret template such as `!.env.example`; `.gitignore` does not untrack a file that is already committed. Load secrets from environment variables or a secret manager (AWS Secrets Manager, Google Secret Manager, Azure Key Vault, or your platform's store per [paas.md](paas.md)).
-2. **Secrets never enter images or build logs.** Never put secrets in Dockerfile `ENV` or `ARG`: Docker documents that both are exposed in the final image; `ENV` also persists in containers from the image, while build arguments may persist in image metadata, provenance attestations and image history. `docker image history` shows an image's history; the reference's example history output shows an `ENV` instruction with its value. As this guide's assessment, it does not show every secret value. Pass runtime secrets at runtime ([docker.md](docker.md)); for a secret needed during a build, use a temporary secret mount for that build instruction and do not copy or print it into the image. Do not print secrets in application or CI logs.
+2. **Secrets never enter images or build logs.** Never put secrets in Dockerfile `ENV` or `ARG`: Docker documents that both are exposed in the final image; `ENV` also persists in containers from the image, while build arguments may persist in image metadata, provenance attestations and image history. `docker image history` shows an image's history; the reference's example history output shows an `ENV` instruction with its value. As this guide's assessment, `docker image history` does not show every secret value. Pass runtime secrets at runtime ([docker.md](docker.md)); for a secret needed during a build, use a temporary secret mount for that build instruction and do not copy or print it into the image. Do not print secrets in application or CI logs.
 3. **Generate secrets randomly** (`openssl rand -base64 32`; `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`), 1 per service and environment, never shared between staging and production.
 4. **Scan before every push.** [gitleaks](https://github.com/gitleaks/gitleaks) or [trufflehog](https://github.com/trufflesecurity/trufflehog) as a pre-commit hook and in CI:
    ```bash
