@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "5b5a84182af5bc757582ff7c9a10ecf099b52300d492607929328d8a410cefca",
+  "body_sha256": "a7ed44a1844b2c7de84f53f40618a2038a71b93855e79651d48022f910e9df94",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -26,6 +26,17 @@ version_basis: {
         "s59abf03bae6a": "https://svelte.dev/docs/kit/adapter-node",
         "s329dda89ba78": "https://svelte.dev/docs/kit/configuration",
         "se2fdc4fd5885": "https://svelte.dev/docs/kit/server-only-modules"
+      }
+    },
+    "svelte-kit-pin": {
+      "name": "SvelteKit routing and hooks documentation",
+      "basis": "@sveltejs/kit@2.70.3",
+      "sources": {
+        "sca07fbe19546": "https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/10-routing.md#L291-L332",
+        "sa9bbf285a91c": "https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/20-load.md#L702-L714",
+        "s380cc33507e0": "https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/30-form-actions.md#L1-L5",
+        "sf5b873616d3c": "https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/30-advanced/20-hooks.md#L15-L36",
+        "s010bd8dbd910": "https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/60-remote-functions.md#L1297-L1303"
       }
     },
     "nuxt": {
@@ -96,8 +107,8 @@ version_basis: {
     "csrf-trust": {"text": "csrf.trustedOrigins defaults empty; list specific form origins, with wildcard trust discouraged.", "components": ["svelte"], "sources": ["svelte:s329dda89ba78"], "status": "REASONED"},
     "svelte-public": {"text": "PUBLIC_ via env.publicPrefix exposes static public env values at build; keep secrets out.", "components": ["svelte"], "sources": ["svelte:sc183fdb68165", "svelte:s329dda89ba78"], "status": "REASONED"},
     "svelte-private": {"text": "Private env modules, .server.js and lib/server are server-only; client import chains, including dynamic imports, fail builds.", "components": ["svelte"], "sources": ["svelte:se2fdc4fd5885"], "status": "REASONED"},
-    "svelte-routes": {"text": "Guide requires checks in page loads, form actions and endpoints rather than a layout; Sources omit a direct routing/auth citation.", "components": ["svelte"], "sources": ["svelte:s329dda89ba78"], "status": "REASONED"},
-    "svelte-handle": {"text": "Guide requires handle to block, not merely attach locals or redirect page navigation, and resource checks near data; Sources omit hook semantics/calling-page qualification.", "components": ["svelte"], "sources": ["svelte:s329dda89ba78"], "status": "REASONED"},
+    "svelte-routes": {"text": "Pinned docs show concurrent layout/page loads, actions on +page.server.js and +server.js independent of layouts; guide advice requires session checks before protected page loads, in form actions and in endpoints, rather than relying on a layout guard.", "components": ["svelte", "svelte-kit-pin"], "sources": ["svelte:s329dda89ba78", "svelte-kit-pin:sca07fbe19546", "svelte-kit-pin:sa9bbf285a91c", "svelte-kit-pin:s380cc33507e0"], "status": "REASONED"},
+    "svelte-handle": {"text": "Pinned docs show handle on SvelteKit server requests, early Response, locals and calling-page metadata for client-initiated remote functions; guide advice requires blocking unauthorized requests and checking resource authorization where served. Static assets bypass SvelteKit.", "components": ["svelte", "svelte-kit-pin"], "sources": ["svelte:s329dda89ba78", "svelte-kit-pin:sf5b873616d3c", "svelte-kit-pin:s010bd8dbd910"], "status": "REASONED"},
     "nuxt-handlers": {"text": "Nuxt auto-registers server/api, server/routes and middleware; middleware runs first, but context.auth alone enforces nothing. Throw/end requests or check each handler.", "components": ["nuxt"], "sources": ["nuxt:se2d1e4a2e433"], "status": "REASONED"},
     "nuxt-auth": {"text": "Nuxt ships no built-in authentication; enforce access server-side, not with client redirects.", "components": ["nuxt"], "sources": ["nuxt:se2d1e4a2e433"], "status": "REASONED"},
     "nuxt-private": {"text": "Direct runtimeConfig keys are server-only with NUXT_ overrides; rendering or passing to useState can disclose them.", "components": ["nuxt"], "sources": ["nuxt:s32e447cb5ef4"], "status": "REASONED"},
@@ -130,8 +141,8 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | csrf-trust: csrf.trustedOrigins defaults empty; list specific form origins, with wildcard trust discouraged. | SvelteKit documentation unknown | REASONED |
 | svelte-public: PUBLIC_ via env.publicPrefix exposes static public env values at build; keep secrets out. | SvelteKit documentation unknown | REASONED |
 | svelte-private: Private env modules, .server.js and lib/server are server-only; client import chains, including dynamic imports, fail builds. | SvelteKit documentation unknown | REASONED |
-| svelte-routes: Guide requires checks in page loads, form actions and endpoints rather than a layout; Sources omit a direct routing/auth citation. | SvelteKit documentation unknown | REASONED |
-| svelte-handle: Guide requires handle to block, not merely attach locals or redirect page navigation, and resource checks near data; Sources omit hook semantics/calling-page qualification. | SvelteKit documentation unknown | REASONED |
+| svelte-routes: Pinned docs show concurrent layout/page loads, actions on +page.server.js and +server.js independent of layouts; guide advice requires session checks before protected page loads, in form actions and in endpoints, rather than relying on a layout guard. | SvelteKit documentation unknown; SvelteKit routing and hooks documentation @sveltejs/kit@2.70.3 | REASONED |
+| svelte-handle: Pinned docs show handle on SvelteKit server requests, early Response, locals and calling-page metadata for client-initiated remote functions; guide advice requires blocking unauthorized requests and checking resource authorization where served. Static assets bypass SvelteKit. | SvelteKit documentation unknown; SvelteKit routing and hooks documentation @sveltejs/kit@2.70.3 | REASONED |
 | nuxt-handlers: Nuxt auto-registers server/api, server/routes and middleware; middleware runs first, but context.auth alone enforces nothing. Throw/end requests or check each handler. | Nuxt documentation 4.x | REASONED |
 | nuxt-auth: Nuxt ships no built-in authentication; enforce access server-side, not with client redirects. | Nuxt documentation 4.x | REASONED |
 | nuxt-private: Direct runtimeConfig keys are server-only with NUXT_ overrides; rendering or passing to useState can disclose them. | Nuxt documentation 4.x | REASONED |
@@ -161,7 +172,7 @@ CSRF: `csrf.checkOrigin` (default `true`, deprecated in the current reference) c
 
 Public env: only variables prefixed `PUBLIC_` (`env.publicPrefix`) are "statically injected into your bundle at build time" and reachable from `$env/static/public`; anything else throws if imported from client code. Keep secrets in modules SvelteKit treats as server-only, either `$env/static/private` / `$env/dynamic/private`, a `.server.js` filename, or anything under `$lib/server/` ([secrets.md](secrets.md)); SvelteKit statically traces import chains and fails the build if client code imports one, even through a dynamic `import()`.
 
-None of this gates a request for you by default: a `+layout.server.js` guard does not protect a sibling `+page.server.js` load function, a form action, or a `+server.js` endpoint reached directly, so each needs its own session check, the same pattern as the Next.js Data Access Layer in [nextjs.md](nextjs.md). The `handle` hook in `hooks.server.js` can enforce access, since it runs on every request and may return a `Response` before `resolve` renders the route, but only when it actually checks the session and blocks; using it just to redirect an unauthenticated page navigation, or just to attach identity onto `event.locals` for other handlers to read, still leaves a directly reached `+server.js` endpoint or form action open. Inside `handle`, `event.url`, `route`, and `params` can reflect the calling page rather than the resource actually being requested, so do not rely on them alone to decide what is being authorized; checking the session there is necessary but not sufficient, since a session check alone does not authorize access to the specific resource, so also enforce that check at the point each resource is served. Wire real authentication with an identity provider or library per [oidc-integration.md](oidc-integration.md), not a client-side redirect alone.
+None of this gates a request for you by default. The pinned SvelteKit load documentation says layout and page `load` functions run concurrently unless a child calls `await parent()`, and a layout `load` does not run on every request. A `+layout.server.js` guard therefore cannot be relied on to protect a sibling `+page.server.js` load function before it uses protected data; the routing documentation says `+layout` has no effect on `+server.js`, and form actions run from `+page.server.js`. Guide advice: check the session before protected work in each page load, form action and `+server.js` endpoint, the same pattern as the Next.js Data Access Layer in [nextjs.md](nextjs.md). The pinned hooks documentation says `handle` in `hooks.server.js` runs whenever the SvelteKit server receives a request, can return a `Response` before `resolve`, and does not handle static assets, including prerendered pages. Guide advice: use `handle` to check the session and block unauthorized SvelteKit requests; a hook that only redirects unauthenticated page navigation or only attaches identity to `event.locals` leaves directly reached `+server.js` endpoints and form actions open unless they check it. For a client-initiated remote function request, the pinned hooks and remote-functions documentation says `event.url`, `route` and `params` in `handle` relate to the calling page rather than the generated endpoint, and warns against using them to authorize data access because request values can be manipulated. Guide advice: do not rely on those fields alone to decide what is authorized; check the session and enforce authorization for the specific resource where it is served. Wire real authentication with an identity provider or library per [oidc-integration.md](oidc-integration.md), not a client-side redirect alone.
 
 ## Nuxt (Nitro server routes)
 
@@ -253,6 +264,11 @@ REASONED: proxy cookie, redirect and trusted-proxy checks per the cited SvelteKi
 
 ## Sources (checked September 2026)
 
+- SvelteKit pinned routing: +layout has no effect on +server.js (pinned tag @sveltejs/kit@2.70.3): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/10-routing.md#L291-L332
+- SvelteKit pinned load: layout/page concurrency and auth implications (pinned tag @sveltejs/kit@2.70.3): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/20-load.md#L702-L714
+- SvelteKit pinned form actions in +page.server.js (pinned tag @sveltejs/kit@2.70.3): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/30-form-actions.md#L1-L5
+- SvelteKit pinned handle scope and remote-function request metadata (pinned tag @sveltejs/kit@2.70.3): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/30-advanced/20-hooks.md#L15-L36
+- SvelteKit pinned remote-function RequestEvent metadata (pinned tag @sveltejs/kit@2.70.3): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/60-remote-functions.md#L1297-L1303
 - SvelteKit adapter-node output defaults and client and prerendered writes (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/index.js#L24-L38
 - SvelteKit adapter-node server chunks under build/server (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/index.js#L118
 - SvelteKit adapter-node serves the separate prerendered directory (pinned tag @sveltejs/adapter-node@5.5.7): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L69
