@@ -4836,19 +4836,19 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | internal-tls: tls internal uses a local CA; clients must trust its root, with caddy trust for the local host. tls also accepts explicit cert/key files. | Caddy documentation (rolling) unknown | REASONED |
 | basic: basic_auth uses hashed passwords from caddy hash-password; it was named basicauth before v2.8.0 and remains single-factor. | Caddy documentation (rolling) unknown | REASONED |
 | path-auth: Protect /admin and /admin/* together: path matches are exact and multiple paths are OR'ed. | Caddy documentation (rolling) unknown | REASONED |
-| mfa: forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is another proposed layer. | Caddy documentation (rolling) unknown | REASONED |
-| access-origin: Cloudflare Access requires closing direct origin ingress and validating its JWT; Caddy still answers directly on 443. Sources omit Cloudflare controls. | Caddy documentation (rolling) unknown | REASONED |
+| mfa: forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it. | Caddy documentation (rolling) unknown; Cloudflare docs c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
+| access-origin: Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's &#96;access&#96; setting has &#96;cloudflared&#96; do. Caddy still answers directly on 443. | Caddy documentation (rolling) unknown; Cloudflare docs c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | body-limit: Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public. | Caddy documentation (rolling) unknown | REASONED |
 | rate-limit: The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer. | Caddy documentation (rolling) unknown; caddy-ratelimit documentation unknown | REASONED |
 | admin-bind: The admin API defaults to localhost:2019 as of v2.11.4; never publish it or reverse-proxy to it. | Caddy admin source v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | admin-authority: Reachable unauthenticated admin clients can replace config at POST /load, edit /config/ or stop with POST /stop. | Caddy documentation (rolling) unknown | REASONED |
 | admin-isolation: Host/Origin checks are not process isolation; local untrusted workloads require a permissioned Unix socket. | Caddy documentation (rolling) unknown | REASONED |
-| docker-admin: Official 2.11.4 Alpine and Windows runtime images EXPOSE 2019 but ship a Caddyfile without admin; absent overrides, the endpoint stays namespace-local. | Official image tag map d82ca5102fa6735be29d5e1fc6ce03af77eb091e; Caddy Docker source fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94; Caddy admin source v2.11.4 | REASONED |
+| docker-admin: The official 2.11.4 Alpine, Windows Server Core 2022/2025, and Nano Server 2022/2025 runtime tags map to fba28535 Dockerfiles that EXPOSE 2019 and run the default Caddyfile without admin; absent overrides, the endpoint stays namespace-local. | Official image tag map d82ca5102fa6735be29d5e1fc6ce03af77eb091e; Caddy Docker source fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94; Caddy admin source v2.11.4 | REASONED |
 | admin-override: A mounted admin setting or CADDY_ADMIN changes the address; do not set 0.0.0.0:2019 to make publication work. | Caddy admin source v2.11.4; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94; Caddy documentation (rolling) unknown | REASONED |
 | namespace: The shipped admin default is localhost:2019. On Docker Engine on Linux, bridge networking keeps loopback container-local; host or container networking shares a namespace, so treat its processes as potential admin clients. | Caddy Docker source fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94; Caddy admin source v2.11.4; Docker networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f; Caddy documentation (rolling) unknown | REASONED |
 | admin-socket: admin unix//run/caddy/admin.sock uses owner-only mode 0200 by default; append &#124;0600 to set it explicitly. | Caddy documentation (rolling) unknown | REASONED |
-| runtime-directory: The packaged caddy user needs RuntimeDirectory=caddy for /run/caddy; restart creates it and binds the socket. Sources omit the service unit/systemd manual. | Caddy documentation (rolling) unknown | REASONED |
-| reload: API reload uses the Caddyfile admin address; admin off disables it and systemd then requires restart. | Caddy documentation (rolling) unknown | REASONED |
+| runtime-directory: The dist service at 33ae08ff runs as caddy without RuntimeDirectory; systemd v262 creates /run/caddy for RuntimeDirectory=caddy at service start and owns it as caddy. Restart for the socket switch is guide reasoning. | Caddy documentation (rolling) unknown; caddyserver/dist service unit 33ae08ff08d168572df2956ed14fbc4949880d94; systemd manual v262 | REASONED |
+| reload: The dist service at 33ae08ff uses caddy reload --config /etc/caddy/Caddyfile --force; API reload uses the Caddyfile admin address. With admin off, guide reasoning requires systemd restart. | Caddy documentation (rolling) unknown; caddyserver/dist service unit 33ae08ff08d168572df2956ed14fbc4949880d94 | REASONED |
 | signal-reload: A manual run without --resume may reload startup config via SIGUSR1; API changes or reload with a different file/adapter disable signal reloads. | Caddy documentation (rolling) unknown | REASONED |
 | on-demand: Do not enable unrestricted on_demand TLS without an ask endpoint or host allowlist; this guide does not enable it. | Caddy documentation (rolling) unknown | REASONED |
 | verify-config: Validate /etc/caddy/Caddyfile; no validation outcome is recorded. | Caddy documentation (rolling) unknown | REASONED |
@@ -4926,7 +4926,7 @@ To protect only part of a site, wrap the directive in a matcher:
 
 Path matches are exact, and `/admin/*` alone does not match `/admin` itself, so list both forms; multiple paths in one matcher are OR'ed.
 
-`basic_auth` is single-factor. For human-facing sites, add MFA with the `forward_auth` directive (Caddy 2.5 and later) pointed at an [Authelia](https://www.authelia.com/) portal, or front the site with Cloudflare Access. Fronting with Cloudflare Access only helps if the origin is locked down: Caddy still answers on 443, so a client that discovers the origin IP connects directly and bypasses Access unless you close direct ingress (a tunnel, or Authenticated Origin Pulls plus a Cloudflare-IP firewall) and validate the Access JWT at the origin, per [cloudflare.md](cloudflare.md). Options in [mfa.md](mfa.md).
+`basic_auth` is single-factor. For human-facing sites, add MFA with the `forward_auth` directive (Caddy 2.5 and later) pointed at an [Authelia](https://www.authelia.com/) portal, or front the site with Cloudflare Access. Cloudflare docs at c896795b describe identity-provider MFA and independent Access MFA; the governing setting follows policy over application over organization, so configure it to require MFA ([MFA requirements](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85)). As this guide reasons, fronting with Cloudflare Access only helps if the origin is locked down: Caddy still answers on 443, so a client that discovers the origin IP connects directly and bypasses Access unless you close direct ingress (a tunnel, or Authenticated Origin Pulls plus a Cloudflare-IP firewall) and validate the Access JWT at the origin ([JWT validation](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json.mdx#L15-L17); [tunnel `access` setting](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L196-L215)), per [cloudflare.md](cloudflare.md). Options in [mfa.md](mfa.md).
 
 ## 4. Bound the expensive endpoints
 
@@ -4951,7 +4951,7 @@ request_body {
 
 Caddy runs a local admin API, by default on `localhost:2019` (as of v2.11.4), that requires no credentials: anything that can reach it replaces the whole configuration with `POST /load`, edits it path by path under `/config/`, or stops the server with `POST /stop`. Its Host and Origin header checks block a browser on another site, but they are not process isolation, so the endpoint's safety rests on the loopback bind. Never publish it: do not reverse-proxy a route to `:2019`, and never move it to a public address.
 
-The official Docker runtime images (2.11.4: Alpine, Windows Server Core and Nano Server) list 2019 in `EXPOSE`, but their default Caddyfile has no `admin` option, so as shipped, with no mounted configuration that sets `admin` and no `CADDY_ADMIN`, the admin API listens on `localhost:2019`. On Docker Engine on Linux, ordinary bridge networking keeps that address on the container's own loopback. Host networking shares the host's network namespace, while `--network container:<name|id>` shares another container's networking stack, including its loopback. Treat processes in that shared namespace as potential admin clients. Do not set `admin 0.0.0.0:2019` (or `CADDY_ADMIN`) to make that port work, do not publish it, and do not run the container with host networking or share its namespace with untrusted containers; run `caddy` commands inside the container instead, for example with `docker exec`.
+The official [2.11.4 runtime tag map](https://github.com/docker-library/official-images/blob/d82ca5102fa6735be29d5e1fc6ce03af77eb091e/library/caddy#L7-L65) maps [2.11.4-alpine](https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L59-L63), [2.11.4-windowsservercore-ltsc2022](https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L42-L47), [2.11.4-windowsservercore-ltsc2025](https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L42-L47), [2.11.4-nanoserver-ltsc2022](https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L27-L32), [2.11.4-nanoserver-ltsc2025](https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L27-L32) to Dockerfiles at fba28535. Each lists 2019 in `EXPOSE` and runs the default Caddyfile, which has no `admin` option; as shipped, with no mounted configuration that sets `admin` and no `CADDY_ADMIN`, the admin API listens on `localhost:2019`. On Docker Engine on Linux, ordinary bridge networking keeps that address on the container's own loopback. Host networking shares the host's network namespace, while `--network container:<name|id>` shares another container's networking stack, including its loopback. Treat processes in that shared namespace as potential admin clients. Do not set `admin 0.0.0.0:2019` (or `CADDY_ADMIN`) to make that port work, do not publish it, and do not run the container with host networking or share its namespace with untrusted containers; run `caddy` commands inside the container instead, for example with `docker exec`.
 
 On a host where untrusted workloads share the machine, loopback is not enough, because any local process can reach `127.0.0.1:2019`. Bind the endpoint to a permissioned Unix socket instead, in the same global options block from section 1 (a Caddyfile has only one), so only processes that can open the socket file reconfigure Caddy:
 
@@ -4962,14 +4962,14 @@ On a host where untrusted workloads share the machine, loopback is not enough, b
 }
 ```
 
-The packaged service runs as the `caddy` user, which cannot create a socket under root-owned `/run`, so give it a runtime directory with `sudo systemctl edit caddy`:
+The caddyserver/dist [service unit at 33ae08ff](https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/init/caddy.service#L22-L32) runs as `caddy` and has no `RuntimeDirectory=` setting. To give that user a directory for the socket under `/run`, add a drop-in with `sudo systemctl edit caddy`:
 
 ```ini
 [Service]
 RuntimeDirectory=caddy
 ```
 
-systemd creates `/run/caddy` owned by `caddy` when the service starts, so the switch from the default TCP endpoint to the socket needs `sudo systemctl restart caddy`, not a reload: the restart makes the runtime directory and binds the socket in one step. After that, `caddy reload`, and so `sudo systemctl reload caddy`, applies config through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. Disabling the endpoint with `admin off` turns off API reload, so under systemd a config change then needs `systemctl restart caddy` (a manual `caddy run` process started without `--resume` can instead reload the startup config file with `SIGUSR1`; a change made through the admin API, or a `caddy reload` with a different file or adapter, disables signal reloads, so check the logs to confirm the reload took).
+The [systemd v262 manual](https://github.com/systemd/systemd/blob/v262/man/systemd.exec.xml#L1558-L1660) says `RuntimeDirectory=caddy` creates `/run/caddy` when the unit starts, owns it according to `User=`/`Group=`, and removes it when the unit stops unless preservation is configured. The switch from the default TCP endpoint to the socket needs `sudo systemctl restart caddy`, not a reload: this is the guide's reasoning that a restart creates the runtime directory and binds the socket in one step. After that, `caddy reload`, and the [dist unit's `ExecReload` at 33ae08ff](https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/init/caddy.service#L22-L32), apply config through this API by reading the admin address from the Caddyfile, so the socket keeps reload working. Disabling the endpoint with `admin off` turns off API reload, so under systemd a config change then needs `systemctl restart caddy` (a manual `caddy run` process started without `--resume` can instead reload the startup config file with `SIGUSR1`; a change made through the admin API, or a `caddy reload` with a different file or adapter, disables signal reloads, so check the logs to confirm the reload took).
 
 ## 6. Verify (REASONED: all Verify scenarios follow the cited Caddy documentation and pinned admin/image sources; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Caddy deployment fixture.)
 
@@ -5049,6 +5049,11 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 - Let's Encrypt ending expiration-notification emails (2025): https://letsencrypt.org/2025/01/22/ending-expiration-emails/
 - Request matchers (path, wildcards, multiple paths; rolling documentation, checked September 2026): https://caddyserver.com/docs/caddyfile/matchers
 - Caddy admin API default `DefaultAdminListen = "localhost:2019"` (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L1433
+- caddyserver/dist service unit (pinned commit 33ae08ff08d168572df2956ed14fbc4949880d94, checked October 2026): https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/init/caddy.service#L22-L32
+- systemd execution manual (pinned v262, checked October 2026): https://github.com/systemd/systemd/blob/v262/man/systemd.exec.xml#L1558-L1660
+- Cloudflare Access MFA requirements (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85
+- Cloudflare Access JWT validation (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json.mdx#L15-L17
+- Cloudflare Tunnel `access` setting, `cloudflared` validating the Access JWT (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L196-L215
 - Docker networking documentation at 4e9a5751518ed8223a8dcde53693badddd72604f (container loopback, host namespace sharing, and the `--network container:` loopback example; the Linux bridge/host distinction above is inferred from these documented namespace semantics): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L286, https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/drivers/host.md#L11-L13, https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L302-L325
 
 ======================================================================
@@ -5068,7 +5073,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | --- | --- | --- |
 | scope: Examples target a maintained HAProxy 3.0 installation and treat frontend, stats, runtime API and direct backend as separate surfaces. | HAProxy 3.0; Supporting documentation unknown | REASONED |
 | pem: Use matching chain/key in a combined PEM, built via a root-only temporary file and rename; separate key loading is also supported. | HAProxy 3.0 | REASONED |
-| renewal: Rebuild the combined PEM on certificate renewal via a certbot deploy hook and reload HAProxy; Sources omit certbot hook syntax. | HAProxy 3.0 | REASONED |
+| renewal: Rebuild the combined PEM and reload HAProxy after successful renewal using Certbot v2.3.0 --deploy-hook or an executable in /etc/letsencrypt/renewal-hooks/deploy (if the configuration directory is /etc/letsencrypt; certbot renew only). | HAProxy 3.0; Certbot deploy hook documentation v2.3.0 | REASONED |
 | tls: Frontend :443 loads the PEM with ssl and ssl-min-ver TLSv1.2; :80 redirects to HTTPS with 301. | HAProxy 3.0 | REASONED |
 | ciphers: ssl-default-bind-ciphers governs TLS 1.2 and -ciphersuites TLS 1.3; Mozilla is policy guidance, not HAProxy syntax authority. | HAProxy 3.0; Supporting documentation unknown | REASONED |
 | privileges: Preserve service hardening; root-started workers drop to haproxy user/group and chroot into a provisioned root-owned directory. | HAProxy 3.0 | REASONED |
@@ -5078,7 +5083,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | remote-backend: Remote TLS backends require certificate verification, a trusted CA and verifyhost matching the backend name. | HAProxy 3.0 | REASONED |
 | basic: Use a crypt(3)-hashed userlist and http_auth condition; $6$ works on glibc Linux, while insecure-password stores plaintext. | HAProxy 3.0; OpenSSL password command 3.0 | REASONED |
 | mtls: For machine access, bind verify required with ca-file requires trusted client certificates. | HAProxy 3.0 | REASONED |
-| mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or use Cloudflare Access for human MFA. | Supporting documentation unknown | REASONED |
+| mfa: Basic is single-factor; Authelia uses its HAProxy Lua integration, or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization). | Supporting documentation unknown; Cloudflare Access MFA documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | maxconn: Global maxconn 4096 caps per-process concurrent connections; frontend maxconn 2000 caps that frontend. | HAProxy 3.0 | REASONED |
 | body-guard: No single request-body-size directive: req.body_size reads advertised Content-Length; deny_status 413 rejects values above 10485760 without buffering. | HAProxy 3.0 | REASONED |
 | body-buffering: Do not add http-buffer-request for this guard: it waits for a complete body or full request buffer. | HAProxy 3.0 | REASONED |
@@ -5112,7 +5117,7 @@ sudo bash -c 'umask 077; tmp=$(mktemp /etc/haproxy/certs/.pem.XXXXXX) || exit 1
   mv "$tmp" /etc/haproxy/certs/example.com.pem'
 ```
 
-Re-run the concatenation from a certbot deploy hook so renewals reach HAProxy.
+With Certbot v2.3.0, run the concatenation and reload HAProxy after a successful renewal using `certbot renew --deploy-hook /path/to/deploy-hook-script` or an executable in `/etc/letsencrypt/renewal-hooks/deploy` (assuming the `/etc/letsencrypt` configuration directory, on `certbot renew`).
 
 ## 1. Terminate TLS and redirect HTTP
 
@@ -5165,7 +5170,7 @@ backend app
 
 `openssl passwd -6` prompts for the password. The prompt keeps the password out of the command text, shell history and shell tracing; the account owner and root can still read it in the `openssl` process while it runs. Hashed `password` entries rely on the system's crypt(3); `$6$` works on glibc-based Linux. Avoid `insecure-password`, which stores the password in cleartext in the configuration file. For machine-to-machine access, client certificates are stronger: add `verify required ca-file /etc/ssl/certs/internal-ca.crt` to the `bind :443` line.
 
-Basic authentication here is single-factor. For human-facing sites, add MFA with an [Authelia](https://www.authelia.com/) portal (HAProxy is supported through Authelia's Lua module) or by fronting the site with Cloudflare Access; options in [mfa.md](mfa.md).
+Basic authentication here is single-factor. For human-facing sites, add MFA with an [Authelia](https://www.authelia.com/) portal (HAProxy is supported through Authelia's Lua module) or by fronting the site with Cloudflare Access and requiring MFA in its governing Access setting (policy over application over organization); options in [mfa.md](mfa.md).
 
 ## 3. Bound the expensive endpoints
 
@@ -5332,6 +5337,8 @@ sudo -u nobody socat - /run/haproxy/admin.sock < /dev/null         # unauthorize
 - Authelia HAProxy integration (MFA portal): https://www.authelia.com/integration/proxies/haproxy/
 - Mozilla SSL Configuration Generator (TLS policy, not HAProxy syntax): https://ssl-config.mozilla.org/
 - OpenSSL 3.0 `passwd -6` SHA-512 crypt and terminal prompting (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-passwd/
+- Certbot v2.3.0 deploy hooks after successful renewal (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L659-L675
+- Cloudflare Access MFA documentation at c896795b8e8bab68d05ae78d64c9cbcda1fdb104, application or policy MFA (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81
 
 ======================================================================
 ==> traefik.md
@@ -5357,22 +5364,22 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | tls-floor: Dynamic default TLS options set minVersion VersionTLS12. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | route: Docker labels select the app host, websecure, letsencrypt resolver and backend port 3000. | Traefik documentation (rolling) unknown; Traefik Docker provider unknown | REASONED |
 | backend-isolation: Publish only Traefik 80/443, not the app's 3000, to prevent middleware/TLS bypass. | Traefik Docker provider unknown | REASONED |
-| basic: Attach bcrypt basicAuth to the router; htpasswd -nB -C 12 selects cost 12 rather than bare cost 5; the OWASP minimum is not directly sourced here. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| basic: Attach bcrypt basicAuth to the router; Apache httpd 2.4.69 htpasswd -nB defaults to bcrypt cost 5, while -C 12 selects cost 12; OWASP at 72865b1e recommends 10 or more for legacy bcrypt. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Apache httpd htpasswd source 2.4.69; OWASP Password Storage Cheat Sheet 72865b1e3b5754246a101778dc00b37f9c233373 | REASONED |
 | compose-hash: Double each dollar sign in Compose hash labels; file-provider hashes need no such escaping. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
 | file-provider: Load dynamic files with providers.file.directory/filename and reference their middleware from Docker as app-auth@file. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
-| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access for human MFA. | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5 | REASONED |
+| mfa: Basic is single-factor; use forwardAuth with Authelia/oauth2-proxy or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization). | Traefik documentation (rolling) unknown; Traefik v3 documentation v3.5; Cloudflare Access MFA documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | body-limit: Attach buffering.maxRequestBodyBytes=10485760 alongside existing auth/routing labels; it bounds accepted body size. | Traefik middleware documentation unknown | REASONED |
 | buffer-storage: memRequestBodyBytes defaults to 1048576 and controls the memory-to-disk threshold independently of maximum accepted body size. | Traefik middleware documentation unknown | REASONED |
 | rate-limit: average=10 and burst=20 configure a rate cap, per source by default. | Traefik middleware documentation unknown | REASONED |
 | inflight: inflightreq.amount=10 bounds concurrent requests; sourceCriterion defaults to request host rather than client, so configure a per-client cap explicitly. | Traefik middleware documentation unknown | REASONED |
-| middleware-order: Rate/inflight precede auth to count rejected logins; buffering follows admission controls to avoid buffering rejected uploads. | Traefik documentation (rolling) unknown; Traefik middleware documentation unknown | REASONED |
+| middleware-order: Rate/inflight precede auth to count rejected logins: Traefik v3.5.0 BasicAuth returns on failure without calling the next handler; buffering follows admission controls to avoid buffering rejected uploads. | Traefik documentation (rolling) unknown; Traefik middleware documentation unknown; Traefik BasicAuth source v3.5.0 | REASONED |
 | dashboard: Keep api.insecure and unprotected api@internal routers off public entry points or protect the dashboard with auth. | Traefik documentation (rolling) unknown | REASONED |
 | swarm: Standalone Docker guidance does not cover Swarm; v3 uses providers.swarm and its separate exposedByDefault also defaults true. | Traefik Swarm provider unknown | REASONED |
 | verify-redirect: HTTP should redirect to HTTPS. | Traefik documentation (rolling) unknown | REASONED |
 | verify-auth: Unauthenticated HTTPS should return 401 once auth is attached. | Traefik documentation (rolling) unknown | REASONED |
 | verify-size: Authenticated 1M must reach the app and 11M return 413; 401/000 invalidate the control. Remove app-body in isolation to rule out backend refusal. | Traefik middleware documentation unknown; Traefik documentation (rolling) unknown | REASONED |
 | observed-429: The guide records only a 429 response; no limiter attribution or exposed/fixed demonstration is established. | Traefik middleware documentation unknown | DEMONSTRATED |
-| verify-rate: Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled. | Traefik middleware documentation unknown | REASONED |
+| verify-rate: Concurrent unauthenticated probes can reach pre-auth limiters; 429 alone cannot distinguish rate, inflight or upstream refusal. Compare each limiter alone against both disabled. | Traefik middleware documentation unknown; Traefik BasicAuth source v3.5.0 | REASONED |
 | verify-isolation: Compose ps covers one project; ss misses NAT-only publication without a userland proxy. Neither finds unintended routes through Traefik. | Traefik Docker provider unknown | REASONED |
 | verify-acme: Inspect ACME startup errors; failed issuance can leave a self-signed TRAEFIK DEFAULT CERT. | Traefik documentation (rolling) unknown | REASONED |
 | canary-route: On a disposable deployment, unlabelled traefik/whoami has one HTTP port; use its generated Host rule and plain HTTP even on :443 because the generated router requests no TLS. | Traefik Docker provider unknown; Traefik documentation (rolling) unknown | REASONED |
@@ -5452,7 +5459,7 @@ Do not also publish the app's port with `ports:`; only Traefik publishes 80 and 
 
 ## 3. Require authentication
 
-Application-level login is preferable ([authentication.md](authentication.md)). At the proxy, attach a basicAuth middleware with bcrypt entries from `htpasswd -nB -C 12 admin` (a bare `-nB` defaults to cost 5, below the OWASP minimum of 10 that [authentication.md](authentication.md) sets):
+Application-level login is preferable ([authentication.md](authentication.md)). At the proxy, attach a basicAuth middleware with bcrypt entries from `htpasswd -nB -C 12 admin`. In Apache httpd 2.4.69, bare `-nB` defaults to bcrypt cost 5 and `-C 12` selects cost 12; OWASP at 72865b1e recommends a work factor of 10 or more for legacy bcrypt:
 
 ```yaml
     labels:
@@ -5471,7 +5478,7 @@ http:
           - "admin:$2y$12$REPLACE_WITH_HASH"
 ```
 
-Load that dynamic file with `providers.file.directory` (or `providers.file.filename`) in the static config, and when a Docker-labelled router references a file-defined middleware, qualify it as `app-auth@file`. basicAuth is single-factor. For human-facing sites, add MFA with the `forwardAuth` middleware pointed at [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy), or front the site with Cloudflare Access; options in [mfa.md](mfa.md).
+Load that dynamic file with `providers.file.directory` (or `providers.file.filename`) in the static config, and when a Docker-labelled router references a file-defined middleware, qualify it as `app-auth@file`. basicAuth is single-factor. For human-facing sites, add MFA with the `forwardAuth` middleware pointed at [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy), or front the site with Cloudflare Access and require MFA in its governing Access setting (policy over application over organization); options in [mfa.md](mfa.md).
 
 ## 4. Bound the expensive endpoints
 
@@ -5491,7 +5498,7 @@ Three middlewares, attached to the router alongside the auth middleware from sec
       - traefik.http.routers.app.middlewares=app-rate,app-inflight,app-auth,app-body
 ```
 
-Order matters here. `app-rate` and `app-inflight` come before `app-auth` so they bound failed-login attempts: basicAuth short-circuits with a 401 before any middleware listed after it runs, so a limiter placed after auth never counts a rejected attempt. `buffering` reads the request into memory or disk before forwarding it, so it must
+Order matters here. `app-rate` and `app-inflight` come before `app-auth` so they bound failed-login attempts: Traefik v3.5.0 BasicAuth returns on failed credentials without calling its next handler, so a limiter placed after auth cannot count a rejected attempt. `buffering` reads the request into memory or disk before forwarding it, so it must
 come after the admission controls; placed first, an accepted upload consumes the buffer before
 `ratelimit` or `inflightreq` has considered it. `maxRequestBodyBytes` sets the largest body accepted;
 `memRequestBodyBytes`, which defaults to 1048576, is the separate threshold at which buffering moves
@@ -5533,7 +5540,8 @@ head -c 1M /dev/zero > /tmp/under.bin && head -c 11M /dev/zero > /tmp/over.bin
 )
 seq 1 40 | xargs -P 40 -I{} curl -q -s -o /dev/null -w '%{http_code}\n' https://app.example.com/ | sort | uniq -c
                                      # No credentials here: app-rate and app-inflight run BEFORE app-auth in the
-                                     # middleware chain (section 4), so an unauthenticated flood is counted by the
+                                     # middleware chain (section 4); Traefik v3.5.0 BasicAuth does not call its
+                                     # next handler on failure, so an unauthenticated flood is counted by the
                                      # limiter, keyed on the client source. A 429 appeared. That is all this shows.
                                      # inflightreq also returns
                                      # 429, and an upstream under load can too, so this does not
@@ -5621,6 +5629,13 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 - Traefik v3.5 file-provider configuration (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/providers/others/file/
 - Traefik v3.5 BasicAuth and Compose dollar-sign escaping (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/basicauth/
 - Traefik v3.5 ForwardAuth delegation (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/routing-configuration/http/middlewares/forwardauth/
+- Traefik v3.5.0 BasicAuth failure and next-handler path (checked October 2026): https://github.com/traefik/traefik/blob/v3.5.0/pkg/middlewares/auth/basic_auth.go#L67-L99
+- Apache httpd 2.4.69 htpasswd bcrypt default cost (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45
+- Apache httpd 2.4.69 htpasswd default cost applied (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L292-L295
+- Apache httpd 2.4.69 htpasswd `-C` cost option (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L382
+- Apache httpd 2.4.69 htpasswd usage (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128
+- OWASP Password Storage Cheat Sheet at 72865b1e3b5754246a101778dc00b37f9c233373, legacy bcrypt work factor (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
+- Cloudflare Access MFA documentation at c896795b8e8bab68d05ae78d64c9cbcda1fdb104, application or policy MFA (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81
 
 ======================================================================
 ==> nodejs.md
