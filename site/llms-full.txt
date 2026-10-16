@@ -32359,11 +32359,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | loki-config: GET /config exposes configuration without a tenant-auth wrapper. | Loki v3.7.8 | REASONED |
 | loki-diagnostics: Metrics and pprof routes are registered by default without a tenant-auth wrapper. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-maintenance: Ingester flush/shutdown accept GET/POST; prepare_shutdown accepts POST/GET/DELETE, without tenant-auth wrappers. | Loki v3.7.8 | REASONED |
-| loki-delete: Non-worker compactor deletion routes require a supported shipper index, retention and a delete-request store; tenant middleware gates traced create/list/cancel handlers; exact mode-to-allow mapping remains unverified. | Loki v3.7.8 | REASONED |
+| loki-delete: Non-worker compactor deletion routes require a supported shipper index, retention and a delete-request store; tenant and deletion-policy middleware gate traced create/list/cancel handlers; exact mode-to-allow mapping remains unverified. | Loki v3.7.8 | REASONED |
 | loki-grpc-bridge: Single-binary ingester RPC and HTTP-over-gRPC expose paths that HTTP-only TLS/proxying does not protect. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-mtls: HTTP/gRPC TLS defaults empty and requires a cert/key pair; configure client CA plus RequireAndVerifyClientCert, not CA alone. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-ring: Single-binary overlay uses inmemory ring, loopback instance address and replication_factor 1 instead of default 3; check no gossip listener remains. | Loki v3.7.8 | REASONED |
-| loki-internal: The server gRPC listen address and port, target flags, scheduler ring and worker configuration are passed to the querier worker service initializer; the ingester lifecycler listen port is set to the server gRPC listen port; worker frontend/scheduler and distributor/querier ingester dial sites are traced; loopback gRPC remains configuration-specific, with advertised/dial addresses, successful worker and ingester calls, any compactor calls and live reachability to verify. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
+| loki-internal: The server gRPC listen address and port, target flags, scheduler ring and worker configuration are passed to the querier worker service initializer; the ingester lifecycler listen port is set to the server gRPC listen port; worker frontend/scheduler and distributor/querier ingester dial sites are traced; loopback gRPC remains a configuration-specific recommendation, with advertised/dial addresses, successful internal worker and ingester calls, any compactor calls and live reachability to verify. | Loki v3.7.8; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
 | loki-grpc-tls: gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers. | dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742; Loki v3.7.8 | REASONED |
 | loki-proxy: An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki. | Loki v3.7.8 | REASONED |
 | verify-inventory: Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed. | node_exporter v1.12.1; Alertmanager v0.34.1; Pushgateway v1.11.3; Jaeger v2.21.0; dskit 8d1c6d34bb5a42b04caa982d68403c5a643bb742 | REASONED |
@@ -32821,6 +32821,7 @@ from your own account's view of the process.
 - Loki v3.7.8 frontend stream: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/frontend_processor.go#L49-L80
 - Loki v3.7.8 scheduler stream: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L87-L164
 - Loki v3.7.8 scheduler response gRPC dial: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L246-L335
+- Loki v3.7.8 frontend client pool construction: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L57
 - Loki v3.7.8 ingester client dial: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/client/client.go#L65-L91
 - Loki v3.7.8 ingester lifecycler construction: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L358-L365
 - Loki v3.7.8 querier ingester client factory: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L58-L74
@@ -32828,6 +32829,7 @@ from your own account's view of the process.
 - Loki v3.7.8 distributor ingester client factory: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L249-L253
 - Loki v3.7.8 distributor ring selection: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L879-L893
 - Loki v3.7.8 distributor ingester push: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L1258-L1271
+- Loki v3.7.8 distributor ingester client pool: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L346
 - Loki v3.7.8 worker connection inputs: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L571-L580
 - Loki v3.7.8 worker service initializer call: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L734-L740
 - Loki v3.7.8 common ring propagation to ingester: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go#L193-L248
