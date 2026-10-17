@@ -102,19 +102,22 @@ This repository covers deployment exposure: TLS, authentication, MFA, secret han
 ## Root Markdown URLs
 
 In every tracked root Markdown body, write an HTTP(S) URL containing `__` as an
-autolink or a link destination, or put it in a code span. Escaped `\_\_` counts.
-`tools/check_bare_urls.py` uses the pinned markdown-it-py CommonMark parser with
-tables enabled. It scans every inline token, including paragraphs, headings,
-table cells, lists and quotes at any depth. A URL in rendered inline text is
-bare, including link text. The gate reconstructs underscores that CommonMark
-interprets as emphasis within a URL; parsed link and autolink destinations and
-code spans are exempt. Block code, HTML blocks and reference definitions have
-no inline tokens to scan. Validated front matter is excluded. Without the
-pinned parser, a local run prints an advisory SKIP and runs the existing lexical
-fallback. CI and `--require-parser` fail if the parser is absent or mismatched.
-The gate recognizes HTTP(S) schemes, not GFM `www.` autolinks or single-underscore
-pairs. A root file that starts with `---` but has invalid `version_basis` front
-matter fails closed before its body is scanned.
+autolink or a link destination, or put it in a code span. Escaped `\_\_` and
+character references for underscores count. `tools/check_bare_urls.py` uses the
+pinned markdown-it-py CommonMark parser with tables enabled. For each inline
+token, including those in paragraphs, headings, table cells, lists and quotes,
+it counts URL occurrences in raw content and subtracts parsed link destinations,
+image sources and code spans. Every remaining occurrence is bare, including link
+text, image alt text and URLs in inline HTML content. A link whose text and
+destination are the same URL has one finding.
+The reported line is the first line of the inline block, even if the URL appears
+later in that block. Block code, HTML blocks and reference definitions have no
+inline tokens to scan. Validated front matter is excluded. Without the pinned
+parser, a local run prints one advisory SKIP and runs the existing lexical
+fallback, which is less exact. CI and `--require-parser` fail if the parser is
+absent or mismatched. The gate recognizes HTTP(S) schemes, not GFM `www.`
+autolinks or single-underscore pairs. A root file that starts with `---` but
+has invalid `version_basis` front matter fails closed before its body is scanned.
 
 ## Version basis
 
@@ -154,10 +157,9 @@ Schema 1 requires exactly these top-level fields:
   list or quote markers). That includes a label that spans lines, a label followed by `:` with
   the destination on a later line, and `[note]: text`, which is a definition because `text`
   is a valid destination. So no bracketed label can become a link. Sources cite URLs only as
-  bare URLs, `<autolinks>` or inline links (bracketed text, then the URL in parentheses).
-  In an enrolled guide's Sources,
-  outside fences, every line closes what it opens: each backtick lies in a code span
-  that ends on that line, and outside code spans each opening bracket is
+  bare URLs, `<autolinks>` or inline links (bracketed text, then the URL in parentheses). In
+  an enrolled guide's Sources, outside fences, every line closes what it opens: each backtick
+  lies in a code span that ends on that line, and outside code spans each opening bracket is
   closed on that line, with no stray closing bracket. A backslash-escaped bracket, parenthesis
   or backtick fails on any Sources line below the heading, outside fences and HTML comments,
   even in a code span. Anywhere in an enrolled guide outside fences, any `a`, `img`, `link` or

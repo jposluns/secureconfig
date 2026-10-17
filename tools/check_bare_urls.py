@@ -2,16 +2,17 @@
 """Reject bare double-underscore URLs in tracked root Markdown bodies.
 
 With the pinned CommonMark parser, inspect every inline token, including those in
-headings, tables, lists and quotes at any depth. Join rendered text across inline
-formatting and restore underscore markers that open inside a URL, since
-``__`` can split a URL into emphasis tokens. A URL containing
-``__`` (also when written ``\\_\\_``) is bare in rendered text, including link
-text. Link and autolink destinations and code spans are exempt. Block code, HTML
-blocks and reference definitions produce no inline tokens. Front matter is excluded.
+headings, tables, lists and quotes at any depth. Count URL occurrences in raw
+inline content, then account for parsed link destinations, image sources and code
+spans. Every remaining occurrence is bare, including link text and image alt text.
+Escaped underscores and character references count. Block code, HTML blocks and
+reference definitions produce no inline tokens. Front matter is excluded.
 Without the pin, the existing lexical scan runs with an advisory SKIP; CI requires
 the parser. Neither path fetches links.
 """
 import argparse
+from collections import Counter
+from html import unescape
 import os
 import re
 import sys
@@ -21,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _markdown import Fences, body_lines
 from _walk import walk_files
 from check_verify_marking import ParserUnavailable, code_spans, gate_parser, html_end
+from version_basis import split as split_front_matter
 
 ROOT = Path(__file__).resolve().parents[1]
 URL = re.compile(r"https?://[^\s<>\"'`\[\]]+", re.I)
@@ -149,58 +151,44 @@ def lexical_findings(path):
 
 
 def parsed_findings(path, parser):
-    """Scan rendered inline text, never link targets or code-span contents."""
-    lines = body_lines(path.read_text(encoding="utf-8"))
+    """Count raw URL occurrences that the parse does not assign to exempt tokens."""
+    text = path.read_text(encoding="utf-8")
+    _, body = split_front_matter(text)
+    prefix = text[:len(text) - len(body)]
+    # Only LF separates lines here; splitlines() would turn Unicode separators
+    # into artificial block boundaries before CommonMark sees the input.
+    lines = [''] * prefix.count('\n') + body.split('\n')
     for token in parser.parse("\n".join(lines)):
         if token.type != "inline":
             continue
-        pieces = []
         line = token.map[0] + 1
-        autolink = 0
-        strong = []
-
-        def scan():
-            if not pieces:
-                return
-            rendered = "".join(part for part, _ in pieces)
-            positions = []
-            for part, part_line in pieces:
-                positions.extend([part_line] * len(part))
-            for match in URL.finditer(rendered):
-                candidate = url_token(match)
-                if "__" in candidate:
-                    yield (f"{path.name}:{positions[match.start()]}: "
-                           f"bare URL contains __: {candidate}")
-            pieces.clear()
-            strong[:] = [False] * len(strong)
-
+        candidates = []
+        for match in URL.finditer(token.content):
+            candidate = url_token(match)
+            decoded = unescape(candidate.replace(r"\_", "_"))
+            if "__" in decoded:
+                candidates.append((candidate, parser.normalizeLink(decoded)))
+        accounted = Counter()
         for child in token.children or ():
-            if child.type == "link_open" and child.markup == "autolink":
-                yield from scan()
-                autolink += 1
-            elif child.type == "link_close" and child.markup == "autolink":
-                autolink -= 1
-            elif child.type == "text":
-                if not autolink:
-                    pieces.append((child.content, line))
-            elif child.type == "strong_open" and child.markup == "__":
-                # Surrounding emphasis is not part of the URL; an opener inside
-                # its current text prefix is. Restore only the latter pair.
-                so_far = "".join(part for part, _ in pieces)
-                inside_url = any(match.end() == len(so_far) for match in URL.finditer(so_far))
-                strong.append(inside_url)
-                if inside_url and not autolink:
-                    pieces.append(("__", line))
-            elif child.type == "strong_close" and child.markup == "__":
-                if strong.pop() and not autolink:
-                    pieces.append(("__", line))
-            elif child.type in ("softbreak", "hardbreak"):
-                if not autolink:
-                    pieces.append(("\n", line))
-                line += 1
-            elif child.type in ("code_inline", "html_inline", "image"):
-                yield from scan()
-        yield from scan()
+            if child.type == "link_open":
+                href = child.attrGet("href")
+                match = URL.match(href or "")
+                if match:
+                    accounted[parser.normalizeLink(url_token(match))] += 1
+            elif child.type == "image":
+                src = child.attrGet("src")
+                match = URL.match(src or "")
+                if match:
+                    accounted[parser.normalizeLink(url_token(match))] += 1
+            elif child.type == "code_inline":
+                for match in URL.finditer(child.content):
+                    candidate = url_token(match)
+                    accounted[parser.normalizeLink(unescape(candidate.replace(r"\_", "_")))] += 1
+        for candidate, normalized in candidates:
+            if accounted[normalized]:
+                accounted[normalized] -= 1
+            else:
+                yield f"{path.name}:{line}: bare URL contains __: {candidate}"
 
 
 def main(argv=None):
@@ -213,7 +201,8 @@ def main(argv=None):
             parser = gate_parser(required=True)
         except ParserUnavailable as exc:
             if args.require_parser or os.environ.get("CI"):
-                raise
+                print(f"  FAIL  bare URL parser unavailable: {exc}")
+                return 1
             parser = None
             print(f"  SKIP  bare URL parser path: {exc} (lexical fallback runs)")
         errors = []

@@ -150,7 +150,7 @@ if bare_urls_tests=$(python3 tools/test_bare_urls_gate.py 2>&1); then
   printf '%s\n' "$bare_urls_tests"
   if grep -q '^  FAIL  ' <<< "$bare_urls_tests"; then
     bad "test_bare_urls_gate.py printed findings but exited 0"
-  elif ! grep -qE '^  ok    bare URL gate: [0-9]+ failures, [0-9]+ exemptions, and bare-fixture mutation proof$|^  SKIP  bare URL parser fixtures: ' <<< "$bare_urls_tests"; then
+  elif ! grep -qE '^  ok    bare URL gate: [0-9]+ failures, [0-9]+ exemptions, and bare, href and code-span mutation proofs$|^  SKIP  bare URL parser fixtures: ' <<< "$bare_urls_tests"; then
     bad "test_bare_urls_gate.py exited 0 without its expected ok line"
   fi
 elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$bare_urls_tests"; then
