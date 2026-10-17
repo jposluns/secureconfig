@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "4fd23c9825822d04f7e12d400a3010ea9ba74a4fce855cda84b60be91c7ee94d",
+  "body_sha256": "6cc282fd5a8bf63a7a75330ddca39fe7d429b261a87e20d00f2ec3d49a6f044b",
   "components": {
     "ds-container": {
       "name": "Datasette container generator",
@@ -516,7 +516,7 @@ DEMONSTRATED: local guard limits on 2026-10-05 in private /dev/shm scratch with 
 
 Applicability checked on 2026-09-18: Datasette stable documentation lists 0.65.5; Datasette packaging source was inspected on moving `main`. sqlite-web source was inspected on moving `master`, identifying itself as 0.8.1; the released 0.8.1 package matched it for the flags and routes the loopback runs exercised. Runtime confirmation used Datasette 0.65.5, datasette-auth-passwords 1.1.1, datasette-write 0.4 and sqlite-web 0.8.1 from PyPI.
 
-The URLs below were fetched during the original authoring, except for the sqlite-web 0.8.1 tag entries checked against the locally extracted tag snapshot in October 2026. This list also records the source-fetch review.
+Every URL listed below was fetched during authoring, except the sqlite-web 0.8.1 tag entries, which were checked against the locally extracted tag snapshot in October 2026. This list also records the source-fetch review.
 
 - Datasette CLI reference (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/cli-reference.html
 - Datasette authentication and permissions (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/authentication.html
