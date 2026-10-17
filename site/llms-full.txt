@@ -30006,7 +30006,7 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 | mem0-reload: Compose uvicorn --reload is a development setting; remove for production. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
 | onyx-prod: Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
 | onyx-bootstrap: Email/password auth is on and first signup becomes admin; claim privately before exposure. | Onyx documentation unknown | REASONED |
-| onyx-auth-type: Comparison of the v4.3.13 and v4.4.0 tag trees indicates AUTH_TYPE no longer selects runtime authentication in v4.4.0; legacy values remain for migrations and a stale-value warning. Tag names supply version identity; the recorded plan for v4.5 removal is unverified by these files. | Onyx documentation unknown; Onyx v4.3 source v4.3.13; Onyx v4.4 source v4.4.0 | REASONED |
+| onyx-auth-type: This guide infers from the v4.3.13 and v4.4.0 tag trees that AUTH_TYPE no longer selects runtime authentication in v4.4.0; legacy values remain for migrations, a one-time legacy SAML import at startup, and a stale-value warning. Tag names alone supply version identity, since neither tree's manifest records the release version; the recorded v4.5 removal plan and its completion are unverified by these files. | Onyx documentation unknown; Onyx v4.3 source v4.3.13; Onyx v4.4 source v4.4.0 | REASONED |
 | onyx-base: Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5; Onyx documentation unknown | REASONED |
 | onyx-api: Development override adds API 8080:8080; remove unless deliberately restricted for access. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
 | onyx-backing: Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
@@ -30171,7 +30171,7 @@ If the development file is running, remove the API publication and every backing
 
 The development mappings include expressions such as `${POSTGRES_HOST_PORT:-5432}:5432`. Setting `POSTGRES_HOST_PORT` changes the host port. Leaving it empty selects the default. Neither action removes the publication. The same trap appears in Dify's plugin-daemon mapping in [agent-builders.md](agent-builders.md).
 
-Email/password authentication is already enabled. This guide infers from the v4.3.13 and v4.4.0 tag trees that `AUTH_TYPE` no longer selects runtime authentication in v4.4.0; v4.4.0 still reads legacy values for migrations and a stale-value warning. The version identity rests on the tag names, since neither tree records its release version in a manifest. The September 2026 documentation record says removal was planned for v4.5; these fetched files do not establish that plan or its completion. Do not set `AUTH_TYPE` expecting to change authentication.
+Email/password authentication is already enabled. This guide infers from the v4.3.13 and v4.4.0 tag trees that `AUTH_TYPE` no longer selects runtime authentication in v4.4.0; v4.4.0 still reads legacy values for migrations, a one-time legacy SAML import at startup, and a stale-value warning. The version identity rests on the tag names, since neither tree records its release version in a manifest. The September 2026 documentation record says removal was planned for v4.5; these fetched files do not establish that plan or its completion. Do not set `AUTH_TYPE` expecting to change authentication.
 
 The Docker documentation also describes access at `localhost:3000`. That is now established from the base Compose file rather than inferred: host 3000 maps to nginx's container port 80, and `web_server` carries no host publication of its own. So `localhost:3000` reaches nginx, not the web process directly, and the web process is not separately published.
 
@@ -30466,7 +30466,7 @@ If the deployment trusts identity headers from a proxy, follow the direct-origin
 - Changing a `${VAR:-default}` host port and believing the publication disappeared.
 - Adding a loopback mapping through a Compose override while retaining the original public mapping.
 - Leaving `AUTH_DISABLED=true` in Mem0 after debugging.
-- Setting Onyx's `AUTH_TYPE` in v4.4.0 and expecting it to select runtime authentication, contrary to this guide's comparison of the v4.3.13 and v4.4.0 tag trees.
+- Setting Onyx's `AUTH_TYPE` and expecting an authentication change; this guide infers from the v4.3.13 and v4.4.0 tag trees that it no longer selects runtime authentication in v4.4.0.
 - Leaving LocalAI's native key unset, or mistaking an upstream provider token for inbound authentication.
 - Inspecting only `ss`, only IPv4, or only the deployment host's own view.
 - Accepting a timeout, an unknown endpoint's `404`, or a credentialed `200` as proof of protection.
@@ -30488,11 +30488,12 @@ The service facts come from the maintainer's vendor-source verification record d
 - [Mem0 server Compose](https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/docker-compose.yaml): uvicorn command and API, PostgreSQL, and dashboard publications.
 - [Mem0 server `main.py`](https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/main.py): the startup `raise RuntimeError` when authentication is on and `JWT_SECRET` is unset, and the `if`/`elif` warning branches for `AUTH_DISABLED` and a short `ADMIN_API_KEY`. The REST API page describes the request-time responses; this file is the startup behaviour.
 - [Onyx basic authentication](https://docs.onyx.app/deployment/authentication/basic.md): email/password authentication, the first user to sign up becoming an admin, and inert `AUTH_TYPE`.
-- [Onyx v4.3.13 authentication configuration](https://github.com/onyx-dot-app/onyx/blob/v4.3.13/backend/onyx/configs/app_configs.py#L134-L142) (checked October 2026): legacy environment selection of authentication.
+- [Onyx v4.3.13 authentication configuration](https://github.com/onyx-dot-app/onyx/blob/v4.3.13/backend/onyx/configs/app_configs.py#L133-L142) (checked October 2026): legacy environment selection of authentication.
 - [Onyx v4.3.13 authentication routes](https://github.com/onyx-dot-app/onyx/blob/v4.3.13/backend/onyx/main.py#L581-L608) (checked October 2026): legacy environment selection of authentication.
-- [Onyx v4.4.0 startup](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/main.py#L371-L372) (checked October 2026): legacy migration or startup warning handling of `AUTH_TYPE`.
+- [Onyx v4.4.0 startup warning](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/main.py#L371-L372) (checked October 2026): startup warning handling of stale `AUTH_TYPE`.
+- [Onyx v4.4.0 startup SAML import](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/main.py#L392-L397) (checked October 2026): startup call to import a legacy SAML provider when `AUTH_TYPE=saml`.
 - [Onyx v4.4.0 authentication warning](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/auth/users.py#L183-L200) (checked October 2026): legacy migration or startup warning handling of `AUTH_TYPE`.
-- [Onyx v4.4.0 SAML provider import](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/db/sso_provider.py#L205-L209) (checked October 2026): legacy migration or startup warning handling of `AUTH_TYPE`.
+- [Onyx v4.4.0 SAML provider import](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/db/sso_provider.py#L197-L209) (checked October 2026): one-time legacy SAML import at startup reads `AUTH_TYPE=saml`.
 - [Onyx v4.4.0 SSO provider migration](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/alembic/versions/1fc2904131a3_add_sso_provider_table_and_seed_from_env.py#L60-L93) (checked October 2026): legacy migration or startup warning handling of `AUTH_TYPE`.
 - [Onyx v4.4.0 disabled authentication migration](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/alembic/versions/f7ca3e2f45d9_migrate_no_auth_data_to_placeholder.py#L129-L147) (checked October 2026): legacy migration or startup warning handling of `AUTH_TYPE`.
 - [Onyx v4.3.13 web package manifest](https://github.com/onyx-dot-app/onyx/blob/v4.3.13/web/package.json#L3) (checked October 2026): `1.0.0-dev` rather than the tag version.
