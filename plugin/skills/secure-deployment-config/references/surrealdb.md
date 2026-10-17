@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "561792ed1c49b3f87ae9dc9a48fc2af85af6e80f7c6bbd70cffd5d56574776a3",
+  "body_sha256": "3e508a9aa57450aa708ee435dff5fbd5b96f150b343436a7e16f8267735976fe",
   "components": {
     "docs": {
       "name": "SurrealDB documentation (rolling)",
@@ -188,9 +188,9 @@ Bash 5.3 says that assignment affects only the command's environment; ensure the
 
 This moves the password out of argv, not out of reach: `/proc/<pid>/environ` contains the initial environment
 set at `execve` and does not reflect later changes to the process environment. Reading it is governed by a
-`PTRACE_MODE_READ_FSCREDS` check that depends on credentials, capabilities, dumpability and Linux Security Modules.
+`PTRACE_MODE_READ_FSCREDS` check that depends on factors such as the credentials and capabilities of the two processes, dumpability and Linux Security Modules.
 As this guide's assessment, the same account or root may read the initial value when that check permits, and a
-process inheriting the environment may receive it. Treat it as exposed to that account and to root while the server runs.
+process inheriting the environment may receive it and expose it the same way for as long as that process runs. Treat it as exposed to that account and to root while the server runs.
 Paste the password alone at the hidden prompt: a multi-line paste leaves every line after the first for
 your shell to run.
 
@@ -324,8 +324,8 @@ shell to run.
 
 - SurrealDB CLI, `surreal start`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start
 - GNU Bash reference manual, bash-5.3 (checked October 2026), prefix assignments 3872-3878: https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3872
-- Linux man-pages, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): initial environment 12-15 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n12; later modifications 26-36 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n26; procfs access check 43-47 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n43
-- Linux man-pages, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): ptrace access factors 2519-2533 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man2/ptrace.2?h=man-pages-6.19#n2519
+- Linux man-pages `proc_pid_environ(5)`, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): initial environment 12-15 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n12; later modifications 26-36 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n26; procfs access check 43-47 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n43
+- Linux man-pages `ptrace(2)`, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): ptrace access factors 2519-2533 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man2/ptrace.2?h=man-pages-6.19#n2519
 - SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass`/`-p` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
 - SurrealDB 3.2.4 `--unauthenticated` flag, bound to `SURREAL_UNAUTHENTICATED` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/dbs/mod.rs#L47-L50
 - SurrealDB 3.2.4 `--bind`/`-b` (`SURREAL_BIND`) default `127.0.0.1:8000` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L177-L180
