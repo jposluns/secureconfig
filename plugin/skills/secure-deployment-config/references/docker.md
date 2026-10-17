@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "341933ce64b66e3a9c45957f10e9be9ed68f6e5c897a47cf599b943ff7b40671",
+  "body_sha256": "6bfafd5f70bd291d7c4fb83328ff059f77ad6a488dd57c40e3e526a0376fb30c",
   "components": {
     "docker-build": {
       "name": "Docker build and image history documentation",
@@ -35,6 +35,25 @@ version_basis: {
       "basis": "unknown",
       "sources": {
         "sae565a19136c": "https://docs.docker.com/compose/how-tos/networking/"
+      }
+    },
+    "git-ignore": {
+      "name": "Git ignore rules",
+      "basis": "v2.49.0",
+      "sources": {
+        "s5f377f0fdbd8": "https://github.com/git/git/blob/v2.49.0/Documentation/gitignore.adoc#L15-L18"
+      }
+    },
+    "docker-workload": {
+      "name": "Docker workload documentation",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "s2fa3b3cd70e6": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/_vendor/github.com/moby/buildkit/frontend/dockerfile/docs/reference.md#L2448-L2463",
+        "s8000f273883e": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/reference/compose-file/services.md#L224-L233",
+        "sb94d21792cd4": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/reference/compose-file/services.md#L1892-L1894",
+        "s28ce092b2589": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/reference/compose-file/services.md#L2008-L2021",
+        "s738280652c95": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L2495-L2502",
+        "secebea1a69ab": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/_index.md#L84-L112"
       }
     },
     "reload": {
@@ -95,7 +114,7 @@ version_basis: {
     "alternate-entry": {"text": "Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "auth": {"text": "Proxy authentication and human MFA supplement application login; no authentication-provider source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "secrets": {"text": "Use runtime environment files or Compose secrets, exclude .env from Git, and never put secrets in Dockerfile ENV/ARG; use temporary build secret mounts. Docker build and history behaviour is sourced; as this guide's assessment, the cited history reference does not establish that every argument value is shown; as this guide's assessment, never bake secrets into images and do not copy or print build-time secrets into the image. No direct source for the runtime delivery methods or the .env exclusion from Git is listed.", "components": ["compose", "docker-build"], "sources": ["compose:sae565a19136c", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s6283b172a5c6"], "status": "REASONED"},
-    "workload": {"text": "Use a non-root USER and the linked capability, no-new-privileges, read-only-root and Docker-socket guidance; no workload-control source is listed here.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "workload": {"text": "Keep .env in .gitignore, which ignores matching untracked files but not tracked files. Use a non-root Dockerfile USER; as this guide's assessment, a compromised app then is not root in the container. Drop capabilities, use no-new-privileges and a read-only root filesystem, and never mount the Docker socket. Docker sources establish the option names and daemon socket access; the linked guide's hardening consequences, including the mounted-socket path, remain this guide's assessment.", "components": ["compose", "git-ignore", "docker-workload"], "sources": ["compose:sae565a19136c", "git-ignore:s5f377f0fdbd8", "docker-workload:s2fa3b3cd70e6", "docker-workload:s8000f273883e", "docker-workload:sb94d21792cd4", "docker-workload:s28ce092b2589", "docker-workload:s738280652c95", "docker-workload:secebea1a69ab"], "status": "REASONED"},
     "database": {"text": "Database TLS and authentication remain necessary for connections from outside the Compose network; database vendor sources are in linked guides.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "verify-publish": {"text": "Compose ps is project-scoped; inventory every host container and TCP/UDP socket, including IPv6. Socket visibility alone does not prove reachability.", "components": ["compose", "engine"], "sources": ["compose:sae565a19136c", "engine:s1e53417c513d"], "status": "REASONED", "verify": [1]},
     "verify-redirect": {"text": "HTTP should redirect to HTTPS; the guide records an expected result, with no direct proxy citation or run.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED", "verify": [1]},
@@ -114,7 +133,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -135,7 +154,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | alternate-entry: Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed. | Compose networking unknown | REASONED |
 | auth: Proxy authentication and human MFA supplement application login; no authentication-provider source is listed. | Compose networking unknown | REASONED |
 | secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and never put secrets in Dockerfile ENV/ARG; use temporary build secret mounts. Docker build and history behaviour is sourced; as this guide's assessment, the cited history reference does not establish that every argument value is shown; as this guide's assessment, never bake secrets into images and do not copy or print build-time secrets into the image. No direct source for the runtime delivery methods or the .env exclusion from Git is listed. | Compose networking unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
-| workload: Use a non-root USER and the linked capability, no-new-privileges, read-only-root and Docker-socket guidance; no workload-control source is listed here. | Compose networking unknown | REASONED |
+| workload: Keep .env in .gitignore, which ignores matching untracked files but not tracked files. Use a non-root Dockerfile USER; as this guide's assessment, a compromised app then is not root in the container. Drop capabilities, use no-new-privileges and a read-only root filesystem, and never mount the Docker socket. Docker sources establish the option names and daemon socket access; the linked guide's hardening consequences, including the mounted-socket path, remain this guide's assessment. | Compose networking unknown; Git ignore rules v2.49.0; Docker workload documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | database: Database TLS and authentication remain necessary for connections from outside the Compose network; database vendor sources are in linked guides. | Compose networking unknown | REASONED |
 | verify-publish: Compose ps is project-scoped; inventory every host container and TCP/UDP socket, including IPv6. Socket visibility alone does not prove reachability. | Compose networking unknown; Docker Engine networking unknown | REASONED |
 | verify-redirect: HTTP should redirect to HTTPS; the guide records an expected result, with no direct proxy citation or run. | Compose networking unknown | REASONED |
@@ -223,7 +242,7 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 
 - The proxy is the natural place for a first authentication gate (basic auth per the proxy guides, or Cloudflare Access); the application still needs its own login for anything multi-user ([authentication.md](authentication.md)). The proxy is also where MFA attaches for human-facing services ([mfa.md](mfa.md)).
 - Pass secrets at runtime through environment files or Docker/Compose secrets. Never bake secrets into the image. Never put secrets in Dockerfile `ENV` or `ARG`: Docker documents that both are exposed in the final image; `ENV` also persists in containers from the image, and build arguments may persist in image metadata, provenance attestations and image history. As this guide's assessment, baking a key into an image ships it to every registry the image touches. `docker image history` shows the image's history, including creation commands; as this guide's assessment, the cited reference does not establish that every argument value is shown. For build-time secrets, use a temporary secret mount for the build instruction and do not copy or print the secret into the image.
-- Keep `.env` in `.gitignore`, and run containers as a non-root user (`USER` in the Dockerfile) so a compromised app is not root in the container. Non-root is the start, not the whole of workload hardening: dropping capabilities, `--security-opt no-new-privileges`, a read-only root filesystem, and never mounting the Docker socket are in [container-hardening.md](container-hardening.md).
+- Keep `.env` in `.gitignore` (Git ignores matching untracked files, while already tracked files are unaffected), and run containers as a non-root user (`USER` in the Dockerfile); as this guide's assessment, this means a compromised app is not root in the container. As this guide's advice, non-root is the start, not the whole of workload hardening: dropping capabilities (`cap_drop`), `--security-opt no-new-privileges` (or Compose `security_opt`), a read-only root filesystem (Compose `read_only`), and never mounting the Docker socket are in [container-hardening.md](container-hardening.md). Docker documents these option names and that the control socket governs daemon access; the linked guide's hardening consequences, including the mounted-socket path, remain this guide's assessment.
 - Databases in containers still need their own TLS and authentication when anything outside the Compose network connects: see [postgresql.md](postgresql.md), [mysql.md](mysql.md), [mongodb.md](mongodb.md), and [redis.md](redis.md).
 
 ## 4. Verify
@@ -246,6 +265,13 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 - Docker build variables (`ENV` persists in containers; build arguments may persist in metadata, provenance and history), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/variables.md#L17-L52
 - Docker build secrets (temporary mounts for build instructions), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22
 - Docker image history command (image history and creation-command output), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118
+- Git v2.49.0 ignore rules for untracked and tracked files (checked October 2026): https://github.com/git/git/blob/v2.49.0/Documentation/gitignore.adoc#L15-L18
+- Docker Dockerfile `USER` instruction, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/_vendor/github.com/moby/buildkit/frontend/dockerfile/docs/reference.md#L2448-L2463
+- Docker Compose `cap_drop` option, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/reference/compose-file/services.md#L224-L233
+- Docker Compose `read_only` option, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/reference/compose-file/services.md#L1892-L1894
+- Docker Compose `security_opt` and `no-new-privileges` spellings, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/reference/compose-file/services.md#L2008-L2021
+- Docker run `--security-opt no-new-privileges`, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L2495-L2502
+- Docker daemon control-socket access and host filesystem control, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/_index.md#L84-L112
 - Docker packet filtering and firewalls: https://docs.docker.com/engine/network/packet-filtering-firewalls/
 - Docker with iptables, for the `DOCKER-USER` chain (processed before Docker's own rules; matches container addresses after DNAT): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker Engine 28.0 release notes, for the published-port and loopback-mapping hardening: https://docs.docker.com/engine/release-notes/28/
