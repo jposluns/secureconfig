@@ -75,7 +75,7 @@ This repository covers deployment exposure: TLS, authentication, MFA, secret han
    rows, paragraphs, directional prose and fence declarations. With the pinned
    parser present, it also re-validates leading fence comments, including shell and
    SQL comments. Without the pin, fence provenance receives only the legacy check;
-   CI requires the parser. Row 3.39 will reuse the same pin.
+   CI requires the parser. The version-basis Sources check uses the same pin.
 
 6. **Angle-bracket placeholders in a shell block, which no gate reliably catches.** `<public-ip>`, `<service-user>` and `<user@host>` read as placeholders and run as redirections: `curl -s http://<public-ip>:11434/api/tags` is a read from a file called `public-ip` and a write to one called `:11434/api/tags`, and it fails in whatever way the surrounding command fails, quietly only because `-s` is quiet. Use a house placeholder instead: a reserved address such as `203.0.113.10`, or `REPLACE_WITH_A_NAME` for a value the reader supplies. Which of the two depends on what failing to substitute looks like. A reserved address is usually right in a configuration value or an illustration, though not always: an unreplaced SAN generates a valid certificate for the wrong address, so judge each case on whether leaving the placeholder produces a result the reader would read as success. It is wrong in a Verify probe whose pass is "nothing answered": an unreplaced `203.0.113.10` times out exactly like a blocked port, so the check passes for the wrong reason. Those take `REPLACE_WITH_A_NAME`, and the check must REJECT the unsubstituted value locally rather than rely on it failing to resolve. Resolution is not a guarantee: a wildcard resolver answers anything, an `http_proxy` in the environment makes the target's name irrelevant, and a local socket error produces the same exit code as a remote refusal. Guard it in the block, and put the command INSIDE the guard so it cannot run unsubstituted; a guard that only prints a warning and then runs the command anyway leaves the original false pass intact. Carry the value in the shell's positional parameters inside a subshell rather than in a named variable, and handle the empty case for a reader who pastes only part of the block. A named variable belongs to the reader's environment as much as to the block: five successive guard designs were beaten in turn by a prefix-only pattern, a partial paste, `set -u`, a placeholder embedded in a longer value, and finally a `readonly` variable already set in the reader's shell, which makes the block's own assignment fail while the probe runs on the inherited value. Positional parameters close the attribute and inheritance bypasses together, because they cannot be made `readonly`, cannot carry `declare -i` or `declare -l`, and are never inherited from the environment. They do not close the partial paste, and on that one case they are worse than the variable they replaced: an omitted assignment left a variable unset and the guard caught it, whereas an omitted `set --` line leaves the caller's own arguments in place and the guard reads those instead. The partial paste is narrowed by two checks together, and it is worth being exact about what they do and do not reach. The block's `set --` line opens with a fixed marker, and the guard lines below it check that marker and then count the values. A fragment that keeps those guard lines but omits or shortens the `set --` line is caught by them; a fragment pasted from below the guard lines is unguarded, as any paste that starts past a guard would be, so the protection is in pasting whole blocks, not in the guard reaching code that precedes it. Measured: a marker alone lets a short assignment crash on an unset positional under `set -u` instead of printing the guard message, and a count alone is passed by any shell holding the expected number of plausible values. Quote the count as `"$#"`. Unquoted it is a bypass and not a nuisance: a reader whose `IFS` contains a digit that ends the count has that expansion split apart, so under `IFS=0` a block requiring one value accepts ten, the test reads `1 -eq 1`, and the command runs. Give every probe `-g` as well, because curl expands `[...]` and `{...}` in a URL whatever the shell did with the quotes. Neither reaches the last case: a shell that already holds the marker AND the right number of values is indistinguishable, from inside the block, from the block having set them. That case is irreducible in a pasted fragment, and this is the fifth successive design in this lineage, so the rule to draw is the one about claims rather than about shells. State per-case what a guard was measured to catch, never an aggregate that it closes a class. Two assumptions remain, and a guide should not pretend otherwise: the block needs a shell whose builtins are the real ones, since a reader who has shadowed `set` or `[` with a function or alias defeats every guard at once, and a value containing a literal apostrophe cannot simply be dropped inside the quotes. Single-quote the placeholder on the `set --` line, and say in the guide that the reader substitutes inside the quotes. A guard cannot help with what happens before it runs: an unquoted substitution site is evaluated by the shell as it parses the line, so a pasted URL containing `&` backgrounds the `set --` itself and leaves the parameters empty while the remainder of the line runs as its own command, and one containing `$(...)` or a backtick simply executes. That is a sixth way past a guard that the first five fixes do not touch, because it lands before the guard exists:
 
@@ -131,8 +131,13 @@ Schema 1 requires exactly these top-level fields:
   ends it. Basis matching is
   literal and case-sensitive, with no adjacent ASCII letter, digit or dot: `v2.51.0` and
   `2.51.0` are not interchangeable. A matching literal inside the cited URL counts too.
-  Components with basis `unknown` are exempt from the basis requirement. Enrolled guides cite
-  with inline links only: outside fences, any line CommonMark could read as a link reference
+  Components with basis `unknown` are exempt from the basis requirement. With the pinned
+  `markdown-it-py` parser, citation presence and basis matching use decoded rendered text and
+  link or autolink `href` targets. Bare URLs in rendered text count; code spans and link labels
+  do not supply citations. HTML comments remain forbidden by the Verify-markup check.
+  CI requires the parser. Local runs without the
+  pin print an advisory SKIP and count citations with the raw-text fallback. Both paths keep
+  the same restrictions: outside fences, any line CommonMark could read as a link reference
   definition fails, that is, a bracketed label and then `:` at the start of a line (after any
   list or quote markers). That includes a label that spans lines, a label followed by `:` with
   the destination on a later line, and `[note]: text`, which is a definition because `text`
@@ -158,7 +163,7 @@ Schema 1 requires exactly these top-level fields:
   a bracketed label); a character reference (`&amp;`, `&#47;`) or backslash escape on a line
   with a URL or link; and, on such a line, a percent-encoded unreserved character (letter,
   digit, `-`, `.`, `_` or `~`, such as `%61`). A component URL may not contain a character
-  reference, an escape or an encoded unreserved character either. No check extracts URLs: each
+  reference, an escape or an encoded unreserved character either. Without the parser, each
   component URL is matched as written in the raw Sources text, as link text or as a link target.
   The scheme and the host, with any userinfo and port, match case-insensitively and the rest
   exactly, so `HTTPS://EXAMPLE.com/p` cites `https://example.com/p` but `https://example.com/P`
@@ -168,10 +173,13 @@ Schema 1 requires exactly these top-level fields:
   punctuation unless a URL character follows them, so `url.` cites `url`, but `url.json`,
   `url/v2` and `url_v2` do not. A `*` or `~` right after the URL, or a `_` after a URL that a
   `_` opened, always ends it, so `**url**x`, `~~url~~x` and `_url_x` cite `url`.
-  Known limits: after these grammar restrictions, the check matches known component URLs
-  textually. It does not render Markdown, so a construct outside CommonMark's common forms, or
-  renderer-specific URL normalization (for example IDNA or fullwidth host mapping), could
-  still cite a URL uncounted. Row 3.39 in `TODO.md` tracks a parser-based check.
+  For an allowed inline link whose destination begins on the next line, the parser counts its
+  target in the owning item; the fallback counts it when the URL appears contiguously there.
+  For a URL only in a code span or link label, the fallback can count the raw spelling, while
+  the parser excludes it. For a bare URL, the parser applies a textual boundary check, so
+  an unusual rendered text construct could leave a citation uncounted. For URL normalization
+  such as IDNA or fullwidth host mapping, this gate establishes the pinned parser's behaviour
+  only; another Markdown renderer may produce a different target.
   `tools/version_basis_sources_baseline.txt` grandfathers existing violations by guide and a
   counted SHA-256 fingerprint of component ID, basis, URL and item paragraph text. New, changed
   or excess occurrences fail, and fixed or removed occurrences require removing their stale

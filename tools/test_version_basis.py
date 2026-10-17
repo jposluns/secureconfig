@@ -16,6 +16,7 @@ from pathlib import Path
 import version_basis as vb
 from _markdown import body_lines
 from check_guide_shape import headings
+from check_verify_marking import gate_parser, ParserUnavailable
 
 URL = 'https://example.com/v1.0#control'
 SID = vb.source_id(URL)
@@ -846,6 +847,120 @@ class RoundTwoTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertIn('FAIL  fixture.md: invalid front matter:', result.stdout)
                 self.assertNotIn('Traceback', result.stdout + result.stderr)
+
+
+class RenderedSourcesTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        try:
+            cls.parser = gate_parser(required=True)
+        except ParserUnavailable as exc:
+            raise unittest.SkipTest(f'pinned parser unavailable: {exc}') from exc
+
+    def check(self, sources, url='https://example.com/control', prose='', use_parser=True):
+        data = fixture()
+        data['components']['product']['sources'] = {vb.source_id(url): url}
+        data['claims']['control']['sources'] = ['product:' + vb.source_id(url)]
+        body = BODY.replace('## Verify', prose + '\n\n## Verify' if prose else '## Verify')
+        body = body[:body.index('- Product')] + sources + '\n'
+        data['body_sha256'] = vb.digest(body)
+        return vb.updated(document(data, body), 'fixture.md',
+                          parser=self.parser if use_parser else None)
+
+    def test_allowed_links_and_emphasis_are_counted(self):
+        url = 'https://example.com/control'
+        for target in (f'<{url}>', f'[doc]({url})', f'*{url}*'):
+            with self.subTest(target=target):
+                self.check(f'- Product v1.0: {target}', url)
+                with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                    self.check(f'- Product v1.0: {url}\n- Again: {target}', url)
+
+    def test_existing_bans_apply_with_and_without_parser(self):
+        url = 'https://example.com/control'
+        cases = (
+            (f'- Product v1.0: [doc](https://example.com/con&#116;rol)', '',
+             'character reference or backslash escape on a line with a URL or link'),
+            (f'- Product v1.0: [doc](https://example.com/con\\-trol)', '',
+             'character reference or backslash escape on a line with a URL or link'),
+            (f'- Product v1.0: [doc](https://example.com/%63ontrol)', '',
+             'percent-encoded unreserved character on a line with a URL or link'),
+            (f'- Product v1.0: {url}', f'[ref]: {url}', 'reference definition'),
+            (f'- Product v1.0: {url}\n- Again: [doc][ref]', '', 'reference-style link'),
+            (f'- Product v1.0: {url} <span title="x">tag</span>', '',
+             'raw HTML <span> tag with attributes'),
+            (f'- Product v1.0: {url} <a href="{url}">Again</a>', '',
+             'raw HTML <a> element'),
+        )
+        for sources, prose, diagnostic in cases:
+            with self.subTest(sources=sources, prose=prose):
+                errors = []
+                for use_parser in (False, True):
+                    with self.assertRaisesRegex(ValueError, re.escape(diagnostic)) as caught:
+                        self.check(sources, url, prose, use_parser)
+                    errors.append(str(caught.exception))
+                self.assertEqual(*errors)
+
+    def test_decoded_basis_on_a_separate_line(self):
+        url = 'https://example.com/control'
+        for basis in ('v1&#46;0', 'v1\\.0'):
+            sources = f'- Product {basis}\n  [doc]({url})'
+            with self.subTest(basis=basis):
+                self.check(sources)
+                with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                    self.check(sources, use_parser=False)
+
+    def test_basis_in_link_label_keeps_its_boundary(self):
+        url = 'https://example.com/control'
+        self.check(f'- [Product v1.0]({url}).')
+        with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+            self.check(f'- Product v1.0. [doc]({url})')
+
+    def test_code_spans_are_not_citations(self):
+        url = 'https://example.com/control'
+        with self.assertRaisesRegex(ValueError, 'source URL absent'):
+            self.check(f'- Product v1.0: `{url}`')
+        self.check(f'- Product v1.0: `{url}`', use_parser=False)
+        self.check(f'- Product v1.0: {url}\n- Example only: `{url}`')
+
+    def test_link_label_is_not_a_citation(self):
+        url = 'https://example.com/control'
+        with self.assertRaisesRegex(ValueError, 'source URL absent from Sources'):
+            self.check(f'- Product v1.0: [{url}](https://other.example/doc)')
+        self.check(f'- Product v1.0: [{url}](https://other.example/doc)', use_parser=False)
+
+    def test_html_comment_remains_banned(self):
+        url = 'https://example.com/control'
+        errors = []
+        for use_parser in (False, True):
+            with self.assertRaisesRegex(ValueError, 'HTML comment outside fence or code span') as caught:
+                self.check(f'- Product v1.0: {url}\n- Again <!-- {url} -->',
+                           use_parser=use_parser)
+            errors.append(str(caught.exception))
+        self.assertEqual(*errors)
+
+    def test_inline_link_destination_wraps_across_lines(self):
+        url = 'https://example.com/control'
+        target = f'[doc](\n  {url})'
+        self.check(f'- Product v1.0: {target}')
+        with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+            self.check(f'- Product v1.0: {url}\n- Again: {target}')
+
+    def test_current_corpus_agrees_on_occurrence_counts(self):
+        differences = []
+        for path in vb.paths():
+            data, full = vb.split(path.read_text(encoding='utf-8'))
+            body = vb.without_summary(full)
+            heads = headings(body)
+            raw = vb.raw_sources(body, heads)
+            occurrences, _ = vb.rendered_sources(body, heads, self.parser)
+            for component in data['components'].values():
+                for url in component['sources'].values():
+                    old = vb.cites(raw, url)
+                    new = sum(vb.rendered_cites(value, url, link)
+                              for value, _, link in occurrences)
+                    if old != new:
+                        differences.append((path.name, url, old, new))
+        self.assertEqual(differences, [])
 
 
 class VerifyGrammarTests(unittest.TestCase):
