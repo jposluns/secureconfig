@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "f3eb3dac42968325fc3dbff9bd2c3a0b2f128ca47ff76ae9938ca28c8b2bd9a1",
+  "body_sha256": "a36b7d32fb5208c162ac967a861c5404326ace8c2dcb62d2444c62be3a8c3a21",
   "components": {
     "adapter": {
       "name": "SvelteKit adapter-node",
@@ -15,7 +15,10 @@ version_basis: {
         "s200d6e800c74": "https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/index.js#L24-L38",
         "sf17c5646623c": "https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/index.js#L118",
         "s1ffeda9bbb37": "https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L69",
-        "s8d4fa8e7426b": "https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L243"
+        "s8d4fa8e7426b": "https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L243",
+        "sfd51397a510e": "https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L17-L24",
+        "s6152d66c6b19": "https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L95-L105",
+        "s7b3a11637166": "https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L209-L239"
       }
     },
     "svelte": {
@@ -80,7 +83,8 @@ version_basis: {
       "basis": "v4.0.0",
       "sources": {
         "sa65d64f55ca1": "https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L163-L170",
-        "se1cb3e5b4959": "https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L653-L659"
+        "se1cb3e5b4959": "https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/src/core/nitro.ts#L653-L659",
+        "sd00a53729513": "https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/package.json#L104"
       }
     },
     "nitro-output": {
@@ -88,6 +92,18 @@ version_basis: {
       "basis": "2.12.0",
       "sources": {
         "sbe9fd1f61fe0": "https://cdn.jsdelivr.net/npm/nitropack@2.12.0/dist/core/index.mjs"
+      }
+    },
+    "nitro-node": {
+      "name": "nitropack 2.12.0 source",
+      "basis": "65e514d873da1d1d9edd4d9576d48d90b13e0fac",
+      "sources": {
+        "sd56c769d6dae": "https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/presets/_resolve.ts#L85-L90",
+        "s32975278fc3f": "https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/presets/node/preset.ts#L16-L29",
+        "sdfda9cd3ce7b": "https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/presets/node/runtime/node-server.ts#L1-L23",
+        "sdf38c24e1f80": "https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/runtime/internal/app.ts#L59-L128",
+        "s91ab58ddc148": "https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/core/config/loader.ts#L134-L141",
+        "s0c8ca22542d2": "https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/package.json#L131"
       }
     },
     "nitro-output-docs": {
@@ -118,8 +134,8 @@ version_basis: {
     "vite-hosts": {"text": "server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names.", "components": ["vite"], "sources": ["vite:sae9dd90908fc"], "status": "REASONED"},
     "verify-private": {"text": "Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects.", "components": ["nuxt", "svelte"], "sources": ["nuxt:se2d1e4a2e433", "svelte:s329dda89ba78"], "status": "REASONED", "verify": [1]},
     "verify-secret": {"text": "Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole following symlinks; only a result with every match under dist/server/ is reported as server output, else FINDING with dist/server/ matches labelled. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; hidden input and set +x keep the secret from argv, history and tracing, not the account owner or root.", "components": ["grep", "adapter", "nuxt-output", "nitro-output", "vite-pin", "vite", "nitro-output-docs"], "sources": ["grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae", "adapter:s200d6e800c74", "adapter:sf17c5646623c", "adapter:s1ffeda9bbb37", "adapter:s8d4fa8e7426b", "nuxt-output:sa65d64f55ca1", "nuxt-output:se1cb3e5b4959", "nitro-output:sbe9fd1f61fe0", "nitro-output-docs:s47fff9b24fba", "nitro-output-docs:s51e38e411bfa", "vite-pin:s8ba1c2b868b7", "vite-pin:s484948ac14b6", "vite:s7c70a12e43ed", "vite:sba6dbfdd7590"], "status": "REASONED", "verify": [1]},
-    "verify-host": {"text": "Spoofed Host must not be trusted; supplied allowlist reference is Vite-specific.", "components": ["vite"], "sources": ["vite:sae9dd90908fc"], "status": "REASONED", "verify": [1]},
-    "verify-proxy": {"text": "Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its preset/platform, not NUXT_PUBLIC_.", "components": ["svelte", "nuxt"], "sources": ["svelte:s59abf03bae6a", "nuxt:s32e447cb5ef4"], "status": "REASONED", "verify": [1]}
+    "verify-host": {"text": "The deployed application must not trust a spoofed Host. The supplied Vite allowlist reference covers its dev server; adapter-node 5.5.7 uses ORIGIN or configured/request headers for the request origin, while nitropack 2.12.0's node-server passes the h3 app through h3's toNodeListener to a Node HTTP or HTTPS server. Guide assessment: these source lines do not establish a universal Host rejection outcome or how h3 1.x or the hosting platform treats Host and forwarded headers.", "components": ["vite", "adapter", "nitro-node"], "sources": ["vite:sae9dd90908fc", "adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:s0c8ca22542d2"], "status": "REASONED", "verify": [1]},
+    "verify-proxy": {"text": "Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its deployment preset and hosting platform, not NUXT_PUBLIC_. Adapter-node 5.5.7 uses ORIGIN or configured/request headers for the request origin; with ORIGIN and PROTOCOL_HEADER unset, it defaults to https and uses the request Host header unless HOST_HEADER supplies one. Nuxt 4.0.0 pins nitropack 2.12.0, which falls back to its node-server preset for a non-static production build with no preset named or matched; that preset passes the h3 app through toNodeListener to a Node HTTP or HTTPS server. Guide assessment: Nuxt's own trusted-proxy and origin handling come from its deployment preset and hosting platform rather than one documented app-level variable; the cited lines do not establish how h3 1.x or the hosting platform treats Host and forwarded headers or a deployed cookie and redirect outcome.", "components": ["svelte", "nuxt", "adapter", "nuxt-output", "nitro-node"], "sources": ["svelte:s59abf03bae6a", "nuxt:s32e447cb5ef4", "adapter:sfd51397a510e", "adapter:s6152d66c6b19", "adapter:s7b3a11637166", "nuxt-output:sd00a53729513", "nitro-node:sd56c769d6dae", "nitro-node:s32975278fc3f", "nitro-node:sdfda9cd3ce7b", "nitro-node:sdf38c24e1f80", "nitro-node:s91ab58ddc148", "nitro-node:s0c8ca22542d2"], "status": "REASONED", "verify": [1]}
   }
 }
 ---
@@ -152,8 +168,8 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | vite-hosts: server.allowedHosts defaults empty with localhost, .localhost and IPs allowed; true disables protection and permits DNS rebinding. Prefer explicit names. | Vite documentation unknown | REASONED |
 | verify-private: Guide expects anonymous /api/private 401; enforcement needs app/server handlers, not client redirects. | Nuxt documentation 4.x; SvelteKit documentation unknown | REASONED |
 | verify-secret: Scan browser-served output: adapter-node build/client and build/prerendered, Nuxt .output/public, Vite dist, scanned whole following symlinks; only a result with every match under dist/server/ is reported as server output, else FINDING with dist/server/ matches labelled. Adjust paths for custom layouts/SSR; reject absence. Prompt full literal secret; grep stdin: 0 finding, 1 no match, others errors. Clean cannot rule out transformed secrets or runtime responses; hidden input and set +x keep the secret from argv, history and tracing, not the account owner or root. | GNU grep unknown; SvelteKit adapter-node @sveltejs/adapter-node@5.5.7; Nuxt output source v4.0.0; Nitro output defaults 2.12.0; Vite bind source v8.3.1; Vite documentation unknown; Nitro documentation (rolling) unknown | REASONED |
-| verify-host: Spoofed Host must not be trusted; supplied allowlist reference is Vite-specific. | Vite documentation unknown | REASONED |
-| verify-proxy: Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its preset/platform, not NUXT_PUBLIC_. | SvelteKit documentation unknown; Nuxt documentation 4.x | REASONED |
+| verify-host: The deployed application must not trust a spoofed Host. The supplied Vite allowlist reference covers its dev server; adapter-node 5.5.7 uses ORIGIN or configured/request headers for the request origin, while nitropack 2.12.0's node-server passes the h3 app through h3's toNodeListener to a Node HTTP or HTTPS server. Guide assessment: these source lines do not establish a universal Host rejection outcome or how h3 1.x or the hosting platform treats Host and forwarded headers. | Vite documentation unknown; SvelteKit adapter-node @sveltejs/adapter-node@5.5.7; nitropack 2.12.0 source 65e514d873da1d1d9edd4d9576d48d90b13e0fac | REASONED |
+| verify-proxy: Check Secure cookies and HTTPS redirects with SvelteKit ORIGIN; verify Nuxt for its deployment preset and hosting platform, not NUXT_PUBLIC_. Adapter-node 5.5.7 uses ORIGIN or configured/request headers for the request origin; with ORIGIN and PROTOCOL_HEADER unset, it defaults to https and uses the request Host header unless HOST_HEADER supplies one. Nuxt 4.0.0 pins nitropack 2.12.0, which falls back to its node-server preset for a non-static production build with no preset named or matched; that preset passes the h3 app through toNodeListener to a Node HTTP or HTTPS server. Guide assessment: Nuxt's own trusted-proxy and origin handling come from its deployment preset and hosting platform rather than one documented app-level variable; the cited lines do not establish how h3 1.x or the hosting platform treats Host and forwarded headers or a deployed cookie and redirect outcome. | SvelteKit documentation unknown; Nuxt documentation 4.x; SvelteKit adapter-node @sveltejs/adapter-node@5.5.7; Nuxt output source v4.0.0; nitropack 2.12.0 source 65e514d873da1d1d9edd4d9576d48d90b13e0fac | REASONED |
 <!-- version-basis:end -->
 
 SvelteKit, Nuxt, and Vite-based apps built by AI assistants inherit the same traps as [nextjs.md](nextjs.md): a server bind that can default wide open (SvelteKit's Node adapter binds `0.0.0.0` as of adapter-node 5.5.7, though Vite's dev server defaults to `localhost` as of Vite 8.3.1), a proxy that has to be explicitly trusted before secure cookies and correct origins work, and a public-env prefix that ships anything given it straight to the browser. Each framework also has more than one server entry point (endpoints, server routes, load functions), and a check placed in only one of them leaves the others open, exactly as with Next.js layouts versus Server Actions.
@@ -249,12 +265,12 @@ ls -d build/client build/prerendered .output/public dist 2>/dev/null  # confirm 
     *) echo "error: grep exited $rc, result inconclusive" ;;
   esac
 )
-curl -q -si https://app.example.com/ -H "Host: evil.example.com" | head -1   # a spoofed Host is not trusted
+curl -q -si https://app.example.com/ -H "Host: evil.example.com" | head -1   # the deployed application must not trust a spoofed Host
 ```
 
 REASONED: preceding block; the whole fence: the private-route request, the output-path listing, the client-secret scan and the spoofed-Host request, per the cited framework documentation and GNU grep manual entries; no deployed framework application is available in the authoring environment, so the two curl checks were not run; at marking time the scan subshell ran against local fixture trees, where a planted secret produced the FINDING line and a clean fixture tree reported clean. On 2026-10-13 (UTC), with Bash 5.3.9 and a dummy secret typed at a pty's hidden prompt, the scan subshell traced two lines under `bash -x` (`trap -` and `set +x +a +e`), neither holding the dummy, where the same subshell with `set +x` removed traced 32 lines, one of them holding the dummy; an interactive Bash given the subshell wrote a history file holding the block's lines and not the dummy. The account-owner and transformation limits stated in this paragraph are documented, not demonstrated. The secret reaches grep on stdin, never argv; the hidden prompt keeps it out of shell history and the block's `set +x` keeps it out of `set -x` tracing, but this does not hide it from the account owner or root. Paste the secret alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. A clean grep result here is evidence, not proof: it means the literal value did not match in the directories searched, not that the secret cannot be present in some other form. A bundler could split, encode, or otherwise transform it, so check the exit code and confirm the directory actually exists rather than reading silence alone as clean.
 
-REASONED: proxy cookie, redirect and trusted-proxy checks per the cited SvelteKit adapter-node and Nuxt runtime config documentation; no reverse proxy or deployed adapter is available in the authoring environment, so these outcomes were not observed. Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use an `https://` `Location` once `ORIGIN` (SvelteKit) is set; without it, SvelteKit often builds an `http://` URL even though the browser connection is TLS. `NUXT_PUBLIC_...` is the public runtime-config prefix, exposed straight to the client bundle; it is not a trusted-proxy or secure-cookie setting and does nothing for this check. Nuxt's own trusted-proxy and origin handling come from its deployment preset and hosting platform rather than one documented app-level variable, so verify the equivalent behavior against whichever adapter you deploy with.
+REASONED: Host, proxy cookie, redirect and trusted-proxy checks per the cited SvelteKit adapter-node documentation and source, Vite server-options documentation, Nuxt runtime config documentation, the pinned Nuxt 4.0.0 package manifest and pinned nitropack 2.12.0 sources; no reverse proxy or deployed adapter is available in the authoring environment, so these outcomes were not observed. The deployed application must not trust a spoofed Host. The supplied Vite allowlist reference covers its dev server. Adapter-node 5.5.7 uses `ORIGIN` or configured/request headers for the request origin; without `ORIGIN` or `PROTOCOL_HEADER`, it defaults the protocol to `https` and uses the request `Host` header unless `HOST_HEADER` supplies one. Behind a reverse proxy, confirm cookies still carry `Secure` and redirects use an `https://` `Location` once `ORIGIN` (SvelteKit) is set. `NUXT_PUBLIC_...` is the public runtime-config prefix, exposed straight to the client bundle; it is not a trusted-proxy or secure-cookie setting and does nothing for this check. Nuxt 4.0.0 pins nitropack 2.12.0. For a non-static production build with no preset named or matched, nitropack falls back to `node-server`, whose entry runtime passes the h3 app through h3's `toNodeListener` to a Node HTTP or HTTPS server. Guide assessment: these source lines do not establish a universal Host rejection outcome, how h3 1.x or the hosting platform treats Host and forwarded headers, or a deployed cookie and redirect outcome. Guide assessment: Nuxt's own trusted-proxy and origin handling come from its deployment preset and hosting platform rather than one documented app-level variable. Guide advice: verify the equivalent behaviour against the deployed Nuxt preset and hosting platform, or whichever adapter you deploy with.
 
 ## Common mistakes
 
@@ -264,6 +280,16 @@ REASONED: proxy cookie, redirect and trusted-proxy checks per the cited SvelteKi
 
 ## Sources (checked September 2026)
 
+- SvelteKit adapter-node origin configuration and proxy header variables (pinned tag @sveltejs/adapter-node@5.5.7; checked October 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L17-L24
+- SvelteKit adapter-node request origin passed to getRequest (pinned tag @sveltejs/adapter-node@5.5.7; checked October 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L95-L105
+- SvelteKit adapter-node protocol, Host and port header fallback (pinned tag @sveltejs/adapter-node@5.5.7; checked October 2026): https://github.com/sveltejs/kit/blob/%40sveltejs/adapter-node%405.5.7/packages/adapter-node/src/handler.js#L209-L239
+- Nuxt 4.0.0 pins nitropack 2.12.0 (pinned tag v4.0.0; checked October 2026): https://github.com/nuxt/nuxt/blob/v4.0.0/packages/nuxt/package.json#L104
+- nitropack 2.12.0 non-static production node-server fallback when no preset is named or matched (pinned release commit 65e514d873da1d1d9edd4d9576d48d90b13e0fac; checked October 2026): https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/presets/_resolve.ts#L85-L90
+- nitropack 2.12.0 production preset auto-detection for a build with no preset named (pinned release commit 65e514d873da1d1d9edd4d9576d48d90b13e0fac; checked October 2026): https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/core/config/loader.ts#L134-L141
+- nitropack 2.12.0 h3 dependency range (pinned release commit 65e514d873da1d1d9edd4d9576d48d90b13e0fac; checked October 2026): https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/package.json#L131
+- nitropack 2.12.0 node-server preset entry (pinned release commit 65e514d873da1d1d9edd4d9576d48d90b13e0fac; checked October 2026): https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/presets/node/preset.ts#L16-L29
+- nitropack 2.12.0 node-server uses h3 toNodeListener with Node HTTP or HTTPS server (pinned release commit 65e514d873da1d1d9edd4d9576d48d90b13e0fac; checked October 2026): https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/presets/node/runtime/node-server.ts#L1-L23
+- nitropack 2.12.0 h3 app construction and request hook (pinned release commit 65e514d873da1d1d9edd4d9576d48d90b13e0fac; checked October 2026): https://github.com/nitrojs/nitro/blob/65e514d873da1d1d9edd4d9576d48d90b13e0fac/src/runtime/internal/app.ts#L59-L128
 - SvelteKit pinned routing: +layout has no effect on +server.js (pinned tag @sveltejs/kit@2.70.3): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/10-routing.md#L291-L332
 - SvelteKit pinned load: layout/page concurrency and auth implications (pinned tag @sveltejs/kit@2.70.3): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/20-load.md#L702-L714
 - SvelteKit pinned form actions in +page.server.js (pinned tag @sveltejs/kit@2.70.3): https://github.com/sveltejs/kit/blob/%40sveltejs/kit%402.70.3/documentation/docs/20-core-concepts/30-form-actions.md#L1-L5

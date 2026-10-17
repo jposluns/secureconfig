@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `frontend-frameworks.md` cites adapter-node 5.5.7 origin and Host header handling, the Nuxt 4.0.0 pin of nitropack 2.12.0, and the release commit's `node-server` request path through h3 and Node HTTP or HTTPS for the Host and proxy checks; scopes the spoofed-Host requirement to the deployed application; and labels the h3, platform and deployment outcomes the sources do not show as this guide's assessment (row 1.179) (#594)
 - `mcp-clients.md` cites the pinned MCP 2025-06-18 Dynamic Client Registration requirement and the 2025-11-25 registration priority order for its version-boundary note, and labels carrying the revision label as this guide's advice (row 1.179) (#595)
 - `ray.md` cites the Docker 28.0.0 release-note fix for loopback-published ports and the KubeRay `v1.6.0` types, controller and pod source for token authentication, states when the operator creates a Secret and sets `RAY_AUTH_MODE` and `RAY_AUTH_TOKEN`, and labels the version minimums as this guide's assessment and inference (row 1.179) (#592)
 - `python.md` cites slowapi `v0.1.10`, HTTPX `0.28.1`, CPython `v3.14.8` and OpenSSL `openssl-4.0.3` for the login rate-limit example, unverified-client warnings and the `SSL_CERT_FILE` export, names the conflict between HTTPX's SSL guide and its code path, and labels the remaining guidance as this guide's advice (row 1.179) (#588)
