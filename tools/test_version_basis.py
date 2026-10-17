@@ -248,6 +248,11 @@ class VersionBasisTests(unittest.TestCase):
             self.assertEqual(standalone.stderr.count('SKIP  version basis'), 1)
             self.assertEqual(quiet.returncode, 0, quiet.stderr)
             self.assertNotIn('SKIP  version basis', quiet.stderr)
+            disallowed = subprocess.run([sys.executable, '-S', script, '--no-advisory',
+                                         '--check'], capture_output=True, text=True,
+                                        env=self.local_env())
+            self.assertEqual(disallowed.returncode, 2)
+            self.assertIn('--no-advisory requires --bundle', disallowed.stderr)
             build = (vb.ROOT / 'scripts/build-llms-full.sh').read_text(encoding='utf-8')
             self.assertIn('python3 tools/version_basis.py --check', build)
             self.assertIn('python3 tools/version_basis.py --no-advisory --bundle "$f"', build)
@@ -907,14 +912,16 @@ class RenderedSourcesTests(unittest.TestCase):
                 raise RuntimeError(f'pinned parser unavailable in CI: {exc}') from exc
             raise unittest.SkipTest(f'pinned parser unavailable: {exc}') from exc
 
-    def check(self, sources, url='https://example.com/control', prose='', use_parser=True):
+    def check(self, sources, url='https://example.com/control', prose='', use_parser=True,
+              basis='v1.0', baseline=None):
         data = fixture()
+        data['components']['product']['basis'] = basis
         data['components']['product']['sources'] = {vb.source_id(url): url}
         data['claims']['control']['sources'] = ['product:' + vb.source_id(url)]
         body = BODY.replace('## Verify', prose + '\n\n## Verify' if prose else '## Verify')
         body = body[:body.index('- Product')] + sources + '\n'
         data['body_sha256'] = vb.digest(body)
-        return vb.updated(document(data, body), 'fixture.md',
+        return vb.updated(document(data, body), 'fixture.md', baseline,
                           parser=self.parser if use_parser else None)
 
     def test_allowed_links_and_emphasis_are_counted(self):
@@ -976,6 +983,14 @@ class RenderedSourcesTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'basis.*absent'):
             self.check(f'- [doc]({cited}) [other](https://other.example/v1.0)')
         self.check(f'- [doc](https://example.com/v1.0)', url='https://example.com/v1.0')
+
+    def test_basis_only_in_declared_link_target(self):
+        for basis, url in (('café', 'https://example.com/café'),
+                           ('a|b', 'https://example.com/a|b')):
+            with self.subTest(basis=basis):
+                for use_parser in (False, True):
+                    self.check(f'- [doc]({url})', url=url, basis=basis,
+                               use_parser=use_parser)
 
     def test_href_path_case_remains_exact(self):
         url = 'https://example.com/Control'
@@ -1093,6 +1108,48 @@ class RenderedSourcesTests(unittest.TestCase):
                 data['body_sha256'] = vb.digest(body)
                 with self.assertRaisesRegex(ValueError, 'unsupported line boundary'):
                     vb.updated(document(data, body), 'fixture.md', parser=self.parser)
+
+    def test_line_boundary_skew_cannot_hide_a_basisless_item(self):
+        url = 'https://example.com/control'
+        body = BODY.replace('A documented control.', 'A documented\u2028\u2028control.')
+        body = body.replace('## Sources (checked September 2026)\n\n'
+                            '- Product v1.0: https://example.com/v1.0#control',
+                            f'## Sources (checked September 2026)\n- Again: {url}\n'
+                            f'### Detail\n- Product v1.0: {url}')
+        data = fixture()
+        data['components']['product']['sources'] = {vb.source_id(url): url}
+        data['claims']['control']['sources'] = ['product:' + vb.source_id(url)]
+        data['body_sha256'] = vb.digest(body)
+        raw = document(data, body)
+        occurrences, _ = vb.rendered_sources(body, headings(body), self.parser)
+        self.assertEqual(len(occurrences), 1)  # The basisless first item is invisible.
+        with self.assertRaisesRegex(ValueError, 'unsupported line boundary'):
+            vb.updated(raw, 'fixture.md', parser=self.parser)
+
+        class WithoutLineGuard:
+            def __getattr__(self, name):
+                return getattr(re, name)
+
+            def search(self, pattern, text, flags=0):
+                if pattern == '[\x0b\x0c\x1c-\x1e\x85\u2028\u2029]':
+                    return None
+                return re.search(pattern, text, flags)
+
+        with patch.object(vb, 're', WithoutLineGuard()):
+            vb.updated(raw, 'fixture.md', parser=self.parser)
+
+    def test_image_basis_violation_cannot_be_baselined_with_parser(self):
+        url = 'https://example.com/control'
+        first = f'- Product v1.0: {url}\n'
+        for item in (f'- Again: ![doc]({url})',
+                     f'- Again v1![x](https://example.com/image).0: {url}'):
+            sources = first + item
+            fingerprint = vb.source_fingerprint('product', 'v1.0', url, item)
+            baseline = Counter({('fixture.md', fingerprint): 1})
+            with self.subTest(item=item):
+                self.check(sources, baseline=baseline, use_parser=False)
+                with self.assertRaisesRegex(ValueError, 'stale Sources baseline'):
+                    self.check(sources, baseline=baseline)
 
     def test_complex_item_fingerprints_match_fallback(self):
         url = 'https://example.com/control'

@@ -136,7 +136,12 @@ Schema 1 requires exactly these top-level fields:
   link or autolink `href` targets. Bare URLs in rendered text count; code spans and link labels
   do not supply citations. HTML comments remain forbidden by the Verify-markup check.
   CI requires the parser. Local runs without the
-  pin print an advisory SKIP and count citations with the raw-text fallback. Both paths run
+  pin print an advisory SKIP and count citations with the raw-text fallback. The rendered
+  check rejects vertical tab (U+000B), form feed (U+000C), file separator (U+001C), group
+  separator (U+001D), record separator (U+001E), next line (U+0085), line separator (U+2028)
+  and paragraph separator (U+2029) anywhere in a guide, because they can skew parser line
+  numbers. Conversely, `v1.0&#46;` can pass the raw-text basis boundary check but fail the
+  rendered one. `--no-advisory` is accepted only with `--bundle`. Both paths run
   the raw URL presence and unsupported-container checks, reference-definition and Sources
   grammar checks, component URL escape and encoding checks, and guide-wide HTML, heading
   and angle-destination checks. Outside fences, any line CommonMark could read as a link reference
@@ -182,8 +187,10 @@ Schema 1 requires exactly these top-level fields:
   and basis checks still apply to an image citation. An image-only citation can therefore pass
   with the fallback and fail with the parser. A basis found only in a link title can pass with
   the fallback and fail with the parser. An image alt spelling inside a link label can pass
-  with the fallback and fail with the parser. Content inside a `<template>` element can count
-  as text in both paths; this behaviour predates the parser check. Citations in fenced or indented code
+  with the fallback and fail with the parser. An image citation's basis violation cannot be
+  baselined with the parser: its raw fingerprint becomes stale, so fix the item instead.
+  Content inside `<template>`, `<details>` or `<script>` elements can count as text in both
+  paths; this behaviour predates the parser check. Citations in fenced or indented code
   blocks still fail the raw container check when they exceed parsed list-item citations.
   With the parser, emphasis can join rendered text to a basis: `v1.0**x**` reads as `v1.0x` and does not
   satisfy the basis boundary. A code span splits a basis: ``v1`.0` `` does not satisfy it.

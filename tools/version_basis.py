@@ -482,18 +482,19 @@ def check_rendered_sources(data, body, heads, parser, guide, baseline=None):
         basis = component['basis']
         pattern = r'(?<![A-Za-z0-9.])' + re.escape(basis) + r'(?![A-Za-z0-9.])'
         for url in component['sources'].values():
-            found = [(owner, items[owner] if owner is not None else ('', ''),
-                      candidate if link else '')
+            found = [(owner, items[owner] if owner is not None else ('', ''))
                      for candidate, owner, link in occurrences
                      if rendered_cites(candidate, url, link, parser)]
             require(found, 'source URL absent from Sources: ' + url)
             if basis == 'unknown':
                 continue
-            for owner, (entry, decoded_entry), href in found:
+            for owner, (entry, decoded_entry) in found:
                 if owner is None:
+                    # Backstop for rendered-only citations: raw container_violations()
+                    # runs first on every item but cannot see every decoded target.
                     errors.append(f'{name}: {url} cited in an unsupported Sources container; '
                                   'put each citation in its own list item')
-                elif not re.search(pattern, decoded_entry + '\n' + href):
+                elif not re.search(pattern, decoded_entry + '\n' + url):
                     fp = source_fingerprint(name, basis, url, entry)
                     current[fp] += 1
                     details[fp] = f'{name}: basis {basis!r} absent from Sources item for {url}'
@@ -776,6 +777,8 @@ def main():
     parser.add_argument('--no-advisory', action='store_true',
                         help='suppress the missing-parser advisory when a caller has already printed it')
     args = parser.parse_args()
+    if args.no_advisory and args.bundle is None:
+        parser.error('--no-advisory requires --bundle')
     try:
         from check_verify_marking import ParserUnavailable, gate_parser
         try:
