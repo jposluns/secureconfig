@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "4d7bc46a6a9c54727271a60a78cdad7ce5f9453f44ffa3e1f7817e822bc12afa",
+  "body_sha256": "7e61d3251d272d600eb84579980483338e378661f71af77fa39229aab130eb78",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -63,7 +63,7 @@ version_basis: {
       "sources": {
         "s707464abc09b": "https://openid.net/specs/openid-connect-core-1_0-errata2.html#OfflineAccess",
         "s06760d0c8dc0": "https://openid.net/specs/openid-connect-registration-1_0-errata2.html#ClientMetadata",
-        "s0cb272ebd339": "https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationValidation"
+        "sd8cd68f5f528": "https://openid.net/specs/openid-connect-discovery-1_0-errata2.html#ProviderConfigurationValidation"
       }
     },
     "owasp": {
@@ -80,7 +80,7 @@ version_basis: {
     "transaction": {"text": "Bind the validated expected issuer to the state/PKCE transaction; multi-AS clients MUST prevent mix-up attacks.", "components": ["rfc", "mcp"], "sources": ["rfc:s232609abe426", "mcp:s34fabf499cb7"], "status": "REASONED"},
     "issuer": {"text": "Authorization metadata issuer must exactly equal the issuer used to construct discovery, including its path; reject the document before using endpoints.", "components": ["mcp", "rfc"], "sources": ["mcp:s117c3edbfcd7", "rfc:sc1f199fd57ff"], "status": "REASONED"},
     "resource-metadata": {"text": "Validate protected-resource resource separately from authorization-server issuer; issuer equality is not SSRF protection.", "components": ["rfc"], "sources": ["rfc:s612208d893d8", "rfc:sc1f199fd57ff"], "status": "REASONED"},
-    "oidc-discovery": {"text": "Apply OpenID Connect Discovery section 4.3 issuer validation to OIDC discovery (this guide's instruction): returned issuer MUST match the Issuer URL used as the well-known prefix and ID Token iss; failed validation aborts affected operations and bars use of invalid information.", "components": ["oidc", "mcp"], "sources": ["oidc:s707464abc09b", "mcp:s117c3edbfcd7", "oidc:s0cb272ebd339"], "status": "REASONED"},
+    "oidc-discovery": {"text": "Apply OpenID Connect Discovery section 4.3 issuer validation to OIDC discovery (this guide's instruction): returned issuer MUST be identical to the Issuer URL used as the well-known prefix and to the iss Claim in ID Tokens issued from this Issuer; on failure, operations requiring that information MUST be aborted and the information MUST NOT be used.", "components": ["oidc", "mcp"], "sources": ["oidc:s707464abc09b", "mcp:s117c3edbfcd7", "oidc:sd8cd68f5f528"], "status": "REASONED"},
     "cimd": {"text": "CIMD client_id uses HTTPS with a path; document client_id must exactly match its URL.", "components": ["cimd"], "sources": ["cimd:sc6ba78bdbb90"], "status": "REASONED"},
     "registration-order": {"text": "Clients SHOULD support CIMD and prefer available preregistration, then CIMD, then optional deprecated DCR.", "components": ["mcp"], "sources": ["mcp:s5655f61af2a0"], "status": "REASONED"},
     "application-type": {"text": "DCR MUST specify appropriate application_type: native SHOULD cover desktop/mobile/CLI/localhost apps; web SHOULD cover remote browser apps.", "components": ["mcp"], "sources": ["mcp:s5655f61af2a0"], "status": "REASONED"},
@@ -123,7 +123,7 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 | transaction: Bind the validated expected issuer to the state/PKCE transaction; multi-AS clients MUST prevent mix-up attacks. | OAuth and HTTP RFCs unknown; MCP 2026-07-28 | REASONED |
 | issuer: Authorization metadata issuer must exactly equal the issuer used to construct discovery, including its path; reject the document before using endpoints. | MCP 2026-07-28; OAuth and HTTP RFCs unknown | REASONED |
 | resource-metadata: Validate protected-resource resource separately from authorization-server issuer; issuer equality is not SSRF protection. | OAuth and HTTP RFCs unknown | REASONED |
-| oidc-discovery: Apply OpenID Connect Discovery section 4.3 issuer validation to OIDC discovery (this guide's instruction): returned issuer MUST match the Issuer URL used as the well-known prefix and ID Token iss; failed validation aborts affected operations and bars use of invalid information. | OpenID Connect 1.0 errata 2; MCP 2026-07-28 | REASONED |
+| oidc-discovery: Apply OpenID Connect Discovery section 4.3 issuer validation to OIDC discovery (this guide's instruction): returned issuer MUST be identical to the Issuer URL used as the well-known prefix and to the iss Claim in ID Tokens issued from this Issuer; on failure, operations requiring that information MUST be aborted and the information MUST NOT be used. | OpenID Connect 1.0 errata 2; MCP 2026-07-28 | REASONED |
 | cimd: CIMD client_id uses HTTPS with a path; document client_id must exactly match its URL. | CIMD draft draft-ietf-oauth-client-id-metadata-document-00 | REASONED |
 | registration-order: Clients SHOULD support CIMD and prefer available preregistration, then CIMD, then optional deprecated DCR. | MCP 2026-07-28 | REASONED |
 | application-type: DCR MUST specify appropriate application_type: native SHOULD cover desktop/mobile/CLI/localhost apps; web SHOULD cover remote browser apps. | MCP 2026-07-28 | REASONED |
@@ -302,5 +302,5 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 - OAuth Client ID Metadata Document draft-ietf-oauth-client-id-metadata-document-00 (HTTPS client-id URL, matching `client_id`): https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-00
 - OpenID Connect Core 1.0 errata 2 section 11, Offline Access (`prompt=consent`, `response_type` condition): https://openid.net/specs/openid-connect-core-1_0-errata2.html#OfflineAccess
 - OpenID Connect Dynamic Client Registration 1.0 errata 2 section 2 (`application_type` default is `web`): https://openid.net/specs/openid-connect-registration-1_0-errata2.html#ClientMetadata
-- OpenID Connect Discovery 1.0 errata 2 section 4.3 (`issuer` identity, ID Token `iss`, abort and non-use on failure; checked October 2026): https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationValidation
+- OpenID Connect Discovery 1.0 errata 2 section 4.3 (`issuer` identity, ID Token `iss`, abort and non-use on failure; checked October 2026): https://openid.net/specs/openid-connect-discovery-1_0-errata2.html#ProviderConfigurationValidation
 - OWASP Server Side Request Forgery Prevention Cheat Sheet (host allowlist, build the request yourself): https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
