@@ -29662,12 +29662,12 @@ REASONED: preceding block; listener inventory, external TCP reachability, proxy/
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | flowise-port: Flowise PORT defaults 3000; Compose publishes ${PORT}:${PORT}; replace with host-loopback mapping. | Flowise documentation unknown; Flowise Compose 4ea391204a499fb6d19747104502362295b4dde3 | REASONED |
-| langflow-port: Langflow defaults port 7860; example Compose publishes 7860:7860 and Postgres 5432:5432; keep database unpublished or private. | Langflow documentation unknown; Langflow Compose c6dbca308dc85526d5cecb31211821ec4f5e1d05 | REASONED |
+| langflow-port: Langflow 1.12.6 settings default port 7860; example Compose publishes 7860:7860 and Postgres 5432:5432; keep database unpublished or private. | Langflow documentation unknown; Langflow Compose c6dbca308dc85526d5cecb31211821ec4f5e1d05; Langflow settings source v1.12.6 | REASONED |
 | librechat-port: LibreChat defaults 3080; Compose publishes ${PORT}:${PORT} and admin-panel ${ADMIN_PANEL_PORT:-3000}:3000; restrict both. | LibreChat documentation unknown; LibreChat Compose 1596df724a840f894831fc74f21de8d8df72fcb1 | REASONED |
 | compose-merge: Override ports lists merge; !override replaces and !reset clears. Guide assessment: require Docker Compose 2.24.4+ for both; pinned v2.24.3 uses compose-go rc.2, whose loader handles !reset, while pinned v2.24.4 uses rc.3 with both tags. Later-release behaviour is not established by these pins. | Docker unknown; Docker Compose merge source 31d174d090fd7111ca2199ed54a3978e0d4ac74d; Docker Compose go.mod v2.24.3; Docker Compose release source v2.24.4; compose-go loader v2.0.0-rc.2; compose-go reset loader v2.0.0-rc.3 | REASONED |
 | docker-firewall: Docker published traffic can bypass UFW; removing or narrowing publications is required. | Docker unknown | REASONED |
@@ -29687,8 +29687,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | verify-debug-config: Merged Compose should change from published 5003/default-enabled to no publication and explicit false after override and recreation; no Docker/listener demonstration. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675; Dify plugin daemon 0.6.10; Docker unknown | REASONED |
 | flowise-tls: Flowise documented TLS uses nginx/certbot upstream localhost:3000; configure NUMBER_OF_PROXIES for real client addresses. | Flowise documentation unknown | REASONED |
 | librechat-tls: LibreChat documented TLS uses nginx upstream localhost:3080; TRUST_PROXY defaults 1 and must match proxy hops. | LibreChat documentation unknown | REASONED |
-| langflow-tls: LANGFLOW_SSL_CERT_FILE/KEY_FILE enable native TLS; proxy remains a place for login/MFA. | Langflow documentation unknown | REASONED |
-| langflow-cookies: LANGFLOW_ACCESS_SECURE and LANGFLOW_REFRESH_SECURE default false; enable both behind HTTPS. | Langflow documentation unknown | REASONED |
+| langflow-tls: Langflow 1.12.6 LANGFLOW_SSL_CERT_FILE/KEY_FILE settings feed native TLS; guide assessment: a proxy remains a place for login/MFA. | Langflow documentation unknown; Langflow settings source v1.12.6 | REASONED |
+| langflow-cookies: Langflow 1.12.6 LANGFLOW_ACCESS_SECURE and LANGFLOW_REFRESH_SECURE default false; set both true behind HTTPS. | Langflow documentation unknown; Langflow settings source v1.12.6 | REASONED |
 | dify-tls: Certbot challenge/domain/email and fullchain.pem/privkey.pem precede certificate update; enable HTTPS and recreate nginx; default HTTPS false, protocols TLSv1.2 TLSv1.3. | Dify certbot source 4c1ad40f8e8a6ee58a958330558f2178b7e47fa7; Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
 | dify-urls: Set CONSOLE_API_URL, CONSOLE_WEB_URL and APP_WEB_URL to public HTTPS; CONSOLE_API_URL controls HTTPS-only cookies. | Dify documentation unknown | REASONED |
 | dify-bootstrap: INIT_PASSWORD defaults empty; set it before first up to gate /install and claim admin privately. | Dify documentation unknown; Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
@@ -29704,11 +29704,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | flowise-secrets: Randomize JWT_AUTH_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET, EXPRESS_SESSION_SECRET default flowise, and TOKEN_HASH_SECRET; APP_URL defaults localhost:3000. | Flowise account minimum v3.0.1; Flowise documentation unknown | REASONED |
 | flowise-encryption: FLOWISE_SECRETKEY_OVERWRITE supplies stored-credential encryption key; otherwise it lives under SECRETKEY_PATH. | Flowise documentation unknown | REASONED |
 | flowise-prediction: Chatflow without assigned key is public by ID; assign per-chatflow API key (DefaultKey is precreated), Bearer requests reject missing key with 401. | Flowise documentation unknown | REASONED |
-| langflow-auto: Application AUTO_LOGIN defaults True, official images false; explicitly disable it, set superuser password other than legacy langflow; username defaults langflow. | Langflow documentation unknown | REASONED |
+| langflow-auto: Langflow 1.12.6 application AUTO_LOGIN defaults True; pinned official image Dockerfiles set false; explicitly disable it and set a superuser password other than legacy langflow; username defaults langflow and password defaults empty. | Langflow documentation unknown; Langflow settings source v1.12.6 | REASONED |
 | langflow-secret: Set permanent random LANGFLOW_SECRET_KEY; documented auto-generated key is unsuitable for production. | Langflow documentation unknown | REASONED |
 | langflow-signup: NEW_USER_IS_ACTIVE defaults False but ENABLE_SIGNUP True; disable signup and keep activation requirement. | Langflow documentation unknown | REASONED |
 | langflow-api: With auto-login off, POST /api/v1/run/&lt;flow-id&gt; needs x-api-key; create via settings or CLI. SKIP_AUTH_AUTO_LOGIN defaults false, applies only with auto-login and is slated for removal. | Langflow documentation unknown | REASONED |
-| langflow-host: HOST defaults localhost; bridged containers need 0.0.0.0 plus host-loopback publication and injected env_file/environment. Body labels docs 1.12.x; Sources lacks that pin. | Langflow documentation unknown; Langflow Compose c6dbca308dc85526d5cecb31211821ec4f5e1d05 | REASONED |
+| langflow-host: Langflow 1.12.6 settings default HOST localhost; guide assessment: bridged containers need 0.0.0.0 plus host-loopback publication and injected env_file/environment; rolling docs remain unversioned. | Langflow documentation unknown; Langflow Compose c6dbca308dc85526d5cecb31211821ec4f5e1d05; Langflow settings source v1.12.6 | REASONED |
 | librechat-bootstrap: First registered user becomes admin; close ALLOW_REGISTRATION after claiming it. | LibreChat documentation unknown | REASONED |
 | librechat-sso: For SSO-only, disable email login and deliberately enable social registration/login; configure OPENID_* and optional required role with provider allowlist and MFA. | LibreChat documentation unknown | REASONED |
 | librechat-secrets: CREDS_KEY is 32 bytes, CREDS_IV 16; JWT secrets at least 32 bytes. Blank values bootstrap keys with persistence caveats; retired JWT defaults are refused. | LibreChat documentation unknown | REASONED |
@@ -29735,7 +29735,7 @@ This guide's advice: Publish the container on loopback and let a proxy or tunnel
 ```yaml
 ports:
   - "127.0.0.1:3000:3000"    # Flowise (PORT defaults to 3000)
-  - "127.0.0.1:7860:7860"    # Langflow (LANGFLOW_PORT defaults to 7860)
+  - "127.0.0.1:7860:7860"    # Langflow (LANGFLOW_PORT defaults to 7860 in 1.12.6 settings)
   - "127.0.0.1:3080:3080"    # LibreChat (PORT defaults to 3080)
 ```
 
@@ -29767,7 +29767,7 @@ services:
 
 Flowise and LibreChat document no TLS of their own; their deployment guides put nginx with certbot in front (`proxy_pass http://localhost:3000` and `http://localhost:3080` respectively). Use [caddy.md](caddy.md) or [nginx.md](nginx.md) with a certificate from [free-certificates.md](free-certificates.md), or [cloudflare.md](cloudflare.md) / [tailscale.md](tailscale.md) with no public port at all. Set `NUMBER_OF_PROXIES` (Flowise) and `TRUST_PROXY` (LibreChat, default `1`) to the number of proxy hops so rate limiting sees client addresses.
 
-Langflow can terminate TLS itself with `LANGFLOW_SSL_CERT_FILE` and `LANGFLOW_SSL_KEY_FILE`; a fronting proxy remains the simpler place to add login and MFA. Behind HTTPS, also set `LANGFLOW_ACCESS_SECURE=true` and `LANGFLOW_REFRESH_SECURE=true`: both default to `false`, so the access and refresh session cookies are issued without the `Secure` flag until you do.
+Langflow 1.12.6 settings define `LANGFLOW_SSL_CERT_FILE` and `LANGFLOW_SSL_KEY_FILE`, which its server passes to Gunicorn on Linux and other platforms, and to Uvicorn on Windows and macOS for native TLS; a fronting proxy remains the simpler place to add login and MFA (this guide's assessment). Behind HTTPS, also set `LANGFLOW_ACCESS_SECURE=true` and `LANGFLOW_REFRESH_SECURE=true`: both default to `false` in 1.12.6, so the access and refresh session cookies are issued without the `Secure` flag until you do.
 
 Dify's bundled nginx can terminate TLS. In `docker/.env`, per the certbot README in the Dify repository: set `NGINX_ENABLE_CERTBOT_CHALLENGE=true`, `CERTBOT_DOMAIN`, `CERTBOT_EMAIL`, `NGINX_SSL_CERT_FILENAME=fullchain.pem`, `NGINX_SSL_CERT_KEY_FILENAME=privkey.pem`; run `docker compose --profile certbot up --force-recreate -d` and `docker compose exec -it certbot /bin/sh /update-cert.sh`; then set `NGINX_HTTPS_ENABLED=true` (default `false`) and recreate nginx with `docker compose --profile certbot up -d --no-deps --force-recreate nginx`. `NGINX_SSL_PROTOCOLS` defaults to `TLSv1.2 TLSv1.3`. Set `CONSOLE_API_URL`, `CONSOLE_WEB_URL`, and `APP_WEB_URL` to the public `https://` URLs; per the Dify reference, `CONSOLE_API_URL` decides whether cookies are marked HTTPS-only.
 
@@ -29800,11 +29800,11 @@ LANGFLOW_SUPERUSER_PASSWORD=REPLACE_WITH_LONG_RANDOM_VALUE
 LANGFLOW_SECRET_KEY=REPLACE_WITH_LONG_RANDOM_VALUE
 ```
 
-- `LANGFLOW_AUTO_LOGIN` defaults to `True` in the application (the official Docker images set it to `false`), which means no login at all; set it to `false` explicitly. The password is then required and cannot be the legacy default `langflow`; the username defaults to `langflow`.
+- `LANGFLOW_AUTO_LOGIN` defaults to `True` in the Langflow 1.12.6 application (the pinned official image Dockerfiles set it to `false`), which bypasses authentication; set it to `false` explicitly. The superuser password defaults to empty and is then required; set it to a long random value other than the rejected legacy default `langflow`. The username defaults to `langflow`.
 - Generate the key with `python3 -c "from secrets import token_urlsafe; print(f'LANGFLOW_SECRET_KEY={token_urlsafe(32)}')"`. An auto-generated key is documented as unsuitable for production.
 - `LANGFLOW_NEW_USER_IS_ACTIVE` defaults to `False`, so a new account waits for superuser activation, but public signup is still OPEN by default (`ENABLE_SIGNUP` is `True`), letting inactive accounts accumulate; set `LANGFLOW_ENABLE_SIGNUP=false` to close registration outright and keep `LANGFLOW_NEW_USER_IS_ACTIVE=False` as the backstop.
 - With auto-login off, API calls (`POST /api/v1/run/<flow-id>`) need a Langflow API key in the `x-api-key` header, created under **Settings > Langflow API Keys** or with `langflow api-key`. `LANGFLOW_SKIP_AUTH_AUTO_LOGIN` (default `false`) only applies when auto-login is on and is slated for removal; leave it alone.
-- `LANGFLOW_HOST` defaults to `localhost`, which is right only when Langflow runs directly on the host behind a same-host proxy; INSIDE a bridged Docker container `localhost` binds the container's own loopback, so a host proxy hitting the published port reaches nothing. In a container set `LANGFLOW_HOST=0.0.0.0` and publish to host loopback (`127.0.0.1:7860:7860`, section 1). These `LANGFLOW_*` settings must also be injected into the container through Compose (`env_file:` or `environment:`), not merely written to a `.env` the app never reads. Version note: checked against the 1.12.x docs.
+- `LANGFLOW_HOST` defaults to `localhost`, which is right only when Langflow runs directly on the host behind a same-host proxy; INSIDE a bridged Docker container `localhost` binds the container's own loopback, so a host proxy hitting the published port reaches nothing. In a container set `LANGFLOW_HOST=0.0.0.0` and publish to host loopback (`127.0.0.1:7860:7860`, section 1). These `LANGFLOW_*` settings must also be injected into the container through Compose (`env_file:` or `environment:`), not merely written to a `.env` the app never reads. Version note: checked against Langflow 1.12.6 settings source; the container and Compose instructions are this guide's assessment, and the rolling documentation remains unversioned.
 
 ## 6. LibreChat
 
@@ -29927,7 +29927,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 ## Common mistakes
 
 - Starting Dify without `INIT_PASSWORD` on a reachable host: the first visitor to `/install` owns the instance.
-- Running Langflow with the default `LANGFLOW_AUTO_LOGIN=True`, which is no login.
+- Running Langflow with `LANGFLOW_AUTO_LOGIN=True` (the application default in 1.12.6), which bypasses authentication; the pinned official image Dockerfiles set it to `false`.
 - A Flowise chatflow with no API key assigned: the prediction API is public to anyone with the ID.
 - Leaving LibreChat registration open after the admin exists, or running with unset or placeholder `CREDS_KEY`/`JWT_SECRET` instead of your own permanent values.
 
@@ -29950,6 +29950,24 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - LibreChat Compose (publishes `${PORT}:${PORT}`; extended via a docker-compose.override.yaml): https://github.com/danny-avila/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml
 - Langflow API keys and authentication: https://docs.langflow.org/api-keys-and-authentication
 - Langflow environment variables (`LANGFLOW_HOST`, `LANGFLOW_PORT`, SSL files): https://docs.langflow.org/environment-variables
+- Langflow 1.12.6 server defaults (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/groups/server.py#L21-L24
+- Langflow 1.12.6 server tls (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/groups/server.py#L45-L48
+- Langflow 1.12.6 auth auto (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L96-L104
+- Langflow 1.12.6 auth cookies (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L135-L148
+- Langflow 1.12.6 constants (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/constants.py#L3-L6
+- Langflow 1.12.6 image (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push.Dockerfile#L234-L235
+- Langflow 1.12.6 backend image (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push_backend.Dockerfile#L124-L128
+- Langflow 1.12.6 ep image (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push_ep.Dockerfile#L164-L169
+- Langflow 1.12.6 prefix (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/base.py#L89-L117
+- Langflow 1.12.6 tls wiring (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L553-L556
+- Langflow 1.12.6 tls uvicorn (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L225-L245
+- Langflow 1.12.6 tls gunicorn (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L670-L690
+- Langflow 1.12.6 password (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L216-L230
+- Langflow 1.12.6 auth prefix (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L344
+- Langflow 1.12.6 auth settings class (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L48
+- Langflow 1.12.6 platform (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L173-L178
+- Langflow 1.12.6 uvicorn branch (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L619-L669
+- Langflow 1.12.6 auto-login branch (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L142-L213
 - Langflow production best practices (`LANGFLOW_SECRET_KEY` preflight): https://docs.langflow.org/deployment-prod-best-practices
 - Langflow security model (the editor runs arbitrary Python with host/filesystem/network access): https://docs.langflow.org/security
 - Langflow authentication overview (external identity, JWT/JWKS validation): https://docs.langflow.org/authentication-overview
@@ -30025,7 +30043,7 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 | mem0-reload: Compose uvicorn --reload is a development setting; remove for production. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
 | onyx-prod: Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
 | onyx-bootstrap: Email/password auth is on and first signup becomes admin; claim privately before exposure. | Onyx documentation unknown | REASONED |
-| onyx-auth-type: Body records AUTH_TYPE inert since v4.4.0 and planned v4.5 removal; Sources does not record those version pins. | Onyx documentation unknown | REASONED |
+| onyx-auth-type: This guide infers from the v4.3.13 and v4.4.0 tag trees that AUTH_TYPE no longer selects runtime authentication in v4.4.0; legacy values remain for migrations, a one-time legacy SAML import at startup, and a stale-value warning. Tag names alone supply version identity, since neither tree's manifest records the release version; the recorded v4.5 removal plan and its completion are unverified by these files. | Onyx documentation unknown; Onyx v4.3 source v4.3.13; Onyx v4.4 source v4.4.0 | REASONED |
 | onyx-base: Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5; Onyx documentation unknown | REASONED |
 | onyx-api: Development override adds API 8080:8080; remove unless deliberately restricted for access. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
 | onyx-backing: Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
@@ -30063,7 +30081,7 @@ Defaults below describe the vendor examples checked on 2026-09-13. A **host publ
 | Text Embeddings Inference, documented Docker run | All host interfaces, `8080:80` | Partial: `--api-key` / `API_KEY` is unset by default, and even when set it covers the inference routes only | On the same port, outside the key: `/`, `/health`, `/ping`, `/metrics`, `/docs`, `/api-doc/openapi.json` (in the documented HTTP build `/metrics` is served on this main port; `--prometheus-port`, default `9000`, starts a separate exporter only in the gRPC build) | Replace with `127.0.0.1:8080:80`, or publish nothing | Set `--api-key` or `API_KEY`, and front the service, because the key alone leaves the routes above open |
 | LangServe, quickstart | Application: `localhost:8000` | None supplied; the application author provides authentication | No container publication in this form | `host=` in `uvicorn.run` | FastAPI dependencies, or [front it](fronting-auth.md) |
 | Mem0, server Compose | Application: `0.0.0.0:8000` inside the container; all host interfaces, `8888:8000` | On: bearer JWT, per-user `X-API-Key`, or legacy admin key | PostgreSQL `8432:5432`; dashboard `3000:3000`, both on all host interfaces | Remove PostgreSQL's publication; remove or loopback-scope API and dashboard mappings | Keep authentication enabled; do not set `AUTH_DISABLED=true` |
-| Onyx, production Compose | nginx host publications `80:80` and `443:443` | On: email/password | Backing services have no host publications | Keep backing services unpublished; configure the intended TLS ingress | Keep the built-in login; `AUTH_TYPE` is inert since v4.4.0 |
+| Onyx, production Compose | nginx host publications `80:80` and `443:443` | On: email/password | Backing services have no host publications | Keep backing services unpublished; configure the intended TLS ingress | Keep the built-in login; this guide infers from the v4.3.13 and v4.4.0 tag trees that `AUTH_TYPE` no longer selects runtime authentication in v4.4.0 |
 | Onyx, development Compose | nginx `80:80` and `3000:80` from the base file, plus API `8080:8080` from the override; all on every host interface | On at the application | PostgreSQL `5432:5432`, OpenSearch `9200:9200`, inference `9000:9000`, Redis `6379:6379`, MinIO `9004:9000` and `9005:9001`, code interpreter `8000:8000` | Use production Compose, or remove every unnecessary publication from the effective configuration | Application authentication is on; it does not reach the backing ports |
 
 ## 1. Bind privately, including every container publication
@@ -30190,7 +30208,7 @@ If the development file is running, remove the API publication and every backing
 
 The development mappings include expressions such as `${POSTGRES_HOST_PORT:-5432}:5432`. Setting `POSTGRES_HOST_PORT` changes the host port. Leaving it empty selects the default. Neither action removes the publication. The same trap appears in Dify's plugin-daemon mapping in [agent-builders.md](agent-builders.md).
 
-Email/password authentication is already enabled. `AUTH_TYPE` has had no effect since v4.4.0; the September 2026 documentation says removal is planned for v4.5. Do not set it expecting to change authentication.
+Email/password authentication is already enabled. This guide infers from the v4.3.13 and v4.4.0 tag trees that `AUTH_TYPE` no longer selects runtime authentication in v4.4.0; v4.4.0 still reads legacy values for migrations, a one-time legacy SAML import at startup, and a stale-value warning. The version identity rests on the tag names, since neither tree records its release version in a manifest. The September 2026 documentation record says removal was planned for v4.5; these fetched files do not establish that plan or its completion. Do not set `AUTH_TYPE` expecting to change authentication.
 
 The Docker documentation also describes access at `localhost:3000`. That is now established from the base Compose file rather than inferred: host 3000 maps to nginx's container port 80, and `web_server` carries no host publication of its own. So `localhost:3000` reaches nginx, not the web process directly, and the web process is not separately published.
 
@@ -30485,7 +30503,7 @@ If the deployment trusts identity headers from a proxy, follow the direct-origin
 - Changing a `${VAR:-default}` host port and believing the publication disappeared.
 - Adding a loopback mapping through a Compose override while retaining the original public mapping.
 - Leaving `AUTH_DISABLED=true` in Mem0 after debugging.
-- Setting Onyx's inert `AUTH_TYPE` and expecting an authentication change.
+- Setting Onyx's `AUTH_TYPE` and expecting an authentication change; this guide infers from the v4.3.13 and v4.4.0 tag trees that it no longer selects runtime authentication in v4.4.0.
 - Leaving LocalAI's native key unset, or mistaking an upstream provider token for inbound authentication.
 - Inspecting only `ss`, only IPv4, or only the deployment host's own view.
 - Accepting a timeout, an unknown endpoint's `404`, or a credentialed `200` as proof of protection.
@@ -30507,6 +30525,16 @@ The service facts come from the maintainer's vendor-source verification record d
 - [Mem0 server Compose](https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/docker-compose.yaml): uvicorn command and API, PostgreSQL, and dashboard publications.
 - [Mem0 server `main.py`](https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/main.py): the startup `raise RuntimeError` when authentication is on and `JWT_SECRET` is unset, and the `if`/`elif` warning branches for `AUTH_DISABLED` and a short `ADMIN_API_KEY`. The REST API page describes the request-time responses; this file is the startup behaviour.
 - [Onyx basic authentication](https://docs.onyx.app/deployment/authentication/basic.md): email/password authentication, the first user to sign up becoming an admin, and inert `AUTH_TYPE`.
+- [Onyx v4.3.13 authentication configuration](https://github.com/onyx-dot-app/onyx/blob/v4.3.13/backend/onyx/configs/app_configs.py#L133-L142) (checked October 2026): legacy environment selection of authentication.
+- [Onyx v4.3.13 authentication routes](https://github.com/onyx-dot-app/onyx/blob/v4.3.13/backend/onyx/main.py#L581-L608) (checked October 2026): legacy environment selection of authentication.
+- [Onyx v4.4.0 startup warning](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/main.py#L371-L372) (checked October 2026): startup warning handling of stale `AUTH_TYPE`.
+- [Onyx v4.4.0 startup SAML import](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/main.py#L392-L397) (checked October 2026): startup call to import a legacy SAML provider when `AUTH_TYPE=saml`.
+- [Onyx v4.4.0 authentication warning](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/auth/users.py#L183-L200) (checked October 2026): legacy migration or startup warning handling of `AUTH_TYPE`.
+- [Onyx v4.4.0 SAML provider import](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/db/sso_provider.py#L197-L209) (checked October 2026): one-time legacy SAML import at startup reads `AUTH_TYPE=saml`.
+- [Onyx v4.4.0 SSO provider migration](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/alembic/versions/1fc2904131a3_add_sso_provider_table_and_seed_from_env.py#L60-L93) (checked October 2026): legacy migration or startup warning handling of `AUTH_TYPE`.
+- [Onyx v4.4.0 disabled authentication migration](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/alembic/versions/f7ca3e2f45d9_migrate_no_auth_data_to_placeholder.py#L129-L147) (checked October 2026): legacy migration or startup warning handling of `AUTH_TYPE`.
+- [Onyx v4.3.13 web package manifest](https://github.com/onyx-dot-app/onyx/blob/v4.3.13/web/package.json#L3) (checked October 2026): `1.0.0-dev` rather than the tag version.
+- [Onyx v4.4.0 web package manifest](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/web/package.json#L3) (checked October 2026): `1.0.0-dev` rather than the tag version.
 - [Onyx local Docker deployment](https://docs.onyx.app/deployment/local/docker.md): documented access at `localhost:3000`.
 - [Onyx production Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.prod.yml): nginx-only host publications.
 - [Onyx development Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.dev.yml): API and backing-service publications, and its own header naming the two-file launch form.
@@ -31487,7 +31515,7 @@ REASONED: preceding block; isolation comparison, listener and external-reachabil
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -31526,7 +31554,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | otel-packages: Systemd reads distribution otelcol.conf; OTELCOL_OPTIONS selects config.yaml; config&#124;noreplace installation can retain local config, and postinstall manages service. | Collector distributions v0.161.0 | REASONED |
 | otel-tls: Require TLS on receivers/exporters and authentication on every receiver protocol accepting off-host data. | Collector security guidance unknown | REASONED |
 | otel-auth: Declare authenticator, start it in service.extensions, and attach each receiver protocol with auth.authenticator; Basic supports htpasswd/client_auth. | Collector security guidance unknown; Collector Basic auth extension 1c897ba9c67afc3c9e218b5cd05a6de49435f4de | REASONED |
-| otel-bearer: bearertokenauth accepts static or file-backed Authorization tokens; the guide cites general security guidance, not a pinned extension reference. | Collector security guidance unknown | REASONED |
+| otel-bearer: bearertokenauth accepts a static token or token file; filename takes precedence over token, and each file line with a non-whitespace field contributes its first whitespace-delimited field. The configurable header (default Authorization) and scheme (default Bearer) apply to HTTP and gRPC outgoing calls; the header becomes the lower-case gRPC metadata key. On incoming requests, Authenticate checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with each configured scheme-prefixed token and accepts any match; outgoing calls send only the first token. | Collector security guidance unknown; Collector bearer token auth extension 1c897ba9c67afc3c9e218b5cd05a6de49435f4de | REASONED |
 | otel-metrics: Internal metrics factory defaults localhost:8888; shipped configs set 127.0.0.1:8888; 0.0.0.0:8888 scrape target is outbound. | OpenTelemetry Collector v0.161.0; Collector distributions v0.161.0 | REASONED |
 | otel-health: Review enabled health-check 13133 independently of receiver authentication. | Collector health source d922ffb299c6b9be026f97dd7d6a5f0f507efdeb; Collector distributions v0.161.0 | REASONED |
 | otel-k8s: otelcol-k8s Dockerfile supplies no default config COPY/CMD; EXPOSE alone establishes no listener; Helm/operator are out of scope. | Collector distributions v0.161.0 | REASONED |
@@ -31663,8 +31691,8 @@ zPages from both `extensions` and `service.extensions` unless needed; if retaine
 and control access separately from receiver authentication. Widen a receiver's bind only where the
 intended clients, proxy, or mesh need it; require TLS on every receiver and exporter; and attach an authenticator
 extension, such as `basicauth` (htpasswd-style credentials, or a static `client_auth` username/password for
-outgoing calls) or `bearertokenauth` (a static or file-backed token sent as an `Authorization` header), to any
-receiver that accepts data from outside the host. Declaring an authenticator extension is not enough to enforce it: list it under `service.extensions` so it
+outgoing calls) or `bearertokenauth` (a static `token` or file `filename`, with `filename` taking precedence), to any
+receiver that accepts data from outside the host. For `bearertokenauth`, each file line with a non-whitespace field supplies its first whitespace-delimited field as a token. The configurable header (default `Authorization`) and scheme (default `Bearer`) apply to outgoing HTTP and gRPC calls: HTTP sends the value as a header, and gRPC sends it as metadata under the lower-case configured header key. On incoming requests, `Authenticate` checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with each configured scheme-prefixed token and accepts any match; outgoing calls send only the first token. Declaring an authenticator extension is not enough to enforce it: list it under `service.extensions` so it
 starts, then attach it to EACH receiver protocol with an `auth.authenticator` key naming the extension.
 Inventory the other listeners too. At v0.161.0, the internal telemetry metrics factory defaults to
 `localhost:8888`; the two shipped configs explicitly use `127.0.0.1:8888`. Their
@@ -31897,6 +31925,14 @@ that accepts spans with no credential at all.
 - OpenTelemetry, Collector security best practices (bind addresses, TLS, authenticator extensions, minimal
   components, non-root): https://opentelemetry.io/docs/security/config-best-practices/
 - OpenTelemetry Collector Contrib, `basicauthextension` (htpasswd, `client_auth`, `auth.authenticator` wiring): https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/basicauthextension
+- OpenTelemetry Collector Contrib, `bearertokenauthextension` README (`token`, `filename`, precedence, line parsing, header and scheme defaults, HTTP and gRPC transport; checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/README.md#L21-L39
+- OpenTelemetry Collector Contrib, `bearertokenauthextension` gRPC metadata and TLS requirement (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L30-L43
+- OpenTelemetry Collector Contrib, `bearertokenauthextension` token resolver handoff and `filename` warning (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L73-L122
+- OpenTelemetry Collector Contrib, `bearertokenauthextension` file token parsing and scheme assembly (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L156-L189
+- OpenTelemetry Collector Contrib, `bearertokenauthextension` first-token selection for outgoing calls (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L197-L205
+- OpenTelemetry Collector Contrib, `bearertokenauthextension` incoming `Authenticate` header and metadata checks (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L234-L255
+- OpenTelemetry Collector Contrib, `bearertokenauthextension` HTTP header assignment (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L264-L272
+- OpenTelemetry Collector Contrib, `bearertokenauthextension` header and scheme defaults (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/factory.go#L15-L18
 - Arize Phoenix, gRPC OTLP Export authorization (`ApiKeyInterceptor`: `UNAUTHENTICATED` without a key, `PERMISSION_DENIED` for a viewer token, `OK` with a write-authorized key or when auth is disabled): https://github.com/Arize-ai/phoenix/blob/f11c885c063f1c9b6146693cda401c5d645d8294/src/phoenix/server/bearer_auth.py
 - OpenTelemetry Collector v0.161.0, internal telemetry metrics default `localhost:8888`: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/service/telemetry/otelconftelemetry/factory.go#L49-L64
 - OpenTelemetry Collector v0.161.0, zPages default endpoint and HTTP server configuration: https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/extension/zpagesextension/factory.go#L15-L29
