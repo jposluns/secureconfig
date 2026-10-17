@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "733fa5899d392231eeb8007f67e434caaf68c62742d26011e759f19981502fbe",
+  "body_sha256": "e99f0fcc1524b98e1393a25a36ea06a29235918c450bb6ed4e012584b2ed41c9",
   "components": {
     "docker-build": {
       "name": "Docker build and image history documentation",
@@ -12,6 +12,32 @@ version_basis: {
         "sd8afa286c173": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/variables.md#L17-L52",
         "s07e00829f121": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22",
         "s6283b172a5c6": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118"
+      }
+    },
+    "bash": {
+      "name": "GNU Bash reference manual",
+      "basis": "bash-5.3",
+      "sources": {
+        "sb38bf74a89b0": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5629",
+        "s8c59508bd4c8": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5917",
+        "s04ec4ba49971": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6000",
+        "se62fd3ad4fc3": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6122",
+        "s2df39d2c9c1c": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6194",
+        "s8447036b2114": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5161",
+        "s3255eca7e496": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4852",
+        "s93dcf5ba0a87": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4740",
+        "s8016d1aecfca": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5929",
+        "sf6c6f542c26c": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6062"
+      }
+    },
+    "grep": {
+      "name": "GNU grep",
+      "basis": "unknown",
+      "sources": {
+        "s33689bc366bf": "https://www.gnu.org/software/grep/manual/html_node/File-and-Directory-Selection.html",
+        "s2c1251092e66": "https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html",
+        "sea43e82b0753": "https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html",
+        "sbd30b628a5b8": "https://www.gnu.org/software/grep/manual/html_node/grep-Programs.html"
       }
     },
     "owasp": {
@@ -147,18 +173,39 @@ version_basis: {
       "sources": {
         "sba07c9b57bd9": "https://v6.vite.dev/guide/env-and-mode"
       }
+    },
+    "aws-store": {
+      "name": "AWS Secrets Manager overview",
+      "basis": "unknown",
+      "sources": {
+        "s81b41c17ad57": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+      }
+    },
+    "google-store": {
+      "name": "Google Cloud Secret Manager overview",
+      "basis": "unknown",
+      "sources": {
+        "scd27be211781": "https://docs.cloud.google.com/secret-manager/docs/overview"
+      }
+    },
+    "azure-store": {
+      "name": "Azure Key Vault overview",
+      "basis": "unknown",
+      "sources": {
+        "seb86b29f4951": "https://learn.microsoft.com/en-us/azure/key-vault/general/overview"
+      }
     }
   },
   "claims": {
     "gitignore": {"text": "Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.", "components": ["owasp", "next", "git-ignore"], "sources": ["owasp:s26a987a1053b", "next:s964651d4eed4", "git-ignore:s90ce7c8605d9"], "status": "REASONED"},
-    "runtime-storage": {"text": "Load secrets from environment or a secret manager; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value.", "components": ["owasp", "docker-build"], "sources": ["owasp:s26a987a1053b", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s6283b172a5c6"], "status": "REASONED"},
+    "runtime-storage": {"text": "Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value.", "components": ["owasp", "docker-build", "aws-store", "google-store", "azure-store"], "sources": ["owasp:s26a987a1053b", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s6283b172a5c6", "aws-store:s81b41c17ad57", "google-store:scd27be211781", "azure-store:seb86b29f4951"], "status": "REASONED"},
     "random": {"text": "Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.", "components": ["owasp", "openssl-rand", "python-secrets"], "sources": ["owasp:s26a987a1053b", "openssl-rand:s11d11381b080", "python-secrets:sd2e8196eaa96"], "status": "REASONED"},
     "scanners": {"text": "Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:s18cdf0069eb9", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
     "argv": {"text": "Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.", "components": ["proc", "apache"], "sources": ["proc:s801d5f1ee88d", "apache:scde9004bb967"], "status": "REASONED"},
     "stdin": {"text": "Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.", "components": ["apache", "docker", "gh"], "sources": ["apache:scde9004bb967", "docker:sf8243a183d67", "gh:sf0b01ee9b3e1"], "status": "REASONED"},
     "credential-files": {"text": "Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass.", "components": ["postgres", "curl"], "sources": ["postgres:s198d4780d9a4", "curl:s3a0a54039912"], "status": "REASONED"},
-    "shell-input": {"text": "Hidden read input avoids history; disable tracing around expansion. The clean-Bash login block clears inherited attributes and allexport and removes TOKEN on exit.", "components": ["docker", "proc"], "sources": ["docker:sf8243a183d67", "proc:s801d5f1ee88d"], "status": "REASONED"},
-    "shell-limits": {"text": "The prompted token stays out of argv and environment; same-account/root memory access and earlier exports remain outside this protection.", "components": ["proc", "docker"], "sources": ["proc:s801d5f1ee88d", "docker:sf8243a183d67"], "status": "REASONED"},
+    "shell-input": {"text": "As this guide's assessment, hidden read input avoids history; as this guide's advice, tracing must be off around expansion. The clean-Bash login block clears inherited TOKEN attributes, turns tracing, allexport and errexit off, enables pipefail, and removes TOKEN on exit.", "components": ["bash", "docker", "proc"], "sources": ["bash:sb38bf74a89b0", "bash:s8c59508bd4c8", "bash:s04ec4ba49971", "bash:se62fd3ad4fc3", "bash:s2df39d2c9c1c", "bash:s8447036b2114", "bash:s3255eca7e496", "bash:s93dcf5ba0a87", "bash:s8016d1aecfca", "bash:sf6c6f542c26c", "docker:sf8243a183d67", "proc:s801d5f1ee88d"], "status": "REASONED"},
+    "shell-limits": {"text": "As this guide's assessment under the stated clean-Bash assumptions, the prompted token stays out of argv and environment; same-account/root memory access and earlier exports remain outside this protection.", "components": ["bash", "proc", "docker"], "sources": ["bash:sb38bf74a89b0", "bash:s8c59508bd4c8", "bash:s04ec4ba49971", "bash:se62fd3ad4fc3", "bash:s2df39d2c9c1c", "bash:s8447036b2114", "bash:s3255eca7e496", "bash:s93dcf5ba0a87", "bash:s8016d1aecfca", "bash:sf6c6f542c26c", "proc:s801d5f1ee88d", "docker:sf8243a183d67"], "status": "REASONED"},
     "argv-review": {"text": "A ps/grep snapshot misses unlabelled secrets and short-lived processes; review secret-input paths instead of treating a clean snapshot as proof.", "components": ["proc"], "sources": ["proc:s801d5f1ee88d"], "status": "REASONED"},
     "ci-store": {"text": "Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
     "prompt-secrets": {"text": "Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b", "owasp:s4564d1912a87"], "status": "REASONED"},
@@ -171,7 +218,7 @@ version_basis: {
     "leak-audit": {"text": "Review provider logs for use of the leaked credential during its exposure window.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
     "encrypted-git": {"text": "SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository.", "components": ["sops", "age"], "sources": ["sops:s78c5bb528dc4", "age:sca8b0d211739"], "status": "REASONED"},
     "verify-scan": {"text": "gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate.", "components": ["gitleaks"], "sources": ["gitleaks:s18cdf0069eb9"], "status": "REASONED", "verify": [1]},
-    "verify-patterns": {"text": "Supplementary grep prints filenames only, skips binaries/excluded trees and treats read errors as failure; empty output is not proof of no secret. No grep manual is cited.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED", "verify": [1]}
+    "verify-patterns": {"text": "Supplementary grep prints filenames only, when null binary data is discovered assumes unprocessed input does not match, skips excluded trees; as this guide's advice, a non-zero exit caused by a read error is a failed check; as this guide's assessment, empty output is not proof of no secret. GNU grep documents -E as extended regular expression syntax.", "components": ["grep", "owasp"], "sources": ["grep:s33689bc366bf", "grep:s2c1251092e66", "grep:sea43e82b0753", "grep:sbd30b628a5b8", "owasp:s26a987a1053b"], "status": "REASONED", "verify": [1]}
   }
 }
 ---
@@ -187,14 +234,14 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | gitignore: Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked. | OWASP secret handling unknown; Next.js unknown; Git ignore patterns 2.42.0 | REASONED |
-| runtime-storage: Load secrets from environment or a secret manager; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value. | OWASP secret handling unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
+| runtime-storage: Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value. | OWASP secret handling unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f; AWS Secrets Manager overview unknown; Google Cloud Secret Manager overview unknown; Azure Key Vault overview unknown | REASONED |
 | random: Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials. | OWASP secret handling unknown; OpenSSL random bytes 3.0; Python secrets 3.13 | REASONED |
 | scanners: Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner. | gitleaks command minimum 8.19+; TruffleHog unknown | REASONED |
 | argv: Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history. | Linux procfs unknown; htpasswd unknown | REASONED |
 | stdin: Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments. | htpasswd unknown; Docker login unknown; GitHub CLI unknown | REASONED |
 | credential-files: Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass. | PostgreSQL password file unknown; curl netrc unknown | REASONED |
-| shell-input: Hidden read input avoids history; disable tracing around expansion. The clean-Bash login block clears inherited attributes and allexport and removes TOKEN on exit. | Docker login unknown; Linux procfs unknown | REASONED |
-| shell-limits: The prompted token stays out of argv and environment; same-account/root memory access and earlier exports remain outside this protection. | Linux procfs unknown; Docker login unknown | REASONED |
+| shell-input: As this guide's assessment, hidden read input avoids history; as this guide's advice, tracing must be off around expansion. The clean-Bash login block clears inherited TOKEN attributes, turns tracing, allexport and errexit off, enables pipefail, and removes TOKEN on exit. | GNU Bash reference manual bash-5.3; Docker login unknown; Linux procfs unknown | REASONED |
+| shell-limits: As this guide's assessment under the stated clean-Bash assumptions, the prompted token stays out of argv and environment; same-account/root memory access and earlier exports remain outside this protection. | GNU Bash reference manual bash-5.3; Linux procfs unknown; Docker login unknown | REASONED |
 | argv-review: A ps/grep snapshot misses unlabelled secrets and short-lived processes; review secret-input paths instead of treating a clean snapshot as proof. | Linux procfs unknown | REASONED |
 | ci-store: Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts. | OWASP secret handling unknown | REASONED |
 | prompt-secrets: Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model. | OWASP secret handling unknown | REASONED |
@@ -207,7 +254,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | leak-audit: Review provider logs for use of the leaked credential during its exposure window. | OWASP secret handling unknown | REASONED |
 | encrypted-git: SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository. | SOPS unknown; age unknown | REASONED |
 | verify-scan: gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate. | gitleaks command minimum 8.19+ | REASONED |
-| verify-patterns: Supplementary grep prints filenames only, skips binaries/excluded trees and treats read errors as failure; empty output is not proof of no secret. No grep manual is cited. | OWASP secret handling unknown | REASONED |
+| verify-patterns: Supplementary grep prints filenames only, when null binary data is discovered assumes unprocessed input does not match, skips excluded trees; as this guide's advice, a non-zero exit caused by a read error is a failed check; as this guide's assessment, empty output is not proof of no secret. GNU grep documents -E as extended regular expression syntax. | GNU grep unknown; OWASP secret handling unknown | REASONED |
 <!-- version-basis:end -->
 
 Leaked API keys and credentials in public repositories are the most common security incident in AI-assisted projects, and scanners harvest fresh commits within minutes. [authentication.md](authentication.md) states the baseline; this guide covers the handling.
@@ -222,9 +269,9 @@ Leaked API keys and credentials in public repositories are the most common secur
    gitleaks git .          # scans the repository history (git/dir need gitleaks 8.19+; older builds use "gitleaks detect" for history and "gitleaks detect --no-git" for the working tree)
    gitleaks dir .          # scans the working tree
    ```
-5. **Secrets never enter a command line.** A process's arguments are readable through `/proc/<pid>/cmdline`, which is what `ps` prints; on a default Linux that means every other user on the host, for as long as the process runs, and the command is then written to your shell history. A `hidepid` proc mount or a separate PID namespace narrows who can see it, neither is the default, and neither covers the history. Prefer a flag that reads from stdin (`htpasswd -i`, `docker login --password-stdin`, `gh auth login --with-token`), a file the tool reads itself (`~/.pgpass`, `curl --netrc`; create it with `umask 077` and keep it mode `0600`, since it stores the secret in plaintext and PostgreSQL ignores a `~/.pgpass` that group or others can read), or an environment variable where the tool offers nothing better. Where a value has to be typed, `read -rs` keeps it off the screen, and what `read` consumes is input rather than a command, so no shell records it. One caveat: shell tracing (`set -x`) echoes the expanded command line, so a script that expands a secret into a pipeline (including the `printf`-into-`--password-stdin` pattern below) must turn tracing off around it, because reading from stdin protects the argument list but not the trace.
+5. **Secrets never enter a command line.** A process's arguments are readable through `/proc/<pid>/cmdline`, which is what `ps` prints; on a default Linux that means every other user on the host, for as long as the process runs, and the command is then written to your shell history. A `hidepid` proc mount or a separate PID namespace narrows who can see it, neither is the default, and neither covers the history. Prefer a flag that reads from stdin (`htpasswd -i`, `docker login --password-stdin`, `gh auth login --with-token`), a file the tool reads itself (`~/.pgpass`, `curl --netrc`; create it with `umask 077` and keep it mode `0600`, since it stores the secret in plaintext and PostgreSQL ignores a `~/.pgpass` that group or others can read), or an environment variable where the tool offers nothing better. As this guide's advice, where a value has to be typed, use `read -rs` to keep terminal input hidden (`-s`) and preserve backslashes (`-r`); as this guide's assessment, because `read` consumes input rather than a command, this keeps the typed value out of shell history. Bash documents that `set -x` prints commands and arguments after expansion; therefore, as this guide's advice, a script that expands a secret into a pipeline (including the `printf`-into-`--password-stdin` pattern below) must turn tracing off around it, because reading from stdin protects the argument list but not the trace.
 
-   This block assumes a clean Bash shell and prompts for the registry token instead of using an ambient `TOKEN`. Paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. It clears inherited attributes, turns tracing and allexport off, and unsets the unexported variable on exit. The entered token stays out of history, argv and the environment; process memory is still readable by the same account and root, and this does not erase an earlier export. Docker stores the login in its configured credential store or configuration file, as described in rule 9.
+   This block assumes a clean Bash shell and prompts for the registry token instead of using an ambient `TOKEN`. As this guide's advice, paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. The block resets `DEBUG`, `RETURN` and `ERR` traps with `trap - DEBUG RETURN ERR`, turns tracing, allexport and errexit off with `set +x +a +e`, then enables pipefail with `set -o pipefail`. It clears inherited `TOKEN` attributes via `unset -n` and `unset -v`, unsets `IFS` with `unset -n IFS` (which also removes an `IFS` nameref) and refuses a readonly `IFS`, then unsets the unexported variable with an `EXIT` trap. It exits without continuing if `TOKEN` cannot be cleared, `IFS` is readonly or `read` fails, and refuses an empty value, a placeholder or a control character. As this guide's assessment under these clean-shell assumptions, the entered token stays out of history, argv and the environment; process memory is still readable by the same account and root, and this does not erase an earlier export. Docker stores the login in its configured credential store or configuration file, as described in rule 9.
 
    ```bash
    (
@@ -268,10 +315,10 @@ When a team needs configuration secrets in git (for example GitOps deployments),
 
 ```bash
 gitleaks git . && echo clean
-grep -rlIE "sk-|AKIA|ASIA|ghp_|-----BEGIN" --exclude-dir=node_modules --exclude-dir=.git .   # crude but fast; -l prints only the filename (never the matching secret), -I skips binaries, --exclude-dir skips a whole tree rather than filtering matched lines
+grep -rlIE "sk-|AKIA|ASIA|ghp_|-----BEGIN" --exclude-dir=node_modules --exclude-dir=.git .   # -r recurses, -l prints only the filename (never the matching secret), -I assumes unprocessed input does not match after null binary data is discovered, --exclude-dir skips a whole tree rather than filtering matched lines; -E uses extended regular expressions; as this guide's assessment, this scan is crude but fast
 ```
 
-On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then prints `clean`). The grep is a supplementary pattern search, not proof that no secret is present: treat any filename it prints as a finding to inspect privately, empty output as no match for these patterns only, and a non-zero exit caused by a read error as a failed check. gitleaks, which scans by rule rather than by a few prefixes, is the primary gate.
+On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then prints `clean`). As this guide's assessment, the grep is a supplementary pattern search, not proof that no secret is present: as this guide's advice, treat any filename it prints as a finding to inspect privately, empty output as no match for these patterns only, and a non-zero exit caused by a read error as a failed check. gitleaks, which scans by rule rather than by a few prefixes, is the primary gate.
 
 ## Sources (checked September 2026)
 
@@ -279,6 +326,9 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 - Docker build secrets (temporary mounts for build instructions), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22
 - Docker image history command (image history and creation-command output), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118
 - OWASP Secrets Management Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
+- AWS Secrets Manager overview (rolling, checked October 2026): https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
+- Google Cloud Secret Manager overview (rolling, checked October 2026): https://docs.cloud.google.com/secret-manager/docs/overview
+- Azure Key Vault overview (rolling, checked October 2026): https://learn.microsoft.com/en-us/azure/key-vault/general/overview
 - gitleaks (git/dir need 8.19+; v8.19.0 README): https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md
 - trufflehog: https://github.com/trufflesecurity/trufflehog
 - sops: https://github.com/getsops/sops and age: https://github.com/FiloSottile/age
@@ -297,3 +347,8 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 - OpenSSL 3.0 `rand` byte count and `-base64` encoding (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-rand/
 - Python 3.13 `secrets.token_urlsafe` (checked October 2026): https://docs.python.org/3.13/library/secrets.html#secrets.token_urlsafe
 - Vite 6 environment variables (`VITE_` values exposed to client code) (checked October 2026): https://v6.vite.dev/guide/env-and-mode
+- GNU Bash reference manual, bash-5.3 (checked October 2026): read `-r`/`-s` 5629-5637 https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5629; `set -a` 5917-5921 https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5917; `allexport` 6000-6001 https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6000; `set -x` 6122-6128 https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6122; turning set options off 6194-6196 https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6194; `declare` attributes 5161-5195 https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5161; `unset -n`/`-v` 4852-4876 https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4852; `trap` and sigspecs 4740-4808 https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4740; errexit 5929-5944 https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5929; pipefail 6062-6065 https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6062
+- GNU grep file and directory selection (`-r`, `-I`, `--exclude-dir`; rolling) (checked October 2026): https://www.gnu.org/software/grep/manual/html_node/File-and-Directory-Selection.html
+- GNU grep general output control (`-l`; rolling) (checked October 2026): https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html
+- GNU grep Programs (`-E` selects extended regular expressions; rolling) (checked October 2026): https://www.gnu.org/software/grep/manual/html_node/grep-Programs.html
+- GNU grep exit status (0 match, 1 no match, 2 error; rolling) (checked October 2026): https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html
