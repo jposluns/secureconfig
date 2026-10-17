@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "1c20f348beab923cb9de42b1f2dc317b379076973afe4a75b18fd5fee259f2e2",
+  "body_sha256": "561792ed1c49b3f87ae9dc9a48fc2af85af6e80f7c6bbd70cffd5d56574776a3",
   "components": {
     "docs": {
       "name": "SurrealDB documentation (rolling)",
@@ -46,6 +46,29 @@ version_basis: {
         "s048fd6bd1f3e": "https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt"
       }
     },
+    "bash": {
+      "name": "GNU Bash reference manual",
+      "basis": "bash-5.3",
+      "sources": {
+        "sf9757e9fd6e8": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3872"
+      }
+    },
+    "procfs": {
+      "name": "Linux procfs manual",
+      "basis": "man-pages-6.19",
+      "sources": {
+        "s56aa3e840419": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n12",
+        "s9aae2a8587f2": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n26",
+        "sd64e43d1515a": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n43"
+      }
+    },
+    "ptrace": {
+      "name": "Linux ptrace manual",
+      "basis": "man-pages-6.19",
+      "sources": {
+        "sfe9fe6919d33": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man2/ptrace.2?h=man-pages-6.19#n2519"
+      }
+    },
     "scope-old": {
       "name": "SurrealDB SCOPE deprecation",
       "basis": "2.x",
@@ -65,7 +88,7 @@ version_basis: {
     "auth-default": {"text": "Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default.", "components": ["defaults"], "sources": ["defaults:se73fa9c93548"], "status": "REASONED"},
     "bind-default": {"text": "Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v3.2.4 --bind/-b and SURREAL_BIND retain that loopback default.", "components": ["defaults", "pinned"], "sources": ["defaults:se73fa9c93548", "pinned:s21f5e29c7e44"], "status": "REASONED"},
     "root-bootstrap": {"text": "User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password.", "components": ["docs", "pinned"], "sources": ["docs:s36c00a9caa98", "pinned:sac8662d10d16"], "status": "REASONED"},
-    "root-input": {"text": "v3.2.4 start has no stdin password form; prompt and supply a command-local environment assignment, avoiding argv but exposing the server environment to same-user/root inspection.", "components": ["pinned"], "sources": ["pinned:sac8662d10d16"], "status": "REASONED"},
+    "root-input": {"text": "v3.2.4 start has no stdin password form; prompt and use a Bash command-local environment assignment, avoiding argv. As this guide's assessment, the initial server environment may be exposed to the same account and root when the procfs ptrace check permits.", "components": ["pinned", "bash", "procfs", "ptrace"], "sources": ["pinned:sac8662d10d16", "bash:sf9757e9fd6e8", "procfs:s56aa3e840419", "procfs:s9aae2a8587f2", "procfs:sd64e43d1515a", "ptrace:sfe9fe6919d33"], "status": "REASONED"},
     "environment": {"text": "The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides.", "components": ["docs", "pinned"], "sources": ["docs:s36c00a9caa98", "pinned:s91a7bdf0a6e8", "pinned:s21f5e29c7e44"], "status": "REASONED"},
     "unauthenticated": {"text": "--unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment.", "components": ["docs", "pinned"], "sources": ["docs:s36c00a9caa98", "docs:s38b5f5aad1d4", "docs:sdaa9a636537a", "pinned:s91a7bdf0a6e8"], "status": "REASONED"},
     "docker-bind": {"text": "Pinned image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication.", "components": ["pinned"], "sources": ["pinned:sb740fb60a865"], "status": "REASONED"},
@@ -99,14 +122,14 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | auth-default: Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default. | SurrealDB 2.0 release announcement unknown | REASONED |
 | bind-default: Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v3.2.4 --bind/-b and SURREAL_BIND retain that loopback default. | SurrealDB 2.0 release announcement unknown; SurrealDB CLI and image v3.2.4 | REASONED |
 | root-bootstrap: User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password. | SurrealDB documentation (rolling) unknown; SurrealDB CLI and image v3.2.4 | REASONED |
-| root-input: v3.2.4 start has no stdin password form; prompt and supply a command-local environment assignment, avoiding argv but exposing the server environment to same-user/root inspection. | SurrealDB CLI and image v3.2.4 | REASONED |
+| root-input: v3.2.4 start has no stdin password form; prompt and use a Bash command-local environment assignment, avoiding argv. As this guide's assessment, the initial server environment may be exposed to the same account and root when the procfs ptrace check permits. | SurrealDB CLI and image v3.2.4; GNU Bash reference manual bash-5.3; Linux procfs manual man-pages-6.19; Linux ptrace manual man-pages-6.19 | REASONED |
 | environment: The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides. | SurrealDB documentation (rolling) unknown; SurrealDB CLI and image v3.2.4 | REASONED |
 | unauthenticated: --unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment. | SurrealDB documentation (rolling) unknown; SurrealDB CLI and image v3.2.4 | REASONED |
 | docker-bind: Pinned image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication. | SurrealDB CLI and image v3.2.4 | REASONED |
@@ -144,8 +167,8 @@ carried over.
 "the initial database root user, applied only if no other root user exists": they initialize that user when
 none exists, and do not disable authentication or rotate an existing root password. Pass the password through
 the environment, never argv (which reaches `ps` and shell history). `surreal start` has no stdin input for it
-(checked at v3.2.4), so the block prompts for it and hands it to that one command as a prefix assignment,
-never exported:
+(checked at v3.2.4), so the block prompts for it and hands it to that one command as a prefix assignment.
+Bash 5.3 says that assignment affects only the command's environment; ensure the password is never exported from the shell:
 
 ```bash
 (
@@ -163,9 +186,11 @@ never exported:
 )
 ```
 
-This moves the password out of argv, not out of reach: it stays readable through `/proc/<pid>/environ` by
-the same user and by root for the server's whole lifetime, as it does through the environment of any
-process that inherits it. Treat it as exposed to that account and to root while the server runs.
+This moves the password out of argv, not out of reach: `/proc/<pid>/environ` contains the initial environment
+set at `execve` and does not reflect later changes to the process environment. Reading it is governed by a
+`PTRACE_MODE_READ_FSCREDS` check that depends on credentials, capabilities, dumpability and Linux Security Modules.
+As this guide's assessment, the same account or root may read the initial value when that check permits, and a
+process inheriting the environment may receive it. Treat it as exposed to that account and to root while the server runs.
 Paste the password alone at the hidden prompt: a multi-line paste leaves every line after the first for
 your shell to run.
 
@@ -298,6 +323,9 @@ shell to run.
 ## Sources (checked September 2026)
 
 - SurrealDB CLI, `surreal start`: https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start
+- GNU Bash reference manual, bash-5.3 (checked October 2026), prefix assignments 3872-3878: https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3872
+- Linux man-pages, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): initial environment 12-15 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n12; later modifications 26-36 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n26; procfs access check 43-47 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n43
+- Linux man-pages, tag man-pages-6.19 (file header says "unreleased"; version identity rests on the tag) (checked October 2026): ptrace access factors 2519-2533 https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man2/ptrace.2?h=man-pages-6.19#n2519
 - SurrealDB 3.2.4 `surreal start` root password: `--password`/`--pass`/`-p` or `SURREAL_PASS`, with no stdin form (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162
 - SurrealDB 3.2.4 `--unauthenticated` flag, bound to `SURREAL_UNAUTHENTICATED` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/dbs/mod.rs#L47-L50
 - SurrealDB 3.2.4 `--bind`/`-b` (`SURREAL_BIND`) default `127.0.0.1:8000` (pinned tag v3.2.4): https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L177-L180
