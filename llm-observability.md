@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "93a0c8475355e0850a5f7af836f261bf26ae5bb89de70355391d00ea568f1d09",
+  "body_sha256": "21153849bde8c4f001b9f5cccf9412eff158ec293b7f3fb33648096ec641f18d",
   "components": {
     "langfuse": {
       "name": "Langfuse documentation",
@@ -122,6 +122,7 @@ version_basis: {
         "s664ba81d1aa6": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L30-L43",
         "saa550790364b": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L73-L122",
         "s93d4733c051d": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L156-L189",
+        "s48a3bfa9c99e": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L234-L255",
         "s4326cb59f96e": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L264-L272",
         "sa8d47408d195": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/factory.go#L15-L18"
       }
@@ -199,7 +200,7 @@ version_basis: {
     "otel-packages": {"text": "Systemd reads distribution otelcol.conf; OTELCOL_OPTIONS selects config.yaml; config|noreplace installation can retain local config, and postinstall manages service.", "components": ["otel-dist"], "sources": ["otel-dist:s96832924ecbd", "otel-dist:s3cf497a4401c", "otel-dist:s532d68e28e68", "otel-dist:saa59feb48156", "otel-dist:s73f6337cd50e", "otel-dist:sff25af5f7a79", "otel-dist:sd829f5067d73", "otel-dist:secd03f9c13d6", "otel-dist:s353fc01c0b2c", "otel-dist:s72fc7a0602d1"], "status": "REASONED"},
     "otel-tls": {"text": "Require TLS on receivers/exporters and authentication on every receiver protocol accepting off-host data.", "components": ["otel-docs"], "sources": ["otel-docs:s5fc11440844b"], "status": "REASONED"},
     "otel-auth": {"text": "Declare authenticator, start it in service.extensions, and attach each receiver protocol with auth.authenticator; Basic supports htpasswd/client_auth.", "components": ["otel-docs", "basicauth"], "sources": ["otel-docs:s5fc11440844b", "basicauth:s473397b3887e"], "status": "REASONED"},
-    "otel-bearer": {"text": "bearertokenauth accepts a static token or token file; filename takes precedence over token, each non-empty file line contributes its first whitespace-delimited field, HTTP uses a configurable header (default Authorization) and scheme (default Bearer), and gRPC sends the value as metadata.", "components": ["otel-docs", "bearertokenauth"], "sources": ["otel-docs:s5fc11440844b", "bearertokenauth:sc102b008afb0", "bearertokenauth:s664ba81d1aa6", "bearertokenauth:saa550790364b", "bearertokenauth:s93d4733c051d", "bearertokenauth:s4326cb59f96e", "bearertokenauth:sa8d47408d195"], "status": "REASONED"},
+    "otel-bearer": {"text": "bearertokenauth accepts a static token or token file; filename takes precedence over token, and each file line with a non-whitespace field contributes its first whitespace-delimited field. The configurable header (default Authorization) and scheme (default Bearer) apply to HTTP and gRPC outgoing calls; the header becomes the lower-case gRPC metadata key. On incoming requests, Authenticate checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with the expected scheme and token.", "components": ["otel-docs", "bearertokenauth"], "sources": ["otel-docs:s5fc11440844b", "bearertokenauth:sc102b008afb0", "bearertokenauth:s664ba81d1aa6", "bearertokenauth:saa550790364b", "bearertokenauth:s93d4733c051d", "bearertokenauth:s48a3bfa9c99e", "bearertokenauth:s4326cb59f96e", "bearertokenauth:sa8d47408d195"], "status": "REASONED"},
     "otel-metrics": {"text": "Internal metrics factory defaults localhost:8888; shipped configs set 127.0.0.1:8888; 0.0.0.0:8888 scrape target is outbound.", "components": ["otel", "otel-dist"], "sources": ["otel:s9780bf233e75", "otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d"], "status": "REASONED"},
     "otel-health": {"text": "Review enabled health-check 13133 independently of receiver authentication.", "components": ["health", "otel-dist"], "sources": ["health:s6ac60517accc", "otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d"], "status": "REASONED"},
     "otel-k8s": {"text": "otelcol-k8s Dockerfile supplies no default config COPY/CMD; EXPOSE alone establishes no listener; Helm/operator are out of scope.", "components": ["otel-dist"], "sources": ["otel-dist:sb93573df35e2"], "status": "REASONED"},
@@ -222,7 +223,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -261,7 +262,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | otel-packages: Systemd reads distribution otelcol.conf; OTELCOL_OPTIONS selects config.yaml; config&#124;noreplace installation can retain local config, and postinstall manages service. | Collector distributions v0.161.0 | REASONED |
 | otel-tls: Require TLS on receivers/exporters and authentication on every receiver protocol accepting off-host data. | Collector security guidance unknown | REASONED |
 | otel-auth: Declare authenticator, start it in service.extensions, and attach each receiver protocol with auth.authenticator; Basic supports htpasswd/client_auth. | Collector security guidance unknown; Collector Basic auth extension 1c897ba9c67afc3c9e218b5cd05a6de49435f4de | REASONED |
-| otel-bearer: bearertokenauth accepts a static token or token file; filename takes precedence over token, each non-empty file line contributes its first whitespace-delimited field, HTTP uses a configurable header (default Authorization) and scheme (default Bearer), and gRPC sends the value as metadata. | Collector security guidance unknown; Collector bearer token auth extension 1c897ba9c67afc3c9e218b5cd05a6de49435f4de | REASONED |
+| otel-bearer: bearertokenauth accepts a static token or token file; filename takes precedence over token, and each file line with a non-whitespace field contributes its first whitespace-delimited field. The configurable header (default Authorization) and scheme (default Bearer) apply to HTTP and gRPC outgoing calls; the header becomes the lower-case gRPC metadata key. On incoming requests, Authenticate checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with the expected scheme and token. | Collector security guidance unknown; Collector bearer token auth extension 1c897ba9c67afc3c9e218b5cd05a6de49435f4de | REASONED |
 | otel-metrics: Internal metrics factory defaults localhost:8888; shipped configs set 127.0.0.1:8888; 0.0.0.0:8888 scrape target is outbound. | OpenTelemetry Collector v0.161.0; Collector distributions v0.161.0 | REASONED |
 | otel-health: Review enabled health-check 13133 independently of receiver authentication. | Collector health source d922ffb299c6b9be026f97dd7d6a5f0f507efdeb; Collector distributions v0.161.0 | REASONED |
 | otel-k8s: otelcol-k8s Dockerfile supplies no default config COPY/CMD; EXPOSE alone establishes no listener; Helm/operator are out of scope. | Collector distributions v0.161.0 | REASONED |
@@ -399,7 +400,7 @@ and control access separately from receiver authentication. Widen a receiver's b
 intended clients, proxy, or mesh need it; require TLS on every receiver and exporter; and attach an authenticator
 extension, such as `basicauth` (htpasswd-style credentials, or a static `client_auth` username/password for
 outgoing calls) or `bearertokenauth` (a static `token` or file `filename`, with `filename` taking precedence), to any
-receiver that accepts data from outside the host. For `bearertokenauth`, each non-empty file line supplies its first whitespace-delimited field as a token; HTTP uses a configurable header (default `Authorization`) and scheme (default `Bearer`), while gRPC sends the value as metadata. Declaring an authenticator extension is not enough to enforce it: list it under `service.extensions` so it
+receiver that accepts data from outside the host. For `bearertokenauth`, each file line with a non-whitespace field supplies its first whitespace-delimited field as a token. The configurable header (default `Authorization`) and scheme (default `Bearer`) apply to outgoing HTTP and gRPC calls: HTTP sends the value as a header, and gRPC sends it as metadata under the lower-case configured header key. On incoming requests, `Authenticate` checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with the expected scheme and token. Declaring an authenticator extension is not enough to enforce it: list it under `service.extensions` so it
 starts, then attach it to EACH receiver protocol with an `auth.authenticator` key naming the extension.
 Inventory the other listeners too. At v0.161.0, the internal telemetry metrics factory defaults to
 `localhost:8888`; the two shipped configs explicitly use `127.0.0.1:8888`. Their
@@ -634,8 +635,9 @@ that accepts spans with no credential at all.
 - OpenTelemetry Collector Contrib, `basicauthextension` (htpasswd, `client_auth`, `auth.authenticator` wiring): https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/basicauthextension
 - OpenTelemetry Collector Contrib, `bearertokenauthextension` README (`token`, `filename`, precedence, line parsing, header and scheme defaults, HTTP and gRPC transport; checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/README.md#L21-L39
 - OpenTelemetry Collector Contrib, `bearertokenauthextension` gRPC metadata and TLS requirement (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L30-L43
-- OpenTelemetry Collector Contrib, `bearertokenauthextension` token resolver and file precedence (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L73-L122
+- OpenTelemetry Collector Contrib, `bearertokenauthextension` token resolver handoff and `filename` warning (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L73-L122
 - OpenTelemetry Collector Contrib, `bearertokenauthextension` file token parsing and scheme assembly (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L156-L189
+- OpenTelemetry Collector Contrib, `bearertokenauthextension` incoming `Authenticate` header and metadata checks (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L234-L255
 - OpenTelemetry Collector Contrib, `bearertokenauthextension` HTTP header assignment (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L264-L272
 - OpenTelemetry Collector Contrib, `bearertokenauthextension` header and scheme defaults (checked October 2026): https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/factory.go#L15-L18
 - Arize Phoenix, gRPC OTLP Export authorization (`ApiKeyInterceptor`: `UNAUTHENTICATED` without a key, `PERMISSION_DENIED` for a viewer token, `OK` with a write-authorized key or when auth is disabled): https://github.com/Arize-ai/phoenix/blob/f11c885c063f1c9b6146693cda401c5d645d8294/src/phoenix/server/bearer_auth.py
