@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `web-exposure.md` cites the GNU grep 3.12 manual and source for exit status 0, 1 and 2, for a missing or unreadable input being an error, and for `-s` suppressing its message, behind the bundle-scan comment; the instruction not to read discarded-error silence as a pass is unchanged (row 1.179) (#615)
 - `surrealdb.md` cites the GNU Bash 5.3 manual for a prefix assignment reaching only that command's environment, and the Linux man-pages 6.19 `proc_pid_environ(5)` and `ptrace(2)` pages for `/proc/<pid>/environ` holding the initial environment behind a ptrace access-mode check; who can read it is labelled as this guide's assessment, and the instruction to treat the password as exposed stays (row 1.179) (#610)
 - `admin-uis.md` cites the Apache httpd 2.4.69 `htpasswd` source for bare `-B` defaulting to bcrypt cost 5 and `-C` setting the cost, and the pinned OWASP Password Storage Cheat Sheet for a legacy bcrypt work factor of 10 or more, behind the Prometheus `-C 12` instruction (row 1.179) (#611)
 - `mcp-clients.md` cites OpenID Connect Discovery 1.0 errata 2 section 4.3 for the provider-configuration `issuer` validation that OpenID Connect discovery applies, quoting its identity, ID Token `iss` and abort-and-non-use requirements (row 1.179) (#609)
