@@ -28866,7 +28866,7 @@ REASONED: following block; the wrong-audience probe in the following block, per 
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -28875,7 +28875,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | transaction: Bind the validated expected issuer to the state/PKCE transaction; multi-AS clients MUST prevent mix-up attacks. | OAuth and HTTP RFCs unknown; MCP 2026-07-28 | REASONED |
 | issuer: Authorization metadata issuer must exactly equal the issuer used to construct discovery, including its path; reject the document before using endpoints. | MCP 2026-07-28; OAuth and HTTP RFCs unknown | REASONED |
 | resource-metadata: Validate protected-resource resource separately from authorization-server issuer; issuer equality is not SSRF protection. | OAuth and HTTP RFCs unknown | REASONED |
-| oidc-discovery: OIDC discovery requires equivalent provider issuer validation; Sources has no OpenID Connect Discovery reference. | OpenID Connect 1.0 errata 2; MCP 2026-07-28 | REASONED |
+| oidc-discovery: Apply OpenID Connect Discovery section 4.3 issuer validation to OIDC discovery (this guide's instruction): returned issuer MUST match the Issuer URL used as the well-known prefix and ID Token iss; failed validation aborts affected operations and bars use of invalid information. | OpenID Connect 1.0 errata 2; MCP 2026-07-28 | REASONED |
 | cimd: CIMD client_id uses HTTPS with a path; document client_id must exactly match its URL. | CIMD draft draft-ietf-oauth-client-id-metadata-document-00 | REASONED |
 | registration-order: Clients SHOULD support CIMD and prefer available preregistration, then CIMD, then optional deprecated DCR. | MCP 2026-07-28 | REASONED |
 | application-type: DCR MUST specify appropriate application_type: native SHOULD cover desktop/mobile/CLI/localhost apps; web SHOULD cover remote browser apps. | MCP 2026-07-28 | REASONED |
@@ -28924,7 +28924,7 @@ Record the issuer you selected from validated metadata (step 2) in the authoriza
 
 Two different identifiers are validated in the discovery flow, and confusing them leaves a hole:
 
-- **Authorization-server metadata** carries an `issuer`, and RFC 8414 section 3.3 requires that "The \"issuer\" value returned MUST be identical" to the issuer identifier used to build the well-known URL (which includes any issuer path component, not merely the hostname, and is not the full metadata URL). "If these values are not identical, the data contained in the response MUST NOT be used." MCP restates it: "the `issuer` value in the document MUST be identical to the issuer identifier used to construct the well-known URL." Preserve the issuer you used to derive the discovery URL and compare the returned `issuer` to it exactly, before you use any endpoint from the document. When you discover through OpenID Connect instead, apply the equivalent OIDC provider-configuration validation of `issuer`.
+- **Authorization-server metadata** carries an `issuer`, and RFC 8414 section 3.3 requires that "The \"issuer\" value returned MUST be identical" to the issuer identifier used to build the well-known URL (which includes any issuer path component, not merely the hostname, and is not the full metadata URL). "If these values are not identical, the data contained in the response MUST NOT be used." MCP restates it: "the `issuer` value in the document MUST be identical to the issuer identifier used to construct the well-known URL." Preserve the issuer you used to derive the discovery URL and compare the returned `issuer` to it exactly, before you use any endpoint from the document. When you discover through OpenID Connect instead, apply the OpenID Connect Discovery section 4.3 provider-configuration validation of `issuer` (this guide's instruction): "The `issuer` value returned MUST be identical to the Issuer URL that was used as the prefix to `/.well-known/openid-configuration` to retrieve the configuration information. This MUST also be identical to the `iss` Claim value in ID Tokens issued from this Issuer." If validation fails, "any operations requiring the information that failed to correctly validate MUST be aborted and the information that failed to validate MUST NOT be used."
 - **Protected-resource metadata** carries a `resource`, and RFC 9728 section 3.3 validates *that* against the resource identifier you intended to reach. This is a separate check from the `issuer` check above; RFC 9728 section 3.3 is about `resource`, not `issuer`, so do both.
 
 Skipping the `issuer` check lets an attacker serve metadata from a location it controls while naming an honest issuer, associating that honest issuer with attacker-chosen endpoints and undermining the expected-issuer record that step 1's mix-up defence relies on.
@@ -29054,6 +29054,7 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 - OAuth Client ID Metadata Document draft-ietf-oauth-client-id-metadata-document-00 (HTTPS client-id URL, matching `client_id`): https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-00
 - OpenID Connect Core 1.0 errata 2 section 11, Offline Access (`prompt=consent`, `response_type` condition): https://openid.net/specs/openid-connect-core-1_0-errata2.html#OfflineAccess
 - OpenID Connect Dynamic Client Registration 1.0 errata 2 section 2 (`application_type` default is `web`): https://openid.net/specs/openid-connect-registration-1_0-errata2.html#ClientMetadata
+- OpenID Connect Discovery 1.0 errata 2 section 4.3 (`issuer` identity, ID Token `iss`, abort and non-use on failure; checked October 2026): https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationValidation
 - OWASP Server Side Request Forgery Prevention Cheat Sheet (host allowlist, build the request yourself): https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
 
 ======================================================================
