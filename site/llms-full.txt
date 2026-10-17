@@ -631,7 +631,7 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 | trust-scope: Self-signed TLS encrypts transit but needs explicit client trust and triggers browser warnings; the guide prefers publicly trusted certificates for browser users and external parties. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
 | rsa-certificate: OpenSSL 3.0 or later generates an RSA 4096-bit self-signed certificate with SHA-256, 365-day validity, an unencrypted key and the shown subject and extensions. | OpenSSL documentation (rolling) unknown | REASONED |
 | ec-certificate: Generate a prime256v1 EC key first, then a SHA-256 self-signed certificate with 365-day validity and the shown subject and extensions; the guide describes ECDSA as smaller and faster. | OpenSSL documentation (rolling) unknown | REASONED |
-| san: SAN must cover every client DNS name and IP; replace the documentation IP or omit IP entries for name-only access. RFC 9525 clients reject a missing matching SAN; that RFC is named but not linked in Sources. | OpenSSL documentation (rolling) unknown | REASONED |
+| san: SAN must cover every client DNS name and IP (this guide's requirement, based on RFC 9525's matching rules); replace the documentation IP or omit IP entries for name-only access. RFC 9525 requires DNS identity matching label by label except under its wildcard rule; an IP-ID reference identifier MUST exactly match an iPAddress subjectAltName entry. It forbids the subject Common Name as a service identifier. On mismatch, an automated client SHOULD terminate; a configured exception MUST NOT disable this control by default. A human-facing client SHOULD warn and terminate but MAY offer advanced users an override. Ad hoc pinning SHOULD NOT restrict future connections to only the pinned certificate. | OpenSSL documentation (rolling) unknown; RFC 9525 service identity RFC 9525 | REASONED |
 | leaf-constraint: Set basicConstraints=critical,CA:FALSE because the stated stock req -x509 configuration otherwise marks a trusted certificate CA:TRUE, allowing its unencrypted server key to sign for any name. | OpenSSL documentation (rolling) unknown | REASONED |
 | extension-history: The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension. | OpenSSL documentation (rolling) unknown | REASONED |
 | unencrypted-key: -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions. | OpenSSL documentation (rolling) unknown | REASONED |
@@ -640,8 +640,8 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 | key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. | OpenSSL documentation (rolling) unknown; Git ignore documentation v2.43.0 | REASONED |
 | mkcert: mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs. | mkcert unknown | REASONED |
 | mkcert-custody: Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users. | mkcert unknown | REASONED |
-| debian-trust: Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian/Ubuntu; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
-| rhel-trust: Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust on RHEL/Fedora; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
+| debian-trust: Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie and Ubuntu noble; use on other Debian and Ubuntu releases is this guide's assessment, with platform-specific Sources entries for those releases absent. | mkcert unknown; Debian ca-certificates trixie; Ubuntu ca-certificates noble | REASONED |
+| rhel-trust: Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract on RHEL 9; Fedora and other RHEL releases are this guide's assessment, with platform-specific Sources entries for those releases absent. | mkcert unknown; RHEL shared system certificates RHEL 9 | REASONED |
 | curl-trust: curl --cacert server.crt supplies explicit trust for app.internal. | OpenSSL documentation (rolling) unknown; curl command documentation curl-8_12_1 | REASONED |
 | requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3 | REASONED |
 | node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js. | mkcert unknown; Node.js extra CA certificates v22.19.0 | REASONED |
@@ -682,7 +682,7 @@ openssl req -x509 -key server.key -sha256 -days 365 -out server.crt \
 
 Rules that make the certificate actually work:
 
-- The `subjectAltName` list must contain every DNS name and IP address clients will use to reach the service. Modern clients validate SAN entries; a certificate with no matching SAN is rejected by clients that follow RFC 9525, so the SAN is mandatory (some verifiers, including OpenSSL's default, still fall back to the CN, which is why the Verify below confirms the SAN exists rather than trusting a CN). Replace the example `203.0.113.10` (a documentation address from RFC 5737) with your service's real IP, or drop the `IP:` entries if clients reach it only by name.
+- The `subjectAltName` list must contain every DNS name and IP address clients will use to reach the service (this guide's requirement, based on the RFC 9525 matching rules that follow). RFC 9525 requires DNS identity matching by comparing labels ('Each label MUST match', except under its wildcard rule) and says an IP-ID reference identifier 'MUST exactly match the value of an iPAddress entry in subjectAltName'. It says the subject Common Name 'MUST NOT be used to identify a service'. If no presented identifier matches, RFC 9525 says an automated client 'SHOULD terminate' and permits a configured exception that 'MUST NOT' disable this security control by default, while a human-facing client 'SHOULD' warn and terminate but may offer advanced users an override. Its ad hoc pinning provision says such pinning 'SHOULD NOT' restrict future connections to only the pinned certificate. Some verifiers, including OpenSSL's default, still fall back to the CN, so confirm in Verify below that the SAN exists rather than trusting a CN. Replace the example `203.0.113.10` (a documentation address from RFC 5737) with your service's real IP, or drop the `IP:` entries if clients reach it only by name.
 - `basicConstraints=critical,CA:FALSE` marks the certificate a leaf, not a CA. It matters because section 4 installs the certificate into client trust stores: OpenSSL's stock configuration marks a bare `req -x509` certificate `CA:TRUE`, which in a trust store is a signer for any name, using the unencrypted key that `-noenc` leaves on the server. This override relies on OpenSSL 3.0 or later, where a command-line extension replaces the configuration default; the end-of-life 1.1.1 would instead emit a duplicate, invalid extension.
 - `-noenc` (spelled `-nodes` before OpenSSL 3.0, still accepted but deprecated) leaves the key unencrypted so services can start unattended; protect it with file permissions instead.
 - Track the `-days` expiry. Nothing renews a self-signed certificate for you; put the date in your calendar or monitoring.
@@ -712,13 +712,13 @@ This is for development machines only. The generated CA can sign for any name, s
 Distribute the certificate (or your internal CA certificate) to clients instead of turning verification off:
 
 ```bash
-# Debian/Ubuntu system trust store
+# Debian trixie/Ubuntu noble system trust store; other releases: this guide's assessment
 sudo cp server.crt /usr/local/share/ca-certificates/app-internal.crt
 sudo update-ca-certificates
 
-# RHEL/Fedora system trust store
+# RHEL 9 system trust store; Fedora and other RHEL releases: this guide's assessment
 sudo cp server.crt /etc/pki/ca-trust/source/anchors/app-internal.crt
-sudo update-ca-trust
+sudo update-ca-trust extract
 
 # Per-tool
 curl -q --cacert server.crt https://app.internal/
@@ -758,6 +758,14 @@ Self-signed certificates have no revocation and no third-party accountability, a
 - curl curl-8_12_1 explicit CA trust (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/cacert.md#L21-L24
 - curl curl-8_12_1 normal certificate verification and `--insecure` (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/insecure.md#L21-L28
 - Node.js v22.19.0 extra trusted CA certificates (checked October 2026): https://github.com/nodejs/node/blob/v22.19.0/doc/api/cli.md#L3234-L3238
+- RFC 9525 subject Common Name (checked October 2026): https://www.rfc-editor.org/rfc/rfc9525.html#section-2
+- RFC 9525 reference identifiers and IP-ID matching (checked October 2026): https://www.rfc-editor.org/rfc/rfc9525.html#section-6.2
+- RFC 9525 DNS identity matching (checked October 2026): https://www.rfc-editor.org/rfc/rfc9525.html#section-6.3
+- RFC 9525 IP identity matching (checked October 2026): https://www.rfc-editor.org/rfc/rfc9525.html#section-6.4
+- RFC 9525 identity mismatch outcome (checked October 2026): https://www.rfc-editor.org/rfc/rfc9525.html#section-6.6
+- Debian trixie update-ca-certificates (checked October 2026): https://manpages.debian.org/trixie/ca-certificates/update-ca-certificates.8.en.html#DESCRIPTION
+- Ubuntu noble update-ca-certificates (checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/update-ca-certificates.8.html#description
+- RHEL 9 shared system certificates (checked October 2026): https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/securing_networks/using-shared-system-certificates_securing-networks#adding-new-certificates_using-shared-system-certificates
 
 ======================================================================
 ==> cloudflare.md
@@ -4788,11 +4796,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | certificate-chain: ssl.pemfile uses fullchain.pem rather than a certificate without its chain. | lighttpd TLS minimum 1.4.56 | REASONED |
 | separate-key: ssl.privkey exists from 1.4.53; older versions need certificate and key concatenated into ssl.pemfile. | lighttpd separate-key minimum 1.4.53 | REASONED |
 | protocol-floor: ssl.openssl.ssl-conf-cmd sets MinProtocol to TLSv1.2 explicitly; recent versions already default to TLS 1.2. | lighttpd TLS minimum 1.4.56 | REASONED |
-| module-defaults: Only mod_indexfile, mod_dirlisting and mod_staticfile load without server.modules entries; load mod_redirect explicitly. | lighttpd documentation unknown | REASONED |
+| module-defaults: In lighttpd 1.4.75, mod_h2 is inserted unless server.feature-flags disables server.h2proto (enabled by default); when server.compat-module-load is enabled (the default), mod_indexfile and mod_dirlisting are conditionally added when enabled, mod_staticfile is added when absent, and compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. Load mod_redirect explicitly. | lighttpd documentation unknown; lighttpd module loader source 1.4.75 | REASONED |
 | http-redirect: For the http scheme, redirect to HTTPS preserving authority, path and query; port 80 must redirect rather than serve content. | lighttpd documentation unknown | REASONED |
 | redirect-code: Set url.redirect-code to 308 explicitly on versions before 1.4.75. | lighttpd redirect default transition 1.4.75 | REASONED |
 | basic-auth: Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable. | lighttpd documentation unknown | REASONED |
-| password-file: Create the user file with Apache htpasswd; the backend reads user:crypt()-hashed-password entries and accepted hashes depend on the build. | lighttpd documentation unknown | REASONED |
+| password-file: Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally, with other hashes of at least 13 characters checked through crypt() when built with crypt support; under USE_LIB_CRYPTO_MD4, the $1+ntlm$ path derives an NTLM hash and calls crypt() with that derived value and a $1$ salt. Check the build and platform's accepted hashes before choosing a flag; this check is this guide's compatibility advice. | lighttpd documentation unknown; lighttpd file authentication source 1.4.75; Apache htpasswd manual 2.4; Debian apache2-utils package trixie; Fedora httpd-tools package unknown | REASONED |
 | mfa: Basic authentication is single-factor; use an MFA-capable front proxy. The stated Authelia support-list exclusion and Cloudflare Access option lack direct Sources entries. | lighttpd documentation unknown | REASONED |
 | verify-config: lighttpd -tt checks /etc/lighttpd/lighttpd.conf before systemctl reload; command-specific and service-manager sources are not recorded. | lighttpd documentation unknown | REASONED |
 | verify-redirect: The HTTP header request should show a redirect to HTTPS; these are read-and-judge status checks. | lighttpd documentation unknown | REASONED |
@@ -4832,7 +4840,7 @@ ssl.openssl.ssl-conf-cmd = ( "MinProtocol" => "TLSv1.2" )
 
 ## 2. Redirect HTTP to HTTPS
 
-`mod_redirect` must be loaded: only `mod_indexfile`, `mod_dirlisting`, and `mod_staticfile` load without being listed in `server.modules`. Per the lighttpd wiki:
+Load `mod_redirect` explicitly. In lighttpd 1.4.75, `configfile.c` inserts `mod_h2` unless `server.feature-flags` disables `server.h2proto` (enabled by default); when `server.compat-module-load` is enabled (the default), it adds `mod_indexfile` when index files are enabled, `mod_dirlisting` when directory listing is enabled, and `mod_staticfile` when it is absent from `server.modules`; compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. For other versions, check the module-loading behaviour. Per the lighttpd wiki:
 
 ```
 server.modules += ( "mod_redirect" )
@@ -4862,7 +4870,7 @@ auth.require = ( "/" =>
 )
 ```
 
-Create the user file with Apache's `htpasswd` (package `apache2-utils` or `httpd-tools`). The lighttpd htpasswd backend reads `user:crypt()-hashed-password` entries; check the mod_auth documentation below for the hash algorithms your lighttpd build accepts before choosing an `htpasswd` flag.
+Create the user file with Apache's `htpasswd` (Debian `apache2-utils`; for Fedora, use `httpd-tools` as this guide's package assessment). In lighttpd 1.4.75, the htpasswd backend reads `username:stored-hash` entries; it checks `{SHA}` SHA-1 and `$apr1$` hashes internally and, when built with `crypt()` support, checks other stored hashes of at least 13 characters through the platform's `crypt()`, except that, when built with MD4 support, the `$1+ntlm$` path derives an NTLM hash and calls `crypt()` with the derived value and a `$1$` salt. Check the build and platform's accepted hash formats before choosing an `htpasswd` flag; this is the guide's compatibility advice. Check the lighttpd mod_auth documentation and Apache `htpasswd` manual in Sources for the supported hash formats.
 
 Basic authentication is single-factor, and lighttpd is absent from Authelia's supported-proxy list. Add MFA by fronting the service with Cloudflare Access ([cloudflare.md](cloudflare.md)) or an MFA-capable proxy; options in [mfa.md](mfa.md).
 
@@ -4905,7 +4913,17 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
 - lighttpd TLS documentation (1.4.56 and later; ssl.privkey from 1.4.53): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_SSL
 - lighttpd mod_auth documentation, including `auth.require` inside a `$HTTP["host"]` conditional: https://redmine.lighttpd.net/projects/lighttpd/wiki/Mod_auth
 - lighttpd HTTP-to-HTTPS redirect how-to (308 explicit before 1.4.75): https://redmine.lighttpd.net/projects/lighttpd/wiki/HowToRedirectHttpToHttps
-- lighttpd configuration options (`server.modules`, the three modules loaded by default): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_ConfigurationOptions
+- lighttpd configuration options (`server.modules` and default modules): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_ConfigurationOptions
+- lighttpd 1.4.75 compatibility loader and conditional modules source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L395-L544
+- lighttpd 1.4.75 TLS module helper source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L270-L290
+- lighttpd 1.4.75 authentication module helper source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L382-L393
+- lighttpd 1.4.75 directive binding, feature flag and compatibility gate source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L662-L945
+- lighttpd 1.4.75 compatibility loader default source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L1684-L1711
+- lighttpd 1.4.75 htpasswd parsing source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L340-L397
+- lighttpd 1.4.75 htpasswd password check source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L613-L740
+- Apache HTTP Server 2.4 `htpasswd` manual (checked October 2026): https://httpd.apache.org/docs/2.4/programs/htpasswd.html
+- Debian trixie `apache2-utils` package (checked October 2026): https://packages.debian.org/trixie/apache2-utils
+- Fedora `httpd-tools` package (checked October 2026): https://packages.fedoraproject.org/pkgs/httpd/httpd-tools/
 
 ======================================================================
 ==> caddy.md
