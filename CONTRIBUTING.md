@@ -107,14 +107,20 @@ character references for underscores count. `tools/check_bare_urls.py` uses the
 pinned markdown-it-py CommonMark parser with tables enabled. For each inline
 token, including those in paragraphs, headings, table cells, lists and quotes,
 it counts URL occurrences in raw content and subtracts parsed link destinations,
-image sources and code spans. Reference-style link and image destinations come
+image sources and code spans. A destination with a parser-encoded URL-ending
+character (`"`, `[`, `]`, `<`, `>`, a backtick or space) does not cancel a
+separate bare URL written with that encoding. An author-written encoded
+destination such as `%22` remains exempt. Reference-style link and image destinations come
 from definitions outside the inline block, so they are not subtracted; an inline
-link sharing a normalized URL with a definition can therefore fail closed. Every
+link, image or autolink sharing a normalized URL with a definition can therefore
+produce one extra finding. Every
 remaining occurrence is bare, including link text, image alt text and URLs in
 inline HTML content. A link whose text and
 destination are the same URL has one finding.
 The reported line is the first line of the inline block, even if the URL appears
-later in that block. Block code, HTML blocks and reference definitions have no
+later in that block. A bare CR counts as a line break to the parser but not to
+the gate's LF-based line map: two bare CRs before a URL on LF line 3 can make
+the finding report line 5. Block code, HTML blocks and reference definitions have no
 inline tokens to scan. Parsed front matter is excluded. Without the pinned
 parser, a local run prints one advisory SKIP and runs the existing lexical
 fallback, which is less exact. CI and `--require-parser` fail if the parser is
@@ -122,11 +128,10 @@ absent or mismatched. The gate recognizes HTTP(S) schemes, not GFM `www.`
 autolinks or single-underscore pairs. A root file that starts with `---` but
 has invalid `version_basis` front matter fails closed before its body is scanned.
 For this gate, `'`, `"`, `[`, `]` and backticks end a URL. Link titles, inline HTML
-comments and a `__…__` emphasis wrapper around a URL can report findings; write
-an accepted citation as an autolink, an inline link destination or a code span.
-When an inline link destination contains `"` and a separate bare URL encodes that
-quote as `%22`, the destination can cancel the bare occurrence in one inline block;
-review that case manually.
+comments and a `__…__` emphasis wrapper around a URL can report findings. An
+escaped `(` in a destination can produce one extra finding, as can a code span
+inside image alt text. Write an accepted citation as an autolink, an inline
+link destination or a code span outside image alt text.
 
 ## Version basis
 

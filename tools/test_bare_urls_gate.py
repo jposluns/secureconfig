@@ -77,6 +77,23 @@ def main():
     )
     for body, line in failures:
         assert_failure(body, line=line)
+    percent_encoding_failures = (
+        ("quote", '[t](https://example.com/x\\"__y) and https://example.com/x%22__y\n'),
+        ("opening bracket", "[t](https://example.com/x[__y) and https://example.com/x%5B__y\n"),
+        ("closing bracket", "[t](https://example.com/x]__y) and https://example.com/x%5D__y\n"),
+        ("opening angle", "[t](<https://example.com/x\\<__y>) and https://example.com/x%3C__y\n"),
+        ("closing angle", "[t](<https://example.com/x\\>__y>) and https://example.com/x%3E__y\n"),
+        ("backtick", "[t](https://example.com/x`__y) and https://example.com/x%60__y\n"),
+        ("space", "[t](<https://example.com/x __y>) and https://example.com/x%20__y\n"),
+        ("autolink quote", '<https://example.com/x"__y> and https://example.com/x%22__y\n'),
+        ("image quote", '![t](https://example.com/x\\"__y) and https://example.com/x%22__y\n'),
+        ("code span cannot supply destination", '[t](https://example.com/x\\"__y) and `[t](https://example.com/x%22__y)` and https://example.com/x%22__y\n'),
+    )
+    for name, body in percent_encoding_failures:
+        try:
+            assert_failure(body)
+        except AssertionError as exc:
+            raise AssertionError(name) from exc
     passing = (
         ("<https://example.com/__init__.py>\n", "# Fixture\n\n"),
         ("[source](https://example.com/__init__.py)\n", "# Fixture\n\n"),
@@ -98,6 +115,8 @@ def main():
         (r"[t](https://example.com/__x\*y)" + "\n", "# Fixture\n\n"),
         (r"[t](https://example.com/__x\))" + "\n", "# Fixture\n\n"),
         ("[t](https://example.com/__x&ampy)\n", "# Fixture\n\n"),
+        ("[t](https://example.com/x%22__y)\n", "# Fixture\n\n"),
+        ("[t](<https://example.com/__x)>)\n", "# Fixture\n\n"),
         ("https://example.com/&#95&#95x\n", "# Fixture\n\n"),
         ("# Fixture\n", '---\nversion_basis: {"url":"https://example.com/__init__.py"}\n---\n'),
     )
@@ -160,10 +179,21 @@ def main():
         ("mixed emphasis", "_See **https://example.com/__init__.py** now_\n", True),
         ("quoted indented code", ">     https://example.com/__init__.py\n", False),
         ("N5 Unicode separator", "Text\u2028\u2028    https://example.com/__init__.py\n", True),
+        ("disclosed escaped opener", "[t](https://example.com/__x\\()\n", True),
+        ("disclosed definition and inline link", "[d]: https://example.com/__x\n\n[t](https://example.com/__x)\n", True),
+        ("disclosed definition and autolink", "[d]: https://example.com/__x\n\n<https://example.com/__x>\n", True),
+        ("disclosed definition and image", "[d]: https://example.com/__x\n\n![t](https://example.com/__x)\n", True),
+        ("disclosed bare CR line", "a\r\rSee https://example.com/__x\n", True),
+        ("disclosed code span in image alt", "![`https://example.com/__x`](i.png)\n", True),
+        ("authored encoded destination beside bare URL", "[t](https://example.com/x%22__y) and https://example.com/x%22__y\n", True),
     )
     lines = {"table cell": 5, "ATX boundary": 4, "quote boundary": 5,
              "table boundary": 5, "lazy list owner": 6, "nested lazy owner": 6,
-             "nested list owner": 8, "list fence dedent": 5, "HTML list dedent": 6}
+             "nested list owner": 8, "list fence dedent": 5, "HTML list dedent": 6,
+             "disclosed definition and inline link": 5,
+             "disclosed definition and autolink": 5,
+             "disclosed definition and image": 5,
+             "disclosed bare CR line": 5}
     for name, body, bare in regressions:
         result = fixture(body)
         expected = f"  FAIL  fixture.md:{lines.get(name, 3)}: bare URL contains __"
@@ -194,7 +224,7 @@ def main():
     assert doubled[0] == 1 and doubled[1].count("  FAIL  fixture.md:3:") == 1, doubled
     repeated = fixture("https://example.com/__init__.py and https://example.com/__init__.py\n")
     assert repeated[0] == 1 and repeated[1].count("  FAIL  fixture.md:3:") == 2, repeated
-    print(f"  ok    bare URL gate: {len(failures) + sum(bare for _, _, bare in regressions)} failures, "
+    print(f"  ok    bare URL gate: {len(failures) + len(percent_encoding_failures) + sum(bare for _, _, bare in regressions)} failures, "
           f"{len(passing) + sum(not bare for _, _, bare in regressions)} exemptions, "
           "and bare, href and code-span mutation proofs")
 
