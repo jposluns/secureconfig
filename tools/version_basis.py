@@ -482,7 +482,8 @@ def cited_target(href, url):
     return other[0] + url[head.end():]
 
 
-def check_rendered_sources(data, body, heads, parser, guide, baseline=None):
+def check_rendered_sources(data, body, heads, parser, guide, baseline=None,
+                           raw_current=None, raw_entries=()):
     occurrences, items = rendered_sources(body, heads, parser)
     current, details, errors = Counter(), {}, []
     for name, component in data['components'].items():
@@ -496,6 +497,14 @@ def check_rendered_sources(data, body, heads, parser, guide, baseline=None):
             require(found, 'source URL absent from Sources: ' + url)
             if basis == 'unknown':
                 continue
+            rendered_items = Counter(entry for owner, (entry, _), _ in found
+                                     if owner is not None)
+            for entry in raw_entries:
+                if cites(entry, url):
+                    if rendered_items[entry]:
+                        rendered_items[entry] -= 1
+                    else:
+                        errors.append(f'{name}: {url} absent from rendered Sources item')
             for owner, (entry, decoded_entry), target in found:
                 if owner is None:
                     # Backstop for rendered-only citations: raw container_violations()
@@ -506,6 +515,10 @@ def check_rendered_sources(data, body, heads, parser, guide, baseline=None):
                     fp = source_fingerprint(name, basis, url, entry)
                     current[fp] += 1
                     details[fp] = f'{name}: basis {basis!r} absent from Sources item for {url}'
+    # A raw violation already consumed its baseline allowance. The renderer can
+    # add a violation, but cannot make that same entry stale or count it twice.
+    for fp, count in (raw_current or {}).items():
+        current[fp] = max(current[fp], count)
     allowed = {fp: count for (filename, fp), count in (baseline or {}).items()
                if filename == Path(guide).name}
     for fp in sorted(current.keys() | allowed.keys()):
@@ -553,6 +566,7 @@ def check_source_bases(data, sources, entries, guide, baseline=None):
         if actual < limit:
             errors.append(f'stale Sources baseline {fingerprint}: {actual} < {limit}; remove it')
     require(not errors, '; '.join(errors))
+    return current
 
 
 
@@ -584,9 +598,6 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0, parser=
     require(data['body_sha256'] == expected_digest,
             f'body changed: expected body_sha256={expected_digest}; review the claim inventory, '
             f'then run: python3 tools/version_basis.py --rebind {shlex.quote(str(guide))}')
-    if parser is not None:
-        require(not re.search('[\x0b\x0c\x1c-\x1e\x85\u2028\u2029]', body),
-                'unsupported line boundary in guide body for rendered Sources checks')
     require(body.startswith('# ') and sum(level == 1 for _, level, _, _ in headings(body)) == 1,
             'guide body must start with exactly one H1')
     heads = headings(body)
@@ -617,19 +628,16 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0, parser=
                     'source URL percent-encodes an unreserved character: ' + url)
             require(cites(sources, url), 'source URL absent from Sources: ' + url)
     # The container count uses ATX-bounded text; see raw_sources().
-    if parser is None:
-        check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
-    else:
-        containers = list(container_violations(data, raw_sources(body, heads), entries))
-        if containers or any('![' in entry for entry in entries):
-            # Preserve the base's complete diagnostic, including basis errors in
-            # an unsupported container and image-only citations.
-            check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
-        check_rendered_sources(data, body, heads, parser, guide, baseline)
+    raw_current = check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
     identifiers(data['claims'])
     blocks = verify_blocks(body, with_status=True)
     # After verify_blocks(), so Verify-marking diagnostics keep precedence.
     guide_violations(body, heads, line_offset)
+    if parser is not None:
+        require(not re.search('[\x0b\x0c\x1c-\x1e\x85\u2028\u2029]', body),
+                'unsupported line boundary in guide body for rendered Sources checks')
+        check_rendered_sources(data, body, heads, parser, guide, baseline,
+                               raw_current, entries)
     covered, used = set(), set()
     for name, claim in data['claims'].items():
         keys(claim, ('text', 'components', 'sources', 'status'), ('evidence', 'verify'))

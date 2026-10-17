@@ -130,9 +130,10 @@ Schema 1 requires exactly these top-level fields:
   heading of the same or higher level with no leading whitespace; a Setext underline never
   ends it. Basis matching is
   literal and case-sensitive, with no adjacent ASCII letter, digit or dot: `v2.51.0` and
-  `2.51.0` are not interchangeable. A matching literal in the item's decoded visible
-  text counts; for a link or autolink, its own scheme and host and the declared URL's
-  path, query and fragment also count.
+  `2.51.0` are not interchangeable. Both paths require a match in the raw item text.
+  With the parser, the item's decoded visible text and, for a link or autolink, its
+  own scheme and authority with the declared URL's path, query and fragment must
+  also satisfy the basis check. The parser path is stricter, never looser.
   Components with basis `unknown` are exempt from the basis requirement. With the pinned
   `markdown-it-py` parser, citation presence uses decoded rendered text and link or autolink
   `href` targets. Bare URLs in rendered text count; code spans and link labels
@@ -189,26 +190,29 @@ Schema 1 requires exactly these top-level fields:
   and basis checks still apply to an image citation. An image-only citation can therefore pass
   with the fallback and fail with the parser. A basis found only in a link title can pass with
   the fallback and fail with the parser. An image alt spelling inside a link label can pass
-  with the fallback and fail with the parser. An image citation's basis violation cannot be
-  baselined with the parser: its raw fingerprint becomes stale, so fix the item instead.
+  with the fallback and fail with the parser. An image-only citation fails the rendered
+  item check even when its raw basis violation has a valid baseline entry.
   Content inside `<template>`, `<details>` or `<script>` elements can count as text in both
   paths; this behaviour predates the parser check. Citations in fenced or indented code
   blocks still fail the raw container check when they exceed parsed list-item citations.
   With the parser, emphasis can join rendered text to a basis: `v1.0**x**` reads as `v1.0x` and does not
   satisfy the basis boundary. A code span splits a basis: ``v1`.0` `` does not satisfy it.
-  An emphasis spelling inside a basis, such as `v1.**0**`, can pass only with the parser
-  because its rendered text contains `v1.0`. An entity spelling inside a basis, such as
-  `v1&#46;0`, can likewise pass only with the parser when its line has no URL or link.
+  Decoded emphasis, character references and backslash escapes cannot supply a
+  basis missing from raw text, even on a separate line without a URL.
   For a bare URL, the parser applies a textual boundary check, so emphasis can split a
   URL that a reader sees as continuous. For link targets containing non-ASCII characters
   or punctuation that the parser encodes, the parser's normalized href is accepted; the
-  declared URL must still be present in raw Sources text. Internationalized host names
-  are checked according to the pinned parser's URL conversion, which may differ from
-  another renderer.
+  declared URL and basis must still occur in raw Sources text. A basis appearing only
+  after punycode or percent-encoding of a host or user name does not pass. A basis
+  appearing only after percent-decoding an autolink's visible text does not pass.
+  Internationalized host names are checked according to the pinned parser's URL
+  conversion, which may differ from another renderer.
   `tools/version_basis_sources_baseline.txt` grandfathers existing violations by guide and a
   counted SHA-256 fingerprint of component ID, basis, URL and item paragraph text. New, changed
   or excess occurrences fail, and fixed or removed occurrences require removing their stale
-  baseline entries. This baseline has no automatic refresh; retained counts remain visible.
+  baseline entries. A raw violation consumes its baseline allowance in both paths;
+  the parser cannot mark that entry stale or count the same violation twice. This
+  baseline has no automatic refresh; retained counts remain visible.
 - `claims`: nonempty object with the same ID grammar. Each claim requires `text`, a nonempty unique
   `components` list, a nonempty `sources` list of `component-id:source-id` references, and `status`
   (`DEMONSTRATED` or `REASONED`). Every claim component needs a source; every component must be used.
