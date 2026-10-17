@@ -992,6 +992,42 @@ class RenderedSourcesTests(unittest.TestCase):
                     self.check(f'- [doc]({url})', url=url, basis=basis,
                                use_parser=use_parser)
 
+    def test_basis_does_not_borrow_declared_url_capitals(self):
+        cases = (
+            ('https://v2-docs.example.com/doc', 'v2',
+             '- Docs: https://V2-docs.example.com/doc'),
+            ('https://v2-docs.example.com/doc', 'v2',
+             '- [doc](https://V2-docs.example.com/doc)'),
+            ('https://v2-docs.example.com/doc', 'v2',
+             '- Docs: <https://V2-docs.example.com/doc>'),
+            ('https://v1@example.com/doc', 'v1',
+             '- Docs: https://V1@example.com/doc'),
+            ('https://example.com/doc', 'https',
+             '- Docs: HTTPS://example.com/doc'),
+        )
+        for url, basis, sources in cases:
+            with self.subTest(sources=sources):
+                messages = []
+                for use_parser in (False, True):
+                    with self.assertRaises(ValueError) as caught:
+                        self.check(sources, url=url, basis=basis,
+                                   use_parser=use_parser)
+                    messages.append(str(caught.exception))
+                self.assertEqual(*messages)
+                self.assertIn('basis', messages[0])
+                self.assertIn('absent from Sources item', messages[0])
+
+    def test_base_computed_case_baseline_stays_valid(self):
+        url = 'https://v2-docs.example.com/doc'
+        basis = 'v2'
+        sources = '- Docs: https://V2-docs.example.com/doc'
+        fingerprint = vb.source_fingerprint('product', basis, url, sources)
+        baseline = {('fixture.md', fingerprint): 1}
+        for use_parser in (False, True):
+            with self.subTest(use_parser=use_parser):
+                self.check(sources, url=url, basis=basis, baseline=baseline,
+                           use_parser=use_parser)
+
     def test_href_path_case_remains_exact(self):
         url = 'https://example.com/Control'
         self.assertEqual(vb.rendered_cites('https://EXAMPLE.com/control', url, True,
@@ -1015,6 +1051,14 @@ class RenderedSourcesTests(unittest.TestCase):
                 self.check(sources, use_parser=use_parser)
             messages.append(str(caught.exception))
         self.assertEqual(*messages)
+
+    def test_normalized_link_in_loose_prose_reaches_rendered_backstop(self):
+        url = 'https://bücher.example/control'
+        sources = (f'- Product v1.0: {url}\n\n'
+                   'Loose v1.0: [doc](https://xn--bcher-kva.example/control)')
+        self.check(sources, url=url, use_parser=False)
+        with self.assertRaisesRegex(ValueError, 'unsupported Sources container'):
+            self.check(sources, url=url, use_parser=True)
 
     def test_base_container_and_presence_diagnostics_in_both_paths(self):
         url = 'https://example.com/control'

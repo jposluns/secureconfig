@@ -130,10 +130,12 @@ Schema 1 requires exactly these top-level fields:
   heading of the same or higher level with no leading whitespace; a Setext underline never
   ends it. Basis matching is
   literal and case-sensitive, with no adjacent ASCII letter, digit or dot: `v2.51.0` and
-  `2.51.0` are not interchangeable. A matching literal inside the cited URL counts too.
+  `2.51.0` are not interchangeable. A matching literal in the item's decoded visible
+  text counts; for a link or autolink, its own scheme and host and the declared URL's
+  path, query and fragment also count.
   Components with basis `unknown` are exempt from the basis requirement. With the pinned
-  `markdown-it-py` parser, citation presence and basis matching use decoded rendered text and
-  link or autolink `href` targets. Bare URLs in rendered text count; code spans and link labels
+  `markdown-it-py` parser, citation presence uses decoded rendered text and link or autolink
+  `href` targets. Bare URLs in rendered text count; code spans and link labels
   do not supply citations. HTML comments remain forbidden by the Verify-markup check.
   CI requires the parser. Local runs without the
   pin print an advisory SKIP and count citations with the raw-text fallback. The rendered

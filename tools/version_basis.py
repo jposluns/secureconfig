@@ -475,6 +475,13 @@ def rendered_cites(candidate, url, link, parser=None):
                     and url[match.end():] == candidate[other.end():]))
 
 
+def cited_target(href, url):
+    """Keep the href's own scheme and authority with the declared URL remainder."""
+    head = re.match(r'[A-Za-z][A-Za-z0-9+.-]*://[^/?#]*', url)
+    other = re.match(r'[A-Za-z][A-Za-z0-9+.-]*://[^/?#]*', href)
+    return other[0] + url[head.end():]
+
+
 def check_rendered_sources(data, body, heads, parser, guide, baseline=None):
     occurrences, items = rendered_sources(body, heads, parser)
     current, details, errors = Counter(), {}, []
@@ -482,19 +489,20 @@ def check_rendered_sources(data, body, heads, parser, guide, baseline=None):
         basis = component['basis']
         pattern = r'(?<![A-Za-z0-9.])' + re.escape(basis) + r'(?![A-Za-z0-9.])'
         for url in component['sources'].values():
-            found = [(owner, items[owner] if owner is not None else ('', ''))
+            found = [(owner, items[owner] if owner is not None else ('', ''),
+                      cited_target(candidate, url) if link else '')
                      for candidate, owner, link in occurrences
                      if rendered_cites(candidate, url, link, parser)]
             require(found, 'source URL absent from Sources: ' + url)
             if basis == 'unknown':
                 continue
-            for owner, (entry, decoded_entry) in found:
+            for owner, (entry, decoded_entry), target in found:
                 if owner is None:
                     # Backstop for rendered-only citations: raw container_violations()
                     # runs first on every item but cannot see every decoded target.
                     errors.append(f'{name}: {url} cited in an unsupported Sources container; '
                                   'put each citation in its own list item')
-                elif not re.search(pattern, decoded_entry + '\n' + url):
+                elif not re.search(pattern, decoded_entry + '\n' + target):
                     fp = source_fingerprint(name, basis, url, entry)
                     current[fp] += 1
                     details[fp] = f'{name}: basis {basis!r} absent from Sources item for {url}'
