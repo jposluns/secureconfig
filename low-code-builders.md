@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "c28088369a93d3d4220180c97262f34b6a11e07150e55d971ab09cfd629ce3ba",
+  "body_sha256": "f2e21c46cd07233260addeb9f50a74ece91000b10c61528ab689404488d707ce",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -20,6 +20,11 @@ version_basis: {
         "sbfbf630008e1": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/docker/start.sh",
         "se5da9707c684": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/docker/start-litestream.sh",
         "s536899ecd4a5": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md",
+        "sca0c9c0ecf24": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L56-L75",
+        "sb4d5b659f7b8": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L77-L90",
+        "s118384fa1d9f": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L95",
+        "s9bee4adc612e": "https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0",
+        "s3f296c702bc5": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3",
         "se81c30b3f43b": "https://github.com/nocodb/nocodb/blob/2026.09.0/docker-compose/examples/external-postgres-and-redis/docker.env"
       }
     },
@@ -124,7 +129,7 @@ version_basis: {
     "nocodb-jwt": {"text": "Unset NC_AUTH_JWT_SECRET generates/stores a UUID as nc_auth_jwt_secret; replace README sample 569a1821-0a93-45e8-87ab-eb857f20a010.", "components": ["nocodb"], "sources": ["nocodb:sa19c6557b712", "nocodb:s536899ecd4a5"], "status": "REASONED"},
     "nocodb-cors": {"text": "Entry file allows every CORS origin.", "components": ["nocodb"], "sources": ["nocodb:sd74ca4df55b0"], "status": "REASONED"},
     "nocodb-proxy": {"text": "Startup resets trust proxy from NC_TRUST_PROXY, default no trust; restrict hops/subnets, never true with direct client access.", "components": ["nocodb"], "sources": ["nocodb:sa19c6557b712", "nocodb:s635b35ce4689", "nocodb:sd74ca4df55b0"], "status": "REASONED"},
-    "nocodb-packaging": {"text": "README binaries are for local quick tests; guide records no 2026.09.0 release binaries and image/install-script production paths.", "components": ["nocodb"], "sources": ["nocodb:s536899ecd4a5"], "status": "REASONED"},
+    "nocodb-packaging": {"text": "README marks binaries for quick local testing and documents Docker image and Auto-upstall paths; the October 2026 release API record lists no assets; the 2026.09.0 tag carries package version 0.301.3. Use the image or vendor install script for production (guide advice).", "components": ["nocodb"], "sources": ["nocodb:s536899ecd4a5", "nocodb:sca0c9c0ecf24", "nocodb:sb4d5b659f7b8", "nocodb:s118384fa1d9f", "nocodb:s9bee4adc612e", "nocodb:s3f296c702bc5"], "status": "REASONED"},
     "baserow-bind": {"text": "Caddy publishes 80/443 on HOST_PUBLISH_IP default 0.0.0.0; set it or publish loopback. Docker wildcard publication bypasses UFW.", "components": ["baserow"], "sources": ["baserow:s1b31314982f4", "baserow:s3f61036aca03"], "status": "REASONED"},
     "baserow-first": {"text": "First signup becomes staff; claim before exposure.", "components": ["baserow"], "sources": ["baserow:s34b87f60dcc6"], "status": "REASONED"},
     "baserow-signup": {"text": "allow_new_signups defaults True; disable in admin settings, yielding Sign up is disabled.", "components": ["baserow"], "sources": ["baserow:s34b87f60dcc6", "baserow:s4588448964a2"], "status": "REASONED"},
@@ -189,7 +194,7 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 | nocodb-jwt: Unset NC_AUTH_JWT_SECRET generates/stores a UUID as nc_auth_jwt_secret; replace README sample 569a1821-0a93-45e8-87ab-eb857f20a010. | NocoDB 2026.09.0 | REASONED |
 | nocodb-cors: Entry file allows every CORS origin. | NocoDB 2026.09.0 | REASONED |
 | nocodb-proxy: Startup resets trust proxy from NC_TRUST_PROXY, default no trust; restrict hops/subnets, never true with direct client access. | NocoDB 2026.09.0 | REASONED |
-| nocodb-packaging: README binaries are for local quick tests; guide records no 2026.09.0 release binaries and image/install-script production paths. | NocoDB 2026.09.0 | REASONED |
+| nocodb-packaging: README marks binaries for quick local testing and documents Docker image and Auto-upstall paths; the October 2026 release API record lists no assets; the 2026.09.0 tag carries package version 0.301.3. Use the image or vendor install script for production (guide advice). | NocoDB 2026.09.0 | REASONED |
 | baserow-bind: Caddy publishes 80/443 on HOST_PUBLISH_IP default 0.0.0.0; set it or publish loopback. Docker wildcard publication bypasses UFW. | Baserow 2.3.4 | REASONED |
 | baserow-first: First signup becomes staff; claim before exposure. | Baserow 2.3.4 | REASONED |
 | baserow-signup: allow_new_signups defaults True; disable in admin settings, yielding Sign up is disabled. | Baserow 2.3.4 | REASONED |
@@ -269,9 +274,8 @@ Two secrets need your attention:
 
 The entry file allows every CORS origin. It also enables Express's `trust proxy`, but startup then
 resets that from `NC_TRUST_PROXY`, which trusts no proxy unless you set it; once a proxy is in front,
-set it to that proxy's hop count or subnet, and never to `true` on a server clients can reach directly. The README says the release binaries "are only for quick testing
-locally", and the 2026.09.0 GitHub release publishes no binaries; production installs use the
-container image or the vendor's install script.
+set it to that proxy's hop count or subnet, and never to `true` on a server clients can reach directly. The 2026.09.0 tag's README says binaries are only for quick local testing ([README, line 95](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L95)).
+The GitHub release API record listed no assets when checked in October 2026 ([release record](https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0)); this guide assesses that record as showing no 2026.09.0 GitHub release binary assets, without establishing what other download services provide. The tag carries NocoDB package version `0.301.3` ([package manifest](https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3)); `2026.09.0` is the tag name, not that package version. The README documents the `nocodb/nocodb:latest` Docker image ([Docker examples](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L56-L75)) and calls Auto-upstall a server production installation that generates Docker Compose ([Auto-upstall section](https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L77-L90)). For production, use the container image or the vendor's install script (this guide's advice based on those README paths).
 
 ## Baserow
 
@@ -604,7 +608,12 @@ mean to publish is the finding.
 - Docker `docker exec` environment: https://docs.docker.com/reference/cli/docker/container/exec/
 - Docker packet filtering (`DOCKER-USER`): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2): https://github.com/docker/cli/blob/v27.2.0/cli/command/formatter/container.go and https://github.com/docker/cli/blob/v27.1.2/cli/command/formatter/container.go
-- NocoDB 2026.09.0 README (Docker example JWT secret, binaries note): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md
+- NocoDB 2026.09.0 README (Docker example JWT secret, Docker image, Auto-upstall and binaries note; checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md
+- NocoDB 2026.09.0 README, Docker with SQLite section (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L56-L75
+- NocoDB 2026.09.0 README, Auto-upstall section (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L77-L90
+- NocoDB 2026.09.0 README, binaries note (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L95
+- NocoDB 2026.09.0 GitHub release API record (assets listed when checked October 2026): https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0
+- NocoDB 2026.09.0 tag package manifest (`0.301.3`; checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3
 - NocoDB 2026.09.0 sample environment without an encryption key: https://github.com/nocodb/nocodb/blob/2026.09.0/docker-compose/examples/external-postgres-and-redis/docker.env
 - Node.js v22 `server.listen` with an omitted host: https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md
 - Baserow 2.3.4 Compose file: https://github.com/baserow/baserow/blob/2.3.4/docker-compose.yml
