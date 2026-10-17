@@ -33677,6 +33677,14 @@ REASONED: logout, browser history and response-header inspection, per the guide'
 - curl 8.23.0 --write-out (format and variables) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L20-L29
 - curl 8.23.0 --write-out http_code (last response code) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L112-L114
 - curl 8.23.0 --write-out url_effective (last fetched URL) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L358-L360
+- curl 8.23.0 --disable short form -q (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/disable.md#L5
+- curl 8.23.0 --globoff short form -g (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/globoff.md#L5
+- curl 8.23.0 --silent short form -s (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/silent.md#L5
+- curl 8.23.0 --show-error short form -S (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/show-error.md#L5
+- curl 8.23.0 --location short form -L (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/location.md#L5
+- curl 8.23.0 --dump-header short form -D (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/dump-header.md#L5
+- curl 8.23.0 --output short form -o (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/output.md#L6
+- curl 8.23.0 --write-out short form -w (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L5
 
 ======================================================================
 ==> firebase-supabase.md
