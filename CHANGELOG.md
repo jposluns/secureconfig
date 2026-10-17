@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `nodejs.md` cites Linux `ip(7)` and `capabilities(7)` for the rule that binding ports below 1024 needs `CAP_NET_BIND_SERVICE` (root or a process holding that capability in the user namespace governing the network namespace), scopes it to Linux, and labels the advice against running the app as root and the proxy preference as this guide's advice (row 1.179) (#602)
 - `low-code-builders.md` cites the NocoDB 2026.09.0 README's Auto-upstall command, which fetches the install script over plain HTTP and runs it with Bash, and its `develop` source link, and advises fetching the script over HTTPS from a pinned, reviewed source before running it (#600)
 - `elasticsearch.md` cites the OpenSearch 3.8.0 GCS and Azure repository plugin settings, blob upload and client construction, scopes the plugin-specific setting finding, cites the core repository crypto path and required key provider, leaves deployed GCS/Azure applicability, minimum versions and later releases unestablished, and labels the provider-side encryption instruction as this guide's advice (row 1.179) (#598)
 - `headless-cms-instant-api.md` cites the Strapi v5.58.0 Users and Permissions source for the initial `allow_register: true` and `default_role` advanced settings, the registration route and its setting check, and labels existing projects' stored settings and other releases as this guide's assessment (row 1.179) (#599)
