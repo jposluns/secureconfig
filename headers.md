@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "5bb9b4d1d08b324b335de57ed555a220be389669be0deed6eadbd19d0db07844",
+  "body_sha256": "65676b8a15763f724da6291920c8c8579c22f423a58150d7c925fd1323e9a57c",
   "components": {
     "mdn": {
       "name": "MDN HTTP documentation",
@@ -35,6 +35,25 @@ version_basis: {
       "sources": {
         "se79954c08919": "https://docs.djangoproject.com/en/5.2/ref/middleware/#module-django.middleware.security"
       }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "8.23.0",
+      "sources": {
+        "s2278b86c08a6": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/disable.md#L18-L20",
+        "s3b9e19f23f2d": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/globoff.md#L19-L22",
+        "s38391c89b58d": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/silent.md#L20-L25",
+        "sc1670c4672b4": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/show-error.md#L19",
+        "s891e2566ea41": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/location.md#L23-L26",
+        "sd386dc0317da": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/proto-redir.md#L19-L20",
+        "se2921468d9d6": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/proto.md#L31-L33",
+        "s508454c45cf1": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/noproxy.md#L18-L23",
+        "s62990c766776": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/dump-header.md#L21-L23",
+        "seb2e6bc373fe": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/output.md#L53-L55",
+        "s3aefa5f74fd4": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L20-L29",
+        "sfff89270c078": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L113-L114",
+        "s81bfb3163a35": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L359-L360"
+      }
     }
   },
   "claims": {
@@ -56,7 +75,7 @@ version_basis: {
     "logout-cookies": {"text": "Clear-Site-Data cookies clears cookies across the registered domain and all subdomains, plus HTTP authentication credentials; invalidate the server session separately.", "components": ["mdn"], "sources": ["mdn:s7f290c45ad37"], "status": "REASONED"},
     "logout-storage": {"text": "Clear-Site-Data storage removes origin local/session storage, IndexedDB and service-worker registrations; understand effects on companion applications before clearing.", "components": ["mdn"], "sources": ["mdn:s7f290c45ad37"], "status": "REASONED"},
     "logout-header": {"text": "The cited MDN logout example includes cache, cookies, storage, executionContexts, prefetchCache and prerenderCache.", "components": ["mdn"], "sources": ["mdn:s7f290c45ad37"], "status": "REASONED"},
-    "verify-fetch": {"text": "Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl-specific Sources and version are absent.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
+    "verify-fetch": {"text": "Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while selecting the last response block is this guide's assessment.", "components": ["mdn", "curl"], "sources": ["mdn:s40155272e6bf", "curl:s2278b86c08a6", "curl:s3b9e19f23f2d", "curl:s38391c89b58d", "curl:sc1670c4672b4", "curl:s891e2566ea41", "curl:sd386dc0317da", "curl:se2921468d9d6", "curl:s508454c45cf1", "curl:s62990c766776", "curl:seb2e6bc373fe", "curl:s3aefa5f74fd4", "curl:sfff89270c078", "curl:s81bfb3163a35"], "status": "REASONED", "verify": [1]},
     "verify-values": {"text": "Judge header values on the final response, not presence on an earlier hop; missing final headers are findings and a failed fetch is inconclusive.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
     "verify-scanner": {"text": "Use the external Security Headers scanner for a second opinion; the guide states that it fetches with GET.", "components": ["scanner"], "sources": ["scanner:s7a94d0fcb6ad"], "status": "REASONED"},
     "verify-csp": {"text": "Unexpected console violations must be absent in normal use, but this alone is insufficient; confirm a deliberately disallowed resource is blocked while an allowed one loads.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED"},
@@ -72,7 +91,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -94,7 +113,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | logout-cookies: Clear-Site-Data cookies clears cookies across the registered domain and all subdomains, plus HTTP authentication credentials; invalidate the server session separately. | MDN HTTP documentation unknown | REASONED |
 | logout-storage: Clear-Site-Data storage removes origin local/session storage, IndexedDB and service-worker registrations; understand effects on companion applications before clearing. | MDN HTTP documentation unknown | REASONED |
 | logout-header: The cited MDN logout example includes cache, cookies, storage, executionContexts, prefetchCache and prerenderCache. | MDN HTTP documentation unknown | REASONED |
-| verify-fetch: Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl-specific Sources and version are absent. | MDN HTTP documentation unknown | REASONED |
+| verify-fetch: Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while selecting the last response block is this guide's assessment. | MDN HTTP documentation unknown; curl 8.23.0 | REASONED |
 | verify-values: Judge header values on the final response, not presence on an earlier hop; missing final headers are findings and a failed fetch is inconclusive. | MDN HTTP documentation unknown | REASONED |
 | verify-scanner: Use the external Security Headers scanner for a second opinion; the guide states that it fetches with GET. | Security Headers scanner unknown | REASONED |
 | verify-csp: Unexpected console violations must be absent in normal use, but this alone is insufficient; confirm a deliberately disallowed resource is blocked while an allowed one loads. | MDN HTTP documentation unknown | REASONED |
@@ -134,9 +153,10 @@ On logout, clear what the browser already holds. `Cache-Control: no-cache` does 
 
 ## Verify
 
-REASONED: final-response header inspection follows the cited MDN header documentation; curl command-specific sources are not recorded. No deployment URL was supplied for live checks, and this guide records no run; the following block states the expected values and treats failed fetches as inconclusive.
+REASONED: final-response header inspection follows the cited MDN header documentation; curl 8.23.0 documents the command options and write-out fields, while selecting the last response block is this guide's assessment. No deployment URL was supplied for live checks, and this guide records no run; the following block states the expected values and treats failed fetches as inconclusive.
 
 ```bash
+# -q skips curlrc, -g disables URL globbing, and -sS hides progress but shows errors.
 # Fetch the FINAL page and read its response headers by eye. -L follows redirects (--proto-redir
 # '=https' blocks an https-to-http downgrade) so you inspect the page a browser lands on, not a 302;
 # --noproxy so no client proxy rewrites the headers; the body is discarded. -D - prints EVERY
@@ -169,3 +189,16 @@ REASONED: logout, browser history and response-header inspection, per the guide'
 - Security header scanner: https://securityheaders.com/
 - Helmet v8.1.0 response-header middleware (checked October 2026): https://github.com/helmetjs/helmet/blob/v8.1.0/README.md#L3
 - Django 5.2 SecurityMiddleware (checked October 2026): https://docs.djangoproject.com/en/5.2/ref/middleware/#module-django.middleware.security
+- curl 8.23.0 --disable (first argument skips curlrc) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/disable.md#L18-L20
+- curl 8.23.0 --globoff (disables URL globbing) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/globoff.md#L19-L22
+- curl 8.23.0 --silent (quiet mode with --show-error) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/silent.md#L20-L25
+- curl 8.23.0 --show-error (reports errors with --silent) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/show-error.md#L19
+- curl 8.23.0 --location (follows redirects) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/location.md#L23-L26
+- curl 8.23.0 --proto-redir (restricts redirect protocols) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/proto-redir.md#L19-L20
+- curl 8.23.0 --proto (= permits only the named protocol) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/proto.md#L31-L33
+- curl 8.23.0 --noproxy (* disables proxy use) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/noproxy.md#L18-L23
+- curl 8.23.0 --dump-header (- writes headers to stdout) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/dump-header.md#L21-L23
+- curl 8.23.0 --output (/dev/null discards the body) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/output.md#L53-L55
+- curl 8.23.0 --write-out (format and variables) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L20-L29
+- curl 8.23.0 --write-out http_code (last response code) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L113-L114
+- curl 8.23.0 --write-out url_effective (last fetched URL) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L359-L360

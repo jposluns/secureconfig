@@ -33566,7 +33566,7 @@ Keep the origin list in configuration per environment rather than hardcoding loc
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -33588,7 +33588,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | logout-cookies: Clear-Site-Data cookies clears cookies across the registered domain and all subdomains, plus HTTP authentication credentials; invalidate the server session separately. | MDN HTTP documentation unknown | REASONED |
 | logout-storage: Clear-Site-Data storage removes origin local/session storage, IndexedDB and service-worker registrations; understand effects on companion applications before clearing. | MDN HTTP documentation unknown | REASONED |
 | logout-header: The cited MDN logout example includes cache, cookies, storage, executionContexts, prefetchCache and prerenderCache. | MDN HTTP documentation unknown | REASONED |
-| verify-fetch: Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl-specific Sources and version are absent. | MDN HTTP documentation unknown | REASONED |
+| verify-fetch: Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while selecting the last response block is this guide's assessment. | MDN HTTP documentation unknown; curl 8.23.0 | REASONED |
 | verify-values: Judge header values on the final response, not presence on an earlier hop; missing final headers are findings and a failed fetch is inconclusive. | MDN HTTP documentation unknown | REASONED |
 | verify-scanner: Use the external Security Headers scanner for a second opinion; the guide states that it fetches with GET. | Security Headers scanner unknown | REASONED |
 | verify-csp: Unexpected console violations must be absent in normal use, but this alone is insufficient; confirm a deliberately disallowed resource is blocked while an allowed one loads. | MDN HTTP documentation unknown | REASONED |
@@ -33628,9 +33628,10 @@ On logout, clear what the browser already holds. `Cache-Control: no-cache` does 
 
 ## Verify
 
-REASONED: final-response header inspection follows the cited MDN header documentation; curl command-specific sources are not recorded. No deployment URL was supplied for live checks, and this guide records no run; the following block states the expected values and treats failed fetches as inconclusive.
+REASONED: final-response header inspection follows the cited MDN header documentation; curl 8.23.0 documents the command options and write-out fields, while selecting the last response block is this guide's assessment. No deployment URL was supplied for live checks, and this guide records no run; the following block states the expected values and treats failed fetches as inconclusive.
 
 ```bash
+# -q skips curlrc, -g disables URL globbing, and -sS hides progress but shows errors.
 # Fetch the FINAL page and read its response headers by eye. -L follows redirects (--proto-redir
 # '=https' blocks an https-to-http downgrade) so you inspect the page a browser lands on, not a 302;
 # --noproxy so no client proxy rewrites the headers; the body is discarded. -D - prints EVERY
@@ -33663,6 +33664,19 @@ REASONED: logout, browser history and response-header inspection, per the guide'
 - Security header scanner: https://securityheaders.com/
 - Helmet v8.1.0 response-header middleware (checked October 2026): https://github.com/helmetjs/helmet/blob/v8.1.0/README.md#L3
 - Django 5.2 SecurityMiddleware (checked October 2026): https://docs.djangoproject.com/en/5.2/ref/middleware/#module-django.middleware.security
+- curl 8.23.0 --disable (first argument skips curlrc) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/disable.md#L18-L20
+- curl 8.23.0 --globoff (disables URL globbing) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/globoff.md#L19-L22
+- curl 8.23.0 --silent (quiet mode with --show-error) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/silent.md#L20-L25
+- curl 8.23.0 --show-error (reports errors with --silent) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/show-error.md#L19
+- curl 8.23.0 --location (follows redirects) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/location.md#L23-L26
+- curl 8.23.0 --proto-redir (restricts redirect protocols) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/proto-redir.md#L19-L20
+- curl 8.23.0 --proto (= permits only the named protocol) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/proto.md#L31-L33
+- curl 8.23.0 --noproxy (* disables proxy use) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/noproxy.md#L18-L23
+- curl 8.23.0 --dump-header (- writes headers to stdout) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/dump-header.md#L21-L23
+- curl 8.23.0 --output (/dev/null discards the body) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/output.md#L53-L55
+- curl 8.23.0 --write-out (format and variables) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L20-L29
+- curl 8.23.0 --write-out http_code (last response code) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L113-L114
+- curl 8.23.0 --write-out url_effective (last fetched URL) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L359-L360
 
 ======================================================================
 ==> firebase-supabase.md
