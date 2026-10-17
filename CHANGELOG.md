@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `cloudflare.md` brings the AOP item's inline 443 `curl` to rule 6 shape and treats a firewall drop as inconclusive even when the service-token GET answers; adds a guarded HTTPS direct-origin probe for remote origins with the CA and certificate-hostname inputs; and says the allowed-vantage controls do not confirm the probed public address, so outcomes count only from an independently confirmed origin address (rows 1.195, 1.196 and 1.197, moved to `DONE.md`) (#618)
 - `headers.md` cites the curl 8.23.0 documentation for each option in the final-response check (`-q`, `-g`, `-sS`, `-L`, `--proto-redir '=https'`, `--noproxy '*'`, `-D -`, `-o /dev/null`, `-w` with `http_code` and `url_effective`) and labels reading the last response block as this guide's assessment (row 1.179) (#617)
 - `sqlite.md` cites the Git v2.56.0 `gitignore`, `git rm` and `git log` documentation for ignore rules not affecting tracked files, removal from the index alone or from the index and working tree, and inspectable commit history, and labels the warning that a committed database stays available to anyone who clones as this guide's assessment on that basis (row 1.179) (#616)
 - `web-exposure.md` cites the GNU grep 3.12 manual and source for exit status 0, 1 and 2, for a missing or unreadable input being an error, and for `-s` suppressing its message, behind the bundle-scan comment; the instruction not to read discarded-error silence as a pass is unchanged (row 1.179) (#615)
