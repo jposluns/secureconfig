@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "5dd3d77cd2029d0d0884e1c2c503725fb2a873d17aaabf1c1046e1ce34f827e4",
+  "body_sha256": "af4d8d2670ad3465732e814cd89ece4d15816a1c5137c3d47e9c958a2b017905",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -68,8 +68,8 @@ version_basis: {
       "basis": "3.12",
       "sources": {
         "s5170317ddea8": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1110",
-        "s95de064db46d": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n424",
-        "s1023ce7e5c4a": "https://git.savannah.gnu.org/cgit/grep.git/tree/src/grep.c?h=v3.12#n1755",
+        "s057470125f4c": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n425",
+        "sb18b36e247d7": "https://git.savannah.gnu.org/cgit/grep.git/tree/src/grep.c?h=v3.12#n1756",
         "s0c4ddbee9e68": "https://git.savannah.gnu.org/cgit/grep.git/tree/src/grep.c?h=v3.12#n661"
       }
     },
@@ -113,7 +113,7 @@ version_basis: {
     "verify-listing": {"text": "Plant a throwaway file in an existing index-less uploads directory; Options -Indexes should yield 403 or 404, never a 200 listing. An absent or unwritable directory is inconclusive; remove the probe afterward.", "components": ["apache"], "sources": ["apache:s97468bf1f299", "apache:sef5ff46eddf7"], "status": "REASONED", "verify": [1]},
     "verify-acme": {"text": "Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive.", "components": ["nginx", "apache", "acme-http01"], "sources": ["nginx:s40bdf1af1596", "nginx:s0e5162d1ce2b", "apache:s24f06763d14a", "acme-http01:se60bdd68e41d"], "status": "REASONED", "verify": [1]},
     "verify-lookalike": {"text": "Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:s24f06763d14a", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED", "verify": [1]},
-    "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.", "components": ["next", "vite", "cra", "grep"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd", "grep:s5170317ddea8", "grep:s95de064db46d", "grep:s1023ce7e5c4a", "grep:s0c4ddbee9e68"], "status": "REASONED", "verify": [1]},
+    "verify-bundle": {"text": "Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets.", "components": ["next", "vite", "cra", "grep"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "cra:scfb24624addd", "grep:s5170317ddea8", "grep:s057470125f4c", "grep:sb18b36e247d7", "grep:s0c4ddbee9e68"], "status": "REASONED", "verify": [1]},
     "verify-backup": {"text": "Known previously deployed backup URLs should return 403 or 404 without the file contents.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED"},
     "verify-suffixes": {"text": "GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive; only local shell syntax and suffix creation were checked, not server execution.", "components": ["nginx", "apache", "caddy", "coreutils", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:se24e9bbc0443", "apache:s7313b1b624d5", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b", "coreutils:sabbd081d1d5a"], "status": "REASONED", "verify": [2]}
   }
@@ -330,7 +330,7 @@ done
 # a bundler can split or encode a value, so scan for the literal secret as well
 ```
 
-REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation and Next.js environment variables. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
+REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation, Next.js environment variables, and GNU grep 3.12 exit status and error handling. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
 
 REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
 against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and replace
@@ -383,6 +383,6 @@ done
 - Caddy v2.11.4 ACME HTTP challenges precede user-defined handlers (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/server.go#L384-L388
 - RFC 8555 section 8.3 HTTP-01 validation (checked October 2026): https://www.rfc-editor.org/rfc/rfc8555.html#section-8.3
 - GNU grep 3.12 manual, Exit Status, lines 1110-1115 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1110
-- GNU grep 3.12 manual, `-s`/`--no-messages`, lines 424-431 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n424
-- GNU grep 3.12 source, failed input open, lines 1755-1772 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/src/grep.c?h=v3.12#n1755
+- GNU grep 3.12 manual, `-s`/`--no-messages`, lines 425-431 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n425
+- GNU grep 3.12 source, failed input open, lines 1756-1772 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/src/grep.c?h=v3.12#n1756
 - GNU grep 3.12 source, input error diagnosis, lines 661-668 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/src/grep.c?h=v3.12#n661
