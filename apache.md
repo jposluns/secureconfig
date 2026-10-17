@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "2c408ae9ceaad3948b3b8beff6573a002d1f78e2a50140925ceeb11f30c423e5",
+  "body_sha256": "bc3046c3e27e676ad14a186b8a26efbe9fae4b85336d3cee5cdbb0fffe01bd68",
   "components": {
     "apache": {
       "name": "Apache HTTP Server",
@@ -104,6 +104,15 @@ version_basis: {
         "s1de7fe72d011": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L112-L115"
       }
     },
+    "cloudflare-access": {
+      "name": "Cloudflare Access documentation",
+      "basis": "commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "sfddb92e438ca": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16",
+        "s7cafe1b17afd": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54",
+        "sdcac732541da": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81"
+      }
+    },
     "openidc": {
       "name": "mod_auth_openidc",
       "basis": "v2.4.20.3",
@@ -125,7 +134,7 @@ version_basis: {
     "password-file": {"text": "Create a bcrypt htpasswd file with cost 12 and -c only for its first user; httpd 2.4.69 defaults bcrypt cost to 5 and OWASP recommends at least 10 for legacy bcrypt. Both password-file paths are guide choices.", "components": ["apache", "debian-packaging", "fedora-packaging", "htpasswd", "owasp"], "sources": ["apache:s99dcb49d86a4", "debian-packaging:s62f6ed2866ab", "debian-packaging:sd1c9de6b39aa", "fedora-packaging:s4479577a2e6a", "htpasswd:s309ecdd34379", "htpasswd:s7850e1e9dfa1", "htpasswd:s1c1a101a70e7", "owasp:s4531e65b6502"], "status": "REASONED"},
     "basic": {"text": "AuthType Basic, AuthName, AuthUserFile and Require valid-user protect the chosen site/path over TLS; enumerate every public path.", "components": ["apache"], "sources": ["apache:s99dcb49d86a4"], "status": "REASONED"},
     "mtls": {"text": "A separate machine-client 443 vhost requires a trusted certificate with SSLVerifyClient require and depth 2; SSLCACertificateFile is server/vhost scoped.", "components": ["apache"], "sources": ["apache:scf804f4940d7"], "status": "REASONED"},
-    "mfa": {"text": "Basic is single-factor; Authelia v4.39.28 says Apache is unsupported for its proxy integration, and mod_auth_openidc v2.4.20.3 is an OIDC relying party. Provider MFA is guide advice; Cloudflare Access is unsourced here.", "components": ["apache", "authelia", "openidc"], "sources": ["apache:s99dcb49d86a4", "authelia:s1de7fe72d011", "openidc:s01e183d16f03"], "status": "REASONED"},
+    "mfa": {"text": "Basic is single-factor; Authelia v4.39.28 says Apache is unsupported for its proxy integration, and mod_auth_openidc v2.4.20.3 is an OIDC relying party. Provider MFA is guide advice; Cloudflare Access documents self-hosted application and MFA policy controls; fronting an Apache origin is this guide's suggested option and assessment.", "components": ["apache", "authelia", "openidc", "cloudflare-access"], "sources": ["apache:s99dcb49d86a4", "authelia:s1de7fe72d011", "openidc:s01e183d16f03", "cloudflare-access:sfddb92e438ca", "cloudflare-access:s7cafe1b17afd", "cloudflare-access:sdcac732541da"], "status": "REASONED"},
     "key-permissions": {"text": "Keep private keys root-owned and mode 0600.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED"},
     "verify-config": {"text": "Run apachectl configtest before service reload; no outcome is recorded.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED", "verify": [1]},
     "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["apache"], "sources": ["apache:sc07f97af99e3"], "status": "REASONED", "verify": [1]},
@@ -143,7 +152,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -159,7 +168,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | password-file: Create a bcrypt htpasswd file with cost 12 and -c only for its first user; httpd 2.4.69 defaults bcrypt cost to 5 and OWASP recommends at least 10 for legacy bcrypt. Both password-file paths are guide choices. | Apache HTTP Server 2.4; Debian apache2 packaging 2.4.69-1; Fedora f44 httpd packaging commit 6df70d39; httpd htpasswd 2.4.69; OWASP password storage cheat sheet commit 72865b1e | REASONED |
 | basic: AuthType Basic, AuthName, AuthUserFile and Require valid-user protect the chosen site/path over TLS; enumerate every public path. | Apache HTTP Server 2.4 | REASONED |
 | mtls: A separate machine-client 443 vhost requires a trusted certificate with SSLVerifyClient require and depth 2; SSLCACertificateFile is server/vhost scoped. | Apache HTTP Server 2.4 | REASONED |
-| mfa: Basic is single-factor; Authelia v4.39.28 says Apache is unsupported for its proxy integration, and mod_auth_openidc v2.4.20.3 is an OIDC relying party. Provider MFA is guide advice; Cloudflare Access is unsourced here. | Apache HTTP Server 2.4; Authelia proxy support v4.39.28; mod_auth_openidc v2.4.20.3 | REASONED |
+| mfa: Basic is single-factor; Authelia v4.39.28 says Apache is unsupported for its proxy integration, and mod_auth_openidc v2.4.20.3 is an OIDC relying party. Provider MFA is guide advice; Cloudflare Access documents self-hosted application and MFA policy controls; fronting an Apache origin is this guide's suggested option and assessment. | Apache HTTP Server 2.4; Authelia proxy support v4.39.28; mod_auth_openidc v2.4.20.3; Cloudflare Access documentation commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | key-permissions: Keep private keys root-owned and mode 0600. | Apache HTTP Server 2.4 | REASONED |
 | verify-config: Run apachectl configtest before service reload; no outcome is recorded. | Apache HTTP Server 2.4 | REASONED |
 | verify-redirect: HTTP should return 301 with an HTTPS Location. | Apache HTTP Server 2.4 | REASONED |
@@ -249,7 +258,7 @@ SSLVerifyClient require
 SSLVerifyDepth 2
 ```
 
-Basic authentication is single-factor. Authelia v4.39.28 says Apache is unsupported for its proxy integration (https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L112-L115). For human-facing sites, use [mod_auth_openidc](https://github.com/OpenIDC/mod_auth_openidc) v2.4.20.3 to make Apache an OIDC relying party (https://github.com/OpenIDC/mod_auth_openidc/blob/v2.4.20.3/README.md#L11-L20), and configure MFA at the identity provider as this guide advises. Cloudflare Access is another suggested option, but it is unsourced here; see [mfa.md](mfa.md).
+Basic authentication is single-factor. Authelia v4.39.28 says Apache is unsupported for its proxy integration (https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L112-L115). For human-facing sites, use [mod_auth_openidc](https://github.com/OpenIDC/mod_auth_openidc) v2.4.20.3 to make Apache an OIDC relying party (https://github.com/OpenIDC/mod_auth_openidc/blob/v2.4.20.3/README.md#L11-L20), and configure MFA at the identity provider as this guide advises. Cloudflare Access is another suggested option for fronting an Apache origin (this guide's assessment); its self-hosted application places an authentication layer between users and an origin server (https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16; https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54), and an Access policy can require MFA (https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81); see [mfa.md](mfa.md).
 
 ## 5. Verify (REASONED: all Verify scenarios follow the cited Apache documentation; this guide records no exposed/fixed deployment run. This metadata-only review has no authorized Apache deployment fixture.)
 
@@ -321,4 +330,6 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 - httpd 2.4.69 `htpasswd` options and bcrypt default: https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128 ; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L43-L45 ; https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295
 - OWASP cheat sheet at commit 72865b1e legacy bcrypt guidance: https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
 - Authelia v4.39.28 Apache proxy support: https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L112-L115
+- Cloudflare Access self-hosted application at commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104 (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16 ; https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54
+- Cloudflare Access MFA policy controls at commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104 (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81
 - mod_auth_openidc v2.4.20.3 relying-party description: https://github.com/OpenIDC/mod_auth_openidc/blob/v2.4.20.3/README.md#L11-L20

@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "02714557715f5ba131f06b85ab84e5ae3e2d47b2d1d2c3a8f648379d58655478",
+  "body_sha256": "e9c22b354b843b329f35ae0791c3e7d108a1905c9589bf0f76dd8700a46b4be9",
   "components": {
     "tls": {
       "name": "lighttpd TLS minimum",
@@ -68,6 +68,22 @@ version_basis: {
         "s436bdf5f1fb9": "https://packages.debian.org/trixie/apache2-utils"
       }
     },
+    "authelia": {
+      "name": "Authelia proxy support",
+      "basis": "v4.39.28",
+      "sources": {
+        "s77083bc8faa2": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L24-L36"
+      }
+    },
+    "cloudflare-access": {
+      "name": "Cloudflare Access documentation",
+      "basis": "commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "sfddb92e438ca": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16",
+        "s7cafe1b17afd": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54",
+        "sdcac732541da": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81"
+      }
+    },
     "fedora-package": {
       "name": "Fedora httpd-tools package",
       "basis": "unknown",
@@ -87,7 +103,7 @@ version_basis: {
     "redirect-code": {"text": "Set url.redirect-code to 308 explicitly on versions before 1.4.75.", "components": ["redirect"], "sources": ["redirect:s6de629323c64"], "status": "REASONED"},
     "basic-auth": {"text": "Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable.", "components": ["docs"], "sources": ["docs:s1dbd1ce27da5"], "status": "REASONED"},
     "password-file": {"text": "Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally, with other hashes of at least 13 characters checked through crypt() when built with crypt support; under USE_LIB_CRYPTO_MD4, the $1+ntlm$ path derives an NTLM hash and calls crypt() with that derived value and a $1$ salt. Check the build and platform's accepted hashes before choosing a flag; this check is this guide's compatibility advice.", "components": ["docs", "authn-source", "htpasswd-tool", "debian-package", "fedora-package"], "sources": ["docs:s1dbd1ce27da5", "authn-source:s2c11c0fbc0ca", "authn-source:se971effb489f", "htpasswd-tool:scde9004bb967", "debian-package:s436bdf5f1fb9", "fedora-package:s919088d03a5e"], "status": "REASONED"},
-    "mfa": {"text": "Basic authentication is single-factor; use an MFA-capable front proxy. The stated Authelia support-list exclusion and Cloudflare Access option lack direct Sources entries.", "components": ["docs"], "sources": ["docs:s1dbd1ce27da5"], "status": "REASONED"},
+    "mfa": {"text": "Basic authentication is single-factor; add MFA by fronting this service (this guide's requirement). Authelia v4.39.28's complete supported-proxy list has no lighttpd entry (this guide's inference from the table); Cloudflare Access documents self-hosted application and MFA policy controls; applying them to lighttpd is this guide's assessment.", "components": ["docs", "authelia", "cloudflare-access"], "sources": ["docs:s1dbd1ce27da5", "authelia:s77083bc8faa2", "cloudflare-access:sfddb92e438ca", "cloudflare-access:s7cafe1b17afd", "cloudflare-access:sdcac732541da"], "status": "REASONED"},
     "verify-config": {"text": "lighttpd -tt checks /etc/lighttpd/lighttpd.conf before systemctl reload; command-specific and service-manager sources are not recorded.", "components": ["docs"], "sources": ["docs:s6d5666b862a0"], "status": "REASONED", "verify": [1]},
     "verify-redirect": {"text": "The HTTP header request should show a redirect to HTTPS; these are read-and-judge status checks.", "components": ["docs"], "sources": ["docs:s6de629323c64"], "status": "REASONED", "verify": [1]},
     "verify-auth": {"text": "An HTTPS request without credentials should return 401 once authentication is enabled.", "components": ["docs"], "sources": ["docs:s1dbd1ce27da5"], "status": "REASONED", "verify": [1]},
@@ -103,7 +119,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -117,7 +133,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | redirect-code: Set url.redirect-code to 308 explicitly on versions before 1.4.75. | lighttpd redirect default transition 1.4.75 | REASONED |
 | basic-auth: Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable. | lighttpd documentation unknown | REASONED |
 | password-file: Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally, with other hashes of at least 13 characters checked through crypt() when built with crypt support; under USE_LIB_CRYPTO_MD4, the $1+ntlm$ path derives an NTLM hash and calls crypt() with that derived value and a $1$ salt. Check the build and platform's accepted hashes before choosing a flag; this check is this guide's compatibility advice. | lighttpd documentation unknown; lighttpd file authentication source 1.4.75; Apache htpasswd manual 2.4; Debian apache2-utils package trixie; Fedora httpd-tools package unknown | REASONED |
-| mfa: Basic authentication is single-factor; use an MFA-capable front proxy. The stated Authelia support-list exclusion and Cloudflare Access option lack direct Sources entries. | lighttpd documentation unknown | REASONED |
+| mfa: Basic authentication is single-factor; add MFA by fronting this service (this guide's requirement). Authelia v4.39.28's complete supported-proxy list has no lighttpd entry (this guide's inference from the table); Cloudflare Access documents self-hosted application and MFA policy controls; applying them to lighttpd is this guide's assessment. | lighttpd documentation unknown; Authelia proxy support v4.39.28; Cloudflare Access documentation commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | verify-config: lighttpd -tt checks /etc/lighttpd/lighttpd.conf before systemctl reload; command-specific and service-manager sources are not recorded. | lighttpd documentation unknown | REASONED |
 | verify-redirect: The HTTP header request should show a redirect to HTTPS; these are read-and-judge status checks. | lighttpd documentation unknown | REASONED |
 | verify-auth: An HTTPS request without credentials should return 401 once authentication is enabled. | lighttpd documentation unknown | REASONED |
@@ -188,7 +204,7 @@ auth.require = ( "/" =>
 
 Create the user file with Apache's `htpasswd` (Debian `apache2-utils`; for Fedora, use `httpd-tools` as this guide's package assessment). In lighttpd 1.4.75, the htpasswd backend reads `username:stored-hash` entries; it checks `{SHA}` SHA-1 and `$apr1$` hashes internally and, when built with `crypt()` support, checks other stored hashes of at least 13 characters through the platform's `crypt()`, except that, when built with MD4 support, the `$1+ntlm$` path derives an NTLM hash and calls `crypt()` with the derived value and a `$1$` salt. Check the build and platform's accepted hash formats before choosing an `htpasswd` flag; this is the guide's compatibility advice. Check the lighttpd mod_auth documentation and Apache `htpasswd` manual in Sources for the supported hash formats.
 
-Basic authentication is single-factor, and lighttpd is absent from Authelia's supported-proxy list. Add MFA by fronting the service with Cloudflare Access ([cloudflare.md](cloudflare.md)) or an MFA-capable proxy; options in [mfa.md](mfa.md).
+Basic authentication is single-factor, and this guide finds no lighttpd entry in Authelia v4.39.28's complete supported-proxy list (https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L24-L36). Add MFA by fronting the service with Cloudflare Access ([cloudflare.md](cloudflare.md)) or an MFA-capable proxy; options in [mfa.md](mfa.md). Cloudflare documents an Access application as an authentication layer between users and a self-hosted origin (https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16; https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54) and an Access policy that can require MFA (https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81). Applying these controls to a lighttpd origin is this guide's assessment.
 
 ## 4. Verify
 
@@ -239,4 +255,7 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
 - lighttpd 1.4.75 htpasswd password check source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L613-L740
 - Apache HTTP Server 2.4 `htpasswd` manual (checked October 2026): https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 - Debian trixie `apache2-utils` package (checked October 2026): https://packages.debian.org/trixie/apache2-utils
+- Authelia v4.39.28 supported-proxy list, complete table (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L24-L36
+- Cloudflare Access self-hosted application at commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104 (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16 ; https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54
+- Cloudflare Access MFA policy controls at commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104 (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81
 - Fedora `httpd-tools` package (checked October 2026): https://packages.fedoraproject.org/pkgs/httpd/httpd-tools/

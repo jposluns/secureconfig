@@ -52,8 +52,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.199 | `realtime-webhooks.md`: proxy-limits: pin vendor sources for the proxy capability summaries beyond the cited Caddy timeouts, nginx, Traefik and HAProxy. (M, M) | `[gap]` |
-| 1.200 | `apache.md`: mfa: cite Cloudflare Access application and policy controls for the suggested fronting option. (M, M) | `[gap]` |
-| 1.201 | `lighttpd.md`: mfa: cite Authelia supported-proxy list and Cloudflare Access for the stated exclusion and MFA fronting option. (M, M) | `[gap]` |
 | 1.202 | `lighttpd.md`: verify-config and verify-host: cite lighttpd command/service-manager behaviour and Apache SNI selection for the comparison. (M, M) | `[gap]` |
 | 1.203 | `headers.md`: placement: cite proxy header directives and generic static-host `_headers` handling for the stated controls. (M, M) | `[gap]` |
 | 1.204 | `headers.md`: all-responses: cite in `headers.md` Sources the nginx `add_header` inheritance source pinned in `nginx.md` for this response-header claim. (M, M) | `[gap]` |
