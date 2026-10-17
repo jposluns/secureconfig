@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "7c194520dabce8cb45811c527184324dfd4d75554693a76f25fe95dc7acb8192",
+  "body_sha256": "dcc9c78474b8927228b664fb96fa4def386a335d01967a4ac145c421d9c7933d",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -189,7 +189,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | dns-manual: certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; the Certbot v2.3.0 guide says certificates created with --manual do not support automatic renewal without a --manual-auth-hook that automates the challenge. | Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
 <!-- version-basis:end -->
 
-Publicly trusted certificates are free through ACME certificate authorities such as Let's Encrypt and ZeroSSL. Browsers and libraries accept them without any client-side configuration, which this guide assesses as the correct choice for every service with a public DNS name. Use [self-signed.md](self-signed.md) only when no public domain exists; a host that cannot accept inbound connections can still get a publicly trusted certificate through the DNS-01 challenge (below), or serve behind [cloudflare.md](cloudflare.md).
+Publicly trusted certificates are free through ACME certificate authorities such as Let's Encrypt and ZeroSSL. Browsers and libraries accept them without any client-side configuration, which is why this guide assesses them as the correct choice for every service with a public DNS name. Use [self-signed.md](self-signed.md) only when no public domain exists; a host that cannot accept inbound connections can still get a publicly trusted certificate through the DNS-01 challenge (below), or serve behind [cloudflare.md](cloudflare.md).
 
 ## Prerequisites
 
@@ -250,7 +250,7 @@ Certificates land in stable paths that server configuration should reference dir
 Let's Encrypt certificates are valid for 90 days at the time of writing, so renewal must be automated. The Certbot v2.3.0 guide says most installations come with a scheduled `certbot renew` task and says that, on Linux and BSD, you can check cron or systemd timers if unsure. Confirm that your installation (package and snap installs included) has a working scheduled `certbot renew` task, and reload the server after each renewal:
 
 ```bash
-sudo systemctl list-timers | grep -i certbot       # check the timer; for cron check /etc/crontab or /etc/cron.*/*
+sudo systemctl list-timers | grep -i certbot       # a certbot timer must be listed; for cron, /etc/crontab or /etc/cron.*/* must contain certbot renew
 sudo certbot renew --dry-run --run-deploy-hooks    # test renewal and the reload hook together
 ```
 
