@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `agent-builders.md` cites the Langflow 1.12.6 settings source, server start-up code and pinned image Dockerfiles for the port, host, native TLS, secure-cookie, auto-login and superuser-password defaults, labels the proxy and container guidance as this guide's assessment, and records the rolling documentation as unversioned (row 1.179) (#608)
 - `llm-observability.md` cites the Collector Contrib `bearertokenauthextension` at the pinned commit for its `token` and `filename` options and their precedence, file-line parsing, configurable header and scheme defaults, and HTTP and gRPC transport, and the incoming `Authenticate` header and metadata check (row 1.179) (#606)
 - `ai-infra-services.md` cites the Onyx v4.3.13 and v4.4.0 tag trees for `AUTH_TYPE` selecting authentication in v4.3.13 and being read only for migrations, a one-time legacy SAML import at startup, and a stale-value warning in v4.4.0, labels that boundary as an inference from the two tags whose identity rests on their names, and records the planned v4.5 removal as unverified (row 1.179) (#607)
 - `self-signed.md` cites RFC 9525 for DNS and IP identity matching, its prohibition on using the subject Common Name, and what a client should do on a mismatch, keeps the SAN-coverage requirement, and cites the Debian trixie, Ubuntu noble and RHEL 9 pages for the trust-store locations and update commands, with Fedora labelled as this guide's assessment (row 1.179) (#605)
