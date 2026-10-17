@@ -24579,7 +24579,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | remotes: OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist. | Ollama v0.34.2 | REASONED |
 | diagnostics: Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts. | Ollama v0.34.2; Ollama documentation (rolling) unknown | REASONED |
 | request-logs: Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup. | Ollama v0.34.2 | REASONED |
-| profiling: No metrics route was found in the main router; shipped pprof availability remains unestablished and cannot be inferred from debug settings. | Ollama v0.34.2 | REASONED |
+| profiling: No metrics route was found in the main router; this guide's review of first-party v0.34.2 Go source found no net/http/pprof import or explicit profiling registration. Dependencies and shipped-binary pprof availability remain unverified and cannot be inferred from debug settings. | Ollama v0.34.2 | REASONED |
 | verify-inventory: Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation. | Ollama v0.34.2; Docker Engine localhost boundary 28.0; systemd v257 | REASONED |
 | verify-bypass: HTTP means direct 11434 answered; fixed refusal needs the real remote path plus successful proxy inference; local errors are inconclusive. | Ollama v0.34.2; curl unknown | REASONED |
 | verify-auth: Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient. | nginx unknown; Ollama v0.34.2; curl unknown | REASONED |
@@ -24988,7 +24988,7 @@ Environment="OLLAMA_DEBUG_LOG_REQUESTS=false"
 
 Request debugging writes request bodies and replay scripts into a temporary directory. Disabling it prevents new captures; existing captures still need a retention and deletion policy. Protect diagnostic files and ensure proxy/application logging does not independently capture credentials or prompts. See [logging configuration](https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go) and the [request logger](https://github.com/ollama/ollama/blob/v0.34.2/server/inference_request_log.go).
 
-No `/metrics` registration appears in the reviewed main router; do not assume a native metrics port. The HTTP server deliberately uses `DefaultServeMux` with a pprof comment, but this review did not establish whether the shipped binary links and registers profiling handlers. Include `/debug/pprof/` in live inventory and public-denial checks. Do not claim either default availability or that `OLLAMA_DEBUG=0` disables profiling. See [HTTP server construction](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go).
+No `/metrics` registration appears in the reviewed main router; do not assume a native metrics port. The [CLI entry point](https://github.com/ollama/ollama/blob/v0.34.2/main.go#L11-L13) runs the [serve command](https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2469-L2475), whose [server path](https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2093-L2109) calls `server.Serve`. That function [attaches the generated router at `/`](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1987-L1992) on `http.DefaultServeMux`, creates an HTTP server with a [nil `Handler` and a pprof comment](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2001-L2011), and [serves the listener](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2052-L2057). The [server import block](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L3-L54) has no `net/http/pprof` import. This guide's review of the first-party v0.34.2 Go tree found no `net/http/pprof` import or explicit profiling registration; that search does not cover dependencies or a shipped binary. Shipped pprof availability remains unestablished; the comment alone does not establish registration. Include `/debug/pprof/` in live inventory and public-denial checks. Do not claim either default availability or that `OLLAMA_DEBUG=0` disables profiling.
 
 **Exposed/fixed comparison, REASONED:** no runtime, diagnostic files, or live profiling inventory is available here. An exposed deployment returns operational metadata and may capture request bodies; the fixed public boundary denies diagnostics, administrators retain necessary visibility, and disabled request logging creates no new capture.
 
@@ -25359,7 +25359,7 @@ Use V3's probe with valid public inference credentials and then through the priv
 
 Exposed: registered operational routes disclose their responses through the catch-all boundary. Fixed: public requests return 404 without reaching upstream, while private administrative diagnostics still work. Pair the denial set with successful public chat.
 
-For `/debug/pprof/`, first observe the actual private binary. If no handler exists, record that absence; do not call it proof that debug settings disabled profiling. If it exists, retain the observed response and demonstrate public denial.
+For `/debug/pprof/`, first observe the actual private binary; this guide's source trace does not establish its response. If no handler exists, record that absence; do not call it proof that debug settings disabled profiling. If it exists, retain the observed response and demonstrate public denial.
 
 For logging, use an isolated service and a unique non-sensitive prompt. With request debugging deliberately enabled only for the comparison, send one completed V3 request and inspect the service's actual temporary-directory namespace for `ollama-request-logs-*`, request bodies, and replay scripts. Then apply C9, restart, send another completed request, and verify that no new request capture is created. Account for a service-specific `TMPDIR` or private temporary namespace. Retain timestamps and file evidence without sharing captured prompts or credentials, then clean up the test captures.
 
@@ -25394,6 +25394,13 @@ These commands validate configuration acceptance; they do not prove authenticati
 - HTTP serving, routes, and host middleware: https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go
 - Client-side outbound signing: https://github.com/ollama/ollama/blob/v0.34.2/api/client.go
 - Server startup and administrative import: https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go
+- CLI entry point (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/main.go#L11-L13
+- Serve command registration (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2469-L2475
+- Serve command server path (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2093-L2109
+- Router attachment (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1987-L1992
+- HTTP server handler and pprof comment (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2001-L2011
+- HTTP listener serve call (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2052-L2057
+- HTTP server import block (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L3-L54
 - Create-file validation: https://github.com/ollama/ollama/blob/v0.34.2/server/create.go
 - Blob-path validation: https://github.com/ollama/ollama/blob/v0.34.2/manifest/paths.go
 - Registry transfers and redirect restrictions: https://github.com/ollama/ollama/blob/v0.34.2/server/images.go
