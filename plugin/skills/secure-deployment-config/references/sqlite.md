@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "b5d9750c2b2d88d7ce071ca053651b9bacb044a869224ae06591a9b815d0cd97",
+  "body_sha256": "8c0ef607f5d25f70aa7e6435a8048a7bc129cab761d969aaabc5b9fbccb91f34",
   "components": {
     "see": {
       "name": "SQLite Encryption Extension",
@@ -253,7 +253,7 @@ Keep the database, its sidecars, temporary files, exports, and backups outside e
 
 ## 2. Keep the file out of git
 
-A committed `.db` file ships every row to anyone who clones the repository, permanently, even after a later commit deletes it. This warning is this guide's assessment based on Git's documented index and working-tree removal and inspectable commit logs. Add `*.db`, `*.sqlite`, `*.sqlite3`, and their sidecar files to `.gitignore` before the first commit: the WAL, shared-memory, and rollback-journal files take the full database filename plus `-wal`, `-shm`, or `-journal`, so each extension needs its own trio (`*.db-wal`, `*.db-shm`, `*.db-journal`, `*.sqlite-wal`, `*.sqlite-shm`, `*.sqlite-journal`, `*.sqlite3-wal`, `*.sqlite3-shm`, `*.sqlite3-journal`). Ignore rules do not remove already-tracked files, so scan the index and history and handle a copy that already leaked per [secrets.md](secrets.md).
+A committed `.db` file ships every row to anyone who clones the repository, permanently, even after a later commit deletes it. This warning is this guide's assessment based on Git's documented removal from the index alone or from the index and working tree and inspectable commit logs. Add `*.db`, `*.sqlite`, `*.sqlite3`, and their sidecar files to `.gitignore` before the first commit: the WAL, shared-memory, and rollback-journal files take the full database filename plus `-wal`, `-shm`, or `-journal`, so each extension needs its own trio (`*.db-wal`, `*.db-shm`, `*.db-journal`, `*.sqlite-wal`, `*.sqlite-shm`, `*.sqlite-journal`, `*.sqlite3-wal`, `*.sqlite3-shm`, `*.sqlite3-journal`). Ignore rules do not remove already-tracked files, so scan the index and history and handle a copy that already leaked per [secrets.md](secrets.md).
 
 ## 3. File permissions
 
@@ -489,6 +489,6 @@ Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests 
 - Litestream configuration (metrics addr, MCP mcp-addr) (Litestream MCP listener in v0.5.0 and later): https://litestream.io/reference/config/
 - Turso SQL over HTTP (`/v2/pipeline`, bearer authentication): https://docs.turso.tech/sdk/http/reference
 - Git v2.56.0 `gitignore` documentation (checked October 2026; tracked files are unaffected): https://github.com/git/git/blob/v2.56.0/Documentation/gitignore.adoc#L15-L18
-- Git v2.56.0 `git-rm` documentation (checked October 2026; index and working-tree removal): https://github.com/git/git/blob/v2.56.0/Documentation/git-rm.adoc#L17-L28
+- Git v2.56.0 `git-rm` documentation (checked October 2026; removal from the index alone or from the index and working tree): https://github.com/git/git/blob/v2.56.0/Documentation/git-rm.adoc#L17-L28
 - Git v2.56.0 `git-log` documentation (checked October 2026; shows commit logs): https://github.com/git/git/blob/v2.56.0/Documentation/git-log.adoc#L16-L16
 - GNU Coreutils v9.7 `stat` manual (checked October 2026; GNU syntax): [`-c` format](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L12989-L12995), [`%a` octal permissions](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13046), [`%n` file name](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13062), and [`%U` owner name](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13073).
