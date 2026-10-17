@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `free-certificates.md` cites Caddy v2.11.4's ACME issuer and its pinned certmagic v0.25.3 for Caddy enabling the TLS-ALPN-01 solver when DNS-01 is not configured and TLS-ALPN-01 is not disabled, and for Caddy being able to use an alternate local port if port 443 forwards to it (row 1.179) (#613)
 - `nginx.md` cites the Authelia v4.39.28 and oauth2-proxy v7.15.4 nginx `auth_request` integration documentation and the Cloudflare Access web-application page behind its MFA requirement, labels whether a given installation enforces MFA as this guide's assessment, and keeps the requirement (row 1.179) (#614)
 - `n8n.md` cites the pinned n8n@2.0.0 and n8n@1.123.85 `NODES_EXCLUDE` defaults (Execute Command and Local File Trigger excluded at 2.0.0, none on the 1.x line at 1.123.85), labels the 2.0 default boundary as this guide's inference and records the first introducing release as unverified (row 1.179) (#612)
 - `surrealdb.md` cites the GNU Bash 5.3 manual for a prefix assignment reaching only that command's environment, and the Linux man-pages 6.19 `proc_pid_environ(5)` and `ptrace(2)` pages for `/proc/<pid>/environ` holding the initial environment behind a ptrace access-mode check; who can read it is labelled as this guide's assessment, and the instruction to treat the password as exposed stays (row 1.179) (#610)
