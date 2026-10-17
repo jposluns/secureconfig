@@ -137,8 +137,10 @@ Schema 1 requires exactly these top-level fields:
   list or quote markers). That includes a label that spans lines, a label followed by `:` with
   the destination on a later line, and `[note]: text`, which is a definition because `text`
   is a valid destination. So no bracketed label can become a link. Sources cite URLs only as
-  bare URLs, `<autolinks>` or inline links (bracketed text, then the URL in parentheses). In
-  an enrolled guide's Sources, outside fences, every line closes what it opens: each backtick
+  bare URLs, `<autolinks>` or inline links (bracketed text, then the URL in parentheses). Use an
+  autolink or inline-link destination for body URLs containing `__`; `tools/check_bare_urls.py`
+  enforces this across tracked root Markdown files. In an enrolled guide's Sources, outside
+  fences, every line closes what it opens: each backtick
   lies in a code span that ends on that line, and outside code spans each opening bracket is
   closed on that line, with no stray closing bracket. A backslash-escaped bracket, parenthesis
   or backtick fails on any Sources line below the heading, outside fences and HTML comments,
