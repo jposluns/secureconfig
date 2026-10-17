@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "21da71d3627e9da9d24eb223894e931e348cbec4640fcbad75a37be0102780df",
+  "body_sha256": "170c6aa4d89db0abeb6e641f1834727b627be39997f1e8c5011a3d391a49dbbb",
   "components": {
     "mcp": {
       "name": "MCP",
@@ -14,6 +14,20 @@ version_basis: {
         "s117c3edbfcd7": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/authorization-server-discovery",
         "s5655f61af2a0": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration",
         "s4903497743e8": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices"
+      }
+    },
+    "mcp-2025-06-18": {
+      "name": "MCP 2025-06-18 authorization",
+      "basis": "86f6e0c675afea9a8f233e09b6faf566b126086c",
+      "sources": {
+        "sf1432398aebf": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/86f6e0c675afea9a8f233e09b6faf566b126086c/docs/specification/2025-06-18/basic/authorization.mdx#L58-L59"
+      }
+    },
+    "mcp-2025-11-25": {
+      "name": "MCP 2025-11-25 authorization",
+      "basis": "86f6e0c675afea9a8f233e09b6faf566b126086c",
+      "sources": {
+        "s9d3e60a1183b": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/86f6e0c675afea9a8f233e09b6faf566b126086c/docs/specification/2025-11-25/basic/authorization.mdx#L198-L209"
       }
     },
     "rfc": {
@@ -70,7 +84,7 @@ version_basis: {
     "registration-order": {"text": "Clients SHOULD support CIMD and prefer available preregistration, then CIMD, then optional deprecated DCR.", "components": ["mcp"], "sources": ["mcp:s5655f61af2a0"], "status": "REASONED"},
     "application-type": {"text": "DCR MUST specify appropriate application_type: native SHOULD cover desktop/mobile/CLI/localhost apps; web SHOULD cover remote browser apps.", "components": ["mcp"], "sources": ["mcp:s5655f61af2a0"], "status": "REASONED"},
     "web-default": {"text": "Omitted application_type defaults to web; incompatible native redirects can be rejected under provider policy, without justification for weakening validation.", "components": ["oidc"], "sources": ["oidc:s06760d0c8dc0"], "status": "REASONED"},
-    "registration-history": {"text": "Body records DCR SHOULD support in 2025-06-18 and CIMD priority by 2025-11-25; Sources pins only the current MCP revision.", "components": ["mcp"], "sources": ["mcp:s5655f61af2a0"], "status": "REASONED"},
+    "registration-history": {"text": "MCP 2025-06-18 said authorization servers and MCP clients SHOULD support DCR; MCP 2025-11-25 put CIMD before DCR after available pre-registration; carrying revision labels is this guide's advice.", "components": ["mcp", "mcp-2025-06-18", "mcp-2025-11-25"], "sources": ["mcp:s5655f61af2a0", "mcp-2025-06-18:sf1432398aebf", "mcp-2025-11-25:s9d3e60a1183b"], "status": "REASONED"},
     "refresh-confidential": {"text": "Keep refresh tokens confidential in transit/storage, including public clients; send only to issuing-server token/revocation endpoints over authenticated TLS.", "components": ["oauth", "rfc"], "sources": ["oauth:sd99e74137366", "rfc:s45a67943085b"], "status": "REASONED"},
     "refresh-storage": {"text": "Keep refresh tokens out of logs, URLs, repositories and public metadata; use protected storage or native credential storage.", "components": ["oauth"], "sources": ["oauth:sd99e74137366"], "status": "REASONED"},
     "refresh-request": {"text": "SHOULD include refresh_token grant type; MAY request advertised offline_access; MUST NOT assume refresh-token issuance.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7"], "status": "REASONED"},
@@ -113,7 +127,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | registration-order: Clients SHOULD support CIMD and prefer available preregistration, then CIMD, then optional deprecated DCR. | MCP 2026-07-28 | REASONED |
 | application-type: DCR MUST specify appropriate application_type: native SHOULD cover desktop/mobile/CLI/localhost apps; web SHOULD cover remote browser apps. | MCP 2026-07-28 | REASONED |
 | web-default: Omitted application_type defaults to web; incompatible native redirects can be rejected under provider policy, without justification for weakening validation. | OpenID Connect 1.0 errata 2 | REASONED |
-| registration-history: Body records DCR SHOULD support in 2025-06-18 and CIMD priority by 2025-11-25; Sources pins only the current MCP revision. | MCP 2026-07-28 | REASONED |
+| registration-history: MCP 2025-06-18 said authorization servers and MCP clients SHOULD support DCR; MCP 2025-11-25 put CIMD before DCR after available pre-registration; carrying revision labels is this guide's advice. | MCP 2026-07-28; MCP 2025-06-18 authorization 86f6e0c675afea9a8f233e09b6faf566b126086c; MCP 2025-11-25 authorization 86f6e0c675afea9a8f233e09b6faf566b126086c | REASONED |
 | refresh-confidential: Keep refresh tokens confidential in transit/storage, including public clients; send only to issuing-server token/revocation endpoints over authenticated TLS. | OAuth 2.1 draft draft-ietf-oauth-v2-1-14; OAuth and HTTP RFCs unknown | REASONED |
 | refresh-storage: Keep refresh tokens out of logs, URLs, repositories and public metadata; use protected storage or native credential storage. | OAuth 2.1 draft draft-ietf-oauth-v2-1-14 | REASONED |
 | refresh-request: SHOULD include refresh_token grant type; MAY request advertised offline_access; MUST NOT assume refresh-token issuance. | MCP 2026-07-28 | REASONED |
@@ -168,7 +182,7 @@ MCP 2026-07-28 prefers **Client ID Metadata Documents** (CIMD, `draft-ietf-oauth
 
 Dynamic Client Registration (DCR) remains a **MAY**, deprecated but kept for compatibility. When you fall back to it, MCP requires an explicit application type: "MCP clients MUST specify an appropriate `application_type` during Dynamic Client Registration." MCP's guidance is to use `native` (a SHOULD) for desktop, mobile, CLI, and localhost-hosted applications, and `web` (a SHOULD) for remotely hosted browser applications. This matters because the default is not neutral: OpenID Connect registration says "The default, if omitted, is `web`", and `web` implies redirect-URI constraints that can conflict with a native client's loopback or custom-scheme redirect, so under a provider policy that enforces them an omitted `application_type` can be rejected. Supply the type explicitly and handle a rejection by fixing the registration, never by loosening redirect validation to make it pass.
 
-(Version boundary: MCP 2025-06-18 said its clients and authorization servers "SHOULD support the OAuth 2.0 Dynamic Client Registration Protocol"; the CIMD-before-DCR priority order was already present by 2025-11-25, so it is not new in 2026-07-28. Carry the revision label when you cite it.)
+(Version boundary: MCP 2025-06-18 said authorization servers and MCP clients "**SHOULD** support the OAuth 2.0 Dynamic Client Registration Protocol" (https://github.com/modelcontextprotocol/modelcontextprotocol/blob/86f6e0c675afea9a8f233e09b6faf566b126086c/docs/specification/2025-06-18/basic/authorization.mdx#L58-L59); MCP 2025-11-25 already set a **SHOULD** priority order for clients supporting all options: available pre-registration, then CIMD when advertised, then DCR as a fallback when supported, then asking the user for client information (https://github.com/modelcontextprotocol/modelcontextprotocol/blob/86f6e0c675afea9a8f233e09b6faf566b126086c/docs/specification/2025-11-25/basic/authorization.mdx#L198-L209), so that order is not new in 2026-07-28. This guide advises carrying the revision label when citing that history.)
 
 ## 4. Keep refresh tokens confidential, and request `offline_access` correctly
 
@@ -273,6 +287,8 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 - MCP Authorization Security Considerations, 2026-07-28 (PKCE MUSTs, HTTPS endpoints and redirect URIs): https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/security-considerations
 - MCP Authorization Server Discovery, 2026-07-28 (`issuer` identity requirement): https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/authorization-server-discovery
 - MCP Client Registration, 2026-07-28 (CIMD SHOULD, mechanism preference, DCR `application_type` MUST): https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration
+- MCP Authorization, 2025-06-18 (authorization servers and MCP clients SHOULD support DCR; checked October 2026): https://github.com/modelcontextprotocol/modelcontextprotocol/blob/86f6e0c675afea9a8f233e09b6faf566b126086c/docs/specification/2025-06-18/basic/authorization.mdx#L58-L59
+- MCP Authorization, 2025-11-25 (registration mechanisms and their SHOULD priority order; checked October 2026): https://github.com/modelcontextprotocol/modelcontextprotocol/blob/86f6e0c675afea9a8f233e09b6faf566b126086c/docs/specification/2025-11-25/basic/authorization.mdx#L198-L209
 - MCP Security Best Practices, 2026-07-28 (SSRF MUST for server-deployed clients): https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices
 - RFC 9207 section 2.4, OAuth 2.0 Authorization Server Issuer Identification (`iss` simple string comparison, reject on mismatch): https://www.rfc-editor.org/rfc/rfc9207.html#section-2.4
 - RFC 9700 section 3, section 4.2, section 4.2.4, and section 4.4.2, OAuth 2.0 Security Best Current Practice (attacker-accessible stored or logged URLs; Referer leakage and its suppression; single-use `state`; mix-up attacks): https://www.rfc-editor.org/rfc/rfc9700.html#section-4.2.4
