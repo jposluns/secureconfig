@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "aa419cfcbcfa74f29059cff14b991c8dbe5022558ecf378eb3ce10e8f84d12b6",
+  "body_sha256": "2e6955fea4d5501a2264d41abcb84bc91aed0e3fc1a0bd21e950a753762740b2",
   "components": {
     "python": {
       "name": "Python http.server documentation",
@@ -105,6 +105,46 @@ version_basis: {
         "s21c6be6f6df4": "https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239",
         "s17c5a0a7ffb2": "https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L241-L243"
       }
+    },
+    "slowapi": {
+      "name": "slowapi source",
+      "basis": "v0.1.10",
+      "sources": {
+        "sf150aa58aa31": "https://github.com/laurentS/slowapi/blob/v0.1.10/README.md#L1-L3",
+        "s4ca3e1e80817": "https://github.com/laurentS/slowapi/blob/v0.1.10/README.md#L24-L50"
+      }
+    },
+    "httpx": {
+      "name": "HTTPX source and documentation",
+      "basis": "0.28.1",
+      "sources": {
+        "s52608d6c5e47": "https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L3-L7",
+        "sd33b79237122": "https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L9-L53",
+        "s928d85a8d13e": "https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L12-L17",
+        "s3734fbccdf40": "https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L72-L86",
+        "s30dd14bf172e": "https://github.com/encode/httpx/blob/0.28.1/httpx/_config.py#L23-L40",
+        "s4a1f3b43f184": "https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L133-L154",
+        "sc5a61a9b2f64": "https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L278-L298"
+      }
+    },
+    "cpython-ssl": {
+      "name": "CPython ssl source and documentation",
+      "basis": "v3.14.8",
+      "sources": {
+        "sbac049853cda": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L390-L405",
+        "s6dcc06feaaaf": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L542-L548",
+        "s4d7f143c9456": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L730-L736",
+        "s4a1cd173d596": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L744-L754",
+        "s79d6191e12eb": "https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L421-L433",
+        "s82c72b9a971a": "https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L1642-L1649"
+      }
+    },
+    "openssl": {
+      "name": "OpenSSL documentation",
+      "basis": "openssl-4.0.3",
+      "sources": {
+        "s592eb65718de": "https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man3/SSL_CTX_load_verify_locations.pod#L39-L49"
+      }
     }
   },
   "claims": {
@@ -121,10 +161,10 @@ version_basis: {
     "secrets": {"text": "Generate secrets.token_urlsafe(32) and load secrets from the environment; the choice of 32 bytes is not covered by listed Sources.", "components": ["django", "stdlib-docs"], "sources": ["django:s7289e1c111ae", "stdlib-docs:s971d128efc65", "stdlib-docs:sdad376a711c3"], "status": "REASONED"},
     "credential-extraction": {"text": "FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry.", "components": ["fastapi"], "sources": ["fastapi:s077aff608a5c"], "status": "REASONED"},
     "oidc": {"text": "OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately.", "components": ["fastapi", "oidc-stub"], "sources": ["fastapi:s077aff608a5c", "oidc-stub:s876e3d51e7ac"], "status": "REASONED"},
-    "login-limit": {"text": "Rate-limit login at the proxy or with slowapi; no listed source documents that limiter.", "components": ["fastapi"], "sources": ["fastapi:s077aff608a5c"], "status": "REASONED"},
+    "login-limit": {"text": "Rate-limiting login routes and a proxy-level limit are this guide's advice. slowapi v0.1.10 documents limits for Starlette/FastAPI HTTP endpoints; endpoints using its limit decorator must take an explicit request argument, and WebSocket endpoints are not supported.", "components": ["fastapi", "slowapi"], "sources": ["fastapi:s077aff608a5c", "slowapi:sf150aa58aa31", "slowapi:s4ca3e1e80817"], "status": "REASONED"},
     "mfa": {"text": "Use pyotp and qrcode, django-otp for Django, or linked MFA guidance.", "components": ["django", "pyotp", "qrcode", "django-otp"], "sources": ["django:s7289e1c111ae", "pyotp:sc118b8ed3bdd", "qrcode:s8247ddfed3d3", "django-otp:sa5c0f7097219"], "status": "REASONED"},
-    "client-validation": {"text": "Never ship requests/httpx verify=False or ssl._create_unverified_context; the httpx client API and ssl._create_unverified_context lack listed Sources.", "components": ["python", "requests"], "sources": ["python:s8fae94406709", "requests:s17c5a0a7ffb2"], "status": "REASONED"},
-    "client-ca": {"text": "REQUESTS_CA_BUNDLE selects a requests CA and SSL_CERT_FILE selects an httpx/ssl CA; the SSL_CERT_FILE variable lacks a listed source.", "components": ["python", "requests"], "sources": ["python:s8fae94406709", "requests:s21c6be6f6df4"], "status": "REASONED"},
+    "client-validation": {"text": "Never ship requests/httpx verify=False or ssl._create_unverified_context; HTTPX documents verify=False and CPython defines _create_unverified_context. The prohibition is this guide's advice.", "components": ["python", "requests", "httpx", "cpython-ssl"], "sources": ["python:s8fae94406709", "requests:s17c5a0a7ffb2", "httpx:s928d85a8d13e", "cpython-ssl:s4a1cd173d596"], "status": "REASONED"},
+    "client-ca": {"text": "REQUESTS_CA_BUNDLE selects a requests CA. HTTPX 0.28.1's transport passes verify and trust_env to create_ssl_context, which reads SSL_CERT_FILE when verify=True and trust_env=True; its SSL guide contradicts that source. Its environment guide says environment variables are used by default but does not list SSL_CERT_FILE. CPython's ssl module reports OpenSSL default verify paths; with no CA specified and verification enabled, ssl.create_default_context() tries to load default CAs, which may fail silently. OpenSSL names SSL_CERT_FILE as an environment override for its default CA file; CPython's cited files do not name that variable, so whether a given ssl configuration uses it remains unverified. The export and explicit-context choices are this guide's advice.", "components": ["python", "requests", "httpx", "cpython-ssl", "openssl"], "sources": ["python:s8fae94406709", "requests:s21c6be6f6df4", "httpx:s52608d6c5e47", "httpx:sd33b79237122", "httpx:s3734fbccdf40", "httpx:s30dd14bf172e", "httpx:s4a1f3b43f184", "httpx:sc5a61a9b2f64", "cpython-ssl:sbac049853cda", "cpython-ssl:s6dcc06feaaaf", "cpython-ssl:s4d7f143c9456", "cpython-ssl:s79d6191e12eb", "cpython-ssl:s82c72b9a971a", "openssl:s592eb65718de"], "status": "REASONED"},
     "http-server-bind": {"text": "As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000.", "components": ["python-pin"], "sources": ["python-pin:s0038729960a0", "python-pin:sa3111578d65d"], "status": "REASONED"},
     "http-server-files": {"text": "http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel.", "components": ["python"], "sources": ["python:s8fae94406709"], "status": "REASONED"},
     "verify-tls": {"text": "Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation.", "components": ["gunicorn", "uvicorn"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9"], "status": "REASONED", "verify": [1]},
@@ -157,10 +197,10 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | secrets: Generate secrets.token_urlsafe(32) and load secrets from the environment; the choice of 32 bytes is not covered by listed Sources. | Django documentation 6.1; Python standard library documentation 3.14 | REASONED |
 | credential-extraction: FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry. | FastAPI documentation unknown | REASONED |
 | oidc: OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately. | FastAPI documentation unknown; FastAPI OpenIdConnect source 31bbb380748ccead62fc0f42dbf4273f11dadccf | REASONED |
-| login-limit: Rate-limit login at the proxy or with slowapi; no listed source documents that limiter. | FastAPI documentation unknown | REASONED |
+| login-limit: Rate-limiting login routes and a proxy-level limit are this guide's advice. slowapi v0.1.10 documents limits for Starlette/FastAPI HTTP endpoints; endpoints using its limit decorator must take an explicit request argument, and WebSocket endpoints are not supported. | FastAPI documentation unknown; slowapi source v0.1.10 | REASONED |
 | mfa: Use pyotp and qrcode, django-otp for Django, or linked MFA guidance. | Django documentation 6.1; PyOTP v2.9.0; qrcode v8.2; django-otp 1.6.1 | REASONED |
-| client-validation: Never ship requests/httpx verify=False or ssl._create_unverified_context; the httpx client API and ssl._create_unverified_context lack listed Sources. | Python http.server documentation 3.14.4; Requests v2.32.3 | REASONED |
-| client-ca: REQUESTS_CA_BUNDLE selects a requests CA and SSL_CERT_FILE selects an httpx/ssl CA; the SSL_CERT_FILE variable lacks a listed source. | Python http.server documentation 3.14.4; Requests v2.32.3 | REASONED |
+| client-validation: Never ship requests/httpx verify=False or ssl._create_unverified_context; HTTPX documents verify=False and CPython defines _create_unverified_context. The prohibition is this guide's advice. | Python http.server documentation 3.14.4; Requests v2.32.3; HTTPX source and documentation 0.28.1; CPython ssl source and documentation v3.14.8 | REASONED |
+| client-ca: REQUESTS_CA_BUNDLE selects a requests CA. HTTPX 0.28.1's transport passes verify and trust_env to create_ssl_context, which reads SSL_CERT_FILE when verify=True and trust_env=True; its SSL guide contradicts that source. Its environment guide says environment variables are used by default but does not list SSL_CERT_FILE. CPython's ssl module reports OpenSSL default verify paths; with no CA specified and verification enabled, ssl.create_default_context() tries to load default CAs, which may fail silently. OpenSSL names SSL_CERT_FILE as an environment override for its default CA file; CPython's cited files do not name that variable, so whether a given ssl configuration uses it remains unverified. The export and explicit-context choices are this guide's advice. | Python http.server documentation 3.14.4; Requests v2.32.3; HTTPX source and documentation 0.28.1; CPython ssl source and documentation v3.14.8; OpenSSL documentation openssl-4.0.3 | REASONED |
 | http-server-bind: As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000. | Python http.server source v3.14.4 | REASONED |
 | http-server-files: http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel. | Python http.server documentation 3.14.4 | REASONED |
 | verify-tls: Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation. | Gunicorn documentation unknown; Uvicorn source 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9 | REASONED |
@@ -233,17 +273,19 @@ token = secrets.token_urlsafe(32)
 ```
 
 - FastAPI's `fastapi.security` classes (`HTTPBearer`, `APIKeyHeader`, `OAuth2AuthorizationCodeBearer`, and so on) extract the credential from the request and declare the OpenAPI security scheme; what they check varies by helper (an API-key helper checks only that a value is present; the HTTP and OAuth2 bearer helpers may also check the scheme), but none authenticate the credential (no signature, issuer, audience, or expiry check), and `OpenIdConnect` is documented as a stub that does not implement the scheme or use the discovery URL. Use them to extract the token, then validate it (signature, issuer, audience, expiry) with an OIDC library such as Authlib, and authorize per [oidc-integration.md](oidc-integration.md).
-- Rate-limit login routes (for example with a proxy-level limit or a library such as slowapi for ASGI apps).
+- Rate-limit login routes (this guide's advice; for example with a proxy-level limit or a library such as slowapi for Starlette/FastAPI ASGI apps' HTTP endpoints; endpoints using slowapi's `limit` decorator must take an explicit `request` argument, and slowapi does not support WebSocket endpoints).
 - MFA: add TOTP with [pyotp](https://github.com/pyauth/pyotp) plus the [qrcode](https://pypi.org/project/qrcode/) package for enrolment QR codes; [django-otp](https://pypi.org/project/django-otp/) integrates this into Django. Requirements and options in [mfa.md](mfa.md).
 
 ## 4. Client-side TLS discipline
 
-Never ship `verify=False` (requests/httpx) or `ssl._create_unverified_context`. For an internal CA, point the client at it instead:
+Never ship `verify=False` (requests/httpx) or `ssl._create_unverified_context` (this guide's advice). For an internal CA, point the client at it instead (this guide's advice):
 
 ```bash
 export REQUESTS_CA_BUNDLE=/path/ca.crt   # requests
-export SSL_CERT_FILE=/path/ca.crt        # httpx and the ssl module
+export SSL_CERT_FILE=/path/ca.crt        # HTTPX with verify=True and trust_env=True; OpenSSL default CA file for ssl when its default verify paths apply (see caveat below)
 ```
+
+HTTPX 0.28.1's SSL guide says `SSL_CERT_FILE` and `SSL_CERT_DIR` are not automatically used and shows an explicit context; its code path contradicts that: its sync and async transports pass `verify` and `trust_env` to `create_ssl_context`, which reads `SSL_CERT_FILE` when both are true. Its environment guide says environment variables are used by default but does not list `SSL_CERT_FILE`. This guide's advice: use the export above for that HTTPX code path; pass an explicit CA context for other configurations. With no CA specified and verification enabled, CPython's `ssl.create_default_context()` tries to load default CAs (CPython notes this may fail silently). `ssl.get_default_verify_paths()` reports OpenSSL's environment key for a CA file; OpenSSL names `SSL_CERT_FILE` as an override for its default CA file. CPython's cited files do not name `SSL_CERT_FILE`, so whether a given `ssl` configuration uses that override remains unverified.
 
 ## 5. Do not quick-share files with `http.server`
 
@@ -285,4 +327,20 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 - qrcode enrolment image generation (v8.2, checked October 2026): https://github.com/lincolnloop/python-qrcode/blob/v8.2/README.rst#L41-L44
 - django-otp Django authentication integration (1.6.1, checked October 2026): https://pypi.org/project/django-otp/1.6.1/
 - Requests REQUESTS_CA_BUNDLE trust roots (v2.32.3, checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239
+- slowapi Starlette/FastAPI scope (v0.1.10, checked October 2026): https://github.com/laurentS/slowapi/blob/v0.1.10/README.md#L1-L3
+- slowapi limit decorator, endpoint request argument and WebSocket limitation (v0.1.10, checked October 2026): https://github.com/laurentS/slowapi/blob/v0.1.10/README.md#L24-L50
+- HTTPX environment-variable default and trust_env (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L3-L7
+- HTTPX environment guide variable list, which omits SSL_CERT_FILE (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L9-L53
+- HTTPX SSL guide, verify=False example (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L12-L17
+- HTTPX SSL guide, conflicting SSL_CERT_FILE statement (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L72-L86
+- HTTPX SSL context selection with verify=True and trust_env=True (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/httpx/_config.py#L23-L40
+- HTTPX sync transport passes verify and trust_env to create_ssl_context (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L133-L154
+- HTTPX async transport passes verify and trust_env to create_ssl_context (0.28.1, checked October 2026): https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L278-L298
+- CPython ssl get_default_verify_paths (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L390-L405
+- CPython ssl load_default_certs (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L542-L548
+- CPython ssl create_default_context conditional default-CA load (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L730-L736
+- CPython ssl _create_unverified_context (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L744-L754
+- CPython ssl documentation for default verify paths and OpenSSL environment keys (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L421-L433
+- CPython ssl documentation for default CAs and silent failure (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L1642-L1649
+- OpenSSL default CA file environment override (openssl-4.0.3, checked October 2026): https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man3/SSL_CTX_load_verify_locations.pod#L39-L49
 - Requests verify=False disables certificate verification (v2.32.3, checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L241-L243
