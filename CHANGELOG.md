@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-17
+
+- `frontend-frameworks.md` cites SvelteKit `@sveltejs/kit@2.70.3` routing, load, form-action, hooks and remote-function documentation for its authorization statements, and labels the per-resource session and authorization checks as this guide's advice (row 1.179) (#589)
+
 ## 2026-10-16
 
 - `container-hardening.md` cites kubectl `v1.34.0` override handling, RFC 7396 and BusyBox `1_36_1` netcat source for the probe pod's override and `nc -z -w` flags, labels the probe's TCP-connect, JSON-quoting and container-name instructions as this guide's advice, keeps the probe pod's securityContext as a Pod Security Standards requirement, and keeps the gap that these sources do not establish what the `busybox:1.36` image contains (row 1.179) (#591)
