@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.199**, **2.48**, **3.41**, **4.12**.
+Next ids: **1.199**, **2.48**, **3.43**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -69,6 +69,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 3.41 | `tools/version_basis.py`: fail, never baselined, a component source URL that pins a ref while that component's basis is `unknown`, so a pinned source lands in a component whose basis is that pin. A pin is a commit SHA or tag in a forge `/blob/`, `/tree/`, `/raw/`, `/blame/`, `/commit/` or `/releases/tag/` path (GitLab-style `/-/` paths included), the ref segment of a `raw.githubusercontent.com` URL, a cgit `h=` or `id=` query, or a GitHub wiki revision; `main`, `master`, `HEAD`, `trunk` and `develop` refs and release-line documentation paths such as `/docs/2.4/` are not pins. At commit 0310e00d it fails eight URLs in seven guides: `caddy.md`, `elasticsearch.md` (two), `headless-browser-services.md`, `memcached.md`, `minio.md`, `rabbitmq.md` and `vector-databases.md`; move each, with its claim references, in the same change. Regression cases in `tools/test_version_basis.py` must fail with the check removed. Follows row 3.39. (M, S) | `[gap]` |
 | 3.39 | Render Sources with a pinned CommonMark parser in `tools/version_basis.py` (for example markdown-it-py, installed and SHA-verified in CI like shellcheck; local runs SKIP with an advisory when absent) and check rendered link targets against component URLs, replacing the line-grammar approximation of #420. Seven review rounds on #420 each found a new exotic construct the regex approach missed; residuals are listed in CONTRIBUTING. (M, M) | `[gap]` |
 
 ## Decisions
