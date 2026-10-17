@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `llm-observability.md` cites the Collector Contrib `bearertokenauthextension` at the pinned commit for its `token` and `filename` options and their precedence, file-line parsing, configurable header and scheme defaults, and HTTP and gRPC transport (row 1.179) (#606)
 - `nodejs.md` cites Linux `ip(7)` and `capabilities(7)` for the rule that binding ports below 1024 needs `CAP_NET_BIND_SERVICE` (held in the user namespace governing the process's network namespace, whether or not the process runs as root), scopes it to Linux, records that ip(7) states it for IPv4 and that IPv6 is not covered by the listed Sources, and labels the advice against running the app as root and the proxy preference as this guide's advice (row 1.179) (#602)
 - `sqlite-http-frontends.md` cites the sqlite-web 0.8.1 tag's version line, password option and password branch, which reads `SQLITE_WEB_PASSWORD` only when `-P/--password` is given and prompts when that variable is unset or empty, and labels the conclusion that the variable alone does not enable authentication as this guide's assessment (row 1.179) (#601)
 - `low-code-builders.md` cites the NocoDB 2026.09.0 README's Auto-upstall command, which fetches the install script over plain HTTP and runs it with Bash, and its `develop` source link, and advises fetching the script over HTTPS from a pinned, reviewed source before running it (#600)
