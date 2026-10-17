@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-17",
   "documentation_checked": "2026-10",
-  "body_sha256": "1400b64f694d524f2d3cfbfc8f02a4eee88ca09d67aaae9457915390142b5e4a",
+  "body_sha256": "e6ab2c6368d6789dbe755e757ab49c02987858a1dd7f6f53731b64637310e0cc",
   "components": {
     "docs": {
       "name": "n8n documentation",
@@ -62,6 +62,20 @@ version_basis: {
         "s907260f38eee": "https://docs.n8n.io/deploy/host-n8n/configure-n8n/security/enable-ssrf-protection"
       }
     },
+    "v2-default": {
+      "name": "n8n 2.0 default exclusion source",
+      "basis": "n8n@2.0.0",
+      "sources": {
+        "s0b6707ff8f67": "https://github.com/n8n-io/n8n/blob/n8n%402.0.0/packages/%40n8n/config/src/configs/nodes.config.ts#L35-L36"
+      }
+    },
+    "v1-default": {
+      "name": "n8n 1.x default exclusion source",
+      "basis": "n8n@1.123.85",
+      "sources": {
+        "s10f7d5ae15e5": "https://github.com/n8n-io/n8n/blob/n8n%401.123.85/packages/%40n8n/config/src/configs/nodes.config.ts#L30-L31"
+      }
+    },
     "v2-docs": {
       "name": "n8n 2.0 breaking changes",
       "basis": "unknown",
@@ -88,7 +102,7 @@ version_basis: {
     "webhook-auth": {"text": "Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
     "auth-boundaries": {"text": "Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries.", "components": ["docs"], "sources": ["docs:s7ce8bf5b35e8", "docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
     "signature": {"text": "A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
-    "code-execution": {"text": "Code executes JavaScript/Python; Execute Command runs the command through a shell in a child process of the n8n process executing the node and is excluded by default at n8n 2.40.6. The rolling 2.0 changes page dates the default to 2.0. Source gap: that rolling page is not pinned to a version.", "components": ["docs", "v2-docs", "runtime"], "sources": ["docs:s290535cad2ea", "v2-docs:s994d1a49cf93", "runtime:s42b6fad131ec", "runtime:s3bfd6e00f52b"], "status": "REASONED"},
+    "code-execution": {"text": "Code executes JavaScript/Python; Execute Command runs the command through a shell in a child process of the n8n process executing the node and is excluded by default at n8n 2.40.6. The pinned n8n 2.0.0 default excludes Execute Command and Local File Trigger; the pinned 1.x line at n8n 1.123.85 excludes none. This guide infers a 2.0 default boundary from those snapshots; the rolling 2.0 changes page dates the default to 2.0. Source gap: the rolling 2.0 changes page is unversioned and the first introducing release is unverified.", "components": ["docs", "v2-docs", "runtime", "v2-default", "v1-default"], "sources": ["docs:s290535cad2ea", "v2-docs:s994d1a49cf93", "runtime:s42b6fad131ec", "runtime:s3bfd6e00f52b", "v2-default:s0b6707ff8f67", "v1-default:s10f7d5ae15e5"], "status": "REASONED"},
     "runners": {"text": "Use hardened external task runners; vendor describes internal mode as insecure by design.", "components": ["docs"], "sources": ["docs:s290535cad2ea"], "status": "REASONED"},
     "environment": {"text": "N8N_BLOCK_ENV_ACCESS_IN_NODE blocks the workflow $env data proxy unless set to false; this source does not establish isolation of every node or Code process.env.", "components": ["runtime"], "sources": ["runtime:se407529f282f", "runtime:sa8c51cda4320"], "status": "REASONED"},
     "js-modules": {"text": "Narrow NODE_FUNCTION_ALLOW_BUILTIN/NODE_FUNCTION_ALLOW_EXTERNAL in external launcher's /etc/n8n-task-runners.json env-overrides; main-container values are overridden.", "components": ["docs"], "sources": ["docs:s290535cad2ea"], "status": "REASONED"},
@@ -110,7 +124,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -131,7 +145,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 | webhook-auth: Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential. | n8n documentation unknown | REASONED |
 | auth-boundaries: Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries. | n8n documentation unknown | REASONED |
 | signature: A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials. | n8n documentation unknown | REASONED |
-| code-execution: Code executes JavaScript/Python; Execute Command runs the command through a shell in a child process of the n8n process executing the node and is excluded by default at n8n 2.40.6. The rolling 2.0 changes page dates the default to 2.0. Source gap: that rolling page is not pinned to a version. | n8n documentation unknown; n8n 2.0 breaking changes unknown; n8n runtime source n8n@2.40.6 | REASONED |
+| code-execution: Code executes JavaScript/Python; Execute Command runs the command through a shell in a child process of the n8n process executing the node and is excluded by default at n8n 2.40.6. The pinned n8n 2.0.0 default excludes Execute Command and Local File Trigger; the pinned 1.x line at n8n 1.123.85 excludes none. This guide infers a 2.0 default boundary from those snapshots; the rolling 2.0 changes page dates the default to 2.0. Source gap: the rolling 2.0 changes page is unversioned and the first introducing release is unverified. | n8n documentation unknown; n8n 2.0 breaking changes unknown; n8n runtime source n8n@2.40.6; n8n 2.0 default exclusion source n8n@2.0.0; n8n 1.x default exclusion source n8n@1.123.85 | REASONED |
 | runners: Use hardened external task runners; vendor describes internal mode as insecure by design. | n8n documentation unknown | REASONED |
 | environment: N8N_BLOCK_ENV_ACCESS_IN_NODE blocks the workflow $env data proxy unless set to false; this source does not establish isolation of every node or Code process.env. | n8n runtime source n8n@2.40.6 | REASONED |
 | js-modules: Narrow NODE_FUNCTION_ALLOW_BUILTIN/NODE_FUNCTION_ALLOW_EXTERNAL in external launcher's /etc/n8n-task-runners.json env-overrides; main-container values are overridden. | n8n documentation unknown | REASONED |
@@ -184,7 +198,7 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 
 ## 5. Code-node isolation and outbound requests
 
-- Workflow editors can run code: the **Code** node executes JavaScript/Python and the **Execute Command** node runs the command through a shell in a child process of the n8n process executing the node. At n8n 2.40.6, `NODES_EXCLUDE` disables Execute Command by default; the rolling 2.0 changes page dates this default to n8n 2.0. Leave it off unless a workflow truly needs it. Run code on hardened EXTERNAL task runners rather than the internal mode, which the vendor calls insecure by design, and keep workflow `$env` access blocked (`N8N_BLOCK_ENV_ACCESS_IN_NODE=true`; at n8n 2.40.6 the `$env` proxy is blocked unless the variable is set to `false`). This guard alone does not establish isolation of every node or Code `process.env`. Allow only the modules a workflow needs, narrowly, and set the allowlist where the RUNNER reads it, not just on the main n8n container (whose values the external launcher overrides): for the JavaScript runner, `NODE_FUNCTION_ALLOW_BUILTIN` and `NODE_FUNCTION_ALLOW_EXTERNAL` under `env-overrides` in the launcher's `/etc/n8n-task-runners.json`; for the Python runner, `N8N_RUNNERS_STDLIB_ALLOW` and `N8N_RUNNERS_EXTERNAL_ALLOW`. An unset-then-`*` allowlist gives arbitrary module access. Because these defaults have shifted across versions and one vendor table is stale, set each value explicitly and confirm it on your installed version.
+- Workflow editors can run code: the **Code** node executes JavaScript/Python and the **Execute Command** node runs the command through a shell in a child process of the n8n process executing the node. At n8n 2.40.6 and 2.0.0, `NODES_EXCLUDE` disables Execute Command by default (at 2.0.0, Local File Trigger as well); at n8n 1.123.85 on the 1.x line, it excludes none. This guide infers a 2.0 default boundary from the pinned snapshots; the rolling 2.0 changes page, which is unversioned, dates this default to n8n 2.0, and the first introducing release is unverified. Leave it off unless a workflow truly needs it. Run code on hardened EXTERNAL task runners rather than the internal mode, which the vendor calls insecure by design, and keep workflow `$env` access blocked (`N8N_BLOCK_ENV_ACCESS_IN_NODE=true`; at n8n 2.40.6 the `$env` proxy is blocked unless the variable is set to `false`). This guard alone does not establish isolation of every node or Code `process.env`. Allow only the modules a workflow needs, narrowly, and set the allowlist where the RUNNER reads it, not just on the main n8n container (whose values the external launcher overrides): for the JavaScript runner, `NODE_FUNCTION_ALLOW_BUILTIN` and `NODE_FUNCTION_ALLOW_EXTERNAL` under `env-overrides` in the launcher's `/etc/n8n-task-runners.json`; for the Python runner, `N8N_RUNNERS_STDLIB_ALLOW` and `N8N_RUNNERS_EXTERNAL_ALLOW`. An unset-then-`*` allowlist gives arbitrary module access. Because these defaults have shifted across versions and one vendor table is stale, set each value explicitly and confirm it on your installed version.
 - Outbound requests are a trust boundary too: a webhook or the **HTTP Request** node can be steered at internal services or the cloud metadata endpoint (SSRF). Enable n8n's own SSRF filter where available (`N8N_SSRF_PROTECTION_ENABLED=true`, from n8n 2.12.0) AND restrict the workload's egress so a request cannot reach your internal network or `169.254.169.254` ([egress-metadata.md](egress-metadata.md)); the app-level filter supplements a network control and does not contain arbitrary code- or command-node networking.
 
 ## 6. Verify
@@ -254,6 +268,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 - n8n `N8N_PORT` default `5678` and `N8N_LISTEN_ADDRESS` default `'::'` (pinned tag n8n@2.40.6): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/%40n8n/config/src/index.ts#L164-L171
 - n8n auth cookie Secure default, recorded in the 1.32.0 changes (pinned tag n8n@2.40.6): https://raw.githubusercontent.com/n8n-io/n8n/n8n@2.40.6/packages/cli/BREAKING-CHANGES.md
 - n8n 2.0 changes, ExecuteCommand and LocalFileTrigger disabled by default (rolling documentation, checked October 2026): https://docs.n8n.io/changelog/v20-breaking-changes
+- n8n pinned tag n8n@2.0.0 `NODES_EXCLUDE` default excludes Execute Command and Local File Trigger (checked October 2026): https://github.com/n8n-io/n8n/blob/n8n%402.0.0/packages/%40n8n/config/src/configs/nodes.config.ts#L35-L36
+- n8n pinned tag n8n@1.123.85 `NODES_EXCLUDE` default excludes none (checked October 2026): https://github.com/n8n-io/n8n/blob/n8n%401.123.85/packages/%40n8n/config/src/configs/nodes.config.ts#L30-L31
 - n8n pinned tag n8n@2.40.6 owner setup handler (`skipAuth`, owner cookie): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/cli/src/controllers/owner.controller.ts#L22-L29
 - n8n pinned tag n8n@2.40.6 default REST endpoint (`rest`): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/%40n8n/config/src/configs/endpoints.config.ts#L153-L155
 - n8n pinned tag n8n@2.40.6 login controller (`POST /login`): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/cli/src/controllers/auth.controller.ts#L38-L54
