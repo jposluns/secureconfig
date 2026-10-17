@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "86a591a0037bac9f017b7b6e5a9b4a6c1e3884e183cd92833efede53933c18a4",
+  "body_sha256": "02714557715f5ba131f06b85ab84e5ae3e2d47b2d1d2c3a8f648379d58655478",
   "components": {
     "tls": {
       "name": "lighttpd TLS minimum",
@@ -42,7 +42,7 @@ version_basis: {
         "s8680e561bed2": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L395-L544",
         "s8e9688979427": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L270-L290",
         "s9bd716d27e8d": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L382-L393",
-        "s1de8f0d3a035": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L928-L945",
+        "s21288573041a": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L662-L945",
         "s67bb3733d81c": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L1684-L1711"
       }
     },
@@ -82,7 +82,7 @@ version_basis: {
     "certificate-chain": {"text": "ssl.pemfile uses fullchain.pem rather than a certificate without its chain.", "components": ["tls"], "sources": ["tls:sbff3cb2e01a8"], "status": "REASONED"},
     "separate-key": {"text": "ssl.privkey exists from 1.4.53; older versions need certificate and key concatenated into ssl.pemfile.", "components": ["key"], "sources": ["key:sbff3cb2e01a8"], "status": "REASONED"},
     "protocol-floor": {"text": "ssl.openssl.ssl-conf-cmd sets MinProtocol to TLSv1.2 explicitly; recent versions already default to TLS 1.2.", "components": ["tls"], "sources": ["tls:sbff3cb2e01a8"], "status": "REASONED"},
-    "module-defaults": {"text": "In lighttpd 1.4.75, mod_h2 is inserted when server.h2proto is enabled; when server.compat-module-load is enabled (the default), mod_indexfile and mod_dirlisting are conditionally added when enabled, mod_staticfile is added when absent, and compatibility handling can also add authentication and TLS modules under their respective conditions. Load mod_redirect explicitly.", "components": ["docs", "modules-source"], "sources": ["docs:s6d5666b862a0", "modules-source:s8680e561bed2", "modules-source:s8e9688979427", "modules-source:s9bd716d27e8d", "modules-source:s1de8f0d3a035", "modules-source:s67bb3733d81c"], "status": "REASONED"},
+    "module-defaults": {"text": "In lighttpd 1.4.75, mod_h2 is inserted unless server.feature-flags disables server.h2proto (enabled by default); when server.compat-module-load is enabled (the default), mod_indexfile and mod_dirlisting are conditionally added when enabled, mod_staticfile is added when absent, and compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. Load mod_redirect explicitly.", "components": ["docs", "modules-source"], "sources": ["docs:s6d5666b862a0", "modules-source:s8680e561bed2", "modules-source:s8e9688979427", "modules-source:s9bd716d27e8d", "modules-source:s21288573041a", "modules-source:s67bb3733d81c"], "status": "REASONED"},
     "http-redirect": {"text": "For the http scheme, redirect to HTTPS preserving authority, path and query; port 80 must redirect rather than serve content.", "components": ["docs"], "sources": ["docs:s6de629323c64"], "status": "REASONED"},
     "redirect-code": {"text": "Set url.redirect-code to 308 explicitly on versions before 1.4.75.", "components": ["redirect"], "sources": ["redirect:s6de629323c64"], "status": "REASONED"},
     "basic-auth": {"text": "Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable.", "components": ["docs"], "sources": ["docs:s1dbd1ce27da5"], "status": "REASONED"},
@@ -112,7 +112,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | certificate-chain: ssl.pemfile uses fullchain.pem rather than a certificate without its chain. | lighttpd TLS minimum 1.4.56 | REASONED |
 | separate-key: ssl.privkey exists from 1.4.53; older versions need certificate and key concatenated into ssl.pemfile. | lighttpd separate-key minimum 1.4.53 | REASONED |
 | protocol-floor: ssl.openssl.ssl-conf-cmd sets MinProtocol to TLSv1.2 explicitly; recent versions already default to TLS 1.2. | lighttpd TLS minimum 1.4.56 | REASONED |
-| module-defaults: In lighttpd 1.4.75, mod_h2 is inserted when server.h2proto is enabled; when server.compat-module-load is enabled (the default), mod_indexfile and mod_dirlisting are conditionally added when enabled, mod_staticfile is added when absent, and compatibility handling can also add authentication and TLS modules under their respective conditions. Load mod_redirect explicitly. | lighttpd documentation unknown; lighttpd module loader source 1.4.75 | REASONED |
+| module-defaults: In lighttpd 1.4.75, mod_h2 is inserted unless server.feature-flags disables server.h2proto (enabled by default); when server.compat-module-load is enabled (the default), mod_indexfile and mod_dirlisting are conditionally added when enabled, mod_staticfile is added when absent, and compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. Load mod_redirect explicitly. | lighttpd documentation unknown; lighttpd module loader source 1.4.75 | REASONED |
 | http-redirect: For the http scheme, redirect to HTTPS preserving authority, path and query; port 80 must redirect rather than serve content. | lighttpd documentation unknown | REASONED |
 | redirect-code: Set url.redirect-code to 308 explicitly on versions before 1.4.75. | lighttpd redirect default transition 1.4.75 | REASONED |
 | basic-auth: Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable. | lighttpd documentation unknown | REASONED |
@@ -156,7 +156,7 @@ ssl.openssl.ssl-conf-cmd = ( "MinProtocol" => "TLSv1.2" )
 
 ## 2. Redirect HTTP to HTTPS
 
-Load `mod_redirect` explicitly. In lighttpd 1.4.75, `configfile.c` inserts `mod_h2` when `server.h2proto` is enabled; when `server.compat-module-load` is enabled (the default), it adds `mod_indexfile` when index files are enabled, `mod_dirlisting` when directory listing is enabled, and `mod_staticfile` when it is absent from `server.modules`; compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. For other versions, check the module-loading behaviour. Per the lighttpd wiki:
+Load `mod_redirect` explicitly. In lighttpd 1.4.75, `configfile.c` inserts `mod_h2` unless `server.feature-flags` disables `server.h2proto` (enabled by default); when `server.compat-module-load` is enabled (the default), it adds `mod_indexfile` when index files are enabled, `mod_dirlisting` when directory listing is enabled, and `mod_staticfile` when it is absent from `server.modules`; compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. For other versions, check the module-loading behaviour. Per the lighttpd wiki:
 
 ```
 server.modules += ( "mod_redirect" )
@@ -230,11 +230,11 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
 - lighttpd mod_auth documentation, including `auth.require` inside a `$HTTP["host"]` conditional: https://redmine.lighttpd.net/projects/lighttpd/wiki/Mod_auth
 - lighttpd HTTP-to-HTTPS redirect how-to (308 explicit before 1.4.75): https://redmine.lighttpd.net/projects/lighttpd/wiki/HowToRedirectHttpToHttps
 - lighttpd configuration options (`server.modules` and default modules): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_ConfigurationOptions
-- lighttpd 1.4.75 module-loading source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L395-L544
-- lighttpd 1.4.75 module-loading source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L270-L290
-- lighttpd 1.4.75 module-loading source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L382-L393
-- lighttpd 1.4.75 module-loading source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L928-L945
-- lighttpd 1.4.75 module-loading source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L1684-L1711
+- lighttpd 1.4.75 compatibility loader and conditional modules source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L395-L544
+- lighttpd 1.4.75 TLS module helper source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L270-L290
+- lighttpd 1.4.75 authentication module helper source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L382-L393
+- lighttpd 1.4.75 directive binding, feature flag and compatibility gate source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L662-L945
+- lighttpd 1.4.75 compatibility loader default source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L1684-L1711
 - lighttpd 1.4.75 htpasswd parsing source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L340-L397
 - lighttpd 1.4.75 htpasswd password check source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L613-L740
 - Apache HTTP Server 2.4 `htpasswd` manual (checked October 2026): https://httpd.apache.org/docs/2.4/programs/htpasswd.html
