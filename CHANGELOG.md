@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `headless-cms-instant-api.md` cites the Strapi v5.58.0 Users and Permissions source for the initial `allow_register: true` and `default_role` advanced settings, the registration route and its setting check, and labels existing projects' stored settings and other releases as this guide's assessment (row 1.179) (#599)
 - `frontend-frameworks.md` cites adapter-node 5.5.7 origin and Host header handling, the Nuxt 4.0.0 pin of nitropack 2.12.0, and the release commit's `node-server` request path through h3 and Node HTTP or HTTPS for the Host and proxy checks; scopes the spoofed-Host requirement to the deployed application; and labels the h3, platform and deployment outcomes the sources do not show as this guide's assessment (row 1.179) (#594)
 - `mcp-clients.md` cites the pinned MCP 2025-06-18 Dynamic Client Registration requirement and the 2025-11-25 registration priority order for its version-boundary note, and labels carrying the revision label as this guide's advice (row 1.179) (#595)
 - `ray.md` cites the Docker 28.0.0 release-note fix for loopback-published ports and the KubeRay `v1.6.0` types, controller and pod source for token authentication, states when the operator creates a Secret and sets `RAY_AUTH_MODE` and `RAY_AUTH_TOKEN`, and labels the version minimums as this guide's assessment and inference (row 1.179) (#592)
