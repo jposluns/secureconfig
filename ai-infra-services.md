@@ -121,7 +121,7 @@ version_basis: {
       }
     },
     "onyx-v43": {
-      "name": "Onyx source v4.3.13",
+      "name": "Onyx v4.3 source",
       "basis": "v4.3.13",
       "sources": {
         "s760f8536b6ff": "https://github.com/onyx-dot-app/onyx/blob/v4.3.13/backend/onyx/configs/app_configs.py#L134-L142",
@@ -130,7 +130,7 @@ version_basis: {
       }
     },
     "onyx-v44": {
-      "name": "Onyx source v4.4.0",
+      "name": "Onyx v4.4 source",
       "basis": "v4.4.0",
       "sources": {
         "s799b0a246cf5": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/main.py#L371-L372",
@@ -231,7 +231,7 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 | mem0-reload: Compose uvicorn --reload is a development setting; remove for production. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
 | onyx-prod: Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
 | onyx-bootstrap: Email/password auth is on and first signup becomes admin; claim privately before exposure. | Onyx documentation unknown | REASONED |
-| onyx-auth-type: Comparison of the v4.3.13 and v4.4.0 tag trees indicates AUTH_TYPE no longer selects runtime authentication in v4.4.0; legacy values remain for migrations and a stale-value warning. Tag names supply version identity; the recorded plan for v4.5 removal is unverified by these files. | Onyx documentation unknown; Onyx source v4.3.13 v4.3.13; Onyx source v4.4.0 v4.4.0 | REASONED |
+| onyx-auth-type: Comparison of the v4.3.13 and v4.4.0 tag trees indicates AUTH_TYPE no longer selects runtime authentication in v4.4.0; legacy values remain for migrations and a stale-value warning. Tag names supply version identity; the recorded plan for v4.5 removal is unverified by these files. | Onyx documentation unknown; Onyx v4.3 source v4.3.13; Onyx v4.4 source v4.4.0 | REASONED |
 | onyx-base: Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5; Onyx documentation unknown | REASONED |
 | onyx-api: Development override adds API 8080:8080; remove unless deliberately restricted for access. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
 | onyx-backing: Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
