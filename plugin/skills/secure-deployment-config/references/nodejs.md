@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "2f828a1314a2c7c177fb7fc110019fe7deba2a85aa9f7c3a812d82fdf06be514",
+  "body_sha256": "eca8c11c3012c4af4b7f1ecec0c02d40e9226350cf3de0503d51d33ac7348af0",
   "components": {
     "node": {
       "name": "Node.js documentation",
@@ -14,15 +14,15 @@ version_basis: {
       }
     },
     "linux-ip": {
-      "name": "Linux ip(7) reference",
-      "basis": "unversioned",
+      "name": "Linux man-pages ip(7)",
+      "basis": "6.19",
       "sources": {
         "s612fed1df1ed": "https://man7.org/linux/man-pages/man7/ip.7.html"
       }
     },
     "linux-capabilities": {
-      "name": "Linux capabilities(7) reference",
-      "basis": "unversioned",
+      "name": "Linux man-pages capabilities(7)",
+      "basis": "6.19",
       "sources": {
         "s3c3a13034c04": "https://man7.org/linux/man-pages/man7/capabilities.7.html"
       }
@@ -88,7 +88,7 @@ version_basis: {
     "tls": {"text": "Direct HTTPS uses a certificate plus chain and private key on all-interface 443.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
     "redirect": {"text": "All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED"},
     "bind": {"text": "Same-host proxy uses 127.0.0.1; managed ingress uses platform-required addresses and ports with edge TLS and application auth. Platform mappings are cross-guide guidance, not covered by listed Sources.", "components": ["node", "express"], "sources": ["node:s87db42190978", "express:s2acbdbd05858"], "status": "REASONED"},
-    "privilege": {"text": "On Linux, binding ports below 1024 requires root with CAP_NET_BIND_SERVICE or a non-root process with that capability in the user namespace governing the network namespace; this guide advises against running the app as root and prefers the proxy layout.", "components": ["node", "linux-ip", "linux-capabilities"], "sources": ["node:s87db42190978", "linux-ip:s612fed1df1ed", "linux-capabilities:s3c3a13034c04"], "status": "REASONED"},
+    "privilege": {"text": "On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace; this guide advises against running the app as root and prefers the proxy layout.", "components": ["node", "linux-ip", "linux-capabilities"], "sources": ["node:s87db42190978", "linux-ip:s612fed1df1ed", "linux-capabilities:s3c3a13034c04"], "status": "REASONED"},
     "proxy": {"text": "Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.", "components": ["express"], "sources": ["express:s2acbdbd05858"], "status": "REASONED"},
     "headers": {"text": "Install helmet() for security headers including HSTS.", "components": ["helmet"], "sources": ["helmet:sc1865315478e"], "status": "REASONED"},
     "password": {"text": "Prefer argon2id for new apps; existing bcrypt systems use hash cost 12 and compare. Password-library APIs are not covered by listed Sources.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
@@ -124,7 +124,7 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 | tls: Direct HTTPS uses a certificate plus chain and private key on all-interface 443. | Node.js documentation unknown | REASONED |
 | redirect: All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended. | Node.js documentation unknown | REASONED |
 | bind: Same-host proxy uses 127.0.0.1; managed ingress uses platform-required addresses and ports with edge TLS and application auth. Platform mappings are cross-guide guidance, not covered by listed Sources. | Node.js documentation unknown; Express proxy documentation unknown | REASONED |
-| privilege: On Linux, binding ports below 1024 requires root with CAP_NET_BIND_SERVICE or a non-root process with that capability in the user namespace governing the network namespace; this guide advises against running the app as root and prefers the proxy layout. | Node.js documentation unknown; Linux ip(7) reference unversioned; Linux capabilities(7) reference unversioned | REASONED |
+| privilege: On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace; this guide advises against running the app as root and prefers the proxy layout. | Node.js documentation unknown; Linux man-pages ip(7) 6.19; Linux man-pages capabilities(7) 6.19 | REASONED |
 | proxy: Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten. | Express proxy documentation unknown | REASONED |
 | headers: Install helmet() for security headers including HSTS. | Helmet documentation unknown | REASONED |
 | password: Prefer argon2id for new apps; existing bcrypt systems use hash cost 12 and compare. Password-library APIs are not covered by listed Sources. | express-session documentation unknown | REASONED |
@@ -178,7 +178,7 @@ require('node:http').createServer((req, res) => {
 }).listen(80);
 ```
 
-On Linux, binding ports below 1024 requires root with `CAP_NET_BIND_SERVICE` or a non-root process with that capability in the user namespace governing the network namespace ([ip(7)](https://man7.org/linux/man-pages/man7/ip.7.html), [capabilities(7)](https://man7.org/linux/man-pages/man7/capabilities.7.html)); this guide advises against running the app as root and prefers the proxy layout. The `listen(443)`/`listen(80)` above bind every interface, which is intended only for this Node-terminates-TLS layout. On a managed platform, do not add these listeners: bind the address and port the platform injects (`0.0.0.0` on `$PORT` for Render, Railway, and Heroku Cedar; `::` on `$PORT` for Heroku Fir; `0.0.0.0` matching `internal_port` for Fly) and let the platform terminate TLS at its ingress, so plain HTTP behind that protected ingress is fine and application authentication is still required ([paas.md](paas.md)).
+On Linux, binding ports below 1024 requires a process, root or not, that has `CAP_NET_BIND_SERVICE` in the user namespace governing its network namespace ([ip(7)](https://man7.org/linux/man-pages/man7/ip.7.html), [capabilities(7)](https://man7.org/linux/man-pages/man7/capabilities.7.html)); this guide advises against running the app as root and prefers the proxy layout. The `listen(443)`/`listen(80)` above bind every interface, which is intended only for this Node-terminates-TLS layout. On a managed platform, do not add these listeners: bind the address and port the platform injects (`0.0.0.0` on `$PORT` for Render, Railway, and Heroku Cedar; `::` on `$PORT` for Heroku Fir; `0.0.0.0` matching `internal_port` for Fly) and let the platform terminate TLS at its ingress, so plain HTTP behind that protected ingress is fine and application authentication is still required ([paas.md](paas.md)).
 
 ## 2. Behind a proxy: tell Express about it
 
@@ -292,5 +292,5 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 - Node.js `https.Agent` options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L70-L103
 - Node.js `https.request` TLS options (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L458-L472
 - Node.js HTTPS agent example (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L533-L549
-- Linux ip(7) privileged-port rule (unversioned, checked October 2026): https://man7.org/linux/man-pages/man7/ip.7.html
-- Linux capabilities(7) CAP_NET_BIND_SERVICE definition (unversioned, checked October 2026): https://man7.org/linux/man-pages/man7/capabilities.7.html
+- Linux ip(7) privileged-port rule (Linux man-pages 6.19, checked October 2026): https://man7.org/linux/man-pages/man7/ip.7.html
+- Linux capabilities(7) CAP_NET_BIND_SERVICE definition (Linux man-pages 6.19, checked October 2026): https://man7.org/linux/man-pages/man7/capabilities.7.html
