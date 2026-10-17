@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "01448c4f9ba0d99dbcaf3c68b1ed70e39986556e4bc9b641b2f0dfda5f50a71d",
+  "body_sha256": "b411a347694b796637f37c7a3f3699df0f5076a123bfe8959c795bfd77daa12c",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -52,6 +52,7 @@ version_basis: {
       "sources": {
         "s9683cb8d689f": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L63",
         "s409f9221aec2": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L280-L296",
+        "s80dbf0751153": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L245-L249",
         "s5216789c9341": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L321-L328"
       }
     },
@@ -64,7 +65,8 @@ version_basis: {
         "s465c4ddcc92f": "https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeclient.go#L304-L313",
         "sc1e2ddefe5ed": "https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L116-L120",
         "sd423f53faa1a": "https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L222-L236",
-        "sf2fbc79f6542": "https://github.com/caddyserver/certmagic/blob/v0.25.3/certmagic.go#L473-L475"
+        "sf2fbc79f6542": "https://github.com/caddyserver/certmagic/blob/v0.25.3/certmagic.go#L473-L475",
+        "s1c3236df58b9": "https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L647-L654"
       }
     },
     "traefik": {
@@ -127,7 +129,7 @@ version_basis: {
   "claims": {
     "public-trust": {"text": "ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; this guide advises preferring them for public DNS names, including private hosts using DNS-01.", "components": ["le", "zerossl"], "sources": ["le:s9ff2d787c618", "zerossl:sddca28a3381b"], "status": "REASONED"},
     "http-challenge": {"text": "HTTP-01 needs a public A/AAAA or CNAME pointing to the server and inbound internet access to port 80.", "components": ["le"], "sources": ["le:s9ff2d787c618"], "status": "REASONED"},
-    "alpn-challenge": {"text": "TLS-ALPN-01 needs a public DNS record and inbound port 443; Caddy's ACME issuer enables the TLS-ALPN-01 solver when DNS-01 is not configured and TLS-ALPN-01 is not disabled, and can use an alternate local port if port 443 forwards to it; Traefik also uses TLS-ALPN-01.", "components": ["le", "caddy", "certmagic", "traefik"], "sources": ["le:s9ff2d787c618", "caddy:s409f9221aec2", "caddy:s5216789c9341", "certmagic:s61e3cba719df", "certmagic:s8782e006523b", "certmagic:s465c4ddcc92f", "certmagic:sc1e2ddefe5ed", "certmagic:sd423f53faa1a", "certmagic:sf2fbc79f6542", "traefik:s418a6b1ad09b"], "status": "REASONED"},
+    "alpn-challenge": {"text": "TLS-ALPN-01 needs a public DNS record and inbound port 443; Caddy's ACME issuer enables the TLS-ALPN-01 solver when DNS-01 is not configured and TLS-ALPN-01 is not disabled, and can use an alternate local port if port 443 forwards to it; Traefik also uses TLS-ALPN-01.", "components": ["le", "caddy", "certmagic", "traefik"], "sources": ["le:s9ff2d787c618", "caddy:s409f9221aec2", "caddy:s80dbf0751153", "caddy:s5216789c9341", "certmagic:s61e3cba719df", "certmagic:s8782e006523b", "certmagic:s465c4ddcc92f", "certmagic:sc1e2ddefe5ed", "certmagic:sd423f53faa1a", "certmagic:sf2fbc79f6542", "certmagic:s1c3236df58b9", "traefik:s418a6b1ad09b"], "status": "REASONED"},
     "dns-challenge": {"text": "DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards; automated issuance and renewal need an automated way to update TXT records, and this guide advises a provider DNS plugin and scoped API credentials, while Certbot also supports manual DNS-01 and an authentication hook for automatic renewal.", "components": ["le", "certbot", "certbot-v230"], "sources": ["le:s9ff2d787c618", "certbot:s7b60a00cadf3", "certbot:s875be163b4c1", "certbot-v230:s55ec19f37395", "certbot-v230:s5bf4ff9fbe76"], "status": "REASONED"},
     "certbot-install": {"text": "Install Certbot and nginx/Apache plugins from the distribution, or the classic snap with /usr/bin/certbot pointing to /snap/bin/certbot.", "components": ["certbot"], "sources": ["certbot:s44faaf4eb7d7"], "status": "REASONED"},
     "server-plugins": {"text": "certbot --nginx or --apache issues and installs certificates for the supplied domain names when the server is supported.", "components": ["certbot"], "sources": ["certbot:s44faaf4eb7d7"], "status": "REASONED"},
@@ -317,6 +319,7 @@ REASONED: preceding block; certificate inventory, HTTPS access and served-certif
 - Let's Encrypt CAA requirements: https://letsencrypt.org/docs/caa/
 - Caddy v2.11.4 automatic certificate acquisition and renewal (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L63
 - Caddy v2.11.4 ACME TLS-ALPN challenge settings (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L280-L296
+- Caddy v2.11.4 builds its ACME issuer template at provisioning (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L245-L249
 - Caddy v2.11.4 passes its ACME issuer template to certmagic (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L321-L328
 - Caddy v2.11.4 pins certmagic v0.25.3 (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/go.mod#L12-L12
 - certmagic v0.25.3 TLS-ALPN-01 solver selection (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeclient.go#L188-L226
@@ -324,6 +327,7 @@ REASONED: preceding block; certificate inventory, HTTPS access and served-certif
 - certmagic v0.25.3 alternate TLS-ALPN port forwarding (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L116-L120
 - certmagic v0.25.3 issuer defaults for the DNS-01 solver and TLS-ALPN setting (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L222-L236
 - certmagic v0.25.3 TLS-ALPN challenge port 443 (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/certmagic.go#L473-L475
+- certmagic v0.25.3 `DefaultACME` values (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L647-L654
 - Traefik v3.5 ACME renewal and challenges (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/tls/certificate-resolvers/acme/
 - OpenSSL 3.0 `s_client` connection and certificate verification (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
 - OpenSSL 3.0 `x509` issuer and validity dates (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-x509/

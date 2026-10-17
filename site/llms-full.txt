@@ -593,6 +593,7 @@ REASONED: preceding block; certificate inventory, HTTPS access and served-certif
 - Let's Encrypt CAA requirements: https://letsencrypt.org/docs/caa/
 - Caddy v2.11.4 automatic certificate acquisition and renewal (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L63
 - Caddy v2.11.4 ACME TLS-ALPN challenge settings (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L280-L296
+- Caddy v2.11.4 builds its ACME issuer template at provisioning (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L245-L249
 - Caddy v2.11.4 passes its ACME issuer template to certmagic (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L321-L328
 - Caddy v2.11.4 pins certmagic v0.25.3 (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/go.mod#L12-L12
 - certmagic v0.25.3 TLS-ALPN-01 solver selection (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeclient.go#L188-L226
@@ -600,6 +601,7 @@ REASONED: preceding block; certificate inventory, HTTPS access and served-certif
 - certmagic v0.25.3 alternate TLS-ALPN port forwarding (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L116-L120
 - certmagic v0.25.3 issuer defaults for the DNS-01 solver and TLS-ALPN setting (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L222-L236
 - certmagic v0.25.3 TLS-ALPN challenge port 443 (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/certmagic.go#L473-L475
+- certmagic v0.25.3 `DefaultACME` values (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L647-L654
 - Traefik v3.5 ACME renewal and challenges (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/tls/certificate-resolvers/acme/
 - OpenSSL 3.0 `s_client` connection and certificate verification (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
 - OpenSSL 3.0 `x509` issuer and validity dates (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-x509/
