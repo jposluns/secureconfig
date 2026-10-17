@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `sqlite-http-frontends.md` cites the sqlite-web 0.8.1 tag's version line, password option and password branch, which reads `SQLITE_WEB_PASSWORD` only when `-P/--password` is given and prompts when that variable is unset or empty, and labels the conclusion that the variable alone does not enable authentication as this guide's assessment (row 1.179) (#601)
 - `low-code-builders.md` cites the NocoDB 2026.09.0 README's Auto-upstall command, which fetches the install script over plain HTTP and runs it with Bash, and its `develop` source link, and advises fetching the script over HTTPS from a pinned, reviewed source before running it (#600)
 - `elasticsearch.md` cites the OpenSearch 3.8.0 GCS and Azure repository plugin settings, blob upload and client construction, scopes the plugin-specific setting finding, cites the core repository crypto path and required key provider, leaves deployed GCS/Azure applicability, minimum versions and later releases unestablished, and labels the provider-side encryption instruction as this guide's advice (row 1.179) (#598)
 - `headless-cms-instant-api.md` cites the Strapi v5.58.0 Users and Permissions source for the initial `allow_register: true` and `default_role` advanced settings, the registration route and its setting check, and labels existing projects' stored settings and other releases as this guide's assessment (row 1.179) (#599)
