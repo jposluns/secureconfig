@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `sqlite.md` cites the Git v2.56.0 `gitignore`, `git rm` and `git log` documentation for ignore rules not affecting tracked files, removal from the index alone or from the index and working tree, and inspectable commit history, and labels the warning that a committed database stays available to anyone who clones as this guide's assessment on that basis (row 1.179) (#616)
 - `web-exposure.md` cites the GNU grep 3.12 manual and source for exit status 0, 1 and 2, for a missing or unreadable input being an error, and for `-s` suppressing its message, behind the bundle-scan comment; the instruction not to read discarded-error silence as a pass is unchanged (row 1.179) (#615)
 - `free-certificates.md` cites Caddy v2.11.4's ACME issuer and its pinned certmagic v0.25.3 for Caddy enabling the TLS-ALPN-01 solver when DNS-01 is not configured and TLS-ALPN-01 is not disabled, and for Caddy being able to use an alternate local port if port 443 forwards to it (row 1.179) (#613)
 - `nginx.md` cites the Authelia v4.39.28 and oauth2-proxy v7.15.4 nginx `auth_request` integration documentation and the Cloudflare Access web-application page behind its MFA requirement, labels whether a given installation enforces MFA as this guide's assessment, and keeps the requirement (row 1.179) (#614)
