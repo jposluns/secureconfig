@@ -131,6 +131,8 @@ if bare_urls=$(python3 tools/check_bare_urls.py 2>&1); then
   printf '%s\n' "$bare_urls"
   if grep -q '^  FAIL  ' <<< "$bare_urls"; then
     bad "check_bare_urls.py printed findings but exited 0"
+  elif ! grep -q '^  ok    tracked root Markdown has no bare double-underscore URLs$' <<< "$bare_urls"; then
+    bad "check_bare_urls.py exited 0 without its expected ok line"
   fi
 elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$bare_urls"; then
   bad "check_bare_urls.py crashed; bare URLs are unverified"
@@ -148,6 +150,8 @@ if bare_urls_tests=$(python3 tools/test_bare_urls_gate.py 2>&1); then
   printf '%s\n' "$bare_urls_tests"
   if grep -q '^  FAIL  ' <<< "$bare_urls_tests"; then
     bad "test_bare_urls_gate.py printed findings but exited 0"
+  elif ! grep -qE '^  ok    bare URL gate: [0-9]+ failures, [0-9]+ exemptions, and bare-fixture mutation proof$' <<< "$bare_urls_tests"; then
+    bad "test_bare_urls_gate.py exited 0 without its expected ok line"
   fi
 elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$bare_urls_tests"; then
   bad "test_bare_urls_gate.py crashed; bare URL fixtures are unverified"

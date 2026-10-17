@@ -14,17 +14,32 @@ from _walk import walk_files
 from check_verify_marking import code_spans, html_end
 
 ROOT = Path(__file__).resolve().parents[1]
-URL = re.compile(r"https?://[^\s<>\"'`]+", re.I)
-REFERENCE = re.compile(r"^ {0,3}\[[^\]]+\]:[ \t]*(?:<)?", re.I)
+URL = re.compile(r"https?://[^\s<>\"'`\[\]]+", re.I)
+REFERENCE = re.compile(r"^ {0,3}\[[^\]]+\]:[ \t]*", re.I)
 INLINE = re.compile(r"\]\([ \t]*(?:<)?$")
+LIST = re.compile(r"^( {0,3}| {4,})(?:[-+*]|[0-9]{1,9}[.)])([ \t]+)")
+DESTINATION = re.compile(r"[ \t]*(?:<[^>]+>|\S+)")
+ATX = re.compile(r"^ {0,3}#{1,6}(?:[ \t]+|$)")
+SETEXT = re.compile(r"^ {0,3}(?:=+|-+)[ \t]*$")
 
 
-def visible_lines(lines):
-    """Blank matched code spans while keeping every original line boundary."""
-    text = "\n".join(lines)
-    for start, end, _ in reversed(list(code_spans(text))):
-        text = text[:start] + re.sub(r"[^\n]", " ", text[start:end]) + text[end:]
-    return text.split("\n")
+def visible_lines(lines, prose, starts):
+    """Blank spans only within consecutive prose lines of one paragraph."""
+    visible = lines[:]
+    start = 0
+    while start < len(lines):
+        if not prose[start]:
+            start += 1
+            continue
+        end = start + 1
+        while end < len(lines) and prose[end] and end not in starts:
+            end += 1
+        text = "\n".join(lines[start:end])
+        for first, last, _ in reversed(list(code_spans(text))):
+            text = text[:first] + re.sub(r"[^\n]", " ", text[first:last]) + text[last:]
+        visible[start:end] = text.split("\n")
+        start = end
+    return visible
 
 
 def url_token(match):
@@ -38,28 +53,69 @@ def url_token(match):
 
 def findings(path):
     lines = body_lines(path.read_text(encoding="utf-8"))
-    visible = visible_lines(lines)
     fences = Fences()
     html_terminator = None
-    reference_next = False
-    for number, (raw, line) in enumerate(zip(lines, visible), 1):
-        continuation, reference_next = reference_next, False
+    paragraph = False
+    list_content = 0
+    prose = []
+    starts = set()
+    for raw in lines:
+        blank = not raw.strip()
         if html_terminator is not None:
-            if html_terminator.search(raw):
+            if html_terminator.search(raw) or (html_terminator.pattern == r"^ *$" and blank):
                 html_terminator = None
+                paragraph = False
+            prose.append(False)
             continue
         if fences.feed(raw) or fences.inside:
+            paragraph = False
+            prose.append(False)
             continue
-        if raw.expandtabs(4).startswith("    "):
+        if blank:
+            paragraph = False
+            prose.append(False)
             continue
-        html_terminator = html_end(raw)
+        expanded = raw.expandtabs(4)
+        indent = len(expanded) - len(expanded.lstrip(" "))
+        if list_content and indent < list_content:
+            list_content = 0
+        candidate = LIST.match(expanded)
+        marker = candidate if candidate and (indent <= 3 or
+                        (list_content and list_content <= indent < list_content + 4)) else None
+        # A list marker is prose even when its indentation reaches four columns.
+        if marker:
+            list_content = len(marker.group(0))
+        code_indent = list_content + 4 if list_content else 4
+        if not marker and indent >= code_indent and not paragraph:
+            prose.append(False)
+            continue
+        html_terminator = html_end(raw, continuing=paragraph)
         if html_terminator is not None:
-            if html_terminator.search(raw):
+            if html_terminator.search(raw) or (html_terminator.pattern == r"^ *$" and blank):
                 html_terminator = None
+            paragraph = False
+            prose.append(False)
             continue
-        definition = REFERENCE.match(line)
-        if definition:
-            reference_next = line[definition.end():].strip() == ""
+        if not paragraph or marker:
+            starts.add(len(prose))
+        prose.append(True)
+        paragraph = not ((REFERENCE.match(raw) and not paragraph) or
+                         ATX.match(raw) or SETEXT.match(raw))
+
+    visible = visible_lines(lines, prose, starts)
+    paragraph = False
+    reference_next = False
+    for index, (raw, line) in enumerate(zip(lines, visible)):
+        if not prose[index]:
+            paragraph = False
+            reference_next = False
+            continue
+        continuation, reference_next = reference_next, False
+        definition = REFERENCE.match(line) if not paragraph else None
+        destination = DESTINATION.match(line, definition.end()) if definition else None
+        if definition and destination is None:
+            reference_next = True
+        next_destination = DESTINATION.match(line) if continuation else None
         for match in URL.finditer(line):
             token = url_token(match)
             if "__" not in token.replace(r"\_", "_"):
@@ -69,11 +125,18 @@ def findings(path):
             if start and line[start - 1] == "<" and line[end:end + 1] == ">":
                 continue
             before = line[:start]
-            if INLINE.search(before) or (definition and start >= definition.end()):
+            if INLINE.search(before):
                 continue
-            if continuation and not before.strip():
+            if destination and destination.start() <= start and end <= destination.end():
                 continue
-            yield f"{path.name}:{number}: bare URL contains __: {token}"
+            if next_destination and next_destination.start() <= start and end <= next_destination.end():
+                continue
+            if (index and INLINE.search(visible[index - 1]) and
+                    index + 1 < len(lines) and re.match(r"^[ \t]*\)[ \t]*$", lines[index + 1]) and
+                    not before.strip()):
+                continue
+            yield f"{path.name}:{index + 1}: bare URL contains __: {token}"
+        paragraph = not (definition or continuation or ATX.match(raw) or SETEXT.match(raw))
 
 
 def main():

@@ -39,20 +39,38 @@ def assert_failure(body, prefix="# Fixture\n\n", line=3, gate_source=None):
 
 
 def main():
-    assert_failure(BARE)
-    assert_failure("[https://example.com/__init__.py](https://example.com/ok)\n")
-    assert_failure(r"See https://example.com/\_\_init.py" + "\n")
-    assert_failure("[source]:\n\nhttps://example.com/__init__.py\n", line=5)
+    failures = (
+        (BARE, 3),
+        ("[https://example.com/__init__.py](https://example.com/ok)\n", 3),
+        (r"See https://example.com/\_\_init.py" + "\n", 3),
+        ("[source]:\n\nhttps://example.com/__init__.py\n", 5),
+        ("Press the ` key.\n\nSee https://example.com/__init__.py\n\nRun `ls`.\n", 5),
+        ("1. Item\n    https://example.com/__init__.py\n", 4),
+        ("- Parent\n    - https://example.com/__init__.py\n", 4),
+        ("Text\n    https://example.com/__init__.py\n", 4),
+        ("Text\n<span>\nhttps://example.com/__init__.py\n", 5),
+        ("<div>\ninside\n\t\nhttps://example.com/__init__.py\n", 6),
+        ("Text\n[x]: https://example.com/__init__.py\n", 4),
+        ("[x]: https://example.com/ok see https://example.com/__init__.py\n", 3),
+        ("Press the ` key.\n\nSee https://example.com/__init__.py\n\n~~~\n`\n~~~\n", 5),
+        ("Press the ` key.\n\nSee https://example.com/__init__.py\n\n````\n`\n`````\n", 5),
+        ("Press the ` key.\n\nSee https://example.com/__init__.py\n\n<div>\n`\n</div>\n", 5),
+    )
+    for body, line in failures:
+        assert_failure(body, line=line)
     passing = (
         ("<https://example.com/__init__.py>\n", "# Fixture\n\n"),
         ("[source](https://example.com/__init__.py)\n", "# Fixture\n\n"),
         ("`https://example.com/__init__.py`\n", "# Fixture\n\n"),
         ("```text\nhttps://example.com/__init__.py\n```\n", "# Fixture\n\n"),
         ("    https://example.com/__init__.py\n", "# Fixture\n\n"),
+        ("    - https://example.com/__init__.py\n", "# Fixture\n\n"),
         ("   \thttps://example.com/__init__.py\n", "# Fixture\n\n"),
         ("<div>\nhttps://example.com/__init__.py\n</div>\n", "# Fixture\n\n"),
         ("[source]: https://example.com/__init__.py\n", "# Fixture\n\n"),
         ("[source]:\n https://example.com/__init__.py\n", "# Fixture\n\n"),
+        ("[t](\nhttps://example.com/__init__.py\n)\n", "# Fixture\n\n"),
+        ("[https://example.com/ok](https://example.com/__init__.py)\n", "# Fixture\n\n"),
         ("# Fixture\n", '---\nversion_basis: {"url":"https://example.com/__init__.py"}\n---\n'),
     )
     for body, prefix in passing:
@@ -64,13 +82,9 @@ def main():
     condition = 'if "__" not in token.replace(r"\\_", "_"):'
     assert source.count(condition) == 1
     disabled = source.replace(condition, "if True:")
-    try:
-        assert_failure(BARE, gate_source=disabled)
-    except AssertionError:
-        pass
-    else:
-        raise AssertionError("bare fixture still passed after disabling the check")
-    print("  ok    bare URL gate: 4 failures, 10 exemptions, and bare-fixture mutation proof")
+    mutated = fixture(BARE, gate_source=disabled)
+    assert mutated == (0, "  ok    tracked root Markdown has no bare double-underscore URLs\n"), mutated
+    print(f"  ok    bare URL gate: {len(failures)} failures, {len(passing)} exemptions, and bare-fixture mutation proof")
 
 
 if __name__ == "__main__":

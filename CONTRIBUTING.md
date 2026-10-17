@@ -138,10 +138,14 @@ Schema 1 requires exactly these top-level fields:
   the destination on a later line, and `[note]: text`, which is a definition because `text`
   is a valid destination. So no bracketed label can become a link. Sources cite URLs only as
   bare URLs, `<autolinks>` or inline links (bracketed text, then the URL in parentheses). Use an
-  autolink or inline-link destination for body URLs containing `__`; `tools/check_bare_urls.py`
-  enforces this across tracked root Markdown files. In an enrolled guide's Sources, outside
-  fences, every line closes what it opens: each backtick
-  lies in a code span that ends on that line, and outside code spans each opening bracket is
+  autolink, inline-link destination or reference-definition destination for body URLs
+  containing `__`. `tools/check_bare_urls.py` checks these URLs in tracked root Markdown
+  prose. It does not recognize GFM `www.` autolinks or single-underscore pairs. Fences
+  inside list or quote containers can mask later prose, and block-level HTML comments
+  are skipped. A root file starting with `---` that is not valid `version_basis` front
+  matter makes this gate fail rather than scan its body. In an enrolled guide's Sources,
+  outside fences, every line closes what it opens: each backtick lies in a code span
+  that ends on that line, and outside code spans each opening bracket is
   closed on that line, with no stray closing bracket. A backslash-escaped bracket, parenthesis
   or backtick fails on any Sources line below the heading, outside fences and HTML comments,
   even in a code span. Anywhere in an enrolled guide outside fences, any `a`, `img`, `link` or
