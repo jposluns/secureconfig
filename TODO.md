@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.313**, **2.48**, **3.41**, **4.12**.
+Next ids: **1.314**, **2.48**, **3.41**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -161,6 +161,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.310 | `oidc-integration.md`: github-org-mfa: establish whether a member without 2FA fails the application membership check before treating GitHub organization membership as proof of MFA. (M, M) | `[gap]` |
 | 1.311 | `ai-infra-services.md`: onyx-auth-type: establish the stated v4.5 removal boundary beyond the pinned v4.3.13 and v4.4.0 snapshots and tag-name identity. (M, M) | `[gap]` |
 | 1.312 | `vector-databases.md`: source or narrow the hosted-console MFA arrangements for Pinecone, Qdrant Cloud, Weaviate Cloud and Zilliz that the cited pages do not establish. (M, M) | `[gap]` |
+| 1.313 | `apache.md` and `lighttpd.md`: mfa: state that an origin reachable without passing through Access is not protected by it, citing the Cloudflare self-hosted application page's note that a published application without an Access application is available to anyone on the Internet and that an already publicly routable origin must be protected by other methods (from #624 QA). (M, S) | `[gap]` |
 | 2.28 | `gitops-controllers.md`: Complete the remaining source audit of image tag-to-build mapping (Redis, Dex), the application-controller bind address, repo-server service method authorization, Dex API method authorization, whether Redis overwrites its password in argv, and RBAC server-side wiring. (M, M) | `[gap]` |
 | 2.29 | `self-hosted-ci-runners.md`: offline inspection outcomes are recorded in the guide. Remaining: verify and cite a pinned vendor source for the `[runners.docker]` `pid_mode` TOML key, corroborated only in rolling GitLab Runner source. (M, M) | `[gap]` |
 | 1.117 | `search-engines.md` Verify (#285): the reviewed tools/scan_credential.sh searches client output and local refs/HEAD/reflog commit trees, with tools/test_scan_credential.py retaining dummy positive/negative controls and documented limits. Still open: run a real client pipeline in a disposable copy with a known dummy admin, master or bootstrap key, require detection, then remove it and rebuild cleanly and require scoped absence; retain a separate old-commit positive control and record the stated coverage limits. No real application build was available for the hand-built fixtures. (M, M) | `[gap]` |
