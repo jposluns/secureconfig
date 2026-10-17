@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "fe91d990b7d6e65780106bd5b6a4a26c0b626484fddc6462b5fa98fc1e78addf",
+  "body_sha256": "9ab3957a42bab62de0ca660b5a70d60cd251fdd1dd5885385764804259ab0fe8",
   "components": {
     "ollama": {
       "name": "Ollama",
@@ -12,6 +12,18 @@ version_basis: {
         "s96f77aee8bdd": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go",
         "sd146dc5d917d": "https://github.com/ollama/ollama/blob/v0.34.2/api/client.go",
         "s7478dad099ab": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go",
+        "s9bf8940c3001": "https://github.com/ollama/ollama/blob/v0.34.2/main.go#L3-L13",
+        "s8f4e8b651967": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2469-L2475",
+        "sc16932a1056b": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2632-L2654",
+        "s3db39cecc705": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2377-L2654",
+        "s8a310972e31d": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2093-L2109",
+        "s5a188d13a009": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1987-L1992",
+        "s0b381e62597c": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2001-L2011",
+        "sa340a3deada2": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2052-L2057",
+        "sbf4266cc6ffa": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L3-L54",
+        "sce8e789d8d24": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1938-L2060",
+        "s4ded5c727f27": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L3-L60",
+        "sc0d5747ba398": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1",
         "sbca403d10498": "https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx",
         "s2abe15b73bce": "https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go",
         "s8dc81acdfb10": "https://github.com/ollama/ollama/blob/v0.34.2/Dockerfile",
@@ -166,7 +178,7 @@ version_basis: {
     "remotes": {"text": "OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce"], "status": "REASONED"},
     "diagnostics": {"text": "Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts.", "components": ["ollama", "ollama-rolling"], "sources": ["ollama:s96f77aee8bdd", "ollama-rolling:s528f69db04e0"], "status": "REASONED", "verify": [3]},
     "request-logs": {"text": "Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:sa89bd5d8e1f7"], "status": "REASONED", "verify": [3]},
-    "profiling": {"text": "No metrics route was found in the main router; shipped pprof availability remains unestablished and cannot be inferred from debug settings.", "components": ["ollama"], "sources": ["ollama:s96f77aee8bdd"], "status": "REASONED", "verify": [3]},
+    "profiling": {"text": "No metrics route was found in the main router; this guide's review of first-party v0.34.2 Go source found no net/http/pprof import or explicit profiling registration. Dependencies were not reviewed; shipped-binary pprof availability remains unestablished and cannot be inferred from debug settings.", "components": ["ollama"], "sources": ["ollama:s96f77aee8bdd", "ollama:s9bf8940c3001", "ollama:s8f4e8b651967", "ollama:sc16932a1056b", "ollama:s3db39cecc705", "ollama:s8a310972e31d", "ollama:s5a188d13a009", "ollama:s0b381e62597c", "ollama:sa340a3deada2", "ollama:sbf4266cc6ffa", "ollama:sce8e789d8d24", "ollama:s4ded5c727f27", "ollama:sc0d5747ba398"], "status": "REASONED", "verify": [3]},
     "verify-inventory": {"text": "Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation.", "components": ["ollama", "docker", "systemd"], "sources": ["ollama:s453c95c884da", "docker:s1e53417c513d", "systemd:sd4c1aeb45417"], "status": "REASONED", "verify": [1]},
     "verify-bypass": {"text": "HTTP means direct 11434 answered; fixed refusal needs the real remote path plus successful proxy inference; local errors are inconclusive.", "components": ["ollama", "curl"], "sources": ["ollama:sbca403d10498", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
     "verify-auth": {"text": "Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient.", "components": ["nginx", "ollama", "curl"], "sources": ["nginx:sf32ce2956917", "ollama:s96f77aee8bdd", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [3]},
@@ -245,7 +257,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | remotes: OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist. | Ollama v0.34.2 | REASONED |
 | diagnostics: Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts. | Ollama v0.34.2; Ollama documentation (rolling) unknown | REASONED |
 | request-logs: Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup. | Ollama v0.34.2 | REASONED |
-| profiling: No metrics route was found in the main router; shipped pprof availability remains unestablished and cannot be inferred from debug settings. | Ollama v0.34.2 | REASONED |
+| profiling: No metrics route was found in the main router; this guide's review of first-party v0.34.2 Go source found no net/http/pprof import or explicit profiling registration. Dependencies were not reviewed; shipped-binary pprof availability remains unestablished and cannot be inferred from debug settings. | Ollama v0.34.2 | REASONED |
 | verify-inventory: Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation. | Ollama v0.34.2; Docker Engine localhost boundary 28.0; systemd v257 | REASONED |
 | verify-bypass: HTTP means direct 11434 answered; fixed refusal needs the real remote path plus successful proxy inference; local errors are inconclusive. | Ollama v0.34.2; curl unknown | REASONED |
 | verify-auth: Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient. | nginx unknown; Ollama v0.34.2; curl unknown | REASONED |
@@ -654,7 +666,7 @@ Environment="OLLAMA_DEBUG_LOG_REQUESTS=false"
 
 Request debugging writes request bodies and replay scripts into a temporary directory. Disabling it prevents new captures; existing captures still need a retention and deletion policy. Protect diagnostic files and ensure proxy/application logging does not independently capture credentials or prompts. See [logging configuration](https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go) and the [request logger](https://github.com/ollama/ollama/blob/v0.34.2/server/inference_request_log.go).
 
-No `/metrics` registration appears in the reviewed main router; do not assume a native metrics port. The HTTP server deliberately uses `DefaultServeMux` with a pprof comment, but this review did not establish whether the shipped binary links and registers profiling handlers. Include `/debug/pprof/` in live inventory and public-denial checks. Do not claim either default availability or that `OLLAMA_DEBUG=0` disables profiling. See [HTTP server construction](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go).
+No `/metrics` registration appears in the [reviewed main router](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go); do not assume a native metrics port. The [CLI entry point](https://github.com/ollama/ollama/blob/v0.34.2/main.go#L3-L13) runs the CLI built by [`NewCLI`](https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2377-L2654), which [registers](https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2632-L2654) the [serve command (`start` alias)](https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2469-L2475), whose [server path](https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2093-L2109) calls [`server.Serve`](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1938-L2060) (the [`server` import](https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L3-L60) names the [`server` package](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1)) when invoked as `serve` or `start`. That function [registers the generated router with `http.Handle("/", h)`](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1987-L1992), creates an HTTP server with a [nil `Handler` and a comment saying `http.DefaultServeMux` was chosen to get `net/http/pprof` for free](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2001-L2011), and [serves the listener](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2052-L2057). The [server import block](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L3-L54) has no `net/http/pprof` import. This guide's review of the first-party v0.34.2 Go tree found no `net/http/pprof` import or explicit profiling registration; that search does not cover dependencies or a shipped binary. Shipped pprof availability remains unestablished; the comment alone does not establish registration. Include `/debug/pprof/` in live inventory and public-denial checks. Do not claim either default availability or that `OLLAMA_DEBUG=0` disables profiling.
 
 **Exposed/fixed comparison, REASONED:** no runtime, diagnostic files, or live profiling inventory is available here. An exposed deployment returns operational metadata and may capture request bodies; the fixed public boundary denies diagnostics, administrators retain necessary visibility, and disabled request logging creates no new capture.
 
@@ -1025,7 +1037,7 @@ Use V3's probe with valid public inference credentials and then through the priv
 
 Exposed: registered operational routes disclose their responses through the catch-all boundary. Fixed: public requests return 404 without reaching upstream, while private administrative diagnostics still work. Pair the denial set with successful public chat.
 
-For `/debug/pprof/`, first observe the actual private binary. If no handler exists, record that absence; do not call it proof that debug settings disabled profiling. If it exists, retain the observed response and demonstrate public denial.
+For `/debug/pprof/`, first observe the actual private binary; this guide's source trace does not establish its response. If no handler exists, record that absence; do not call it proof that debug settings disabled profiling. If it exists, retain the observed response and demonstrate public denial.
 
 For logging, use an isolated service and a unique non-sensitive prompt. With request debugging deliberately enabled only for the comparison, send one completed V3 request and inspect the service's actual temporary-directory namespace for `ollama-request-logs-*`, request bodies, and replay scripts. Then apply C9, restart, send another completed request, and verify that no new request capture is created. Account for a service-specific `TMPDIR` or private temporary namespace. Retain timestamps and file evidence without sharing captured prompts or credentials, then clean up the test captures.
 
@@ -1060,6 +1072,18 @@ These commands validate configuration acceptance; they do not prove authenticati
 - HTTP serving, routes, and host middleware: https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go
 - Client-side outbound signing: https://github.com/ollama/ollama/blob/v0.34.2/api/client.go
 - Server startup and administrative import: https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go
+- CLI entry point (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/main.go#L3-L13
+- Serve command definition (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2469-L2475
+- CLI constructor NewCLI (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2377-L2654
+- Serve command registration (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2632-L2654
+- Serve command server path (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2093-L2109
+- Router attachment (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1987-L1992
+- HTTP server handler and pprof comment (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2001-L2011
+- HTTP listener serve call (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2052-L2057
+- HTTP server import block (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L3-L54
+- Serve function (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1938-L2060
+- cmd package imports, including the server package (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L3-L60
+- server package clause (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1
 - Create-file validation: https://github.com/ollama/ollama/blob/v0.34.2/server/create.go
 - Blob-path validation: https://github.com/ollama/ollama/blob/v0.34.2/manifest/paths.go
 - Registry transfers and redirect restrictions: https://github.com/ollama/ollama/blob/v0.34.2/server/images.go
