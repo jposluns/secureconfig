@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `realtime-webhooks.md` cites nginx release-1.26.3 `proxy_read_timeout` and HAProxy v3.0.0 `timeout client`, `timeout server`, `timeout http-request` and per-process `maxconn` for its proxy-limits summary, and labels the cross-guide coverage comparison as this guide's assessment (row 1.199) (#625)
 - Split row 1.179's residual guide and claim sourcing into numbered Priority 2 rows 1.199 to 1.227 and 1.230 to 1.312 after an item-by-item audit, retire the original row in `DONE.md` with scoped merged-PR dispositions, record the maintainer's direction in `DECISIONS.md`, and keep the six historical GitOps facts under row 2.28 (#621)
 - Write seven source citations whose path contains `__main__.py` or `__init__.py` as autolinks (the URL in angle brackets), so that lychee can extract the cited file rather than its parent directory (confirmation pending, row 3.40): five Langflow citations in agent builders and two Certbot citations in free certificates. Each URL is unchanged character for character; TODO row 3.40 now names what remains (#620)
 - `cloudflare.md` requires an independently confirmed origin address before reading its no-tunnel AOP 443 probe: a client-certificate refusal indicates AOP, and a `401`/`403` the app's authorization, only from that address, while a refusal or reply from an unconfirmed address shows only that something answers there, in the Verify item and the `verify-aop` claim (row 1.198, moved to `DONE.md`) (#619)
