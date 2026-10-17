@@ -619,8 +619,8 @@ REASONED: preceding block; certificate inventory, HTTPS access and served-certif
 - Certbot v2.3.0 relevant saved values (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L295-L312
 - Certbot v2.3.0 initial renewal configuration (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1120-L1128
 - Certbot v2.3.0 renewed configuration (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1243-L1249
-- Certbot v2.3.0 Cloudflare DNS credentials (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot-dns-cloudflare/certbot_dns_cloudflare/__init__.py#L24-L39
-- Certbot v2.3.0 Cloudflare DNS credential permissions (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot-dns-cloudflare/certbot_dns_cloudflare/__init__.py#L61-L78
+- Certbot v2.3.0 Cloudflare DNS credentials (checked October 2026): <https://github.com/certbot/certbot/blob/v2.3.0/certbot-dns-cloudflare/certbot_dns_cloudflare/__init__.py#L24-L39>
+- Certbot v2.3.0 Cloudflare DNS credential permissions (checked October 2026): <https://github.com/certbot/certbot/blob/v2.3.0/certbot-dns-cloudflare/certbot_dns_cloudflare/__init__.py#L61-L78>
 - Cloudflare Origin CA (checked October 2026): https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/
 
 ======================================================================
@@ -30019,14 +30019,14 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - Langflow 1.12.6 backend image (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push_backend.Dockerfile#L124-L128
 - Langflow 1.12.6 ep image (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push_ep.Dockerfile#L164-L169
 - Langflow 1.12.6 prefix (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/base.py#L89-L117
-- Langflow 1.12.6 tls wiring (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L553-L556
-- Langflow 1.12.6 tls uvicorn (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L225-L245
-- Langflow 1.12.6 tls gunicorn (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L670-L690
+- Langflow 1.12.6 tls wiring (checked October 2026): <https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L553-L556>
+- Langflow 1.12.6 tls uvicorn (checked October 2026): <https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L225-L245>
+- Langflow 1.12.6 tls gunicorn (checked October 2026): <https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L670-L690>
 - Langflow 1.12.6 password (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L216-L230
 - Langflow 1.12.6 auth prefix (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L344
 - Langflow 1.12.6 auth settings class (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L48
-- Langflow 1.12.6 platform (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L173-L178
-- Langflow 1.12.6 uvicorn branch (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L619-L669
+- Langflow 1.12.6 platform (checked October 2026): <https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L173-L178>
+- Langflow 1.12.6 uvicorn branch (checked October 2026): <https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L619-L669>
 - Langflow 1.12.6 auto-login branch (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L142-L213
 - Langflow production best practices (`LANGFLOW_SECRET_KEY` preflight): https://docs.langflow.org/deployment-prod-best-practices
 - Langflow security model (the editor runs arbitrary Python with host/filesystem/network access): https://docs.langflow.org/security

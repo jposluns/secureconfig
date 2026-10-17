@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "6e0ea06462cf87616ca35687aa67fabd89f6c77fab6cf65e9e6549afadbc6879",
+  "body_sha256": "49aeeb6f2264d04bfeae494a08061515cc6649f8cda6dc14173a133553160593",
   "components": {
     "dify": {
       "name": "Dify documentation",
@@ -586,14 +586,14 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - Langflow 1.12.6 backend image (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push_backend.Dockerfile#L124-L128
 - Langflow 1.12.6 ep image (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push_ep.Dockerfile#L164-L169
 - Langflow 1.12.6 prefix (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/base.py#L89-L117
-- Langflow 1.12.6 tls wiring (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L553-L556
-- Langflow 1.12.6 tls uvicorn (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L225-L245
-- Langflow 1.12.6 tls gunicorn (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L670-L690
+- Langflow 1.12.6 tls wiring (checked October 2026): <https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L553-L556>
+- Langflow 1.12.6 tls uvicorn (checked October 2026): <https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L225-L245>
+- Langflow 1.12.6 tls gunicorn (checked October 2026): <https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L670-L690>
 - Langflow 1.12.6 password (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L216-L230
 - Langflow 1.12.6 auth prefix (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L344
 - Langflow 1.12.6 auth settings class (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L48
-- Langflow 1.12.6 platform (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L173-L178
-- Langflow 1.12.6 uvicorn branch (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L619-L669
+- Langflow 1.12.6 platform (checked October 2026): <https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L173-L178>
+- Langflow 1.12.6 uvicorn branch (checked October 2026): <https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L619-L669>
 - Langflow 1.12.6 auto-login branch (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L142-L213
 - Langflow production best practices (`LANGFLOW_SECRET_KEY` preflight): https://docs.langflow.org/deployment-prod-best-practices
 - Langflow security model (the editor runs arbitrary Python with host/filesystem/network access): https://docs.langflow.org/security
