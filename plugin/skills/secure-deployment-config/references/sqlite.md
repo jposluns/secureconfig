@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "ef07757c67696a1319e62468335cd03aa40f41001119b9693d5c6fb0c96ff73b",
+  "body_sha256": "b5d9750c2b2d88d7ce071ca053651b9bacb044a869224ae06591a9b815d0cd97",
   "components": {
     "see": {
       "name": "SQLite Encryption Extension",
@@ -128,6 +128,15 @@ version_basis: {
         "sadf0431c1271": "https://www.sqlite.org/security.html"
       }
     },
+    "git": {
+      "name": "Git documentation",
+      "basis": "v2.56.0",
+      "sources": {
+        "s12aad6467212": "https://github.com/git/git/blob/v2.56.0/Documentation/gitignore.adoc#L15-L18",
+        "s8054ab09dc74": "https://github.com/git/git/blob/v2.56.0/Documentation/git-rm.adoc#L17-L28",
+        "s9a6802adec89": "https://github.com/git/git/blob/v2.56.0/Documentation/git-log.adoc#L16-L16"
+      }
+    },
     "coreutils": {
       "name": "GNU Coreutils stat manual",
       "basis": "v9.7",
@@ -143,7 +152,7 @@ version_basis: {
     "filesystem": {"text": "No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sadf0431c1271"], "status": "REASONED"},
     "extensions": {"text": "Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s742deb3338bb"], "status": "REASONED"},
     "web-files": {"text": "Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
-    "git-files": {"text": "Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
+    "git-files": {"text": "Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. This guide assesses committed database rows as permanently available to anyone who clones, even after a later deletion commit.", "components": ["sqlite-rolling", "git"], "sources": ["sqlite-rolling:sf3d7f8391994", "git:s12aad6467212", "git:s8054ab09dc74", "git:s9a6802adec89"], "status": "REASONED"},
     "permissions": {"text": "Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
     "temporary": {"text": "Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
     "encryption": {"text": "Public-domain SQLite has no file encryption; SEE is licensed and SQLCipher is a third-party alternative, otherwise use filesystem or volume encryption.", "components": ["see", "cipher"], "sources": ["see:sda3d8876503d", "cipher:s57d83a42a74a"], "status": "REASONED"},
@@ -190,14 +199,14 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | filesystem: No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect. | SQLite documentation (rolling) unknown | REASONED |
 | extensions: Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries. | SQLite documentation (rolling) unknown | REASONED |
 | web-files: Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names. | SQLite documentation (rolling) unknown | REASONED |
-| git-files: Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. | SQLite documentation (rolling) unknown | REASONED |
+| git-files: Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. This guide assesses committed database rows as permanently available to anyone who clones, even after a later deletion commit. | SQLite documentation (rolling) unknown; Git documentation v2.56.0 | REASONED |
 | permissions: Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation. | SQLite documentation (rolling) unknown | REASONED |
 | temporary: Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions. | SQLite documentation (rolling) unknown | REASONED |
 | encryption: Public-domain SQLite has no file encryption; SEE is licensed and SQLCipher is a third-party alternative, otherwise use filesystem or volume encryption. | SQLite Encryption Extension unknown; SQLCipher unknown | REASONED |
@@ -244,7 +253,7 @@ Keep the database, its sidecars, temporary files, exports, and backups outside e
 
 ## 2. Keep the file out of git
 
-A committed `.db` file ships every row to anyone who clones the repository, permanently, even after a later commit deletes it. Add `*.db`, `*.sqlite`, `*.sqlite3`, and their sidecar files to `.gitignore` before the first commit: the WAL, shared-memory, and rollback-journal files take the full database filename plus `-wal`, `-shm`, or `-journal`, so each extension needs its own trio (`*.db-wal`, `*.db-shm`, `*.db-journal`, `*.sqlite-wal`, `*.sqlite-shm`, `*.sqlite-journal`, `*.sqlite3-wal`, `*.sqlite3-shm`, `*.sqlite3-journal`). Ignore rules do not remove already-tracked files, so scan the index and history and handle a copy that already leaked per [secrets.md](secrets.md).
+A committed `.db` file ships every row to anyone who clones the repository, permanently, even after a later commit deletes it. This warning is this guide's assessment based on Git's documented index and working-tree removal and inspectable commit logs. Add `*.db`, `*.sqlite`, `*.sqlite3`, and their sidecar files to `.gitignore` before the first commit: the WAL, shared-memory, and rollback-journal files take the full database filename plus `-wal`, `-shm`, or `-journal`, so each extension needs its own trio (`*.db-wal`, `*.db-shm`, `*.db-journal`, `*.sqlite-wal`, `*.sqlite-shm`, `*.sqlite-journal`, `*.sqlite3-wal`, `*.sqlite3-shm`, `*.sqlite3-journal`). Ignore rules do not remove already-tracked files, so scan the index and history and handle a copy that already leaked per [secrets.md](secrets.md).
 
 ## 3. File permissions
 
@@ -479,4 +488,7 @@ Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests 
 - Docker container reachability: [bridge peers and publication](https://docs.docker.com/engine/network/drivers/bridge/), [host networking](https://docs.docker.com/engine/network/drivers/host/), and [shared container networking stacks](https://docs.docker.com/engine/network/#container-networks).
 - Litestream configuration (metrics addr, MCP mcp-addr) (Litestream MCP listener in v0.5.0 and later): https://litestream.io/reference/config/
 - Turso SQL over HTTP (`/v2/pipeline`, bearer authentication): https://docs.turso.tech/sdk/http/reference
+- Git v2.56.0 `gitignore` documentation (checked October 2026; tracked files are unaffected): https://github.com/git/git/blob/v2.56.0/Documentation/gitignore.adoc#L15-L18
+- Git v2.56.0 `git-rm` documentation (checked October 2026; index and working-tree removal): https://github.com/git/git/blob/v2.56.0/Documentation/git-rm.adoc#L17-L28
+- Git v2.56.0 `git-log` documentation (checked October 2026; shows commit logs): https://github.com/git/git/blob/v2.56.0/Documentation/git-log.adoc#L16-L16
 - GNU Coreutils v9.7 `stat` manual (checked October 2026; GNU syntax): [`-c` format](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L12989-L12995), [`%a` octal permissions](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13046), [`%n` file name](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13062), and [`%U` owner name](https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13073).
