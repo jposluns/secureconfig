@@ -52,7 +52,7 @@ python3 tools/version_basis.py --check
     echo
     # A concatenated document cannot carry several YAML front matters.
     # Keep the complete generated summary and guide body in each guide.
-    python3 tools/version_basis.py --bundle "$f"
+    python3 tools/version_basis.py --no-advisory --bundle "$f"
   done
 } > "$out"
 

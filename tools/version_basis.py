@@ -416,23 +416,15 @@ def rendered_sources(body, heads, parser):
     by matching known URLs in rendered text tokens; code and link labels do not
     supply targets. Link and autolink destinations come from the parser's href.
     """
-    from html.parser import HTMLParser
-
-    class Anchors(HTMLParser):
-        def __init__(self):
-            super().__init__(convert_charrefs=True)
-            self.hrefs = []
-
-        def handle_starttag(self, tag, attrs):
-            if tag.lower() == 'a':
-                self.hrefs.extend(value for key, value in attrs if key.lower() == 'href' and value)
-
     _, ranges = _sources_ranges(body, heads)
     lines = body.splitlines()
     occurrences = []
     items = []
     stack = []
+    parents = []
     for token in parser.parse(body):
+        if token.nesting == -1:
+            parents.pop()
         if token.type == 'list_item_open':
             items.append(([], []))
             stack.append(len(items) - 1)
@@ -440,7 +432,8 @@ def rendered_sources(body, heads, parser):
             stack.pop()
         elif token.type == 'inline' and token.map and any(
                 token.map[0] < end and token.map[1] > start for start, end in ranges):
-            owner = stack[-1] if stack else None
+            owner = (stack[-1] if stack and parents[-2:] ==
+                     ['list_item_open', 'paragraph_open'] else None)
             if owner is not None:
                 items[owner][0].extend(lines[token.map[0]:token.map[1]])
             in_link = 0
@@ -462,17 +455,11 @@ def rendered_sources(body, heads, parser):
                 elif child.type in ('softbreak', 'hardbreak'):
                     visible.append('\n')
                 elif child.type == 'html_inline':
-                    html_parser = Anchors()
-                    html_parser.feed(child.content)
-                    occurrences.extend((href, owner, True) for href in html_parser.hrefs)
+                    visible.append('\n')
             if owner is not None:
                 items[owner][1].append(''.join(visible))
-        elif token.type == 'html_block' and token.map and any(
-                token.map[0] < end and token.map[1] > start for start, end in ranges):
-            html_parser = Anchors()
-            html_parser.feed(token.content)
-            occurrences.extend((href, stack[-1] if stack else None, True)
-                               for href in html_parser.hrefs)
+        if token.nesting == 1:
+            parents.append(token.type)
     return occurrences, [('\n'.join(raw), '\n'.join(rendered))
                          for raw, rendered in items]
 
@@ -588,6 +575,9 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0, parser=
     require(data['body_sha256'] == expected_digest,
             f'body changed: expected body_sha256={expected_digest}; review the claim inventory, '
             f'then run: python3 tools/version_basis.py --rebind {shlex.quote(str(guide))}')
+    if parser is not None:
+        require(not re.search('[\x0b\x0c\x1c-\x1e\x85\u2028\u2029]', body),
+                'unsupported line boundary in guide body for rendered Sources checks')
     require(body.startswith('# ') and sum(level == 1 for _, level, _, _ in headings(body)) == 1,
             'guide body must start with exactly one H1')
     heads = headings(body)
@@ -783,6 +773,8 @@ def main():
                         help='optional enrolled guide for --check or --write')
     parser.add_argument('--require-parser', action='store_true',
                         help='fail if the pinned CommonMark parser is unavailable (CI)')
+    parser.add_argument('--no-advisory', action='store_true',
+                        help='suppress the missing-parser advisory when a caller has already printed it')
     args = parser.parse_args()
     try:
         from check_verify_marking import ParserUnavailable, gate_parser
@@ -792,8 +784,9 @@ def main():
             if args.require_parser or os.environ.get('CI'):
                 raise ValueError(f'pinned parser unavailable: {exc}') from exc
             source_parser = None
-            print(f'  SKIP  version basis rendered Sources checks: {exc} '
-                  '(line grammar still runs)', file=sys.stderr)
+            if not args.no_advisory:
+                print(f'  SKIP  version basis rendered Sources checks: {exc} '
+                      '(line grammar still runs)', file=sys.stderr)
         selected = paths()
         baseline = load_source_baseline()
         require({name for name, _ in baseline} <= {path.name for path in selected},

@@ -179,10 +179,17 @@ Schema 1 requires exactly these top-level fields:
   target in the owning item; the fallback counts it when the URL appears contiguously there.
   For a URL only in a code span or link label, the fallback can count the raw spelling, while
   the parser excludes it. An image target is excluded from parser counting; the raw presence
-  and basis checks still apply to an image citation. Citations in fenced or indented code
+  and basis checks still apply to an image citation. An image-only citation can therefore pass
+  with the fallback and fail with the parser. A basis found only in a link title can pass with
+  the fallback and fail with the parser. An image alt spelling inside a link label can pass
+  with the fallback and fail with the parser. Content inside a `<template>` element can count
+  as text in both paths; this behaviour predates the parser check. Citations in fenced or indented code
   blocks still fail the raw container check when they exceed parsed list-item citations.
-  Emphasis can join rendered text to a basis: `v1.0**x**` reads as `v1.0x` and does not
+  With the parser, emphasis can join rendered text to a basis: `v1.0**x**` reads as `v1.0x` and does not
   satisfy the basis boundary. A code span splits a basis: ``v1`.0` `` does not satisfy it.
+  An emphasis spelling inside a basis, such as `v1.**0**`, can pass only with the parser
+  because its rendered text contains `v1.0`. An entity spelling inside a basis, such as
+  `v1&#46;0`, can likewise pass only with the parser when its line has no URL or link.
   For a bare URL, the parser applies a textual boundary check, so emphasis can split a
   URL that a reader sees as continuous. For link targets containing non-ASCII characters
   or punctuation that the parser encodes, the parser's normalized href is accepted; the

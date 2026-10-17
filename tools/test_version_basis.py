@@ -240,6 +240,18 @@ class VersionBasisTests(unittest.TestCase):
                         self.assertIn('SKIP  version basis rendered Sources checks', result.stderr)
                         self.assertEqual(result.stdout, '# Plain\n')
 
+            standalone = subprocess.run([sys.executable, '-S', script, '--bundle', str(path)],
+                                        capture_output=True, text=True, env=self.local_env())
+            quiet = subprocess.run([sys.executable, '-S', script, '--no-advisory',
+                                    '--bundle', str(path)], capture_output=True, text=True,
+                                   env=self.local_env())
+            self.assertEqual(standalone.stderr.count('SKIP  version basis'), 1)
+            self.assertEqual(quiet.returncode, 0, quiet.stderr)
+            self.assertNotIn('SKIP  version basis', quiet.stderr)
+            build = (vb.ROOT / 'scripts/build-llms-full.sh').read_text(encoding='utf-8')
+            self.assertIn('python3 tools/version_basis.py --check', build)
+            self.assertIn('python3 tools/version_basis.py --no-advisory --bundle "$f"', build)
+
 
 class SourcesBasisTests(unittest.TestCase):
     url = 'https://example.com/control'
@@ -1005,6 +1017,10 @@ class RenderedSourcesTests(unittest.TestCase):
             first + f'\n- Other\n-\n  Again v1.0: {url}',
             first + f'\n- Again: ![doc]({url})',
             f'- Product v1`.0`: {url}',
+            f'- Product v1<br>.0: {url}',
+            f'- Product: {url}\n  > v1.0',
+            (f'- Product: {url}\n\n  | Field | Value |\n'
+             '  | --- | --- |\n  | Basis | v1.0 |'),
         )
         for sources in cases:
             with self.subTest(sources=sources):
@@ -1057,6 +1073,47 @@ class RenderedSourcesTests(unittest.TestCase):
         self.check(f'- Product v1.0: {target}')
         with self.assertRaisesRegex(ValueError, 'basis.*absent'):
             self.check(f'- Product v1.0: {url}\n- Again: {target}')
+
+    def test_softbreak_splits_basis(self):
+        url = 'https://example.com/control'
+        with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+            self.check(f'- Product v1\n  .0: {url}')
+
+    def test_non_lf_line_boundaries_fail_closed(self):
+        url = 'https://example.com/control'
+        sources = f'- Product: {url}\n\n### More\n\n- Product v1.0: {url}'
+        for boundary in '\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029':
+            with self.subTest(boundary=repr(boundary)):
+                body = BODY.replace('## Sources (checked September 2026)',
+                                    boundary * 3 + '## Sources (checked September 2026)')
+                body = body[:body.index('- Product')] + sources + '\n'
+                data = fixture()
+                data['components']['product']['sources'] = {vb.source_id(url): url}
+                data['claims']['control']['sources'] = ['product:' + vb.source_id(url)]
+                data['body_sha256'] = vb.digest(body)
+                with self.assertRaisesRegex(ValueError, 'unsupported line boundary'):
+                    vb.updated(document(data, body), 'fixture.md', parser=self.parser)
+
+    def test_complex_item_fingerprints_match_fallback(self):
+        url = 'https://example.com/control'
+        for sources in (
+                f'- Product: {url}\n  > v1.0',
+                (f'- Product: {url}\n\n  | Field | Value |\n'
+                 '  | --- | --- |\n  | Basis | v1.0 |')):
+            with self.subTest(sources=sources):
+                body = BODY[:BODY.index('- Product')] + sources + '\n'
+                heads = headings(body)
+                raw = vb.raw_sources(body, heads)
+                old = vb.source_entries(raw)
+                _, items = vb.rendered_sources(body, heads, self.parser)
+                self.assertEqual([entry for entry, _ in items], old)
+                fp = vb.source_fingerprint('product', 'v1.0', url, old[0])
+                baseline = Counter({('fixture.md', fp): 1})
+                data = fixture()
+                data['components']['product']['sources'] = {vb.source_id(url): url}
+                data['claims']['control']['sources'] = ['product:' + vb.source_id(url)]
+                data['body_sha256'] = vb.digest(body)
+                vb.updated(document(data, body), 'fixture.md', baseline, self.parser)
 
     def test_current_corpus_agrees_on_occurrence_counts(self):
         differences = []
