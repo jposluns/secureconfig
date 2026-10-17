@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-27",
   "documentation_checked": "2026-09",
-  "body_sha256": "cf2c95ec59c97d2e5cdffcaafc3a55f6fd284c5620dfd02b43ecdb95fb9274dc",
+  "body_sha256": "4fd23c9825822d04f7e12d400a3010ea9ba74a4fce855cda84b60be91c7ee94d",
   "components": {
     "ds-container": {
       "name": "Datasette container generator",
@@ -59,6 +59,15 @@ version_basis: {
       "basis": "825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2",
       "sources": {
         "s13d71c0a8cb2": "https://raw.githubusercontent.com/coleifer/sqlite-web/825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2/sqlite_web/sqlite_web.py"
+      }
+    },
+    "web-tag-source": {
+      "name": "sqlite-web tagged implementation",
+      "basis": "0.8.1",
+      "sources": {
+        "s1626cd0d975f": "https://github.com/coleifer/sqlite-web/blob/0.8.1/sqlite_web/sqlite_web.py#L3",
+        "s8c12f9aab57c": "https://github.com/coleifer/sqlite-web/blob/0.8.1/sqlite_web/sqlite_web.py#L1735-L1740",
+        "s30bba3ce63c6": "https://github.com/coleifer/sqlite-web/blob/0.8.1/sqlite_web/sqlite_web.py#L1944-L1956"
       }
     },
     "web-image": {
@@ -214,7 +223,7 @@ version_basis: {
     "web-cli": {"text": "sqlite-web -H/--host uses uppercase H and -p/--port overrides the port; the documented default is 127.0.0.1:8080.", "components": ["web", "web-source"], "sources": ["web:s91f8591a5f84", "web-source:s13d71c0a8cb2"], "status": "REASONED"},
     "write-test": {"text": "Local anonymous write and root write without CSRF were denied; root write with the token returned 302 and wrote the row.", "components": ["write", "datasette-docs"], "sources": ["datasette-docs:s406cc998a5da", "write:s073e10d21091"], "status": "DEMONSTRATED", "evidence": "With datasette-write on a disposable database, an anonymous write got `403`, a root write without the CSRF token `403`, and with the token `302`, and the row was written."},
     "secret-indirection": {"text": "Keep plugin secrets out of public metadata with documented environment or file indirection, and protect root login URLs and credential files.", "components": ["datasette-docs"], "sources": ["datasette-docs:sb1b30f98f026", "datasette-docs:s878851fd8eac"], "status": "REASONED"},
-    "web-auth-config": {"text": "A nonempty shared password requires -P/--password; SQLITE_WEB_PASSWORD is read only inside that option branch. The shared login supplies no per-table roles.", "components": ["web", "web-source"], "sources": ["web:s91f8591a5f84", "web-source:s13d71c0a8cb2"], "status": "REASONED"},
+    "web-auth-config": {"text": "In tagged sqlite-web 0.8.1, a nonempty shared password requires -P/--password; SQLITE_WEB_PASSWORD is read only inside that option branch, and an unset or empty variable leads to a prompt. The shared login supplies no per-table roles.", "components": ["web", "web-source", "web-tag-source"], "sources": ["web:s91f8591a5f84", "web-source:s13d71c0a8cb2", "web-tag-source:s1626cd0d975f", "web-tag-source:s8c12f9aab57c", "web-tag-source:s30bba3ce63c6"], "status": "REASONED"},
     "web-readonly-config": {"text": "--read-only opens SQLite with mode=ro and reduces exposure to reads; it does not authenticate callers.", "components": ["web", "web-source", "sqlite"], "sources": ["web:s91f8591a5f84", "web-source:s13d71c0a8cb2", "sqlite:s4e4e320abf5b"], "status": "REASONED"},
     "cors-policy": {"text": "--cors permits cross-origin JSON access and should be omitted unless intended; its absence does not authenticate requests.", "components": ["datasette-docs"], "sources": ["datasette-docs:s96c8e6562139"], "status": "REASONED"},
     "query-pages": {"text": "Queries return at most 1,000 rows at a time by default; pagination retrieves more, so that limit is not a confidentiality boundary.", "components": ["datasette-docs"], "sources": ["datasette-docs:se154b0fa47dd", "datasette-docs:s824eb176fda7"], "status": "REASONED"}
@@ -283,7 +292,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | web-cli: sqlite-web -H/--host uses uppercase H and -p/--port overrides the port; the documented default is 127.0.0.1:8080. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | REASONED |
 | write-test: Local anonymous write and root write without CSRF were denied; root write with the token returned 302 and wrote the row. | datasette-write 0.4; Datasette documentation (rolling) unknown | DEMONSTRATED |
 | secret-indirection: Keep plugin secrets out of public metadata with documented environment or file indirection, and protect root login URLs and credential files. | Datasette documentation (rolling) unknown | REASONED |
-| web-auth-config: A nonempty shared password requires -P/--password; SQLITE_WEB_PASSWORD is read only inside that option branch. The shared login supplies no per-table roles. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | REASONED |
+| web-auth-config: In tagged sqlite-web 0.8.1, a nonempty shared password requires -P/--password; SQLITE_WEB_PASSWORD is read only inside that option branch, and an unset or empty variable leads to a prompt. The shared login supplies no per-table roles. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2; sqlite-web tagged implementation 0.8.1 | REASONED |
 | web-readonly-config: --read-only opens SQLite with mode=ro and reduces exposure to reads; it does not authenticate callers. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2; SQLite documentation unknown | REASONED |
 | cors-policy: --cors permits cross-origin JSON access and should be omitted unless intended; its absence does not authenticate requests. | Datasette documentation (rolling) unknown | REASONED |
 | query-pages: Queries return at most 1,000 rows at a time by default; pagination retrieves more, so that limit is not a confidentiality boundary. | Datasette documentation (rolling) unknown | REASONED |
@@ -365,7 +374,7 @@ At the time of writing, sqlite-web defaults to `127.0.0.1:8080`. Overrides are `
 
 The project Dockerfile starts with `-H 0.0.0.0` and exposes 8080; the README publishes `8080:8080`. For a proxy on the Docker host, use an explicit loopback publication such as `-p 127.0.0.1:8080:8080`, then verify it externally.
 
-Authentication requires a nonempty password. `-P/--password` prompts; the inspected implementation reads `SQLITE_WEB_PASSWORD` only inside that option's branch. The environment variable alone therefore does not enable authentication in this source. The browser login uses one shared password, without per-table roles.
+Authentication requires a nonempty password. In the tagged sqlite-web 0.8.1 implementation, `-P/--password` enables password setup: it uses `SQLITE_WEB_PASSWORD` when that variable is nonempty and otherwise prompts; the variable is read only inside that option's branch. In this guide's assessment of that release, the environment variable alone therefore does not enable authentication. The browser login uses one shared password, without per-table roles.
 
 For the shared proxy-authentication pattern below:
 
@@ -507,7 +516,7 @@ DEMONSTRATED: local guard limits on 2026-10-05 in private /dev/shm scratch with 
 
 Applicability checked on 2026-09-18: Datasette stable documentation lists 0.65.5; Datasette packaging source was inspected on moving `main`. sqlite-web source was inspected on moving `master`, identifying itself as 0.8.1; the released 0.8.1 package matched it for the flags and routes the loopback runs exercised. Runtime confirmation used Datasette 0.65.5, datasette-auth-passwords 1.1.1, datasette-write 0.4 and sqlite-web 0.8.1 from PyPI.
 
-Every URL listed below was fetched during authoring. This list also records the source-fetch review.
+The URLs below were fetched during the original authoring, except for the sqlite-web 0.8.1 tag entries checked against the locally extracted tag snapshot in October 2026. This list also records the source-fetch review.
 
 - Datasette CLI reference (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/cli-reference.html
 - Datasette authentication and permissions (rolling documentation, checked September 2026): https://docs.datasette.io/en/stable/authentication.html
@@ -530,6 +539,9 @@ Every URL listed below was fetched during authoring. This list also records the 
 - Datasette write plugin (datasette-write 0.4 used in the loopback demonstrations): https://github.com/simonw/datasette-write/blob/0.4/README.md
 - sqlite-web README, features, options, and Docker usage (sqlite-web 0.8.1 from PyPI, tested on loopback): https://github.com/coleifer/sqlite-web/blob/0.8.1/README.md
 - sqlite-web implementation: https://raw.githubusercontent.com/coleifer/sqlite-web/825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2/sqlite_web/sqlite_web.py
+- sqlite-web 0.8.1 tag f86cfc7613a511114a804720448d8a145c17cc79 version line (checked October 2026): https://github.com/coleifer/sqlite-web/blob/0.8.1/sqlite_web/sqlite_web.py#L3
+- sqlite-web 0.8.1 tag f86cfc7613a511114a804720448d8a145c17cc79 password option (checked October 2026): https://github.com/coleifer/sqlite-web/blob/0.8.1/sqlite_web/sqlite_web.py#L1735-L1740
+- sqlite-web 0.8.1 tag f86cfc7613a511114a804720448d8a145c17cc79 password branch (checked October 2026): https://github.com/coleifer/sqlite-web/blob/0.8.1/sqlite_web/sqlite_web.py#L1944-L1956
 - sqlite-web Dockerfile: https://raw.githubusercontent.com/coleifer/sqlite-web/7f6658b012a789f0b9418cad543e7798ce850130/docker/Dockerfile
 - SQLite security: https://www.sqlite.org/security.html
 - SQLite serverless architecture and filesystem access: https://www.sqlite.org/serverless.html
