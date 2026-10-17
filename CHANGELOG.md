@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
-- `ollama.md` cites the v0.34.2 server entry point, router attachment, server construction and import block for the profiling trace, labels the first-party source search as this guide's review, and keeps live verification of `/debug/pprof/` on the shipped binary (row 1.179) (#593)
+- `ollama.md` cites the v0.34.2 CLI entry point, serve command definition and registration, router attachment, HTTP server handler and pprof comment, listener serve call and import block for the profiling trace, labels the first-party source search as this guide's review, and keeps live verification of `/debug/pprof/` on the shipped binary (row 1.179) (#593)
 - `python.md` cites slowapi `v0.1.10`, HTTPX `0.28.1`, CPython `v3.14.8` and OpenSSL `openssl-4.0.3` for the login rate-limit example, unverified-client warnings and the `SSL_CERT_FILE` export, names the conflict between HTTPX's SSL guide and its code path, and labels the remaining guidance as this guide's advice (row 1.179) (#588)
 - `frontend-frameworks.md` cites SvelteKit `@sveltejs/kit@2.70.3` routing, load, form-action, hooks and remote-function documentation for its authorization statements, and labels the per-resource session and authorization checks as this guide's advice (row 1.179) (#589)
 
