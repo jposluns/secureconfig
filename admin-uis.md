@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "1161bd3ecf0bf0f39b676211b28f10844457aa0779068a9ba74ed1ca36da04eb",
+  "body_sha256": "8cc03871084681c33365ab91aeec1b663beb07b64b3f9d716354c1563ef4912e",
   "components": {
     "mongo": {
       "name": "mongo-express",
@@ -109,7 +109,7 @@ version_basis: {
     "grafana-bind": {"text": "Empty http_addr joins the port and binds all interfaces; set 127.0.0.1.", "components": ["grafana-pin", "go"], "sources": ["grafana-pin:s4c6ff3174e7e", "grafana-pin:sb00e234d0ddd", "grafana-pin:sf14b29976adb", "go:s37204ff1b27c"], "status": "REASONED"},
     "grafana-tls": {"text": "Native HTTPS uses server protocol=https, cert_file and cert_key.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5", "grafana:sc241e0772095"], "status": "REASONED"},
     "prometheus-auth": {"text": "Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes.", "components": ["prometheus"], "sources": ["prometheus:scce074c47e9c"], "status": "REASONED"},
-    "prometheus-bcrypt": {"text": "Use htpasswd -nB -C 12; Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, below OWASP's minimum work factor of 10 for legacy bcrypt.", "components": ["prometheus", "htpasswd", "httpd-source", "owasp-source"], "sources": ["prometheus:scce074c47e9c", "htpasswd:scde9004bb967", "httpd-source:sfed14ba2991a", "httpd-source:sf711558bdf3c", "httpd-source:s4aa0f7f341fb", "httpd-source:s4ec6b9b216dc", "httpd-source:s6952d96564d9", "owasp-source:s4531e65b6502"], "status": "REASONED"},
+    "prometheus-bcrypt": {"text": "Use htpasswd -nB -C 12; Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, by this guide's comparison below OWASP's minimum work factor of 10 for legacy bcrypt.", "components": ["prometheus", "htpasswd", "httpd-source", "owasp-source"], "sources": ["prometheus:scce074c47e9c", "htpasswd:scde9004bb967", "httpd-source:sfed14ba2991a", "httpd-source:sf711558bdf3c", "httpd-source:s4aa0f7f341fb", "httpd-source:s4ec6b9b216dc", "httpd-source:s6952d96564d9", "owasp-source:s4531e65b6502"], "status": "REASONED"},
     "prometheus-bind": {"text": "Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090.", "components": ["prometheus-pin"], "sources": ["prometheus-pin:s6d5f308b02a2"], "status": "REASONED"},
     "prometheus-tls": {"text": "web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config.", "components": ["prometheus"], "sources": ["prometheus:sc48b506cc29a"], "status": "REASONED"},
     "database-panels": {"text": "Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated.", "components": ["phpmyadmin", "pgadmin"], "sources": ["phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435"], "status": "REASONED"},
@@ -143,7 +143,7 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 | grafana-bind: Empty http_addr joins the port and binds all interfaces; set 127.0.0.1. | Grafana v13.2.2; Go net unknown | REASONED |
 | grafana-tls: Native HTTPS uses server protocol=https, cert_file and cert_key. | Grafana docs unknown | REASONED |
 | prometheus-auth: Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes. | Prometheus docs unknown | REASONED |
-| prometheus-bcrypt: Use htpasswd -nB -C 12; Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, below OWASP's minimum work factor of 10 for legacy bcrypt. | Prometheus docs unknown; Apache htpasswd 2.4; Apache httpd htpasswd source 2.4.69; OWASP Password Storage Cheat Sheet 72865b1e3b5754246a101778dc00b37f9c233373 | REASONED |
+| prometheus-bcrypt: Use htpasswd -nB -C 12; Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, by this guide's comparison below OWASP's minimum work factor of 10 for legacy bcrypt. | Prometheus docs unknown; Apache htpasswd 2.4; Apache httpd htpasswd source 2.4.69; OWASP Password Storage Cheat Sheet 72865b1e3b5754246a101778dc00b37f9c233373 | REASONED |
 | prometheus-bind: Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090. | Prometheus v3.14.0 | REASONED |
 | prometheus-tls: web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config. | Prometheus docs unknown | REASONED |
 | database-panels: Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated. | phpMyAdmin unknown; pgAdmin unknown | REASONED |
@@ -191,7 +191,7 @@ No authentication at all by default, and it listens on `0.0.0.0:9090` by default
 
 ```yaml
 basic_auth_users:
-  admin: $2b$12$REPLACE_WITH_BCRYPT_HASH    # htpasswd -nB -C 12 admin, hash part (Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, below OWASP's minimum 10 for legacy bcrypt)
+  admin: $2b$12$REPLACE_WITH_BCRYPT_HASH    # htpasswd -nB -C 12 admin, hash part (Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5; by this guide's comparison, below OWASP's minimum 10 for legacy bcrypt)
 ```
 
 The same file carries TLS (`tls_server_config` with `cert_file` and `key_file`; see the Prometheus TLS guide below). Validate with `promtool check web-config web.yml`. Exporters and Alertmanager need the same treatment; see [observability-components.md](observability-components.md).

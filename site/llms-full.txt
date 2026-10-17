@@ -32483,7 +32483,7 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 | grafana-bind: Empty http_addr joins the port and binds all interfaces; set 127.0.0.1. | Grafana v13.2.2; Go net unknown | REASONED |
 | grafana-tls: Native HTTPS uses server protocol=https, cert_file and cert_key. | Grafana docs unknown | REASONED |
 | prometheus-auth: Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes. | Prometheus docs unknown | REASONED |
-| prometheus-bcrypt: Use htpasswd -nB -C 12; Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, below OWASP's minimum work factor of 10 for legacy bcrypt. | Prometheus docs unknown; Apache htpasswd 2.4; Apache httpd htpasswd source 2.4.69; OWASP Password Storage Cheat Sheet 72865b1e3b5754246a101778dc00b37f9c233373 | REASONED |
+| prometheus-bcrypt: Use htpasswd -nB -C 12; Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, by this guide's comparison below OWASP's minimum work factor of 10 for legacy bcrypt. | Prometheus docs unknown; Apache htpasswd 2.4; Apache httpd htpasswd source 2.4.69; OWASP Password Storage Cheat Sheet 72865b1e3b5754246a101778dc00b37f9c233373 | REASONED |
 | prometheus-bind: Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090. | Prometheus v3.14.0 | REASONED |
 | prometheus-tls: web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config. | Prometheus docs unknown | REASONED |
 | database-panels: Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated. | phpMyAdmin unknown; pgAdmin unknown | REASONED |
@@ -32531,7 +32531,7 @@ No authentication at all by default, and it listens on `0.0.0.0:9090` by default
 
 ```yaml
 basic_auth_users:
-  admin: $2b$12$REPLACE_WITH_BCRYPT_HASH    # htpasswd -nB -C 12 admin, hash part (Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, below OWASP's minimum 10 for legacy bcrypt)
+  admin: $2b$12$REPLACE_WITH_BCRYPT_HASH    # htpasswd -nB -C 12 admin, hash part (Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5; by this guide's comparison, below OWASP's minimum 10 for legacy bcrypt)
 ```
 
 The same file carries TLS (`tls_server_config` with `cert_file` and `key_file`; see the Prometheus TLS guide below). Validate with `promtool check web-config web.yml`. Exporters and Alertmanager need the same treatment; see [observability-components.md](observability-components.md).
