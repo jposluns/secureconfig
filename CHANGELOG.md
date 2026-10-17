@@ -10,9 +10,13 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
-## 2026-10-16
+## 2026-10-17
 
 - `frontend-frameworks.md` cites SvelteKit `@sveltejs/kit@2.70.3` routing, load, form-action, hooks and remote-function documentation for its authorization statements, and labels the per-resource session and authorization checks as this guide's advice (row 1.179) (#589)
+
+## 2026-10-16
+
+- `container-hardening.md` cites kubectl `v1.34.0` override handling, RFC 7396 and BusyBox `1_36_1` netcat source for the probe pod's override and `nc -z -w` flags, labels the probe's TCP-connect, JSON-quoting and container-name instructions as this guide's advice, keeps the probe pod's securityContext as a Pod Security Standards requirement, and keeps the gap that these sources do not establish what the `busybox:1.36` image contains (row 1.179) (#591)
 - `machine-auth.md` cites the OWASP password-storage and secrets-management cheat sheets, the OpenBao `v2.7.1` README and the AWS, Google Cloud, Azure, OpenBao, 1Password and Bitwarden product pages for API-key hashing and secret stores, and states the conditions under which hashed keys and platform identity give the protection described; `secrets.md` cites the AWS, Google Cloud and Azure overviews for its secret-store examples (row 1.179) (#590)
 - `secrets.md` cites the GNU Bash `bash-5.3` reference manual for hidden `read` input, tracing, allexport, `unset` and the `EXIT` trap, and the GNU grep manual pages for the supplementary scan's flags and exit status, and labels the history, argv and environment outcomes and the scan's limits as this guide's advice and assessment (row 1.179) (#587)
 - `self-hosted-idp.md` cites authentik `version/2026.8.3` core URL routes and the unversioned Docker Engine security and rootless-mode pages for its administration-routing and daemon-privilege statements, and labels listener topology, path-separation difficulty, rootful-socket host-root equivalence and the rootless blast radius as this guide's assessment (row 1.179) (#585)
