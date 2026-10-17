@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `free-certificates.md` cites the Certbot v2.3.0 user guide and source for the scheduled renewal task, how renewal options and deploy hooks are saved, the DNS plugins (including the Cloudflare plugin's credentials) and manual DNS-01, and the Cloudflare Origin CA page for its plan, lifetime and Cloudflare-to-origin-only scope; generalizations and judgements are labelled as this guide's assessment or advice (row 1.179) (#603)
 - `headless-cms-instant-api.md` cites the Strapi v5.58.0 Users and Permissions source for the initial `allow_register: true` and `default_role` advanced settings, the registration route and its setting check, and labels existing projects' stored settings and other releases as this guide's assessment (row 1.179) (#599)
 - `low-code-builders.md` cites the NocoDB 2026.09.0 README for its quick-test binaries note, Docker image and Auto-upstall install paths, the GitHub release record that listed no assets when checked, and the tag's package version `0.301.3`, labelling the release-asset conclusion as this guide's assessment and the production instruction as its advice (row 1.179) (#597)
 - `agent-builders.md` cites the pinned Docker Compose merge page for the ports merge, `!reset` and `!override` rules and the Compose v2.24.3 and v2.24.4 compose-go pins and loaders for the 2.24.4 floor, which it labels as this guide's assessment, and labels the loopback-and-proxy instruction as this guide's advice (row 1.179) (#596)
