@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "dda9dd8f8613702c7f513e1410d78ccda39e6b9ceb85314d7b18f99bbdba2ac7",
+  "body_sha256": "7c194520dabce8cb45811c527184324dfd4d75554693a76f25fe95dc7acb8192",
   "components": {
     "le": {
       "name": "Let's Encrypt documentation",
@@ -271,7 +271,7 @@ A CAA DNS record restricts which certificate authorities may issue for your doma
 - **ZeroSSL**: free certificates over ACME. Some clients need External Account Binding (EAB) credentials from the ZeroSSL dashboard; the acme.sh client registers with ZeroSSL by default.
 - **acme.sh**: a dependency-light shell ACME client supporting many DNS providers, useful where certbot is unavailable. Install from the repository release rather than piping a downloaded script straight into a shell. https://github.com/acmesh-official/acme.sh
 - **Caddy and Traefik**: obtain and renew certificates themselves with no external client; see [caddy.md](caddy.md) and [traefik.md](traefik.md). This guide assesses it as the lowest-effort correct option for new deployments.
-- **Cloudflare origin certificates**: available on Cloudflare's Free plan; Cloudflare's page refers to long-lived origin CA certificates and says the validity period is chosen at creation. Cloudflare says they only encrypt traffic between Cloudflare and the origin server, not traffic from client browsers to the origin, and that visitors may see untrusted certificate errors if Cloudflare is paused or proxying is disabled; this guide requires using them only for origins that receive traffic only through Cloudflare-proxied records; see [cloudflare.md](cloudflare.md).
+- **Cloudflare origin certificates**: available on Cloudflare's Free plan; Cloudflare's page refers to long-lived origin CA certificates and says the validity period is chosen at creation. Cloudflare says they only encrypt traffic between Cloudflare and the origin server, not traffic from client browsers to the origin, and that visitors may see untrusted certificate errors if Cloudflare is paused or proxying is disabled; use them only for origins that receive traffic only through Cloudflare-proxied records; see [cloudflare.md](cloudflare.md).
 
 ## Verify
 
