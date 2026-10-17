@@ -17,6 +17,10 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **TODO row 1.179 split into individual rows, 2026-10-17 (#621).** The maintainer directed on
+  2026-10-17 that row 1.179, a single very long row covering residual unsourced facts across many
+  guides, be split into individual tasks with their own TODO numbers. Each piece of work should be
+  separately numbered and trackable.
 - **ai-infra-services.md check 1 marked DEMONSTRATED, 2026-10-15 (#553).** The maintainer ruled, through AskUser,
   that the check 1 **Broken:** and **Fixed:** paragraphs are marked DEMONSTRATED on the exposed and fixed fixture
   runs #538 records (`grep_exit=0` and `grep_exit=1` in Bash, dash and BusyBox ash; check 1 needs no service),
