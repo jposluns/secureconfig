@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-09-26",
+  "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "0dec88a3ac6b6465937c1607c49fd72fd059a590382d2efea0897b65205dd3e6",
+  "body_sha256": "89cda75f02bd6d0e841d5bbd5b6f9e5c5869ffba1d73b07f3f7b67614463df29",
   "components": {
     "dify": {
       "name": "Dify documentation",
@@ -135,8 +135,12 @@ version_basis: {
         "s7bc8fc06f0e2": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/base.py#L111-L117",
         "sf521d52020be": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L553-L556",
         "s6cf1768228ea": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L225-L245",
-        "s741084c143ad": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L681-L689",
-        "s811c48f271ba": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L217-L230"
+        "s1ee798ffcdbe": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L670-L690",
+        "s6485ba67d66f": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L216-L230",
+        "s842c850d80b0": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L344",
+        "s9701f0527287": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L173-L178",
+        "sb2a88f59cc75": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L619-L669",
+        "s3ff960d5d18a": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L142-L213"
       }
     },
     "langflow-compose": {
@@ -237,8 +241,8 @@ version_basis: {
     "verify-debug-config": {"text": "Merged Compose should change from published 5003/default-enabled to no publication and explicit false after override and recreation; no Docker/listener demonstration.", "components": ["dify-console", "daemon", "docker"], "sources": ["dify-console:s1e4c822a36b1", "daemon:s191317bdf3a7", "daemon:s32b7d021da01", "daemon:sb19f8717ed1f", "docker:se716ad33db1f"], "status": "REASONED"},
     "flowise-tls": {"text": "Flowise documented TLS uses nginx/certbot upstream localhost:3000; configure NUMBER_OF_PROXIES for real client addresses.", "components": ["flowise"], "sources": ["flowise:s7b675aa70798", "flowise:sfee1ae75d51a"], "status": "REASONED"},
     "librechat-tls": {"text": "LibreChat documented TLS uses nginx upstream localhost:3080; TRUST_PROXY defaults 1 and must match proxy hops.", "components": ["librechat"], "sources": ["librechat:s432d72870381", "librechat:s41811a0d442f"], "status": "REASONED"},
-    "langflow-tls": {"text": "Langflow 1.12.6 SSL_CERT_FILE/KEY_FILE settings feed native TLS; guide assessment: a proxy remains a place for login/MFA.", "components": ["langflow", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-1126:s46241ad0c9d0", "langflow-1126:s7bc8fc06f0e2", "langflow-1126:sf521d52020be", "langflow-1126:s6cf1768228ea", "langflow-1126:s741084c143ad"], "status": "REASONED"},
-    "langflow-cookies": {"text": "Langflow 1.12.6 ACCESS_SECURE and REFRESH_SECURE default false; set both true behind HTTPS.", "components": ["langflow", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-1126:s400ca0f879b4", "langflow-1126:s7bc8fc06f0e2"], "status": "REASONED"},
+    "langflow-tls": {"text": "Langflow 1.12.6 SSL_CERT_FILE/KEY_FILE settings feed native TLS; guide assessment: a proxy remains a place for login/MFA.", "components": ["langflow", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-1126:s46241ad0c9d0", "langflow-1126:s7bc8fc06f0e2", "langflow-1126:sf521d52020be", "langflow-1126:s6cf1768228ea", "langflow-1126:s1ee798ffcdbe", "langflow-1126:s9701f0527287", "langflow-1126:sb2a88f59cc75"], "status": "REASONED"},
+    "langflow-cookies": {"text": "Langflow 1.12.6 ACCESS_SECURE and REFRESH_SECURE default false; set both true behind HTTPS.", "components": ["langflow", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-1126:s400ca0f879b4", "langflow-1126:s842c850d80b0"], "status": "REASONED"},
     "dify-tls": {"text": "Certbot challenge/domain/email and fullchain.pem/privkey.pem precede certificate update; enable HTTPS and recreate nginx; default HTTPS false, protocols TLSv1.2 TLSv1.3.", "components": ["certbot", "dify-console"], "sources": ["certbot:sba8e43d56b94", "dify-console:sb28809d177bf"], "status": "REASONED"},
     "dify-urls": {"text": "Set CONSOLE_API_URL, CONSOLE_WEB_URL and APP_WEB_URL to public HTTPS; CONSOLE_API_URL controls HTTPS-only cookies.", "components": ["dify"], "sources": ["dify:s144cc3f563a1"], "status": "REASONED"},
     "dify-bootstrap": {"text": "INIT_PASSWORD defaults empty; set it before first up to gate /install and claim admin privately.", "components": ["dify", "dify-console"], "sources": ["dify:s144cc3f563a1", "dify:sc63a91c72255", "dify-console:sb28809d177bf"], "status": "REASONED"},
@@ -254,7 +258,7 @@ version_basis: {
     "flowise-secrets": {"text": "Randomize JWT_AUTH_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET, EXPRESS_SESSION_SECRET default flowise, and TOKEN_HASH_SECRET; APP_URL defaults localhost:3000.", "components": ["flowise-auth", "flowise"], "sources": ["flowise-auth:s6fd9f4266a98", "flowise:sfee1ae75d51a"], "status": "REASONED"},
     "flowise-encryption": {"text": "FLOWISE_SECRETKEY_OVERWRITE supplies stored-credential encryption key; otherwise it lives under SECRETKEY_PATH.", "components": ["flowise"], "sources": ["flowise:sfee1ae75d51a"], "status": "REASONED"},
     "flowise-prediction": {"text": "Chatflow without assigned key is public by ID; assign per-chatflow API key (DefaultKey is precreated), Bearer requests reject missing key with 401.", "components": ["flowise"], "sources": ["flowise:s546a18b65918", "flowise:s23c31010d23d"], "status": "REASONED"},
-    "langflow-auto": {"text": "Langflow 1.12.6 application AUTO_LOGIN defaults True; pinned official image Dockerfiles set false; explicitly disable it and set a superuser password other than legacy langflow; username defaults langflow and password defaults empty.", "components": ["langflow", "langflow-1126"], "sources": ["langflow:s5cfeeba4d9b3", "langflow:s885461210e4e", "langflow-1126:sd7fd176a7394", "langflow-1126:sb7ab44ba0da0", "langflow-1126:s8e8d73b2b8bd", "langflow-1126:s57f0e83270f9", "langflow-1126:s419881904281", "langflow-1126:s811c48f271ba", "langflow-1126:s7bc8fc06f0e2"], "status": "REASONED"},
+    "langflow-auto": {"text": "Langflow 1.12.6 application AUTO_LOGIN defaults True; pinned official image Dockerfiles set false; explicitly disable it and set a superuser password other than legacy langflow; username defaults langflow and password defaults empty.", "components": ["langflow", "langflow-1126"], "sources": ["langflow:s5cfeeba4d9b3", "langflow:s885461210e4e", "langflow-1126:sd7fd176a7394", "langflow-1126:sb7ab44ba0da0", "langflow-1126:s8e8d73b2b8bd", "langflow-1126:s57f0e83270f9", "langflow-1126:s419881904281", "langflow-1126:s6485ba67d66f", "langflow-1126:s3ff960d5d18a", "langflow-1126:s842c850d80b0"], "status": "REASONED"},
     "langflow-secret": {"text": "Set permanent random LANGFLOW_SECRET_KEY; documented auto-generated key is unsuitable for production.", "components": ["langflow"], "sources": ["langflow:s5a55bdef1f33"], "status": "REASONED"},
     "langflow-signup": {"text": "NEW_USER_IS_ACTIVE defaults False but ENABLE_SIGNUP True; disable signup and keep activation requirement.", "components": ["langflow"], "sources": ["langflow:s885461210e4e"], "status": "REASONED"},
     "langflow-api": {"text": "With auto-login off, POST /api/v1/run/<flow-id> needs x-api-key; create via settings or CLI. SKIP_AUTH_AUTO_LOGIN defaults false, applies only with auto-login and is slated for removal.", "components": ["langflow"], "sources": ["langflow:s5cfeeba4d9b3", "langflow:s885461210e4e"], "status": "REASONED"},
@@ -284,7 +288,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -357,7 +361,7 @@ This guide's advice: Publish the container on loopback and let a proxy or tunnel
 ```yaml
 ports:
   - "127.0.0.1:3000:3000"    # Flowise (PORT defaults to 3000)
-  - "127.0.0.1:7860:7860"    # Langflow (LANGFLOW_PORT defaults to 7860)
+  - "127.0.0.1:7860:7860"    # Langflow (LANGFLOW_PORT defaults to 7860 in 1.12.6 settings)
   - "127.0.0.1:3080:3080"    # LibreChat (PORT defaults to 3080)
 ```
 
@@ -389,7 +393,7 @@ services:
 
 Flowise and LibreChat document no TLS of their own; their deployment guides put nginx with certbot in front (`proxy_pass http://localhost:3000` and `http://localhost:3080` respectively). Use [caddy.md](caddy.md) or [nginx.md](nginx.md) with a certificate from [free-certificates.md](free-certificates.md), or [cloudflare.md](cloudflare.md) / [tailscale.md](tailscale.md) with no public port at all. Set `NUMBER_OF_PROXIES` (Flowise) and `TRUST_PROXY` (LibreChat, default `1`) to the number of proxy hops so rate limiting sees client addresses.
 
-Langflow 1.12.6 settings define `LANGFLOW_SSL_CERT_FILE` and `LANGFLOW_SSL_KEY_FILE`, which its server passes to Gunicorn on Linux and to Uvicorn on Windows and macOS for native TLS; a fronting proxy remains the simpler place to add login and MFA (this guide's assessment). Behind HTTPS, also set `LANGFLOW_ACCESS_SECURE=true` and `LANGFLOW_REFRESH_SECURE=true`: both default to `false` in 1.12.6, so the access and refresh session cookies are issued without the `Secure` flag until you do.
+Langflow 1.12.6 settings define `LANGFLOW_SSL_CERT_FILE` and `LANGFLOW_SSL_KEY_FILE`, which its server passes to Gunicorn on Linux and other platforms, and to Uvicorn on Windows and macOS for native TLS; a fronting proxy remains the simpler place to add login and MFA (this guide's assessment). Behind HTTPS, also set `LANGFLOW_ACCESS_SECURE=true` and `LANGFLOW_REFRESH_SECURE=true`: both default to `false` in 1.12.6, so the access and refresh session cookies are issued without the `Secure` flag until you do.
 
 Dify's bundled nginx can terminate TLS. In `docker/.env`, per the certbot README in the Dify repository: set `NGINX_ENABLE_CERTBOT_CHALLENGE=true`, `CERTBOT_DOMAIN`, `CERTBOT_EMAIL`, `NGINX_SSL_CERT_FILENAME=fullchain.pem`, `NGINX_SSL_CERT_KEY_FILENAME=privkey.pem`; run `docker compose --profile certbot up --force-recreate -d` and `docker compose exec -it certbot /bin/sh /update-cert.sh`; then set `NGINX_HTTPS_ENABLED=true` (default `false`) and recreate nginx with `docker compose --profile certbot up -d --no-deps --force-recreate nginx`. `NGINX_SSL_PROTOCOLS` defaults to `TLSv1.2 TLSv1.3`. Set `CONSOLE_API_URL`, `CONSOLE_WEB_URL`, and `APP_WEB_URL` to the public `https://` URLs; per the Dify reference, `CONSOLE_API_URL` decides whether cookies are marked HTTPS-only.
 
@@ -422,7 +426,7 @@ LANGFLOW_SUPERUSER_PASSWORD=REPLACE_WITH_LONG_RANDOM_VALUE
 LANGFLOW_SECRET_KEY=REPLACE_WITH_LONG_RANDOM_VALUE
 ```
 
-- In Langflow 1.12.6, `LANGFLOW_AUTO_LOGIN` defaults to `True` in the application (the pinned official image Dockerfiles set it to `false`), which bypasses authentication; set it to `false` explicitly. The superuser password defaults to empty and is then required; set it to a long random value other than the rejected legacy default `langflow`. The username defaults to `langflow`.
+- `LANGFLOW_AUTO_LOGIN` defaults to `True` in the Langflow 1.12.6 application (the pinned official image Dockerfiles set it to `false`), which bypasses authentication; set it to `false` explicitly. The superuser password defaults to empty and is then required; set it to a long random value other than the rejected legacy default `langflow`. The username defaults to `langflow`.
 - Generate the key with `python3 -c "from secrets import token_urlsafe; print(f'LANGFLOW_SECRET_KEY={token_urlsafe(32)}')"`. An auto-generated key is documented as unsuitable for production.
 - `LANGFLOW_NEW_USER_IS_ACTIVE` defaults to `False`, so a new account waits for superuser activation, but public signup is still OPEN by default (`ENABLE_SIGNUP` is `True`), letting inactive accounts accumulate; set `LANGFLOW_ENABLE_SIGNUP=false` to close registration outright and keep `LANGFLOW_NEW_USER_IS_ACTIVE=False` as the backstop.
 - With auto-login off, API calls (`POST /api/v1/run/<flow-id>`) need a Langflow API key in the `x-api-key` header, created under **Settings > Langflow API Keys** or with `langflow api-key`. `LANGFLOW_SKIP_AUTH_AUTO_LOGIN` (default `false`) only applies when auto-login is on and is slated for removal; leave it alone.
@@ -549,7 +553,7 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 ## Common mistakes
 
 - Starting Dify without `INIT_PASSWORD` on a reachable host: the first visitor to `/install` owns the instance.
-- Running Langflow 1.12.6 with the application default `LANGFLOW_AUTO_LOGIN=True`, which bypasses authentication; the pinned official image Dockerfiles set it to `false`.
+- Running Langflow with `LANGFLOW_AUTO_LOGIN=True` (the application default in 1.12.6), which bypasses authentication; the pinned official image Dockerfiles set it to `false`.
 - A Flowise chatflow with no API key assigned: the prediction API is public to anyone with the ID.
 - Leaving LibreChat registration open after the admin exists, or running with unset or placeholder `CREDS_KEY`/`JWT_SECRET` instead of your own permanent values.
 
@@ -583,8 +587,12 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - Langflow 1.12.6 prefix (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/base.py#L111-L117
 - Langflow 1.12.6 tls wiring (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L553-L556
 - Langflow 1.12.6 tls uvicorn (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L225-L245
-- Langflow 1.12.6 tls gunicorn (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L681-L689
-- Langflow 1.12.6 password (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L217-L230
+- Langflow 1.12.6 tls gunicorn (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L670-L690
+- Langflow 1.12.6 password (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L216-L230
+- Langflow 1.12.6 auth prefix (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L344
+- Langflow 1.12.6 platform (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L173-L178
+- Langflow 1.12.6 uvicorn branch (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L619-L669
+- Langflow 1.12.6 auto-login branch (checked October 2026): https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L142-L213
 - Langflow production best practices (`LANGFLOW_SECRET_KEY` preflight): https://docs.langflow.org/deployment-prod-best-practices
 - Langflow security model (the editor runs arbitrary Python with host/filesystem/network access): https://docs.langflow.org/security
 - Langflow authentication overview (external identity, JWT/JWKS validation): https://docs.langflow.org/authentication-overview
