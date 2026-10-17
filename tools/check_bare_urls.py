@@ -12,7 +12,6 @@ the parser. Neither path fetches links.
 """
 import argparse
 from collections import Counter
-from html import unescape
 import os
 import re
 import sys
@@ -53,12 +52,17 @@ def visible_lines(lines, prose, starts):
     return visible
 
 
-def url_token(match):
+def url_token(match, protected_closers=0):
     """Exclude prose punctuation and unmatched closing parentheses from a URL."""
-    token = match.group()
-    token = token.rstrip(".,;:!?*~")
-    while token.endswith(")") and token.count(")") > token.count("("):
-        token = token[:-1]
+    token = match.group() if hasattr(match, "group") else match
+    while True:
+        trimmed = token.rstrip(".,;:!?*~")
+        if trimmed != token:
+            token = trimmed
+        elif token.endswith(")") and token.count(")") > token.count("(") + protected_closers:
+            token = token[:-1]
+        else:
+            break
     return token
 
 
@@ -152,20 +156,31 @@ def lexical_findings(path):
 
 def parsed_findings(path, parser):
     """Count raw URL occurrences that the parse does not assign to exempt tokens."""
+    from markdown_it.common.utils import unescapeAll
+
+    def decoded_url(raw):
+        # Preserve escaped closing parentheses while trimming link syntax.
+        escaped_closers = len(re.findall(r"(?<!\\)(?:\\\\)*\\\)", raw))
+        return url_token(unescapeAll(raw), escaped_closers)
+
     text = path.read_text(encoding="utf-8")
     _, body = split_front_matter(text)
     prefix = text[:len(text) - len(body)]
     # Only LF separates lines here; splitlines() would turn Unicode separators
     # into artificial block boundaries before CommonMark sees the input.
     lines = [''] * prefix.count('\n') + body.split('\n')
-    for token in parser.parse("\n".join(lines)):
+    env = {}
+    tokens = parser.parse("\n".join(lines), env)
+    reference_hrefs = {parser.normalizeLink(ref["href"])
+                       for ref in env.get("references", {}).values()}
+    for token in tokens:
         if token.type != "inline":
             continue
         line = token.map[0] + 1
         candidates = []
         for match in URL.finditer(token.content):
             candidate = url_token(match)
-            decoded = unescape(candidate.replace(r"\_", "_"))
+            decoded = decoded_url(match.group())
             if "__" in decoded:
                 candidates.append((candidate, parser.normalizeLink(decoded)))
         accounted = Counter()
@@ -173,17 +188,18 @@ def parsed_findings(path, parser):
             if child.type == "link_open":
                 href = child.attrGet("href")
                 match = URL.match(href or "")
-                if match:
-                    accounted[parser.normalizeLink(url_token(match))] += 1
+                if match and parser.normalizeLink(href) not in reference_hrefs:
+                    closers = max(0, match.group().count(")") - match.group().count("("))
+                    accounted[parser.normalizeLink(url_token(match, closers))] += 1
             elif child.type == "image":
                 src = child.attrGet("src")
                 match = URL.match(src or "")
-                if match:
-                    accounted[parser.normalizeLink(url_token(match))] += 1
+                if match and parser.normalizeLink(src) not in reference_hrefs:
+                    closers = max(0, match.group().count(")") - match.group().count("("))
+                    accounted[parser.normalizeLink(url_token(match, closers))] += 1
             elif child.type == "code_inline":
                 for match in URL.finditer(child.content):
-                    candidate = url_token(match)
-                    accounted[parser.normalizeLink(unescape(candidate.replace(r"\_", "_")))] += 1
+                    accounted[parser.normalizeLink(decoded_url(match.group()))] += 1
         for candidate, normalized in candidates:
             if accounted[normalized]:
                 accounted[normalized] -= 1

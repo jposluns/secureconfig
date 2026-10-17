@@ -67,6 +67,13 @@ def main():
         ("Press the ` key.\n\nSee https://example.com/__init__.py\n\n~~~\n`\n~~~\n", 5),
         ("Press the ` key.\n\nSee https://example.com/__init__.py\n\n````\n`\n`````\n", 5),
         ("Press the ` key.\n\nSee https://example.com/__init__.py\n\n<div>\n`\n</div>\n", 5),
+        ("See [docs][d] and https://example.com/__x now.\n\n[d]: https://example.com/__x\n", 3),
+        ("See [d] and https://example.com/__x now.\n\n[d]: https://example.com/__x\n", 3),
+        ("See [d][] and https://example.com/__x now.\n\n[d]: https://example.com/__x\n", 3),
+        ("See ![alt][d] and https://example.com/__x now.\n\n[d]: https://example.com/__x\n", 3),
+        ("[https://example.com/__x][d]\n\n[d]: https://example.com/__x\n", 3),
+        ("[ref]: https://example.com/__init__.py\n\nSee https://example.com/__init__.py and [label][ref]\n", 5),
+        ("[ref]: https://example.com/__init__.py\n\nSee https://example.com/__init__.py and ![alt][ref]\n", 5),
     )
     for body, line in failures:
         assert_failure(body, line=line)
@@ -86,6 +93,12 @@ def main():
         ("[source]:\n https://example.com/__init__.py\n", "# Fixture\n\n"),
         ("[t](\nhttps://example.com/__init__.py\n)\n", "# Fixture\n\n"),
         ("[https://example.com/ok](https://example.com/__init__.py)\n", "# Fixture\n\n"),
+        ("[t](https://example.com/__x.)\n", "# Fixture\n\n"),
+        ("[t](https://example.com/__x*)\n", "# Fixture\n\n"),
+        (r"[t](https://example.com/__x\*y)" + "\n", "# Fixture\n\n"),
+        (r"[t](https://example.com/__x\))" + "\n", "# Fixture\n\n"),
+        ("[t](https://example.com/__x&ampy)\n", "# Fixture\n\n"),
+        ("https://example.com/&#95&#95x\n", "# Fixture\n\n"),
         ("# Fixture\n", '---\nversion_basis: {"url":"https://example.com/__init__.py"}\n---\n'),
     )
     for body, prefix in passing:
