@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `nginx.md` cites the Authelia v4.39.28 and oauth2-proxy v7.15.4 nginx `auth_request` integration documentation and the Cloudflare Access web-application page behind its MFA requirement, labels whether a given installation enforces MFA as this guide's assessment, and keeps the requirement (row 1.179) (#614)
 - `agent-builders.md` cites the Langflow 1.12.6 settings source, server start-up code and pinned image Dockerfiles for the port, host, native TLS, secure-cookie, auto-login and superuser-password defaults, labels the proxy and container guidance as this guide's assessment, and records the rolling documentation as unversioned (row 1.179) (#608)
 - `llm-observability.md` cites the Collector Contrib `bearertokenauthextension` at the pinned commit for its `token` and `filename` options and their precedence, file-line parsing, configurable header and scheme defaults, and HTTP and gRPC transport, and the incoming `Authenticate` header and metadata check (row 1.179) (#606)
 - `ai-infra-services.md` cites the Onyx v4.3.13 and v4.4.0 tag trees for `AUTH_TYPE` selecting authentication in v4.3.13 and being read only for migrations, a one-time legacy SAML import at startup, and a stale-value warning in v4.4.0, labels that boundary as an inference from the two tags whose identity rests on their names, and records the planned v4.5 removal as unverified (row 1.179) (#607)
