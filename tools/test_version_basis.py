@@ -5,6 +5,7 @@ from collections import Counter
 import datetime
 import io
 import json
+import os
 import re
 import subprocess
 import sys
@@ -54,6 +55,12 @@ def document(data, body=BODY):
 
 
 class VersionBasisTests(unittest.TestCase):
+    @staticmethod
+    def local_env():
+        env = os.environ.copy()
+        env.pop('CI', None)
+        return env
+
     def test_round_trip_and_heading_lines(self):
         raw = document(fixture())
         rendered = vb.updated(raw)
@@ -192,7 +199,8 @@ class VersionBasisTests(unittest.TestCase):
             path = Path(directory) / 'invalid.md'
             path.write_text(document(fixture()), encoding='utf-8')
             result = subprocess.run([sys.executable, str(vb.ROOT / 'tools/version_basis.py'),
-                                     '--bundle', str(path)], capture_output=True, text=True)
+                                     '--bundle', str(path)], capture_output=True, text=True,
+                                    env=self.local_env())
             self.assertEqual(result.returncode, 1)
             self.assertEqual(result.stdout, '')
             self.assertIn('stale summary', result.stderr)
@@ -202,27 +210,49 @@ class VersionBasisTests(unittest.TestCase):
             text = path.read_text(encoding='utf-8')
             self.assertEqual(vb.updated(text, path.name, vb.load_source_baseline()), text)
             result = subprocess.run([sys.executable, str(vb.ROOT / 'tools/version_basis.py'),
-                                     '--bundle', str(path)], capture_output=True, text=True)
+                                     '--bundle', str(path)], capture_output=True, text=True,
+                                    env=self.local_env())
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(result.stdout, vb.split(text)[1])
             self.assertTrue(result.stdout.startswith('# '))
         result = subprocess.run([sys.executable, str(vb.ROOT / 'tools/version_basis.py'), '--check'],
-                                capture_output=True, text=True)
+                                capture_output=True, text=True, env=self.local_env())
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_parser_requirement_in_subprocess(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'plain.md'
+            path.write_text('# Plain\n', encoding='utf-8')
+            script = str(vb.ROOT / 'tools/version_basis.py')
+            for ci, required in ((False, False), (True, False), (False, True), (True, True)):
+                env = self.local_env()
+                if ci:
+                    env['CI'] = 'true'
+                command = [sys.executable, '-S', script, '--bundle', str(path)]
+                if required:
+                    command.append('--require-parser')
+                with self.subTest(ci=ci, required=required):
+                    result = subprocess.run(command, capture_output=True, text=True, env=env)
+                    self.assertEqual(result.returncode, int(ci or required), result.stderr)
+                    if ci or required:
+                        self.assertIn('pinned parser unavailable', result.stderr)
+                    else:
+                        self.assertIn('SKIP  version basis rendered Sources checks', result.stderr)
+                        self.assertEqual(result.stdout, '# Plain\n')
 
 
 class SourcesBasisTests(unittest.TestCase):
     url = 'https://example.com/control'
     other = 'https://example.com/other'
 
-    def check(self, sources, basis='v1.0', urls=None, baseline=None):
+    def check(self, sources, basis='v1.0', urls=None, baseline=None, parser=None):
         data = fixture()
         data['components']['product'].update(
             basis=basis, sources={vb.source_id(url): url for url in (urls or [self.url])})
         data['claims']['control']['sources'] = ['product:' + vb.source_id(self.url)]
         body = BODY[:BODY.index('- Product')] + sources + '\n'
         data['body_sha256'] = vb.digest(body)
-        return vb.updated(document(data, body), 'fixture.md', baseline)
+        return vb.updated(document(data, body), 'fixture.md', baseline, parser=parser)
 
     def check_urls(self, sources, urls):
         """Like check(), with the claim citing urls[0] instead of self.url."""
@@ -283,24 +313,30 @@ class SourcesBasisTests(unittest.TestCase):
 
     def test_unsupported_containers_fail_closed(self):
         # Codex round 1: citations the item parser cannot see must not pass.
-        for sources in (f'- Product v1.0: {self.url}\n- - Again: {self.url}',
+        try:
+            pinned = gate_parser(required=True)
+        except ParserUnavailable:
+            pinned = None
+        for parser in (None, pinned) if pinned is not None else (None,):
+            for sources in (f'- Product v1.0: {self.url}\n- - Again: {self.url}',
                         f'- Product v1.0: {self.url}\n- # Again: {self.url}',
                         f'- Product v1.0: {self.url}\n> - Again: {self.url}',
                         f'- Product v1.0: {self.url}\n\n> Again: {self.url}',
                         f'- Product v1.0: {self.url}\n\nAgain: {self.url}',
                         f'- Product v1.0: {self.url}\n\n### Again {self.url}'):
-            with self.subTest(sources=sources), self.assertRaisesRegex(
-                    ValueError, re.escape(self.url) + ' cited in an unsupported Sources container'):
-                self.check(sources)
-        # The basis literal on the hidden citation does not rescue it.
-        with self.assertRaisesRegex(ValueError, 'unsupported Sources container'):
-            self.check(f'- Product v1.0: {self.url}\n- - Again v1.0: {self.url}')
-        # Passing controls: the same citations, each in its own list item.
-        self.check(f'- Product v1.0: {self.url}\n- Again v1.0: {self.url}')
-        self.check(f'- Product v1.0: {self.url}\n  - Again v1.0: {self.url}')
-        self.check(f'- Product v1.0: {self.url}\n- Product v1.0: [again]({self.url})')
-        # Unknown basis: URL presence stays mandatory, the container check is skipped.
-        self.check(f'- Product: {self.url}\n- - Again: {self.url}', basis='unknown')
+                with self.subTest(sources=sources, parser=parser), self.assertRaisesRegex(
+                        ValueError, re.escape(self.url) + ' cited in an unsupported Sources container'):
+                    self.check(sources, parser=parser)
+            # The basis literal on the hidden citation does not rescue it.
+            with self.assertRaisesRegex(ValueError, 'unsupported Sources container'):
+                self.check(f'- Product v1.0: {self.url}\n- - Again v1.0: {self.url}', parser=parser)
+            # Passing controls: the same citations, each in its own list item.
+            self.check(f'- Product v1.0: {self.url}\n- Again v1.0: {self.url}', parser=parser)
+            self.check(f'- Product v1.0: {self.url}\n  - Again v1.0: {self.url}', parser=parser)
+            self.check(f'- Product v1.0: {self.url}\n- Product v1.0: [again]({self.url})',
+                       parser=parser)
+            # Unknown basis: URL presence stays mandatory, the container check is skipped.
+            self.check(f'- Product: {self.url}\n- - Again: {self.url}', basis='unknown', parser=parser)
 
     def test_formatted_bare_urls_are_counted(self):
         # Codex round 2: a trailing ** once hid the URL from every check.
@@ -855,6 +891,8 @@ class RenderedSourcesTests(unittest.TestCase):
         try:
             cls.parser = gate_parser(required=True)
         except ParserUnavailable as exc:
+            if os.environ.get('CI'):
+                raise RuntimeError(f'pinned parser unavailable in CI: {exc}') from exc
             raise unittest.SkipTest(f'pinned parser unavailable: {exc}') from exc
 
     def check(self, sources, url='https://example.com/control', prose='', use_parser=True):
@@ -915,6 +953,81 @@ class RenderedSourcesTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'basis.*absent'):
             self.check(f'- Product v1.0. [doc]({url})')
 
+    def test_opening_link_label_boundary(self):
+        url = 'https://example.com/control'
+        self.check(f'- Product v1.0[doc]({url})')
+        with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+            self.check(f'- Product av1.0[doc]({url})')
+
+    def test_cited_href_only_supplies_its_own_basis(self):
+        cited = 'https://example.com/control'
+        with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+            self.check(f'- [doc]({cited}) [other](https://other.example/v1.0)')
+        self.check(f'- [doc](https://example.com/v1.0)', url='https://example.com/v1.0')
+
+    def test_href_path_case_remains_exact(self):
+        url = 'https://example.com/Control'
+        self.assertEqual(vb.rendered_cites('https://EXAMPLE.com/control', url, True,
+                                           self.parser), 0)
+        with self.assertRaisesRegex(ValueError, 'source URL absent'):
+            self.check(f'- Product v1.0: `{url}` [doc](https://EXAMPLE.com/control)', url=url)
+        self.check('- Product v1.0: [doc](https://EXAMPLE.com/Control)', url=url)
+
+    def test_normalized_link_target(self):
+        for url in ('https://example.com/café', 'https://bücher.example/control',
+                    'https://example.com/a|b', 'https://example.com/a[b]'):
+            with self.subTest(url=url):
+                self.check(f'- Product v1.0: [doc]({url})', url=url)
+
+    def test_outside_list_item_has_base_container_message(self):
+        url = 'https://example.com/control'
+        sources = f'- Product v1.0: {url}\n\nLoose v1.0: {url}'
+        messages = []
+        for use_parser in (False, True):
+            with self.assertRaisesRegex(ValueError, 'unsupported Sources container') as caught:
+                self.check(sources, use_parser=use_parser)
+            messages.append(str(caught.exception))
+        self.assertEqual(*messages)
+
+    def test_base_container_and_presence_diagnostics_in_both_paths(self):
+        url = 'https://example.com/control'
+        first = f'- Product v1.0: {url}'
+        cases = (
+            first + f'\n- - Again v1.0: {url}',
+            f'- - Product v1.0: {url}',
+            first + f'\n- # Again v1.0 {url}',
+            first + f'\n> - Again v1.0: {url}',
+            f'> - Product v1.0: {url}',
+            first + f'\n- > Again v1.0: {url}',
+            first + f'\n\nIntro\n\n    Again: {url}',
+            first + f'\n\n```text\nAgain: {url}\n```',
+            '- Product v1.0\n-\n  Again v1.0: ' + url,
+            first + f'\n- Other\n-\n  Again v1.0: {url}',
+            first + f'\n- Again: ![doc]({url})',
+            f'- Product v1`.0`: {url}',
+        )
+        for sources in cases:
+            with self.subTest(sources=sources):
+                messages = []
+                for use_parser in (False, True):
+                    with self.assertRaises(ValueError) as caught:
+                        self.check(sources, use_parser=use_parser)
+                    messages.append(str(caught.exception))
+                self.assertEqual(*messages)
+
+    def test_existing_unsupported_containers_in_both_paths(self):
+        url = 'https://example.com/control'
+        for sources in (f'- Product v1.0: {url}\n- - Again: {url}',
+                        f'- Product v1.0: {url}\n> - Again: {url}',
+                        f'- Product v1.0: {url}\n\nAgain: {url}'):
+            with self.subTest(sources=sources):
+                messages = []
+                for use_parser in (False, True):
+                    with self.assertRaises(ValueError) as caught:
+                        self.check(sources, use_parser=use_parser)
+                    messages.append(str(caught.exception))
+                self.assertEqual(*messages)
+
     def test_code_spans_are_not_citations(self):
         url = 'https://example.com/control'
         with self.assertRaisesRegex(ValueError, 'source URL absent'):
@@ -960,6 +1073,24 @@ class RenderedSourcesTests(unittest.TestCase):
                               for value, _, link in occurrences)
                     if old != new:
                         differences.append((path.name, url, old, new))
+        self.assertEqual(differences, [])
+
+    def test_current_corpus_item_fingerprints_match_fallback(self):
+        differences = []
+        for path in vb.paths():
+            data, full = vb.split(path.read_text(encoding='utf-8'))
+            body = vb.without_summary(full)
+            heads = headings(body)
+            raw = vb.raw_sources(body, heads)
+            _, items = vb.rendered_sources(body, heads, self.parser)
+            for name, component in data['components'].items():
+                for url in component['sources'].values():
+                    old = Counter(vb.source_fingerprint(name, component['basis'], url, entry)
+                                  for entry in vb.source_entries(raw) if vb.cites(entry, url))
+                    new = Counter(vb.source_fingerprint(name, component['basis'], url, entry)
+                                  for entry, _ in items if vb.cites(entry, url))
+                    if old != new:
+                        differences.append((path.name, name, url))
         self.assertEqual(differences, [])
 
 

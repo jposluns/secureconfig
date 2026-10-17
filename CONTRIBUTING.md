@@ -136,8 +136,10 @@ Schema 1 requires exactly these top-level fields:
   link or autolink `href` targets. Bare URLs in rendered text count; code spans and link labels
   do not supply citations. HTML comments remain forbidden by the Verify-markup check.
   CI requires the parser. Local runs without the
-  pin print an advisory SKIP and count citations with the raw-text fallback. Both paths keep
-  the same restrictions: outside fences, any line CommonMark could read as a link reference
+  pin print an advisory SKIP and count citations with the raw-text fallback. Both paths run
+  the raw URL presence and unsupported-container checks, reference-definition and Sources
+  grammar checks, component URL escape and encoding checks, and guide-wide HTML, heading
+  and angle-destination checks. Outside fences, any line CommonMark could read as a link reference
   definition fails, that is, a bracketed label and then `:` at the start of a line (after any
   list or quote markers). That includes a label that spans lines, a label followed by `:` with
   the destination on a later line, and `[note]: text`, which is a definition because `text`
@@ -176,10 +178,17 @@ Schema 1 requires exactly these top-level fields:
   For an allowed inline link whose destination begins on the next line, the parser counts its
   target in the owning item; the fallback counts it when the URL appears contiguously there.
   For a URL only in a code span or link label, the fallback can count the raw spelling, while
-  the parser excludes it. For a bare URL, the parser applies a textual boundary check, so
-  an unusual rendered text construct could leave a citation uncounted. For URL normalization
-  such as IDNA or fullwidth host mapping, this gate establishes the pinned parser's behaviour
-  only; another Markdown renderer may produce a different target.
+  the parser excludes it. An image target is excluded from parser counting; the raw presence
+  and basis checks still apply to an image citation. Citations in fenced or indented code
+  blocks still fail the raw container check when they exceed parsed list-item citations.
+  Emphasis can join rendered text to a basis: `v1.0**x**` reads as `v1.0x` and does not
+  satisfy the basis boundary. A code span splits a basis: ``v1`.0` `` does not satisfy it.
+  For a bare URL, the parser applies a textual boundary check, so emphasis can split a
+  URL that a reader sees as continuous. For link targets containing non-ASCII characters
+  or punctuation that the parser encodes, the parser's normalized href is accepted; the
+  declared URL must still be present in raw Sources text. Internationalized host names
+  are checked according to the pinned parser's URL conversion, which may differ from
+  another renderer.
   `tools/version_basis_sources_baseline.txt` grandfathers existing violations by guide and a
   counted SHA-256 fingerprint of component ID, basis, URL and item paragraph text. New, changed
   or excess occurrences fail, and fixed or removed occurrences require removing their stale

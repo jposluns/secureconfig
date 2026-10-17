@@ -428,6 +428,7 @@ def rendered_sources(body, heads, parser):
                 self.hrefs.extend(value for key, value in attrs if key.lower() == 'href' and value)
 
     _, ranges = _sources_ranges(body, heads)
+    lines = body.splitlines()
     occurrences = []
     items = []
     stack = []
@@ -441,21 +442,21 @@ def rendered_sources(body, heads, parser):
                 token.map[0] < end and token.map[1] > start for start, end in ranges):
             owner = stack[-1] if stack else None
             if owner is not None:
-                items[owner][0].append(token.content)
+                items[owner][0].extend(lines[token.map[0]:token.map[1]])
             in_link = 0
-            visible, hrefs = [], []
+            visible = []
             for child in token.children or []:
                 if child.type == 'link_open':
                     href = child.attrGet('href')
                     occurrences.append((href, owner, True))
-                    hrefs.append(href)
                     visible.append('\n')  # Keep the label's Markdown boundary for basis matching.
                     in_link += 1
                 elif child.type == 'link_close':
                     visible.append('\n')
                     in_link -= 1
                 elif child.type in ('text', 'code_inline'):
-                    visible.append(child.content)
+                    visible.append(('\n' + child.content + '\n') if child.type == 'code_inline'
+                                   else child.content)
                     if child.type == 'text' and not in_link:
                         occurrences.append((child.content, owner, False))
                 elif child.type in ('softbreak', 'hardbreak'):
@@ -465,7 +466,7 @@ def rendered_sources(body, heads, parser):
                     html_parser.feed(child.content)
                     occurrences.extend((href, owner, True) for href in html_parser.hrefs)
             if owner is not None:
-                items[owner][1].extend([''.join(visible), *hrefs])
+                items[owner][1].append(''.join(visible))
         elif token.type == 'html_block' and token.map and any(
                 token.map[0] < end and token.map[1] > start for start, end in ranges):
             html_parser = Anchors()
@@ -476,10 +477,11 @@ def rendered_sources(body, heads, parser):
                          for raw, rendered in items]
 
 
-def rendered_cites(candidate, url, link):
+def rendered_cites(candidate, url, link, parser=None):
     """Count exact hrefs, or legacy bare URLs in decoded rendered text."""
     if not link:
         return cites(candidate, url)
+    url = parser.normalizeLink(url) if parser is not None else url
     match = re.match(r'[A-Za-z][A-Za-z0-9+.-]*://[^/?#]*', url)
     other = re.match(r'[A-Za-z][A-Za-z0-9+.-]*://[^/?#]*', candidate or '')
     return int(bool(match and other and match[0].lower() == other[0].lower()
@@ -493,17 +495,18 @@ def check_rendered_sources(data, body, heads, parser, guide, baseline=None):
         basis = component['basis']
         pattern = r'(?<![A-Za-z0-9.])' + re.escape(basis) + r'(?![A-Za-z0-9.])'
         for url in component['sources'].values():
-            found = [(owner, items[owner] if owner is not None else ('', ''))
+            found = [(owner, items[owner] if owner is not None else ('', ''),
+                      candidate if link else '')
                      for candidate, owner, link in occurrences
-                     if rendered_cites(candidate, url, link)]
+                     if rendered_cites(candidate, url, link, parser)]
             require(found, 'source URL absent from Sources: ' + url)
             if basis == 'unknown':
                 continue
-            for owner, (entry, decoded_entry) in found:
+            for owner, (entry, decoded_entry), href in found:
                 if owner is None:
                     errors.append(f'{name}: {url} cited in an unsupported Sources container; '
                                   'put each citation in its own list item')
-                elif not re.search(pattern, decoded_entry):
+                elif not re.search(pattern, decoded_entry + '\n' + href):
                     fp = source_fingerprint(name, basis, url, entry)
                     current[fp] += 1
                     details[fp] = f'{name}: basis {basis!r} absent from Sources item for {url}'
@@ -613,12 +616,16 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0, parser=
             require(not _ESCAPE.search(url), 'source URL contains an escape or entity: ' + url)
             require(not _UNRESERVED.search(url),
                     'source URL percent-encodes an unreserved character: ' + url)
-            if parser is None:
-                require(cites(sources, url), 'source URL absent from Sources: ' + url)
+            require(cites(sources, url), 'source URL absent from Sources: ' + url)
     # The container count uses ATX-bounded text; see raw_sources().
     if parser is None:
         check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
     else:
+        containers = list(container_violations(data, raw_sources(body, heads), entries))
+        if containers or any('![' in entry for entry in entries):
+            # Preserve the base's complete diagnostic, including basis errors in
+            # an unsupported container and image-only citations.
+            check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
         check_rendered_sources(data, body, heads, parser, guide, baseline)
     identifiers(data['claims'])
     blocks = verify_blocks(body, with_status=True)
@@ -785,9 +792,8 @@ def main():
             if args.require_parser or os.environ.get('CI'):
                 raise ValueError(f'pinned parser unavailable: {exc}') from exc
             source_parser = None
-            if not args.bundle:
-                print(f'  SKIP  version basis rendered Sources checks: {exc} '
-                      '(line grammar still runs)', file=sys.stderr)
+            print(f'  SKIP  version basis rendered Sources checks: {exc} '
+                  '(line grammar still runs)', file=sys.stderr)
         selected = paths()
         baseline = load_source_baseline()
         require({name for name, _ in baseline} <= {path.name for path in selected},
