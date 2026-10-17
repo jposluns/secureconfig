@@ -36162,10 +36162,10 @@ mean to publish is the finding.
 - Docker packet filtering (`DOCKER-USER`): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2): https://github.com/docker/cli/blob/v27.2.0/cli/command/formatter/container.go and https://github.com/docker/cli/blob/v27.1.2/cli/command/formatter/container.go
 - NocoDB 2026.09.0 README (Docker example JWT secret, Docker image, Auto-upstall and binaries note; checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md
-- NocoDB 2026.09.0 README, Docker with SQLite section (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L56-L75
+- NocoDB 2026.09.0 README, Docker with SQLite and Docker with PG sections (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L56-L75
 - NocoDB 2026.09.0 README, Auto-upstall section (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L77-L90
 - NocoDB 2026.09.0 README, binaries note (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L95
-- NocoDB 2026.09.0 GitHub release API record (assets listed when checked October 2026): https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0
+- NocoDB 2026.09.0 GitHub release API record (no assets listed when checked October 2026): https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0
 - NocoDB 2026.09.0 tag package manifest (`0.301.3`; checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3
 - NocoDB 2026.09.0 sample environment without an encryption key: https://github.com/nocodb/nocodb/blob/2026.09.0/docker-compose/examples/external-postgres-and-redis/docker.env
 - Node.js v22 `server.listen` with an omitted host: https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md

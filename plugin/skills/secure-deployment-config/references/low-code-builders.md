@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "f2e21c46cd07233260addeb9f50a74ece91000b10c61528ab689404488d707ce",
+  "body_sha256": "f2eb61c1396c38420ca550fb261290846c33f561b7b0faeb89cf7723c70db92d",
   "components": {
     "nocodb": {
       "name": "NocoDB",
@@ -609,10 +609,10 @@ mean to publish is the finding.
 - Docker packet filtering (`DOCKER-USER`): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker CLI port display (`[::]:` from v27.2.0, `:::` through v27.1.2): https://github.com/docker/cli/blob/v27.2.0/cli/command/formatter/container.go and https://github.com/docker/cli/blob/v27.1.2/cli/command/formatter/container.go
 - NocoDB 2026.09.0 README (Docker example JWT secret, Docker image, Auto-upstall and binaries note; checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md
-- NocoDB 2026.09.0 README, Docker with SQLite section (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L56-L75
+- NocoDB 2026.09.0 README, Docker with SQLite and Docker with PG sections (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L56-L75
 - NocoDB 2026.09.0 README, Auto-upstall section (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L77-L90
 - NocoDB 2026.09.0 README, binaries note (checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L95
-- NocoDB 2026.09.0 GitHub release API record (assets listed when checked October 2026): https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0
+- NocoDB 2026.09.0 GitHub release API record (no assets listed when checked October 2026): https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0
 - NocoDB 2026.09.0 tag package manifest (`0.301.3`; checked October 2026): https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3
 - NocoDB 2026.09.0 sample environment without an encryption key: https://github.com/nocodb/nocodb/blob/2026.09.0/docker-compose/examples/external-postgres-and-redis/docker.env
 - Node.js v22 `server.listen` with an omitted host: https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md

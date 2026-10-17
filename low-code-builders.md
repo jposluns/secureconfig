@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-15",
   "documentation_checked": "2026-09",
-  "body_sha256": "f2e21c46cd07233260addeb9f50a74ece91000b10c61528ab689404488d707ce",
+  "body_sha256": "f2eb61c1396c38420ca550fb261290846c33f561b7b0faeb89cf7723c70db92d",
   "components": {
     "nocodb": {
       "name": "NocoDB",
