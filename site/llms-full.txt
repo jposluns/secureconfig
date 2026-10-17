@@ -442,13 +442,13 @@ maintaining a private assessment indefinitely.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | public-trust: ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; this guide advises preferring them for public DNS names, including private hosts using DNS-01. | Let's Encrypt documentation unknown; ZeroSSL unknown | REASONED |
 | http-challenge: HTTP-01 needs a public A/AAAA or CNAME pointing to the server and inbound internet access to port 80. | Let's Encrypt documentation unknown | REASONED |
-| alpn-challenge: TLS-ALPN-01 needs a public DNS record and inbound port 443; the guide names Caddy and Traefik, and the claim cites no Caddy TLS-ALPN-01 source. | Let's Encrypt documentation unknown; Traefik ACME documentation v3.5 | REASONED |
+| alpn-challenge: TLS-ALPN-01 needs a public DNS record and inbound port 443; Caddy's ACME issuer enables the TLS-ALPN-01 solver when DNS-01 is not configured and TLS-ALPN-01 is not disabled, with an alternate local port requiring forwarding from 443; Traefik also uses TLS-ALPN-01. | Let's Encrypt documentation unknown; Caddy automatic HTTPS v2.11.4; certmagic ACME implementation v0.25.3; Traefik ACME documentation v3.5 | REASONED |
 | dns-challenge: DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards; automated issuance and renewal need an automated way to update TXT records, and this guide advises a provider DNS plugin and scoped API credentials, while Certbot also supports manual DNS-01 and an authentication hook for automatic renewal. | Let's Encrypt documentation unknown; Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
 | certbot-install: Install Certbot and nginx/Apache plugins from the distribution, or the classic snap with /usr/bin/certbot pointing to /snap/bin/certbot. | Certbot documentation unknown | REASONED |
 | server-plugins: certbot --nginx or --apache issues and installs certificates for the supplied domain names when the server is supported. | Certbot documentation unknown | REASONED |
@@ -485,7 +485,7 @@ Publicly trusted certificates are free through ACME certificate authorities such
 
 - A public DNS record (`A`/`AAAA` or `CNAME`) pointing at the server, for the HTTP-01 and TLS-ALPN-01 challenges; the DNS-01 challenge instead needs only control of the challenge `TXT` record and can certify a host with no public address record or inbound port.
 - For the HTTP-01 challenge: inbound port 80 reachable from the internet.
-- For the TLS-ALPN-01 challenge (used by Caddy and Traefik): inbound port 443.
+- For the TLS-ALPN-01 challenge: inbound port 443. Caddy's ACME issuer enables this challenge when DNS-01 is not configured and TLS-ALPN-01 is not disabled; Traefik also uses it. Caddy can use an alternate local port if port 443 forwards to it.
 - For the DNS-01 challenge (required for wildcard certificates), automated issuance and renewal need an automated way to update the provider's TXT record; this guide advises using a DNS plugin and scoped API credentials, while Certbot also documents manual authentication hooks for automated challenges. Manual DNS-01 is also possible with `certbot certonly --manual --preferred-challenges dns`, creating the TXT record by hand; the Certbot v2.3.0 guide says certificates obtained this way do not auto-renew without an authentication hook (`--manual-auth-hook`) that automates the challenge.
 
 If none of these is possible, use [cloudflare.md](cloudflare.md) instead.
@@ -592,6 +592,12 @@ REASONED: preceding block; certificate inventory, HTTPS access and served-certif
 - Let's Encrypt OCSP end of life: https://letsencrypt.org/2025/08/06/ocsp-service-has-reached-end-of-life
 - Let's Encrypt CAA requirements: https://letsencrypt.org/docs/caa/
 - Caddy v2.11.4 automatic certificate acquisition and renewal (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L63
+- Caddy v2.11.4 ACME TLS-ALPN challenge settings (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L280-L296
+- Caddy v2.11.4 passes its ACME issuer template to certmagic (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L321-L328
+- Caddy v2.11.4 pins certmagic v0.25.3 (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/go.mod#L12-L12
+- certmagic v0.25.3 TLS-ALPN-01 solver selection (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeclient.go#L188-L226
+- certmagic v0.25.3 TLS-ALPN challenge listener port (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeclient.go#L304-L313
+- certmagic v0.25.3 alternate TLS-ALPN port forwarding (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L116-L120
 - Traefik v3.5 ACME renewal and challenges (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/tls/certificate-resolvers/acme/
 - OpenSSL 3.0 `s_client` connection and certificate verification (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
 - OpenSSL 3.0 `x509` issuer and validity dates (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-x509/
