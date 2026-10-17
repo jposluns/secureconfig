@@ -55,8 +55,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.200 | `apache.md`: mfa: cite Cloudflare Access application and policy controls for the suggested fronting option. (M, M) | `[gap]` |
 | 1.201 | `lighttpd.md`: mfa: cite Authelia supported-proxy list and Cloudflare Access for the stated exclusion and MFA fronting option. (M, M) | `[gap]` |
 | 1.202 | `lighttpd.md`: verify-config and verify-host: cite lighttpd command/service-manager behaviour and Apache SNI selection for the comparison. (M, M) | `[gap]` |
-| 1.203 | `headers.md`: placement: cite proxy header directives and generic static-host `_headers` handling for the stated controls. (M, M) | `[gap]` |
-| 1.204 | `headers.md`: all-responses: cite in `headers.md` Sources the nginx `add_header` inheritance source pinned in `nginx.md` for this response-header claim. (M, M) | `[gap]` |
 | 1.205 | `docker.md`: auth and verify-auth: pin the authentication-provider and proxy sources for MFA rejection and the 401/403 discriminator. (M, M) | `[gap]` |
 | 1.206 | `docker.md`: workload: cite Git, USER, capabilities, no-new-privileges, read-only filesystem and socket controls from Docker and Git sources. (M, M) | `[gap]` |
 | 1.207 | `docker.md`: persistence: cite Docker firewall/INPUT-path behaviour and the startup-unit mechanism behind persistence advice. (M, M) | `[gap]` |

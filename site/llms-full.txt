@@ -33625,7 +33625,7 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| placement: Set response headers at a proxy, in application middleware or in a static host's _headers file; proxy header directives and the static-host _headers file lack Sources entries. | MDN HTTP documentation unknown; Helmet v8.1.0; Django 5.2 | REASONED |
+| placement: Set response headers at a proxy with nginx add_header, Apache Header or Caddy header, in application middleware, or in a Cloudflare Pages _headers file for static asset responses; Pages Functions responses need headers set in Functions code. Applying the three proxy directives to all six listed headers is this guide's inference. | MDN HTTP documentation unknown; Helmet v8.1.0; Django 5.2; nginx source release-1.26.3; Apache HTTP Server 2.4.69; Caddy source v2.11.4; Cloudflare Pages documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | hsts: Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS. | MDN HTTP documentation unknown | REASONED |
 | hsts-preload: Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates. | MDN HTTP documentation unknown | REASONED |
 | csp: Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy. | MDN HTTP documentation unknown | REASONED |
@@ -33634,7 +33634,7 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 | referrer: Send Referrer-Policy: strict-origin-when-cross-origin and verify that final-response value. | MDN HTTP documentation unknown | REASONED |
 | permissions: Permissions-Policy disables camera, microphone and geolocation with empty allowlists; verify all three restrictions. | MDN HTTP documentation unknown | REASONED |
 | framing: X-Frame-Options: DENY or enforcing CSP frame-ancestors 'none' denies framing; supported frame-ancestors supersedes X-Frame-Options, and default-src does not cover it. frame-ancestors * overrides DENY. | MDN HTTP documentation unknown | REASONED |
-| all-responses: Send headers on every response, including errors; nginx add_header inheritance is mentioned through a local guide without a direct vendor Sources entry. | MDN HTTP documentation unknown | REASONED |
+| all-responses: Send headers on every response, including errors; nginx add_header inherits parent headers only when the child has no header list, and always prevents omission for non-default statuses. This guide assesses setting headers only on 200 / as a proxy misconfiguration. | MDN HTTP documentation unknown; nginx source release-1.26.3 | REASONED |
 | shared-cache: Use Cache-Control: private for authenticated responses or no-store for sensitive ones; cache only public content unless authenticated caching is explicitly configured. | MDN HTTP documentation unknown | REASONED |
 | cache-key: A URL-only shared cache can leak one user's response to another; explicitly vary authenticated cache entries on the cookie or authorization header. | MDN HTTP documentation unknown | REASONED |
 | browser-cache: private still permits browser storage; no-store forbids private and shared storage and belongs on authenticated responses and responses setting session cookies. | MDN HTTP documentation unknown | REASONED |
@@ -33651,7 +33651,7 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 | verify-logout: After logout, Back must not restore authenticated content; verify a request to the login screen and inspect no-store and Clear-Site-Data separately in every supported browser. | MDN HTTP documentation unknown | REASONED |
 <!-- version-basis:end -->
 
-TLS protects the transport; these response headers protect the page. Set them at the proxy (`add_header` in [nginx.md](nginx.md), `Header` in [apache.md](apache.md), `header` in Caddy), in app middleware (helmet for Express per [nodejs.md](nodejs.md), Django's security settings per [python.md](python.md)), or in a `_headers` file on static hosts.
+TLS protects the transport; these response headers protect the page. Set them at the proxy ([`add_header`](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L110-L116) in [nginx.md](nginx.md), [`Header`](https://github.com/apache/httpd/blob/2.4.69/docs/manual/mod/mod_headers.xml#L311-L328) in [apache.md](apache.md), [`header`](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/headers/caddyfile.go#L27-L48) in Caddy), in app middleware (helmet for Express per [nodejs.md](nodejs.md), Django's security settings per [python.md](python.md)), or in a [`_headers` file](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/pages/configuration/headers.mdx#L14) for Cloudflare Pages static asset responses. Cloudflare Pages does not apply `_headers` to Pages Functions responses; set those headers in [Functions code](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/pages/configuration/headers.mdx#L26). Applying the three proxy directives to all six headers below is this guide's inference.
 
 ## The set worth shipping
 
@@ -33669,7 +33669,7 @@ Notes that keep these correct rather than decorative:
 - **HSTS** only after HTTPS provably works everywhere on the domain; `includeSubDomains` commits every subdomain to HTTPS. Leave the `preload` token off unless you have read what preload-list inclusion means: removal is possible but slow (weeks, and browser-dependent as each browser ships an updated list), so treat inclusion as a long-lived commitment.
 - **CSP** is the one that needs tailoring. Start from `default-src 'self'`, add the sources your app actually uses, and prefer nonces or hashes over `'unsafe-inline'` for scripts. Roll out with `Content-Security-Policy-Report-Only` first on an existing app so you see what would break before enforcing.
 - **frame-ancestors** in CSP supersedes `X-Frame-Options` in browsers that support it. The modern equivalent of `X-Frame-Options: DENY` is `frame-ancestors 'none'` in the CSP; add it explicitly, because `default-src` does not cover framing. Sending both `X-Frame-Options` and `frame-ancestors` keeps older scanners content.
-- Headers belong on every response, including error pages; setting them only on `200 /` is a common proxy misconfiguration (nginx `add_header` inheritance per [nginx.md](nginx.md)).
+- Headers belong on every response, including error pages; this guide assesses setting them only on `200 /` as a proxy misconfiguration. In nginx, `add_header` inherits the parent's headers only if a child has no header list ([merge](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687); [list creation](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796)), and [`always`](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L843-L849) covers statuses outside its default set ([status handling](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218); [nginx.md](nginx.md)).
 
 ## Do not cache authenticated responses in a shared cache
 
@@ -33719,6 +33719,15 @@ REASONED: logout, browser history and response-header inspection, per the guide'
 - Security header scanner: https://securityheaders.com/
 - Helmet v8.1.0 response-header middleware (checked October 2026): https://github.com/helmetjs/helmet/blob/v8.1.0/README.md#L3
 - Django 5.2 SecurityMiddleware (checked October 2026): https://docs.djangoproject.com/en/5.2/ref/middleware/#module-django.middleware.security
+- nginx release-1.26.3 add_header directive (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L110-L116
+- nginx release-1.26.3 add_header list creation (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796
+- nginx release-1.26.3 header inheritance (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687
+- nginx release-1.26.3 always status handling (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218
+- nginx release-1.26.3 always option (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L843-L849
+- Apache 2.4.69 Header response-header directive (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/docs/manual/mod/mod_headers.xml#L311-L328
+- Caddy v2.11.4 header response-header directive (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/headers/caddyfile.go#L27-L48
+- Cloudflare Pages _headers on static assets (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104) (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/pages/configuration/headers.mdx#L14
+- Cloudflare Pages _headers Pages Functions limit (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104) (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/pages/configuration/headers.mdx#L26
 - curl 8.23.0 --disable (first argument skips curlrc) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/disable.md#L18-L20
 - curl 8.23.0 --globoff (disables URL globbing) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/globoff.md#L19-L22
 - curl 8.23.0 --silent (quiet mode with --show-error) (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/silent.md#L20-L25
