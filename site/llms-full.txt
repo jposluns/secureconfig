@@ -442,13 +442,13 @@ maintaining a private assessment indefinitely.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | public-trust: ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; this guide advises preferring them for public DNS names, including private hosts using DNS-01. | Let's Encrypt documentation unknown; ZeroSSL unknown | REASONED |
 | http-challenge: HTTP-01 needs a public A/AAAA or CNAME pointing to the server and inbound internet access to port 80. | Let's Encrypt documentation unknown | REASONED |
-| alpn-challenge: TLS-ALPN-01 needs a public DNS record and inbound port 443; the guide names Caddy and Traefik, and the claim cites no Caddy TLS-ALPN-01 source. | Let's Encrypt documentation unknown; Traefik ACME documentation v3.5 | REASONED |
+| alpn-challenge: TLS-ALPN-01 needs a public DNS record and inbound port 443; Caddy's ACME issuer enables the TLS-ALPN-01 solver when DNS-01 is not configured and TLS-ALPN-01 is not disabled, and can use an alternate local port if port 443 forwards to it; Traefik also uses TLS-ALPN-01. | Let's Encrypt documentation unknown; Caddy automatic HTTPS v2.11.4; certmagic ACME implementation v0.25.3; Traefik ACME documentation v3.5 | REASONED |
 | dns-challenge: DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards; automated issuance and renewal need an automated way to update TXT records, and this guide advises a provider DNS plugin and scoped API credentials, while Certbot also supports manual DNS-01 and an authentication hook for automatic renewal. | Let's Encrypt documentation unknown; Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
 | certbot-install: Install Certbot and nginx/Apache plugins from the distribution, or the classic snap with /usr/bin/certbot pointing to /snap/bin/certbot. | Certbot documentation unknown | REASONED |
 | server-plugins: certbot --nginx or --apache issues and installs certificates for the supplied domain names when the server is supported. | Certbot documentation unknown | REASONED |
@@ -485,7 +485,7 @@ Publicly trusted certificates are free through ACME certificate authorities such
 
 - A public DNS record (`A`/`AAAA` or `CNAME`) pointing at the server, for the HTTP-01 and TLS-ALPN-01 challenges; the DNS-01 challenge instead needs only control of the challenge `TXT` record and can certify a host with no public address record or inbound port.
 - For the HTTP-01 challenge: inbound port 80 reachable from the internet.
-- For the TLS-ALPN-01 challenge (used by Caddy and Traefik): inbound port 443.
+- For the TLS-ALPN-01 challenge: inbound port 443. Caddy's ACME issuer enables this challenge when DNS-01 is not configured and TLS-ALPN-01 is not disabled; Traefik also uses it. Caddy can use an alternate local port if port 443 forwards to it.
 - For the DNS-01 challenge (required for wildcard certificates), automated issuance and renewal need an automated way to update the provider's TXT record; this guide advises using a DNS plugin and scoped API credentials, while Certbot also documents manual authentication hooks for automated challenges. Manual DNS-01 is also possible with `certbot certonly --manual --preferred-challenges dns`, creating the TXT record by hand; the Certbot v2.3.0 guide says certificates obtained this way do not auto-renew without an authentication hook (`--manual-auth-hook`) that automates the challenge.
 
 If none of these is possible, use [cloudflare.md](cloudflare.md) instead.
@@ -592,6 +592,16 @@ REASONED: preceding block; certificate inventory, HTTPS access and served-certif
 - Let's Encrypt OCSP end of life: https://letsencrypt.org/2025/08/06/ocsp-service-has-reached-end-of-life
 - Let's Encrypt CAA requirements: https://letsencrypt.org/docs/caa/
 - Caddy v2.11.4 automatic certificate acquisition and renewal (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/autohttps.go#L62-L63
+- Caddy v2.11.4 ACME TLS-ALPN challenge settings (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L280-L296
+- Caddy v2.11.4 builds its ACME issuer template at provisioning (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L245-L249
+- Caddy v2.11.4 passes its ACME issuer template to certmagic (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddytls/acmeissuer.go#L321-L328
+- Caddy v2.11.4 pins certmagic v0.25.3 (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/go.mod#L12-L12
+- certmagic v0.25.3 TLS-ALPN-01 solver selection (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeclient.go#L188-L226
+- certmagic v0.25.3 TLS-ALPN challenge listener port (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeclient.go#L304-L313
+- certmagic v0.25.3 alternate TLS-ALPN port forwarding (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L116-L120
+- certmagic v0.25.3 issuer defaults for the DNS-01 solver and TLS-ALPN setting (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L222-L236
+- certmagic v0.25.3 TLS-ALPN challenge port 443 (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/certmagic.go#L473-L475
+- certmagic v0.25.3 `DefaultACME` values (checked October 2026): https://github.com/caddyserver/certmagic/blob/v0.25.3/acmeissuer.go#L647-L654
 - Traefik v3.5 ACME renewal and challenges (checked October 2026): https://doc.traefik.io/traefik/v3.5/reference/install-configuration/tls/certificate-resolvers/acme/
 - OpenSSL 3.0 `s_client` connection and certificate verification (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-s_client/
 - OpenSSL 3.0 `x509` issuer and validity dates (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-x509/
@@ -4516,7 +4526,7 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -4534,7 +4544,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | password-file: At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils. | nginx documentation unknown; Apache httpd source 2.4.69; OWASP Password Storage Cheat Sheet commit 72865b1e; Debian apache2 packaging 2.4.69-1 | REASONED |
 | basic: auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers. | nginx documentation unknown | REASONED |
 | mtls: At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
-| mfa: At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia, oauth2-proxy and Cloudflare Access integration claims are not covered by the nginx source cited here. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
+| mfa: At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia v4.39.28 and oauth2-proxy v7.15.4 document nginx auth_request integration, and Cloudflare Access documents protecting self-hosted web applications; the nginx source cited here does not cover those integrations. MFA is this guide's requirement; whether a given installation enforces it depends on its configured portal or Access policy (this guide's assessment). | nginx documentation unknown; nginx source release-1.26.3; Authelia nginx integration v4.39.28; oauth2-proxy nginx integration v7.15.4; Cloudflare Access web applications unknown | REASONED |
 | body-limit: client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check. | nginx documentation unknown | REASONED |
 | rate-limit: Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503. | nginx documentation unknown | REASONED |
 | connection-limit: limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503. | nginx documentation unknown | REASONED |
@@ -4633,7 +4643,7 @@ Mutual TLS for machine-to-machine access:
 
 At nginx release-1.26.3, these directives configure client-certificate verification ([directive definitions](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L153-L172)), and `ssl_verify_client on` or `optional` without `ssl_client_certificate` fails the [configuration check](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802) ("no ssl_client_certificate for ssl_verify_client"); `optional_no_ca` ([enum value 3](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L74-L80)) is exempt.
 
-Basic authentication is single-factor. For human-facing sites, add MFA with the `auth_request` mechanism pointed at an [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy) portal, or front the site with Cloudflare Access; options in [mfa.md](mfa.md). At nginx release-1.26.3, `auth_request` accepts a subrequest status from `NGX_HTTP_OK` (200) up to `NGX_HTTP_SPECIAL_RESPONSE` (300, exclusive), returns 401 or 403 as received, and answers any other status with 500 ([module handler](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182), [status codes](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138)). The nginx source cited here does not cover the Authelia, oauth2-proxy or Cloudflare Access integrations.
+Basic authentication is single-factor. For human-facing sites, add MFA with the `auth_request` mechanism pointed at an [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy) portal, or front the site with Cloudflare Access; options in [mfa.md](mfa.md) (this guide's requirement). Whether MFA is enforced in a particular installation depends on the configured portal or Access policy (this guide's assessment). Authelia v4.39.28 requires nginx's `http_auth_request` module ([requirements](https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L39-L45)); its nginx setup includes an auth-request snippet in each protected location ([location guidance](https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L245-L247)) containing `auth_request /internal/authelia/authz;` ([snippet](https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L517-L519)). oauth2-proxy v7.15.4 documents nginx `auth_request` against its authentication endpoint and requires `--reverse-proxy` for this option ([integration](https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/integrations/nginx.md#L16-L18)). Cloudflare Access documents protecting self-hosted web applications by checking requests against Access policies before allowing them through ([web applications](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/)). At nginx release-1.26.3, `auth_request` accepts a subrequest status from `NGX_HTTP_OK` (200) up to `NGX_HTTP_SPECIAL_RESPONSE` (300, exclusive), returns 401 or 403 as received, and answers any other status with 500 ([module handler](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182), [status codes](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138)). The nginx source cited here does not cover the Authelia, oauth2-proxy or Cloudflare Access integrations.
 
 ## 4. Bound the expensive endpoints
 
@@ -4767,6 +4777,11 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 - nginx release-1.26.3 add_header list creation (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796
 - nginx release-1.26.3 auth request (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182
 - nginx release-1.26.3 HTTP status codes (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138
+- Authelia v4.39.28 nginx module requirements (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L39-L45
+- Authelia v4.39.28 nginx protected locations (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L245-L247
+- Authelia v4.39.28 nginx auth_request snippet (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L517-L519
+- oauth2-proxy v7.15.4 nginx auth_request integration (checked October 2026): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/integrations/nginx.md#L16-L18
+- Cloudflare Access web applications (unversioned page, checked October 2026): https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/
 - nginx release-1.26.3 ticket rotation (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576
 - Apache httpd 2.4.69 htpasswd (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128
 - Apache httpd 2.4.69 bcrypt default (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45
@@ -27738,7 +27753,7 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -27759,7 +27774,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 | webhook-auth: Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential. | n8n documentation unknown | REASONED |
 | auth-boundaries: Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries. | n8n documentation unknown | REASONED |
 | signature: A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials. | n8n documentation unknown | REASONED |
-| code-execution: Code executes JavaScript/Python; Execute Command runs the command through a shell in a child process of the n8n process executing the node and is excluded by default at n8n 2.40.6. The rolling 2.0 changes page dates the default to 2.0. Source gap: that rolling page is not pinned to a version. | n8n documentation unknown; n8n 2.0 breaking changes unknown; n8n runtime source n8n@2.40.6 | REASONED |
+| code-execution: Code executes JavaScript/Python; Execute Command runs the command through a shell in a child process of the n8n process executing the node and is excluded by default at n8n 2.40.6. The pinned n8n 2.0.0 default excludes Execute Command and Local File Trigger; the pinned 1.x line at n8n 1.123.85 excludes none. This guide infers a 2.0 default boundary from those snapshots; the rolling 2.0 changes page dates the default to 2.0. Source gap: the rolling 2.0 changes page is unversioned and the first introducing release is unverified. | n8n documentation unknown; n8n 2.0 breaking changes unknown; n8n runtime source n8n@2.40.6; n8n 2.0 default exclusion source n8n@2.0.0; n8n 1.x default exclusion source n8n@1.123.85 | REASONED |
 | runners: Use hardened external task runners; vendor describes internal mode as insecure by design. | n8n documentation unknown | REASONED |
 | environment: N8N_BLOCK_ENV_ACCESS_IN_NODE blocks the workflow $env data proxy unless set to false; this source does not establish isolation of every node or Code process.env. | n8n runtime source n8n@2.40.6 | REASONED |
 | js-modules: Narrow NODE_FUNCTION_ALLOW_BUILTIN/NODE_FUNCTION_ALLOW_EXTERNAL in external launcher's /etc/n8n-task-runners.json env-overrides; main-container values are overridden. | n8n documentation unknown | REASONED |
@@ -27812,7 +27827,7 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 
 ## 5. Code-node isolation and outbound requests
 
-- Workflow editors can run code: the **Code** node executes JavaScript/Python and the **Execute Command** node runs the command through a shell in a child process of the n8n process executing the node. At n8n 2.40.6, `NODES_EXCLUDE` disables Execute Command by default; the rolling 2.0 changes page dates this default to n8n 2.0. Leave it off unless a workflow truly needs it. Run code on hardened EXTERNAL task runners rather than the internal mode, which the vendor calls insecure by design, and keep workflow `$env` access blocked (`N8N_BLOCK_ENV_ACCESS_IN_NODE=true`; at n8n 2.40.6 the `$env` proxy is blocked unless the variable is set to `false`). This guard alone does not establish isolation of every node or Code `process.env`. Allow only the modules a workflow needs, narrowly, and set the allowlist where the RUNNER reads it, not just on the main n8n container (whose values the external launcher overrides): for the JavaScript runner, `NODE_FUNCTION_ALLOW_BUILTIN` and `NODE_FUNCTION_ALLOW_EXTERNAL` under `env-overrides` in the launcher's `/etc/n8n-task-runners.json`; for the Python runner, `N8N_RUNNERS_STDLIB_ALLOW` and `N8N_RUNNERS_EXTERNAL_ALLOW`. An unset-then-`*` allowlist gives arbitrary module access. Because these defaults have shifted across versions and one vendor table is stale, set each value explicitly and confirm it on your installed version.
+- Workflow editors can run code: the **Code** node executes JavaScript/Python and the **Execute Command** node runs the command through a shell in a child process of the n8n process executing the node. At n8n 2.40.6 and 2.0.0, `NODES_EXCLUDE` disables Execute Command by default (at 2.0.0, Local File Trigger as well); at n8n 1.123.85 on the 1.x line, it excludes none. This guide infers a 2.0 default boundary from the pinned snapshots; the rolling 2.0 changes page, which is unversioned, dates this default to n8n 2.0, and the first introducing release is unverified. Leave it off unless a workflow truly needs it. Run code on hardened EXTERNAL task runners rather than the internal mode, which the vendor calls insecure by design, and keep workflow `$env` access blocked (`N8N_BLOCK_ENV_ACCESS_IN_NODE=true`; at n8n 2.40.6 the `$env` proxy is blocked unless the variable is set to `false`). This guard alone does not establish isolation of every node or Code `process.env`. Allow only the modules a workflow needs, narrowly, and set the allowlist where the RUNNER reads it, not just on the main n8n container (whose values the external launcher overrides): for the JavaScript runner, `NODE_FUNCTION_ALLOW_BUILTIN` and `NODE_FUNCTION_ALLOW_EXTERNAL` under `env-overrides` in the launcher's `/etc/n8n-task-runners.json`; for the Python runner, `N8N_RUNNERS_STDLIB_ALLOW` and `N8N_RUNNERS_EXTERNAL_ALLOW`. An unset-then-`*` allowlist gives arbitrary module access. Because these defaults have shifted across versions and one vendor table is stale, set each value explicitly and confirm it on your installed version.
 - Outbound requests are a trust boundary too: a webhook or the **HTTP Request** node can be steered at internal services or the cloud metadata endpoint (SSRF). Enable n8n's own SSRF filter where available (`N8N_SSRF_PROTECTION_ENABLED=true`, from n8n 2.12.0) AND restrict the workload's egress so a request cannot reach your internal network or `169.254.169.254` ([egress-metadata.md](egress-metadata.md)); the app-level filter supplements a network control and does not contain arbitrary code- or command-node networking.
 
 ## 6. Verify
@@ -27882,6 +27897,8 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 - n8n `N8N_PORT` default `5678` and `N8N_LISTEN_ADDRESS` default `'::'` (pinned tag n8n@2.40.6): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/%40n8n/config/src/index.ts#L164-L171
 - n8n auth cookie Secure default, recorded in the 1.32.0 changes (pinned tag n8n@2.40.6): https://raw.githubusercontent.com/n8n-io/n8n/n8n@2.40.6/packages/cli/BREAKING-CHANGES.md
 - n8n 2.0 changes, ExecuteCommand and LocalFileTrigger disabled by default (rolling documentation, checked October 2026): https://docs.n8n.io/changelog/v20-breaking-changes
+- n8n pinned tag n8n@2.0.0 `NODES_EXCLUDE` default excludes Execute Command and Local File Trigger (checked October 2026): https://github.com/n8n-io/n8n/blob/n8n%402.0.0/packages/%40n8n/config/src/configs/nodes.config.ts#L35-L36
+- n8n pinned tag n8n@1.123.85 `NODES_EXCLUDE` default excludes none (checked October 2026): https://github.com/n8n-io/n8n/blob/n8n%401.123.85/packages/%40n8n/config/src/configs/nodes.config.ts#L30-L31
 - n8n pinned tag n8n@2.40.6 owner setup handler (`skipAuth`, owner cookie): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/cli/src/controllers/owner.controller.ts#L22-L29
 - n8n pinned tag n8n@2.40.6 default REST endpoint (`rest`): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/%40n8n/config/src/configs/endpoints.config.ts#L153-L155
 - n8n pinned tag n8n@2.40.6 login controller (`POST /login`): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/cli/src/controllers/auth.controller.ts#L38-L54
@@ -34935,7 +34952,7 @@ The guide's `self-hosted/v0.8.1` version basis cites Compose at e693f206f5050b00
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -34962,7 +34979,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | verify-listing: Plant a throwaway file in an existing index-less uploads directory; Options -Indexes should yield 403 or 404, never a 200 listing. An absent or unwritable directory is inconclusive; remove the probe afterward. | Apache documentation 2.4 | REASONED |
 | verify-acme: Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive. | nginx documentation unknown; Apache documentation 2.4; ACME HTTP-01 RFC 8555 | REASONED |
 | verify-lookalike: Probe .well-known-backup/config across nginx, Apache and Caddy; expect 403 or 404. Plant a real readable file to distinguish denial from absence, then remove it. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
-| verify-bundle: Scan built client output for credential patterns/literal secrets; grep 0 match, 1 no match, 2 error. Clean does not exclude transformed secrets; no grep reference supplied. | Next.js documentation unknown; Vite documentation unknown; Create React App documentation unknown | REASONED |
+| verify-bundle: Scan built client output for credential patterns/literal secrets; GNU grep 3.12 returns 0 for a selected line, 1 for none and 2 for an error. A missing directory is an error; discarding errors can leave silence without a clean result. Clean does not exclude transformed secrets. | Next.js documentation unknown; Vite documentation unknown; Create React App documentation unknown; GNU grep 3.12 | REASONED |
 | verify-backup: Known previously deployed backup URLs should return 403 or 404 without the file contents. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | verify-suffixes: GNU mktemp --suffix plants readable files for .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz plus a generic dotfile. Exposed: 200 with PLANTED-SECRET; fixed: 403 or 404 without it. Failed planting or curl is inconclusive; only local shell syntax and suffix creation were checked, not server execution. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; GNU coreutils documentation unknown; Caddy documentation (rolling) unknown | REASONED |
 <!-- version-basis:end -->
@@ -35134,12 +35151,12 @@ for d in .next/static build dist; do
 done
 # run against the built client bundle, not the source. Exit 1 with no output is clean, exit 0
 # is a match, and exit 2 is a grep failure that is NOT clean. Do not send the errors to
-# /dev/null and read silence as a pass: against a directory that does not exist, grep exits 2
-# and prints nothing, which looks exactly like success. A clean result is evidence, not proof:
+# /dev/null and read silence as a pass: a missing directory is an error (exit 2), and
+# discarding its error message leaves silence, which looks exactly like success. A clean result is evidence, not proof:
 # a bundler can split or encode a value, so scan for the literal secret as well
 ```
 
-REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation and Next.js environment variables. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
+REASONED: preceding block; dotfile/backup denial, listings, ACME/lookalike paths and bundle scans, per the guide's cited nginx core module, nginx access module, Apache core Options, Caddy matchers, RFC 8555 section 8.3 HTTP-01 validation, Next.js environment variables, and GNU grep 3.12 exit status and error handling. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; the block with a scratch document root and curl stub exited 0, printed eight STUB curl lines and removed its planted files. Real grep returned 1 silently for clean input, 0 with a matching fixture line and 2 with No such file or directory for missing input. Exposed servers disclose planted content or listings; fixed servers deny them, still serve challenge tokens and keep secrets out of bundles. HTTP outcomes remain unobserved. Any backup path known to have existed on the server should also return 403 or 404, without the file contents, at the deployed URL.
 
 REASONED: following block; suffix and dotfile denial, per the guide's cited GNU coreutils mktemp, nginx access module, Apache mod_authz_core and Caddy matchers. No web-server deployment is available and local listeners are denied. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics. With a scratch document root and curl stub the block exited 0, printed nine STUB curl lines and removed the plants; independent fixtures confirmed all nine suffix/dotfile cases held PLANTED-SECRET at mode 0644. Live exposed 200 responses with that body and fixed 403/404 responses without it remain unobserved. Also plant a readable file for each suffix and a generic dotfile, so the added classes are tested
 against real content. Use GNU `mktemp`, set `DOCROOT` to this host's document root, and replace
@@ -35191,6 +35208,10 @@ done
 - Caddy v2.11.4 file listings require the `browse` configuration (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/fileserver/staticfiles.go#L140-L142 ; https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/fileserver/staticfiles.go#L371-L374
 - Caddy v2.11.4 ACME HTTP challenges precede user-defined handlers (checked October 2026): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/server.go#L384-L388
 - RFC 8555 section 8.3 HTTP-01 validation (checked October 2026): https://www.rfc-editor.org/rfc/rfc8555.html#section-8.3
+- GNU grep 3.12 manual, Exit Status, lines 1110-1115 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1110
+- GNU grep 3.12 manual, `-s`/`--no-messages`, lines 425-431 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n425
+- GNU grep 3.12 source, failed input open, lines 1756-1772 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/src/grep.c?h=v3.12#n1756
+- GNU grep 3.12 source, input error diagnosis, lines 661-668 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/src/grep.c?h=v3.12#n661
 
 ======================================================================
 ==> realtime-webhooks.md
