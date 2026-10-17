@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "b8637a3fc7beaa4a5236b58450b9b6c13809f830ad9ae2b3146045113e4058ed",
+  "body_sha256": "07eda7c75b5cada2d56a730e2c7a33df34730eec5139f55d0545aad278723811",
   "components": {
     "ng": {
       "name": "nginx documentation",
@@ -59,6 +59,29 @@ version_basis: {
         "sfafe27857e33": "https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576"
       }
     },
+    "authelia": {
+      "name": "Authelia nginx integration",
+      "basis": "v4.39.28",
+      "sources": {
+        "s279cd6449b53": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L39-L45",
+        "sdf01968ab996": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L245-L247",
+        "s237ae14bbb4a": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L517-L519"
+      }
+    },
+    "oauth2-proxy": {
+      "name": "oauth2-proxy nginx integration",
+      "basis": "v7.15.4",
+      "sources": {
+        "sc62400f0ea8a": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/integrations/nginx.md#L16-L18"
+      }
+    },
+    "cloudflare-access": {
+      "name": "Cloudflare Access web applications",
+      "basis": "unknown",
+      "sources": {
+        "sfe56578bedf4": "https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/"
+      }
+    },
     "httpd": {
       "name": "Apache httpd source",
       "basis": "2.4.69",
@@ -100,7 +123,7 @@ version_basis: {
     "password-file": {"text": "At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils.", "components": ["ng", "httpd", "owasp", "debian-apache2"], "sources": ["ng:sf32ce2956917", "debian-apache2:sc2a26b3a7af5", "debian-apache2:s62f6ed2866ab", "httpd:s309ecdd34379", "httpd:sf711558bdf3c", "httpd:s1c1a101a70e7", "httpd:s4482c55d79a2", "owasp:s4531e65b6502"], "status": "REASONED"},
     "basic": {"text": "auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers.", "components": ["ng"], "sources": ["ng:sf32ce2956917", "ng:sf3430c5a0b22"], "status": "REASONED"},
     "mtls": {"text": "At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification.", "components": ["ng", "nginx-source"], "sources": ["ng:s6a0728ca7609", "nginx-source:s66c86979411e", "nginx-source:sabb195c173d5", "nginx-source:sa930199b563a"], "status": "REASONED"},
-    "mfa": {"text": "At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia, oauth2-proxy and Cloudflare Access integration claims are not covered by the nginx source cited here.", "components": ["ng", "nginx-source"], "sources": ["ng:sf32ce2956917", "nginx-source:s3df6e64cd6a3", "nginx-source:sced570e33c0f"], "status": "REASONED"},
+    "mfa": {"text": "At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia v4.39.28 and oauth2-proxy v7.15.4 document nginx auth_request integration, and Cloudflare Access documents protecting self-hosted web applications; the nginx source cited here does not cover those integrations. MFA is this guide's requirement; whether a given installation enforces it depends on its configured portal or Access policy (this guide's assessment).", "components": ["ng", "nginx-source", "authelia", "oauth2-proxy", "cloudflare-access"], "sources": ["ng:sf32ce2956917", "nginx-source:s3df6e64cd6a3", "nginx-source:sced570e33c0f", "authelia:s279cd6449b53", "authelia:sdf01968ab996", "authelia:s237ae14bbb4a", "oauth2-proxy:sc62400f0ea8a", "cloudflare-access:sfe56578bedf4"], "status": "REASONED"},
     "body-limit": {"text": "client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
     "rate-limit": {"text": "Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503.", "components": ["ng"], "sources": ["ng:sb3bee9429629"], "status": "REASONED"},
     "connection-limit": {"text": "limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503.", "components": ["ng"], "sources": ["ng:sddc43aac8779"], "status": "REASONED"},
@@ -124,7 +147,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -142,7 +165,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | password-file: At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils. | nginx documentation unknown; Apache httpd source 2.4.69; OWASP Password Storage Cheat Sheet commit 72865b1e; Debian apache2 packaging 2.4.69-1 | REASONED |
 | basic: auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers. | nginx documentation unknown | REASONED |
 | mtls: At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
-| mfa: At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia, oauth2-proxy and Cloudflare Access integration claims are not covered by the nginx source cited here. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
+| mfa: At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia v4.39.28 and oauth2-proxy v7.15.4 document nginx auth_request integration, and Cloudflare Access documents protecting self-hosted web applications; the nginx source cited here does not cover those integrations. MFA is this guide's requirement; whether a given installation enforces it depends on its configured portal or Access policy (this guide's assessment). | nginx documentation unknown; nginx source release-1.26.3; Authelia nginx integration v4.39.28; oauth2-proxy nginx integration v7.15.4; Cloudflare Access web applications unknown | REASONED |
 | body-limit: client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check. | nginx documentation unknown | REASONED |
 | rate-limit: Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503. | nginx documentation unknown | REASONED |
 | connection-limit: limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503. | nginx documentation unknown | REASONED |
@@ -241,7 +264,7 @@ Mutual TLS for machine-to-machine access:
 
 At nginx release-1.26.3, these directives configure client-certificate verification ([directive definitions](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L153-L172)), and `ssl_verify_client on` or `optional` without `ssl_client_certificate` fails the [configuration check](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802) ("no ssl_client_certificate for ssl_verify_client"); `optional_no_ca` ([enum value 3](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L74-L80)) is exempt.
 
-Basic authentication is single-factor. For human-facing sites, add MFA with the `auth_request` mechanism pointed at an [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy) portal, or front the site with Cloudflare Access; options in [mfa.md](mfa.md). At nginx release-1.26.3, `auth_request` accepts a subrequest status from `NGX_HTTP_OK` (200) up to `NGX_HTTP_SPECIAL_RESPONSE` (300, exclusive), returns 401 or 403 as received, and answers any other status with 500 ([module handler](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182), [status codes](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138)). The nginx source cited here does not cover the Authelia, oauth2-proxy or Cloudflare Access integrations.
+Basic authentication is single-factor. For human-facing sites, add MFA with the `auth_request` mechanism pointed at an [Authelia](https://www.authelia.com/) or [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy) portal, or front the site with Cloudflare Access; options in [mfa.md](mfa.md) (this guide's requirement). Whether MFA is enforced in a particular installation depends on the configured portal or Access policy (this guide's assessment). Authelia v4.39.28 requires nginx's `http_auth_request` module ([requirements](https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L39-L45)); its nginx setup includes an auth-request snippet in each protected location ([location guidance](https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L245-L247)) containing `auth_request /internal/authelia/authz;` ([snippet](https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L517-L519)). oauth2-proxy v7.15.4 documents nginx `auth_request` against its authentication endpoint and requires `--reverse-proxy` for this option ([integration](https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/integrations/nginx.md#L16-L18)). Cloudflare Access documents protecting self-hosted web applications by checking requests against Access policies before allowing them through ([web applications](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/)). At nginx release-1.26.3, `auth_request` accepts a subrequest status from `NGX_HTTP_OK` (200) up to `NGX_HTTP_SPECIAL_RESPONSE` (300, exclusive), returns 401 or 403 as received, and answers any other status with 500 ([module handler](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182), [status codes](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138)). The nginx source cited here does not cover the Authelia, oauth2-proxy or Cloudflare Access integrations.
 
 ## 4. Bound the expensive endpoints
 
@@ -375,6 +398,11 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 - nginx release-1.26.3 add_header list creation (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796
 - nginx release-1.26.3 auth request (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182
 - nginx release-1.26.3 HTTP status codes (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138
+- Authelia v4.39.28 nginx module requirements (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L39-L45
+- Authelia v4.39.28 nginx protected locations (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L245-L247
+- Authelia v4.39.28 nginx auth_request snippet (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L517-L519
+- oauth2-proxy v7.15.4 nginx auth_request integration (checked October 2026): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/integrations/nginx.md#L16-L18
+- Cloudflare Access web applications (unversioned page, checked October 2026): https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/
 - nginx release-1.26.3 ticket rotation (checked October 2026): https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576
 - Apache httpd 2.4.69 htpasswd (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128
 - Apache httpd 2.4.69 bcrypt default (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45
