@@ -13,6 +13,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 ## 2026-10-17
 
 - `mcp-clients.md` cites the pinned MCP 2025-06-18 Dynamic Client Registration requirement and the 2025-11-25 registration priority order for its version-boundary note, and labels carrying the revision label as this guide's advice (row 1.179) (#595)
+- `ray.md` cites the Docker 28.0.0 release-note fix for loopback-published ports and the KubeRay `v1.6.0` types, controller and pod source for token authentication, states when the operator creates a Secret and sets `RAY_AUTH_MODE` and `RAY_AUTH_TOKEN`, and labels the version minimums as this guide's assessment and inference (row 1.179) (#592)
 - `python.md` cites slowapi `v0.1.10`, HTTPX `0.28.1`, CPython `v3.14.8` and OpenSSL `openssl-4.0.3` for the login rate-limit example, unverified-client warnings and the `SSL_CERT_FILE` export, names the conflict between HTTPX's SSL guide and its code path, and labels the remaining guidance as this guide's advice (row 1.179) (#588)
 - `frontend-frameworks.md` cites SvelteKit `@sveltejs/kit@2.70.3` routing, load, form-action, hooks and remote-function documentation for its authorization statements, and labels the per-resource session and authorization checks as this guide's advice (row 1.179) (#589)
 
