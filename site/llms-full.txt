@@ -446,20 +446,20 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| public-trust: ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; prefer these for public DNS names, including private hosts using DNS-01. | Let's Encrypt documentation unknown; ZeroSSL unknown | REASONED |
+| public-trust: ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; this guide advises preferring them for public DNS names, including private hosts using DNS-01. | Let's Encrypt documentation unknown; ZeroSSL unknown | REASONED |
 | http-challenge: HTTP-01 needs a public A/AAAA or CNAME pointing to the server and inbound internet access to port 80. | Let's Encrypt documentation unknown | REASONED |
 | alpn-challenge: TLS-ALPN-01 needs a public DNS record and inbound port 443; the guide names Caddy and Traefik, and the claim cites no Caddy TLS-ALPN-01 source. | Let's Encrypt documentation unknown; Traefik ACME documentation v3.5 | REASONED |
-| dns-challenge: DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards; provider API access and a DNS plugin apply to automated issuance and renewal, while manual DNS-01 is possible. | Let's Encrypt documentation unknown; Certbot documentation unknown | REASONED |
+| dns-challenge: DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards; automated issuance and renewal need an automated way to update TXT records, and this guide advises a provider DNS plugin and scoped API credentials, while Certbot also supports manual DNS-01 and an authentication hook for automatic renewal. | Let's Encrypt documentation unknown; Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
 | certbot-install: Install Certbot and nginx/Apache plugins from the distribution, or the classic snap with /usr/bin/certbot pointing to /snap/bin/certbot. | Certbot documentation unknown | REASONED |
 | server-plugins: certbot --nginx or --apache issues and installs certificates for the supplied domain names when the server is supported. | Certbot documentation unknown | REASONED |
 | standalone: certonly --standalone binds port 80; stop its current owner and arrange webroot, a server plugin or port-freeing hooks for unattended renewal. | Certbot documentation unknown | REASONED |
 | webroot: certonly --webroot uses /var/www/html to serve challenge files while the existing web server keeps running. | Certbot documentation unknown | REASONED |
-| dns-credentials: The Cloudflare DNS plugin uses a credentials file and a Zone:DNS:Edit token limited to required zones, never the Global API Key; protect the file with mode 600 in a 700 directory. | Certbot documentation unknown | REASONED |
+| dns-credentials: The Cloudflare DNS plugin uses a credentials file and a Zone:DNS:Edit token limited to required zones; this guide requires never using the Global API Key and protecting the file with mode 600 in a 700 directory. | Certbot documentation unknown; Certbot Cloudflare DNS plugin v2.3.0 | REASONED |
 | certificate-paths: Configure servers against stable /etc/letsencrypt/live/example.com/fullchain.pem and privkey.pem paths for the chain and private key. | Certbot documentation unknown | REASONED |
-| renewal-schedule: Package and snap installs register a timer or cron job running certbot renew; confirm the timer and test renewal plus reload with --dry-run --run-deploy-hooks. | Certbot documentation unknown | REASONED |
-| deploy-hook: Persist a reload hook during successful initial issuance or renewal, or install an executable in renewal-hooks/deploy; renew --deploy-hook does not persist it when no renewal is due. | Certbot documentation unknown | REASONED |
+| renewal-schedule: The Certbot v2.3.0 user guide says most installations have a scheduled task running certbot renew and says that, on Linux and BSD, you can check cron or systemd timers if unsure; this guide requires confirming the task and testing renewal plus reload with --dry-run --run-deploy-hooks, including package and snap installations. | Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
+| deploy-hook: This guide requires persisting a reload hook during successful initial issuance or successful renewal, or installing an executable in renewal-hooks/deploy; Certbot v2.3.0 saves the renewal-relevant options set on the command line to a lineage after successful renewal, and a renew --deploy-hook invocation with no renewal due does not save that hook. | Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
 | reconfigure: certbot reconfigure can add the reload hook later on Certbot 2.3.0 and later. | Certbot reconfigure minimum 2.3.0 | REASONED |
-| expiry-monitoring: Monitor the served certificate's expiry and renewal failures instead of relying on CA reminder emails; include a dry run in the deployment checklist. | Let's Encrypt documentation unknown; Certbot documentation unknown | REASONED |
+| expiry-monitoring: Monitor the served certificate's expiry and renewal failures instead of relying on CA reminder emails; include a dry run in the deployment checklist. This guide assesses that any renewal step involving a person will fail at those scheduled shorter certificate lifetimes and that unattended automation is the only viable path. | Let's Encrypt documentation unknown; Certbot documentation unknown | REASONED |
 | default-lifetime: At the guide's September 2026 documentation check, Let's Encrypt's default certificate lifetime is 90 days. | Let's Encrypt documentation unknown | REASONED |
 | short-lifetime: Optional 6-day short-lived certificates are available to every subscriber as of the guide's September 2026 check. | Let's Encrypt documentation unknown | REASONED |
 | lifetime-schedule: The classic profile moves to 64 days on 2027-02-10 and 45 days on 2028-02-16; industry rules cap publicly trusted certificates at 47 days from 2029-03-15. | Let's Encrypt documentation unknown | REASONED |
@@ -469,24 +469,24 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | zerossl-eab: ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials. | ZeroSSL unknown | REASONED |
 | acme-default: acme.sh registers with ZeroSSL by default. | acme.sh unknown | REASONED |
 | acme-install: acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell. | acme.sh unknown | REASONED |
-| server-automation: The guide recommends Caddy or Traefik for built-in issuance and renewal without an external client. | Let's Encrypt documentation unknown; Caddy automatic HTTPS v2.11.4; Traefik ACME documentation v3.5 | REASONED |
-| origin-certificates: The guide describes Cloudflare origin certificates as free, long-lived and trusted only by Cloudflare's edge behind its proxy; a Cloudflare Sources entry is absent. | Let's Encrypt documentation unknown | REASONED |
+| server-automation: This guide advises Caddy or Traefik for built-in issuance and renewal without an external client; it assesses them as the lowest-effort correct option for new deployments. | Let's Encrypt documentation unknown; Caddy automatic HTTPS v2.11.4; Traefik ACME documentation v3.5 | REASONED |
+| origin-certificates: Cloudflare lists Origin CA certificates on its Free plan, refers to long-lived origin CA certificates and says the validity period is chosen at creation, says they only encrypt traffic between Cloudflare and the origin, and warns that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled; this guide requires using them only for origins that receive traffic only through Cloudflare-proxied records. | Let's Encrypt documentation unknown; Cloudflare Origin CA documentation checked October 2026 | REASONED |
 | verify-inventory: certbot certificates lists issued certificates and their expiry dates. | Certbot documentation unknown | REASONED |
 | verify-https: Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. | Let's Encrypt documentation unknown; curl command documentation curl-8_12_1 | REASONED |
 | verify-certificate: The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates. | Let's Encrypt documentation unknown; OpenSSL certificate commands 3.0 | REASONED |
 | authentication: A certificate alone is insufficient protection; continue with server controls and authentication. | Let's Encrypt documentation unknown | REASONED |
-| dns-automation: For automated DNS-01 issuance and renewal, use a provider DNS plugin and least-privilege API credentials; manual TXT entry is a separate path. | Certbot documentation unknown | REASONED |
-| dns-manual: certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; these certificates do not auto-renew without a --manual-auth-hook that automates the challenge. | Certbot documentation unknown | REASONED |
+| dns-automation: For automated DNS-01 issuance and renewal, this guide advises using a provider DNS plugin and least-privilege API credentials; Certbot also documents manual TXT entry and authentication hooks that automate the challenge. | Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
+| dns-manual: certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; the Certbot v2.3.0 guide says certificates created with --manual do not support automatic renewal without a --manual-auth-hook that automates the challenge. | Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
 <!-- version-basis:end -->
 
-Publicly trusted certificates are free through ACME certificate authorities such as Let's Encrypt and ZeroSSL. Browsers and libraries accept them without any client-side configuration, which makes them the correct choice for every service with a public DNS name. Use [self-signed.md](self-signed.md) only when no public domain exists; a host that cannot accept inbound connections can still get a publicly trusted certificate through the DNS-01 challenge (below), or serve behind [cloudflare.md](cloudflare.md).
+Publicly trusted certificates are free through ACME certificate authorities such as Let's Encrypt and ZeroSSL. Browsers and libraries accept them without any client-side configuration, which is why this guide assesses them as the correct choice for every service with a public DNS name. Use [self-signed.md](self-signed.md) only when no public domain exists; a host that cannot accept inbound connections can still get a publicly trusted certificate through the DNS-01 challenge (below), or serve behind [cloudflare.md](cloudflare.md).
 
 ## Prerequisites
 
 - A public DNS record (`A`/`AAAA` or `CNAME`) pointing at the server, for the HTTP-01 and TLS-ALPN-01 challenges; the DNS-01 challenge instead needs only control of the challenge `TXT` record and can certify a host with no public address record or inbound port.
 - For the HTTP-01 challenge: inbound port 80 reachable from the internet.
 - For the TLS-ALPN-01 challenge (used by Caddy and Traefik): inbound port 443.
-- For the DNS-01 challenge (required for wildcard certificates), automated issuance and renewal need API access to the DNS provider. Manual DNS-01 is also possible with `certbot certonly --manual --preferred-challenges dns`, creating the TXT record by hand; certificates obtained this way do not auto-renew without an authentication hook (`--manual-auth-hook`) that automates the challenge.
+- For the DNS-01 challenge (required for wildcard certificates), automated issuance and renewal need an automated way to update the provider's TXT record; this guide advises using a DNS plugin and scoped API credentials, while Certbot also documents manual authentication hooks for automated challenges. Manual DNS-01 is also possible with `certbot certonly --manual --preferred-challenges dns`, creating the TXT record by hand; the Certbot v2.3.0 guide says certificates obtained this way do not auto-renew without an authentication hook (`--manual-auth-hook`) that automates the challenge.
 
 If none of these is possible, use [cloudflare.md](cloudflare.md) instead.
 
@@ -520,7 +520,7 @@ sudo certbot certonly --standalone -d example.com
 sudo certbot certonly --webroot -w /var/www/html -d example.com
 ```
 
-Wildcard certificates require the DNS-01 challenge. For automated issuance and renewal, use a DNS plugin (for example `python3-certbot-dns-cloudflare`), with provider API credentials scoped to least privilege (a Cloudflare API token with `Zone:DNS:Edit` on only the required zones, never the account-wide Global API Key) in a file readable only by root (`chmod 600` the file in a `700` directory; Certbot warns when other users can read it):
+Wildcard certificates require the DNS-01 challenge. For automated issuance and renewal, use a DNS plugin as this guide advises (for example `python3-certbot-dns-cloudflare`). Scope provider API credentials to least privilege: use a Cloudflare API token with `Zone:DNS:Edit` on only the required zones; never use the account-wide Global API Key. Keep the credentials file readable only by root (`chmod 600` the file in a `700` directory; Certbot warns when other users can read it):
 
 ```bash
 sudo certbot certonly --dns-cloudflare \
@@ -537,16 +537,16 @@ Certificates land in stable paths that server configuration should reference dir
 
 ## Renewal
 
-Let's Encrypt certificates are valid for 90 days at the time of writing, so renewal must be automated. Package and snap installs of certbot register a systemd timer or cron job that runs `certbot renew` for you. Confirm that it works and reload the server after each renewal:
+Let's Encrypt certificates are valid for 90 days at the time of writing, so renewal must be automated. The Certbot v2.3.0 guide says most installations come with a scheduled `certbot renew` task and says that, on Linux and BSD, you can check cron or systemd timers if unsure. Confirm that your installation (package and snap installs included) has a working scheduled `certbot renew` task, and reload the server after each renewal:
 
 ```bash
-sudo systemctl list-timers | grep -i certbot       # the renewal timer must be active
+sudo systemctl list-timers | grep -i certbot       # a certbot timer must be listed; for cron, /etc/crontab or /etc/cron.*/* must contain certbot renew
 sudo certbot renew --dry-run --run-deploy-hooks    # test renewal and the reload hook together
 ```
 
-Install the reload hook durably: pass `--deploy-hook "systemctl reload nginx"` on the initial `certonly`/`run` (Certbot saves it to the renewal config only when a certificate is actually obtained or renewed), drop an executable script into `/etc/letsencrypt/renewal-hooks/deploy/` (it runs after every successful renewal), or add it later with `certbot reconfigure` (Certbot 2.3.0 and later). A bare `certbot renew --deploy-hook ...` does nothing when no renewal is due, so it never persists the hook. A certificate that issues once and then expires in production is the most common ACME failure, so monitor the served certificate's expiry and alert on renewal failure rather than relying on CA reminder emails; the dry run belongs in your deployment checklist.
+Install the reload hook durably: pass `--deploy-hook "systemctl reload nginx"` on the initial `certonly`/`run` (Certbot saves it to the renewal config only when a certificate is actually obtained or renewed), drop an executable script into `/etc/letsencrypt/renewal-hooks/deploy/` (it runs after every successful renewal), or add it later with `certbot reconfigure` (Certbot 2.3.0 and later). In Certbot v2.3.0, a bare `certbot renew --deploy-hook ...` skips renewal when no certificate is due and does not save that hook to a renewal configuration; use one of the durable methods above. This guide assesses a certificate that issues once and then expires in production as the most common ACME failure, so monitor the served certificate's expiry and alert on renewal failure rather than relying on CA reminder emails; the dry run belongs in your deployment checklist.
 
-Lifetimes are getting shorter. Per Let's Encrypt as of September 2026: 6-day short-lived certificates are available now to every subscriber; the default `classic` profile moves to 64-day certificates on 2027-02-10 and to 45-day certificates on 2028-02-16; and industry rules cap publicly trusted certificates at 47 days from 2029-03-15. Any renewal step that involves a person will fail at those lifetimes, so the automation above is the only viable path. Let's Encrypt also switched off its OCSP service on 2025-08-06 and publishes revocation only through CRLs, so do not add OCSP stapling directives for Let's Encrypt certificates.
+Lifetimes are getting shorter. Per Let's Encrypt as of September 2026: 6-day short-lived certificates are available now to every subscriber; the default `classic` profile moves to 64-day certificates on 2027-02-10 and to 45-day certificates on 2028-02-16; and industry rules cap publicly trusted certificates at 47 days from 2029-03-15. This guide assesses that any renewal step involving a person will fail at those lifetimes and that the automation above is the only viable path. Let's Encrypt also switched off its OCSP service on 2025-08-06 and publishes revocation only through CRLs, so do not add OCSP stapling directives for Let's Encrypt certificates.
 
 ## Rate limits
 
@@ -560,8 +560,8 @@ A CAA DNS record restricts which certificate authorities may issue for your doma
 
 - **ZeroSSL**: free certificates over ACME. Some clients need External Account Binding (EAB) credentials from the ZeroSSL dashboard; the acme.sh client registers with ZeroSSL by default.
 - **acme.sh**: a dependency-light shell ACME client supporting many DNS providers, useful where certbot is unavailable. Install from the repository release rather than piping a downloaded script straight into a shell. https://github.com/acmesh-official/acme.sh
-- **Caddy and Traefik**: obtain and renew certificates themselves with no external client; see [caddy.md](caddy.md) and [traefik.md](traefik.md). This is the lowest-effort correct option for new deployments.
-- **Cloudflare origin certificates**: free and valid for long periods, but trusted only by Cloudflare's edge, so they are usable only behind the Cloudflare proxy; see [cloudflare.md](cloudflare.md).
+- **Caddy and Traefik**: obtain and renew certificates themselves with no external client; see [caddy.md](caddy.md) and [traefik.md](traefik.md). This guide assesses it as the lowest-effort correct option for new deployments.
+- **Cloudflare origin certificates**: available on Cloudflare's Free plan; Cloudflare's page refers to long-lived origin CA certificates and says the validity period is chosen at creation. Cloudflare says they only encrypt traffic between Cloudflare and the origin server, not traffic from client browsers to the origin, and that visitors may see untrusted certificate errors if Cloudflare is paused or proxying is disabled; use them only for origins that receive traffic only through Cloudflare-proxied records; see [cloudflare.md](cloudflare.md).
 
 ## Verify
 
@@ -597,6 +597,21 @@ REASONED: preceding block; certificate inventory, HTTPS access and served-certif
 - OpenSSL 3.0 `x509` issuer and validity dates (checked October 2026): https://docs.openssl.org/3.0/man1/openssl-x509/
 - curl curl-8_12_1 HEAD requests (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/head.md#L21-L22
 - curl curl-8_12_1 normal certificate verification and `--insecure` (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/insecure.md#L21-L28
+- Certbot v2.3.0 scheduled renewal guidance (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L808-L825
+- Certbot v2.3.0 renew selection (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L632-L640
+- Certbot v2.3.0 renewal option persistence (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L704-L710
+- Certbot v2.3.0 deploy hooks (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L659-L684
+- Certbot v2.3.0 DNS plugins (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L194-L220
+- Certbot v2.3.0 manual DNS-01 and renewal (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L222-L265
+- Certbot v2.3.0 deploy-hook argument storage (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/cli/cli_utils.py#L227-L231
+- Certbot v2.3.0 renewal option list (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/renewal.py#L40-L53
+- Certbot v2.3.0 due-renewal branch (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/renewal.py#L509-L534
+- Certbot v2.3.0 relevant saved values (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L295-L312
+- Certbot v2.3.0 initial renewal configuration (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1120-L1128
+- Certbot v2.3.0 renewed configuration (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/storage.py#L1243-L1249
+- Certbot v2.3.0 Cloudflare DNS credentials (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot-dns-cloudflare/certbot_dns_cloudflare/__init__.py#L24-L39
+- Certbot v2.3.0 Cloudflare DNS credential permissions (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot-dns-cloudflare/certbot_dns_cloudflare/__init__.py#L61-L78
+- Cloudflare Origin CA (checked October 2026): https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/
 
 ======================================================================
 ==> self-signed.md
@@ -616,7 +631,7 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 | trust-scope: Self-signed TLS encrypts transit but needs explicit client trust and triggers browser warnings; the guide prefers publicly trusted certificates for browser users and external parties. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
 | rsa-certificate: OpenSSL 3.0 or later generates an RSA 4096-bit self-signed certificate with SHA-256, 365-day validity, an unencrypted key and the shown subject and extensions. | OpenSSL documentation (rolling) unknown | REASONED |
 | ec-certificate: Generate a prime256v1 EC key first, then a SHA-256 self-signed certificate with 365-day validity and the shown subject and extensions; the guide describes ECDSA as smaller and faster. | OpenSSL documentation (rolling) unknown | REASONED |
-| san: SAN must cover every client DNS name and IP; replace the documentation IP or omit IP entries for name-only access. RFC 9525 clients reject a missing matching SAN; that RFC is named but not linked in Sources. | OpenSSL documentation (rolling) unknown | REASONED |
+| san: SAN must cover every client DNS name and IP (this guide's requirement, based on RFC 9525's matching rules); replace the documentation IP or omit IP entries for name-only access. RFC 9525 requires DNS identity matching label by label except under its wildcard rule; an IP-ID reference identifier MUST exactly match an iPAddress subjectAltName entry. It forbids the subject Common Name as a service identifier. On mismatch, an automated client SHOULD terminate; a configured exception MUST NOT disable this control by default. A human-facing client SHOULD warn and terminate but MAY offer advanced users an override. Ad hoc pinning SHOULD NOT restrict future connections to only the pinned certificate. | OpenSSL documentation (rolling) unknown; RFC 9525 service identity RFC 9525 | REASONED |
 | leaf-constraint: Set basicConstraints=critical,CA:FALSE because the stated stock req -x509 configuration otherwise marks a trusted certificate CA:TRUE, allowing its unencrypted server key to sign for any name. | OpenSSL documentation (rolling) unknown | REASONED |
 | extension-history: The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension. | OpenSSL documentation (rolling) unknown | REASONED |
 | unencrypted-key: -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions. | OpenSSL documentation (rolling) unknown | REASONED |
@@ -625,8 +640,8 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 | key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. | OpenSSL documentation (rolling) unknown; Git ignore documentation v2.43.0 | REASONED |
 | mkcert: mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs. | mkcert unknown | REASONED |
 | mkcert-custody: Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users. | mkcert unknown | REASONED |
-| debian-trust: Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian/Ubuntu; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
-| rhel-trust: Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust on RHEL/Fedora; a platform-specific Sources entry is absent. | mkcert unknown | REASONED |
+| debian-trust: Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie and Ubuntu noble; use on other Debian and Ubuntu releases is this guide's assessment, with platform-specific Sources entries for those releases absent. | mkcert unknown; Debian ca-certificates trixie; Ubuntu ca-certificates noble | REASONED |
+| rhel-trust: Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract on RHEL 9; Fedora and other RHEL releases are this guide's assessment, with platform-specific Sources entries for those releases absent. | mkcert unknown; RHEL shared system certificates RHEL 9 | REASONED |
 | curl-trust: curl --cacert server.crt supplies explicit trust for app.internal. | OpenSSL documentation (rolling) unknown; curl command documentation curl-8_12_1 | REASONED |
 | requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3 | REASONED |
 | node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js. | mkcert unknown; Node.js extra CA certificates v22.19.0 | REASONED |
@@ -667,7 +682,7 @@ openssl req -x509 -key server.key -sha256 -days 365 -out server.crt \
 
 Rules that make the certificate actually work:
 
-- The `subjectAltName` list must contain every DNS name and IP address clients will use to reach the service. Modern clients validate SAN entries; a certificate with no matching SAN is rejected by clients that follow RFC 9525, so the SAN is mandatory (some verifiers, including OpenSSL's default, still fall back to the CN, which is why the Verify below confirms the SAN exists rather than trusting a CN). Replace the example `203.0.113.10` (a documentation address from RFC 5737) with your service's real IP, or drop the `IP:` entries if clients reach it only by name.
+- The `subjectAltName` list must contain every DNS name and IP address clients will use to reach the service (this guide's requirement, based on the RFC 9525 matching rules that follow). RFC 9525 requires DNS identity matching by comparing labels ('Each label MUST match', except under its wildcard rule) and says an IP-ID reference identifier 'MUST exactly match the value of an iPAddress entry in subjectAltName'. It says the subject Common Name 'MUST NOT be used to identify a service'. If no presented identifier matches, RFC 9525 says an automated client 'SHOULD terminate' and permits a configured exception that 'MUST NOT' disable this security control by default, while a human-facing client 'SHOULD' warn and terminate but may offer advanced users an override. Its ad hoc pinning provision says such pinning 'SHOULD NOT' restrict future connections to only the pinned certificate. Some verifiers, including OpenSSL's default, still fall back to the CN, so confirm in Verify below that the SAN exists rather than trusting a CN. Replace the example `203.0.113.10` (a documentation address from RFC 5737) with your service's real IP, or drop the `IP:` entries if clients reach it only by name.
 - `basicConstraints=critical,CA:FALSE` marks the certificate a leaf, not a CA. It matters because section 4 installs the certificate into client trust stores: OpenSSL's stock configuration marks a bare `req -x509` certificate `CA:TRUE`, which in a trust store is a signer for any name, using the unencrypted key that `-noenc` leaves on the server. This override relies on OpenSSL 3.0 or later, where a command-line extension replaces the configuration default; the end-of-life 1.1.1 would instead emit a duplicate, invalid extension.
 - `-noenc` (spelled `-nodes` before OpenSSL 3.0, still accepted but deprecated) leaves the key unencrypted so services can start unattended; protect it with file permissions instead.
 - Track the `-days` expiry. Nothing renews a self-signed certificate for you; put the date in your calendar or monitoring.
@@ -697,13 +712,13 @@ This is for development machines only. The generated CA can sign for any name, s
 Distribute the certificate (or your internal CA certificate) to clients instead of turning verification off:
 
 ```bash
-# Debian/Ubuntu system trust store
+# Debian trixie/Ubuntu noble system trust store; other releases: this guide's assessment
 sudo cp server.crt /usr/local/share/ca-certificates/app-internal.crt
 sudo update-ca-certificates
 
-# RHEL/Fedora system trust store
+# RHEL 9 system trust store; Fedora and other RHEL releases: this guide's assessment
 sudo cp server.crt /etc/pki/ca-trust/source/anchors/app-internal.crt
-sudo update-ca-trust
+sudo update-ca-trust extract
 
 # Per-tool
 curl -q --cacert server.crt https://app.internal/
@@ -743,6 +758,14 @@ Self-signed certificates have no revocation and no third-party accountability, a
 - curl curl-8_12_1 explicit CA trust (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/cacert.md#L21-L24
 - curl curl-8_12_1 normal certificate verification and `--insecure` (checked October 2026): https://github.com/curl/curl/blob/curl-8_12_1/docs/cmdline-opts/insecure.md#L21-L28
 - Node.js v22.19.0 extra trusted CA certificates (checked October 2026): https://github.com/nodejs/node/blob/v22.19.0/doc/api/cli.md#L3234-L3238
+- RFC 9525 subject Common Name (checked October 2026): https://www.rfc-editor.org/rfc/rfc9525.html#section-2
+- RFC 9525 reference identifiers and IP-ID matching (checked October 2026): https://www.rfc-editor.org/rfc/rfc9525.html#section-6.2
+- RFC 9525 DNS identity matching (checked October 2026): https://www.rfc-editor.org/rfc/rfc9525.html#section-6.3
+- RFC 9525 IP identity matching (checked October 2026): https://www.rfc-editor.org/rfc/rfc9525.html#section-6.4
+- RFC 9525 identity mismatch outcome (checked October 2026): https://www.rfc-editor.org/rfc/rfc9525.html#section-6.6
+- Debian trixie update-ca-certificates (checked October 2026): https://manpages.debian.org/trixie/ca-certificates/update-ca-certificates.8.en.html#DESCRIPTION
+- Ubuntu noble update-ca-certificates (checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/update-ca-certificates.8.html#description
+- RHEL 9 shared system certificates (checked October 2026): https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/securing_networks/using-shared-system-certificates_securing-networks#adding-new-certificates_using-shared-system-certificates
 
 ======================================================================
 ==> cloudflare.md
@@ -4773,11 +4796,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | certificate-chain: ssl.pemfile uses fullchain.pem rather than a certificate without its chain. | lighttpd TLS minimum 1.4.56 | REASONED |
 | separate-key: ssl.privkey exists from 1.4.53; older versions need certificate and key concatenated into ssl.pemfile. | lighttpd separate-key minimum 1.4.53 | REASONED |
 | protocol-floor: ssl.openssl.ssl-conf-cmd sets MinProtocol to TLSv1.2 explicitly; recent versions already default to TLS 1.2. | lighttpd TLS minimum 1.4.56 | REASONED |
-| module-defaults: Only mod_indexfile, mod_dirlisting and mod_staticfile load without server.modules entries; load mod_redirect explicitly. | lighttpd documentation unknown | REASONED |
+| module-defaults: In lighttpd 1.4.75, mod_h2 is inserted unless server.feature-flags disables server.h2proto (enabled by default); when server.compat-module-load is enabled (the default), mod_indexfile and mod_dirlisting are conditionally added when enabled, mod_staticfile is added when absent, and compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. Load mod_redirect explicitly. | lighttpd documentation unknown; lighttpd module loader source 1.4.75 | REASONED |
 | http-redirect: For the http scheme, redirect to HTTPS preserving authority, path and query; port 80 must redirect rather than serve content. | lighttpd documentation unknown | REASONED |
 | redirect-code: Set url.redirect-code to 308 explicitly on versions before 1.4.75. | lighttpd redirect default transition 1.4.75 | REASONED |
 | basic-auth: Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable. | lighttpd documentation unknown | REASONED |
-| password-file: Create the user file with Apache htpasswd; the backend reads user:crypt()-hashed-password entries and accepted hashes depend on the build. | lighttpd documentation unknown | REASONED |
+| password-file: Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally, with other hashes of at least 13 characters checked through crypt() when built with crypt support; under USE_LIB_CRYPTO_MD4, the $1+ntlm$ path derives an NTLM hash and calls crypt() with that derived value and a $1$ salt. Check the build and platform's accepted hashes before choosing a flag; this check is this guide's compatibility advice. | lighttpd documentation unknown; lighttpd file authentication source 1.4.75; Apache htpasswd manual 2.4; Debian apache2-utils package trixie; Fedora httpd-tools package unknown | REASONED |
 | mfa: Basic authentication is single-factor; use an MFA-capable front proxy. The stated Authelia support-list exclusion and Cloudflare Access option lack direct Sources entries. | lighttpd documentation unknown | REASONED |
 | verify-config: lighttpd -tt checks /etc/lighttpd/lighttpd.conf before systemctl reload; command-specific and service-manager sources are not recorded. | lighttpd documentation unknown | REASONED |
 | verify-redirect: The HTTP header request should show a redirect to HTTPS; these are read-and-judge status checks. | lighttpd documentation unknown | REASONED |
@@ -4817,7 +4840,7 @@ ssl.openssl.ssl-conf-cmd = ( "MinProtocol" => "TLSv1.2" )
 
 ## 2. Redirect HTTP to HTTPS
 
-`mod_redirect` must be loaded: only `mod_indexfile`, `mod_dirlisting`, and `mod_staticfile` load without being listed in `server.modules`. Per the lighttpd wiki:
+Load `mod_redirect` explicitly. In lighttpd 1.4.75, `configfile.c` inserts `mod_h2` unless `server.feature-flags` disables `server.h2proto` (enabled by default); when `server.compat-module-load` is enabled (the default), it adds `mod_indexfile` when index files are enabled, `mod_dirlisting` when directory listing is enabled, and `mod_staticfile` when it is absent from `server.modules`; compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. For other versions, check the module-loading behaviour. Per the lighttpd wiki:
 
 ```
 server.modules += ( "mod_redirect" )
@@ -4847,7 +4870,7 @@ auth.require = ( "/" =>
 )
 ```
 
-Create the user file with Apache's `htpasswd` (package `apache2-utils` or `httpd-tools`). The lighttpd htpasswd backend reads `user:crypt()-hashed-password` entries; check the mod_auth documentation below for the hash algorithms your lighttpd build accepts before choosing an `htpasswd` flag.
+Create the user file with Apache's `htpasswd` (Debian `apache2-utils`; for Fedora, use `httpd-tools` as this guide's package assessment). In lighttpd 1.4.75, the htpasswd backend reads `username:stored-hash` entries; it checks `{SHA}` SHA-1 and `$apr1$` hashes internally and, when built with `crypt()` support, checks other stored hashes of at least 13 characters through the platform's `crypt()`, except that, when built with MD4 support, the `$1+ntlm$` path derives an NTLM hash and calls `crypt()` with the derived value and a `$1$` salt. Check the build and platform's accepted hash formats before choosing an `htpasswd` flag; this is the guide's compatibility advice. Check the lighttpd mod_auth documentation and Apache `htpasswd` manual in Sources for the supported hash formats.
 
 Basic authentication is single-factor, and lighttpd is absent from Authelia's supported-proxy list. Add MFA by fronting the service with Cloudflare Access ([cloudflare.md](cloudflare.md)) or an MFA-capable proxy; options in [mfa.md](mfa.md).
 
@@ -4890,7 +4913,17 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
 - lighttpd TLS documentation (1.4.56 and later; ssl.privkey from 1.4.53): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_SSL
 - lighttpd mod_auth documentation, including `auth.require` inside a `$HTTP["host"]` conditional: https://redmine.lighttpd.net/projects/lighttpd/wiki/Mod_auth
 - lighttpd HTTP-to-HTTPS redirect how-to (308 explicit before 1.4.75): https://redmine.lighttpd.net/projects/lighttpd/wiki/HowToRedirectHttpToHttps
-- lighttpd configuration options (`server.modules`, the three modules loaded by default): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_ConfigurationOptions
+- lighttpd configuration options (`server.modules` and default modules): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_ConfigurationOptions
+- lighttpd 1.4.75 compatibility loader and conditional modules source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L395-L544
+- lighttpd 1.4.75 TLS module helper source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L270-L290
+- lighttpd 1.4.75 authentication module helper source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L382-L393
+- lighttpd 1.4.75 directive binding, feature flag and compatibility gate source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L662-L945
+- lighttpd 1.4.75 compatibility loader default source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L1684-L1711
+- lighttpd 1.4.75 htpasswd parsing source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L340-L397
+- lighttpd 1.4.75 htpasswd password check source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L613-L740
+- Apache HTTP Server 2.4 `htpasswd` manual (checked October 2026): https://httpd.apache.org/docs/2.4/programs/htpasswd.html
+- Debian trixie `apache2-utils` package (checked October 2026): https://packages.debian.org/trixie/apache2-utils
+- Fedora `httpd-tools` package (checked October 2026): https://packages.fedoraproject.org/pkgs/httpd/httpd-tools/
 
 ======================================================================
 ==> caddy.md
@@ -29991,7 +30024,7 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 | mem0-reload: Compose uvicorn --reload is a development setting; remove for production. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
 | onyx-prod: Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
 | onyx-bootstrap: Email/password auth is on and first signup becomes admin; claim privately before exposure. | Onyx documentation unknown | REASONED |
-| onyx-auth-type: Body records AUTH_TYPE inert since v4.4.0 and planned v4.5 removal; Sources does not record those version pins. | Onyx documentation unknown | REASONED |
+| onyx-auth-type: This guide infers from the v4.3.13 and v4.4.0 tag trees that AUTH_TYPE no longer selects runtime authentication in v4.4.0; legacy values remain for migrations, a one-time legacy SAML import at startup, and a stale-value warning. Tag names alone supply version identity, since neither tree's manifest records the release version; the recorded v4.5 removal plan and its completion are unverified by these files. | Onyx documentation unknown; Onyx v4.3 source v4.3.13; Onyx v4.4 source v4.4.0 | REASONED |
 | onyx-base: Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5; Onyx documentation unknown | REASONED |
 | onyx-api: Development override adds API 8080:8080; remove unless deliberately restricted for access. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
 | onyx-backing: Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
@@ -30029,7 +30062,7 @@ Defaults below describe the vendor examples checked on 2026-09-13. A **host publ
 | Text Embeddings Inference, documented Docker run | All host interfaces, `8080:80` | Partial: `--api-key` / `API_KEY` is unset by default, and even when set it covers the inference routes only | On the same port, outside the key: `/`, `/health`, `/ping`, `/metrics`, `/docs`, `/api-doc/openapi.json` (in the documented HTTP build `/metrics` is served on this main port; `--prometheus-port`, default `9000`, starts a separate exporter only in the gRPC build) | Replace with `127.0.0.1:8080:80`, or publish nothing | Set `--api-key` or `API_KEY`, and front the service, because the key alone leaves the routes above open |
 | LangServe, quickstart | Application: `localhost:8000` | None supplied; the application author provides authentication | No container publication in this form | `host=` in `uvicorn.run` | FastAPI dependencies, or [front it](fronting-auth.md) |
 | Mem0, server Compose | Application: `0.0.0.0:8000` inside the container; all host interfaces, `8888:8000` | On: bearer JWT, per-user `X-API-Key`, or legacy admin key | PostgreSQL `8432:5432`; dashboard `3000:3000`, both on all host interfaces | Remove PostgreSQL's publication; remove or loopback-scope API and dashboard mappings | Keep authentication enabled; do not set `AUTH_DISABLED=true` |
-| Onyx, production Compose | nginx host publications `80:80` and `443:443` | On: email/password | Backing services have no host publications | Keep backing services unpublished; configure the intended TLS ingress | Keep the built-in login; `AUTH_TYPE` is inert since v4.4.0 |
+| Onyx, production Compose | nginx host publications `80:80` and `443:443` | On: email/password | Backing services have no host publications | Keep backing services unpublished; configure the intended TLS ingress | Keep the built-in login; this guide infers from the v4.3.13 and v4.4.0 tag trees that `AUTH_TYPE` no longer selects runtime authentication in v4.4.0 |
 | Onyx, development Compose | nginx `80:80` and `3000:80` from the base file, plus API `8080:8080` from the override; all on every host interface | On at the application | PostgreSQL `5432:5432`, OpenSearch `9200:9200`, inference `9000:9000`, Redis `6379:6379`, MinIO `9004:9000` and `9005:9001`, code interpreter `8000:8000` | Use production Compose, or remove every unnecessary publication from the effective configuration | Application authentication is on; it does not reach the backing ports |
 
 ## 1. Bind privately, including every container publication
@@ -30156,7 +30189,7 @@ If the development file is running, remove the API publication and every backing
 
 The development mappings include expressions such as `${POSTGRES_HOST_PORT:-5432}:5432`. Setting `POSTGRES_HOST_PORT` changes the host port. Leaving it empty selects the default. Neither action removes the publication. The same trap appears in Dify's plugin-daemon mapping in [agent-builders.md](agent-builders.md).
 
-Email/password authentication is already enabled. `AUTH_TYPE` has had no effect since v4.4.0; the September 2026 documentation says removal is planned for v4.5. Do not set it expecting to change authentication.
+Email/password authentication is already enabled. This guide infers from the v4.3.13 and v4.4.0 tag trees that `AUTH_TYPE` no longer selects runtime authentication in v4.4.0; v4.4.0 still reads legacy values for migrations, a one-time legacy SAML import at startup, and a stale-value warning. The version identity rests on the tag names, since neither tree records its release version in a manifest. The September 2026 documentation record says removal was planned for v4.5; these fetched files do not establish that plan or its completion. Do not set `AUTH_TYPE` expecting to change authentication.
 
 The Docker documentation also describes access at `localhost:3000`. That is now established from the base Compose file rather than inferred: host 3000 maps to nginx's container port 80, and `web_server` carries no host publication of its own. So `localhost:3000` reaches nginx, not the web process directly, and the web process is not separately published.
 
@@ -30451,7 +30484,7 @@ If the deployment trusts identity headers from a proxy, follow the direct-origin
 - Changing a `${VAR:-default}` host port and believing the publication disappeared.
 - Adding a loopback mapping through a Compose override while retaining the original public mapping.
 - Leaving `AUTH_DISABLED=true` in Mem0 after debugging.
-- Setting Onyx's inert `AUTH_TYPE` and expecting an authentication change.
+- Setting Onyx's `AUTH_TYPE` and expecting an authentication change; this guide infers from the v4.3.13 and v4.4.0 tag trees that it no longer selects runtime authentication in v4.4.0.
 - Leaving LocalAI's native key unset, or mistaking an upstream provider token for inbound authentication.
 - Inspecting only `ss`, only IPv4, or only the deployment host's own view.
 - Accepting a timeout, an unknown endpoint's `404`, or a credentialed `200` as proof of protection.
@@ -30473,6 +30506,16 @@ The service facts come from the maintainer's vendor-source verification record d
 - [Mem0 server Compose](https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/docker-compose.yaml): uvicorn command and API, PostgreSQL, and dashboard publications.
 - [Mem0 server `main.py`](https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/main.py): the startup `raise RuntimeError` when authentication is on and `JWT_SECRET` is unset, and the `if`/`elif` warning branches for `AUTH_DISABLED` and a short `ADMIN_API_KEY`. The REST API page describes the request-time responses; this file is the startup behaviour.
 - [Onyx basic authentication](https://docs.onyx.app/deployment/authentication/basic.md): email/password authentication, the first user to sign up becoming an admin, and inert `AUTH_TYPE`.
+- [Onyx v4.3.13 authentication configuration](https://github.com/onyx-dot-app/onyx/blob/v4.3.13/backend/onyx/configs/app_configs.py#L133-L142) (checked October 2026): legacy environment selection of authentication.
+- [Onyx v4.3.13 authentication routes](https://github.com/onyx-dot-app/onyx/blob/v4.3.13/backend/onyx/main.py#L581-L608) (checked October 2026): legacy environment selection of authentication.
+- [Onyx v4.4.0 startup warning](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/main.py#L371-L372) (checked October 2026): startup warning handling of stale `AUTH_TYPE`.
+- [Onyx v4.4.0 startup SAML import](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/main.py#L392-L397) (checked October 2026): startup call to import a legacy SAML provider when `AUTH_TYPE=saml`.
+- [Onyx v4.4.0 authentication warning](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/auth/users.py#L183-L200) (checked October 2026): legacy migration or startup warning handling of `AUTH_TYPE`.
+- [Onyx v4.4.0 SAML provider import](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/db/sso_provider.py#L197-L209) (checked October 2026): one-time legacy SAML import at startup reads `AUTH_TYPE=saml`.
+- [Onyx v4.4.0 SSO provider migration](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/alembic/versions/1fc2904131a3_add_sso_provider_table_and_seed_from_env.py#L60-L93) (checked October 2026): legacy migration or startup warning handling of `AUTH_TYPE`.
+- [Onyx v4.4.0 disabled authentication migration](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/alembic/versions/f7ca3e2f45d9_migrate_no_auth_data_to_placeholder.py#L129-L147) (checked October 2026): legacy migration or startup warning handling of `AUTH_TYPE`.
+- [Onyx v4.3.13 web package manifest](https://github.com/onyx-dot-app/onyx/blob/v4.3.13/web/package.json#L3) (checked October 2026): `1.0.0-dev` rather than the tag version.
+- [Onyx v4.4.0 web package manifest](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/web/package.json#L3) (checked October 2026): `1.0.0-dev` rather than the tag version.
 - [Onyx local Docker deployment](https://docs.onyx.app/deployment/local/docker.md): documented access at `localhost:3000`.
 - [Onyx production Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.prod.yml): nginx-only host publications.
 - [Onyx development Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.dev.yml): API and backing-service publications, and its own header naming the two-file launch form.
