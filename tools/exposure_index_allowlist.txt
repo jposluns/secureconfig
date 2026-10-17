@@ -8,6 +8,7 @@ README.md 443  # README pointer: the same step 2 sentence as README.md 80; not a
 ai-infra-services.md 9001  # container port behind the 0.0.0.0:9005 publication; the host listener is row 9005
 apache.md 9000  # illustrative number: the IPv6 address [2001:db8:80::1]:9000 in a comment on why a grep for :80 or :443 misleads; not a listener
 clickhouse.md 443  # outbound: the HTTPS fixture URLs in the url() allow-list test; not a ClickHouse listener
+cloudflare.md 65535  # HTTPS probe port validation upper bound, not a configured origin listener
 common-mistakes.md 3000  # illustrative number: the `ufw deny 3000` and `-p 3000:3000` example in the Docker item, which links docker.md (cited on row 3000)
 egress-metadata.md 443  # outbound: the destination port of the NetworkPolicy egress rule; not a listener
 litellm.md 5432  # outbound: LiteLLM's DATABASE_URL connection to its PostgreSQL; the database listener is postgresql.md's
