@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-17
 
+- `frontend-frameworks.md` cites the adapter-node 5.5.7 origin and Host header handling and the Nuxt 4.0.0 pin of Nitro 2.12.0 and its `node-server` request path for the Host and proxy checks, keeps the spoofed-Host requirement scoped to the deployed application, and labels the platform and deployment outcomes the sources do not show as this guide's assessment (row 1.179) (#594)
 - `frontend-frameworks.md` cites SvelteKit `@sveltejs/kit@2.70.3` routing, load, form-action, hooks and remote-function documentation for its authorization statements, and labels the per-resource session and authorization checks as this guide's advice (row 1.179) (#589)
 
 ## 2026-10-16
