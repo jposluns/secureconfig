@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "9dd71445cb62bb95d8a52e6f4f0986fb7e121802b9aec6e13276d8aa763a1ce5",
+  "body_sha256": "98b300cdef1841dfc3071ee568b4a7e1fda9d75ad81a08571c08cb9498fbf104",
   "components": {
     "es": {
       "name": "Elasticsearch documentation",
@@ -150,6 +150,26 @@ version_basis: {
         "sc57180db39be": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java"
       }
     },
+    "gcs38": {
+      "name": "OpenSearch GCS source",
+      "basis": "3.8.0",
+      "sources": {
+        "s631e8e354e26": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStoragePlugin.java#L125-L144",
+        "s9ff434d5553c": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageRepository.java#L74-L84",
+        "s7e94d736aed9": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageBlobStore.java#L259-L266",
+        "sfa59a5382e57": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageService.java#L247-L285"
+      }
+    },
+    "azure38": {
+      "name": "OpenSearch Azure source",
+      "basis": "3.8.0",
+      "sources": {
+        "s85d096884518": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureRepositoryPlugin.java#L133-L153",
+        "sc2902fffc253": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureRepository.java#L75-L107",
+        "s22bd450a8a30": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureBlobStore.java#L351-L394",
+        "sdea961e1b3be": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureStorageService.java#L195-L239"
+      }
+    },
     "kb": {
       "name": "Kibana reference",
       "basis": "8.19",
@@ -259,7 +279,7 @@ version_basis: {
     "os-s3": {"text": "3.1 removed server_side_encryption; server_side_encryption_type accepts AES256/aws:kms/bucket_default. Default changed from bucket_default to AES256 in 3.8; explicitly select intended mode.", "components": ["os31", "os38"], "sources": ["os31:s089decb3330d", "os38:sc57180db39be"], "status": "REASONED"},
     "os-s3-kms": {"text": "Explicit KMS repository mode uses server_side_encryption_kms_key_id ARN with object/KMS permissions; this is server-side encryption and settings are not Elasticsearch-compatible.", "components": ["os31", "cloud"], "sources": ["os31:s089decb3330d", "cloud:se1e1c91f80b4"], "status": "REASONED"},
     "es-gcs-azure": {"text": "8.19 GCS/Azure setting lists document no client-side-encryption switch; configure provider key policy and access. GCS supplied keys remain server-side and Azure keys/SAS are authentication.", "components": ["es819"], "sources": ["es819:s28a1fe315963", "es819:s6279b842bc10"], "status": "REASONED"},
-    "os-gcs-azure": {"text": "Follow 3.6 plugin/credential workflow; tag-pinned GCS/Azure client-side-encryption capability and minimum versions remain unestablished.", "components": ["os36"], "sources": ["os36:sf0940d73ed6e"], "status": "REASONED"},
+    "os-gcs-azure": {"text": "Follow 3.6 plugin/credential workflow. This guide's review of OpenSearch 3.8.0 GCS and Azure plugin settings, blob upload and client construction found no client-side-encryption setting; minimum versions and later-release behaviour remain unestablished. This guide's advice: Configure required customer-managed encryption through provider policy and grant key access.", "components": ["os36", "gcs38", "azure38", "cloud"], "sources": ["os36:sf0940d73ed6e", "gcs38:s631e8e354e26", "gcs38:s9ff434d5553c", "gcs38:s7e94d736aed9", "gcs38:sfa59a5382e57", "azure38:s85d096884518", "azure38:sc2902fffc253", "azure38:s22bd450a8a30", "azure38:sdea961e1b3be", "cloud:sdc6a5af591ff", "cloud:saeb8db497f20"], "status": "REASONED"},
     "snapshot-integrity": {"text": "Keep repositories private and keys recoverable; do not rewrite active repository files. Configuration backups are separate and security-state snapshots are sensitive.", "components": ["es819"], "sources": ["es819:sb98bd971e2f6", "es819:s93987af8201d"], "status": "REASONED"},
     "kibana-default": {"text": "Kibana defaults HTTP localhost:5601 with server TLS disabled; 8.19.22/9.5.4 Docker templates explicitly use wildcard host, requiring override/publication review.", "components": ["kb", "kb8", "kb9"], "sources": ["kb:s0fe3c0d2e958", "kb8:sd77254a631b1", "kb8:s14662915ed7e", "kb9:sd0f70697a909", "kb9:s39aaa733de4b"], "status": "REASONED"},
     "kibana-tls": {"text": "Free Basic 8.19 server.ssl certificate/key protects incoming UI traffic; elasticsearch.ssl CA/full verification protects the separate backend hop.", "components": ["kb"], "sources": ["kb:s0fe3c0d2e958"], "status": "REASONED"},
@@ -338,7 +358,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | os-s3: 3.1 removed server_side_encryption; server_side_encryption_type accepts AES256/aws:kms/bucket_default. Default changed from bucket_default to AES256 in 3.8; explicitly select intended mode. | OpenSearch S3 reference 3.1; OpenSearch S3 source 3.8.0 | REASONED |
 | os-s3-kms: Explicit KMS repository mode uses server_side_encryption_kms_key_id ARN with object/KMS permissions; this is server-side encryption and settings are not Elasticsearch-compatible. | OpenSearch S3 reference 3.1; Cloud provider documentation unknown | REASONED |
 | es-gcs-azure: 8.19 GCS/Azure setting lists document no client-side-encryption switch; configure provider key policy and access. GCS supplied keys remain server-side and Azure keys/SAS are authentication. | Elasticsearch reference 8.19 | REASONED |
-| os-gcs-azure: Follow 3.6 plugin/credential workflow; tag-pinned GCS/Azure client-side-encryption capability and minimum versions remain unestablished. | OpenSearch reference 3.6 | REASONED |
+| os-gcs-azure: Follow 3.6 plugin/credential workflow. This guide's review of OpenSearch 3.8.0 GCS and Azure plugin settings, blob upload and client construction found no client-side-encryption setting; minimum versions and later-release behaviour remain unestablished. This guide's advice: Configure required customer-managed encryption through provider policy and grant key access. | OpenSearch reference 3.6; OpenSearch GCS source 3.8.0; OpenSearch Azure source 3.8.0; Cloud provider documentation unknown | REASONED |
 | snapshot-integrity: Keep repositories private and keys recoverable; do not rewrite active repository files. Configuration backups are separate and security-state snapshots are sensitive. | Elasticsearch reference 8.19 | REASONED |
 | kibana-default: Kibana defaults HTTP localhost:5601 with server TLS disabled; 8.19.22/9.5.4 Docker templates explicitly use wildcard host, requiring override/publication review. | Kibana reference 8.19; Kibana source 8.19.22; Kibana source 9.5.4 | REASONED |
 | kibana-tls: Free Basic 8.19 server.ssl certificate/key protects incoming UI traffic; elasticsearch.ssl CA/full verification protects the separate backend hop. | Kibana reference 8.19 | REASONED |
@@ -803,7 +823,7 @@ PUT /_snapshot/private_azure
 
 The complete Elasticsearch 8.19 setting lists document no client-side-encryption switch for these repositories. Configure required customer-managed encryption through the provider's bucket/account policy and grant the required key access. GCS customer-supplied encryption keys are also a server-side mechanism. Azure account keys and SAS tokens authenticate requests; they do not establish client-side encryption. See [8.19 GCS settings](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-gcs.html), [8.19 Azure settings](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-azure.html), and [GCS encryption distinctions](https://docs.cloud.google.com/storage/docs/encryption).
 
-**OpenSearch: free Apache-2.0; the cited repository workflow is version 3.6.** Follow OpenSearch's own plugin and credential instructions, including its Azure workflow. A tag-pinned review of OpenSearch's GCS/Azure client-side-encryption implementations remains outstanding. Their capability and minimum version are **not established here**; do not infer absence from Elasticsearch's settings or from failed source retrieval. See [OpenSearch 3.6 snapshot/repository guidance](https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/).
+**OpenSearch: free Apache-2.0; the cited repository workflow is version 3.6.** Follow OpenSearch's own plugin and credential instructions, including its Azure workflow. This guide's review of the OpenSearch 3.8.0 GCS and Azure plugin settings, blob upload and client construction found no client-side-encryption setting. The minimum versions for client-side-encryption capability and behaviour in later releases remain **not established here**. Do not infer broader absence from Elasticsearch's settings or from failed source retrieval. This guide's advice: Configure required customer-managed encryption through the provider's bucket/account policy and grant the required key access. See [OpenSearch 3.6 snapshot/repository guidance](https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/) and the pinned GCS and Azure implementation Sources below.
 
 Keep repository access private and keys recoverable for the required retention period. Do not rewrite files inside an active repository as an improvised encryption layer. Elasticsearch configuration-file backups are separate from snapshots and should be assessed for encryption; snapshots containing security feature state are sensitive too. See [8.19 backup guidance](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html) and [repository-integrity requirements](https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshot-restore.html).
 
@@ -1235,7 +1255,7 @@ REASONED: binding, backend TLS and cookie inspection from the cited UI settings;
 
 REASONED: exposure interpretation from the cited cluster authentication references; no target cluster is available. An unauthenticated `GET /` returning cluster JSON is the classic finding; so is `_cat/indices` listing your data to the world.
 
-REASONED: deployment expectations and source-audit limits recorded in this guide; no target deployment is available and OpenSearch GCS/Azure capability remains unestablished. The deployment checks below remain REASONED from the cited vendor documentation and pinned sources. The separate OpenSearch GCS/Azure source audit remains open.
+REASONED: deployment expectations and source-audit limits recorded in this guide; no target deployment is available, and OpenSearch GCS/Azure minimum versions and later-release behaviour remain unestablished. The deployment checks below remain REASONED from the cited vendor documentation and pinned sources. This guide reviewed the OpenSearch 3.8.0 GCS/Azure plugin sources; live encryption behaviour remains untested.
 
 | Scope | Exposed/fixed checks and retained source work | Status |
 | --- | --- | --- |
@@ -1243,7 +1263,7 @@ REASONED: deployment expectations and source-audit limits recorded in this guide
 | Listener defaults | Check Elasticsearch and Kibana 8.19.22 and 9.5.4 listener addresses and actual ports in exposed and fixed states. Include archive/package initial setup, Docker configuration, enrollment with local and remote peers, explicit address overrides, available IPv4/IPv6 loopback addresses, and container publication. Retain effective settings and authorized/prohibited network results. | REASONED: the authoring host forbids opening listeners without an isolated network namespace, and has none. Existing cluster/runtime and target-access blockers still apply. |
 | FLS/DLS | Check the two-tenant fixture on Elasticsearch 8.19 with an eligible Platinum/Enterprise licence and OpenSearch 3.8.0. Record unrestricted and restricted search, direct GET, `_source`, requested-field, secret-aggregation, and allowed-aggregation results. Retain administrator fixture controls, effective roles/settings, and actual application-credential results. Record documented inference limitations separately from ordinary retrieval results. | REASONED: live clusters and an eligible Elasticsearch FLS/DLS licence are unavailable. |
 | Storage | Record actual data-path mount/device chains before and after encryption. Check refusal to start when the required encrypted mount is unavailable and successful startup after restoration. Cover logs, swap, and local snapshot storage; use provider volume/key metadata where applicable. | REASONED: target-node, target-storage, and service-manager fixture access are unavailable. |
-| REASONED: whole row; live snapshot, key-metadata and KMS-denial checks per the cited snapshot and repository references, with clusters, repositories and provider or KMS test identities unavailable, and the GCS and Azure source audit still open. Snapshots and source audit | On both products, take and restore a harmless snapshot. Record new and retained object encryption/key metadata, authorized and unauthorized object downloads, and a KMS-dependent denial with a working positive control. Record the OpenSearch version and explicit S3 encryption settings. Separately complete tag-pinned inspection of OpenSearch GCS/Azure client-side-encryption capability before asserting support or absence. | REASONED for live checks: clusters, repositories and provider/KMS test identities are unavailable. Source audit open: the identified implementation evidence is unavailable. |
+| REASONED: whole row; live snapshot, key-metadata and KMS-denial checks per the cited snapshot and repository references, with clusters, repositories and provider or KMS test identities unavailable. Snapshots and source audit | On both products, take and restore a harmless snapshot. Record new and retained object encryption/key metadata, authorized and unauthorized object downloads, and a KMS-dependent denial with a working positive control. Record the OpenSearch version and explicit S3 encryption settings. Separately verify OpenSearch GCS/Azure client-side-encryption capability in the deployed version before asserting support or absence; this guide reviewed only the 3.8.0 plugin sources. | REASONED for live checks: clusters, repositories and provider/KMS test identities are unavailable. Minimum versions and later-release behaviour remain unestablished. |
 | UI | Check exposed HTTP and fixed CA-validated HTTPS for Kibana 8.19 and Dashboards 3.8.0. Record plaintext rejection, listener addresses, container overrides/publication, prohibited-network denial with an authorized positive control, backend full verification, and the Dashboards Secure cookie. | REASONED: UI processes, deployed certificates, target hosts, and network test paths are unavailable. |
 
 ## Sources (checked September 2026)
@@ -1314,6 +1334,14 @@ REASONED: deployment expectations and source-audit limits recorded in this guide
 - Elasticsearch 8.19 S3 repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-s3.html
 - OpenSearch 3.1 repository API and encryption-setting change: https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/
 - OpenSearch S3 implementation, tag 3.8.0: https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java
+- GCS plugin settings, tag 3.8.0 (checked October 2026): https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStoragePlugin.java#L125-L144
+- GCS repository settings, tag 3.8.0 (checked October 2026): https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageRepository.java#L74-L84
+- GCS blob upload, tag 3.8.0 (checked October 2026): https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageBlobStore.java#L259-L266
+- GCS client construction, tag 3.8.0 (checked October 2026): https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageService.java#L247-L285
+- Azure plugin settings, tag 3.8.0 (checked October 2026): https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureRepositoryPlugin.java#L133-L153
+- Azure repository settings, tag 3.8.0 (checked October 2026): https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureRepository.java#L75-L107
+- Azure blob upload, tag 3.8.0 (checked October 2026): https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureBlobStore.java#L351-L394
+- Azure client construction, tag 3.8.0 (checked October 2026): https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureStorageService.java#L195-L239
 - Elasticsearch 8.19 GCS repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-gcs.html
 - Elasticsearch 8.19 Azure repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-azure.html
 - OpenSearch 3.6 snapshot/repository workflow: https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/
