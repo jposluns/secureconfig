@@ -99,6 +99,23 @@ This repository covers deployment exposure: TLS, authentication, MFA, secret han
 
 8. **A validator's character set is spelled out, never written as a range.** Outside the C locale, GNU grep, GNU sed and bash `[[ =~ ]]` let a bracket range such as `[A-Za-z]` or `[0-9a-f]` match non-ASCII letters and digits (`é` matched both in the #356 review), and bash `case` is ASCII only while its `globasciiranges` option is on, which a build or a `shopt -u` can change; a reader pastes a block into whatever locale their terminal has. A guard that accepts or refuses input writes its set out, as in `*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*` for a host name or `[0123456789abcdef]` for a generated hex value, which means the same thing in every locale, tool and shell. A POSIX class in an accept list is not a fix on its own: `[[:alnum:]]` matches non-ASCII letters under C.UTF-8 too, so a class that decides what to accept is sound only inside a check that runs entirely under an explicit `LC_ALL=C`, as the token search in `mcp-clients.md` does. A class in a reject list is sound in any locale, because a locale that widens the class only refuses more: refusing the locale's whitespace and control characters with `*[[:space:][:cntrl:]]*`, as `chat-uis.md` does and documents, needs neither a spelled-out set nor `LC_ALL=C`. A false positive is waived in `tools/bracket_ranges_allow.txt`, never in the guide. Each entry has four TAB-separated fields: `<guide-file> TAB sha256:<span digest> TAB sha256:<block digest> TAB <reason>`, with each digest 64 lowercase hex digits. Hash SHA-256 of UTF-8 of the extracted, newline-normalized text: `blocks_of` converts CRLF and bare CR to LF and removes fence indentation. The span is the opener line or, when any scanned opener on it retains a spanning reading, all lines from it through Bash block end, joined with LF and no added trailing LF. The block digest hashes the whole extracted body, excluding fence lines. Preserve backslashes and remaining whitespace; do not hash joined or quote-stripped readings. These are not raw-file byte digests: changing only LF to CRLF or bare CR keeps the waiver. One entry covers the findings attributed to one opener-line occurrence; later independent openers need their own entries, and duplicate occurrences consume duplicate entries. Moving a span to a different block body or editing any extracted line of its enclosing block makes the entry stale, including lines before or after the span. Absolute line numbers are not bound: edits elsewhere in the guide and movement of a whole unchanged block within it keep the waiver. A range-free validator false positive needs a reason distinguishing it from a real range. Malformed digests, empty reasons, stale entries and retired in-guide waiver markers fail the gate. The gate `tools/check_bracket_ranges.py` scans every fenced bash block in the guides, README.md, controls-reference.md and this file, including comments and heredocs, without shell lexing. Quote-free closed prefixes settle the lexical reading; ambiguous alternatives retain the span through block end. The test-word exemption requires a same-line standalone close and excludes bare one-word literal tests. Under threat model (B), the target is accidental locale-dependent ranges in accept-list validators, and structural defects must be fixed. Runtime expansion that changes the list, test-word-shaped data and constructed multiline quoting are disclosed residual classes, not hardening targets. In particular, empty-variable expansion in `[!$a]` across a quoted newline (codex round-8 P1-1) and `re='^ [ a-z x ] +$'` (P1-2) remain disclosed misses. Other residuals include bracket-free tr ranges, POSIX classes, \w, runtime assembly, non-bash fences and fence-extraction limits. The ship criterion is that neither review family finds a realistic, accidental fail-open. The gate reports the current bash-block, guide and waived-expression counts; every finding must be covered by a valid allowlist entry. At #360, after merging main, the delta against qa/360-r9 was 1 added and 0 removed findings: Python sys.argv[1] indexing in the vLLM TCP probe. Four entries were rebound after main's rule-7 guard sweep; their spans and reasons are unchanged. All span and block bindings match, and individual block-line edits each invalidate their waiver and leave a stale entry; `tools/test_bracket_ranges.py` edits each line of every waived block and prints the current binding and edit counts. The deterministic suite has 2892 cases (2830 ordinary, 41 allowlist, 4 quote-removal and 17 joining), 2884 checked behaviours, 8 disclosed blind spots and 17 entry-point runs. Mutations removing block binding, using a partial block, accepting legacy entries or malformed block digests, preserving raw line endings, binding only the opener or skipping stale detection fail the suite. The fuzzer has 17 regression tests. Its length-5 run with `--multiline-length 4` generates 2,129,785 candidates per engine under C and en_US.utf8. Glob: 645,833 parsed, 157,068 live and flagged, 0 missed; grep -E: 1,250,035 parsed, 18,010 live and flagged, 0 missed; Bash regex: 1,895,043 parsed, 250,686 live and flagged, 0 missed. These bounded counts match round 8. The gate's docstring details the settlement argument, false positives and residuals.
 
+## Root Markdown URLs
+
+In every tracked root Markdown body, write an HTTP(S) URL containing `__` as an
+autolink or a link destination, or put it in a code span. Escaped `\_\_` counts.
+`tools/check_bare_urls.py` uses the pinned markdown-it-py CommonMark parser with
+tables enabled. It scans every inline token, including paragraphs, headings,
+table cells, lists and quotes at any depth. A URL in rendered inline text is
+bare, including link text. The gate reconstructs underscores that CommonMark
+interprets as emphasis within a URL; parsed link and autolink destinations and
+code spans are exempt. Block code, HTML blocks and reference definitions have
+no inline tokens to scan. Validated front matter is excluded. Without the
+pinned parser, a local run prints an advisory SKIP and runs the existing lexical
+fallback. CI and `--require-parser` fail if the parser is absent or mismatched.
+The gate recognizes HTTP(S) schemes, not GFM `www.` autolinks or single-underscore
+pairs. A root file that starts with `---` but has invalid `version_basis` front
+matter fails closed before its body is scanned.
+
 ## Version basis
 
 The enrolled guides are listed in `tools/version_basis_guides.txt`. Their front matter uses a
@@ -137,13 +154,8 @@ Schema 1 requires exactly these top-level fields:
   list or quote markers). That includes a label that spans lines, a label followed by `:` with
   the destination on a later line, and `[note]: text`, which is a definition because `text`
   is a valid destination. So no bracketed label can become a link. Sources cite URLs only as
-  bare URLs, `<autolinks>` or inline links (bracketed text, then the URL in parentheses). Use an
-  autolink, inline-link destination or reference-definition destination for body URLs
-  containing `__`. `tools/check_bare_urls.py` checks these URLs in tracked root Markdown
-  prose. It does not recognize GFM `www.` autolinks or single-underscore pairs. Fences
-  inside list or quote containers can mask later prose, and block-level HTML comments
-  are skipped. A root file starting with `---` that is not valid `version_basis` front
-  matter makes this gate fail rather than scan its body. In an enrolled guide's Sources,
+  bare URLs, `<autolinks>` or inline links (bracketed text, then the URL in parentheses).
+  In an enrolled guide's Sources,
   outside fences, every line closes what it opens: each backtick lies in a code span
   that ends on that line, and outside code spans each opening bracket is
   closed on that line, with no stray closing bracket. A backslash-escaped bracket, parenthesis

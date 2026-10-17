@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
-"""Reject bare body URLs containing a double underscore in tracked root Markdown.
+"""Reject bare double-underscore URLs in tracked root Markdown bodies.
 
-This is a raw-text guard against CommonMark emphasis changing a cited URL. It is
-deliberately narrower than a link checker: it does not fetch or render links.
+With the pinned CommonMark parser, inspect every inline token, including those in
+headings, tables, lists and quotes at any depth. Join rendered text across inline
+formatting and restore underscore markers that open inside a URL, since
+``__`` can split a URL into emphasis tokens. A URL containing
+``__`` (also when written ``\\_\\_``) is bare in rendered text, including link
+text. Link and autolink destinations and code spans are exempt. Block code, HTML
+blocks and reference definitions produce no inline tokens. Front matter is excluded.
+Without the pin, the existing lexical scan runs with an advisory SKIP; CI requires
+the parser. Neither path fetches links.
 """
+import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -11,7 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _markdown import Fences, body_lines
 from _walk import walk_files
-from check_verify_marking import code_spans, html_end
+from check_verify_marking import ParserUnavailable, code_spans, gate_parser, html_end
 
 ROOT = Path(__file__).resolve().parents[1]
 URL = re.compile(r"https?://[^\s<>\"'`\[\]]+", re.I)
@@ -51,7 +60,7 @@ def url_token(match):
     return token
 
 
-def findings(path):
+def lexical_findings(path):
     lines = body_lines(path.read_text(encoding="utf-8"))
     fences = Fences()
     html_terminator = None
@@ -139,17 +148,84 @@ def findings(path):
         paragraph = not (definition or continuation or ATX.match(raw) or SETEXT.match(raw))
 
 
-def main():
+def parsed_findings(path, parser):
+    """Scan rendered inline text, never link targets or code-span contents."""
+    lines = body_lines(path.read_text(encoding="utf-8"))
+    for token in parser.parse("\n".join(lines)):
+        if token.type != "inline":
+            continue
+        pieces = []
+        line = token.map[0] + 1
+        autolink = 0
+        strong = []
+
+        def scan():
+            if not pieces:
+                return
+            rendered = "".join(part for part, _ in pieces)
+            positions = []
+            for part, part_line in pieces:
+                positions.extend([part_line] * len(part))
+            for match in URL.finditer(rendered):
+                candidate = url_token(match)
+                if "__" in candidate:
+                    yield (f"{path.name}:{positions[match.start()]}: "
+                           f"bare URL contains __: {candidate}")
+            pieces.clear()
+            strong[:] = [False] * len(strong)
+
+        for child in token.children or ():
+            if child.type == "link_open" and child.markup == "autolink":
+                yield from scan()
+                autolink += 1
+            elif child.type == "link_close" and child.markup == "autolink":
+                autolink -= 1
+            elif child.type == "text":
+                if not autolink:
+                    pieces.append((child.content, line))
+            elif child.type == "strong_open" and child.markup == "__":
+                # Surrounding emphasis is not part of the URL; an opener inside
+                # its current text prefix is. Restore only the latter pair.
+                so_far = "".join(part for part, _ in pieces)
+                inside_url = any(match.end() == len(so_far) for match in URL.finditer(so_far))
+                strong.append(inside_url)
+                if inside_url and not autolink:
+                    pieces.append(("__", line))
+            elif child.type == "strong_close" and child.markup == "__":
+                if strong.pop() and not autolink:
+                    pieces.append(("__", line))
+            elif child.type in ("softbreak", "hardbreak"):
+                if not autolink:
+                    pieces.append(("\n", line))
+                line += 1
+            elif child.type in ("code_inline", "html_inline", "image"):
+                yield from scan()
+        yield from scan()
+
+
+def main(argv=None):
+    arguments = argparse.ArgumentParser(description=__doc__)
+    arguments.add_argument("--require-parser", action="store_true",
+                           help="fail if the shared pinned parser is unavailable")
+    args = arguments.parse_args(argv)
     try:
+        try:
+            parser = gate_parser(required=True)
+        except ParserUnavailable as exc:
+            if args.require_parser or os.environ.get("CI"):
+                raise
+            parser = None
+            print(f"  SKIP  bare URL parser path: {exc} (lexical fallback runs)")
         errors = []
         for path in walk_files(ROOT, suffixes={".md"}):
             if path.parent == ROOT:
-                errors.extend(findings(path))
+                errors.extend(parsed_findings(path, parser) if parser else lexical_findings(path))
         for error in errors:
             print(f"  FAIL  {error}")
         if errors:
             return 1
-        print("  ok    tracked root Markdown has no bare double-underscore URLs")
+        mode = "pinned parser" if parser else "lexical fallback"
+        print(f"  ok    tracked root Markdown has no bare double-underscore URLs ({mode})")
         return 0
     except (OSError, UnicodeError, ValueError) as exc:
         print(f"  FAIL  check_bare_urls.py could not scan tracked Markdown: {exc}")
