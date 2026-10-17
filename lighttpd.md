@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-09-26",
   "documentation_checked": "2026-09",
-  "body_sha256": "fc329da4579055c92667a236eef7e06f208566fb3acb5ec6a0ec2cb1d38d33c6",
+  "body_sha256": "8a8c76cdecdbf3158b34459541500e7a0d225034c62c0bbe070053c34aa3fca7",
   "components": {
     "tls": {
       "name": "lighttpd TLS minimum",
@@ -34,6 +34,42 @@ version_basis: {
         "s6d5666b862a0": "https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_ConfigurationOptions",
         "s6de629323c64": "https://redmine.lighttpd.net/projects/lighttpd/wiki/HowToRedirectHttpToHttps"
       }
+    },
+    "modules-source": {
+      "name": "lighttpd module loader source",
+      "basis": "1.4.75",
+      "sources": {
+        "s8680e561bed2": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L395-L544"
+      }
+    },
+    "authn-source": {
+      "name": "lighttpd file authentication source",
+      "basis": "1.4.75",
+      "sources": {
+        "s2c11c0fbc0ca": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L340-L397",
+        "sa574c1398c63": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L614-L740"
+      }
+    },
+    "htpasswd-tool": {
+      "name": "Apache htpasswd manual",
+      "basis": "2.4",
+      "sources": {
+        "scde9004bb967": "https://httpd.apache.org/docs/2.4/programs/htpasswd.html"
+      }
+    },
+    "debian-package": {
+      "name": "Debian apache2-utils package",
+      "basis": "trixie",
+      "sources": {
+        "s436bdf5f1fb9": "https://packages.debian.org/trixie/apache2-utils"
+      }
+    },
+    "fedora-package": {
+      "name": "Fedora httpd-tools package",
+      "basis": "unknown",
+      "sources": {
+        "s919088d03a5e": "https://packages.fedoraproject.org/pkgs/httpd/httpd-tools/"
+      }
     }
   },
   "claims": {
@@ -42,11 +78,11 @@ version_basis: {
     "certificate-chain": {"text": "ssl.pemfile uses fullchain.pem rather than a certificate without its chain.", "components": ["tls"], "sources": ["tls:sbff3cb2e01a8"], "status": "REASONED"},
     "separate-key": {"text": "ssl.privkey exists from 1.4.53; older versions need certificate and key concatenated into ssl.pemfile.", "components": ["key"], "sources": ["key:sbff3cb2e01a8"], "status": "REASONED"},
     "protocol-floor": {"text": "ssl.openssl.ssl-conf-cmd sets MinProtocol to TLSv1.2 explicitly; recent versions already default to TLS 1.2.", "components": ["tls"], "sources": ["tls:sbff3cb2e01a8"], "status": "REASONED"},
-    "module-defaults": {"text": "Only mod_indexfile, mod_dirlisting and mod_staticfile load without server.modules entries; load mod_redirect explicitly.", "components": ["docs"], "sources": ["docs:s6d5666b862a0"], "status": "REASONED"},
+    "module-defaults": {"text": "In lighttpd 1.4.75, mod_indexfile and mod_dirlisting are conditionally added when enabled, and mod_staticfile is added when absent; compatibility handling can also add other modules. Load mod_redirect explicitly.", "components": ["docs", "modules-source"], "sources": ["docs:s6d5666b862a0", "modules-source:s8680e561bed2"], "status": "REASONED"},
     "http-redirect": {"text": "For the http scheme, redirect to HTTPS preserving authority, path and query; port 80 must redirect rather than serve content.", "components": ["docs"], "sources": ["docs:s6de629323c64"], "status": "REASONED"},
     "redirect-code": {"text": "Set url.redirect-code to 308 explicitly on versions before 1.4.75.", "components": ["redirect"], "sources": ["redirect:s6de629323c64"], "status": "REASONED"},
     "basic-auth": {"text": "Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable.", "components": ["docs"], "sources": ["docs:s1dbd1ce27da5"], "status": "REASONED"},
-    "password-file": {"text": "Create the user file with Apache htpasswd; the backend reads user:crypt()-hashed-password entries and accepted hashes depend on the build.", "components": ["docs"], "sources": ["docs:s1dbd1ce27da5"], "status": "REASONED"},
+    "password-file": {"text": "Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally, with other hashes of at least 13 characters checked through crypt() when built with crypt support. Check the build and platform's accepted hashes before choosing a flag.", "components": ["docs", "authn-source", "htpasswd-tool", "debian-package", "fedora-package"], "sources": ["docs:s1dbd1ce27da5", "authn-source:s2c11c0fbc0ca", "authn-source:sa574c1398c63", "htpasswd-tool:scde9004bb967", "debian-package:s436bdf5f1fb9", "fedora-package:s919088d03a5e"], "status": "REASONED"},
     "mfa": {"text": "Basic authentication is single-factor; use an MFA-capable front proxy. The stated Authelia support-list exclusion and Cloudflare Access option lack direct Sources entries.", "components": ["docs"], "sources": ["docs:s1dbd1ce27da5"], "status": "REASONED"},
     "verify-config": {"text": "lighttpd -tt checks /etc/lighttpd/lighttpd.conf before systemctl reload; command-specific and service-manager sources are not recorded.", "components": ["docs"], "sources": ["docs:s6d5666b862a0"], "status": "REASONED", "verify": [1]},
     "verify-redirect": {"text": "The HTTP header request should show a redirect to HTTPS; these are read-and-judge status checks.", "components": ["docs"], "sources": ["docs:s6de629323c64"], "status": "REASONED", "verify": [1]},
@@ -72,11 +108,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | certificate-chain: ssl.pemfile uses fullchain.pem rather than a certificate without its chain. | lighttpd TLS minimum 1.4.56 | REASONED |
 | separate-key: ssl.privkey exists from 1.4.53; older versions need certificate and key concatenated into ssl.pemfile. | lighttpd separate-key minimum 1.4.53 | REASONED |
 | protocol-floor: ssl.openssl.ssl-conf-cmd sets MinProtocol to TLSv1.2 explicitly; recent versions already default to TLS 1.2. | lighttpd TLS minimum 1.4.56 | REASONED |
-| module-defaults: Only mod_indexfile, mod_dirlisting and mod_staticfile load without server.modules entries; load mod_redirect explicitly. | lighttpd documentation unknown | REASONED |
+| module-defaults: In lighttpd 1.4.75, mod_indexfile and mod_dirlisting are conditionally added when enabled, and mod_staticfile is added when absent; compatibility handling can also add other modules. Load mod_redirect explicitly. | lighttpd documentation unknown; lighttpd module loader source 1.4.75 | REASONED |
 | http-redirect: For the http scheme, redirect to HTTPS preserving authority, path and query; port 80 must redirect rather than serve content. | lighttpd documentation unknown | REASONED |
 | redirect-code: Set url.redirect-code to 308 explicitly on versions before 1.4.75. | lighttpd redirect default transition 1.4.75 | REASONED |
 | basic-auth: Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable. | lighttpd documentation unknown | REASONED |
-| password-file: Create the user file with Apache htpasswd; the backend reads user:crypt()-hashed-password entries and accepted hashes depend on the build. | lighttpd documentation unknown | REASONED |
+| password-file: Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally, with other hashes of at least 13 characters checked through crypt() when built with crypt support. Check the build and platform's accepted hashes before choosing a flag. | lighttpd documentation unknown; lighttpd file authentication source 1.4.75; Apache htpasswd manual 2.4; Debian apache2-utils package trixie; Fedora httpd-tools package unknown | REASONED |
 | mfa: Basic authentication is single-factor; use an MFA-capable front proxy. The stated Authelia support-list exclusion and Cloudflare Access option lack direct Sources entries. | lighttpd documentation unknown | REASONED |
 | verify-config: lighttpd -tt checks /etc/lighttpd/lighttpd.conf before systemctl reload; command-specific and service-manager sources are not recorded. | lighttpd documentation unknown | REASONED |
 | verify-redirect: The HTTP header request should show a redirect to HTTPS; these are read-and-judge status checks. | lighttpd documentation unknown | REASONED |
@@ -116,7 +152,7 @@ ssl.openssl.ssl-conf-cmd = ( "MinProtocol" => "TLSv1.2" )
 
 ## 2. Redirect HTTP to HTTPS
 
-`mod_redirect` must be loaded: only `mod_indexfile`, `mod_dirlisting`, and `mod_staticfile` load without being listed in `server.modules`. Per the lighttpd wiki:
+Load `mod_redirect` explicitly. In lighttpd 1.4.75, `configfile.c` adds `mod_indexfile` when index files are enabled, `mod_dirlisting` when directory listing is enabled, and `mod_staticfile` when it is absent from `server.modules`; compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. For other versions, check the module-loading behaviour. Per the lighttpd wiki:
 
 ```
 server.modules += ( "mod_redirect" )
@@ -146,7 +182,7 @@ auth.require = ( "/" =>
 )
 ```
 
-Create the user file with Apache's `htpasswd` (package `apache2-utils` or `httpd-tools`). The lighttpd htpasswd backend reads `user:crypt()-hashed-password` entries; check the mod_auth documentation below for the hash algorithms your lighttpd build accepts before choosing an `htpasswd` flag.
+Create the user file with Apache's `htpasswd` (Debian `apache2-utils`; for Fedora, use `httpd-tools` as this guide's package assessment). In lighttpd 1.4.75, the htpasswd backend reads `username:stored-hash` entries; it checks `{SHA}` SHA-1 and `$apr1$` hashes internally and, when built with `crypt()` support, passes other stored hashes of at least 13 characters to the platform's `crypt()`. Check the build and platform's accepted hash formats before choosing an `htpasswd` flag; this is the guide's compatibility advice.
 
 Basic authentication is single-factor, and lighttpd is absent from Authelia's supported-proxy list. Add MFA by fronting the service with Cloudflare Access ([cloudflare.md](cloudflare.md)) or an MFA-capable proxy; options in [mfa.md](mfa.md).
 
@@ -189,4 +225,10 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
 - lighttpd TLS documentation (1.4.56 and later; ssl.privkey from 1.4.53): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_SSL
 - lighttpd mod_auth documentation, including `auth.require` inside a `$HTTP["host"]` conditional: https://redmine.lighttpd.net/projects/lighttpd/wiki/Mod_auth
 - lighttpd HTTP-to-HTTPS redirect how-to (308 explicit before 1.4.75): https://redmine.lighttpd.net/projects/lighttpd/wiki/HowToRedirectHttpToHttps
-- lighttpd configuration options (`server.modules`, the three modules loaded by default): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_ConfigurationOptions
+- lighttpd configuration options (`server.modules` and default modules): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_ConfigurationOptions
+- lighttpd 1.4.75 module-loading source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L395-L544
+- lighttpd 1.4.75 htpasswd parsing source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L340-L397
+- lighttpd 1.4.75 htpasswd password check source (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_authn_file.c#L614-L740
+- Apache HTTP Server 2.4 `htpasswd` manual (checked October 2026): https://httpd.apache.org/docs/2.4/programs/htpasswd.html
+- Debian trixie `apache2-utils` package (checked October 2026): https://packages.debian.org/trixie/apache2-utils
+- Fedora `httpd-tools` package (checked October 2026): https://packages.fedoraproject.org/pkgs/httpd/httpd-tools/
