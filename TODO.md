@@ -52,8 +52,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
-| 1.230 | `authentication.md`: offboarding: source membership, proxy and token revocation delays and time-to-revoke checks. (M, M) | `[gap]` |
-| 1.231 | `authentication.md`: verify-origin-isolation: source the proxy isolation expectation beyond the current Cloudflare citations, retaining the deployed-origin result as a test expectation. (M, M) | `[gap]` |
 | 1.233 | `mfa.md`: admin-factors and authelia-factors: cite administrator policy and Authelia passkey behaviour. (M, M) | `[gap]` |
 | 1.234 | `mfa.md`: webauthn-library and unattended-mtls: cite library and mTLS deployment behaviour or label guidance as assessment. (M, M) | `[gap]` |
 | 1.235 | `mfa.md`: verify-recovery-history: cite the recovery-code scan behaviour. (M, M) | `[gap]` |
