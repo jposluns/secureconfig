@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.257 | `deployment-lifecycle.md`: retire-credentials and offboarding: source per-layer revocation and delayed invalidation checks. (M, M) | Done, #660. Cited per-layer revocation and delayed replay expectations while retaining the application, membership, database and deployment-timing gaps. |
+| 1.260 | `deployment-lifecycle.md`: dns-retirement: cite DNS TTL, resource retention and takeover behaviour for the retirement procedure. (M, M) | Done, #660. Cited takeover and DNS retirement order, corrected the TTL bound for serve-stale, and labelled authoritative-retention advice and platform limits. |
 | 1.255 | `deployment-lifecycle.md`: initialize-secrets, registration and setup-route: cite application bootstrap and first-owner/setup-route behaviour or narrow the universal contract. (M, M) | Done, #658. Pinned Open WebUI bootstrap and signup behaviour, scoped the first-admin warning, and labelled initialization advice and the restart test expectation with residual gaps. |
 | 1.256 | `deployment-lifecycle.md`: fronting-order and clone-secrets: cite deployment-order and clone credential-lifecycle behaviour. (M, M) | Done, #658. Corrected ACME fronting order, pinned Cloudflare Access context and labelled clone-data and credential-rotation advice while retaining the inheritance source gap. |
 | 1.261 | `gpu-clouds.md`: verify-jupyter: cite Jupyter `/api/contents` and the 403/200 expectation with and without a token. (M, M) | Done, #657. Pinned Jupyter Server v2.18.0 contents routing, token authentication, anonymous 403 handling and the documented HTTP 200 success response. |
