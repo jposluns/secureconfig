@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.207 | `docker.md`: persistence: cite Docker firewall/INPUT-path behaviour and the startup-unit mechanism behind persistence advice. (M, M) | Done, #628. Pinned Docker, Moby and systemd sources now support the proxy mapping, chain placement and unit ordering, with the residual INPUT and persistence conclusions labelled as guide reasoning or assessment. |
 | 1.206 | `docker.md`: workload: cite Git, USER, capabilities, no-new-privileges, read-only filesystem and socket controls from Docker and Git sources. (M, M) | Done, #627. Pinned Git and Docker citations now support the ignore behaviour, USER, option names and daemon access while the linked guide retains the hardening assessments. |
 | 1.203 | `headers.md`: placement: cite proxy header directives and generic static-host `_headers` handling for the stated controls. (M, M) | Done, #626. Pinned proxy directive and Cloudflare Pages sources and scoped `_headers` to static asset responses. |
 | 1.204 | `headers.md`: all-responses: cite in `headers.md` Sources the nginx `add_header` inheritance source pinned in `nginx.md` for this response-header claim. (M, M) | Done, #626. Cited pinned nginx inheritance and `always` handling for the every-response requirement. |
