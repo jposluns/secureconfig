@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "20bab04efcd3f11a351d4d195ac9ca85bbf59fdb5cbfdb28de0a72c9aeecac89",
+  "body_sha256": "157e46f159f0f4457d43a1b311f18c8efdd97fdec15bec7065c1373ee5eb24ec",
   "components": {
     "nmap": {
       "name": "Nmap documentation",
@@ -63,11 +63,62 @@ version_basis: {
       "sources": {
         "s0c8b1a738e7b": "https://man.openbsd.org/OpenBSD-7.6/nc.1"
       }
+    },
+    "ubuntu-nc": {
+      "name": "Ubuntu noble netcat-openbsd source",
+      "basis": "c047f1a4572e796c8643fb7e5a719a9d960a677b",
+      "sources": {
+        "s478aaf9a8975": "https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n257",
+        "sd7b31d3bc579": "https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n263",
+        "scc48da80246b": "https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n308"
+      }
+    },
+    "c9s-nmap": {
+      "name": "CentOS Stream 9 nmap packaging",
+      "basis": "17c2b7795d821cd7fbe311cf3f885be3ea1f122f",
+      "sources": {
+        "sd06e83963e39": "https://gitlab.com/redhat/centos-stream/rpms/nmap/-/blob/17c2b7795d821cd7fbe311cf3f885be3ea1f122f/nmap.spec#L133-L137",
+        "s3ab25d24e37a": "https://gitlab.com/redhat/centos-stream/rpms/nmap/-/blob/17c2b7795d821cd7fbe311cf3f885be3ea1f122f/nmap.spec#L6-L8"
+      }
+    },
+    "busybox": {
+      "name": "BusyBox 1.36.1",
+      "basis": "1_36_1",
+      "sources": {
+        "s34bdee292f79": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93",
+        "sd707e18625cc": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L136-L170",
+        "s14b89daa008d": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59"
+      }
+    },
+    "docker-notes": {
+      "name": "Docker Engine release notes",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "s182da2bdd442": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/release-notes/28.md#L771-L772",
+        "sfbe11311e8a4": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/release-notes/28.md#L263-L263"
+      }
+    },
+    "webui": {
+      "name": "Open WebUI",
+      "basis": "0a7c15832fb30b1903753e83f81dc7d27e5b0944",
+      "sources": {
+        "s94d055784840": "https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/config.py"
+      }
+    },
+    "certbot-v230": {
+      "name": "Certbot user guide and source",
+      "basis": "v2.3.0",
+      "sources": {
+        "s5def4225771f": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/cli/__init__.py#L146-L170",
+        "se96df86ba351": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/cli/helpful.py#L210-L211",
+        "sc37d1ffd6192": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/cli/helpful.py#L237-L264",
+        "s77de4441a9e5": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L786-L798"
+      }
     }
   },
   "claims": {
     "outside": {"text": "Run exposure checks from a second network; host-local curl and ss do not establish outside reachability or platform firewall behaviour.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED"},
-    "tcp-scan": {"text": "Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. Sources has no reference for nc implementations other than OpenBSD netcat.", "components": ["nmap", "openbsd-nc"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141", "openbsd-nc:s0c8b1a738e7b"], "status": "REASONED"},
+    "tcp-scan": {"text": "Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. Use the house placeholder guard for both. Ubuntu noble netcat-openbsd documents -v verbosity, -z scanning and -w timeout; BusyBox 1.36.1 small nc lacks -v/-z and needs NC_EXTRA for -w, while its NC_110_COMPAT applet lists -v/-w and needs NC_EXTRA for -z. CentOS Stream 9 packages Ncat 7.92 as nc; its option behaviour and traditional/GNU netcat remain unestablished. As this guide's assessment, refusal or timeout shows only connection failure; unsupported-option errors, local errors and silent exits are inconclusive.", "components": ["nmap", "openbsd-nc", "ubuntu-nc", "c9s-nmap", "busybox"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141", "openbsd-nc:s0c8b1a738e7b", "ubuntu-nc:s478aaf9a8975", "ubuntu-nc:sd7b31d3bc579", "ubuntu-nc:scc48da80246b", "c9s-nmap:sd06e83963e39", "c9s-nmap:s3ab25d24e37a", "busybox:s34bdee292f79", "busybox:sd707e18625cc", "busybox:s14b89daa008d"], "status": "REASONED"},
     "udp-scan": {"text": "The full port sweep is TCP only; inventory UDP services and probe their ports separately with nmap -sU.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd"], "status": "REASONED"},
     "all-addresses": {"text": "Check public IPv4, public IPv6 and platform URLs as well as the custom domain; one address cannot establish coverage of the others.", "components": ["nmap", "vercel"], "sources": ["nmap:sf8404f695ccd", "vercel:se6089d5c4e96"], "status": "REASONED"},
     "passive-index": {"text": "Cross-reference Shodan and Censys indexes for previously indexed exposure; indexed observations are not a fresh direct scan.", "components": ["shodan", "censys"], "sources": ["shodan:scf863db67f1e", "censys:s1e64a007a91f"], "status": "REASONED"},
@@ -81,8 +132,8 @@ version_basis: {
     "clone-secrets": {"text": "Treat clone data like production and rotate inherited credentials if the clone is less trusted. Access-policy citation is context only; clone credential lifecycle is not sourced.", "components": ["access"], "sources": ["access:sc007294b64a0"], "status": "REASONED"},
     "dns-retirement": {"text": "Remove CNAME or A/AAAA records before releasing the resource; retain it through the old TTL and authoritative removal checks. dig supports DNS inspection; takeover and resource-retention guidance has no dedicated source.", "components": ["dns"], "sources": ["dns:se6d352e0a4fa"], "status": "REASONED"},
     "retire-credentials": {"text": "After DNS retirement revoke deployment access policies, API/service credentials and dedicated database users. Access-policy citation covers only the fronting context.", "components": ["access"], "sources": ["access:sc007294b64a0"], "status": "REASONED"},
-    "reverify": {"text": "Repeat outside scans and negative auth tests after upgrades, restores or network/auth changes; restored defaults can reopen exposure. Nmap supports the scan, not application restore behaviour.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED"},
-    "certificate-monitor": {"text": "Monitor certificate expiry externally; a local certbot renewal dry run does not prove the last production renewal succeeded. Nmap is outside-check context only; a Certbot source is not recorded.", "components": ["nmap", "openssl"], "sources": ["nmap:sf8404f695ccd", "openssl:s00aaf106164f", "openssl:s0856f4a58574"], "status": "REASONED"},
+    "reverify": {"text": "Repeat outside scans and negative auth tests after upgrades, backup restores or network/auth changes; a restore can reintroduce a default account or reset a feature flag as this guide's assessment, not a general vendor fact. Docker 28.0.0 warns that hosts with IPv6 forwarding already enabled that relied on Docker setting FORWARD to DROP may need configuration changes; 28.3.3 fixes local-network access to loopback-intended published ports after firewalld reload. Open WebUI enables persistence by default; as this guide's conditional inference, restoring database values that override the environment after first launch could reinstate earlier signup settings. The files this guide cites do not establish database precedence or general restore behaviour; Nmap supports scanning only.", "components": ["nmap", "docker-notes", "webui"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141", "docker-notes:s182da2bdd442", "docker-notes:sfbe11311e8a4", "webui:s94d055784840"], "status": "REASONED"},
+    "certificate-monitor": {"text": "Monitor certificate expiry externally. As this guide's assessment, a renewal cron can silently fail while the host's view looks fine; its advice is a scheduled external openssl s_client or third-party monitor. Certbot v2.3.0 dry-run uses staging unless a custom server is set, saves no test certificates and runs applicable deploy hooks only with --run-deploy-hooks after success, using the active certificate. The user guide separates dry-run from live renewal; this guide infers that dry-run cannot establish the last real renewal's success. Nmap is outside-check context only.", "components": ["nmap", "openssl", "certbot-v230"], "sources": ["nmap:sf8404f695ccd", "openssl:s00aaf106164f", "openssl:s0856f4a58574", "certbot-v230:s5def4225771f", "certbot-v230:se96df86ba351", "certbot-v230:sc37d1ffd6192", "certbot-v230:s77de4441a9e5"], "status": "REASONED"},
     "offboarding": {"text": "Revoke identity membership, proxy/app sessions, personal tokens, API keys and second factors; account for cached-session expiry. Access-policy citation does not establish each layer or its revocation delay.", "components": ["access"], "sources": ["access:sc007294b64a0"], "status": "REASONED"},
     "verify-ipv4": {"text": "From another network, nmap -Pn -p- should find only intended TCP ports; unintended open ports fail, and errors or an unexecuted scan are inconclusive.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED", "verify": [1]},
     "verify-ipv6": {"text": "Repeat the full TCP sweep over the public IPv6 address with -6; a scan that did not run is inconclusive.", "components": ["nmap"], "sources": ["nmap:sf8404f695ccd", "nmap:sb7d0e7eb5141"], "status": "REASONED", "verify": [1]},
@@ -98,12 +149,12 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | outside: Run exposure checks from a second network; host-local curl and ss do not establish outside reachability or platform firewall behaviour. | Nmap documentation unknown | REASONED |
-| tcp-scan: Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. Sources has no reference for nc implementations other than OpenBSD netcat. | Nmap documentation unknown; OpenBSD nc manual 7.6 | REASONED |
+| tcp-scan: Sweep authorized hosts with nmap -Pn -p-; the guide also gives an nc port loop. Use the house placeholder guard for both. Ubuntu noble netcat-openbsd documents -v verbosity, -z scanning and -w timeout; BusyBox 1.36.1 small nc lacks -v/-z and needs NC_EXTRA for -w, while its NC_110_COMPAT applet lists -v/-w and needs NC_EXTRA for -z. CentOS Stream 9 packages Ncat 7.92 as nc; its option behaviour and traditional/GNU netcat remain unestablished. As this guide's assessment, refusal or timeout shows only connection failure; unsupported-option errors, local errors and silent exits are inconclusive. | Nmap documentation unknown; OpenBSD nc manual 7.6; Ubuntu noble netcat-openbsd source c047f1a4572e796c8643fb7e5a719a9d960a677b; CentOS Stream 9 nmap packaging 17c2b7795d821cd7fbe311cf3f885be3ea1f122f; BusyBox 1.36.1 1_36_1 | REASONED |
 | udp-scan: The full port sweep is TCP only; inventory UDP services and probe their ports separately with nmap -sU. | Nmap documentation unknown | REASONED |
 | all-addresses: Check public IPv4, public IPv6 and platform URLs as well as the custom domain; one address cannot establish coverage of the others. | Nmap documentation unknown; Vercel Deployment Protection unknown | REASONED |
 | passive-index: Cross-reference Shodan and Censys indexes for previously indexed exposure; indexed observations are not a fresh direct scan. | Shodan unknown; Censys unknown | REASONED |
@@ -117,8 +168,8 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | clone-secrets: Treat clone data like production and rotate inherited credentials if the clone is less trusted. Access-policy citation is context only; clone credential lifecycle is not sourced. | Cloudflare Access policies unknown | REASONED |
 | dns-retirement: Remove CNAME or A/AAAA records before releasing the resource; retain it through the old TTL and authoritative removal checks. dig supports DNS inspection; takeover and resource-retention guidance has no dedicated source. | BIND dig documentation unknown | REASONED |
 | retire-credentials: After DNS retirement revoke deployment access policies, API/service credentials and dedicated database users. Access-policy citation covers only the fronting context. | Cloudflare Access policies unknown | REASONED |
-| reverify: Repeat outside scans and negative auth tests after upgrades, restores or network/auth changes; restored defaults can reopen exposure. Nmap supports the scan, not application restore behaviour. | Nmap documentation unknown | REASONED |
-| certificate-monitor: Monitor certificate expiry externally; a local certbot renewal dry run does not prove the last production renewal succeeded. Nmap is outside-check context only; a Certbot source is not recorded. | Nmap documentation unknown; OpenSSL command documentation 3.0 | REASONED |
+| reverify: Repeat outside scans and negative auth tests after upgrades, backup restores or network/auth changes; a restore can reintroduce a default account or reset a feature flag as this guide's assessment, not a general vendor fact. Docker 28.0.0 warns that hosts with IPv6 forwarding already enabled that relied on Docker setting FORWARD to DROP may need configuration changes; 28.3.3 fixes local-network access to loopback-intended published ports after firewalld reload. Open WebUI enables persistence by default; as this guide's conditional inference, restoring database values that override the environment after first launch could reinstate earlier signup settings. The files this guide cites do not establish database precedence or general restore behaviour; Nmap supports scanning only. | Nmap documentation unknown; Docker Engine release notes 4e9a5751518ed8223a8dcde53693badddd72604f; Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
+| certificate-monitor: Monitor certificate expiry externally. As this guide's assessment, a renewal cron can silently fail while the host's view looks fine; its advice is a scheduled external openssl s_client or third-party monitor. Certbot v2.3.0 dry-run uses staging unless a custom server is set, saves no test certificates and runs applicable deploy hooks only with --run-deploy-hooks after success, using the active certificate. The user guide separates dry-run from live renewal; this guide infers that dry-run cannot establish the last real renewal's success. Nmap is outside-check context only. | Nmap documentation unknown; OpenSSL command documentation 3.0; Certbot user guide and source v2.3.0 | REASONED |
 | offboarding: Revoke identity membership, proxy/app sessions, personal tokens, API keys and second factors; account for cached-session expiry. Access-policy citation does not establish each layer or its revocation delay. | Cloudflare Access policies unknown | REASONED |
 | verify-ipv4: From another network, nmap -Pn -p- should find only intended TCP ports; unintended open ports fail, and errors or an unexecuted scan are inconclusive. | Nmap documentation unknown | REASONED |
 | verify-ipv6: Repeat the full TCP sweep over the public IPv6 address with -6; a scan that did not run is inconclusive. | Nmap documentation unknown | REASONED |
@@ -132,7 +183,7 @@ This repository's per-service guides check TLS, binding, and authentication from
 
 A `curl` or `ss -tlnp` run on the host itself cannot see a firewall the host does not know about, or a platform-level bypass like Docker's iptables rules ([docker.md](docker.md)). Verify from a second network: a phone hotspot, a cloud shell, or a second VM.
 
-- Port-by-port: `for p in 22 80 443 3000 5432 6379 27017; do nc -vz -w 3 REPLACE_WITH_YOUR_PUBLIC_IP "$p"; done`, or a full sweep, `nmap -Pn -p- REPLACE_WITH_YOUR_PUBLIC_IP` (per the nmap reference, which documents `-p-` and `-p 1-65535` as equivalent port-range syntax; this sweeps TCP only, so inventory and separately probe any UDP service with `nmap -sU` on its ports; only scan hosts you own or are authorized to test).
+- Port-by-port: `for p in 22 80 443 3000 5432 6379 27017; do nc -vz -w 3 REPLACE_WITH_YOUR_PUBLIC_IP "$p"; done`, or a full sweep, `nmap -Pn -p- REPLACE_WITH_YOUR_PUBLIC_IP` (per the nmap reference, which documents `-p-` and `-p 1-65535` as equivalent port-range syntax; this sweeps TCP only, so inventory and separately probe any UDP service with `nmap -sU` on its ports; only scan hosts you own or are authorized to test). Before running either form, use the [guarded Verify block](#verify); for the loop, replace only its IPv4 arm's `nmap -Pn -p- "$1"` with `for p in 22 80 443 3000 5432 6379 27017; do nc -vz -w 3 "$1" "$p"; done`, keeping the whole guard and substituting inside the quotes on `set --`. Ubuntu noble netcat-openbsd documents `-v` as verbose output, `-z` as scanning without sending data and `-w` as a connection/idle timeout. BusyBox 1.36.1 small `nc` lacks `-v` and `-z`, and has `-w` only with `NC_EXTRA`; its `NC_110_COMPAT` applet lists `-v` and `-w`, with `-z` conditional on `NC_EXTRA`. CentOS Stream 9 packages Ncat 7.92 as an `nc` alternative, but the Ncat implementation this guide cites is from a later master commit, so Ncat 7.92's option behaviour remains unestablished here, as does traditional or GNU netcat behaviour. Check the installed variant. As this guide's assessment, refusal or timeout shows only that this connection failed; an unsupported-option error, local error or silent exit is inconclusive.
 - Check every address the service actually has, not just the one you remember configuring: the public IPv4 address, the public IPv6 address if the host has one, and any platform-assigned URL alongside your custom domain (a PaaS default subdomain, per [paas.md](paas.md), often stays reachable even when the custom domain is fronted). A scan of one address that misses the others is not a clean result, it is an incomplete one.
 - Cross-reference what is already indexed about your IP with a passive internet-wide scanner such as Shodan or Censys; both build a continuously updated index of internet-connected hosts and services, so a stale exposure can show up there before you find it yourself ([cloud-firewalls.md](cloud-firewalls.md) covers the firewall rules this is checking).
 
@@ -157,7 +208,7 @@ Retiring a deployment in the wrong order leaves a dangling DNS record pointing a
 
 ## 5. Re-verify after anything changes
 
-Rerun the outside-in checks in section 1 and the negative auth tests from [authentication.md](authentication.md) after an upgrade, a backup restore (which can reintroduce a default account or reset a feature flag), or any change to network policy or auth configuration. Monitor certificate expiry from outside the host too: a renewal cron can silently fail while the host's own view still looks fine, so an external check (a scheduled `openssl s_client` from another machine, or a third-party uptime/certificate monitor) catches what a local `certbot renew --dry-run` cannot.
+Rerun the outside-in checks in section 1 and the negative auth tests from [authentication.md](authentication.md) after an upgrade, a backup restore (which, as this guide's assessment, can reintroduce a default account or reset a feature flag), or any change to network policy or auth configuration. Docker's pinned 28.x release notes give concrete change-related cases: 28.0.0 sets IPv6 `FORWARD` policy to `DROP` only when Docker enables forwarding itself, warning that hosts with forwarding already enabled that relied on Docker setting `DROP` may need configuration changes; 28.3.3 fixes direct local-network access to published container ports after a firewalld reload, even when intended for loopback-only access. Open WebUI's pinned configuration supplies an environment-derived signup default and enables persistence by default. As this guide's conditional inference for restores, if database values override the environment after first launch as described in [open-webui.md](open-webui.md), restoring earlier database values could reinstate earlier signup settings; the configuration this guide cites delegates to `models.config.Config`, whose implementation this guide does not cite, so these files do not establish that precedence or general restore behaviour. Nmap supports scanning, not application restore behaviour. Monitor certificate expiry from outside the host too: as this guide's assessment, a renewal cron can silently fail while the host's own view still looks fine, so this guide's advice is an external check (a scheduled `openssl s_client` from another machine, or a third-party uptime/certificate monitor). Certbot v2.3.0's `certbot renew --dry-run` uses the staging test server unless a custom server is set, obtains test certificates without saving them and does not run deploy hooks unless `--run-deploy-hooks` is supplied; applicable deploy hooks then run only after a successful dry run, using the current active certificate. The option documentation also warns that dry runs can temporarily change webserver configuration, reload webservers and run pre/post hooks; the user guide's dry-run example distinguishes it from a subsequent live renewal. From these documented limits, this guide infers that a dry run cannot show whether the last real renewal succeeded; Nmap is outside-check context only.
 
 ## 6. Offboarding
 
@@ -167,7 +218,7 @@ When a person leaves, revoke access at every layer they touched, not only their 
 
 - Verifying only the custom domain and forgetting the platform's own generated URL, which is often still reachable and unauthenticated.
 - Deleting the app first and the DNS record later, leaving exactly the dangling-CNAME window a takeover needs.
-- Trusting a local `certbot renew --dry-run` as proof that production certificates are actually renewing; it proves the client works, not that the last real renewal succeeded.
+- Trusting a local `certbot renew --dry-run` as proof that production certificates are actually renewing; Certbot v2.3.0 documents test certificates without saving them, staging unless a custom server is set, and deploy hooks only with `--run-deploy-hooks` after a successful dry run, using the active certificate. This guide infers that this test does not establish whether the last real renewal succeeded.
 
 ## Verify
 
@@ -221,3 +272,18 @@ openssl s_client -connect app.example.com:443 -servername app.example.com \
 - OpenSSL 3.0 `s_client` (checked October 2026; connection, hostname verification, and verification errors): https://docs.openssl.org/3.0/man1/openssl-s_client/
 - OpenSSL 3.0 `x509` (checked October 2026; `-noout -enddate` certificate expiry inspection): https://docs.openssl.org/3.0/man1/openssl-x509/
 - OpenBSD 7.6 `nc` (checked October 2026; OpenBSD netcat implementation of `-v`, `-z`, and `-w`): https://man.openbsd.org/OpenBSD-7.6/nc.1
+- Ubuntu noble nc verbose flag, lines 257 to 258, at c047f1a4572e796c8643fb7e5a719a9d960a677b (checked October 2026): https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n257
+- Ubuntu noble nc timeout flag, lines 263 to 266, at c047f1a4572e796c8643fb7e5a719a9d960a677b (checked October 2026): https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n263
+- Ubuntu noble nc zero-I/O scan, lines 308 to 311, at c047f1a4572e796c8643fb7e5a719a9d960a677b (checked October 2026): https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n308
+- CentOS Stream 9 ncat nc alternative, at 17c2b7795d821cd7fbe311cf3f885be3ea1f122f (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/nmap/-/blob/17c2b7795d821cd7fbe311cf3f885be3ea1f122f/nmap.spec#L133-L137
+- CentOS Stream 9 nmap package version, at 17c2b7795d821cd7fbe311cf3f885be3ea1f122f (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/nmap/-/blob/17c2b7795d821cd7fbe311cf3f885be3ea1f122f/nmap.spec#L6-L8
+- BusyBox 1.36.1 compatible nc options, at 1_36_1 (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93
+- BusyBox 1.36.1 small nc option parser, at 1_36_1 (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L136-L170
+- BusyBox 1.36.1 nc compatibility build selection, at 1_36_1 (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59
+- Docker Engine 28.0.0 IPv6 forwarding-policy change and warning, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/release-notes/28.md#L771-L772
+- Docker Engine 28.3.3 firewalld-reload exposure fix, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/release-notes/28.md#L263-L263
+- Open WebUI signup default and persistence configuration (lines 1649, 3091 and 3237 to 3244; Config implementation not cited), at 0a7c15832fb30b1903753e83f81dc7d27e5b0944 (checked October 2026): https://raw.githubusercontent.com/open-webui/open-webui/0a7c15832fb30b1903753e83f81dc7d27e5b0944/backend/open_webui/config.py
+- Certbot dry-run and deploy-hook option documentation, at v2.3.0 (checked October 2026): <https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/cli/__init__.py#L146-L170>
+- Certbot dry-run test-server dispatch, at v2.3.0 (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/cli/helpful.py#L210-L211
+- Certbot staging-server selection and custom-server exception, at v2.3.0 (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/cli/helpful.py#L237-L264
+- Certbot user-guide dry-run and subsequent live-renewal example, at v2.3.0 (checked October 2026): https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L786-L798

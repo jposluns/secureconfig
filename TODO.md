@@ -55,12 +55,9 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.251 | `admin-uis.md`: private: source RedisInsight private/NAT-without-host-listener behaviour. (M, M) | `[gap]` |
 | 1.252 | `low-code-builders.md`: Budibase initialization and validation: pin Budibase sources for the stated setup and authentication behaviour. (M, M) | `[gap]` |
 | 1.253 | `server-admin-panels.md`: pin Proxmox bind/LISTEN_IP/access-list behaviour as one versioned conjunction. (M, M) | `[gap]` |
-| 1.254 | `deployment-lifecycle.md`: tcp-scan: cite non-OpenBSD `nc` behaviour used by the check. (M, M) | `[gap]` |
 | 1.255 | `deployment-lifecycle.md`: initialize-secrets, registration and setup-route: cite application bootstrap and first-owner/setup-route behaviour or narrow the universal contract. (M, M) | `[gap]` |
 | 1.256 | `deployment-lifecycle.md`: fronting-order and clone-secrets: cite deployment-order and clone credential-lifecycle behaviour. (M, M) | `[gap]` |
 | 1.257 | `deployment-lifecycle.md`: retire-credentials and offboarding: source per-layer revocation and delayed invalidation checks. (M, M) | `[gap]` |
-| 1.258 | `deployment-lifecycle.md`: reverify: source or narrow the claim that restores recreate defaults and reset flags. (M, M) | `[gap]` |
-| 1.259 | `deployment-lifecycle.md`: certificate-monitor: cite Certbot dry-run behaviour for renewal verification. (M, M) | `[gap]` |
 | 1.260 | `deployment-lifecycle.md`: dns-retirement: cite DNS TTL, resource retention and takeover behaviour for the retirement procedure. (M, M) | `[gap]` |
 | 1.261 | `gpu-clouds.md`: verify-jupyter: cite Jupyter `/api/contents` and the 403/200 expectation with and without a token. (M, M) | `[gap]` |
 | 1.262 | `gpu-clouds.md`: modal-shared: cite the Shared Endpoints exception. (M, M) | `[gap]` |

@@ -10,6 +10,9 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.254 | `deployment-lifecycle.md`: tcp-scan: cite non-OpenBSD `nc` behaviour used by the check. (M, M) | Done, #656. Cited Ubuntu netcat-openbsd, BusyBox and CentOS Ncat packaging, retained implementation gaps and added the placeholder-guard pointer. |
+| 1.258 | `deployment-lifecycle.md`: reverify: source or narrow the claim that restores recreate defaults and reset flags. (M, M) | Done, #656. Cited Docker change-related exposure and Open WebUI persistence configuration, labelling restore reasoning and retaining the database-precedence gap. |
+| 1.259 | `deployment-lifecycle.md`: certificate-monitor: cite Certbot dry-run behaviour for renewal verification. (M, M) | Done, #656. Cited Certbot v2.3.0 dry-run limits and labelled renewal-history inference and external-monitoring advice. |
 | 1.246 | `php.md`: plain-auth: pin plain-PHP throttling and MFA mechanisms or label the recommendation as guide advice. (M, M) | Done, #651. Labelled plain-PHP throttling and MFA choices as guide advice, narrowed the PHP assessment, pinned fail2ban log-based mechanics, and retained application-filter and PHP TOTP-library gaps. |
 | 1.249 | `web-exposure.md`: apache-listing: cite Debian/Ubuntu Apache defaults and index-list behaviour. (M, M) | Done, #652. Cited Debian 2.4.69-1 listing defaults and the exact index list, retaining Ubuntu packaging as unchecked. |
 | 1.250 | `web-exposure.md`: source-maps: cite the source-map exposure claim and its scope. (M, M) | Done, #652. Cited ECMA-426 and pinned Next.js/Vite production defaults, qualifying source recovery and labelling guide reasoning and advice. |
