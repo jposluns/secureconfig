@@ -10,7 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
-| 1.241 | `oidc-integration.md`: client-secret-storage: pin a secret-storage reference for the client-secret handling claim. (M, M) | Done, #647. Pinned RFC, OWASP and Docker sources and aligned the client-secret guidance with container secret-delivery priorities. |
+| 1.241 | `oidc-integration.md`: client-secret-storage: pin a secret-storage reference for the client-secret handling claim. (M, M) | Done, #647. Cited RFC 6749 and pinned OWASP and Docker sources and aligned the client-secret guidance with container secret-delivery priorities. |
 | 1.236 | `identity-providers.md`: auth0-passkey-policy and admin-passkeys: cite Auth0/passkey tiers, password disablement and WebAuthn policy behaviour. (M, M) | Done, #644. Cited Auth0 passkey and MFA behaviour and provider WebAuthn support, with Free-tier step-up and tier-availability gaps stated. |
 | 1.237 | `identity-providers.md`: entra-every-signin and application-allowlist: cite Entra Conditional Access and Google/Microsoft application allowlists. (M, M) | Done, #644. Cited Entra MFA and reauthentication controls plus Google and Microsoft authorization claims, correcting the every-sign-in overstatement. |
 | 1.238 | `identity-providers.md`: firebase-data-policy and github-proxy-workloads: cite Firebase Rules and GitHub Actions OIDC behaviour. (M, M) | Done, #644. Cited Firebase Rules, Supabase RLS and GitHub Actions OIDC, scoping data access to covered client requests. |
