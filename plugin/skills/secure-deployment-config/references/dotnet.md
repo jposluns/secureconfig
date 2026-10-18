@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "f41362bc0a493432ee704b2a04810990bfa519aabf722dc1cac79bc3b5fd1c89",
+  "body_sha256": "10f455bd5e1e9cc54ea69a2d50883c9cba79de0ada5085b56891741f8232ee5d",
   "components": {
     "docs": {
       "name": "ASP.NET Core documentation",
@@ -114,6 +114,16 @@ version_basis: {
       "sources": {
         "s640872a17a8a": "https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography"
       }
+    },
+    "cf-docs": {
+      "name": "Cloudflare documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "s6f6104362214": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85",
+        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24",
+        "sfddb92e438ca": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16",
+        "s863803bd9a1f": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L48-L48"
+      }
     }
   },
   "claims": {
@@ -136,7 +146,7 @@ version_basis: {
     "authorization": {"text": "Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages.", "components": ["docs"], "sources": ["docs:sa3c22a38f4cb"], "status": "REASONED"},
     "login-limit": {"text": "NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing.", "components": ["rate-min"], "sources": ["rate-min:sd3fef8f45066"], "status": "REASONED"},
     "oidc": {"text": "Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json.", "components": ["docs"], "sources": ["docs:s592dc85bb71f"], "status": "REASONED"},
-    "mfa": {"text": "Enforce MFA at the provider or fronting identity layer per linked guides. The fronting identity layer's MFA option has no listed source.", "components": ["docs"], "sources": ["docs:s592dc85bb71f", "docs:s2d5a930aac35"], "status": "REASONED"},
+    "mfa": {"text": "Enforce MFA at the identity provider or fronting layer; this guide recommends Cloudflare Access independent MFA for a self-hosted public app only with effective MFA enforcement (policy over application over organization) and no origin bypass. The cited pages do not establish this deployment's enforcement or origin isolation.", "components": ["docs", "cf-docs"], "sources": ["docs:s592dc85bb71f", "docs:s2d5a930aac35", "cf-docs:s6f6104362214", "cf-docs:s7e793d13cf31", "cf-docs:sfddb92e438ca", "cf-docs:s863803bd9a1f"], "status": "REASONED"},
     "client-validation": {"text": "Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback.", "components": ["docs"], "sources": ["docs:s6afc0255098f"], "status": "REASONED"},
     "client-ca": {"text": "On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots.", "components": ["runtime", "openssl", "dotnet-rolling"], "sources": ["dotnet-rolling:s640872a17a8a", "runtime:s29ee940c94b9", "openssl:scac6dada5f6a"], "status": "REASONED"},
     "developer-errors": {"text": "Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1", "net10:s61afb89034f8"], "status": "REASONED"},
@@ -213,6 +223,7 @@ Components (recorded basis):
 - iis: IIS documentation, IIS 10
 - iis-rolling: IIS documentation (rolling), unknown
 - dotnet-rolling: .NET documentation (rolling), unknown
+- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
 
 Claims (full source mapping in the front matter):
 
@@ -235,7 +246,7 @@ Claims (full source mapping in the front matter):
 - authorization (REASONED; docs): Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages.
 - login-limit (REASONED; rate-min): NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing.
 - oidc (REASONED; docs): Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json.
-- mfa (REASONED; docs): Enforce MFA at the provider or fronting identity layer per linked guides. The fronting identity layer's MFA option has no listed source.
+- mfa (REASONED; docs, cf-docs): Enforce MFA at the identity provider or fronting layer; this guide recommends Cloudflare Access independent MFA for a self-hosted public app only with effective MFA enforcement (policy over application over organization) and no origin bypass. The cited pages do not establish this deployment's enforcement or origin isolation.
 - client-validation (REASONED; docs): Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback.
 - client-ca (REASONED; runtime, openssl, dotnet-rolling): On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots.
 - developer-errors (REASONED; net10): Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment.
@@ -362,7 +373,11 @@ app.UseRateLimiter();   // after UseRouting when policies are per endpoint
 app.MapPost("/login", LoginHandler).RequireRateLimiting("login");
 ```
 
-SSO: the `Microsoft.AspNetCore.Authentication.OpenIdConnect` package adds `.AddOpenIdConnect(options => { options.Authority = ...; options.ClientId = ...; options.ClientSecret = ...; options.ResponseType = OpenIdConnectResponseType.Code; })` next to `.AddCookie()`, with the cookie as `DefaultScheme` and OIDC as `DefaultChallengeScheme`; keep the secret out of `appsettings.json`. Validation and allowlist checks are in [oidc-integration.md](oidc-integration.md), providers in [identity-providers.md](identity-providers.md). MFA: enforce it at the identity provider, or front the app per [mfa.md](mfa.md).
+SSO: the `Microsoft.AspNetCore.Authentication.OpenIdConnect` package adds `.AddOpenIdConnect(options => { options.Authority = ...; options.ClientId = ...; options.ClientSecret = ...; options.ResponseType = OpenIdConnectResponseType.Code; })` next to `.AddCookie()`, with the cookie as `DefaultScheme` and OIDC as `DefaultChallengeScheme`; keep the secret out of `appsettings.json`. Validation and allowlist checks are in [oidc-integration.md](oidc-integration.md), providers in [identity-providers.md](identity-providers.md). MFA: enforce it at the identity provider, or require MFA in the fronting layer per [mfa.md](mfa.md). This guide recommends Cloudflare Access with independent MFA as one fronting option for a self-hosted public application, provided the effective policy requires MFA and the origin cannot be reached around Access.
+
+Cloudflare documents Access as an authentication layer between users and a self-hosted origin. Its independent MFA prompts for an additional authentication method before granting access, with TOTP authenticators and WebAuthn security keys among the supported methods. The MFA requirements page requires enabling independent MFA at the organization level first and gives settings precedence as policy over application over organization; application and policy settings can require or turn off MFA. This guide therefore requires checking that the effective setting requires MFA, rather than assuming an organization default suffices.
+
+Cloudflare says a publicly routable application needs its origin IP protected by other methods. This guide reasons that the fronting layer protects the app only when requests cannot bypass it to reach the origin. These passages do not establish this deployment's effective MFA policy or origin isolation; merely adding an identity layer does not establish MFA enforcement.
 
 ## 4. Client-side TLS discipline
 
@@ -733,3 +748,7 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 - .NET 10 health-check authorization and Host-header spoofing: https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-10.0
 - .NET 10 host filtering and AllowedHosts: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/host-filtering?view=aspnetcore-10.0
 - .NET 10 provider-side MFA requirements (checked October 2026): https://learn.microsoft.com/en-us/aspnet/core/security/authentication/mfa?view=aspnetcore-10.0
+- Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, MFA requirements, precedence and prerequisite (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85
+- Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, independent MFA and supported TOTP/WebAuthn factors (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24
+- Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, self-hosted public application authentication layer (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16
+- Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, publicly routable origin protection requirement (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L48-L48
