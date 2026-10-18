@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.255 | `deployment-lifecycle.md`: initialize-secrets, registration and setup-route: cite application bootstrap and first-owner/setup-route behaviour or narrow the universal contract. (M, M) | Done, #658. Pinned Open WebUI bootstrap and signup behaviour, scoped the first-admin warning, and labelled initialization advice and the restart test expectation with residual gaps. |
+| 1.256 | `deployment-lifecycle.md`: fronting-order and clone-secrets: cite deployment-order and clone credential-lifecycle behaviour. (M, M) | Done, #658. Corrected ACME fronting order, pinned Cloudflare Access context and labelled clone-data and credential-rotation advice while retaining the inheritance source gap. |
 | 1.254 | `deployment-lifecycle.md`: tcp-scan: cite non-OpenBSD `nc` behaviour used by the check. (M, M) | Done, #656. Cited Ubuntu netcat-openbsd, BusyBox and CentOS Ncat packaging, retained implementation gaps and added the placeholder-guard pointer. |
 | 1.258 | `deployment-lifecycle.md`: reverify: source or narrow the claim that restores recreate defaults and reset flags. (M, M) | Done, #656. Cited Docker change-related exposure and Open WebUI persistence configuration, labelling restore reasoning and retaining the database-precedence gap. |
 | 1.259 | `deployment-lifecycle.md`: certificate-monitor: cite Certbot dry-run behaviour for renewal verification. (M, M) | Done, #656. Cited Certbot v2.3.0 dry-run limits and labelled renewal-history inference and external-monitoring advice. |

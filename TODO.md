@@ -52,8 +52,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
-| 1.255 | `deployment-lifecycle.md`: initialize-secrets, registration and setup-route: cite application bootstrap and first-owner/setup-route behaviour or narrow the universal contract. (M, M) | `[gap]` |
-| 1.256 | `deployment-lifecycle.md`: fronting-order and clone-secrets: cite deployment-order and clone credential-lifecycle behaviour. (M, M) | `[gap]` |
 | 1.257 | `deployment-lifecycle.md`: retire-credentials and offboarding: source per-layer revocation and delayed invalidation checks. (M, M) | `[gap]` |
 | 1.260 | `deployment-lifecycle.md`: dns-retirement: cite DNS TTL, resource retention and takeover behaviour for the retirement procedure. (M, M) | `[gap]` |
 | 1.261 | `gpu-clouds.md`: verify-jupyter: cite Jupyter `/api/contents` and the 403/200 expectation with and without a token. (M, M) | `[gap]` |
