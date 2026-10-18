@@ -36344,7 +36344,7 @@ connection string or the tool's own login is not enough.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -36369,11 +36369,11 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 | appsmith-encryption: Entrypoint generates 13-character encryption password/salt; external values override them. Development Compose sets both abcd; replace before first start. | Appsmith v2.4.1 | REASONED |
 | appsmith-rotation: Changing an existing abcd encryption pair presumably makes stored credentials unreadable; plan re-entry. Inferred, not tested. | Appsmith v2.4.1 | REASONED |
 | budibase-publish: Proxy publishes MAIN_PORT, sample 10000; LiteLLM publishes LITELLM_PORT default 4000. | Budibase v3.46.0 | REASONED |
-| budibase-couchdb: Proxy /db/ reaches CouchDB, exposing sample budibase/budibase login to anyone reaching it. | Budibase v3.46.0 | REASONED |
-| budibase-secrets: Sample JWT_SECRET/API_ENCRYPTION_KEY are testsecret; service passwords, INTERNAL_API_KEY and LITELLM_MASTER_KEY are budibase. Replace all. | Budibase v3.46.0 | REASONED |
-| budibase-sample-check: Recorded source search found no production rejection of testsecret; source reasoning, not a live safeguard test. | Budibase v3.46.0 | REASONED |
-| budibase-init: Unauthenticated POST /api/global/users/init creates first admin until a user exists; validation runs first, so no read-only claimed-state probe. | Budibase v3.46.0 | REASONED |
-| budibase-seed: Claim admin before exposure or seed BB_ADMIN_USER_EMAIL/BB_ADMIN_USER_PASSWORD. | Budibase v3.46.0 | REASONED |
+| budibase-couchdb: Proxy /db/ reaches CouchDB. Compose maps COUCH_DB_USER/PASSWORD to COUCHDB_USER/PASSWORD; the image entrypoint adds that admin only when both are non-empty and its existing-admin check finds none for that name. With unchanged samples and that condition, anyone reaching the proxy can try budibase/budibase. | Budibase v3.46.0 | REASONED |
+| budibase-secrets: Sample JWT_SECRET/API_ENCRYPTION_KEY are testsecret; service passwords, INTERNAL_API_KEY and LITELLM_MASTER_KEY are budibase. Replace all before first start. Compose pins docker.io/litellm/litellm:main-v1.83.10-stable.patch.3 and passes LITELLM_MASTER_KEY; acceptance of budibase by that image is not established. | Budibase v3.46.0 | REASONED |
+| budibase-sample-check: This guide's October 2026 search of the full v3.46.0 tag with git grep -l testsecret v3.46.0 found exactly hosting/.env, hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot, hosting/hosting.properties, packages/backend-core/tests/jestEnv.ts and scripts/dev/manage.js. This guide inspected those hits. This guide's assessment is that these hits do not establish absence of production rejection; no live safeguard test ran. | Budibase v3.46.0 | REASONED |
+| budibase-init: POST /api/global/users/init is public; its body validator requires string email and tenantId fields, permits an optional password, rejects unknown fields and precedes adminUser. In the supplied tenant context, checkAnyUserExists() truthy causes 403 with the exact vendor error quoted in the body. The helper definition was not fetched, so which users count and any multi-tenancy exception remain unestablished. This guide assesses this POST as unsafe for read-only claimed-state probing: invalid bodies can fail validation in both states, while accepted initialization creates an admin. | Budibase v3.46.0 | REASONED |
+| budibase-seed: Claim admin before exposure (guide advice), manually or with BB_ADMIN_USER_EMAIL/BB_ADMIN_USER_PASSWORD. Startup attempts seeding only with SELF_HOSTED truthy, MULTI_TENANCY falsy and both values non-empty; in tenancy.getTenantId() context, it calls createAdminUser when the admin checklist is not checked OR the email does not exist, with hashPassword/requirePassword/skipPasswordValidation true. | Budibase v3.46.0 | REASONED |
 | windmill-code: Workers execute user scripts; a login enables code execution on worker hosts. | Windmill v1.817.0 | REASONED |
 | windmill-bind: Default 0.0.0.0:8000; SERVER_BIND_ADDR changes binary binding. Default wildcard bind was not observed. | Windmill v1.817.0 | REASONED |
 | windmill-compose: Compose exposes server 8000 internally; Caddy publishes 80/25 on all host interfaces. Bind publications privately; container loopback cutting Caddy off is inferred. | Windmill v1.817.0 | REASONED |
@@ -36396,7 +36396,7 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 | nocodb-key-logic: A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated. | Docker docs unknown | DEMONSTRATED |
 | verify-windmill-control: Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed. | Windmill v1.817.0 | REASONED |
 | verify-couchdb: Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control. | Budibase v3.46.0; CouchDB 3.5.2 | REASONED |
-| verify-litellm: Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-&#96;sk-&#96; keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. | Budibase v3.46.0; LiteLLM authentication source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| verify-litellm: Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-&#96;sk-&#96; keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched. | Budibase v3.46.0; LiteLLM authentication source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
 | verify-tcp-outcomes: Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated. | Baserow 2.3.4; Budibase v3.46.0; Windmill v1.817.0 | DEMONSTRATED |
 | verify-tcp-inputs: Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control. | Baserow 2.3.4; Budibase v3.46.0; Windmill v1.817.0 | DEMONSTRATED |
 <!-- version-basis:end -->
@@ -36474,21 +36474,51 @@ unreadable, so plan to re-enter them (inferred from the encryption design, not t
 ## Budibase
 
 Budibase's Compose file publishes its nginx proxy on `MAIN_PORT` (10000 in the sample `.env`) and its
-LiteLLM service on `${LITELLM_PORT:-4000}`. The proxy forwards `/db/` to CouchDB. The sample
-`hosting/.env` sets `JWT_SECRET` and `API_ENCRYPTION_KEY` to `testsecret`, and the CouchDB, MinIO and
+LiteLLM service on `${LITELLM_PORT:-4000}`. The proxy forwards `/db/` to CouchDB (CouchDB upstream variable and proxy location sources below).
+The sample `hosting/.env` sets `JWT_SECRET` and `API_ENCRYPTION_KEY` to `testsecret`, and the CouchDB, MinIO and
 Redis passwords, `INTERNAL_API_KEY` and `LITELLM_MASTER_KEY` to `budibase`, under a comment that says
-"These should be updated". A search of the v3.46.0 source finds `testsecret` only in those sample files,
-a DigitalOcean first-boot script, a test setup and a development script, and no code that checks for
-it. With the sample file unchanged,
-anyone who can reach the proxy can try `budibase`/`budibase` against CouchDB through `/db/`, and the
-LiteLLM port answers to the master key `budibase`. Replace every one of those values before the first
-start.
+"These should be updated" (sample secret assignments source below).
+This guide's October 2026 search of the full v3.46.0 tag with
+`git grep -l testsecret v3.46.0` found exactly these five files:
+`hosting/.env`, `hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot`,
+`hosting/hosting.properties`, `packages/backend-core/tests/jestEnv.ts` and `scripts/dev/manage.js`.
+This guide inspected those five files: sample assignments, first-boot substitution, test assignments
+and development entries.
+This guide's assessment is that those hits do not establish that production code never rejects the sample values;
+no live safeguard test ran.
+Compose maps `COUCH_DB_USER` and `COUCH_DB_PASSWORD` to the `COUCHDB_USER` and `COUCHDB_PASSWORD`
+environment of `budibase/database:2.1.0`; the image version file also says `2.1.0`.
+The Dockerfile installs the entrypoint and selects the runner, which invokes that entrypoint for CouchDB.
+With both values non-empty, the entrypoint appends the admin credentials only if its existing-admin
+check finds no entry for that name (CouchDB image and credential mapping, entrypoint installation,
+runner command, image version file, runner call and conditional admin creation sources below).
+With the sample file unchanged and that creation condition met, anyone who can reach the proxy can try
+`budibase`/`budibase` against CouchDB through `/db/`.
+Compose pins `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` and passes `LITELLM_MASTER_KEY`
+(LiteLLM image and environment source below); acceptance of `budibase` by that image is not established.
+This guide has not established that [litellm.md](litellm.md)'s pinned source
+`6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to that image; no LiteLLM source for that image was fetched.
+Replace every one of those values before the first start.
 
-The first-run admin route `POST /api/global/users/init` needs no login and works until the first user
-exists; after that it returns an error ("You cannot initialise once an global user has been created").
-The route validates its request body before that check, so no read-only request shows whether an
-instance is claimed. Create the admin first, or seed it with `BB_ADMIN_USER_EMAIL` and
-`BB_ADMIN_USER_PASSWORD`.
+The first-run admin route `POST /api/global/users/init` is public (public init endpoint entry and
+public authentication middleware chain sources below).
+Its controller calls `checkAnyUserExists()` inside `tenancy.doInTenant(tenantId, ...)` using the request's
+`tenantId`; a truthy result produces HTTP 403 with "You cannot initialise once an global user has been created."
+(admin-init controller and refusal source below).
+The helper is imported from `packages/worker/src/utilities/users.ts`, which was not fetched;
+which users count and any multi-tenancy exception in that helper remain unestablished.
+The route's `buildAdminInitValidation()` runs before `controller.adminUser`; it requires string `email`
+and `tenantId` fields, allows an optional password and rejects unknown fields
+(admin-init body validator and middleware order sources below).
+This guide assesses this POST as unsafe for read-only claimed-state probing: invalid bodies can fail
+validation in both states, while accepted initialization creates an admin.
+Create the admin before exposure, manually or with `BB_ADMIN_USER_EMAIL` and `BB_ADMIN_USER_PASSWORD`
+(this guide's advice; admin environment definitions and app-service mapping sources below).
+Startup attempts seeding only when `SELF_HOSTED` is truthy, `MULTI_TENANCY` is falsy and both values are
+non-empty; in the `tenancy.getTenantId()` context, it calls `createAdminUser` when
+`!checklist?.adminUser?.checked || !exists`, where `exists` is `users.doesUserExist(bbAdminEmail)`.
+That call sets `hashPassword`, `requirePassword` and `skipPasswordValidation` to `true`
+(startup admin seeding conditions source below).
 
 ## Windmill
 
@@ -36646,10 +36676,10 @@ Exposed, the default login gets `200` with a token; fixed, it gets `400` (both o
 on the loopback run). Before trusting a `400`, log in once with your real credentials, so that a dead
 service is not read as fixed.
 
-REASONED: The two sample-value requests use Budibase v3.46.0 sample environment for the sample values and Budibase v3.46.0 proxy configuration (`/db/`) for the path. The Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password; the LiteLLM 401 for a non-`sk-` key when a database is connected and the 400 without one are supported by LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. These are expectations, not live observations. The recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. For Budibase, two reasoned requests use the published sample values, which are not secrets. Substitute
+REASONED: The two sample-value requests use Budibase v3.46.0 sample environment for the sample values and Budibase v3.46.0 proxy configuration (`/db/`) for the path. The Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password; the LiteLLM 401 for a non-`sk-` key when a database is connected and the 400 without one are supported by LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). These LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin `6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to Compose image `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` (LiteLLM image and environment source below); no source for that image was fetched. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. These are expectations, not live observations. The recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. For Budibase, two reasoned requests use the published sample values, which are not secrets. Substitute
 the proxy URL (`http://HOST:10000` in the sample setup) and the LiteLLM URL inside the single quotes.
 
-REASONED: following block; Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. The exposed 200 outcomes still require live comparison. No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review (October 2026, Bash 5.3.9 and ShellCheck 0.11.0) checked syntax and guard fixtures with a curl stub; no service response was observed. Bash -n and ShellCheck 0.11.0 each exited 0 with no output. In that local marking review, missing marker printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); missing set -- line printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); short assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls); long assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls). Placeholder, first empty, second empty, first option-like, second option-like, first spaced, second spaced, embedded placeholder, tab, LF, CR and DEL each printed "substitute both URLs on the set -- line above; not probing" (each exit 0, 0 stub calls). The valid fixture exited 0 with 2 stub calls and printed, in order, `stub couchdb url=http://203.0.113.10:10000/db/_session?basic=true`, `couchdb sample login: http=200 exit=0 err=fixture ok`, `stub litellm url=http://203.0.113.11:4000/v1/models` and `litellm sample key: http=200 exit=0 err=fixture ok`.
+REASONED: following block; Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). These LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin `6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to Compose image `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` (LiteLLM image and environment source below); no source for that image was fetched. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. The exposed 200 outcomes still require live comparison. No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review (October 2026, Bash 5.3.9 and ShellCheck 0.11.0) checked syntax and guard fixtures with a curl stub; no service response was observed. Bash -n and ShellCheck 0.11.0 each exited 0 with no output. In that local marking review, missing marker printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); missing set -- line printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); short assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls); long assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls). Placeholder, first empty, second empty, first option-like, second option-like, first spaced, second spaced, embedded placeholder, tab, LF, CR and DEL each printed "substitute both URLs on the set -- line above; not probing" (each exit 0, 0 stub calls). The valid fixture exited 0 with 2 stub calls and printed, in order, `stub couchdb url=http://203.0.113.10:10000/db/_session?basic=true`, `couchdb sample login: http=200 exit=0 err=fixture ok`, `stub litellm url=http://203.0.113.11:4000/v1/models` and `litellm sample key: http=200 exit=0 err=fixture ok`.
 
 ```bash
 (
@@ -36669,13 +36699,15 @@ REASONED: following block; Budibase v3.46.0 sample environment supplies the samp
 )
 ```
 
-REASONED: Exposed and fixed outcomes below are expectations, not live observations. Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. Exposed, either line gets `200`, which means the sample secret is live. Fixed, the CouchDB sample login
+REASONED: Exposed and fixed outcomes below are expectations, not live observations. Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). These LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin `6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to Compose image `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` (LiteLLM image and environment source below); no source for that image was fetched. No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. Exposed, either line gets `200`, which means the sample secret is live. Fixed, the CouchDB sample login
 gets `401` ("Username or password wasn't recognized", per CouchDB's `/_session` reference) and the
 LiteLLM sample key gets a 401 (or a 400 if the proxy has no database), per the LiteLLM authentication source; compare the `/v1/models` check in [litellm.md](litellm.md). Confirm each
-service answers your real credentials as the positive control. Budibase's first-run admin route has no
-equivalent probe: its request validation runs before the "already initialised" check, so a request
-either fails validation in both states or, with a valid body on a fresh instance, creates the admin.
-Claim the admin yourself before the proxy is reachable.
+service answers your real credentials as the positive control. This guide assesses Budibase's first-run
+POST as unsafe for read-only claimed-state probing: the body validator precedes the controller's
+tenant-context `checkAnyUserExists()` call (admin-init body validator, middleware order and controller
+sources below); invalid bodies can fail validation in both states, while accepted initialization creates an admin.
+The helper definition was not fetched, so which users count and any multi-tenancy exception remain unestablished.
+Claim the admin yourself before the proxy is reachable (this guide's advice).
 
 REASONED: Manual signup procedure, per the guide's cited NocoDB 2026.09.0 first user, signup and its refusal message, NocoDB 2026.09.0 app settings (`invite_only_signup`), Baserow 2.3.4 first user, signup and its refusal message, Baserow 2.3.4 settings model (`allow_new_signups`), Appsmith v2.4.1 server properties (bind address, signup) and Appsmith v2.4.1 `SIGNUP_DISABLED` error. No browser-accessible NocoDB, Baserow or Appsmith deployment was available for the account lifecycle checks; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. This paragraph contains no shell or configuration fragment to execute locally. Expect account creation when exposed and backend refusal when fixed, with administrator login still working. For NocoDB, Baserow and Appsmith, check signup by hand, reasoned from source. In a private browser
 window, open the instance's sign-up page and try to create an account with an address you control.
@@ -36798,6 +36830,28 @@ mean to publish is the finding.
 - Budibase v3.46.0 public worker routes: https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts
 - Budibase v3.46.0 admin init: https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/controllers/global/users.ts
 - Budibase v3.46.0 admin init route and its validation: https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts
+- Budibase v3.46.0 sample secret assignments (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/.env#L4-L16
+- Budibase v3.46.0 CouchDB image and credential mapping (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml#L111-L120
+- Budibase v3.46.0 LiteLLM image and environment (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml#L129-L144
+- Budibase v3.46.0 CouchDB upstream variable (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/proxy/nginx.prod.conf#L86
+- Budibase v3.46.0 CouchDB proxy location (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/proxy/nginx.prod.conf#L236-L239
+- Budibase v3.46.0 public init endpoint entry (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts#L40-L43
+- Budibase v3.46.0 public authentication middleware chain (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts#L133-L167
+- Budibase v3.46.0 admin-init body validator (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts#L13-L28
+- Budibase v3.46.0 admin-init middleware order (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts#L75-L79
+- Budibase v3.46.0 admin-init controller and refusal (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/controllers/global/users.ts#L229-L274
+- Budibase v3.46.0 startup admin seeding conditions (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/server/src/startup/index.ts#L226-L266
+- Budibase v3.46.0 admin environment definitions (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/backend-core/src/environment.ts#L267-L268
+- Budibase v3.46.0 app-service admin environment mapping (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml#L27-L28
+- Budibase v3.46.0 CouchDB entrypoint installation (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/Dockerfile#L89-L91
+- Budibase v3.46.0 CouchDB runner command (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/Dockerfile#L151-L154
+- Budibase v3.46.0 database image version file (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/VERSION#L1
+- Budibase v3.46.0 runner calls CouchDB entrypoint (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/runner.sh#L165-L166
+- Budibase v3.46.0 conditional CouchDB admin creation (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/docker-entrypoint.sh#L70-L75
+- Budibase v3.46.0 hosting sample secrets (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/hosting.properties#L4-L18
+- Budibase v3.46.0 first-boot sample substitution (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot#L11-L15
+- Budibase v3.46.0 test secret assignments (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/backend-core/tests/jestEnv.ts#L9-L10
+- Budibase v3.46.0 development secret entries (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/scripts/dev/manage.js#L11-L12
 - Apache CouchDB 3.5.2 `/_session` reference: https://github.com/apache/couchdb/blob/3.5.2/src/docs/src/api/server/authn.rst
 - LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026): https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/user_api_key_auth.py
 - Windmill v1.817.0 README (default credentials): https://github.com/windmill-labs/windmill/blob/v1.817.0/README.md
