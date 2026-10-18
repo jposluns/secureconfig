@@ -10,6 +10,9 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.254 | `deployment-lifecycle.md`: tcp-scan: cite non-OpenBSD `nc` behaviour used by the check. (M, M) | Done, #656. Cited Ubuntu netcat-openbsd, BusyBox and CentOS Ncat packaging, retained implementation gaps and added the placeholder-guard pointer. |
+| 1.258 | `deployment-lifecycle.md`: reverify: source or narrow the claim that restores recreate defaults and reset flags. (M, M) | Done, #656. Cited Docker change-related exposure and Open WebUI persistence configuration, labelling restore reasoning and retaining the database-precedence gap. |
+| 1.259 | `deployment-lifecycle.md`: certificate-monitor: cite Certbot dry-run behaviour for renewal verification. (M, M) | Done, #656. Cited Certbot v2.3.0 dry-run limits and labelled renewal-history inference and external-monitoring advice. |
 | 1.252 | `low-code-builders.md`: Budibase initialization and validation: pin Budibase sources for the stated setup and authentication behaviour. (M, M) | Done, #655. Pinned Budibase initialization, startup seeding and CouchDB credential sources, with explicit user-count and LiteLLM image-source limits, and recorded this guide's testsecret search. |
 | 1.251 | `admin-uis.md`: private: source RedisInsight private/NAT-without-host-listener behaviour. (M, M) | Done, #654. Cited RedisInsight defaults and authentication-code limits plus Docker publication and proxy sources, retained the host-listener gap as assessment, and removed the unsupported RedisInsight two-200 assertion. |
 | 1.253 | `server-admin-panels.md`: pin Proxmox bind/LISTEN_IP/access-list behaviour as one versioned conjunction. (M, M) | Done, #653. Pinned the Proxmox bind and shared access-list implementation with dependency bounds, documenting the IPv4 fallback, residual runtime gap and guide assessments. |
