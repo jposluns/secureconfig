@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "1729fce70ddd613b02f1069ff3521f6745733e87365150ac3ef4e0aeb39719f9",
+  "body_sha256": "ec55d386709c875f2389ca5c965dad3caf6c34a4837d2d602fc807b9d567adc7",
   "components": {
     "entra": {
       "name": "Microsoft Entra documentation",
@@ -42,7 +42,8 @@ version_basis: {
       "basis": "unknown",
       "sources": {
         "s69c4a65e512f": "https://firebase.google.com/docs/auth",
-        "s6bf1b9443202": "https://firebase.google.com/pricing"
+        "s6bf1b9443202": "https://firebase.google.com/pricing",
+        "s5368f5c06957": "https://firebase.google.com/docs/rules/basics#production-ready_rules"
       }
     },
     "auth0": {
@@ -50,7 +51,9 @@ version_basis: {
       "basis": "unknown",
       "sources": {
         "sc6cc7bcbb422": "https://auth0.com/docs/secure/multi-factor-authentication/adaptive-mfa",
-        "s6d62bb8ed8bf": "https://auth0.com/pricing"
+        "s6d62bb8ed8bf": "https://auth0.com/pricing",
+        "s5794c9fb8add": "https://auth0.com/docs/authenticate/database-connections/passkeys#offer-passwords-and-passkeys-at-login",
+        "s7ecf8ee3e9ba": "https://auth0.com/docs/secure/multi-factor-authentication/fido-authentication-with-webauthn#webauthn-as-multi-factor-authentication"
       }
     },
     "cognito": {
@@ -140,7 +143,8 @@ version_basis: {
       "basis": "ab3b44cd743709649e46f7708da2f6a6a70bc227",
       "sources": {
         "s729880406dc3": "https://github.com/zitadel/zitadel/blob/ab3b44cd743709649e46f7708da2f6a6a70bc227/README.md#L121-L123",
-        "sd1f3f5ccaffa": "https://github.com/zitadel/zitadel/blob/ab3b44cd743709649e46f7708da2f6a6a70bc227/apps/docs/content/guides/integrate/login-ui/mfa.mdx#L15-L19"
+        "sd1f3f5ccaffa": "https://github.com/zitadel/zitadel/blob/ab3b44cd743709649e46f7708da2f6a6a70bc227/apps/docs/content/guides/integrate/login-ui/mfa.mdx#L15-L19",
+        "s27d60b6057d3": "https://github.com/zitadel/zitadel/blob/ab3b44cd743709649e46f7708da2f6a6a70bc227/apps/docs/content/concepts/features/passkeys.mdx#L7-L15"
       }
     },
     "authentik-source": {
@@ -154,7 +158,8 @@ version_basis: {
       "name": "Keycloak documentation",
       "basis": "26.7.4",
       "sources": {
-        "s1e55f7daaa0d": "https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc#L2-L21"
+        "s1e55f7daaa0d": "https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc#L2-L21",
+        "s676048230ec9": "https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/authentication/passkeys.adoc#L5-L8"
       }
     },
     "ory-kratos": {
@@ -174,6 +179,57 @@ version_basis: {
       "sources": {
         "s7735ed8cb7ad": "https://github.com/ory/hydra/blob/v26.2.0/README.md#L49-L72",
         "s9e834fe62236": "https://github.com/ory/hydra/blob/v26.2.0/README.md#L126-L136"
+      }
+    },
+    "google-oidc-docs": {
+      "name": "Google OpenID Connect documentation",
+      "basis": "unknown",
+      "sources": {
+        "sce9a29f93b69": "https://developers.google.com/identity/openid-connect/openid-connect#validatinganidtoken"
+      }
+    },
+    "okta-passkey-docs": {
+      "name": "Okta passkey documentation",
+      "basis": "a4f65eea34b89af7f2f543e43a74a0dfbc709cd0",
+      "sources": {
+        "sb02bd3add612": "https://github.com/okta/okta-developer-docs/blob/a4f65eea34b89af7f2f543e43a74a0dfbc709cd0/packages/@okta/vuepress-site/docs/guides/custom-passkeys/main/index.md#L19-L21"
+      }
+    },
+    "supabase-rls-docs": {
+      "name": "Supabase RLS documentation",
+      "basis": "10c7379c970ae4d2f30f3158194061cf5ffb8fc5",
+      "sources": {
+        "sdb0688cb20c8": "https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/database/postgres/row-level-security.mdx#L28-L60"
+      }
+    },
+    "auth0-mfa-source": {
+      "name": "Auth0 MFA documentation",
+      "basis": "5258d17ede3eea0ed0e330d15f8921a542564f68",
+      "sources": {
+        "sf926337e245b": "https://github.com/auth0/docs/blob/5258d17ede3eea0ed0e330d15f8921a542564f68/articles/mfa/guides/enable-mfa.md#L12-L26"
+      }
+    },
+    "entra-conditional": {
+      "name": "Microsoft Entra Conditional Access documentation",
+      "basis": "231747abc59ae3d50c74e215c1cdd592eb980723",
+      "sources": {
+        "s9bf89b3e9f66": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/conditional-access/policy-all-users-mfa-strength.md#L35-L60",
+        "sc657c943e436": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/conditional-access/howto-conditional-access-session-lifetime.md#L28-L43"
+      }
+    },
+    "entra-allowlist": {
+      "name": "Microsoft Entra token and application access documentation",
+      "basis": "231747abc59ae3d50c74e215c1cdd592eb980723",
+      "sources": {
+        "sb49c822a58e5": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity-platform/id-token-claims-reference.md#L40",
+        "sfdfe9683e4ff": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/enterprise-apps/assign-user-or-group-access-portal.md#L16-L22"
+      }
+    },
+    "github-docs": {
+      "name": "GitHub Actions documentation",
+      "basis": "cb051611377a0d2904411e6157154e9b4953d870",
+      "sources": {
+        "s4d638483756e": "https://github.com/github/docs/blob/cb051611377a0d2904411e6157154e9b4953d870/content/actions/concepts/security/openid-connect.md#L19-L23"
       }
     },
     "entra-docs": {
@@ -216,14 +272,14 @@ version_basis: {
     "verify-logs": {"text": "Correlate provider sign-in records with application authorization decisions; Entra Sign-in logs record logins and Audit logs record configuration changes. A sign-in alone proves no enforcement.", "components": ["entra"], "sources": ["entra:sca079c06e1ac"], "status": "REASONED"},
     "google-org-mfa": {"text": "Google Workspace super administrators can enforce 2-Step Verification in the Admin console for all users, or for a selected organizational unit or configuration group; this guide's assessment is that Cloud Identity uses the same Admin console setting; the cited Workspace page does not show it; Sign in with Google OIDC has no per-app charge as recorded in September 2026. The deployment page establishes the enforcement scope; the OIDC-pricing claim lacks a dedicated source.", "components": ["google", "google-docs"], "sources": ["google:s78598c90d854", "google-docs:s4e673839253c"], "status": "REASONED"},
     "okta-verify-factors": {"text": "Okta Verify supports push, TOTP and FastPass.", "components": ["okta", "okta-docs"], "sources": ["okta:sc0f6f4461955", "okta-docs:sbad1704aaf36"], "status": "REASONED"},
-    "auth0-passkey-policy": {"text": "Auth0 Free passkeys with verified user verification are phishing-resistant multifactor, but enabling passkeys does not disable password sign-in or provide the separately licensed enforced-factor and step-up MFA policy. General Auth0 pricing source; no pinned passkey or password-disablement reference.", "components": ["auth0"], "sources": ["auth0:s6d62bb8ed8bf"], "status": "REASONED"},
+    "auth0-passkey-policy": {"text": "At the time of writing, Auth0 Free includes passkeys but lacks its separately licensed MFA policy for enforced factors and step-up; with user verification, WebAuthn is phishing-resistant multifactor. Enabling passkeys leaves password sign-in available while the database connection permits password authentication. Auth0 separates enabled MFA factors from the Always enforcement choice; the cited rolling passkey and WebAuthn pages do not independently establish Free-tier step-up entitlement.", "components": ["auth0", "auth0-mfa-source"], "sources": ["auth0:s6d62bb8ed8bf", "auth0:s5794c9fb8add", "auth0:s7ecf8ee3e9ba", "auth0-mfa-source:sf926337e245b"], "status": "REASONED"},
     "supabase-aal2": {"text": "Require aal2 in Supabase authorization policies; TOTP enrollment alone does not enforce MFA.", "components": ["supabase", "supabase-docs"], "sources": ["supabase:sf91e99d7738c", "supabase-docs:sf7aaaf9af229", "supabase-docs:sa9ece8e2f60a"], "status": "REASONED"},
-    "entra-every-signin": {"text": "Entra P1 Conditional Access is how the body requires MFA for everyone on every sign-in, unlike security defaults' conditional prompting for non-admin users. General pricing and security-defaults sources; no dedicated Conditional Access configuration reference in Sources.", "components": ["entra"], "sources": ["entra:s6fa089f8a7c6", "entra:s36db3cb5ed40"], "status": "REASONED"},
-    "application-allowlist": {"text": "After provider login, the application or fronting layer must check a tenant, hosted-domain, group or explicit-user allowlist; accepting every Google or Microsoft account as staff is not authorization. General GitHub OAuth and ALB authentication sources; no Google or Microsoft allowlist reference in Sources.", "components": ["github", "aws-identity"], "sources": ["github:s6b78ce27fabc", "aws-identity:sb1894f4f0139"], "status": "REASONED"},
-    "firebase-data-policy": {"text": "Firebase rules and Supabase RLS still decide data access after authentication. General Firebase authentication and Supabase pricing sources; no dedicated rules or RLS reference in Sources.", "components": ["firebase", "supabase"], "sources": ["firebase:s69c4a65e512f", "supabase:sf91e99d7738c"], "status": "REASONED"},
-    "github-proxy-workloads": {"text": "oauth2-proxy's GitHub provider can restrict organizations and teams; GitHub Actions OIDC is a separate workload mechanism, not this human OAuth login. Sources has no Actions OIDC reference.", "components": ["github", "oauth2-proxy"], "sources": ["github:s6b78ce27fabc", "oauth2-proxy:s6d5e39ce93b5"], "status": "REASONED"},
+    "entra-every-signin": {"text": "At the time of writing, Entra P1 adds Conditional Access. An all-users, all-resources policy requires MFA for everyone; a separate Every time sign-in-frequency control requires repeated reauthentication. Security defaults instead prompt non-admin users when necessary. The cited passages do not establish a fresh MFA challenge on every resource access.", "components": ["entra", "entra-conditional"], "sources": ["entra:s6fa089f8a7c6", "entra:s36db3cb5ed40", "entra-conditional:s9bf89b3e9f66", "entra-conditional:sc657c943e436"], "status": "REASONED"},
+    "application-allowlist": {"text": "Guide advice: after any provider login, the application or fronting layer must check a tenant, hosted-domain, group or explicit-user allowlist; accepting every Google or Microsoft account as staff is not authorization. Google documents the ID-token hd claim; Microsoft documents tenant issuer restriction and enterprise-application group assignment. No fetched Google Workspace application-access page establishes a native admin-console allowlist.", "components": ["github", "aws-identity", "google-oidc-docs", "entra-allowlist"], "sources": ["github:s6b78ce27fabc", "aws-identity:sb1894f4f0139", "google-oidc-docs:sce9a29f93b69", "entra-allowlist:sb49c822a58e5", "entra-allowlist:sfdfe9683e4ff"], "status": "REASONED"},
+    "firebase-data-policy": {"text": "Firebase Security Rules and Supabase RLS policies still decide covered client data access after authentication. Supabase service_role bypasses RLS and must stay server-side. Rolling Firebase Rules and pinned Supabase RLS references support the scoped claim.", "components": ["firebase", "supabase-rls-docs"], "sources": ["firebase:s5368f5c06957", "supabase-rls-docs:sdb0688cb20c8"], "status": "REASONED"},
+    "github-proxy-workloads": {"text": "oauth2-proxy's GitHub provider can restrict organizations and teams; GitHub Actions OIDC gives workflows short-lived cloud-provider tokens. This guide's assessment is that workload OIDC is separate from human GitHub OAuth login.", "components": ["github", "oauth2-proxy", "github-docs"], "sources": ["github:s6b78ce27fabc", "oauth2-proxy:s6d5e39ce93b5", "github-docs:s4d638483756e"], "status": "REASONED"},
     "provider-authenticators": {"text": "The body lists Microsoft Authenticator, Okta Verify and Google prompts as provider-native authenticators. Google documents prompts on signed-in phones for Google Account sign-in; a prompt is a second factor when used in addition to the password for 2-Step Verification, and can also replace a password. Guide assessment: an RFC 6238 authenticator app can be used where the provider offers TOTP; no cited source establishes per-provider compatibility.", "components": ["entra", "okta", "google-docs", "okta-docs", "entra-docs"], "sources": ["entra:s36db3cb5ed40", "okta:sc0f6f4461955", "google-docs:see25fce3a7a3", "okta-docs:sbad1704aaf36", "entra-docs:sa319646e1a02"], "status": "REASONED"},
-    "admin-passkeys": {"text": "Require phishing-resistant hardware keys or platform passkeys for administrators and check each provider's tier before relying on availability. General Entra security-defaults source; no provider-specific passkey-tier or WebAuthn reference in Sources.", "components": ["entra"], "sources": ["entra:s36db3cb5ed40"], "status": "REASONED"},
+    "admin-passkeys": {"text": "Microsoft Entra, Auth0, Okta, Keycloak and Zitadel document passkey or WebAuthn support. Guide advice: check each provider's tier before relying on availability and require phishing-resistant hardware keys or platform passkeys for administrators. The fetched pages do not establish tier availability for all five providers.", "components": ["entra-docs", "auth0", "okta-passkey-docs", "keycloak-source", "zitadel-source"], "sources": ["entra-docs:sa319646e1a02", "auth0:s5794c9fb8add", "okta-passkey-docs:sb02bd3add612", "keycloak-source:s676048230ec9", "zitadel-source:s27d60b6057d3"], "status": "REASONED"},
     "self-hosted-mfa": {"text": "Keycloak, authentik, Zitadel and Authelia have documented OTP, authenticator validation or OIDC capabilities; Keycloak documents OTP policy, QR-code setup and time-based and counter-based generators; authentik's validation stage rejects a response unless the login's device challenges include a compatible class, checking code classes as one group and WebAuthn and Duo each by class. Ory Kratos provides identity and self-service login with TOTP, WebAuthn and lookup-secret strategies; Ory Hydra is an OAuth 2.0 and OpenID Connect server that connects to an existing identity provider through a login and consent app; Ory Network is hosted. Self-hosted, these options give you OIDC and MFA without a vendor (this guide's assessment where the cited ranges do not show it). Guide advice: require MFA in each protected login or authentication flow and test that first-factor-only access is denied. For a self-hosted deployment, patch, back up and keep the identity service highly available; this guide's assessment is that a compromised or down identity provider takes every dependent app with it. For a small project a hosted tier above is usually the smaller correct change.", "components": ["entra", "authelia-source", "zitadel-source", "authentik-source", "keycloak-source", "ory-kratos", "ory-hydra"], "sources": ["entra:s36db3cb5ed40", "authelia-source:se61b694f1b18", "authelia-source:sa874f6497a22", "zitadel-source:s729880406dc3", "zitadel-source:sd1f3f5ccaffa", "authentik-source:s18275a7072e9", "keycloak-source:s1e55f7daaa0d", "ory-kratos:sa1328330301d", "ory-kratos:s0208175a002a", "ory-kratos:s557dc3b182b7", "ory-kratos:sd666b62f8a70", "ory-kratos:s3d2d98558214", "ory-hydra:s7735ed8cb7ad", "ory-hydra:s9e834fe62236"], "status": "REASONED"}
   }
 }
@@ -235,7 +291,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -270,14 +326,14 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | verify-logs: Correlate provider sign-in records with application authorization decisions; Entra Sign-in logs record logins and Audit logs record configuration changes. A sign-in alone proves no enforcement. | Microsoft Entra documentation unknown | REASONED |
 | google-org-mfa: Google Workspace super administrators can enforce 2-Step Verification in the Admin console for all users, or for a selected organizational unit or configuration group; this guide's assessment is that Cloud Identity uses the same Admin console setting; the cited Workspace page does not show it; Sign in with Google OIDC has no per-app charge as recorded in September 2026. The deployment page establishes the enforcement scope; the OIDC-pricing claim lacks a dedicated source. | Google Cloud Identity pricing unknown; Google 2-Step Verification and prompts documentation unknown | REASONED |
 | okta-verify-factors: Okta Verify supports push, TOTP and FastPass. | Okta pricing unknown; Okta Verify documentation a4f65eea34b89af7f2f543e43a74a0dfbc709cd0 | REASONED |
-| auth0-passkey-policy: Auth0 Free passkeys with verified user verification are phishing-resistant multifactor, but enabling passkeys does not disable password sign-in or provide the separately licensed enforced-factor and step-up MFA policy. General Auth0 pricing source; no pinned passkey or password-disablement reference. | Auth0 documentation unknown | REASONED |
+| auth0-passkey-policy: At the time of writing, Auth0 Free includes passkeys but lacks its separately licensed MFA policy for enforced factors and step-up; with user verification, WebAuthn is phishing-resistant multifactor. Enabling passkeys leaves password sign-in available while the database connection permits password authentication. Auth0 separates enabled MFA factors from the Always enforcement choice; the cited rolling passkey and WebAuthn pages do not independently establish Free-tier step-up entitlement. | Auth0 documentation unknown; Auth0 MFA documentation 5258d17ede3eea0ed0e330d15f8921a542564f68 | REASONED |
 | supabase-aal2: Require aal2 in Supabase authorization policies; TOTP enrollment alone does not enforce MFA. | Supabase pricing unknown; Supabase MFA documentation 10c7379c970ae4d2f30f3158194061cf5ffb8fc5 | REASONED |
-| entra-every-signin: Entra P1 Conditional Access is how the body requires MFA for everyone on every sign-in, unlike security defaults' conditional prompting for non-admin users. General pricing and security-defaults sources; no dedicated Conditional Access configuration reference in Sources. | Microsoft Entra documentation unknown | REASONED |
-| application-allowlist: After provider login, the application or fronting layer must check a tenant, hosted-domain, group or explicit-user allowlist; accepting every Google or Microsoft account as staff is not authorization. General GitHub OAuth and ALB authentication sources; no Google or Microsoft allowlist reference in Sources. | GitHub OAuth apps unknown; AWS IAM Identity Center and ALB unknown | REASONED |
-| firebase-data-policy: Firebase rules and Supabase RLS still decide data access after authentication. General Firebase authentication and Supabase pricing sources; no dedicated rules or RLS reference in Sources. | Firebase documentation unknown; Supabase pricing unknown | REASONED |
-| github-proxy-workloads: oauth2-proxy's GitHub provider can restrict organizations and teams; GitHub Actions OIDC is a separate workload mechanism, not this human OAuth login. Sources has no Actions OIDC reference. | GitHub OAuth apps unknown; oauth2-proxy v7.15.4 | REASONED |
+| entra-every-signin: At the time of writing, Entra P1 adds Conditional Access. An all-users, all-resources policy requires MFA for everyone; a separate Every time sign-in-frequency control requires repeated reauthentication. Security defaults instead prompt non-admin users when necessary. The cited passages do not establish a fresh MFA challenge on every resource access. | Microsoft Entra documentation unknown; Microsoft Entra Conditional Access documentation 231747abc59ae3d50c74e215c1cdd592eb980723 | REASONED |
+| application-allowlist: Guide advice: after any provider login, the application or fronting layer must check a tenant, hosted-domain, group or explicit-user allowlist; accepting every Google or Microsoft account as staff is not authorization. Google documents the ID-token hd claim; Microsoft documents tenant issuer restriction and enterprise-application group assignment. No fetched Google Workspace application-access page establishes a native admin-console allowlist. | GitHub OAuth apps unknown; AWS IAM Identity Center and ALB unknown; Google OpenID Connect documentation unknown; Microsoft Entra token and application access documentation 231747abc59ae3d50c74e215c1cdd592eb980723 | REASONED |
+| firebase-data-policy: Firebase Security Rules and Supabase RLS policies still decide covered client data access after authentication. Supabase service_role bypasses RLS and must stay server-side. Rolling Firebase Rules and pinned Supabase RLS references support the scoped claim. | Firebase documentation unknown; Supabase RLS documentation 10c7379c970ae4d2f30f3158194061cf5ffb8fc5 | REASONED |
+| github-proxy-workloads: oauth2-proxy's GitHub provider can restrict organizations and teams; GitHub Actions OIDC gives workflows short-lived cloud-provider tokens. This guide's assessment is that workload OIDC is separate from human GitHub OAuth login. | GitHub OAuth apps unknown; oauth2-proxy v7.15.4; GitHub Actions documentation cb051611377a0d2904411e6157154e9b4953d870 | REASONED |
 | provider-authenticators: The body lists Microsoft Authenticator, Okta Verify and Google prompts as provider-native authenticators. Google documents prompts on signed-in phones for Google Account sign-in; a prompt is a second factor when used in addition to the password for 2-Step Verification, and can also replace a password. Guide assessment: an RFC 6238 authenticator app can be used where the provider offers TOTP; no cited source establishes per-provider compatibility. | Microsoft Entra documentation unknown; Okta pricing unknown; Google 2-Step Verification and prompts documentation unknown; Okta Verify documentation a4f65eea34b89af7f2f543e43a74a0dfbc709cd0; Microsoft Authenticator documentation 231747abc59ae3d50c74e215c1cdd592eb980723 | REASONED |
-| admin-passkeys: Require phishing-resistant hardware keys or platform passkeys for administrators and check each provider's tier before relying on availability. General Entra security-defaults source; no provider-specific passkey-tier or WebAuthn reference in Sources. | Microsoft Entra documentation unknown | REASONED |
+| admin-passkeys: Microsoft Entra, Auth0, Okta, Keycloak and Zitadel document passkey or WebAuthn support. Guide advice: check each provider's tier before relying on availability and require phishing-resistant hardware keys or platform passkeys for administrators. The fetched pages do not establish tier availability for all five providers. | Microsoft Authenticator documentation 231747abc59ae3d50c74e215c1cdd592eb980723; Auth0 documentation unknown; Okta passkey documentation a4f65eea34b89af7f2f543e43a74a0dfbc709cd0; Keycloak documentation 26.7.4; Zitadel documentation ab3b44cd743709649e46f7708da2f6a6a70bc227 | REASONED |
 | self-hosted-mfa: Keycloak, authentik, Zitadel and Authelia have documented OTP, authenticator validation or OIDC capabilities; Keycloak documents OTP policy, QR-code setup and time-based and counter-based generators; authentik's validation stage rejects a response unless the login's device challenges include a compatible class, checking code classes as one group and WebAuthn and Duo each by class. Ory Kratos provides identity and self-service login with TOTP, WebAuthn and lookup-secret strategies; Ory Hydra is an OAuth 2.0 and OpenID Connect server that connects to an existing identity provider through a login and consent app; Ory Network is hosted. Self-hosted, these options give you OIDC and MFA without a vendor (this guide's assessment where the cited ranges do not show it). Guide advice: require MFA in each protected login or authentication flow and test that first-factor-only access is denied. For a self-hosted deployment, patch, back up and keep the identity service highly available; this guide's assessment is that a compromised or down identity provider takes every dependent app with it. For a small project a hosted tier above is usually the smaller correct change. | Microsoft Entra documentation unknown; Authelia v4.39.28; Zitadel documentation ab3b44cd743709649e46f7708da2f6a6a70bc227; authentik source version/2026.8.3; Keycloak documentation 26.7.4; Ory Kratos v26.2.0; Ory Hydra v26.2.0 | REASONED |
 <!-- version-basis:end -->
 
@@ -291,13 +347,13 @@ Every tier and price below was read from the vendor's pricing page in September 
 - **Customer identity (CIAM)**: your application's own users sign up and sign in. Use a hosted provider rather than writing password storage, MFA, recovery, and rate limiting yourself.
 - **Developer identity**: GitHub (or GitLab) login gates a tool for developers, optionally restricted to an organization. Often the simplest correct choice for a solo or small project.
 
-A login proves who the person is. **It does not decide whether they may use your app.** After any of the providers below, your application (or the fronting layer) still checks that the identity is on an allowlist: a tenant, a hosted domain, a group, or an explicit list of users. Accepting every Google or Microsoft account as "staff" is the recurring mistake; [oidc-integration.md](oidc-integration.md) covers the check.
+A login proves who the person is. **It does not decide whether they may use your app.** This guide's advice is to enforce application authorization after login. After any of the providers below, your application (or the fronting layer) still checks that the identity is on an allowlist: a tenant, a hosted domain, a group, or an explicit list of users. Accepting every Google or Microsoft account as "staff" is the recurring mistake; [oidc-integration.md](oidc-integration.md) covers the check.
 
 ## 2. Workforce providers
 
 | Provider | Free tier and MFA facts (September 2026) | Fit |
 |---|---|---|
-| Microsoft Entra ID | Free tier, bundled with Azure and Microsoft 365 subscriptions, includes MFA and unlimited SSO to SaaS apps. Security defaults require every user to register MFA, enforce it for administrators, and prompt other users when Microsoft judges it necessary. P1 at $7 per user per month (annual commitment) adds Conditional Access, which is how you require MFA for everyone on every sign-in; P2 at $10 adds risk-based policies. | Any team already on Microsoft 365. |
+| Microsoft Entra ID | Free tier, bundled with Azure and Microsoft 365 subscriptions, includes MFA and unlimited SSO to SaaS apps. Security defaults require every user to register MFA, enforce it for administrators, and prompt other users when Microsoft judges it necessary. P1 at $7 per user per month (annual commitment) adds Conditional Access: require MFA for all users across all resources with an all-users policy; to require reauthentication every time, also set the separate sign-in-frequency control to Every time. These controls do not establish a fresh MFA challenge on every resource access. P2 at $10 adds risk-based policies. | Any team already on Microsoft 365. |
 | Google Workspace / Cloud Identity | Sign in with Google (OIDC) costs nothing per app. Google Workspace super administrators can enforce 2-Step Verification in the Admin console for all users, or for a selected organizational unit or configuration group; this guide's assessment is that Cloud Identity uses the same Admin console setting; the cited Workspace page does not show it. Cloud Identity Free exists; its default licence count was not read from a Google page for this guide, so check the source. | Any team already on Workspace. |
 | Okta Workforce Identity | Okta Verify supports push, TOTP, and FastPass. A $1,500 annual contract minimum applies and there is no free production tier. | Only when your organization already runs Okta. Not a purchase for a small project. |
 | JumpCloud, OneLogin, Ping Identity | Workforce directories in the same class. Tiers not verified for this guide. | Existing enterprise estates only. |
@@ -307,8 +363,8 @@ A login proves who the person is. **It does not decide whether they may use your
 | Provider | Free tier and MFA facts (September 2026) | Notes |
 |---|---|---|
 | Microsoft Entra External ID | Core features free for the first 50,000 monthly active users (MAU). SMS MFA and machine-to-machine (client credentials) authentication are billed per transaction as add-ons. | Keep the external (customer) tenant separate from the workforce tenant. |
-| Google Identity Platform / Firebase Authentication | Email, password, and social sign-in are free in base Firebase Authentication. Upgrading to Authentication with Identity Platform unlocks TOTP MFA and, on the pay-as-you-go Blaze plan, a free tier of 50,000 MAU (50 SAML/OIDC MAU); the no-billing Spark plan is capped much lower, at 3,000 daily active users (2 for SAML/OIDC), so confirm which plan applies before relying on the MAU figure. SMS is billed per message. | Rules and RLS still decide data access: [firebase-supabase.md](firebase-supabase.md). |
-| Auth0 (Okta) | Free plan: 25,000 MAU, passkeys, and unlimited social connections. **No MFA factors on Free**; MFA factors start with the paid Essentials plan, and Adaptive MFA requires an Enterprise plan plus its add-on. B2C Essentials is $35 per month for 500 MAU. | Free includes passkeys, which with verified user verification are themselves phishing-resistant multifactor; what Free lacks is Auth0's separately licensed MFA policy (enforced factors and step-up), and enabling passkeys does not disable password sign-in. |
+| Google Identity Platform / Firebase Authentication | Email, password, and social sign-in are free in base Firebase Authentication. Upgrading to Authentication with Identity Platform unlocks TOTP MFA and, on the pay-as-you-go Blaze plan, a free tier of 50,000 MAU (50 SAML/OIDC MAU); the no-billing Spark plan is capped much lower, at 3,000 daily active users (2 for SAML/OIDC), so confirm which plan applies before relying on the MAU figure. SMS is billed per message. | Firebase Security Rules and Supabase RLS policies still decide covered client data access after authentication; keep the Supabase `service_role` server-side because it bypasses RLS: [firebase-supabase.md](firebase-supabase.md). |
+| Auth0 (Okta) | Free plan: 25,000 MAU, passkeys, and unlimited social connections. **No MFA factors on Free**; MFA factors start with the paid Essentials plan, and Adaptive MFA requires an Enterprise plan plus its add-on. B2C Essentials is $35 per month for 500 MAU. | At the time of writing, Free includes passkeys, which with user verification are phishing-resistant multifactor; what Free lacks is Auth0's separately licensed MFA policy (enforced factors and step-up). Enabling passkeys leaves password sign-in available while the database connection permits password authentication. The cited passkey and MFA pages do not independently establish Free-tier step-up entitlement. |
 | Amazon Cognito | Lite and Essentials tiers: 10,000 MAU free for direct sign-in and 50 MAU free for SAML/OIDC federation (Lite pools created on or before 10:00 a.m. Pacific Time on 22 November 2024, and qualifying new Lite pools in those existing accounts, keep a grandfathered 50,000 MAU free tier). Essentials is $0.015 per MAU beyond that and includes passkeys; Lite does not. SMS goes through SNS and is billed separately. | Pairs with Application Load Balancer authentication ([cloud-identity-proxies.md](cloud-identity-proxies.md)). |
 | Clerk | Hobby plan: 50,000 monthly retained users (a user who returns at least 24 hours after signing up; not the same unit as MAU). **MFA is Pro and above** at $25 per month, or $20 billed annually. | "Free plan" does not mean MFA. |
 | WorkOS AuthKit | User management free for the first 1,000,000 MAU. Enterprise SSO and Directory Sync are separate products at $125 per connection per month for the first 15 connections each. | Good app login; the per-connection fees are for selling to enterprises. |
@@ -317,7 +373,7 @@ A login proves who the person is. **It does not decide whether they may use your
 
 ## 4. Developer identity
 
-- **GitHub OAuth**: an OAuth app gives login for any GitHub user; restrict to members of your organization or team in the app (or with oauth2-proxy, which has a GitHub provider with org and team restrictions). GitHub Actions OIDC is a different mechanism for workloads, covered in [machine-auth.md](machine-auth.md).
+- **GitHub OAuth**: an OAuth app gives login for any GitHub user; restrict to members of your organization or team in the app (or with oauth2-proxy, which has a GitHub provider with org and team restrictions). GitHub Actions OIDC gives workflows short-lived cloud-provider tokens; this guide's assessment is that it is a different mechanism from human OAuth login, covered in [machine-auth.md](machine-auth.md).
 - **AWS IAM Identity Center**: the free workforce directory for your team's own AWS console and CLI access. It is not a general OIDC provider for Application Load Balancer authentication; for app login on AWS pair the ALB with Cognito or an OIDC provider from section 3 ([cloud-identity-proxies.md](cloud-identity-proxies.md)).
 
 ## 5. Self-hosted identity providers
@@ -328,7 +384,7 @@ Keycloak, authentik, Zitadel, and Authelia ([mfa.md](mfa.md)) have documented OT
 
 - **Duo**: the Duo Free edition covers up to 10 users with MFA and the Duo Mobile app. Its Authentication Proxy speaks RADIUS and LDAP, which retrofits MFA onto VPNs and services with RADIUS support; for mandatory MFA set `failmode=secure`, since the default `safe` admits a primary-authenticated user when Duo is unreachable, and keep a separately controlled emergency path.
 - **Provider-native authenticators**: Microsoft Authenticator (Entra), Okta Verify (Okta), Google prompts (Google Account sign-in on a signed-in phone); a prompt is a second factor when used in addition to the password for 2-Step Verification, and can also replace a password. Guide assessment: an RFC 6238 authenticator app can be used where the provider offers TOTP; no cited source establishes per-provider compatibility.
-- **Hardware keys and passkeys**: YubiKey and other FIDO2 keys, and platform passkeys, are the phishing-resistant factor. Most of the providers above document passkey or WebAuthn support; check the tier before relying on it, and require it for administrators ([mfa.md](mfa.md)).
+- **Hardware keys and passkeys**: YubiKey and other FIDO2 keys, and platform passkeys, are the phishing-resistant factor. Microsoft Entra, Auth0, Okta, Keycloak and Zitadel document passkey or WebAuthn support; check each provider's tier before relying on it, and require phishing-resistant hardware keys or platform passkeys for administrators ([mfa.md](mfa.md)). The fetched pages do not establish tier availability for all five providers.
 
 ## 7. Poor fits for a small project
 
@@ -336,8 +392,8 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 
 ## Verify
 
-- REASONED: paired administrator MFA access, per the guide's cited Microsoft Entra security defaults and Supabase MFA enforcement. No provider tenant, administrator test account or protected admin function is available; this item supplies no local command or configuration to execute. No login was observed. Exposed access permits a password-only or social-login-only session; fixed access denies that same admin function until MFA completes and then permits it. With only the password (or only a social login) an administrator cannot reach an admin function once MFA is required at the provider; test with a fresh session, and confirm the same admin function DOES succeed once MFA is completed, so the denial is MFA enforcement and not an unrelated failure.
-- REASONED: allowed and excluded account comparison, per the guide's cited oauth2-proxy v7.15.4 GitHub organization/team restrictions and username exception. No connected application or allowed/excluded provider accounts are available; this item supplies no local command or configuration to execute. No login was observed. Exposed authorization admits a valid outside account; fixed authorization rejects it while admitting an allowed account. A valid account from outside your allowlist (a personal Gmail, a different tenant, a non-member GitHub user) is rejected after login, not admitted, while an allowed account does reach the app, so the rejection is the allowlist and not a broken login path.
+- REASONED: paired administrator MFA access, per the guide's cited Microsoft Entra security defaults and Conditional Access policy and Supabase MFA enforcement. No provider tenant, administrator test account or protected admin function is available; this item supplies no local command or configuration to execute. No login was observed. Exposed access permits a password-only or social-login-only session; fixed access denies that same admin function until MFA completes and then permits it. With only the password (or only a social login) an administrator cannot reach an admin function once MFA is required at the provider; test with a fresh session, and confirm the same admin function DOES succeed once MFA is completed, so the denial is MFA enforcement and not an unrelated failure.
+- REASONED: allowed and excluded account comparison, per the guide's cited oauth2-proxy v7.15.4 GitHub organization/team restrictions and username exception, Google ID-token hosted-domain claim and Microsoft Entra tenant and application assignment documentation. No connected application or allowed/excluded provider accounts are available; this item supplies no local command or configuration to execute. No login was observed. Exposed authorization admits a valid outside account; fixed authorization rejects it while admitting an allowed account. A valid account from outside your allowlist (a personal Gmail, a different tenant, a non-member GitHub user) is rejected after login, not admitted, while an allowed account does reach the app, so the rejection is the allowlist and not a broken login path.
 - REASONED: correlation of sign-in assurance and application authorization, per the guide's cited Microsoft Entra sign-in logs and Microsoft Entra security defaults. No provider test events or application decision logs are available; this item supplies no local command or configuration to execute. No logs were inspected. Exposed decisions admit insufficient assurance or an outside account; fixed decisions require the factor and deny the outside account, corroborated with sign-in records rather than inferred from login success alone. Correlate each test against the provider's sign-in log (in Microsoft Entra this is Sign-in logs, not Audit logs, which record configuration changes) and your application's authorization decision: confirm the required factor or assurance level was met and that the outside account was denied. A log entry alone shows only that a sign-in happened, not that MFA or the allowlist was enforced.
 
 ## Sources (checked September 2026)
@@ -381,3 +437,17 @@ Zscaler Private Access, HashiCorp Boundary, Ping Identity, OneLogin, and Okta as
 - Ory Kratos lookup-secret second-factor strategy (v26.2.0, checked October 2026): https://github.com/ory/kratos/blob/v26.2.0/selfservice/strategy/lookup/strategy.go#L82-L122
 - Ory Hydra connects to an existing identity provider through a login and consent app; OAuth 2.0 and OpenID Connect (v26.2.0, checked October 2026): https://github.com/ory/hydra/blob/v26.2.0/README.md#L49-L72
 - Ory Hydra deployment options and Ory Network (v26.2.0, checked October 2026): https://github.com/ory/hydra/blob/v26.2.0/README.md#L126-L136
+- Auth0 passkey login and password coexistence (rolling documentation, basis unknown; checked October 2026): https://auth0.com/docs/authenticate/database-connections/passkeys#offer-passwords-and-passkeys-at-login
+- Auth0 WebAuthn user verification and MFA (rolling documentation, basis unknown; checked October 2026): https://auth0.com/docs/secure/multi-factor-authentication/fido-authentication-with-webauthn#webauthn-as-multi-factor-authentication
+- Auth0 factor enablement and Always enforcement (pinned commit 5258d17ede3eea0ed0e330d15f8921a542564f68, checked October 2026): https://github.com/auth0/docs/blob/5258d17ede3eea0ed0e330d15f8921a542564f68/articles/mfa/guides/enable-mfa.md#L12-L26
+- Microsoft Entra all-users Conditional Access MFA policy (pinned commit 231747abc59ae3d50c74e215c1cdd592eb980723, checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/conditional-access/policy-all-users-mfa-strength.md#L35-L60
+- Microsoft Entra Every time sign-in frequency (pinned commit 231747abc59ae3d50c74e215c1cdd592eb980723, checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/conditional-access/howto-conditional-access-session-lifetime.md#L28-L43
+- Microsoft Entra ID token issuer and tenant restriction (pinned commit 231747abc59ae3d50c74e215c1cdd592eb980723, checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity-platform/id-token-claims-reference.md#L40
+- Microsoft Entra enterprise application user and group assignment (pinned commit 231747abc59ae3d50c74e215c1cdd592eb980723, checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/enterprise-apps/assign-user-or-group-access-portal.md#L16-L22
+- Google OpenID Connect hosted-domain claim (rolling documentation, basis unknown; checked October 2026): https://developers.google.com/identity/openid-connect/openid-connect#validatinganidtoken
+- Firebase Security Rules for data access (rolling documentation, basis unknown; checked October 2026): https://firebase.google.com/docs/rules/basics#production-ready_rules
+- Supabase RLS policies (pinned commit 10c7379c970ae4d2f30f3158194061cf5ffb8fc5, checked October 2026): https://github.com/supabase/supabase/blob/10c7379c970ae4d2f30f3158194061cf5ffb8fc5/apps/docs/content/guides/database/postgres/row-level-security.mdx#L28-L60
+- GitHub Actions OIDC for workflow cloud access (pinned commit cb051611377a0d2904411e6157154e9b4953d870, checked October 2026): https://github.com/github/docs/blob/cb051611377a0d2904411e6157154e9b4953d870/content/actions/concepts/security/openid-connect.md#L19-L23
+- Okta passkey authenticator policies (pinned commit a4f65eea34b89af7f2f543e43a74a0dfbc709cd0, checked October 2026): https://github.com/okta/okta-developer-docs/blob/a4f65eea34b89af7f2f543e43a74a0dfbc709cd0/packages/@okta/vuepress-site/docs/guides/custom-passkeys/main/index.md#L19-L21
+- Keycloak passkey login (26.7.4, checked October 2026): https://github.com/keycloak/keycloak/blob/26.7.4/docs/documentation/server_admin/topics/authentication/passkeys.adoc#L5-L8
+- Zitadel passkeys (pinned commit ab3b44cd743709649e46f7708da2f6a6a70bc227, checked October 2026): https://github.com/zitadel/zitadel/blob/ab3b44cd743709649e46f7708da2f6a6a70bc227/apps/docs/content/concepts/features/passkeys.mdx#L7-L15

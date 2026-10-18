@@ -10,6 +10,9 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.236 | `identity-providers.md`: auth0-passkey-policy and admin-passkeys: cite Auth0/passkey tiers, password disablement and WebAuthn policy behaviour. (M, M) | Done, #644. Cited Auth0 passkey and MFA behaviour and provider WebAuthn support, with Free-tier step-up and tier-availability gaps stated. |
+| 1.237 | `identity-providers.md`: entra-every-signin and application-allowlist: cite Entra Conditional Access and Google/Microsoft application allowlists. (M, M) | Done, #644. Cited Entra MFA and reauthentication controls plus Google and Microsoft authorization claims, correcting the every-sign-in overstatement. |
+| 1.238 | `identity-providers.md`: firebase-data-policy and github-proxy-workloads: cite Firebase Rules and GitHub Actions OIDC behaviour. (M, M) | Done, #644. Cited Firebase Rules, Supabase RLS and GitHub Actions OIDC, scoping data access to covered client requests. |
 | 1.230 | `authentication.md`: offboarding: source membership, proxy and token revocation delays and time-to-revoke checks. (M, M) | Done, #642. Sourced Entra, Cloudflare and OAuth revocation behaviour while retaining deployment timing as a test expectation. |
 | 1.231 | `authentication.md`: verify-origin-isolation: source the proxy isolation expectation beyond the current Cloudflare citations, retaining the deployed-origin result as a test expectation. (M, M) | Done, #642. Sourced proxy and signed-header origin checks while retaining deployed reachability as a test expectation. |
 | 1.214 | `host.md`: brokered-ssh: cite SSM, IAP, Bastion and tailnet broker behaviour for the stated alternatives. (M, M) | Done, #641. The host guide now cites the broker paths and states the remaining host-firewall rule gap. |
