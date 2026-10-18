@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "8d8013942ecc4c0abfd6d8f96b9020acaa065ec51666dcaebe93fc93012c2e6c",
+  "body_sha256": "1d40a5c3ed27c0f36a7b8b0dc1e90c6f78eab98e8f42819ce7fbed043bd348df",
   "components": {
     "frp": {
       "name": "frp documentation",
@@ -100,6 +100,19 @@ version_basis: {
         "scd9d50cf72b7": "https://github.com/torvalds/linux/blob/v6.8/drivers/net/wireguard/socket.c#L387-L393",
         "sb02ea8702b2a": "https://github.com/torvalds/linux/blob/v6.8/net/ipv4/udp_tunnel_core.c#L17-L19"
       }
+    },
+    "ufw-source": {
+      "name": "Ubuntu Noble ufw source",
+      "basis": "4992be7722389108d5f2ebb5ca221b228f0c68b1",
+      "sources": {
+        "sa61919e3296d": "https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n70",
+        "sf5e201b3987a": "https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n532",
+        "s0b0f73700e57": "https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n546",
+        "s6161b0ad44f0": "https://git.launchpad.net/ubuntu/+source/ufw/tree/conf/ufw.defaults?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n4",
+        "s4470c8632bc7": "https://git.launchpad.net/ubuntu/+source/ufw/tree/conf/ufw.defaults?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n1",
+        "s1fe29ea7aa5f": "https://git.launchpad.net/ubuntu/+source/ufw/tree/src/backend_iptables.py?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n169",
+        "s0dacc2148041": "https://git.launchpad.net/ubuntu/+source/ufw/tree/src/backend_iptables.py?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n475"
+      }
     }
   },
   "claims": {
@@ -134,7 +147,7 @@ version_basis: {
     "ssh-persist": {"text": "Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding.", "components": ["ssh", "autossh-source"], "sources": ["ssh:s1f80cf6ae7f5", "autossh-source:s6398847a2896"], "status": "REASONED"},
     "verify-token": {"text": "Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client.", "components": ["frp", "frps"], "sources": ["frp:s7479bbde986d", "frps:sc1e3e11b0618", "frps:s72151a3006dc", "frps:sc982b975a190"], "status": "REASONED", "verify": [1]},
     "verify-wg": {"text": "wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface.", "components": ["wg", "iproute2-docs", "linux-source"], "sources": ["wg:sd41c4b487466", "iproute2-docs:s8aa0d96d25e7", "linux-source:sc7cb2448145d", "linux-source:sdfc1a2d0c3cc"], "status": "REASONED", "verify": [1]},
-    "verify-firewall": {"text": "Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection.", "components": ["wg", "nft", "ufw-docs", "iproute2-docs", "linux-source"], "sources": ["wg:sd41c4b487466", "nft:s0defde7f202b", "ufw-docs:scff3a017f30b", "iproute2-docs:s5d50117b1a36", "linux-source:scd9d50cf72b7", "linux-source:sb02ea8702b2a"], "status": "REASONED", "verify": [1]},
+    "verify-firewall": {"text": "Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw status verbose shows ufw-managed rules and defaults but omits rules from ufw's rules files. Check IPV6 in /etc/default/ufw. The pinned manual describes ufw show raw as displaying filter, nat, mangle and raw tables using iptables and ip6tables; the pinned backend raw branch lists IPv4 filter, nat, mangle and raw tables and IPv6 filter, mangle and raw tables. Confirm nothing admits unauthorized external traffic to the tunneled service beyond the intended tunnel or proxy path, for both IPv4 and IPv6. This guide's reasoning is that ufw's view does not replace native nftables inspection.", "components": ["wg", "nft", "ufw-docs", "iproute2-docs", "linux-source", "ufw-source"], "sources": ["wg:sd41c4b487466", "nft:s0defde7f202b", "ufw-docs:scff3a017f30b", "iproute2-docs:s5d50117b1a36", "linux-source:scd9d50cf72b7", "linux-source:sb02ea8702b2a", "ufw-source:sa61919e3296d", "ufw-source:sf5e201b3987a", "ufw-source:s0b0f73700e57", "ufw-source:s6161b0ad44f0", "ufw-source:s4470c8632bc7", "ufw-source:s1fe29ea7aa5f", "ufw-source:s0dacc2148041"], "status": "REASONED", "verify": [1]},
     "verify-route": {"text": "An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [1]},
     "verify-counter": {"text": "Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer.", "components": ["wg", "nft"], "sources": ["wg:sf75d6938d30e", "nft:s0defde7f202b"], "status": "REASONED", "verify": [1]},
     "verify-ssh": {"text": "On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no.", "components": ["ssh", "iproute2-docs"], "sources": ["ssh:s0fdb398555df", "ssh:s1f80cf6ae7f5", "iproute2-docs:s5d50117b1a36"], "status": "REASONED", "verify": [1]}
@@ -148,7 +161,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -183,7 +196,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | ssh-persist: Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding. | OpenSSH unknown; autossh source 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476 | REASONED |
 | verify-token: Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client. | frp documentation unknown; frps source v0.71.0 | REASONED |
 | verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
-| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
+| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw status verbose shows ufw-managed rules and defaults but omits rules from ufw's rules files. Check IPV6 in /etc/default/ufw. The pinned manual describes ufw show raw as displaying filter, nat, mangle and raw tables using iptables and ip6tables; the pinned backend raw branch lists IPv4 filter, nat, mangle and raw tables and IPv6 filter, mangle and raw tables. Confirm nothing admits unauthorized external traffic to the tunneled service beyond the intended tunnel or proxy path, for both IPv4 and IPv6. This guide's reasoning is that ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual unknown; iproute2 manuals v6.12.0; Linux source v6.8; Ubuntu Noble ufw source 4992be7722389108d5f2ebb5ca221b228f0c68b1 | REASONED |
 | verify-route: An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause. | WireGuard unknown; nftables unknown | REASONED |
 | verify-counter: Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer. | WireGuard unknown; nftables unknown | REASONED |
 | verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown; iproute2 manuals v6.12.0 | REASONED |
@@ -251,7 +264,7 @@ To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forwar
 
 ## Verify
 
-REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, nftables and OpenSSH documentation defines the checks below. This read-only review cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run.
+REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, Ubuntu Noble ufw source, nftables and OpenSSH documentation defines the checks below. This read-only review cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run.
 
 ```bash
 # frp positive control: with the correct auth.token, frpc logs 'login to server success' (proving
@@ -272,12 +285,19 @@ sudo wg show wg0          # needs privilege; shows the listen-port (51820) + per
 ip link show wg0          # expect the UP flag in the <...> flags; a WireGuard interface usually shows operational 'state UNKNOWN', which is fine. wg show reporting a port while the interface is administratively down is why this check exists
 ss -ulnp                  # read every UDP listener to spot any OTHER, unexpected service; do not rely on it to confirm WireGuard (the in-kernel socket has no owning process to show under -p, and a real host also lists resolved/mDNS)
 # ufw must be active with a default-deny (or default-reject) incoming policy, or this proves nothing
-# ('inactive' or a default-allow policy would pass it while the port is open):
+# ('inactive' or a default-allow policy would pass it while the port is open). Its status shows
+# ufw-managed rules and defaults, not rules from ufw's rules files:
 sudo ufw status verbose
-# confirm nothing admits UNAUTHORIZED external traffic to the tunneled service beyond the intended
-# tunnel/proxy path, for BOTH IPv4 and IPv6; ufw shows only its own iptables/ip6tables view, so read
-# native nftables rules (the forward rule above) separately with 'nft list ruleset':
+# Check IPV6 in /etc/default/ufw: yes applies IPv6 rules; no accepts IPv6 only on loopback.
+# Confirm nothing admits UNAUTHORIZED external traffic to the tunneled service beyond the intended
+# tunnel/proxy path, for BOTH IPv4 and IPv6. The pinned manual describes `ufw show raw`
+# as displaying filter, nat, mangle and raw tables using iptables and ip6tables.
+# The pinned backend raw branch lists IPv4 filter, nat, mangle and raw tables,
+# and IPv6 filter, mangle and raw tables, beyond the status view:
 sudo ufw show raw
+# This guide's reasoning: the iptables/ip6tables report does not replace native nftables inspection.
+# Read the native ruleset, including the forward rule above, separately:
+sudo nft list ruleset
 
 # positive control: from the peer, ping a host reachable ONLY through the tunnel (another peer, or a
 # server-side address in 192.168.88.0/24 that the peer cannot reach on its own LAN), so a success proves
@@ -325,6 +345,13 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 - frps stcp and sudp proxies register an in-process visitor listener (`server/visitor/visitor.go` L49-L57, `NewInternalListener`), and xtcp registers with the NAT-hole controller (`server/proxy/xtcp.go` L63); none opens a socket (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/visitor/visitor.go#L49-L57, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/stcp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/sudp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/proxy.go#L202-L215, https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/net/listener.go#L25-L37, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/xtcp.go#L63 and https://github.com/fatedier/frp/blob/v0.71.0/pkg/nathole/controller.go#L125-L139
 - autossh SSH monitoring and restart (pinned commit 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476, checked October 2026): https://github.com/Autossh/autossh/blob/90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476/README#L25-L26
 - Ubuntu Noble ufw manual, status verbose, show raw and IPv4/IPv6 rule visibility (rolling documentation, checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html
+- Ubuntu Noble ufw manual, status and status verbose (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 70-93, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n70
+- Ubuntu Noble ufw manual, status limitations and show raw tables (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 532-541, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n532
+- Ubuntu Noble ufw manual, IPv6 configuration and rule display (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 546-554, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n546
+- Ubuntu Noble ufw default IPv6 setting (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 4-7, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/conf/ufw.defaults?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n4
+- Ubuntu Noble ufw defaults path and IPv6 setting (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 1-7, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/conf/ufw.defaults?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n1
+- Ubuntu Noble ufw iptables backend, raw report IPv4/IPv6 table enumeration (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 169-260, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/src/backend_iptables.py?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n169
+- Ubuntu Noble ufw iptables backend, verbose status default policies (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 475-487, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/src/backend_iptables.py?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n475
 - iproute2 ip-link manual, "ip link show - display device attributes"; the device name "specifies the network device to show." (pinned tag v6.12.0, checked October 2026): https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ip-link.8.in
 - Linux administrative IFF_UP flag (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L39-L40
 - Linux operational UNKNOWN state (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L58-L61
