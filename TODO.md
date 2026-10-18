@@ -53,8 +53,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | --- | --- | --- |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
 | 1.214 | `host.md`: brokered-ssh: cite SSM, IAP, Bastion and tailnet broker behaviour for the stated alternatives. (M, M) | `[gap]` |
-| 1.216 | `host.md`: updates: cite unattended-upgrades and dnf-automatic package/service behaviour. (M, M) | `[gap]` |
-| 1.217 | `host.md`: verify-listeners: cite `ss`, `nc`, SSH and BusyBox behaviour for the inventory and reachability tests. (M, M) | `[gap]` |
 | 1.218 | `cloud-firewalls.md`: ssm, iap and bastion: cite Session Manager, IAP, Bastion and tailnet broker architectures. (M, M) | `[gap]` |
 | 1.219 | `cloud-firewalls.md`: docker: cite Docker/UFW bypass behaviour for host-versus-cloud firewall advice. (M, M) | `[gap]` |
 | 1.220 | `cloud-firewalls.md`: gcp-policies: cite hierarchical and network firewall policy evaluation order. (M, M) | `[gap]` |

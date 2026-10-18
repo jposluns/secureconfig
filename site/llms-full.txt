@@ -10297,7 +10297,7 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | --- | --- | --- |
 | safe-transition: Confirm non-root key login and sudo in a fresh session before disabling password/root access; retain the working session while testing. | OpenSSH documentation unknown | REASONED |
 | keys-only: Disable PasswordAuthentication and KbdInteractiveAuthentication; enable PubkeyAuthentication and prohibit root login. | OpenSSH documentation unknown | REASONED |
-| include-order: OpenSSH 8.2 added server Include; OpenSSH 9.9 documents first-obtained values and lexical wildcard order supporting 00-hardening.conf. The fetched Ubuntu focal OpenSSH 1:8.2p1-4 configuration and CentOS Stream 9 packaging place the drop-in Include near the top, before main-file settings. With ssh_pwauth: true, cloud-init 26.2 writes PasswordAuthentication yes to 50-cloud-init.conf when the main configuration includes that directory; cloud-init 20.1 instead updated the main file. Current distribution defaults and cloud-image prevalence remain unestablished. | OpenSSH documentation unknown; OpenSSH 8.1 server manual V_8_1_P1; OpenSSH 8.2 server manual V_8_2_P1; OpenSSH 9.9 server manual V_9_9_P2; Ubuntu focal OpenSSH source 1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc; CentOS Stream 9 OpenSSH packaging 0b69a3828606595828fc3b878a7c70652303ad67; cloud-init 26.2 26.2; cloud-init 20.1 20.1 | REASONED |
+| include-order: OpenSSH 8.2 added server Include; OpenSSH 9.9 documents that, unless noted otherwise, each keyword uses its first obtained value, and documents lexical wildcard order supporting 00-hardening.conf. The fetched Ubuntu focal OpenSSH 1:8.2p1-4 configuration and CentOS Stream 9 packaging place the drop-in Include near the top, before main-file settings. With ssh_pwauth: true, cloud-init 26.2 writes PasswordAuthentication yes to 50-cloud-init.conf when the main configuration includes that directory; cloud-init 20.1 instead updated the main file. Current distribution defaults and cloud-image prevalence remain unestablished. | OpenSSH documentation unknown; OpenSSH 8.1 server manual V_8_1_P1; OpenSSH 8.2 server manual V_8_2_P1; OpenSSH 9.9 source V_9_9_P2; Ubuntu focal OpenSSH source 1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc; CentOS Stream 9 OpenSSH packaging 0b69a3828606595828fc3b878a7c70652303ad67; cloud-init 26.2 26.2; cloud-init 20.1 20.1 | REASONED |
 | effective-config: Validate with sshd -t before reload; inspect sshd -T global values and -T -C for Match-specific settings. Service names differ by distribution. | OpenSSH documentation unknown | REASONED |
 | totp: SSH TOTP uses google-authenticator-libpam through PAM keyboard-interactive; keys-only configuration must change before adding this factor. | OpenSSH documentation unknown; google-authenticator-libpam unknown | REASONED |
 | duo: Duo pam_duo provides the alternative push factor through PAM keyboard-interactive. | OpenSSH documentation unknown; Duo Unix unknown | REASONED |
@@ -10311,8 +10311,8 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | docker-bypass: With Docker Engine default Linux bridge firewall rules, published container traffic is diverted before UFW settings; consult docker.md before relying on the host firewall. As this guide's assessment, other modes and paths, including the userland proxy, need separate review in that guide. | UFW documentation unknown; Docker Engine networking 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | fail2ban: Use fail2ban to ban repeated authentication failures against SSH/login services. | fail2ban unknown | REASONED |
 | crowdsec: CrowdSec is the alternative protection for repeated authentication failures. | CrowdSec unknown | REASONED |
-| updates: Automate patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems; no update-tool source is listed. | OpenSSH documentation unknown | REASONED |
-| verify-listeners: Inventory intended TCP/UDP listeners and addresses in both IP families; no ss manual is listed. | UFW documentation unknown | REASONED |
+| updates: Automate security patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems, configured to install them. Ubuntu noble's postinst conditionally writes 20auto-upgrades, and apt-daily-upgrade invokes unattended-upgrade when its periodic interval permits; its allowed origins include the release and security pockets. CentOS Stream 9 packages dnf-automatic; DNF 4.14.0 ships apply_updates=no and upgrade_type=default, so enable dnf-automatic-install.timer and select upgrade_type=security for security-only installation. Other Debian and RHEL-family package defaults remain unestablished. | Ubuntu noble unattended-upgrades source 0570be65234e2392d420308470d26920fa4cd21a; Ubuntu noble-updates apt source 835f914ef5657b923fbb8b357f134b00de24c6fd; CentOS Stream 9 dnf packaging 3d5ca2af8635e0ef77219625f734d503b9900208; DNF 4.14.0 4.14.0 | REASONED |
+| verify-listeners: Inventory intended TCP/UDP listeners and addresses in both IP families with explicit ss -4 and -6 runs. Ubuntu noble netcat-openbsd supports -v, -z and -w; CentOS Stream 9 packages Ncat as an nc alternative, but behaviour of packaged 7.92 remains unestablished. BusyBox 1.36.1 small nc lacks -v while its 1.10-compatible applet lists -v. As this guide's assessment, refusal or timeout proves only that this connection failed; local errors, unsupported options and exit 1 without output are inconclusive. The OpenSSH 9.9 client options select password and disable public key; the literal Permission denied (publickey) is this guide's reasoned expectation dependent on server-advertised methods, while immediate failure without a password prompt remains required. | iproute2 ss manual v6.12.0; Ubuntu noble netcat-openbsd source c047f1a4572e796c8643fb7e5a719a9d960a677b; CentOS Stream 9 nmap packaging 17c2b7795d821cd7fbe311cf3f885be3ea1f122f; BusyBox 1.36.1 1_36_1; OpenSSH 9.9 source V_9_9_P2 | REASONED |
 | verify-firewall: UFW status should show default-deny ingress and admin-scoped SSH allowances; also inspect show raw because status omits /etc/ufw rules. | UFW documentation unknown | REASONED |
 | verify-external: Disallowed-source TCP 22 must fail while allowed SSH works; correlate effective rules. Refusal alone, local errors and unsupported netcat options are inconclusive. | UFW documentation unknown; firewalld documentation unknown | REASONED |
 | verify-password: A password-only SSH attempt must fail immediately without a password prompt; a prompt means password authentication remains enabled. | OpenSSH documentation unknown | REASONED |
@@ -10334,7 +10334,7 @@ PermitRootLogin no
 PubkeyAuthentication yes
 ```
 
-OpenSSH 9.9 documents that sshd uses the *first* value it reads for each option and processes `Include` wildcard matches in lexical order. The fetched Ubuntu focal OpenSSH 1:8.2p1-4 configuration and CentOS Stream 9 packaging place `Include /etc/ssh/sshd_config.d/*.conf` near the top, before main-file settings; OpenSSH 8.2 added `Include` to `sshd_config`. In cloud-init 26.2, `ssh_pwauth: true` sets `PasswordAuthentication yes` in `50-cloud-init.conf` when the main configuration includes that drop-in directory; cloud-init 20.1 instead updated the main file. Read before a later main-file line or a higher-numbered drop-in, that `yes` value wins and password login stays on. Name the hardening file `00-hardening.conf` so it is read first, and confirm with `sshd -T` (below) that the value took effect; as this guide's reasoning, an upgraded main file may lack the include or an earlier drop-in may already have set it. The fetched packaging does not establish current defaults for every Debian, Ubuntu and RHEL-family release, or how often cloud images contain this drop-in.
+OpenSSH 9.9 documents that, unless noted otherwise, sshd uses the *first* value it reads for each keyword and processes `Include` wildcard matches in lexical order. The fetched Ubuntu focal OpenSSH 1:8.2p1-4 configuration and CentOS Stream 9 packaging place `Include /etc/ssh/sshd_config.d/*.conf` near the top, before main-file settings; OpenSSH 8.2 added `Include` to `sshd_config`. In cloud-init 26.2, `ssh_pwauth: true` sets `PasswordAuthentication yes` in `50-cloud-init.conf` when the main configuration includes that drop-in directory; cloud-init 20.1 instead updated the main file. Read before a later main-file line or a higher-numbered drop-in, that `yes` value wins and password login stays on. Name the hardening file `00-hardening.conf` so it is read first, and confirm with `sshd -T` (below) that the value took effect; as this guide's reasoning, an upgraded main file may lack the include or an earlier drop-in may already have set it. The fetched packaging does not establish current defaults for every Debian, Ubuntu and RHEL-family release, or how often cloud images contain this drop-in.
 
 ```bash
 sudo sshd -t && sudo systemctl reload ssh    # sshd on RHEL-family systems
@@ -10391,14 +10391,15 @@ sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm nothing
 ## 3. Brute-force protection and updates
 
 - fail2ban ([github.com/fail2ban/fail2ban](https://github.com/fail2ban/fail2ban)) or CrowdSec ([crowdsec.net](https://www.crowdsec.net/)) bans repeated authentication failures against SSH and login panels.
-- Automate security patches: `unattended-upgrades` on Debian/Ubuntu, `dnf-automatic` on RHEL-family systems.
+- Automate security patches: `unattended-upgrades` on Debian/Ubuntu, `dnf-automatic` on RHEL-family systems. Configure them to install updates: on Ubuntu noble, the unattended-upgrades post-install script writes `20auto-upgrades` when `enable_auto_updates` is true, and `apt-daily-upgrade.timer` runs `apt.systemd.daily install`, which invokes `unattended-upgrade` when its periodic interval permits. Its Ubuntu allowed origins include the release and security pockets; inspect local origins and periodic settings. On CentOS Stream 9, `dnf-automatic` is a packaged subpackage; DNF 4.14.0 ships `apply_updates = no` and `upgrade_type = default`, so the generic timer does not install updates with that configuration. Enable `dnf-automatic-install.timer` to install updates, and set `upgrade_type = security` when only advisory-backed security upgrades are intended. Package defaults on other Debian and RHEL-family releases remain unestablished.
 
 ## 4. Verify
 
-REASONED: listener, firewall, SSH key-only and PAM MFA checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited SSH, firewall and MFA sources; this read-only review has no authorized target host or external probe machine.
+REASONED: listener, firewall, SSH key-only and PAM MFA checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited SSH, firewall, MFA, iproute2, netcat and BusyBox sources; this read-only review has no authorized target host or external probe machine.
 
 ```bash
-sudo ss -tulnp                    # TCP and UDP listeners (IPv4 and IPv6): only intended ones, on intended addresses
+sudo ss -4 -tulnp                 # IPv4 TCP and UDP listeners: only intended ones, on intended addresses
+sudo ss -6 -tulnp                 # IPv6 TCP and UDP listeners: only intended ones, on intended addresses
 sudo ufw status verbose           # default deny incoming; then `sudo ufw show raw` (status verbose omits rules loaded from /etc/ufw): every allowance that can reach 22 (a port-22 rule OR a broader "from <range> to any" allow) is scoped to your admin range, never Anywhere
 (                                 # a subshell, so your own script arguments are untouched
   set -- PASTE_WHOLE_BLOCK 'REPLACE_WITH_YOUR_PUBLIC_IP'   # replace inside the quotes, keeping them
@@ -10408,19 +10409,19 @@ sudo ufw status verbose           # default deny incoming; then `sudo ufw show r
   case "$1" in
     *REPLACE_WITH_*|*YOUR_PUBLIC_IP*|"") echo "substitute your own address on the set -- line above; not probing" ;;
     *) nc -vz -w 3 "$1" 22 ;;   # from an address outside the admin range: must fail to connect
-    # a refusal or timeout only means THIS connection failed, not that the host firewall denied it (a host with
+    # as this guide's assessment, a refusal or timeout only means THIS connection failed, not that the host firewall denied it (a host with
     # no sshd listening refuses too): confirm SSH works from an allowed source and read `ufw status`/`--list-all`
-    # for the effective rule. A local error, an unsupported option (BusyBox netcat rejects -v), or exit 1 with no
-    # output at all is inconclusive: nothing reached the network
+    # for the effective rule. A local error, an unsupported option (BusyBox small nc lacks -v; its 1.10-compatible applet accepts it), or exit 1 with no
+    # output at all is inconclusive as this guide's assessment; it does not establish a remote firewall result
   esac
 )
 # guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
-ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@host   # keys-only: expect an immediate "Permission denied (publickey)" with NO password prompt; a password prompt means password auth is still on
+ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@host   # keys-only: require immediate failure with NO password prompt; a password prompt means password auth is still on. "Permission denied (publickey)" is this guide's reasoned expectation for a server offering only publickey
 # guard-conventions: allow probe of an illustrative user@host; no reader-substituted placeholder in this probe's argv
 ssh user@host                     # with PAM MFA: the key is accepted, then a code is required before a shell. Also confirm a wrong or omitted code is REJECTED, that unenrolled users are denied (drop `nullok`), and that Duo fails closed (`failmode=secure`), per mfa.md; otherwise the factor is optional, not mandatory
 ```
 
-REASONED: preceding block; listener and firewall inventory, disallowed-source SSH reachability, key-only login and PAM MFA comparisons follow the cited SSH, firewall and MFA sources; no authorized target host or external probe machine is available, and no exposed/fixed result is recorded. Run the SSH test from a second terminal before closing your working session.
+REASONED: preceding block; listener and firewall inventory, disallowed-source SSH reachability, key-only login and PAM MFA comparisons follow the cited SSH, firewall, MFA, iproute2, netcat and BusyBox sources; no authorized target host or external probe machine is available, and no exposed/fixed result is recorded. Run the SSH test from a second terminal before closing your working session. The `nc -vz -w 3` form is sourced for Ubuntu noble netcat-openbsd; CentOS Stream 9 packages Ncat 7.92 as an `nc` alternative, but the fetched Ncat source is a later master commit, so this guide has not established the packaged version's option behaviour. Check the installed `nc` variant before treating this probe as evidence.
 
 ## Sources (checked September 2026)
 
@@ -10451,6 +10452,35 @@ REASONED: preceding block; listener and firewall inventory, disallowed-source SS
 - CrowdSec: https://www.crowdsec.net/
 - google-authenticator-libpam: https://github.com/google/google-authenticator-libpam
 - Duo Unix (`UsePAM`, `KbdInteractiveAuthentication`, `AuthenticationMethods publickey,keyboard-interactive`): https://duo.com/docs/duounix
+
+- Ubuntu noble conditional automatic-update configuration, at 0570be65234e2392d420308470d26920fa4cd21a (checked October 2026): https://git.launchpad.net/ubuntu/+source/unattended-upgrades/tree/debian/postinst?id=0570be65234e2392d420308470d26920fa4cd21a#n47
+- Ubuntu noble allowed origins, at 0570be65234e2392d420308470d26920fa4cd21a (checked October 2026): https://git.launchpad.net/ubuntu/+source/unattended-upgrades/tree/data/50unattended-upgrades.Ubuntu?id=0570be65234e2392d420308470d26920fa4cd21a#n6
+- Ubuntu noble apt upgrade timer, at 835f914ef5657b923fbb8b357f134b00de24c6fd (checked October 2026): https://git.launchpad.net/ubuntu/+source/apt/tree/debian/apt-daily-upgrade.timer?id=835f914ef5657b923fbb8b357f134b00de24c6fd#n5
+- Ubuntu noble apt upgrade service, at 835f914ef5657b923fbb8b357f134b00de24c6fd (checked October 2026): https://git.launchpad.net/ubuntu/+source/apt/tree/debian/apt-daily-upgrade.service?id=835f914ef5657b923fbb8b357f134b00de24c6fd#n7
+- Ubuntu noble periodic unattended-upgrade invocation, at 835f914ef5657b923fbb8b357f134b00de24c6fd (checked October 2026): https://git.launchpad.net/ubuntu/+source/apt/tree/debian/apt.systemd.daily?id=835f914ef5657b923fbb8b357f134b00de24c6fd#n491
+- CentOS Stream 9 dnf-automatic subpackage, at 3d5ca2af8635e0ef77219625f734d503b9900208 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L260-L267
+- DNF 4.14.0 automatic configuration defaults, at 4.14.0 (checked October 2026): https://github.com/rpm-software-management/dnf/blob/4.14.0/etc/dnf/automatic.conf#L1-L22
+- DNF 4.14.0 automatic timer behaviour, at 4.14.0 (checked October 2026): https://github.com/rpm-software-management/dnf/blob/4.14.0/doc/automatic.rst#L38-L50
+- DNF 4.14.0 security upgrade type, at 4.14.0 (checked October 2026): https://github.com/rpm-software-management/dnf/blob/4.14.0/doc/automatic.rst#L86-L91
+- DNF 4.14.0 automatic install timer, at 4.14.0 (checked October 2026): https://github.com/rpm-software-management/dnf/blob/4.14.0/etc/systemd/dnf-automatic-install.timer#L7-L13
+- DNF 4.14.0 automatic install service, at 4.14.0 (checked October 2026): https://github.com/rpm-software-management/dnf/blob/4.14.0/etc/systemd/dnf-automatic-install.service#L7-L13
+- iproute2 ss numeric output, at v6.12.0 (checked October 2026): https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34
+- iproute2 ss listening sockets, at v6.12.0 (checked October 2026): https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44
+- iproute2 ss process display, at v6.12.0 (checked October 2026): https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163
+- iproute2 ss TCP sockets, at v6.12.0 (checked October 2026): https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375
+- iproute2 ss UDP sockets, at v6.12.0 (checked October 2026): https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L377-L378
+- iproute2 ss explicit IPv4 and IPv6 selection, at v6.12.0 (checked October 2026): https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L365-L369
+- Ubuntu noble nc verbose and timeout flags, at c047f1a4572e796c8643fb7e5a719a9d960a677b (checked October 2026): https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n257
+- Ubuntu noble nc zero-I/O scan, at c047f1a4572e796c8643fb7e5a719a9d960a677b (checked October 2026): https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n308
+- Ubuntu noble nc connection and exit path, at c047f1a4572e796c8643fb7e5a719a9d960a677b (checked October 2026): https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/netcat.c?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n899
+- CentOS Stream 9 ncat nc alternative, at 17c2b7795d821cd7fbe311cf3f885be3ea1f122f (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/nmap/-/blob/17c2b7795d821cd7fbe311cf3f885be3ea1f122f/nmap.spec#L133-L137
+- OpenSSH 9.9 client PreferredAuthentications, at V_9_9_P2 (checked October 2026): https://github.com/openssh/openssh-portable/blob/V_9_9_P2/ssh_config.5#L1536-L1546
+- OpenSSH 9.9 client PubkeyAuthentication, at V_9_9_P2 (checked October 2026): https://github.com/openssh/openssh-portable/blob/V_9_9_P2/ssh_config.5#L1661-L1674
+- OpenSSH 9.9 client authentication failure message, at V_9_9_P2 (checked October 2026): https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshconnect2.c#L539-L543
+- BusyBox 1.36.1 small nc option parser, at 1_36_1 (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L133-L170
+- BusyBox 1.36.1 compatible nc options, at 1_36_1 (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93
+- BusyBox 1.36.1 nc compatibility build selection, at 1_36_1 (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59
+- CentOS Stream 9 nmap package version, at 17c2b7795d821cd7fbe311cf3f885be3ea1f122f (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/nmap/-/blob/17c2b7795d821cd7fbe311cf3f885be3ea1f122f/nmap.spec#L6-L8
 
 ======================================================================
 ==> cloud-firewalls.md
