@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.206 | `docker.md`: workload: cite Git, USER, capabilities, no-new-privileges, read-only filesystem and socket controls from Docker and Git sources. (M, M) | Done, #627. Pinned Git and Docker citations now support the ignore behaviour, USER, option names and daemon access while the linked guide retains the hardening assessments. |
 | 1.203 | `headers.md`: placement: cite proxy header directives and generic static-host `_headers` handling for the stated controls. (M, M) | Done, #626. Pinned proxy directive and Cloudflare Pages sources and scoped `_headers` to static asset responses. |
 | 1.204 | `headers.md`: all-responses: cite in `headers.md` Sources the nginx `add_header` inheritance source pinned in `nginx.md` for this response-header claim. (M, M) | Done, #626. Cited pinned nginx inheritance and `always` handling for the every-response requirement. |
 | 1.199 | `realtime-webhooks.md`: proxy-limits: pin vendor sources for the proxy capability summaries beyond the cited Caddy timeouts, nginx, Traefik and HAProxy. (M, M) | Done, #625. Pinned nginx `proxy_read_timeout` and HAProxy timeout and aggregate `maxconn` controls in the guide and claim inventory. |
