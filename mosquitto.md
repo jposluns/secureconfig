@@ -159,53 +159,63 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| loopback-default: 2.0+ without listeners binds loopback and permits anonymous clients; it is not authenticated. | Mosquitto documentation unknown | REASONED |
-| listener-default: Explicit 2.0 listeners default to rejecting unauthenticated clients; an unspecified bind address is wildcard. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
-| image21: Recorded 2.1.2 Alpine tags ship anonymous MQTT 1883 and HTTP API/dashboard 9883; override configuration and restrict publication. | Mosquitto image catalogue 920b00976e6e8335bab0a3fd293b95b6b2404ce3; Mosquitto image source 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60 | REASONED |
-| image-api: 2.1.2 HTTP API uses a dual-stack socket and exposes systree/listeners JSON and version text without shipped credentials/ACLs. | Mosquitto v2.1.2 | REASONED |
-| image16: Recorded 1.6.15 image tags ship commented upstream config: wildcard 1883 and anonymous access. | Mosquitto image source 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60; Mosquitto legacy v1.6.15 | REASONED |
-| image20: Recorded 2.0.22 image tags ship commented upstream config and retain loopback-only defaults. | Mosquitto image source 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60; Mosquitto v2.0.22 | REASONED |
-| deprecation: File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0. | Mosquitto documentation unknown; Mosquitto release announcements unknown | REASONED |
-| password-file: Prompt for distinct device credentials; -c overwrites, and -D edits the file without terminating connections by itself. | Mosquitto documentation unknown | REASONED |
-| reload: Reload changed credentials/ACLs; manual says connections unaffected, but 2.0.22 rechecks credentials; confirm deployed termination. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
-| shared-policy: per_listener_settings false shares authentication/ACL policy; flipping it is neither separation nor 2.1 migration. | Mosquitto v2.0.22 | REASONED |
-| tls: 8883 TLS needs CA/certificate/key; optional require_certificate adds machine possession, not human MFA. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
-| listener-apply: Remove/firewall plaintext; confirm include_dir and restart for listener changes, which reload does not apply. | Mosquitto documentation unknown | REASONED |
-| acl-default: Password authentication alone leaves application topics unrestricted without an authorization mechanism. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
-| acl-users: Unlisted access is denied; user means username; pre-user topic rules apply only to anonymous clients. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
-| acl-patterns: Patterns apply to all users; %u/%c must occupy a whole topic level; prefer authenticated usernames over chosen client IDs. | Mosquitto documentation unknown | REASONED |
-| sys: deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it. | Mosquitto documentation unknown; Mosquitto release announcements unknown | REASONED |
-| subscription: File ACLs filter message access, not SUBSCRIBE acceptance; accepted # alone is no bypass. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
-| connection-default: Per-listener max_connections defaults to -1, unlimited by this setting. | Mosquitto v2.0.22 | REASONED |
-| packet-default: max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20. | Mosquitto v2.0.22; Mosquitto v2.1.2; Mosquitto release announcements unknown | REASONED |
-| payload-default: message_size_limit defaults to 0; payload rejection follows reception and completes QoS acknowledgements. | Mosquitto v2.0.22 | REASONED |
-| inflight-default: max_inflight_messages defaults to 20 per client for outgoing QoS 1/2; it is not a message-rate limit. | Mosquitto v2.0.22 | REASONED |
-| queue-default: max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages. | Mosquitto v2.0.22; Mosquitto release announcements unknown | REASONED |
-| queue-bytes: max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing. | Mosquitto v2.0.22 | REASONED |
-| keepalive: max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
-| packet-boundary: 2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
-| global-limits: 2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions. | Mosquitto documentation unknown; Mosquitto v2.1.2; Mosquitto release announcements unknown | REASONED |
-| session-expiry: 2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap. | Mosquitto v2.0.22 | REASONED |
-| listener-policy: 2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope. | Mosquitto v2.0.22 | REASONED |
-| websockets: Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
-| persistent-policy: Listeners share topic/session namespaces; disconnected persistent clients retain their most recent listener's ACL policy. | Mosquitto v2.0.22 | REASONED |
-| client-id: use_username_as_clientid is per-listener and needs restart; globally consistent usernames prevent cross-identity ID takeover, not same-user displacement. | Mosquitto v2.0.22 | REASONED |
-| migration: 2.1 listener_allow_anonymous and plugin_load/plugin_use replace listener policy; attach password-file and ACL-file plugins explicitly. | Mosquitto documentation unknown | REASONED |
-| bridge-tls: Port 8883 alone enables no bridge TLS; require CA/hostname verification, protected remote password and optional client certificate. | Mosquitto v2.0.22 | REASONED |
-| bridge-topics: Bridge contexts bypass local ACLs and 2.1.2 accepts unmatched ingress topics; narrow routes/remote ACLs do not contain malicious upstream. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
-| bridge-options: try_private aids bridge handling, not auth; restart_timeout supplies backoff; notifications false suppresses default $SYS status writes. | Mosquitto v2.0.22 | REASONED |
-| runtime: Dedicated runtime identity needs readable security files and writable protected state/log paths after the early 2.0 privilege drop. | Mosquitto documentation unknown | REASONED |
-| persistence: Persistence defaults false; persistence_location alone does not enable it; protect data, logs, secrets and backups. | Mosquitto documentation unknown | REASONED |
-| client-config: Verify uses protected 2.1 client -o files; 2.0 lacks -o and needs isolated default configurations. | Mosquitto documentation unknown | REASONED |
-| verify-auth: Authenticated CONNACK succeeds and anonymous CONNECT rejects; timeout exit 27, SUBACK and transport failures prove no authentication. | Mosquitto documentation unknown; Mosquitto v2.1.2 | REASONED |
-| verify-mtls: Missing certificate must fail at TLS while trusted certificate succeeds; then separately test MQTT credentials. | Mosquitto documentation unknown | REASONED |
-| verify-network: Inspect actual namespace and external IPv4/IPv6/NAT paths; removed plaintext/WebSocket endpoints must not answer. | Mosquitto documentation unknown; Mosquitto v2.0.22 | REASONED |
-| verify-delivery: Require own telemetry, cross-device isolation and controller before/after markers around denied injection; inspect PUBACK and delivery. | Mosquitto documentation unknown; Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
-| verify-sys: Require exposed telemetry plus authorized marker control; fixed devices receive no $SYS messages. | Mosquitto documentation unknown | REASONED |
-| verify-resources: Separate packet allocation, payload, queue, inflight, keepalive, connection and session tests need matched healthy controls. | Mosquitto v2.0.22; Mosquitto v2.1.2 | REASONED |
-| verify-bridges: Test scoped delivery, TLS identity, remote ACLs and malicious-upstream containment independently; inspect runtime permissions and persistence. | Mosquitto v2.0.22 | REASONED |
+Components (recorded basis):
+
+- docs: Mosquitto documentation, unknown
+- v20: Mosquitto, v2.0.22
+- library: Mosquitto image catalogue, 920b00976e6e8335bab0a3fd293b95b6b2404ce3
+- image: Mosquitto image source, 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60
+- v21: Mosquitto, v2.1.2
+- v16: Mosquitto legacy, v1.6.15
+- release-notes: Mosquitto release announcements, unknown
+
+Claims (full source mapping in the front matter):
+
+- loopback-default (REASONED; docs): 2.0+ without listeners binds loopback and permits anonymous clients; it is not authenticated.
+- listener-default (REASONED; docs, v20): Explicit 2.0 listeners default to rejecting unauthenticated clients; an unspecified bind address is wildcard.
+- image21 (REASONED; library, image): Recorded 2.1.2 Alpine tags ship anonymous MQTT 1883 and HTTP API/dashboard 9883; override configuration and restrict publication.
+- image-api (REASONED; v21): 2.1.2 HTTP API uses a dual-stack socket and exposes systree/listeners JSON and version text without shipped credentials/ACLs.
+- image16 (REASONED; image, v16): Recorded 1.6.15 image tags ship commented upstream config: wildcard 1883 and anonymous access.
+- image20 (REASONED; image, v20): Recorded 2.0.22 image tags ship commented upstream config and retain loopback-only defaults.
+- deprecation (REASONED; docs, release-notes): File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0.
+- password-file (REASONED; docs): Prompt for distinct device credentials; -c overwrites, and -D edits the file without terminating connections by itself.
+- reload (REASONED; docs, v20): Reload changed credentials/ACLs; manual says connections unaffected, but 2.0.22 rechecks credentials; confirm deployed termination.
+- shared-policy (REASONED; v20): per_listener_settings false shares authentication/ACL policy; flipping it is neither separation nor 2.1 migration.
+- tls (REASONED; docs, v20): 8883 TLS needs CA/certificate/key; optional require_certificate adds machine possession, not human MFA.
+- listener-apply (REASONED; docs): Remove/firewall plaintext; confirm include_dir and restart for listener changes, which reload does not apply.
+- acl-default (REASONED; docs, v20): Password authentication alone leaves application topics unrestricted without an authorization mechanism.
+- acl-users (REASONED; docs, v20): Unlisted access is denied; user means username; pre-user topic rules apply only to anonymous clients.
+- acl-patterns (REASONED; docs): Patterns apply to all users; %u/%c must occupy a whole topic level; prefer authenticated usernames over chosen client IDs.
+- sys (REASONED; docs, release-notes): deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it.
+- subscription (REASONED; v20, v21): File ACLs filter message access, not SUBSCRIBE acceptance; accepted # alone is no bypass.
+- connection-default (REASONED; v20): Per-listener max_connections defaults to -1, unlimited by this setting.
+- packet-default (REASONED; v20, v21, release-notes): max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20.
+- payload-default (REASONED; v20): message_size_limit defaults to 0; payload rejection follows reception and completes QoS acknowledgements.
+- inflight-default (REASONED; v20): max_inflight_messages defaults to 20 per client for outgoing QoS 1/2; it is not a message-rate limit.
+- queue-default (REASONED; v20, release-notes): max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages.
+- queue-bytes (REASONED; v20): max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing.
+- keepalive (REASONED; v20, v21): max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1.
+- packet-boundary (REASONED; v20, v21): 2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary.
+- global-limits (REASONED; docs, v21, release-notes): 2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions.
+- session-expiry (REASONED; v20): 2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap.
+- listener-policy (REASONED; v20): 2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope.
+- websockets (REASONED; v20, v21): Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing.
+- persistent-policy (REASONED; v20): Listeners share topic/session namespaces; disconnected persistent clients retain their most recent listener's ACL policy.
+- client-id (REASONED; v20): use_username_as_clientid is per-listener and needs restart; globally consistent usernames prevent cross-identity ID takeover, not same-user displacement.
+- migration (REASONED; docs): 2.1 listener_allow_anonymous and plugin_load/plugin_use replace listener policy; attach password-file and ACL-file plugins explicitly.
+- bridge-tls (REASONED; v20): Port 8883 alone enables no bridge TLS; require CA/hostname verification, protected remote password and optional client certificate.
+- bridge-topics (REASONED; v20, v21): Bridge contexts bypass local ACLs and 2.1.2 accepts unmatched ingress topics; narrow routes/remote ACLs do not contain malicious upstream.
+- bridge-options (REASONED; v20): try_private aids bridge handling, not auth; restart_timeout supplies backoff; notifications false suppresses default $SYS status writes.
+- runtime (REASONED; docs): Dedicated runtime identity needs readable security files and writable protected state/log paths after the early 2.0 privilege drop.
+- persistence (REASONED; docs): Persistence defaults false; persistence_location alone does not enable it; protect data, logs, secrets and backups.
+- client-config (REASONED; docs): Verify uses protected 2.1 client -o files; 2.0 lacks -o and needs isolated default configurations.
+- verify-auth (REASONED; docs, v21): Authenticated CONNACK succeeds and anonymous CONNECT rejects; timeout exit 27, SUBACK and transport failures prove no authentication.
+- verify-mtls (REASONED; docs): Missing certificate must fail at TLS while trusted certificate succeeds; then separately test MQTT credentials.
+- verify-network (REASONED; docs, v20): Inspect actual namespace and external IPv4/IPv6/NAT paths; removed plaintext/WebSocket endpoints must not answer.
+- verify-delivery (REASONED; docs, v20, v21): Require own telemetry, cross-device isolation and controller before/after markers around denied injection; inspect PUBACK and delivery.
+- verify-sys (REASONED; docs): Require exposed telemetry plus authorized marker control; fixed devices receive no $SYS messages.
+- verify-resources (REASONED; v20, v21): Separate packet allocation, payload, queue, inflight, keepalive, connection and session tests need matched healthy controls.
+- verify-bridges (REASONED; v20): Test scoped delivery, TLS identity, remote ACLs and malicious-upstream containment independently; inspect runtime permissions and persistence.
 <!-- version-basis:end -->
 
 MQTT brokers back IoT and agent projects, and open brokers leak live telemetry and accept injected commands. Mosquitto's defaults are sane on version 2.0 and later (with a listener defined, anonymous access is off; without any listener it binds the loopback interface only); the job is to keep them sane while adding real listeners.

@@ -750,11 +750,14 @@ def render(data):
              f"Metadata reviewed {data['checked']}; documentation checked {data['documentation_checked']} "
              '(exact day unknown). DEMONSTRATED refers to historical evidence in this guide; '
              'REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.', '',
-             '| Claim | Basis | Status |', '| --- | --- | --- |']
+             'Components (recorded basis):', '']
+    for name, component in data['components'].items():
+        lines.append(f"- {name}: {cell(component['name'])}, {cell(component['basis'])}")
+    lines.extend(['', 'Claims (full source mapping in the front matter):', ''])
     for name, claim in data['claims'].items():
-        bases = '; '.join(f"{cell(data['components'][ref]['name'])} {cell(data['components'][ref]['basis'])}"
-                          for ref in claim['components'])
-        lines.append(f"| {name}: {cell(claim['text'])} | {bases} | {claim['status']} |")
+        # The fixed prefix keeps single-line text from opening Markdown blocks.
+        refs = ', '.join(claim['components'])
+        lines.append(f"- {name} ({claim['status']}; {refs}): {cell(claim['text'])}")
     lines.append(END)
     return '\n'.join(lines)
 

@@ -153,39 +153,53 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| auto-https: Caddy 2 obtains and renews public certificates and redirects HTTP to HTTPS; DNS must point here and the example requires public 80/443. | Caddy documentation (rolling) unknown | REASONED |
-| issuers: Public certificates come from Let's Encrypt or ZeroSSL and renew automatically. | Caddy documentation (rolling) unknown | REASONED |
-| renewal-monitoring: Set the ACME email contact but monitor renewal yourself: Let's Encrypt stopped expiration emails. | Caddy documentation (rolling) unknown; Let's Encrypt expiration-email notice 2025 | REASONED |
-| backend: reverse_proxy sends traffic to 127.0.0.1:3000; keep the app private to prevent TLS/auth bypass. | Caddy documentation (rolling) unknown | REASONED |
-| hsts: Caddy sends no HSTS automatically; add it only after HTTPS works across every included subdomain. | Caddy documentation (rolling) unknown | REASONED |
-| forwarded: Caddy ignores untrusted client X-Forwarded-* by default; configure trusted_proxies behind a trusted CDN/proxy. | Caddy documentation (rolling) unknown | REASONED |
-| internal-tls: tls internal uses a local CA; clients must trust its root, with caddy trust for the local host. tls also accepts explicit cert/key files. | Caddy documentation (rolling) unknown | REASONED |
-| basic: basic_auth uses hashed passwords from caddy hash-password; it was named basicauth before v2.8.0 and remains single-factor. | Caddy documentation (rolling) unknown | REASONED |
-| path-auth: Protect /admin and /admin/* together: path matches are exact and multiple paths are OR'ed. | Caddy documentation (rolling) unknown | REASONED |
-| mfa: forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it. | Caddy documentation (rolling) unknown; Cloudflare docs c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
-| access-origin: Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's &#96;access&#96; setting has &#96;cloudflared&#96; do. Caddy still answers directly on 443. | Caddy documentation (rolling) unknown; Cloudflare docs c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
-| body-limit: Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public. | Caddy documentation (rolling) unknown | REASONED |
-| rate-limit: The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer. | Caddy documentation (rolling) unknown; caddy-ratelimit source 5625512f24f6f59d6f64fb3aafe5eecff0b286db | REASONED |
-| admin-bind: The admin API defaults to localhost:2019 as of v2.11.4; never publish it or reverse-proxy to it. | Caddy admin source v2.11.4; Caddy documentation (rolling) unknown | REASONED |
-| admin-authority: Reachable unauthenticated admin clients can replace config at POST /load, edit /config/ or stop with POST /stop. | Caddy documentation (rolling) unknown | REASONED |
-| admin-isolation: Host/Origin checks are not process isolation; local untrusted workloads require a permissioned Unix socket. | Caddy documentation (rolling) unknown | REASONED |
-| docker-admin: The official 2.11.4 Alpine, Windows Server Core 2022/2025, and Nano Server 2022/2025 runtime tags map to fba28535 Dockerfiles that EXPOSE 2019 and run the default Caddyfile without admin; absent overrides, the endpoint stays namespace-local. | Official image tag map d82ca5102fa6735be29d5e1fc6ce03af77eb091e; Caddy Docker source fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94; Caddy admin source v2.11.4 | REASONED |
-| admin-override: A mounted admin setting or CADDY_ADMIN changes the address; do not set 0.0.0.0:2019 to make publication work. | Caddy admin source v2.11.4; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94; Caddy documentation (rolling) unknown | REASONED |
-| namespace: The shipped admin default is localhost:2019. On Docker Engine on Linux, bridge networking keeps loopback container-local; host or container networking shares a namespace, so treat its processes as potential admin clients. | Caddy Docker source fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Default Caddyfile source 33ae08ff08d168572df2956ed14fbc4949880d94; Caddy admin source v2.11.4; Docker networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f; Caddy documentation (rolling) unknown | REASONED |
-| admin-socket: admin unix//run/caddy/admin.sock uses owner-only mode 0200 by default; append &#124;0600 to set it explicitly. | Caddy documentation (rolling) unknown | REASONED |
-| runtime-directory: The dist service at 33ae08ff runs as caddy without RuntimeDirectory; systemd v262 creates /run/caddy for RuntimeDirectory=caddy at service start and owns it as caddy. Restart for the socket switch is guide reasoning. | Caddy documentation (rolling) unknown; caddyserver/dist service unit 33ae08ff08d168572df2956ed14fbc4949880d94; systemd manual v262 | REASONED |
-| reload: The dist service at 33ae08ff uses caddy reload --config /etc/caddy/Caddyfile --force; API reload uses the Caddyfile admin address. With admin off, guide reasoning requires systemd restart. | Caddy documentation (rolling) unknown; caddyserver/dist service unit 33ae08ff08d168572df2956ed14fbc4949880d94 | REASONED |
-| signal-reload: A manual run without --resume may reload startup config via SIGUSR1; API changes or reload with a different file/adapter disable signal reloads. | Caddy documentation (rolling) unknown | REASONED |
-| on-demand: Do not enable unrestricted on_demand TLS without an ask endpoint or host allowlist; this guide does not enable it. | Caddy documentation (rolling) unknown | REASONED |
-| verify-config: Validate /etc/caddy/Caddyfile; no validation outcome is recorded. | Caddy documentation (rolling) unknown | REASONED |
-| verify-redirect: HTTP should redirect to HTTPS. | Caddy documentation (rolling) unknown | REASONED |
-| verify-auth: With site-wide auth, HTTPS without credentials returns 401. | Caddy documentation (rolling) unknown | REASONED |
-| verify-scope: The @admin variant must return 401 for /admin and /admin/x, but an app response rather than 401 for a non-admin path. | Caddy documentation (rolling) unknown | REASONED |
-| verify-size: Authenticated 1M reaches the app and 11M returns 413; 401/000 void the control. Auth can prevent body reads; remove request_body in isolation to attribute refusal. | Caddy documentation (rolling) unknown | REASONED |
-| verify-backend: Read all listeners: app 3000 must be loopback-only even if proxy checks pass. | Caddy documentation (rolling) unknown | REASONED |
-| verify-admin: TCP admin must bind only loopback; absent 2019 requires confirming admin off or a socket. Check Unix socket existence and owner restrictions separately. | Caddy documentation (rolling) unknown | REASONED |
+Components (recorded basis):
+
+- admin: Caddy admin source, v2.11.4
+- tags: Official image tag map, d82ca5102fa6735be29d5e1fc6ce03af77eb091e
+- images: Caddy Docker source, fba2853501d36e8a72f946ac8cb7ff64d07e48f2
+- dist: Default Caddyfile source, 33ae08ff08d168572df2956ed14fbc4949880d94
+- docker-network: Docker networking documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
+- docs-rolling: Caddy documentation (rolling), unknown
+- letsencrypt-notice: Let's Encrypt expiration-email notice, 2025
+- service: caddyserver/dist service unit, 33ae08ff08d168572df2956ed14fbc4949880d94
+- systemd: systemd manual, v262
+- cloudflare: Cloudflare docs, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
+- ratelimit-source: caddy-ratelimit source, 5625512f24f6f59d6f64fb3aafe5eecff0b286db
+
+Claims (full source mapping in the front matter):
+
+- auto-https (REASONED; docs-rolling): Caddy 2 obtains and renews public certificates and redirects HTTP to HTTPS; DNS must point here and the example requires public 80/443.
+- issuers (REASONED; docs-rolling): Public certificates come from Let's Encrypt or ZeroSSL and renew automatically.
+- renewal-monitoring (REASONED; docs-rolling, letsencrypt-notice): Set the ACME email contact but monitor renewal yourself: Let's Encrypt stopped expiration emails.
+- backend (REASONED; docs-rolling): reverse_proxy sends traffic to 127.0.0.1:3000; keep the app private to prevent TLS/auth bypass.
+- hsts (REASONED; docs-rolling): Caddy sends no HSTS automatically; add it only after HTTPS works across every included subdomain.
+- forwarded (REASONED; docs-rolling): Caddy ignores untrusted client X-Forwarded-* by default; configure trusted_proxies behind a trusted CDN/proxy.
+- internal-tls (REASONED; docs-rolling): tls internal uses a local CA; clients must trust its root, with caddy trust for the local host. tls also accepts explicit cert/key files.
+- basic (REASONED; docs-rolling): basic_auth uses hashed passwords from caddy hash-password; it was named basicauth before v2.8.0 and remains single-factor.
+- path-auth (REASONED; docs-rolling): Protect /admin and /admin/* together: path matches are exact and multiple paths are OR'ed.
+- mfa (REASONED; docs-rolling, cloudflare): forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it.
+- access-origin (REASONED; docs-rolling, cloudflare): Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's &#96;access&#96; setting has &#96;cloudflared&#96; do. Caddy still answers directly on 443.
+- body-limit (REASONED; docs-rolling): Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public.
+- rate-limit (REASONED; docs-rolling, ratelimit-source): The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer.
+- admin-bind (REASONED; admin, docs-rolling): The admin API defaults to localhost:2019 as of v2.11.4; never publish it or reverse-proxy to it.
+- admin-authority (REASONED; docs-rolling): Reachable unauthenticated admin clients can replace config at POST /load, edit /config/ or stop with POST /stop.
+- admin-isolation (REASONED; docs-rolling): Host/Origin checks are not process isolation; local untrusted workloads require a permissioned Unix socket.
+- docker-admin (REASONED; tags, images, dist, admin): The official 2.11.4 Alpine, Windows Server Core 2022/2025, and Nano Server 2022/2025 runtime tags map to fba28535 Dockerfiles that EXPOSE 2019 and run the default Caddyfile without admin; absent overrides, the endpoint stays namespace-local.
+- admin-override (REASONED; admin, dist, docs-rolling): A mounted admin setting or CADDY_ADMIN changes the address; do not set 0.0.0.0:2019 to make publication work.
+- namespace (REASONED; images, dist, admin, docker-network, docs-rolling): The shipped admin default is localhost:2019. On Docker Engine on Linux, bridge networking keeps loopback container-local; host or container networking shares a namespace, so treat its processes as potential admin clients.
+- admin-socket (REASONED; docs-rolling): admin unix//run/caddy/admin.sock uses owner-only mode 0200 by default; append &#124;0600 to set it explicitly.
+- runtime-directory (REASONED; docs-rolling, service, systemd): The dist service at 33ae08ff runs as caddy without RuntimeDirectory; systemd v262 creates /run/caddy for RuntimeDirectory=caddy at service start and owns it as caddy. Restart for the socket switch is guide reasoning.
+- reload (REASONED; docs-rolling, service): The dist service at 33ae08ff uses caddy reload --config /etc/caddy/Caddyfile --force; API reload uses the Caddyfile admin address. With admin off, guide reasoning requires systemd restart.
+- signal-reload (REASONED; docs-rolling): A manual run without --resume may reload startup config via SIGUSR1; API changes or reload with a different file/adapter disable signal reloads.
+- on-demand (REASONED; docs-rolling): Do not enable unrestricted on_demand TLS without an ask endpoint or host allowlist; this guide does not enable it.
+- verify-config (REASONED; docs-rolling): Validate /etc/caddy/Caddyfile; no validation outcome is recorded.
+- verify-redirect (REASONED; docs-rolling): HTTP should redirect to HTTPS.
+- verify-auth (REASONED; docs-rolling): With site-wide auth, HTTPS without credentials returns 401.
+- verify-scope (REASONED; docs-rolling): The @admin variant must return 401 for /admin and /admin/x, but an app response rather than 401 for a non-admin path.
+- verify-size (REASONED; docs-rolling): Authenticated 1M reaches the app and 11M returns 413; 401/000 void the control. Auth can prevent body reads; remove request_body in isolation to attribute refusal.
+- verify-backend (REASONED; docs-rolling): Read all listeners: app 3000 must be loopback-only even if proxy checks pass.
+- verify-admin (REASONED; docs-rolling): TCP admin must bind only loopback; absent 2019 requires confirming admin off or a socket. Check Unix socket existence and owner restrictions separately.
 <!-- version-basis:end -->
 
 Caddy 2 obtains, installs, and renews publicly trusted certificates automatically and redirects HTTP to HTTPS by default. For a new deployment with a public domain, it is the shortest correct path to HTTPS: no ACME client, no renewal timer, no redirect block.

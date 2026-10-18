@@ -166,73 +166,84 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| fpm-private: FPM requires listen per pool; exposed FastCGI permits code execution. Use a Unix socket or loopback TCP 9000; never publish container FPM. | PHP native configuration 8.x | REASONED |
-| fpm-clients: listen.allowed_clients defaults unset, accepting any address; explicitly allow loopback for TCP. | PHP native configuration 8.x | REASONED |
-| fpm-socket: Unix socket access uses listen.owner, listen.group and listen.mode, default 0660. | PHP native configuration 8.x | REASONED |
-| cookie-secure: Native session.cookie_secure defaults 0; enable it. | PHP native configuration 8.x | REASONED |
-| cookie-httponly: Native session.cookie_httponly defaults 0; enable it. | PHP native configuration 8.x | REASONED |
-| cookie-samesite: Native session.cookie_samesite defaults empty; choose Lax or Strict. | PHP native configuration 8.x | REASONED |
-| session-strict: session.use_strict_mode defaults 0; enable it. | PHP native configuration 8.x | REASONED |
-| session-regenerate: Regenerate IDs after login/privilege changes; delete_old_session defaults false. Timestamp expiry avoids immediate deletion. | PHP documentation unknown | REASONED |
-| passwords: PASSWORD_DEFAULT currently uses bcrypt; Argon2id needs an Argon2 build. Verify/rehash passwords and allow growing hashes, suggested 255 bytes. | PHP documentation unknown | REASONED |
-| plain-auth: Guide assessment: the cited PHP password and session functions provide no login-attempt throttling; this is not a claim about every PHP extension or application. Guide advice: apply a proxy limiter or a fail2ban jail over an application/proxy failure log, following authentication.md requirements. nginx.md section 4 documents limit_req; caddy.md section 4 states that stock Caddy has no rate limiter; apache.md gives no limiter configuration. fail2ban 1.1.1 documents filter and logpath; its nginx-limit-req jail reads the nginx error log and its filter matches limiting or delaying entries. These sources do not establish a filter for this PHP application's login form or its log format. Guide advice: for plain-PHP MFA, use a TOTP library or an identity layer in front whose policy requires MFA; mfa.md covers identity-layer options and enforcement requirements, but its library list has no PHP TOTP library. No PHP TOTP library is pinned here. | PHP documentation unknown; fail2ban 1.1.1 | REASONED |
-| laravel-debug: Set APP_ENV=production, APP_DEBUG=false and HTTPS APP_URL; debug mode exposes configuration values. | Laravel 12.x | REASONED |
-| laravel-key: Generate APP_KEY with artisan key:generate; list old keys in APP_PREVIOUS_KEYS during rotation. | Laravel 12.x | REASONED |
-| laravel-secure: Set SESSION_SECURE_COOKIE=true; the session secure configuration has no default. | Laravel 12.x | REASONED |
-| laravel-httponly: SESSION_HTTP_ONLY defaults true; retain it. | Laravel 12.x | REASONED |
-| laravel-samesite: SESSION_SAME_SITE defaults lax; strict suits admin-only apps. | Laravel 12.x | REASONED |
-| laravel-proxy: Laravel 12.x trustProxies names proxies in bootstrap/app.php; wildcard trust requires exclusive proxy reachability. | Laravel 12.x | REASONED |
-| laravel-urls: URL::forceHttps() or forceScheme(https) in a provider boot method forces generated HTTPS URLs. | Laravel 12.x | REASONED |
-| laravel-hashes: Hash::make/check default to bcrypt; HASH_DRIVER=argon2id switches it and needsRehash detects upgrades. HASH_VERIFY=false disables rejection of other algorithms. | Laravel 12.x | REASONED |
-| laravel-limiter: Define a five-per-minute login limiter keyed by email plus IP; attach throttle:login to the real route. | Laravel 12.x | REASONED |
-| fortify-login: 12.x starter kits use Fortify, which throttles username plus IP and regenerates session IDs on login; standalone Fortify omits views. | Laravel 12.x | REASONED |
-| fortify-mfa: Fortify twoFactorAuthentication with confirm and confirmPassword supplies TOTP and recovery codes. | Laravel 12.x | REASONED |
-| socialite: Socialite supplies OAuth providers; community packages supply OIDC. Use HTTPS callbacks and linked allowlist/token checks. | Laravel 12.x | REASONED |
-| laravel-cache: Keep plaintext .env untracked; build config/route caches after production inputs and rebuild on changes. Cached config does not load .env; use env only in config files. | Laravel 12.x | REASONED |
-| laravel-hosts: Laravel accepts arbitrary Host headers by default; restrict hosts at the server and add anchored TrustHosts with subdomains:false. | Laravel 12.x | REASONED |
-| debug-tools: Omit Telescope and Debugbar from production; Telescope local-only installation includes conditional provider registration. | Laravel 12.x; Laravel Debugbar unknown | REASONED |
-| curl-peer: CURLOPT_SSL_VERIFYPEER defaults true; retain certificate verification. | PHP documentation unknown | REASONED |
-| curl-host: CURLOPT_SSL_VERIFYHOST defaults 2; retain hostname checks and use CURLOPT_CAINFO for an internal CA. | PHP documentation unknown | REASONED |
-| display-errors: PHP 8.x display_errors defaults On; set Off before execution. ini_set cannot hide a fatal error preventing it from running. | PHP native configuration 8.x | REASONED |
-| startup-errors: display_startup_errors defaults On since PHP 8.0.0, previously Off; set Off. | PHP native configuration 8.x | REASONED |
-| log-errors: log_errors defaults Off; enable it with a protected, pre-created, worker-writable log outside the document root and rotation. Unset error_log uses the SAPI logger. | PHP native configuration 8.x | REASONED |
-| error-reporting: error_reporting defaults E_ALL since PHP 8.0.0; retain reporting into logs. Package/template/deployment overrides can differ. | PHP native configuration 8.x | REASONED |
-| php-banner: expose_php defaults On; Off suppresses PHP own X-Powered-By header, not other layers or all application identification. | PHP native configuration 8.x; PHP documentation unknown | REASONED |
-| production-template: PHP 8.4 production template disables display and enables logging, but uses E_ALL &amp; ~E_DEPRECATED and leaves expose_php enabled. | PHP production template 8.4 | REASONED |
-| disable-functions: disable_functions defaults empty; test the listed process-function restrictions. Since PHP 8.0 definitions disappear and userland can redefine them; internal functions only, not a security boundary. | PHP native configuration 8.x | REASONED |
-| url-fopen: allow_url_fopen defaults On; disable unnecessary URL wrappers after compatibility tests, not as a general egress policy. | PHP documentation unknown | REASONED |
-| url-include: allow_url_include defaults Off, deprecated since PHP 7.4; retain Off. URL includes also require allow_url_fopen. | PHP documentation unknown | REASONED |
-| basedir: open_basedir defaults NULL; allow required paths, retain OS isolation and account for disabled realpath caching. PHP 8.3 rejects runtime .. components. | PHP native configuration 8.x | REASONED |
-| fpm-extensions: PHP 8.x FPM security.limit_extensions defaults .php .phar; restrict to .php, which still permits uploaded PHP dispatched by the server. | PHP native configuration 8.x | REASONED |
-| upload-execution: Separate writable uploads from code, preferably outside the document root; server mappings must forbid PHP execution, including aliases/symlinks. | PHP native configuration 8.x; Laravel 12.x | REASONED |
-| laravel-storage: Laravel 12.x local disk defaults storage/app/private; public disk uses storage/app/public via public/storage, which does not itself prevent PHP execution. | Laravel 12.x | REASONED |
-| upload-size: upload_max_filesize defaults 2M per file; post_max_size must allow multipart overhead. | PHP native configuration 8.x | REASONED |
-| post-size: post_max_size defaults 8M; excess leaves POST and FILES empty and must be rejected by the app. | PHP native configuration 8.x | REASONED |
-| upload-count: max_file_uploads defaults 20; twenty maximum-sized files need not fit the POST limit. | PHP native configuration 8.x; PHP documentation unknown | REASONED |
-| memory-limit: memory_limit defaults 128M, should generally exceed post_max_size, and -1 removes the bound. | PHP native configuration 8.x | REASONED |
-| input-vars: max_input_vars defaults 1000 separately for GET, POST and COOKIE; excess is warned/truncated, not a general JSON limit. | PHP native configuration 8.x | REASONED |
-| execution-time: max_execution_time defaults 30 for web and 0 for CLI; platform/build accounting can exclude I/O, not a portable wall-clock deadline. | PHP native configuration 8.x | REASONED |
-| input-time: max_input_time defaults -1, using max_execution_time; 0 is unlimited. Example and production template select 60 seconds. | PHP native configuration 8.x; PHP production template 8.4 | REASONED |
-| upload-time: Test slow/multiple uploads and coordinate server size/time limits. Per-request bounds do not replace capacity controls or rate limiting. | PHP documentation unknown | REASONED |
-| fpm-timeout: request_terminate_timeout defaults 0, disabled; example selects 60s as app policy and kills overlong workers. | PHP native configuration 8.x | REASONED |
-| fpm-finished: request_terminate_timeout_track_finished defaults no; yes extends the limit past fastcgi_finish_request and into shutdown work. | PHP native configuration 8.x | REASONED |
-| session-gc: Native gc_maxlifetime defaults 1440 seconds; probabilistic collection is not auth expiry. Use timestamp expiry/cleanup; shared paths can inherit shorter lifetimes. | PHP native configuration 8.x; PHP documentation unknown | REASONED |
-| session-lifetime: Native cookie_lifetime defaults 0, a browser-session cookie; Laravel uses config/session.php rather than native storage/lifetime directives. | PHP native configuration 8.x; Laravel 12.x | REASONED |
-| session-only-cookies: session.use_only_cookies defaults 1; retain it to exclude GET/POST IDs. Disabling it is deprecated from PHP 8.4. | PHP native configuration 8.x | REASONED |
-| session-storage: Default files handler needs a private worker-writable directory outside the document root; dedicated-account mode 0700, default file mode 0600, separate untrusted-app identities. | PHP native configuration 8.x | REASONED |
-| session-sid-length: PHP 8.x session.sid_length defaults 32; changes are deprecated from 8.4. PHP 8.3 production template sets 26. | PHP native configuration 8.x; PHP production template 8.3 | REASONED |
-| session-sid-bits: PHP 8.x session.sid_bits_per_character defaults 4; changes are deprecated from 8.4. PHP 8.3 production template sets 5. | PHP native configuration 8.x; PHP production template 8.3 | REASONED |
-| verify-listener: Inventory all FPM listeners: Unix socket or loopback TCP 9000 only. | PHP native configuration 8.x | REASONED |
-| verify-tls: The TLS probe distinguishes cited exit=60 certificate failure from reasoned exit=0 success without -k; linked fronting-server guides supply TLS configuration. | curl manual 7.75.0 | REASONED |
-| verify-cookies: Inspect login Set-Cookie for Secure, HttpOnly and SameSite=Lax. | PHP native configuration 8.x; Laravel 12.x | REASONED |
-| verify-auth: Anonymous protected routes must deny or redirect to login without protected content; require authorized success and isolated auth-removal control. Unrelated redirects/errors and anonymous Set-Cookie do not establish authentication. | Laravel 12.x | REASONED |
-| verify-config: Inspect CLI ini/settings against installed E_ALL; CLI does not establish web SAPI/FPM settings. Do not publish phpinfo. | PHP documentation unknown; PHP native configuration 8.x | REASONED |
-| verify-banner: Fixture should give HTTP 200; expose_php On should show PHP header unless stripped, Off must hide it. Proxy stripping in both states needs SAPI inspection. | PHP documentation unknown | REASONED |
-| verify-error: Native warning fixture must disclose canary with display_errors On, then return reached marker without diagnostics and log the warning after hardening. Errors/missing logs/blank bodies are inconclusive; startup/parse errors untested. | PHP native configuration 8.x; PHP documentation unknown | REASONED |
-| verify-laravel-error: Repeat body probe with controlled Laravel exception, rebuild config cache after APP_DEBUG changes, and require generic response plus protected log; native fixture does not test framework errors. | Laravel 12.x | REASONED |
-| verify-curl-version: The exitcode and errormsg write-out variables require curl 7.75.0 or later per the curl manual. | curl manual 7.75.0 | REASONED |
+Components (recorded basis):
+
+- php: PHP documentation, unknown
+- curl: curl manual, 7.75.0
+- php8: PHP native configuration, 8.x
+- template84: PHP production template, 8.4
+- template83: PHP production template, 8.3
+- laravel: Laravel, 12.x
+- debugbar: Laravel Debugbar, unknown
+- fail2ban: fail2ban, 1.1.1
+
+Claims (full source mapping in the front matter):
+
+- fpm-private (REASONED; php8): FPM requires listen per pool; exposed FastCGI permits code execution. Use a Unix socket or loopback TCP 9000; never publish container FPM.
+- fpm-clients (REASONED; php8): listen.allowed_clients defaults unset, accepting any address; explicitly allow loopback for TCP.
+- fpm-socket (REASONED; php8): Unix socket access uses listen.owner, listen.group and listen.mode, default 0660.
+- cookie-secure (REASONED; php8): Native session.cookie_secure defaults 0; enable it.
+- cookie-httponly (REASONED; php8): Native session.cookie_httponly defaults 0; enable it.
+- cookie-samesite (REASONED; php8): Native session.cookie_samesite defaults empty; choose Lax or Strict.
+- session-strict (REASONED; php8): session.use_strict_mode defaults 0; enable it.
+- session-regenerate (REASONED; php): Regenerate IDs after login/privilege changes; delete_old_session defaults false. Timestamp expiry avoids immediate deletion.
+- passwords (REASONED; php): PASSWORD_DEFAULT currently uses bcrypt; Argon2id needs an Argon2 build. Verify/rehash passwords and allow growing hashes, suggested 255 bytes.
+- plain-auth (REASONED; php, fail2ban): Guide assessment: the cited PHP password and session functions provide no login-attempt throttling; this is not a claim about every PHP extension or application. Guide advice: apply a proxy limiter or a fail2ban jail over an application/proxy failure log, following authentication.md requirements. nginx.md section 4 documents limit_req; caddy.md section 4 states that stock Caddy has no rate limiter; apache.md gives no limiter configuration. fail2ban 1.1.1 documents filter and logpath; its nginx-limit-req jail reads the nginx error log and its filter matches limiting or delaying entries. These sources do not establish a filter for this PHP application's login form or its log format. Guide advice: for plain-PHP MFA, use a TOTP library or an identity layer in front whose policy requires MFA; mfa.md covers identity-layer options and enforcement requirements, but its library list has no PHP TOTP library. No PHP TOTP library is pinned here.
+- laravel-debug (REASONED; laravel): Set APP_ENV=production, APP_DEBUG=false and HTTPS APP_URL; debug mode exposes configuration values.
+- laravel-key (REASONED; laravel): Generate APP_KEY with artisan key:generate; list old keys in APP_PREVIOUS_KEYS during rotation.
+- laravel-secure (REASONED; laravel): Set SESSION_SECURE_COOKIE=true; the session secure configuration has no default.
+- laravel-httponly (REASONED; laravel): SESSION_HTTP_ONLY defaults true; retain it.
+- laravel-samesite (REASONED; laravel): SESSION_SAME_SITE defaults lax; strict suits admin-only apps.
+- laravel-proxy (REASONED; laravel): Laravel 12.x trustProxies names proxies in bootstrap/app.php; wildcard trust requires exclusive proxy reachability.
+- laravel-urls (REASONED; laravel): URL::forceHttps() or forceScheme(https) in a provider boot method forces generated HTTPS URLs.
+- laravel-hashes (REASONED; laravel): Hash::make/check default to bcrypt; HASH_DRIVER=argon2id switches it and needsRehash detects upgrades. HASH_VERIFY=false disables rejection of other algorithms.
+- laravel-limiter (REASONED; laravel): Define a five-per-minute login limiter keyed by email plus IP; attach throttle:login to the real route.
+- fortify-login (REASONED; laravel): 12.x starter kits use Fortify, which throttles username plus IP and regenerates session IDs on login; standalone Fortify omits views.
+- fortify-mfa (REASONED; laravel): Fortify twoFactorAuthentication with confirm and confirmPassword supplies TOTP and recovery codes.
+- socialite (REASONED; laravel): Socialite supplies OAuth providers; community packages supply OIDC. Use HTTPS callbacks and linked allowlist/token checks.
+- laravel-cache (REASONED; laravel): Keep plaintext .env untracked; build config/route caches after production inputs and rebuild on changes. Cached config does not load .env; use env only in config files.
+- laravel-hosts (REASONED; laravel): Laravel accepts arbitrary Host headers by default; restrict hosts at the server and add anchored TrustHosts with subdomains:false.
+- debug-tools (REASONED; laravel, debugbar): Omit Telescope and Debugbar from production; Telescope local-only installation includes conditional provider registration.
+- curl-peer (REASONED; php): CURLOPT_SSL_VERIFYPEER defaults true; retain certificate verification.
+- curl-host (REASONED; php): CURLOPT_SSL_VERIFYHOST defaults 2; retain hostname checks and use CURLOPT_CAINFO for an internal CA.
+- display-errors (REASONED; php8): PHP 8.x display_errors defaults On; set Off before execution. ini_set cannot hide a fatal error preventing it from running.
+- startup-errors (REASONED; php8): display_startup_errors defaults On since PHP 8.0.0, previously Off; set Off.
+- log-errors (REASONED; php8): log_errors defaults Off; enable it with a protected, pre-created, worker-writable log outside the document root and rotation. Unset error_log uses the SAPI logger.
+- error-reporting (REASONED; php8): error_reporting defaults E_ALL since PHP 8.0.0; retain reporting into logs. Package/template/deployment overrides can differ.
+- php-banner (REASONED; php8, php): expose_php defaults On; Off suppresses PHP own X-Powered-By header, not other layers or all application identification.
+- production-template (REASONED; template84): PHP 8.4 production template disables display and enables logging, but uses E_ALL &amp; ~E_DEPRECATED and leaves expose_php enabled.
+- disable-functions (REASONED; php8): disable_functions defaults empty; test the listed process-function restrictions. Since PHP 8.0 definitions disappear and userland can redefine them; internal functions only, not a security boundary.
+- url-fopen (REASONED; php): allow_url_fopen defaults On; disable unnecessary URL wrappers after compatibility tests, not as a general egress policy.
+- url-include (REASONED; php): allow_url_include defaults Off, deprecated since PHP 7.4; retain Off. URL includes also require allow_url_fopen.
+- basedir (REASONED; php8): open_basedir defaults NULL; allow required paths, retain OS isolation and account for disabled realpath caching. PHP 8.3 rejects runtime .. components.
+- fpm-extensions (REASONED; php8): PHP 8.x FPM security.limit_extensions defaults .php .phar; restrict to .php, which still permits uploaded PHP dispatched by the server.
+- upload-execution (REASONED; php8, laravel): Separate writable uploads from code, preferably outside the document root; server mappings must forbid PHP execution, including aliases/symlinks.
+- laravel-storage (REASONED; laravel): Laravel 12.x local disk defaults storage/app/private; public disk uses storage/app/public via public/storage, which does not itself prevent PHP execution.
+- upload-size (REASONED; php8): upload_max_filesize defaults 2M per file; post_max_size must allow multipart overhead.
+- post-size (REASONED; php8): post_max_size defaults 8M; excess leaves POST and FILES empty and must be rejected by the app.
+- upload-count (REASONED; php8, php): max_file_uploads defaults 20; twenty maximum-sized files need not fit the POST limit.
+- memory-limit (REASONED; php8): memory_limit defaults 128M, should generally exceed post_max_size, and -1 removes the bound.
+- input-vars (REASONED; php8): max_input_vars defaults 1000 separately for GET, POST and COOKIE; excess is warned/truncated, not a general JSON limit.
+- execution-time (REASONED; php8): max_execution_time defaults 30 for web and 0 for CLI; platform/build accounting can exclude I/O, not a portable wall-clock deadline.
+- input-time (REASONED; php8, template84): max_input_time defaults -1, using max_execution_time; 0 is unlimited. Example and production template select 60 seconds.
+- upload-time (REASONED; php): Test slow/multiple uploads and coordinate server size/time limits. Per-request bounds do not replace capacity controls or rate limiting.
+- fpm-timeout (REASONED; php8): request_terminate_timeout defaults 0, disabled; example selects 60s as app policy and kills overlong workers.
+- fpm-finished (REASONED; php8): request_terminate_timeout_track_finished defaults no; yes extends the limit past fastcgi_finish_request and into shutdown work.
+- session-gc (REASONED; php8, php): Native gc_maxlifetime defaults 1440 seconds; probabilistic collection is not auth expiry. Use timestamp expiry/cleanup; shared paths can inherit shorter lifetimes.
+- session-lifetime (REASONED; php8, laravel): Native cookie_lifetime defaults 0, a browser-session cookie; Laravel uses config/session.php rather than native storage/lifetime directives.
+- session-only-cookies (REASONED; php8): session.use_only_cookies defaults 1; retain it to exclude GET/POST IDs. Disabling it is deprecated from PHP 8.4.
+- session-storage (REASONED; php8): Default files handler needs a private worker-writable directory outside the document root; dedicated-account mode 0700, default file mode 0600, separate untrusted-app identities.
+- session-sid-length (REASONED; php8, template83): PHP 8.x session.sid_length defaults 32; changes are deprecated from 8.4. PHP 8.3 production template sets 26.
+- session-sid-bits (REASONED; php8, template83): PHP 8.x session.sid_bits_per_character defaults 4; changes are deprecated from 8.4. PHP 8.3 production template sets 5.
+- verify-listener (REASONED; php8): Inventory all FPM listeners: Unix socket or loopback TCP 9000 only.
+- verify-tls (REASONED; curl): The TLS probe distinguishes cited exit=60 certificate failure from reasoned exit=0 success without -k; linked fronting-server guides supply TLS configuration.
+- verify-cookies (REASONED; php8, laravel): Inspect login Set-Cookie for Secure, HttpOnly and SameSite=Lax.
+- verify-auth (REASONED; laravel): Anonymous protected routes must deny or redirect to login without protected content; require authorized success and isolated auth-removal control. Unrelated redirects/errors and anonymous Set-Cookie do not establish authentication.
+- verify-config (REASONED; php, php8): Inspect CLI ini/settings against installed E_ALL; CLI does not establish web SAPI/FPM settings. Do not publish phpinfo.
+- verify-banner (REASONED; php): Fixture should give HTTP 200; expose_php On should show PHP header unless stripped, Off must hide it. Proxy stripping in both states needs SAPI inspection.
+- verify-error (REASONED; php8, php): Native warning fixture must disclose canary with display_errors On, then return reached marker without diagnostics and log the warning after hardening. Errors/missing logs/blank bodies are inconclusive; startup/parse errors untested.
+- verify-laravel-error (REASONED; laravel): Repeat body probe with controlled Laravel exception, rebuild config cache after APP_DEBUG changes, and require generic response plus protected log; native fixture does not test framework errors.
+- verify-curl-version (REASONED; curl): The exitcode and errormsg write-out variables require curl 7.75.0 or later per the curl manual.
 <!-- version-basis:end -->
 
 PHP normally runs behind a web server (Apache with php-fpm or mod_php, nginx or Caddy with php-fpm), so TLS terminates there: follow [apache.md](apache.md), [nginx.md](nginx.md), or [caddy.md](caddy.md) with a certificate from [free-certificates.md](free-certificates.md). The PHP-specific exposures are the php-fpm FastCGI socket (the PHP manual: "An exposed FastCGI endpoint allows arbitrary code execution"), session cookies that PHP ships without `Secure`, `HttpOnly`, or `SameSite` (all three default off), `APP_DEBUG=true` left on in production, and cURL calls with certificate checks turned off.

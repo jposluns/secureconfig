@@ -131,45 +131,57 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| default: Stock memcached has no authentication and binds INADDR_ANY on TCP11211; isolate it from the internet and untrusted users. | memcached documentation unknown; memcached source 1.6.45 | REASONED |
-| releases: Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases. | memcached security release notes unknown; memcached documentation unknown; memcached release notes revision 780e280d1a7f98f2981ffeb357ef0c9b182a9844 | REASONED |
-| bind: Use loopback or an intended private address with firewall restrictions; repeated -l/address-specific ports can add listeners that require inspection. | memcached source 1.6.45; memcached documentation unknown | REASONED |
-| ports: Set -p 11211 -U 0 explicitly; zero disables the corresponding transport and changing TCP port provides no access control. | memcached source 1.6.45 | REASONED |
-| udp-default: UDP defaults disabled since 1.5.6; keep -U 0 against inherited settings and reflection/amplification exposure. | memcached documentation unknown | REASONED |
-| account: Run a dedicated unprivileged account; -u changes identity only when launched as root and does not create the account. | memcached source 1.6.45 | REASONED |
-| syscalls: Optional drop_privileges adds build/platform-dependent syscall restrictions, defaults disabled and needs deployment testing. | memcached source 1.6.45 | REASONED |
-| connections: -c bounds connections, not request rate; upstream default 1024, example 256 with operational headroom. | memcached source 1.6.45; memcached documentation unknown | REASONED |
-| memory: -m budgets item memory, not total process memory; upstream default 64 MB, example 256 with extra process overhead. | memcached source 1.6.45; memcached documentation unknown | REASONED |
-| idle: Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15. | memcached source 1.6.45; memcached ASCII authentication release notes unknown | REASONED |
-| sasl-build: SASL support dates from 1.4.3 and requires --enable-sasl, advertised -S and compatible Cyrus mechanism/client; SASL PLAIN needs TLS. | memcached documentation unknown | REASONED |
-| sasl-secrets: saslpasswd2 prompts; protect the Cyrus password database for the service account. SASL authenticates without encryption and does not justify public exposure. | memcached documentation unknown | REASONED |
-| sasl-protocol: -S gates binary protected operations but permits VERSION/negotiation; ASCII per-listener overrides or negotiation bypass SASL, so test every listener. | memcached source 1.6.45 | REASONED |
-| ascii-auth: Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization. | memcached documentation unknown; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f; memcached ASCII authentication release notes unknown | REASONED |
-| ascii-limits: -Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup. | memcached ASCII authentication release notes unknown; memcached source 1.6.45 | REASONED |
-| tls: TLS dates from 1.5.13, needs --enable-tls/OpenSSL1.1.1+ and compatible clients; default off, runtime -Z uses PEM chain/key extended options. | memcached documentation unknown | REASONED |
-| mtls: ssl_verify_mode defaults 0/no required client cert; mode 2 with ssl_ca_cert requires certificates, adding machine possession, not human MFA. | memcached documentation unknown | REASONED |
-| notls: A notls loopback listener bypasses TLS but does not remove -S binary requirements; do not add plaintext merely for text administration. | memcached documentation unknown; memcached source 1.6.45 | REASONED |
-| reload: Text refresh_certs/settings do not apply directly to -S; 1.6.45 SIGHUP reloads configured paths and authenticated binary STAT inspects settings; existing sessions persist. | memcached TLS design 4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969; memcached source 1.6.45 | REASONED |
-| flush: -F blocks cache-wide invalidation but preserves ordinary writes/deletes; rejected flush increments cmd_flush, so inspect response and retained item. | memcached source 1.6.45; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
-| shutdown: Leave -A absent to keep ASCII shutdown disabled; inspect inherited arguments. | memcached source 1.6.45; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
-| dump: 1.6.45 -X blocks cachedump, stats detail and crawler meta/mgdump; ordinary statistics and known-key reads remain available. | memcached source 1.6.45 | REASONED |
-| watch: -W blocks watch and dates from 1.5.21; preserve network/authentication protection for other remaining capabilities. | memcached watch-control release notes unknown; memcached source 1.6.45 | REASONED |
-| crawler: no_lru_crawler is not an authorization boundary; protocol commands can re-enable the background crawler. | memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
-| verify-inventory: Check executable/build capabilities, process account and every TCP/UDP/publication listener; pair intended listeners with allowed-client protected operations. | memcached source 1.6.45; memcached documentation unknown | REASONED |
-| verify-budgets: Effective example maxconns/maxbytes are 256/268435456 versus upstream 1024/67108864; verify disabled UDP/shutdown/flush/dump and matched SET/GET, not workload capacity. | memcached source 1.6.45 | REASONED |
-| verify-isolation: Disallowed observer must lose TCP11211 while allowed observer still completes a protected request; timeout alone is inconclusive without target/listener/firewall evidence. | memcached documentation unknown | REASONED |
-| verify-text: Loopback plaintext stats/settings end with END only in the applicable text configuration; SASL/TLS/private-bind failures prove none of those controls independently. | memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f; memcached source 1.6.45 | REASONED |
-| verify-tls: Plaintext cannot complete TLS; fixed endpoint must verify CA and IP/DNS identity and support application operations; chain-only trust is insufficient. | memcached documentation unknown; OpenSSL CLI 3.0 | REASONED |
-| verify-mtls: Under verify mode 2, only a valid client certificate completes the application request; server Verification: OK can precede client rejection. | memcached documentation unknown | REASONED |
-| verify-reload: After replacing material and SIGHUP, new connections must present the new certificate and complete an application request; errors or old certificates fail. | memcached TLS design 4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969; memcached source 1.6.45 | REASONED |
-| verify-flush: Disposable text/binary comparisons change flush success and lost item to explicit refusal and retained item; initial SET/GET and ordinary operations stay usable. | memcached source 1.6.45; memcached documentation unknown | REASONED |
-| verify-dump: Populated disposable fixtures must change dump acceptance to explicit refusal; empty dumps, crawler problems and protocol failures do not prove -X. | memcached source 1.6.45; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
-| verify-watch: Exposed watch acceptance must become explicit refusal; watcher timeout alone does not demonstrate -W. | memcached source 1.6.45 | REASONED |
-| verify-shutdown: Disposable -A baseline stops; fixed state refuses shutdown while the same process answers statistics; disable restart masking and never use a live cache. | memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f; memcached source 1.6.45 | REASONED |
-| verify-auth: Fresh no-auth/wrong-password protected GETs must fail while correct SASL or ASCII token login returns a known item; binary SASL auth-required status is 0x20. | memcached documentation unknown; memcached source 1.6.45; memcached protocol source 7278bdee96329915bbc87731ba005095453f5c2f | REASONED |
-| local-guards: Historical shell/scanner checks and invalid-input rejection exercised guards and instrumented dispatch, not memcached startup or service behavior. | memcached source 1.6.45; memcached documentation unknown | DEMONSTRATED |
+Components (recorded basis):
+
+- docs: memcached documentation, unknown
+- openssl: OpenSSL CLI, 3.0
+- stable: memcached source, 1.6.45
+- protocol: memcached protocol source, 7278bdee96329915bbc87731ba005095453f5c2f
+- reload: memcached TLS design, 4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969
+- ascii: memcached ASCII authentication release notes, unknown
+- watch: memcached watch-control release notes, unknown
+- security: memcached security release notes, unknown
+- release-notes-source: memcached release notes revision, 780e280d1a7f98f2981ffeb357ef0c9b182a9844
+
+Claims (full source mapping in the front matter):
+
+- default (REASONED; docs, stable): Stock memcached has no authentication and binds INADDR_ANY on TCP11211; isolate it from the internet and untrusted users.
+- releases (REASONED; security, docs, release-notes-source): Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases.
+- bind (REASONED; stable, docs): Use loopback or an intended private address with firewall restrictions; repeated -l/address-specific ports can add listeners that require inspection.
+- ports (REASONED; stable): Set -p 11211 -U 0 explicitly; zero disables the corresponding transport and changing TCP port provides no access control.
+- udp-default (REASONED; docs): UDP defaults disabled since 1.5.6; keep -U 0 against inherited settings and reflection/amplification exposure.
+- account (REASONED; stable): Run a dedicated unprivileged account; -u changes identity only when launched as root and does not create the account.
+- syscalls (REASONED; stable): Optional drop_privileges adds build/platform-dependent syscall restrictions, defaults disabled and needs deployment testing.
+- connections (REASONED; stable, docs): -c bounds connections, not request rate; upstream default 1024, example 256 with operational headroom.
+- memory (REASONED; stable, docs): -m budgets item memory, not total process memory; upstream default 64 MB, example 256 with extra process overhead.
+- idle (REASONED; stable, ascii): Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15.
+- sasl-build (REASONED; docs): SASL support dates from 1.4.3 and requires --enable-sasl, advertised -S and compatible Cyrus mechanism/client; SASL PLAIN needs TLS.
+- sasl-secrets (REASONED; docs): saslpasswd2 prompts; protect the Cyrus password database for the service account. SASL authenticates without encryption and does not justify public exposure.
+- sasl-protocol (REASONED; stable): -S gates binary protected operations but permits VERSION/negotiation; ASCII per-listener overrides or negotiation bypass SASL, so test every listener.
+- ascii-auth (REASONED; docs, protocol, ascii): Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization.
+- ascii-limits (REASONED; ascii, stable): -Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup.
+- tls (REASONED; docs): TLS dates from 1.5.13, needs --enable-tls/OpenSSL1.1.1+ and compatible clients; default off, runtime -Z uses PEM chain/key extended options.
+- mtls (REASONED; docs): ssl_verify_mode defaults 0/no required client cert; mode 2 with ssl_ca_cert requires certificates, adding machine possession, not human MFA.
+- notls (REASONED; docs, stable): A notls loopback listener bypasses TLS but does not remove -S binary requirements; do not add plaintext merely for text administration.
+- reload (REASONED; reload, stable): Text refresh_certs/settings do not apply directly to -S; 1.6.45 SIGHUP reloads configured paths and authenticated binary STAT inspects settings; existing sessions persist.
+- flush (REASONED; stable, protocol): -F blocks cache-wide invalidation but preserves ordinary writes/deletes; rejected flush increments cmd_flush, so inspect response and retained item.
+- shutdown (REASONED; stable, protocol): Leave -A absent to keep ASCII shutdown disabled; inspect inherited arguments.
+- dump (REASONED; stable): 1.6.45 -X blocks cachedump, stats detail and crawler meta/mgdump; ordinary statistics and known-key reads remain available.
+- watch (REASONED; watch, stable): -W blocks watch and dates from 1.5.21; preserve network/authentication protection for other remaining capabilities.
+- crawler (REASONED; protocol): no_lru_crawler is not an authorization boundary; protocol commands can re-enable the background crawler.
+- verify-inventory (REASONED; stable, docs): Check executable/build capabilities, process account and every TCP/UDP/publication listener; pair intended listeners with allowed-client protected operations.
+- verify-budgets (REASONED; stable): Effective example maxconns/maxbytes are 256/268435456 versus upstream 1024/67108864; verify disabled UDP/shutdown/flush/dump and matched SET/GET, not workload capacity.
+- verify-isolation (REASONED; docs): Disallowed observer must lose TCP11211 while allowed observer still completes a protected request; timeout alone is inconclusive without target/listener/firewall evidence.
+- verify-text (REASONED; protocol, stable): Loopback plaintext stats/settings end with END only in the applicable text configuration; SASL/TLS/private-bind failures prove none of those controls independently.
+- verify-tls (REASONED; docs, openssl): Plaintext cannot complete TLS; fixed endpoint must verify CA and IP/DNS identity and support application operations; chain-only trust is insufficient.
+- verify-mtls (REASONED; docs): Under verify mode 2, only a valid client certificate completes the application request; server Verification: OK can precede client rejection.
+- verify-reload (REASONED; reload, stable): After replacing material and SIGHUP, new connections must present the new certificate and complete an application request; errors or old certificates fail.
+- verify-flush (REASONED; stable, docs): Disposable text/binary comparisons change flush success and lost item to explicit refusal and retained item; initial SET/GET and ordinary operations stay usable.
+- verify-dump (REASONED; stable, protocol): Populated disposable fixtures must change dump acceptance to explicit refusal; empty dumps, crawler problems and protocol failures do not prove -X.
+- verify-watch (REASONED; stable): Exposed watch acceptance must become explicit refusal; watcher timeout alone does not demonstrate -W.
+- verify-shutdown (REASONED; protocol, stable): Disposable -A baseline stops; fixed state refuses shutdown while the same process answers statistics; disable restart masking and never use a live cache.
+- verify-auth (REASONED; docs, stable, protocol): Fresh no-auth/wrong-password protected GETs must fail while correct SASL or ASCII token login returns a known item; binary SASL auth-required status is 0x20.
+- local-guards (DEMONSTRATED; stable, docs): Historical shell/scanner checks and invalid-input rejection exercised guards and instrumented dispatch, not memcached startup or service behavior.
 <!-- version-basis:end -->
 
 Memcached has no authentication by default, and its `-l` option defaults to `INADDR_ANY`, so a stock start listens on every interface on TCP 11211 and serves any client that connects. The project's own wording: memcached "does not spend much, if any, effort in ensuring its defensibility from random internet connections", so it "must not" be exposed to the internet or to untrusted users. The practical control is network isolation; SASL and TLS exist, but each needs a build compiled with that feature. SASL adds no encryption; SASL PLAIN credentials need TLS. See the [server configuration documentation](https://docs.memcached.org/serverguide/configuring/) and [SASL documentation](https://docs.memcached.org/protocols/binarysasl/).

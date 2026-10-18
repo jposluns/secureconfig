@@ -72,6 +72,63 @@ class VersionBasisTests(unittest.TestCase):
         self.assertEqual(vb.split(BODY), (None, BODY))
 
 
+    def test_summary_lists_and_order(self):
+        data = fixture()
+        sha = '4ba3cc0e2ebec61b726b227fdf51e55f4a502182'
+        data['components']['product']['basis'] = sha
+        data['components']['aux'] = {'name': 'Aux <&|`>', 'basis': 'unknown',
+                                     'sources': {SID: URL}}
+        data['claims']['control']['components'] = ['aux', 'product']
+        data['claims']['control']['sources'].append('aux:' + SID)
+        data['claims']['another'] = dict(data['claims']['control'],
+            text='Observed control.', status='DEMONSTRATED', verify=[],
+            evidence='Observed refusal, then successful authorized request.')
+        body = BODY.replace('- Product v1.0:', f'- Product {sha}:')
+        data['body_sha256'] = vb.digest(body)
+        rendered = vb.updated(document(data, body))
+        summary = vb.render(data)
+        self.assertEqual(summary, '\n'.join([
+            vb.START, '**Version basis**', '', vb.ADVICE, '',
+            'Metadata reviewed 2026-09-26; documentation checked 2026-09 '
+            '(exact day unknown). DEMONSTRATED refers to historical evidence in this guide; '
+            'REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.',
+            '', 'Components (recorded basis):', '',
+            f'- product: Product, {sha}', '- aux: Aux &lt;&amp;&#124;&#96;&gt;, unknown',
+            '', 'Claims (full source mapping in the front matter):', '',
+            '- control (REASONED; aux, product): Requires authentication.',
+            '- another (DEMONSTRATED; aux, product): Observed control.', vb.END]))
+        metadata, full_body = vb.split(rendered)
+        self.assertEqual(metadata, data)
+        self.assertEqual(full_body, body.replace('# Fixture\n\n', '# Fixture\n\n' + summary + '\n\n', 1))
+        self.assertEqual(vb.without_summary(full_body), body)
+        self.assertEqual(vb.updated(rendered), rendered)
+        data['components']['product']['basis'] = '<&|`>'
+        self.assertIn('- product: Product, &lt;&amp;&#124;&#96;&gt;', vb.render(data))
+
+    def test_claim_text_preserves_cell_output_and_list_structure(self):
+        try:
+            parser = gate_parser(required=True)
+        except ParserUnavailable as exc:
+            if os.environ.get('CI'):
+                raise
+            self.skipTest(str(exc))
+        for text in ('- item', '+ item', '* item', '# heading', '> quote', '1. item',
+                     '1) item', '---', '~~~', '**bold** _emphasis_',
+                     '[link](https://example.com)', '![image](https://example.com)',
+                     r'\*literal\* &amp; <b> | `code`', 'word\u2028- item'):
+            with self.subTest(text=text):
+                data = fixture()
+                data['claims']['control']['text'] = text
+                rendered = vb.updated(document(data))
+                line = next(line for line in rendered.split('\n')
+                            if line.startswith('- control ('))
+                tokens = parser.parse(line)
+                self.assertEqual([token.type for token in tokens],
+                                 ['bullet_list_open', 'list_item_open', 'paragraph_open',
+                                  'inline', 'paragraph_close', 'list_item_close', 'bullet_list_close'])
+                self.assertEqual(line, '- control (REASONED; product): ' + vb.cell(text))
+                self.assertEqual(vb.split(rendered)[0], data)
+
     def test_normal_string_fields(self):
         data = fixture()
         data['claims']['control'].update(
@@ -944,10 +1001,11 @@ class RoundTwoTests(unittest.TestCase):
 
     def test_rebind_does_not_refresh_stale_summary(self):
         raw = vb.updated(document(fixture()))
-        raw = raw.replace('control: Requires authentication.', 'control: Stale summary.')
+        raw = raw.replace('control (REASONED; product): Requires authentication.',
+                          'control (REASONED; product): Stale summary.')
         raw += 'A reviewed qualification.\n'
         result = vb.rebound(raw)
-        self.assertIn('control: Stale summary.', result)
+        self.assertIn('control (REASONED; product): Stale summary.', result)
         self.assertNotEqual(vb.updated(result), result)
 
     def test_multiline_emission(self):

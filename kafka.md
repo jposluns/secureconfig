@@ -139,49 +139,59 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| plaintext: Default listener is PLAINTEXT://:9092 as of 4.3.1. | Kafka listener default 4.3.1 | REASONED |
-| internal-default: security.inter.broker.protocol defaults to PLAINTEXT. | Kafka documentation 4.3 | REASONED |
-| authorizer-default: No authorizer by default; reachable clients can read, write, create and delete topics. | Kafka documentation 4.3 | REASONED |
-| roles: Examples target 4.3; 4.0+ is KRaft-only; critical deployments should separate broker/controller roles. | Kafka documentation 4.3 | REASONED |
-| listeners: CLIENT 9093 uses SASL_SSL; private INTERNAL 9095 and CONTROLLER 9094 use mutual TLS; remove plaintext. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| advertise: Advertise broker CLIENT/INTERNAL only; broker-only nodes still need outbound controller security. | Kafka documentation 4.3 | REASONED |
-| listener-selection: Use inter.broker.listener.name without security.inter.broker.protocol; lowercase listener prefixes must match. | Kafka documentation 4.3 | REASONED |
-| quorum: Dynamic quorum bootstrap is not static-voter migration; reuse cluster ID and use the documented membership workflow. | Kafka documentation 4.3 | REASONED |
-| controller-scram: KAFKA-15513 lists 3.5.1/3.6.0 and no fix; it does not prove failure on every 4.3 deployment. | Apache Kafka issue tracker and KIPs unknown | REASONED |
-| tls-files: Protect per-node keystores, truststores, keys and properties before writing secrets; require matching SANs. | Kafka documentation 4.3 | REASONED |
-| pem: PEM is supported since 2.7.0; PKCS#8 key passwords use ssl.key.password, not PEM store passwords. | Kafka documentation 4.3 | REASONED |
-| hostname: Hostname verification defaults on since 2.0.0; leave it enabled. | Kafka documentation 4.3 | REASONED |
-| client-cert: SASL_SSL needs listener-prefixed ssl.client.auth; none is default, requested is optional, required enforces mTLS. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| tls-protocols: Generated 4.3 reference defaults ssl.enabled.protocols to TLSv1.2,TLSv1.3. | Kafka documentation 4.3 | REASONED |
-| scram: Use distinct SCRAM-SHA-512 identities only over TLS; KRaft credentials reside in the metadata log. | Kafka documentation 4.3 | REASONED |
-| scram-files: Bootstrap through authorized internal mTLS; protected --add-config-file values omit brackets and need Java escaping. | Kafka source 4.3.0 | REASONED |
-| bootstrap-acl: StandardAuthorizer on every broker/controller denies by default; authorize exact node/admin principals before quorum startup. | Kafka documentation 4.3; Apache Kafka issue tracker and KIPs unknown | REASONED |
-| legacy-authorizer: Legacy 3.9 ZooKeeper uses kafka.security.authorizer.AclAuthorizer, not SimpleAclAuthorizer or the KRaft class. | Kafka legacy authorization 3.9 | REASONED |
-| topic-grants: Separate writer Write/Describe from reader Read/Describe and app-workers group Read; remove broader old grants. | Kafka documentation 4.3 | REASONED |
-| topic-create: Disable auto.create.topics.enable; this does not revoke explicit Create rights. | Kafka documentation 4.3 | REASONED |
-| producer-grants: --producer includes Create; use explicit writer grants and inspect wildcard, prefix and cluster ACLs. | Kafka documentation 4.3 | REASONED |
-| transactions: Grant the specific transactional ID; 4.3.0 non-transactional initialization also accepts topic Write without IdempotentWrite. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| quotas: Per-broker user byte quotas and request_percentage (one thread's time) need sizing; user/client overrides take precedence. | Kafka documentation 4.3 | REASONED |
-| connections: Client listener connection and connection-creation limits are separate from traffic quotas and internal health. | Kafka documentation 4.3 | REASONED |
-| mutation-quota: Conditional controller_mutation_rate bounds partition mutations, not throughput or permissions. | Kafka documentation 4.3 | REASONED |
-| logging: 4.0+ uses Log4j2; requested denials log at INFO, allows at DEBUG, some evaluations at TRACE; collect authentication separately. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| clients: Protect separate client properties; 4.3 CLI uses --command-config, including console producer/consumer. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| mfa: Kafka has no second-factor dialogue; client mTLS is a machine possession control; human access needs an MFA layer. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| redpanda: Protocol controls carry over, but Redpanda uses redpanda.yaml/rpk; check its own quotas, listeners and logging. | Redpanda documentation unknown | REASONED |
-| console: Console login needs configured OIDC/basic auth and enterprise licence; enabled features without valid licence show an expiry page. | Redpanda documentation unknown | REASONED |
-| verify-tls: Inventory role-specific listeners and verify hostname/chain; TLS errors differ from inconclusive DNS/local failures. | Kafka documentation 4.3; OpenSSL documentation 3.5 | REASONED |
-| verify-internal: Valid internal certificate must permit Kafka access; missing/untrusted certificates need TLS-attributed rejection. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| verify-controller: Controller valid/missing/untrusted certificate and allowed/disallowed-network pairs need logs; TLS alone proves no quorum health. | Kafka documentation 4.3; OpenSSL documentation 3.5 | REASONED |
-| verify-password: Authenticated control succeeds; plaintext is refused and wrong password reports SaslAuthenticationException, not merely nonzero exit. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| verify-acl: Require marker delivery and opposite-role operation denials; an empty consumer result is inconclusive. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| verify-idempotence: Only the negative producer probe sets enable.idempotence=false, so IdempotentWrite authorization cannot mask the topic-write denial; test override only. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| verify-default-deny: Authenticated low-user access to a fixture with no matching ACL must yield TopicAuthorizationException; inspect effective authorizer. | Kafka documentation 4.3 | REASONED |
-| verify-create: Application creation must be denied while administrator creation succeeds; inspect old literal Create grants too. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| verify-inspection: Inspect matching ACLs, user/client quotas and every broker's effective limits; listings do not establish enforcement. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| verify-quota: Matched bounded producer runs must deliver records and discriminate nonzero throttle metrics; other limits need separate workloads. | Kafka documentation 4.3; Kafka source 4.3.0 | REASONED |
-| verify-logs: Matched INFO/DEBUG requests need correlated denial/allow records; missing denial means collection failed. | Kafka source 4.3.0; Kafka documentation 4.3 | REASONED |
+Components (recorded basis):
+
+- default: Kafka listener default, 4.3.1
+- docs: Kafka documentation, 4.3
+- kafka-design: Apache Kafka issue tracker and KIPs, unknown
+- source: Kafka source, 4.3.0
+- legacy: Kafka legacy authorization, 3.9
+- redpanda: Redpanda documentation, unknown
+- openssl: OpenSSL documentation, 3.5
+
+Claims (full source mapping in the front matter):
+
+- plaintext (REASONED; default): Default listener is PLAINTEXT://:9092 as of 4.3.1.
+- internal-default (REASONED; docs): security.inter.broker.protocol defaults to PLAINTEXT.
+- authorizer-default (REASONED; docs): No authorizer by default; reachable clients can read, write, create and delete topics.
+- roles (REASONED; docs): Examples target 4.3; 4.0+ is KRaft-only; critical deployments should separate broker/controller roles.
+- listeners (REASONED; docs, source): CLIENT 9093 uses SASL_SSL; private INTERNAL 9095 and CONTROLLER 9094 use mutual TLS; remove plaintext.
+- advertise (REASONED; docs): Advertise broker CLIENT/INTERNAL only; broker-only nodes still need outbound controller security.
+- listener-selection (REASONED; docs): Use inter.broker.listener.name without security.inter.broker.protocol; lowercase listener prefixes must match.
+- quorum (REASONED; docs): Dynamic quorum bootstrap is not static-voter migration; reuse cluster ID and use the documented membership workflow.
+- controller-scram (REASONED; kafka-design): KAFKA-15513 lists 3.5.1/3.6.0 and no fix; it does not prove failure on every 4.3 deployment.
+- tls-files (REASONED; docs): Protect per-node keystores, truststores, keys and properties before writing secrets; require matching SANs.
+- pem (REASONED; docs): PEM is supported since 2.7.0; PKCS#8 key passwords use ssl.key.password, not PEM store passwords.
+- hostname (REASONED; docs): Hostname verification defaults on since 2.0.0; leave it enabled.
+- client-cert (REASONED; docs, source): SASL_SSL needs listener-prefixed ssl.client.auth; none is default, requested is optional, required enforces mTLS.
+- tls-protocols (REASONED; docs): Generated 4.3 reference defaults ssl.enabled.protocols to TLSv1.2,TLSv1.3.
+- scram (REASONED; docs): Use distinct SCRAM-SHA-512 identities only over TLS; KRaft credentials reside in the metadata log.
+- scram-files (REASONED; source): Bootstrap through authorized internal mTLS; protected --add-config-file values omit brackets and need Java escaping.
+- bootstrap-acl (REASONED; docs, kafka-design): StandardAuthorizer on every broker/controller denies by default; authorize exact node/admin principals before quorum startup.
+- legacy-authorizer (REASONED; legacy): Legacy 3.9 ZooKeeper uses kafka.security.authorizer.AclAuthorizer, not SimpleAclAuthorizer or the KRaft class.
+- topic-grants (REASONED; docs): Separate writer Write/Describe from reader Read/Describe and app-workers group Read; remove broader old grants.
+- topic-create (REASONED; docs): Disable auto.create.topics.enable; this does not revoke explicit Create rights.
+- producer-grants (REASONED; docs): --producer includes Create; use explicit writer grants and inspect wildcard, prefix and cluster ACLs.
+- transactions (REASONED; docs, source): Grant the specific transactional ID; 4.3.0 non-transactional initialization also accepts topic Write without IdempotentWrite.
+- quotas (REASONED; docs): Per-broker user byte quotas and request_percentage (one thread's time) need sizing; user/client overrides take precedence.
+- connections (REASONED; docs): Client listener connection and connection-creation limits are separate from traffic quotas and internal health.
+- mutation-quota (REASONED; docs): Conditional controller_mutation_rate bounds partition mutations, not throughput or permissions.
+- logging (REASONED; docs, source): 4.0+ uses Log4j2; requested denials log at INFO, allows at DEBUG, some evaluations at TRACE; collect authentication separately.
+- clients (REASONED; docs, source): Protect separate client properties; 4.3 CLI uses --command-config, including console producer/consumer.
+- mfa (REASONED; docs, source): Kafka has no second-factor dialogue; client mTLS is a machine possession control; human access needs an MFA layer.
+- redpanda (REASONED; redpanda): Protocol controls carry over, but Redpanda uses redpanda.yaml/rpk; check its own quotas, listeners and logging.
+- console (REASONED; redpanda): Console login needs configured OIDC/basic auth and enterprise licence; enabled features without valid licence show an expiry page.
+- verify-tls (REASONED; docs, openssl): Inventory role-specific listeners and verify hostname/chain; TLS errors differ from inconclusive DNS/local failures.
+- verify-internal (REASONED; docs, source): Valid internal certificate must permit Kafka access; missing/untrusted certificates need TLS-attributed rejection.
+- verify-controller (REASONED; docs, openssl): Controller valid/missing/untrusted certificate and allowed/disallowed-network pairs need logs; TLS alone proves no quorum health.
+- verify-password (REASONED; docs, source): Authenticated control succeeds; plaintext is refused and wrong password reports SaslAuthenticationException, not merely nonzero exit.
+- verify-acl (REASONED; docs, source): Require marker delivery and opposite-role operation denials; an empty consumer result is inconclusive.
+- verify-idempotence (REASONED; docs, source): Only the negative producer probe sets enable.idempotence=false, so IdempotentWrite authorization cannot mask the topic-write denial; test override only.
+- verify-default-deny (REASONED; docs): Authenticated low-user access to a fixture with no matching ACL must yield TopicAuthorizationException; inspect effective authorizer.
+- verify-create (REASONED; docs, source): Application creation must be denied while administrator creation succeeds; inspect old literal Create grants too.
+- verify-inspection (REASONED; docs, source): Inspect matching ACLs, user/client quotas and every broker's effective limits; listings do not establish enforcement.
+- verify-quota (REASONED; docs, source): Matched bounded producer runs must deliver records and discriminate nonzero throttle metrics; other limits need separate workloads.
+- verify-logs (REASONED; source, docs): Matched INFO/DEBUG requests need correlated denial/allow records; missing denial means collection failed.
 <!-- version-basis:end -->
 
 Kafka's broker defaults are `listeners=PLAINTEXT://:9092` (as of Kafka 4.3.1), `security.inter.broker.protocol=PLAINTEXT`, and no authorizer, so anyone who reaches port 9092 can read every topic, produce to it, and create or delete topics with no credential and no encryption. Property names below come from the Kafka 4.x documentation (KRaft mode).

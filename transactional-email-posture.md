@@ -163,39 +163,58 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| spf-identity: SPF TXT authorizes connecting IPs for MAIL FROM, or HELO with a null return path; it does not authenticate visible From without DMARC alignment. | SPF RFC 7208; DMARC RFC 9989 | REASONED |
-| spf-all: -all fails unmatched senders, ~all softfails and may still be delivered, while +all or bare all passes everyone. | SPF RFC 7208 | REASONED |
-| spf-record: Publish exactly one v=spf1 record per evaluated domain; multiple records produce permerror. | SPF RFC 7208 | REASONED |
-| spf-lookups: Ten DNS-lookup terms across recursion include include/a/mx/ptr/exists/redirect but exclude ip4/ip6/all; exceeding the limit gives permerror. An earlier matching mechanism stops evaluation; permerror is no SPF pass. | SPF RFC 7208 | REASONED |
-| dkim-signing: DKIM d= and s= select the _domainkey public key; signatures authenticate signed content for the signing domain, not encryption. Actual signing and verification are required for DMARC. | DKIM RFC 6376; DMARC RFC 9989 | REASONED |
-| dkim-crypto: Use rsa-sha256, never rsa-sha1; RFC 8301 sets a 1024-bit RSA floor and recommends at least 2048 bits, used here as the working minimum. Publish the full generated key, not the truncated example. | DKIM cryptography RFC 8301 | REASONED |
-| dkim-rotation: Publish a new selector before switching signing, retire the old selector after in-flight mail clears, and revoke with empty p=; inspect actual selector, delegation and rotation ownership. | DKIM RFC 6376 | REASONED |
-| dmarc-alignment: DMARC requires at least one passing and aligned SPF or DKIM result; relaxed adkim=r/aspf=r defaults to organizational-domain alignment, strict s requires exact domain matching. | DMARC RFC 9989 | REASONED |
-| dmarc-policy: p=none requests monitoring only, quarantine suspicious handling, and reject SMTP-time rejection; receivers retain local policy, so missing enforcement does not guarantee delivery. | DMARC RFC 9989 | REASONED |
-| dmarc-subdomains: sp covers existing subdomains and np non-existent ones, falling back np to sp to p; a subdomain-specific record can take precedence. Inventory explicit and inherited policies. | DMARC RFC 9989 | REASONED |
-| dmarc-discovery: RFC 9989 DNS tree walk discovers policy and organizational domain, replacing the former public-suffix-list method. | DMARC RFC 9989 | REASONED |
-| dmarc-testing: t=y weakens enforcement and t=n is the default; the illustrated enforcing record omits the tag. | DMARC RFC 9989 | REASONED |
-| dmarc-rollout: Monitor aggregate reports under p=none until legitimate streams align before moving to p=reject, or legitimate mail can be rejected. | DMARC RFC 9989; DMARC aggregate reporting RFC 9990 | REASONED |
-| dmarc-pct: RFC 9989, May 2026, obsoletes RFC 7489 and removes pct; legacy p=reject;pct=25 was partial application, not a current rollout control. | DMARC RFC 9989 | REASONED |
-| aggregate: Enable rua daily aggregate XML reporting to observe sending streams; an external reporting domain must authorize reports, and actual receipt/processing must be checked. | DMARC aggregate reporting RFC 9990 | REASONED |
-| failure-reports: ruf forensic reports can expose content, recipients and reset tokens; omit initially, settle redaction/retention/access before enabling, and authorize external destinations. | DMARC failure reporting RFC 9991 | REASONED |
-| starttls: 587 submission upgrades with STARTTLS before authentication; an opportunistic fallback can expose credentials to stripping, so require successful validated TLS. | Submission TLS RFC 8314 | REASONED |
-| implicit-tls: 465 submission starts with TLS and avoids STARTTLS stripping; RFC 8314 prefers implicit TLS going forward. | Submission TLS RFC 8314 | REASONED |
-| tls-validation: Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997. | Submission TLS RFC 8314; Submission TLS update RFC 8997 | REASONED |
-| port-25: 25 is inter-server relay or provider submission; identify the endpoint role instead of assuming that port 25 implies no authentication. | SMTP submission roles RFC 6409 | REASONED |
-| relay-policy: Reject unauthenticated untrusted forwarding to non-local recipients while allowing ordinary inbound local delivery and explicitly authorized relay paths. | SMTP relay controls RFC 2505 | REASONED |
-| submission-auth: After TLS, unauthenticated or invalidly authenticated submission must fail while authorized submission succeeds. | SMTP submission roles RFC 6409; Submission TLS RFC 8314 | REASONED |
-| sts-publication: MTA-STS TXT advertises the HTTPS text/plain policy at /.well-known/mta-sts.txt on mta-sts.example.com; the example selects enforce, an MX host and max_age 604800. | MTA-STS RFC 8461 | REASONED |
-| sts-enforcement: Only enforce constrains delivery; testing and none do not. MTA-STS protects mail arriving at the policy domain and depends on sending-server validation, not protection of the publishing domain outbound mail. | MTA-STS RFC 8461 | REASONED |
-| sts-refresh: Update the MTA-STS TXT id whenever the policy changes. | MTA-STS RFC 8461 | REASONED |
-| tls-reports: TLS-RPT _smtp._tls TXT with TLSRPTv1 and rua supplies reports, never enforcement. | TLS-RPT RFC 8460 | REASONED |
-| bimi: BIMI is optional logo display metadata requiring DMARC enforcement, not authentication or guaranteed rendering; deploy it last. | BIMI documentation unknown | REASONED |
-| verify-dns: Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. No DNS control was available. | SPF RFC 7208; DKIM RFC 6376; DMARC RFC 9989; MTA-STS RFC 8461; TLS-RPT RFC 8460; BIMI documentation unknown; BIND dig manual 9.18.39 | REASONED |
-| verify-tls: 587 STARTTLS and 465 implicit-TLS probes require validated TLS 1.2 or newer; TLS availability does not establish AUTH gating. Plaintext or stripped-STARTTLS AUTH must be refused; transport/TLS failures are inconclusive. No SMTP endpoint or container runtime was available. | Submission TLS RFC 8314; Submission TLS update RFC 8997; OpenSSL command documentation 3.0 | REASONED |
-| verify-alignment: Send a benign message to a controlled recipient and inspect receiver-trusted Authentication-Results, not a supplied header; require passing aligned SPF or DKIM and p=reject with subdomain coverage and no testing or legacy sampling. | Authentication-Results RFC 8601; DMARC RFC 9989 | REASONED |
-| verify-relay: In an operator-controlled environment, external MAIL FROM and non-local RCPT TO should receive 5xx; compare with authorized submission and ordinary local delivery. These expected outcomes remain unobserved. | SMTP relay controls RFC 2505; SMTP submission roles RFC 6409 | REASONED |
+Components (recorded basis):
+
+- spf: SPF, RFC 7208
+- dkim: DKIM, RFC 6376
+- crypto: DKIM cryptography, RFC 8301
+- dmarc: DMARC, RFC 9989
+- aggregate: DMARC aggregate reporting, RFC 9990
+- failure: DMARC failure reporting, RFC 9991
+- submission: Submission TLS, RFC 8314
+- roles: SMTP submission roles, RFC 6409
+- relay: SMTP relay controls, RFC 2505
+- sts: MTA-STS, RFC 8461
+- rpt: TLS-RPT, RFC 8460
+- results: Authentication-Results, RFC 8601
+- bimi: BIMI documentation, unknown
+- submission-update: Submission TLS update, RFC 8997
+- bind: BIND dig manual, 9.18.39
+- openssl: OpenSSL command documentation, 3.0
+
+Claims (full source mapping in the front matter):
+
+- spf-identity (REASONED; spf, dmarc): SPF TXT authorizes connecting IPs for MAIL FROM, or HELO with a null return path; it does not authenticate visible From without DMARC alignment.
+- spf-all (REASONED; spf): -all fails unmatched senders, ~all softfails and may still be delivered, while +all or bare all passes everyone.
+- spf-record (REASONED; spf): Publish exactly one v=spf1 record per evaluated domain; multiple records produce permerror.
+- spf-lookups (REASONED; spf): Ten DNS-lookup terms across recursion include include/a/mx/ptr/exists/redirect but exclude ip4/ip6/all; exceeding the limit gives permerror. An earlier matching mechanism stops evaluation; permerror is no SPF pass.
+- dkim-signing (REASONED; dkim, dmarc): DKIM d= and s= select the _domainkey public key; signatures authenticate signed content for the signing domain, not encryption. Actual signing and verification are required for DMARC.
+- dkim-crypto (REASONED; crypto): Use rsa-sha256, never rsa-sha1; RFC 8301 sets a 1024-bit RSA floor and recommends at least 2048 bits, used here as the working minimum. Publish the full generated key, not the truncated example.
+- dkim-rotation (REASONED; dkim): Publish a new selector before switching signing, retire the old selector after in-flight mail clears, and revoke with empty p=; inspect actual selector, delegation and rotation ownership.
+- dmarc-alignment (REASONED; dmarc): DMARC requires at least one passing and aligned SPF or DKIM result; relaxed adkim=r/aspf=r defaults to organizational-domain alignment, strict s requires exact domain matching.
+- dmarc-policy (REASONED; dmarc): p=none requests monitoring only, quarantine suspicious handling, and reject SMTP-time rejection; receivers retain local policy, so missing enforcement does not guarantee delivery.
+- dmarc-subdomains (REASONED; dmarc): sp covers existing subdomains and np non-existent ones, falling back np to sp to p; a subdomain-specific record can take precedence. Inventory explicit and inherited policies.
+- dmarc-discovery (REASONED; dmarc): RFC 9989 DNS tree walk discovers policy and organizational domain, replacing the former public-suffix-list method.
+- dmarc-testing (REASONED; dmarc): t=y weakens enforcement and t=n is the default; the illustrated enforcing record omits the tag.
+- dmarc-rollout (REASONED; dmarc, aggregate): Monitor aggregate reports under p=none until legitimate streams align before moving to p=reject, or legitimate mail can be rejected.
+- dmarc-pct (REASONED; dmarc): RFC 9989, May 2026, obsoletes RFC 7489 and removes pct; legacy p=reject;pct=25 was partial application, not a current rollout control.
+- aggregate (REASONED; aggregate): Enable rua daily aggregate XML reporting to observe sending streams; an external reporting domain must authorize reports, and actual receipt/processing must be checked.
+- failure-reports (REASONED; failure): ruf forensic reports can expose content, recipients and reset tokens; omit initially, settle redaction/retention/access before enabling, and authorize external destinations.
+- starttls (REASONED; submission): 587 submission upgrades with STARTTLS before authentication; an opportunistic fallback can expose credentials to stripping, so require successful validated TLS.
+- implicit-tls (REASONED; submission): 465 submission starts with TLS and avoids STARTTLS stripping; RFC 8314 prefers implicit TLS going forward.
+- tls-validation (REASONED; submission, submission-update): Validate certificate chain and hostname before credentials on either submission port; the guide states TLS 1.2 as the floor and attributes that update to RFC 8997.
+- port-25 (REASONED; roles): 25 is inter-server relay or provider submission; identify the endpoint role instead of assuming that port 25 implies no authentication.
+- relay-policy (REASONED; relay): Reject unauthenticated untrusted forwarding to non-local recipients while allowing ordinary inbound local delivery and explicitly authorized relay paths.
+- submission-auth (REASONED; roles, submission): After TLS, unauthenticated or invalidly authenticated submission must fail while authorized submission succeeds.
+- sts-publication (REASONED; sts): MTA-STS TXT advertises the HTTPS text/plain policy at /.well-known/mta-sts.txt on mta-sts.example.com; the example selects enforce, an MX host and max_age 604800.
+- sts-enforcement (REASONED; sts): Only enforce constrains delivery; testing and none do not. MTA-STS protects mail arriving at the policy domain and depends on sending-server validation, not protection of the publishing domain outbound mail.
+- sts-refresh (REASONED; sts): Update the MTA-STS TXT id whenever the policy changes.
+- tls-reports (REASONED; rpt): TLS-RPT _smtp._tls TXT with TLSRPTv1 and rua supplies reports, never enforcement.
+- bimi (REASONED; bimi): BIMI is optional logo display metadata requiring DMARC enforcement, not authentication or guaranteed rendering; deploy it last.
+- verify-dns (REASONED; spf, dkim, dmarc, sts, rpt, bimi, bind): Inspect SPF, DKIM TXT/CNAME, DMARC, MTA-STS, TLS-RPT and BIMI records using actual inventory; DNS inspection alone does not evaluate SPF/DMARC or prove a listener. No DNS control was available.
+- verify-tls (REASONED; submission, submission-update, openssl): 587 STARTTLS and 465 implicit-TLS probes require validated TLS 1.2 or newer; TLS availability does not establish AUTH gating. Plaintext or stripped-STARTTLS AUTH must be refused; transport/TLS failures are inconclusive. No SMTP endpoint or container runtime was available.
+- verify-alignment (REASONED; results, dmarc): Send a benign message to a controlled recipient and inspect receiver-trusted Authentication-Results, not a supplied header; require passing aligned SPF or DKIM and p=reject with subdomain coverage and no testing or legacy sampling.
+- verify-relay (REASONED; relay, roles): In an operator-controlled environment, external MAIL FROM and non-local RCPT TO should receive 5xx; compare with authorized submission and ordinary local delivery. These expected outcomes remain unobserved.
 <!-- version-basis:end -->
 
 Password resets, sign-in links, and invitations are part of your authentication path: a recipient who trusts a forged one hands an attacker the account. The controls that stop that forgery are not a single service's settings but three DNS-published standards (SPF, DKIM, and DMARC), the submission channel your application sends through, and the transport policy between mail servers. This guide covers that posture for a deployment that sends transactional mail. It is standards-based rather than product-based, so [authentication.md](authentication.md) covers the account side and [secrets.md](secrets.md) covers the SMTP credential and DKIM private key you will handle here.

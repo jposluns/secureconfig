@@ -129,33 +129,46 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| private: Keep BI tools private with fronting MFA and least-privilege read-only DB accounts unless write-back is needed. | Redash docs unknown; Metabase docs unknown | REASONED |
-| metabase-setup: First account is admin; finish setup before anyone else can reach it. | Metabase docs unknown | REASONED |
-| metabase-precedence: Settings merge .lein-env, .boot-env, environment and JVM properties in order; later empty values mask earlier settings. | Metabase v0.63.18; environ 1.2.0 | REASONED |
-| metabase-bind: Final nonblank MB_JETTY_HOST sets the jar host; otherwise Ring passes no host and Jetty binds wildcard. Use loopback behind a local proxy. | Metabase v0.63.18; Ring Jetty adapter 1.15.3; Jetty 12.1.13 | REASONED |
-| metabase-image: Image exports MB_JETTY_HOST=0.0.0.0 when unset/empty; publish 127.0.0.1:3000:3000 before first start. | Metabase v0.63.18; Docker publishing unknown | REASONED |
-| metabase-port: Port defaults 3000 unless the final MB_JETTY_PORT is nonblank. | Metabase v0.63.18 | REASONED |
-| metabase-sharing: Public links/embeds default enabled and expose view-only question/dashboard/document results without login; disable unneeded sharing. | Metabase docs unknown | REASONED |
-| metabase-embed: Public embed URLs are recoverable; embeds do not strengthen the public-link boundary. | Metabase docs unknown | REASONED |
-| metabase-sandbox: Row/column security is Pro/Enterprise; free-tier sharing exposes the rows/columns the question queries. | Metabase docs unknown | REASONED |
-| superset-secret: Set a unique complex random SECRET_KEY before exposure; it signs session cookies. | Superset docs unknown | REASONED |
-| superset-admin: Replace the first-run admin password before exposure. | Superset docs unknown; Superset Compose 3d01094d231712e3470eb625be3f9925aeaeadb5 | REASONED |
-| superset-public: Absent AUTH_ROLE_PUBLIC does not prove denial; inspect effective Public-role grants, which provide no data access by default. | Superset docs unknown | REASONED |
-| superset-copy: PUBLIC_ROLE_LIKE copies permissions at superset init; broad roles grant access without scoping datasets/dashboards. | Superset docs unknown | REASONED |
-| superset-compose: Example Compose is unsupported for production; use unique passwords/SECRET_KEY, not the example against production data. | Superset Compose 3d01094d231712e3470eb625be3f9925aeaeadb5 | REASONED |
-| redash-setup: Create the first-run admin before others reach setup. | Redash docs unknown | REASONED |
-| redash-https: Enforce HTTPS and the private-access pattern. | Redash docs unknown | REASONED |
-| redash-cookie: Use an instance-specific REDASH_COOKIE_SECRET; never commit or reuse it. | Redash docs unknown | REASONED |
-| redash-encryption: REDASH_SECRET_KEY encrypts data-source credentials; use a strong unique value outside version control. | Redash docs unknown | REASONED |
-| redash-bind: Default image server uses REDASH_GUNICORN_BIND or [::]:5000 when unset/empty; dual-stack may accept IPv4. Bind/publish privately. | Redash v26.9.0 | REASONED |
-| verify-credentials: Confirm no default admin/admin or example credentials work. | Metabase docs unknown; Superset Compose 3d01094d231712e3470eb625be3f9925aeaeadb5; Redash docs unknown | REASONED |
-| verify-db: Inspect effective/inherited DB grants; confirm reads and denied writes on a disposable object; scope needed write-back separately. | Metabase docs unknown | REASONED |
-| verify-listeners: Inventory application/proxy sockets and Docker NAT publications; probe direct origins over IPv4/IPv6/LAN/VPC. Absent ss entries do not prove isolation. | Metabase v0.63.18; Superset Compose 3d01094d231712e3470eb625be3f9925aeaeadb5; Redash v26.9.0; Docker publishing unknown | REASONED |
-| verify-ports: Verify lists Metabase/Superset/Redash defaults 3000/8088/5000, qualified as install-dependent. | Metabase v0.63.18; Superset Compose 3d01094d231712e3470eb625be3f9925aeaeadb5; Redash v26.9.0 | REASONED |
-| verify-data: Authorized data is the control; anonymous data fails. Denial/verified login challenge passes; SPA shells, 404/errors and arbitrary redirects are inconclusive. | Metabase docs unknown; Superset docs unknown; Redash docs unknown | REASONED |
-| verify-private: For tunnel-only access, confirm public isolation separately and test authorization on the permitted private path. | Redash docs unknown; Docker publishing unknown | REASONED |
+Components (recorded basis):
+
+- metabase-docs: Metabase docs, unknown
+- metabase: Metabase, v0.63.18
+- environ: environ, 1.2.0
+- ring: Ring Jetty adapter, 1.15.3
+- jetty: Jetty, 12.1.13
+- superset: Superset docs, unknown
+- superset-compose: Superset Compose, 3d01094d231712e3470eb625be3f9925aeaeadb5
+- redash-docs: Redash docs, unknown
+- redash: Redash, v26.9.0
+- docker: Docker publishing, unknown
+
+Claims (full source mapping in the front matter):
+
+- private (REASONED; redash-docs, metabase-docs): Keep BI tools private with fronting MFA and least-privilege read-only DB accounts unless write-back is needed.
+- metabase-setup (REASONED; metabase-docs): First account is admin; finish setup before anyone else can reach it.
+- metabase-precedence (REASONED; metabase, environ): Settings merge .lein-env, .boot-env, environment and JVM properties in order; later empty values mask earlier settings.
+- metabase-bind (REASONED; metabase, ring, jetty): Final nonblank MB_JETTY_HOST sets the jar host; otherwise Ring passes no host and Jetty binds wildcard. Use loopback behind a local proxy.
+- metabase-image (REASONED; metabase, docker): Image exports MB_JETTY_HOST=0.0.0.0 when unset/empty; publish 127.0.0.1:3000:3000 before first start.
+- metabase-port (REASONED; metabase): Port defaults 3000 unless the final MB_JETTY_PORT is nonblank.
+- metabase-sharing (REASONED; metabase-docs): Public links/embeds default enabled and expose view-only question/dashboard/document results without login; disable unneeded sharing.
+- metabase-embed (REASONED; metabase-docs): Public embed URLs are recoverable; embeds do not strengthen the public-link boundary.
+- metabase-sandbox (REASONED; metabase-docs): Row/column security is Pro/Enterprise; free-tier sharing exposes the rows/columns the question queries.
+- superset-secret (REASONED; superset): Set a unique complex random SECRET_KEY before exposure; it signs session cookies.
+- superset-admin (REASONED; superset, superset-compose): Replace the first-run admin password before exposure.
+- superset-public (REASONED; superset): Absent AUTH_ROLE_PUBLIC does not prove denial; inspect effective Public-role grants, which provide no data access by default.
+- superset-copy (REASONED; superset): PUBLIC_ROLE_LIKE copies permissions at superset init; broad roles grant access without scoping datasets/dashboards.
+- superset-compose (REASONED; superset-compose): Example Compose is unsupported for production; use unique passwords/SECRET_KEY, not the example against production data.
+- redash-setup (REASONED; redash-docs): Create the first-run admin before others reach setup.
+- redash-https (REASONED; redash-docs): Enforce HTTPS and the private-access pattern.
+- redash-cookie (REASONED; redash-docs): Use an instance-specific REDASH_COOKIE_SECRET; never commit or reuse it.
+- redash-encryption (REASONED; redash-docs): REDASH_SECRET_KEY encrypts data-source credentials; use a strong unique value outside version control.
+- redash-bind (REASONED; redash): Default image server uses REDASH_GUNICORN_BIND or [::]:5000 when unset/empty; dual-stack may accept IPv4. Bind/publish privately.
+- verify-credentials (REASONED; metabase-docs, superset-compose, redash-docs): Confirm no default admin/admin or example credentials work.
+- verify-db (REASONED; metabase-docs): Inspect effective/inherited DB grants; confirm reads and denied writes on a disposable object; scope needed write-back separately.
+- verify-listeners (REASONED; metabase, superset-compose, redash, docker): Inventory application/proxy sockets and Docker NAT publications; probe direct origins over IPv4/IPv6/LAN/VPC. Absent ss entries do not prove isolation.
+- verify-ports (REASONED; metabase, superset-compose, redash): Verify lists Metabase/Superset/Redash defaults 3000/8088/5000, qualified as install-dependent.
+- verify-data (REASONED; metabase-docs, superset, redash-docs): Authorized data is the control; anonymous data fails. Denial/verified login challenge passes; SPA shells, 404/errors and arbitrary redirects are inconclusive.
+- verify-private (REASONED; redash-docs, docker): For tunnel-only access, confirm public isolation separately and test authorization on the permitted private path.
 <!-- version-basis:end -->
 
 These tools hold live connections to your production databases and cache query results in their own

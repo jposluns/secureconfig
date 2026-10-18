@@ -94,50 +94,55 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| nomad-bind: Nomad defaults bind_addr=0.0.0.0 and all three listeners fall back to it; setting only addresses.http leaves RPC and gossip on bind_addr. | Nomad Community Edition 2.0.7 | REASONED |
-| nomad-http: Nomad HTTP API/UI uses 4646; UI defaults enabled at /ui/. | Nomad Community Edition 2.0.7 | REASONED |
-| nomad-rpc: Nomad RPC uses 4647; keep it on private or management addresses. | Nomad Community Edition 2.0.7 | REASONED |
-| nomad-gossip: Nomad Serf uses 4648 TCP/UDP; gossip is unencrypted until encrypt is configured. | Nomad Community Edition 2.0.7 | REASONED |
-| nomad-dev: Linux -dev binds 127.0.0.1 except -dev-connect, which binds 0.0.0.0. Wildcard behavior was not observed. | Nomad Community Edition 2.0.7 | REASONED |
-| nomad-acl-default: ACLs default disabled; enable acl.enabled on every agent before exposing the API. | Nomad Community Edition 2.0.7 | REASONED |
-| nomad-debug: Debug endpoints still require enable_debug with ACLs off; -dev enables it. | Nomad Community Edition 2.0.7 | REASONED |
-| nomad-exec: On a root Linux client, exec uses a chroot and task user, default nobody, with root refused by the default exec denylist; no client job was run. | Nomad Community Edition 2.0.7 | REASONED |
-| nomad-raw-exec: raw_exec has no isolation and defaults off, but -dev enables it. | Nomad Community Edition 2.0.7 | REASONED |
-| nomad-remote-exec: Remote task execution defaults enabled through disable_remote_exec=false. | Nomad Community Edition 2.0.7 | REASONED |
-| nomad-tls: HTTP/RPC TLS defaults off; enable both tls.http and tls.rpc. | Nomad Community Edition 2.0.7 | REASONED |
-| nomad-bootstrap-reset: Unauthenticated PUT /v1/acl/bootstrap claims the first management token after ACL enablement; repeat is blocked until the operator reset file in data_dir/server. | Nomad Community Edition 2.0.7 | REASONED |
-| consul-client-bind: Consul client_addr defaults 127.0.0.1; widening it or addresses.http makes the API reachable. | Consul Community Edition 2.0.4 | REASONED |
-| consul-http: Consul HTTP API is 8500; UI defaults off and -dev enables /ui/ on that port. | Consul Community Edition 2.0.4 | REASONED |
-| consul-dns: Consul DNS uses 8600 TCP/UDP on client_addr. | Consul Community Edition 2.0.4 | REASONED |
-| consul-rpc: Consul server RPC uses 8300 on bind_addr, default 0.0.0.0. | Consul Community Edition 2.0.4 | REASONED |
-| consul-lan: Consul LAN Serf uses 8301 TCP/UDP on bind_addr. | Consul Community Edition 2.0.4 | REASONED |
-| consul-wan: Consul WAN Serf uses 8302 TCP/UDP on bind_addr. | Consul Community Edition 2.0.4 | REASONED |
-| consul-https: Consul HTTPS defaults disabled. | Consul Community Edition 2.0.4 | REASONED |
-| consul-grpc: Plaintext gRPC defaults disabled; servers open TLS gRPC on 8503 on client_addr. | Consul Community Edition 2.0.4 | REASONED |
-| consul-acl-default: Consul ACLs default off and disabled ACL resolution grants management rights; with ACLs enabled default_policy still defaults allow. | Consul Community Edition 2.0.4 | REASONED |
-| consul-bootstrap-reset: Bootstrap is unauthenticated and one-time until an operator writes acl-bootstrap-reset; bootstrap privately before exposing the API. | Consul Community Edition 2.0.4 | REASONED |
-| consul-script: enable_script_checks defaults off; enabling without ACLs or allow_write_http_from only warns. Prefer enable_local_script_checks if needed. | Consul Community Edition 2.0.4 | REASONED |
-| consul-remote-exec: consul exec defaults disabled through disable_remote_exec=true. | Consul Community Edition 2.0.4 | REASONED |
-| consul-tls-gossip: TLS verification defaults off and gossip is unencrypted without encrypt. | Consul Community Edition 2.0.4 | REASONED |
-| verify-inventory: Inventory TCP/UDP on private or management addresses; wildcard exposed binds and actual external isolation remain reasoned. | Nomad Community Edition 2.0.7; Consul Community Edition 2.0.4 | REASONED |
-| loopback-listeners: Loopback runs used substitute TCP/Serf UDP ports; Consul DNS, WAN and gRPC were disabled, so their live listeners were not demonstrated. | Nomad Community Edition 2.0.7; Consul Community Edition 2.0.4 | DEMONSTRATED |
-| nomad-acl-probe: Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403. | Nomad Community Edition 2.0.7 | DEMONSTRATED |
-| nomad-agent-acl: Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403. | Nomad Community Edition 2.0.7 | DEMONSTRATED |
-| nomad-bootstrap-run: ACL probe rejection did not prove bootstrap complete; first bootstrap issued management credentials and the second returned already-done. | Nomad Community Edition 2.0.7 | DEMONSTRATED |
-| nomad-anonymous-policy: Anonymous rights come from the named anonymous policy; historical exported-token inspection found it absent, then present with submit-job despite unchanged probe results. | Nomad Community Edition 2.0.7 | DEMONSTRATED |
-| nomad-job-registration: Anonymous registration succeeded with ACLs off and failed with ACLs on and no anonymous policy; registration is not a demonstrated job execution. | Nomad Community Edition 2.0.7 | DEMONSTRATED |
-| nomad-token-input: CLI accepts -token or NOMAD_TOKEN, not stdin; the current prompted one-command prefix avoids argv/history but retains same-user/root environment visibility. That form has no recorded live Nomad run. | Nomad Community Edition 2.0.7 | REASONED |
-| consul-acl-probe: Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text. | Consul Community Edition 2.0.4 | DEMONSTRATED |
-| consul-agent-acl: Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs. | Consul Community Edition 2.0.4 | DEMONSTRATED |
-| consul-bootstrap-run: Deny results appeared before bootstrap; first bootstrap issued a token and the second refused with bootstrap no longer allowed. | Consul Community Edition 2.0.4 | DEMONSTRATED |
-| consul-anonymous-token: Inspect anonymous accessor 00000000-0000-0000-0000-000000000002 for policies, roles and identities; its recorded read listed none. | Consul Community Edition 2.0.4 | DEMONSTRATED |
-| consul-default-token: An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write. | Consul Community Edition 2.0.4 | DEMONSTRATED |
-| consul-kv: Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny. | Consul Community Edition 2.0.4 | DEMONSTRATED |
-| consul-script-run: With default script-check settings, remote script registration was refused. | Consul Community Edition 2.0.4 | DEMONSTRATED |
-| verify-tcp: Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run; UDP is not tested. | Nomad Community Edition 2.0.7; Consul Community Edition 2.0.4 | REASONED |
-| verify-address-limits: TCP guard refuses zero/dotted-IPv6 forms but permits loopback and some hex forms reaching the probing host; use public addresses and corroborate surprising connections with host sockets. | Nomad Community Edition 2.0.7; Consul Community Edition 2.0.4 | REASONED |
+Components (recorded basis):
+
+- nomad: Nomad Community Edition, 2.0.7
+- consul: Consul Community Edition, 2.0.4
+
+Claims (full source mapping in the front matter):
+
+- nomad-bind (REASONED; nomad): Nomad defaults bind_addr=0.0.0.0 and all three listeners fall back to it; setting only addresses.http leaves RPC and gossip on bind_addr.
+- nomad-http (REASONED; nomad): Nomad HTTP API/UI uses 4646; UI defaults enabled at /ui/.
+- nomad-rpc (REASONED; nomad): Nomad RPC uses 4647; keep it on private or management addresses.
+- nomad-gossip (REASONED; nomad): Nomad Serf uses 4648 TCP/UDP; gossip is unencrypted until encrypt is configured.
+- nomad-dev (REASONED; nomad): Linux -dev binds 127.0.0.1 except -dev-connect, which binds 0.0.0.0. Wildcard behavior was not observed.
+- nomad-acl-default (REASONED; nomad): ACLs default disabled; enable acl.enabled on every agent before exposing the API.
+- nomad-debug (REASONED; nomad): Debug endpoints still require enable_debug with ACLs off; -dev enables it.
+- nomad-exec (REASONED; nomad): On a root Linux client, exec uses a chroot and task user, default nobody, with root refused by the default exec denylist; no client job was run.
+- nomad-raw-exec (REASONED; nomad): raw_exec has no isolation and defaults off, but -dev enables it.
+- nomad-remote-exec (REASONED; nomad): Remote task execution defaults enabled through disable_remote_exec=false.
+- nomad-tls (REASONED; nomad): HTTP/RPC TLS defaults off; enable both tls.http and tls.rpc.
+- nomad-bootstrap-reset (REASONED; nomad): Unauthenticated PUT /v1/acl/bootstrap claims the first management token after ACL enablement; repeat is blocked until the operator reset file in data_dir/server.
+- consul-client-bind (REASONED; consul): Consul client_addr defaults 127.0.0.1; widening it or addresses.http makes the API reachable.
+- consul-http (REASONED; consul): Consul HTTP API is 8500; UI defaults off and -dev enables /ui/ on that port.
+- consul-dns (REASONED; consul): Consul DNS uses 8600 TCP/UDP on client_addr.
+- consul-rpc (REASONED; consul): Consul server RPC uses 8300 on bind_addr, default 0.0.0.0.
+- consul-lan (REASONED; consul): Consul LAN Serf uses 8301 TCP/UDP on bind_addr.
+- consul-wan (REASONED; consul): Consul WAN Serf uses 8302 TCP/UDP on bind_addr.
+- consul-https (REASONED; consul): Consul HTTPS defaults disabled.
+- consul-grpc (REASONED; consul): Plaintext gRPC defaults disabled; servers open TLS gRPC on 8503 on client_addr.
+- consul-acl-default (REASONED; consul): Consul ACLs default off and disabled ACL resolution grants management rights; with ACLs enabled default_policy still defaults allow.
+- consul-bootstrap-reset (REASONED; consul): Bootstrap is unauthenticated and one-time until an operator writes acl-bootstrap-reset; bootstrap privately before exposing the API.
+- consul-script (REASONED; consul): enable_script_checks defaults off; enabling without ACLs or allow_write_http_from only warns. Prefer enable_local_script_checks if needed.
+- consul-remote-exec (REASONED; consul): consul exec defaults disabled through disable_remote_exec=true.
+- consul-tls-gossip (REASONED; consul): TLS verification defaults off and gossip is unencrypted without encrypt.
+- verify-inventory (REASONED; nomad, consul): Inventory TCP/UDP on private or management addresses; wildcard exposed binds and actual external isolation remain reasoned.
+- loopback-listeners (DEMONSTRATED; nomad, consul): Loopback runs used substitute TCP/Serf UDP ports; Consul DNS, WAN and gRPC were disabled, so their live listeners were not demonstrated.
+- nomad-acl-probe (DEMONSTRATED; nomad): Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403.
+- nomad-agent-acl (DEMONSTRATED; nomad): Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403.
+- nomad-bootstrap-run (DEMONSTRATED; nomad): ACL probe rejection did not prove bootstrap complete; first bootstrap issued management credentials and the second returned already-done.
+- nomad-anonymous-policy (DEMONSTRATED; nomad): Anonymous rights come from the named anonymous policy; historical exported-token inspection found it absent, then present with submit-job despite unchanged probe results.
+- nomad-job-registration (DEMONSTRATED; nomad): Anonymous registration succeeded with ACLs off and failed with ACLs on and no anonymous policy; registration is not a demonstrated job execution.
+- nomad-token-input (REASONED; nomad): CLI accepts -token or NOMAD_TOKEN, not stdin; the current prompted one-command prefix avoids argv/history but retains same-user/root environment visibility. That form has no recorded live Nomad run.
+- consul-acl-probe (DEMONSTRATED; consul): Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text.
+- consul-agent-acl (DEMONSTRATED; consul): Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs.
+- consul-bootstrap-run (DEMONSTRATED; consul): Deny results appeared before bootstrap; first bootstrap issued a token and the second refused with bootstrap no longer allowed.
+- consul-anonymous-token (DEMONSTRATED; consul): Inspect anonymous accessor 00000000-0000-0000-0000-000000000002 for policies, roles and identities; its recorded read listed none.
+- consul-default-token (DEMONSTRATED; consul): An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write.
+- consul-kv (DEMONSTRATED; consul): Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny.
+- consul-script-run (DEMONSTRATED; consul): With default script-check settings, remote script registration was refused.
+- verify-tcp (REASONED; nomad, consul): Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run; UDP is not tested.
+- verify-address-limits (REASONED; nomad, consul): TCP guard refuses zero/dotted-IPv6 forms but permits loopback and some hex forms reaching the probing host; use public addresses and corroborate surprising connections with host sockets.
 <!-- version-basis:end -->
 
 Nomad schedules and runs workloads, and Consul holds a cluster's service catalog, health checks and

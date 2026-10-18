@@ -351,70 +351,100 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| fronting: Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress. | Apache Airflow 3.3.2; Argo Workflows documentation release-3.7; Temporal documentation (rolling) unknown | REASONED |
-| prefect-auth: Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
-| prefect-key: Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server. | Prefect Basic Auth minimum 3.1.8; Prefect documentation (rolling) unknown | REASONED |
-| prefect-secrets: Protect the auth string and credential-bearing Blocks; Prefect 3.1.8 block-document read routes accept include_secrets, and Secret.get() returns the underlying value. Restrict API and worker access; UI masking does not enforce authorization. | Prefect Blocks source 3.1.8; Prefect documentation (rolling) unknown | REASONED |
-| prefect-port: The self-hosted Prefect server uses port 4200. | Prefect documentation (rolling) unknown | REASONED |
-| dagster-bind: Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback when the port is unset or 0; explicitly bind the private origin. | Dagster OSS 1.13.24 | REASONED |
-| dagster-helm: The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default. | Dagster OSS 1.13.24 | REASONED |
-| dagster-auth: OSS webserver has no built-in login or access control; protect all routes with an authenticating proxy. | Dagster documentation (rolling) unknown | REASONED |
-| airflow-boundary: Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private. | Apache Airflow 3.3.2 | REASONED |
-| airflow-two-api: Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all. | Apache Airflow historical configuration 2.11.0; Apache Airflow historical default 2.2.5 | REASONED |
-| airflow-simple: Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied. | Apache Airflow 3.3.2 | REASONED |
-| airflow-fab: For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
-| airflow-api: Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager. | Apache Airflow 3.3.2; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
-| airflow-all-admins: Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin. | Apache Airflow 3.3.2 | REASONED |
-| fab-public-role: Leave [fab] auth_role_public and legacy AUTH_ROLE_PUBLIC unset; a configured public role can make FAB treat an anonymous visitor as logged in and supply that role's permissions. | Apache Airflow FAB provider source providers-fab/3.9.0 | REASONED |
-| airflow-compose-account: Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately. | Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
-| airflow-jwt: Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery. | Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
-| airflow-secret-key: Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
-| airflow-config: Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow 3.3.2 | REASONED |
-| airflow-fernet: Protect Connections, Variables, database and Fernet keys; an empty [core] FERNET_KEY selects a no-encryption implementation for new values, while configured comma-separated keys use MultiFernet. Preserve keys needed to decrypt existing values; authorized workloads still use secrets. | Apache Airflow crypto source 3.3.2; Apache Airflow documentation (rolling) unknown | REASONED |
-| airflow-port: Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer. | Apache Airflow documentation (rolling) unknown | REASONED |
-| temporal-authorizer: Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience. | Temporal documentation (rolling) unknown | REASONED |
-| temporal-claims: Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS. | Temporal documentation (rolling) unknown | REASONED |
-| temporal-health: The built-in default authorizer permits health checks without claims; health is not an authorization discriminator. | Temporal documentation (rolling) unknown | REASONED |
-| temporal-ui: UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP. | Temporal documentation (rolling) unknown | REASONED |
-| temporal-tls: Internode and frontend mTLS are separate from UI login and API authorization. | Temporal documentation (rolling) unknown | REASONED |
-| temporal-payloads: Keep plaintext credentials out of persisted inputs/results/history; the Temporal Go SDK v1.28.0 codec HTTP handler accepts encode/decode POSTs without an authentication check, so authenticate and restrict a deployed Codec Server separately. | Temporal documentation (rolling) unknown; Temporal Go SDK codec source v1.28.0 | REASONED |
-| temporal-ports: Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference. | Temporal documentation (rolling) unknown | REASONED |
-| flower-bind: Flower defaults to wildcard address and 5555 unless Unix socket, FLOWER_ variables or implicit working-directory flowerconfig.py override; bind loopback explicitly. | Flower v2.2.0; Tornado v6.5.10 | REASONED |
-| flower-api: Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection. | Flower documentation (rolling) unknown | REASONED |
-| flower-basic: Basic auth uses a comma-separated credential list; supply it through FLOWER_BASIC_AUTH or protected config rather than argv and retain private TLS fronting. | Flower documentation (rolling) unknown | REASONED |
-| flower-oauth: OAuth needs handler, client key/secret, redirect and allowed-email regex; protect the secret outside argv and prefer an MFA-enforcing provider. | Flower documentation (rolling) unknown | REASONED |
-| flower-socket: Flower passes fixed mode 0777; Tornado removes/recreates filesystem sockets on startup, so chmod does not persist. Abstract sockets have no filesystem permission boundary. | Flower v2.2.0; Tornado v6.5.10; Linux permissions and tools unknown | REASONED |
-| flower-directory: Restrict socket directory search with Flower ownership, proxy-only group, mode 0750 and no outsider ACL; directory access is essential because socket mode permits writes. | Linux permissions and tools unknown | REASONED |
-| flower-capabilities: Applicable DAC capabilities bypass directory search checks; Docker defaults include CAP_DAC_OVERRIDE, while user namespaces and idmapped mounts change identity interpretation. | Linux permissions and tools unknown; Moby Docker docker-v29.8.1 | REASONED |
-| flower-runtime-dir: Reapply directory owner/group/mode on creation: /run is cleared at boot and RuntimeDirectory defaults 0755 unless RuntimeDirectoryMode overrides it. | systemd v257; Filesystem Hierarchy Standard 3.0 | REASONED |
-| flower-numeric-ids: A proxy sharing the socket directory must hold the required numeric group after namespace/mount mappings; names alone do not establish access. | Linux permissions and tools unknown | REASONED |
-| argo-bind: Argo Server binds wildcard :2746 with host-dependent IPv4/IPv6 support and no bind-address flag. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
-| argo-defaults: Both tags default secure=true, auth-mode=client and hsts=true; flags and ARGO_ environment equivalents can override. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
-| argo-client: Client mode uses caller Kubernetes credentials/RBAC; v4.1.4 validates via SelfSubjectReview and requires Kubernetes 1.28+. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
-| argo-quickstart: Both tags' minimal/mysql/postgres quick-starts enable server plus client mode while retaining TLS; v4.1.4 telemetry does too. Anonymous callers inherit server permissions. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
-| argo-quickstart-rbac: Quick-start binds cluster-wide workflow/template and Secret get/create permissions, plus cluster-workflow-template rights; it is demo-only. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
-| argo-installs: Traced install inputs keep client auth/TLS with cluster-wide server RBAC; namespace-install adds --namespaced and namespace RBAC. Generated install YAML was absent. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
-| argo-service: Base Service omits type, defaulting to ClusterIP, and maps 2746 to 2746; this does not authenticate reachable callers. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
-| argo-fallback: Remove server auth mode: adding client/SSO does not prevent anonymous fallback to server credentials; local mode uses the server kubeconfig. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
-| argo-sso: Enable sso.rbac.enabled and map groups to narrow ServiceAccounts through rbac-rule/precedence; without SSO RBAC, authenticated users share server permissions. | Argo Workflows documentation release-3.7; Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
-| argo-secrets: Store SSO OAuth credentials in referenced Kubernetes Secrets and supply API tokens through protected input, not argv. | Argo Workflows documentation release-3.7 | REASONED |
-| argo-tls: Keep TLS enabled with a trusted certificate Secret; no name generates a self-signed certificate, failed named-Secret loading fails startup, secure=false is plaintext and defeats HSTS. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
-| argo-metrics: /metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics. | Argo Workflows v3.7.18; Argo Workflows v4.1.4 | REASONED |
-| argo-network: Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained. | Argo Workflows documentation release-3.7 | REASONED |
-| verify-inventory: ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately. | Flower v2.2.0; Argo Workflows v3.7.18; iproute2 ss manual v6.15.0; Linux network namespaces manual man-pages-5.13; Prefect documentation (rolling) unknown | REASONED |
-| verify-prefect: Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent. | Prefect Basic Auth minimum 3.1.8; Prefect server source 9e560c9b6df4e19a5109a66e66d461f9facb538d; Prefect documentation (rolling) unknown | REASONED |
-| verify-dagster: A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately. | Dagster documentation (rolling) unknown | REASONED |
-| verify-airflow: FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth. | Apache Airflow historical configuration 2.11.0; Apache Airflow documentation (rolling) unknown; Apache Airflow FAB provider documentation (rolling) unknown | REASONED |
-| verify-temporal: Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth. | Temporal documentation (rolling) unknown | REASONED |
-| verify-flower: Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected. | Flower documentation (rolling) unknown | REASONED |
-| verify-socket: Directory/socket permissions, outsider denial, reboot persistence and container numeric IDs remain reasoned; no socket or Flower process ran. | Flower v2.2.0; Linux permissions and tools unknown | REASONED |
-| flower-stat-run: Tmpfs directory-only stat distinguished 0755 and 0750; the 0750 directory initially had only base ACL entries. | Linux permissions and tools unknown | DEMONSTRATED |
-| flower-acl-run: A named nobody search ACL remained invisible in stat mode 750; ls and getfacl exposed the entry. | Linux permissions and tools unknown | DEMONSTRATED |
-| flower-mask-run: Changing the ACL mask hid named search permission; chmod 0750 restored its reported effectiveness. Access as nobody was not tested. | Linux permissions and tools unknown | DEMONSTRATED |
-| verify-argo: Anonymous workflow JSON is exposed when server RBAC permits; missing tokens should yield 401 without server mode. A 403 alone is inconclusive; pair authorized 200 and inspect auth modes. | Argo Workflows v3.7.18; Argo Workflows v4.1.4; Argo Workflows documentation release-3.7 | REASONED |
-| verify-origin: Any HTTP response from the origin at an untrusted vantage proves publication; use the same responding allowed origin as control and treat connection errors/timeouts as inconclusive. | Apache Airflow 3.3.2; Argo Workflows documentation release-3.7 | REASONED |
+Components (recorded basis):
+
+- prefect: Prefect Basic Auth minimum, 3.1.8
+- prefect-source: Prefect server source, 9e560c9b6df4e19a5109a66e66d461f9facb538d
+- dagster: Dagster OSS, 1.13.24
+- airflow: Apache Airflow, 3.3.2
+- airflow-two: Apache Airflow historical configuration, 2.11.0
+- airflow-old: Apache Airflow historical default, 2.2.5
+- flower: Flower, v2.2.0
+- tornado: Tornado, v6.5.10
+- linux: Linux permissions and tools, unknown
+- systemd: systemd, v257
+- fhs: Filesystem Hierarchy Standard, 3.0
+- docker: Moby Docker, docker-v29.8.1
+- argo-three: Argo Workflows, v3.7.18
+- argo-four: Argo Workflows, v4.1.4
+- argo-docs: Argo Workflows documentation, release-3.7
+- iproute2: iproute2 ss manual, v6.15.0
+- network-namespaces: Linux network namespaces manual, man-pages-5.13
+- prefect-rolling: Prefect documentation (rolling), unknown
+- dagster-rolling: Dagster documentation (rolling), unknown
+- airflow-rolling: Apache Airflow documentation (rolling), unknown
+- temporal-rolling: Temporal documentation (rolling), unknown
+- flower-rolling: Flower documentation (rolling), unknown
+- prefect-blocks: Prefect Blocks source, 3.1.8
+- fab-source: Apache Airflow FAB provider source, providers-fab/3.9.0
+- airflow-crypto: Apache Airflow crypto source, 3.3.2
+- temporal-codec: Temporal Go SDK codec source, v1.28.0
+- fab-rolling: Apache Airflow FAB provider documentation (rolling), unknown
+
+Claims (full source mapping in the front matter):
+
+- fronting (REASONED; airflow, argo-docs, temporal-rolling): Keep UI/API origins private behind HTTPS and authentication; use IdP MFA for browsers and separate machine authentication, and constrain worker egress.
+- prefect-auth (REASONED; prefect, prefect-rolling): Self-hosted Prefect defaults unauthenticated; Basic Auth from 3.1.8 uses matching server/client auth strings and prompts the UI.
+- prefect-key (REASONED; prefect, prefect-rolling): Cloud-only PREFECT_API_KEY takes precedence over PREFECT_API_AUTH_STRING and produces 401 against a self-hosted server.
+- prefect-secrets (REASONED; prefect-blocks, prefect-rolling): Protect the auth string and credential-bearing Blocks; Prefect 3.1.8 block-document read routes accept include_secrets, and Secret.get() returns the underlying value. Restrict API and worker access; UI masking does not enforce authorization.
+- prefect-port (REASONED; prefect-rolling): The self-hosted Prefect server uses port 4200.
+- dagster-bind (REASONED; dagster): Direct dagster-webserver/dev defaults to 127.0.0.1:3000, with flag/environment overrides and free-port fallback when the port is unset or 0; explicitly bind the private origin.
+- dagster-helm (REASONED; dagster): The chart passes -h 0.0.0.0 on the Service port, default 80, with ClusterIP Service by default.
+- dagster-auth (REASONED; dagster-rolling): OSS webserver has no built-in login or access control; protect all routes with an authenticating proxy.
+- airflow-boundary (REASONED; airflow): Airflow assumes authenticated known users and is not designed for untrusted public exposure; deployment managers must keep it private.
+- airflow-two-api (REASONED; airflow-two, airflow-old): Airflow 2.11.0 uses [api] auth_backends with session default; before 2.3 the name was auth_backend and 2.2.5 defaulted to deny_all.
+- airflow-simple (REASONED; airflow): Airflow 3 defaults to development-only Simple Auth Manager, with configured users/roles and generated passwords printed to logs unless supplied.
+- airflow-fab (REASONED; airflow, fab-rolling): For production install FAB and select FabAuthManager through [core] auth_manager; verify the effective manager and use an identity backend with MFA.
+- airflow-api (REASONED; airflow, fab-rolling): Airflow 3 public API uses JWT independently of [fab] auth_backends, which selects FAB API backends rather than the auth manager.
+- airflow-all-admins (REASONED; airflow): Keep simple_auth_manager_all_admins unset or False; enabling it disables login and grants every visitor admin.
+- fab-public-role (REASONED; fab-source): Leave [fab] auth_role_public and legacy AUTH_ROLE_PUBLIC unset; a configured public role can make FAB treat an anonymous visitor as logged in and supply that role's permissions.
+- airflow-compose-account (REASONED; airflow-rolling, fab-rolling, airflow): Development Compose selects FAB but defaults to airflow/airflow; set credentials before account creation and update/delete an existing account separately.
+- airflow-jwt (REASONED; airflow-rolling, airflow): Replace Compose fallback AIRFLOW__API_AUTH__JWT_SECRET=airflow_jwt_secret and share the strong value with all signers/validators; the public fallback permits token forgery.
+- airflow-secret-key (REASONED; airflow-two, airflow-rolling, airflow): Provision the independent secret_key too: [webserver] on 2.11.0 and [api] on 3.3.2.
+- airflow-config (REASONED; airflow-two, airflow-rolling, airflow): Keep configuration exposure off with WEBSERVER__EXPOSE_CONFIG on 2.11.0 or API__EXPOSE_CONFIG on 3.3.2.
+- airflow-fernet (REASONED; airflow-crypto, airflow-rolling): Protect Connections, Variables, database and Fernet keys; an empty [core] FERNET_KEY selects a no-encryption implementation for new values, while configured comma-separated keys use MultiFernet. Preserve keys needed to decrypt existing values; authorized workloads still use secrets.
+- airflow-port (REASONED; airflow-rolling): Compose publishes 8080 on all interfaces; use 127.0.0.1:8080:8080 behind the fronting layer.
+- temporal-authorizer (REASONED; temporal-rolling): Empty authorizer selects noopAuthorizer allowing every API request, including administration; configure default authorization with trusted JWT keys and audience.
+- temporal-claims (REASONED; temporal-rolling): Empty claimMapper selects a no-op granting system-admin claims; configure both Authorizer and ClaimMapper, with frontend TLS.
+- temporal-health (REASONED; temporal-rolling): The built-in default authorizer permits health checks without claims; health is not an authorization discriminator.
+- temporal-ui (REASONED; temporal-rolling): UI OIDC auth.enabled is a sibling of providers; TEMPORAL_AUTH_ENABLED plus provider settings gates the UI only, with MFA at the IdP.
+- temporal-tls (REASONED; temporal-rolling): Internode and frontend mTLS are separate from UI login and API authorization.
+- temporal-payloads (REASONED; temporal-rolling, temporal-codec): Keep plaintext credentials out of persisted inputs/results/history; the Temporal Go SDK v1.28.0 codec HTTP handler accepts encode/decode POSTs without an authentication check, so authenticate and restrict a deployed Codec Server separately.
+- temporal-ports (REASONED; temporal-rolling): Frontend gRPC uses 7233 and the Web UI 8233 in the cited CLI server reference.
+- flower-bind (REASONED; flower, tornado): Flower defaults to wildcard address and 5555 unless Unix socket, FLOWER_ variables or implicit working-directory flowerconfig.py override; bind loopback explicitly.
+- flower-api (REASONED; flower-rolling): Authentication defaults off; unauthenticated HTTP API is disabled unless FLOWER_UNAUTHENTICATED_API=true, which must not be mistaken for dashboard protection.
+- flower-basic (REASONED; flower-rolling): Basic auth uses a comma-separated credential list; supply it through FLOWER_BASIC_AUTH or protected config rather than argv and retain private TLS fronting.
+- flower-oauth (REASONED; flower-rolling): OAuth needs handler, client key/secret, redirect and allowed-email regex; protect the secret outside argv and prefer an MFA-enforcing provider.
+- flower-socket (REASONED; flower, tornado, linux): Flower passes fixed mode 0777; Tornado removes/recreates filesystem sockets on startup, so chmod does not persist. Abstract sockets have no filesystem permission boundary.
+- flower-directory (REASONED; linux): Restrict socket directory search with Flower ownership, proxy-only group, mode 0750 and no outsider ACL; directory access is essential because socket mode permits writes.
+- flower-capabilities (REASONED; linux, docker): Applicable DAC capabilities bypass directory search checks; Docker defaults include CAP_DAC_OVERRIDE, while user namespaces and idmapped mounts change identity interpretation.
+- flower-runtime-dir (REASONED; systemd, fhs): Reapply directory owner/group/mode on creation: /run is cleared at boot and RuntimeDirectory defaults 0755 unless RuntimeDirectoryMode overrides it.
+- flower-numeric-ids (REASONED; linux): A proxy sharing the socket directory must hold the required numeric group after namespace/mount mappings; names alone do not establish access.
+- argo-bind (REASONED; argo-three, argo-four): Argo Server binds wildcard :2746 with host-dependent IPv4/IPv6 support and no bind-address flag.
+- argo-defaults (REASONED; argo-three, argo-four): Both tags default secure=true, auth-mode=client and hsts=true; flags and ARGO_ environment equivalents can override.
+- argo-client (REASONED; argo-three, argo-four): Client mode uses caller Kubernetes credentials/RBAC; v4.1.4 validates via SelfSubjectReview and requires Kubernetes 1.28+.
+- argo-quickstart (REASONED; argo-three, argo-four): Both tags' minimal/mysql/postgres quick-starts enable server plus client mode while retaining TLS; v4.1.4 telemetry does too. Anonymous callers inherit server permissions.
+- argo-quickstart-rbac (REASONED; argo-three, argo-four): Quick-start binds cluster-wide workflow/template and Secret get/create permissions, plus cluster-workflow-template rights; it is demo-only.
+- argo-installs (REASONED; argo-three, argo-four): Traced install inputs keep client auth/TLS with cluster-wide server RBAC; namespace-install adds --namespaced and namespace RBAC. Generated install YAML was absent.
+- argo-service (REASONED; argo-three, argo-four): Base Service omits type, defaulting to ClusterIP, and maps 2746 to 2746; this does not authenticate reachable callers.
+- argo-fallback (REASONED; argo-three, argo-four): Remove server auth mode: adding client/SSO does not prevent anonymous fallback to server credentials; local mode uses the server kubeconfig.
+- argo-sso (REASONED; argo-docs, argo-three, argo-four): Enable sso.rbac.enabled and map groups to narrow ServiceAccounts through rbac-rule/precedence; without SSO RBAC, authenticated users share server permissions.
+- argo-secrets (REASONED; argo-docs): Store SSO OAuth credentials in referenced Kubernetes Secrets and supply API tokens through protected input, not argv.
+- argo-tls (REASONED; argo-three, argo-four): Keep TLS enabled with a trusted certificate Secret; no name generates a self-signed certificate, failed named-Secret loading fails startup, secure=false is plaintext and defeats HSTS.
+- argo-metrics (REASONED; argo-three, argo-four): /metrics shares the server listener and auth gate unless ARGO_SERVER_METRICS_AUTH=false; server mode also admits anonymous metrics.
+- argo-network (REASONED; argo-docs): Keep 2746 private behind authenticated HTTPS; restrict direct Pod/Service access and scope server, SSO and execution-account permissions. Workflow submission permits arbitrary containers unless constrained.
+- verify-inventory (REASONED; flower, argo-three, iproute2, network-namespaces, prefect-rolling): ss inventories only the current namespace, not publication, routing or authentication; inspect publications and external reachability separately.
+- verify-prefect (REASONED; prefect, prefect-source, prefect-rolling): Anonymous POST /api/flows/filter returning a JSON list is exposed; fixed is 401 with an authorized list on the same origin. Health/ready GET exemptions are version-dependent.
+- verify-dagster (REASONED; dagster-rolling): A RepositoryConnection from /graphql is a read, including empty nodes; GraphQL/transport errors are inconclusive. Test proxy authentication and origin isolation separately.
+- verify-airflow (REASONED; airflow-two, airflow-rolling, fab-rolling): FAB 3.9.0 returning 201 with access_token for airflow/airflow is exposed; pair a valid account and anonymous/authenticated API reads at proxy and origin. Airflow 2 uses its own API/auth.
+- verify-temporal (REASONED; temporal-rolling): Credential-free workflow listing on 7233 is exposed; require rejection and a matched authorized call, not health, TLS errors or missing namespaces as proof of auth.
+- verify-flower (REASONED; flower-rolling): Anonymous UI/API should yield Basic 401 or OAuth login redirect, with a valid-session control; API-disabled is not proof the dashboard is protected.
+- verify-socket (REASONED; flower, linux): Directory/socket permissions, outsider denial, reboot persistence and container numeric IDs remain reasoned; no socket or Flower process ran.
+- flower-stat-run (DEMONSTRATED; linux): Tmpfs directory-only stat distinguished 0755 and 0750; the 0750 directory initially had only base ACL entries.
+- flower-acl-run (DEMONSTRATED; linux): A named nobody search ACL remained invisible in stat mode 750; ls and getfacl exposed the entry.
+- flower-mask-run (DEMONSTRATED; linux): Changing the ACL mask hid named search permission; chmod 0750 restored its reported effectiveness. Access as nobody was not tested.
+- verify-argo (REASONED; argo-three, argo-four, argo-docs): Anonymous workflow JSON is exposed when server RBAC permits; missing tokens should yield 401 without server mode. A 403 alone is inconclusive; pair authorized 200 and inspect auth modes.
+- verify-origin (REASONED; airflow, argo-docs): Any HTTP response from the origin at an untrusted vantage proves publication; use the same responding allowed origin as control and treat connection errors/timeouts as inconclusive.
 <!-- version-basis:end -->
 
 These webservers and UIs schedule and trigger arbitrary code execution across your infrastructure, and most

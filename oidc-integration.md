@@ -199,55 +199,74 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| code-flow: Use server-side authorization code flow with PKCE; RFC 9700 requires PKCE for public clients and recommends it for others, and discourages implicit grant. | OAuth security BCP and PKCE unknown | REASONED |
-| redirect-match: Register an exact callback URI including scheme, host, path and trailing slash; avoid prefix and wildcard matching. | OAuth security BCP and PKCE unknown | REASONED |
-| transaction-binding: Generate state bound to the browser session, nonce and S256 code_challenge for each authorization; request openid email profile. | OAuth security BCP and PKCE unknown; OpenID Connect Core 1.0 | REASONED |
-| code-exchange: Exchange the code server-side with client secret and the code_verifier that produced the challenge. | OAuth security BCP and PKCE unknown; OpenID Connect Core 1.0 | REASONED |
-| token-signature: Validate the ID-token signature against provider JWKS using a pinned algorithm; Core defaults to RS256 unless another was registered. | OpenID Connect Core 1.0; OpenID Connect Discovery 1.0 | REASONED |
-| token-issuer: Require iss to equal the configured issuer before trusting claims. | OpenID Connect Core 1.0 | REASONED |
-| token-audience: aud must include the client ID and no untrusted additional audience; confirm azp equals the client ID where present. | OpenID Connect Core 1.0 | REASONED |
-| token-expiry-nonce: Require unexpired exp and nonce equal to the value sent. | OpenID Connect Core 1.0 | REASONED |
-| token-leaks: Keep codes and tokens out of logs, traces and analytics; set callback Referrer-Policy: no-referrer and redirect to a clean URL. | OAuth security BCP and PKCE unknown | REASONED |
-| refresh-tokens: No offline access is requested, but provider-specific refresh tokens must remain server-side secrets, go only to the token endpoint and be revoked on offboarding. | OAuth security BCP and PKCE unknown | REASONED |
-| account-linking: Link by issuer and sub, not mutable or non-unique email, phone_number or preferred_username. | OpenID Connect Core 1.0; Google identity documentation unknown; Microsoft Entra documentation unknown | REASONED |
-| logout: Destroy the server session and cookie; where advertised, redirect to end_session_endpoint with id_token_hint and registered post_logout_redirect_uri; Entra uses /oauth2/v2.0/logout. | OpenID Connect RP-Initiated Logout 1.0; Microsoft Entra documentation unknown; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
-| discovery: Fetch issuer/.well-known/openid-configuration for endpoints and jwks_uri; tenant-specific issuer must match, with Entra common/organizations handled separately. | OpenID Connect Discovery 1.0; Microsoft Entra documentation unknown | REASONED |
-| google-allowlist: Require verified ID-token hd to equal the Workspace domain; absent hd is rejection and the request parameter is not access control. | Google identity documentation unknown | REASONED |
-| entra-allowlist: Require allowed tid and tenant-specific iss; prefer Single tenant only. organizations accepts any Entra tenant, common also personal accounts; key identity by oid or sub plus tid. | Microsoft Entra documentation unknown | REASONED |
-| github-identity: GitHub OAuth has no discovery or ID token; fetch GET https://api.github.com/user and key identity by numeric id, not login. | GitHub OAuth and REST documentation unknown | REASONED |
-| github-org: With read:org, GET /user/memberships/orgs/&lt;org&gt; must return 200 and state active; 404 is unaffiliated. | GitHub OAuth and REST documentation unknown | REASONED |
-| github-team: With read:org, GET /orgs/&lt;org&gt;/teams/&lt;team_slug&gt;/memberships/&lt;username&gt; must return 200 and state active; pending is an unaccepted invitation and 404 is no membership. | GitHub OAuth and REST documentation unknown | REASONED |
-| okta-groups: Add an ID-token groups claim on the org authorization server and request groups scope; require a named group. More than 100 groups fails, so narrow the filter. | Okta documentation unknown | REASONED |
-| default-deny: Reject and log identities outside the allowlist before creating a session; do not create pending accounts by default. | Google identity documentation unknown; Microsoft Entra documentation unknown; Okta documentation unknown | REASONED |
-| google-registration: Register a Google OAuth client and exact callback; discovery is https://accounts.google.com/.well-known/openid-configuration and iss is https://accounts.google.com or accounts.google.com. | Google identity documentation unknown | REASONED |
-| entra-registration: Register a Web application, callback and client secret; prefer tenant-specific /v2.0/.well-known/openid-configuration discovery for single-tenant apps. | Microsoft Entra documentation unknown | REASONED |
-| entra-template: For common/organizations, substitute GUID tid into the issuer template, match iss exactly, restrict signing keys by issuer scope and enforce the tenant allowlist. | Microsoft Entra documentation unknown | REASONED |
-| github-registration: Register an OAuth app callback; authorize at /login/oauth/authorize with read:user read:org, state and S256 PKCE; exchange at /login/oauth/access_token with secret, code, verifier and redirect_uri. | GitHub OAuth and REST documentation unknown | REASONED |
-| github-callback-default: Always send redirect_uri: omission selects the first callback. Apps with one callback before August 3, 2026 retain wildcard matching; disable it for exact matching. | GitHub OAuth and REST documentation unknown | REASONED |
-| okta-registration: Create an OIDC Web Application with sign-in/out URIs and narrowed assignment; use org discovery or /oauth2/&lt;authorizationServerId&gt; discovery, with iss matching the prefix. | Okta documentation unknown | REASONED |
-| openid-client-signature: Call enableNonRepudiationChecks: openid-client otherwise trusts token-endpoint TLS in code flow; retain verifier, state and nonce in the initiating browser's server session. | openid-client unknown | REASONED |
-| authjs-config: Auth.js uses AUTH_&lt;PROVIDER&gt;_ID/SECRET and Okta/Entra ISSUER, with /api/auth/callback/&lt;provider&gt;; add the allowlist in signIn and override Entra common with the tenant issuer. | Auth.js unknown | REASONED |
-| authjs-revocation: Auth.js JWT-cookie logout leaves a copied token valid until exp unless blocked; use database sessions or a blocklist for server-side revocation. | Auth.js unknown | REASONED |
-| authlib-config: Authlib registration uses Google discovery, openid profile email and S256; authorize_redirect and authorize_access_token implement the callback flow. | Authlib unknown | REASONED |
-| go-oidc-verifier: go-oidc verifies signature, issuer, audience and expiry; compare idToken.Nonce separately and leave SkipIssuerCheck off. | go-oidc unknown | REASONED |
-| entra-mfa: Require authentication strength through Entra Conditional Access; check ID-token and optional-claims documentation before relying on amr=mfa. | Microsoft Entra documentation unknown | REASONED |
-| google-mfa: Google Workspace super administrators can enforce 2-Step Verification in the Admin console for all users, or for a selected organizational unit or configuration group. Guide advice: set Enforcement On for every user who signs in to the app; no Google ID-token MFA claim was verified for this guide. | Google identity documentation unknown | REASONED |
-| okta-mfa: Use Okta authentication and global-session policies; its amr includes pwd, mfa, otp and hwk. | Okta documentation unknown | REASONED |
-| verify-discovery: The discovery probe reads Google issuer and jwks_uri; this does not demonstrate application authorization. | Google identity documentation unknown; OpenID Connect Discovery 1.0 | REASONED |
-| verify-anonymous: Unauthenticated /admin must return 401 or a 302 to provider/login, never 200 or protected content; an unrelated redirect is not success. | OpenID Connect Core 1.0 | REASONED |
-| verify-allowlist: A valid account outside the Google domain, Entra tenant, GitHub organization or Okta group authenticates at the provider but is rejected and logged by the app. | Google identity documentation unknown; Microsoft Entra documentation unknown; GitHub OAuth and REST documentation unknown; Okta documentation unknown | REASONED |
-| verify-redirect: Changing redirect_uri host or adding a path segment must cause a provider error without redirection. | OAuth security BCP and PKCE unknown | REASONED |
-| verify-state: A changed callback state must be rejected. | OAuth security BCP and PKCE unknown | REASONED |
-| verify-token: Accept a valid ID-token control and reject one-property fixtures for expiry beyond skew, wrong aud/azp and broken signature in the token-validation path, not the code callback. | OpenID Connect Core 1.0 | REASONED |
-| verify-logout: After logout a protected page returns to login and a copied old cookie stops authorizing; JWT sessions need database replacement or a revocation check. | Auth.js unknown; OpenID Connect RP-Initiated Logout 1.0; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
-| server-session: After token validation and allowlist authorization, create a server-side session and give the browser only a session cookie marked Secure, HttpOnly and SameSite. | Auth.js unknown; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
-| browser-token-storage: Do not store ID or access tokens in localStorage or script-readable cookies; this server-side login recipe has no browser need for them. | OAuth security BCP and PKCE unknown; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd | REASONED |
-| client-secret-storage: Keep the web app client secret confidential. Prefer a secret manager (this guide's advice; OWASP lists it as an option). In containers, use an orchestrator-mounted secret or secret-store fetch where possible, and a runtime environment variable only if those are unavailable. Never commit the secret to a repository or bake it into an image (this guide's advice; Docker documents that build ARG and ENV persist in the final image). | OAuth security BCP and PKCE unknown; RFC 6749 client authentication unknown; OWASP Cheat Sheet Series 668ba7db3d0da5868b8a0305c259f7f6914a6ecd; Docker build documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
-| github-org-mfa: GitHub OAuth has no ID token. An active organization membership check establishes membership only; inference from the pinned 2FA policy: membership alone does not prove MFA because a member without 2FA retains membership when required 2FA blocks resource access. Guide assessment: MFA depends on the organization's effective 2FA requirement and whether it is enabled; guide advice: verify that requirement before relying on it for MFA. This guide has not established that a member without 2FA fails the app's membership check; test with such an account before relying on it. | GitHub OAuth and REST documentation unknown; GitHub organization two-factor authentication policy cb051611377a0d2904411e6157154e9b4953d870 | REASONED |
-| authjs-session-storage: Auth.js stores an encrypted JWT or database session ID in an HttpOnly cookie; use database sessions or a server blocklist when copied-cookie revocation is required. | Auth.js unknown | REASONED |
-| mfa-session-check: An app may additionally refuse an ID-token session showing no second factor only where the provider documents that claim; do not assume a portable MFA claim across providers. | Microsoft Entra documentation unknown; Okta documentation unknown | REASONED |
+Components (recorded basis):
+
+- oauth: OAuth security BCP and PKCE, unknown
+- core: OpenID Connect Core, 1.0
+- discovery: OpenID Connect Discovery, 1.0
+- logout: OpenID Connect RP-Initiated Logout, 1.0
+- google: Google identity documentation, unknown
+- entra: Microsoft Entra documentation, unknown
+- github-2fa: GitHub organization two-factor authentication policy, cb051611377a0d2904411e6157154e9b4953d870
+- github: GitHub OAuth and REST documentation, unknown
+- okta: Okta documentation, unknown
+- openid-client: openid-client, unknown
+- authjs: Auth.js, unknown
+- authlib: Authlib, unknown
+- go-oidc: go-oidc, unknown
+- secret-rfc: RFC 6749 client authentication, unknown
+- docker-build: Docker build documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
+- owasp-docs: OWASP Cheat Sheet Series, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
+
+Claims (full source mapping in the front matter):
+
+- code-flow (REASONED; oauth): Use server-side authorization code flow with PKCE; RFC 9700 requires PKCE for public clients and recommends it for others, and discourages implicit grant.
+- redirect-match (REASONED; oauth): Register an exact callback URI including scheme, host, path and trailing slash; avoid prefix and wildcard matching.
+- transaction-binding (REASONED; oauth, core): Generate state bound to the browser session, nonce and S256 code_challenge for each authorization; request openid email profile.
+- code-exchange (REASONED; oauth, core): Exchange the code server-side with client secret and the code_verifier that produced the challenge.
+- token-signature (REASONED; core, discovery): Validate the ID-token signature against provider JWKS using a pinned algorithm; Core defaults to RS256 unless another was registered.
+- token-issuer (REASONED; core): Require iss to equal the configured issuer before trusting claims.
+- token-audience (REASONED; core): aud must include the client ID and no untrusted additional audience; confirm azp equals the client ID where present.
+- token-expiry-nonce (REASONED; core): Require unexpired exp and nonce equal to the value sent.
+- token-leaks (REASONED; oauth): Keep codes and tokens out of logs, traces and analytics; set callback Referrer-Policy: no-referrer and redirect to a clean URL.
+- refresh-tokens (REASONED; oauth): No offline access is requested, but provider-specific refresh tokens must remain server-side secrets, go only to the token endpoint and be revoked on offboarding.
+- account-linking (REASONED; core, google, entra): Link by issuer and sub, not mutable or non-unique email, phone_number or preferred_username.
+- logout (REASONED; logout, entra, owasp-docs): Destroy the server session and cookie; where advertised, redirect to end_session_endpoint with id_token_hint and registered post_logout_redirect_uri; Entra uses /oauth2/v2.0/logout.
+- discovery (REASONED; discovery, entra): Fetch issuer/.well-known/openid-configuration for endpoints and jwks_uri; tenant-specific issuer must match, with Entra common/organizations handled separately.
+- google-allowlist (REASONED; google): Require verified ID-token hd to equal the Workspace domain; absent hd is rejection and the request parameter is not access control.
+- entra-allowlist (REASONED; entra): Require allowed tid and tenant-specific iss; prefer Single tenant only. organizations accepts any Entra tenant, common also personal accounts; key identity by oid or sub plus tid.
+- github-identity (REASONED; github): GitHub OAuth has no discovery or ID token; fetch GET https://api.github.com/user and key identity by numeric id, not login.
+- github-org (REASONED; github): With read:org, GET /user/memberships/orgs/&lt;org&gt; must return 200 and state active; 404 is unaffiliated.
+- github-team (REASONED; github): With read:org, GET /orgs/&lt;org&gt;/teams/&lt;team_slug&gt;/memberships/&lt;username&gt; must return 200 and state active; pending is an unaccepted invitation and 404 is no membership.
+- okta-groups (REASONED; okta): Add an ID-token groups claim on the org authorization server and request groups scope; require a named group. More than 100 groups fails, so narrow the filter.
+- default-deny (REASONED; google, entra, okta): Reject and log identities outside the allowlist before creating a session; do not create pending accounts by default.
+- google-registration (REASONED; google): Register a Google OAuth client and exact callback; discovery is https://accounts.google.com/.well-known/openid-configuration and iss is https://accounts.google.com or accounts.google.com.
+- entra-registration (REASONED; entra): Register a Web application, callback and client secret; prefer tenant-specific /v2.0/.well-known/openid-configuration discovery for single-tenant apps.
+- entra-template (REASONED; entra): For common/organizations, substitute GUID tid into the issuer template, match iss exactly, restrict signing keys by issuer scope and enforce the tenant allowlist.
+- github-registration (REASONED; github): Register an OAuth app callback; authorize at /login/oauth/authorize with read:user read:org, state and S256 PKCE; exchange at /login/oauth/access_token with secret, code, verifier and redirect_uri.
+- github-callback-default (REASONED; github): Always send redirect_uri: omission selects the first callback. Apps with one callback before August 3, 2026 retain wildcard matching; disable it for exact matching.
+- okta-registration (REASONED; okta): Create an OIDC Web Application with sign-in/out URIs and narrowed assignment; use org discovery or /oauth2/&lt;authorizationServerId&gt; discovery, with iss matching the prefix.
+- openid-client-signature (REASONED; openid-client): Call enableNonRepudiationChecks: openid-client otherwise trusts token-endpoint TLS in code flow; retain verifier, state and nonce in the initiating browser's server session.
+- authjs-config (REASONED; authjs): Auth.js uses AUTH_&lt;PROVIDER&gt;_ID/SECRET and Okta/Entra ISSUER, with /api/auth/callback/&lt;provider&gt;; add the allowlist in signIn and override Entra common with the tenant issuer.
+- authjs-revocation (REASONED; authjs): Auth.js JWT-cookie logout leaves a copied token valid until exp unless blocked; use database sessions or a blocklist for server-side revocation.
+- authlib-config (REASONED; authlib): Authlib registration uses Google discovery, openid profile email and S256; authorize_redirect and authorize_access_token implement the callback flow.
+- go-oidc-verifier (REASONED; go-oidc): go-oidc verifies signature, issuer, audience and expiry; compare idToken.Nonce separately and leave SkipIssuerCheck off.
+- entra-mfa (REASONED; entra): Require authentication strength through Entra Conditional Access; check ID-token and optional-claims documentation before relying on amr=mfa.
+- google-mfa (REASONED; google): Google Workspace super administrators can enforce 2-Step Verification in the Admin console for all users, or for a selected organizational unit or configuration group. Guide advice: set Enforcement On for every user who signs in to the app; no Google ID-token MFA claim was verified for this guide.
+- okta-mfa (REASONED; okta): Use Okta authentication and global-session policies; its amr includes pwd, mfa, otp and hwk.
+- verify-discovery (REASONED; google, discovery): The discovery probe reads Google issuer and jwks_uri; this does not demonstrate application authorization.
+- verify-anonymous (REASONED; core): Unauthenticated /admin must return 401 or a 302 to provider/login, never 200 or protected content; an unrelated redirect is not success.
+- verify-allowlist (REASONED; google, entra, github, okta): A valid account outside the Google domain, Entra tenant, GitHub organization or Okta group authenticates at the provider but is rejected and logged by the app.
+- verify-redirect (REASONED; oauth): Changing redirect_uri host or adding a path segment must cause a provider error without redirection.
+- verify-state (REASONED; oauth): A changed callback state must be rejected.
+- verify-token (REASONED; core): Accept a valid ID-token control and reject one-property fixtures for expiry beyond skew, wrong aud/azp and broken signature in the token-validation path, not the code callback.
+- verify-logout (REASONED; authjs, logout, owasp-docs): After logout a protected page returns to login and a copied old cookie stops authorizing; JWT sessions need database replacement or a revocation check.
+- server-session (REASONED; authjs, owasp-docs): After token validation and allowlist authorization, create a server-side session and give the browser only a session cookie marked Secure, HttpOnly and SameSite.
+- browser-token-storage (REASONED; oauth, owasp-docs): Do not store ID or access tokens in localStorage or script-readable cookies; this server-side login recipe has no browser need for them.
+- client-secret-storage (REASONED; oauth, secret-rfc, owasp-docs, docker-build): Keep the web app client secret confidential. Prefer a secret manager (this guide's advice; OWASP lists it as an option). In containers, use an orchestrator-mounted secret or secret-store fetch where possible, and a runtime environment variable only if those are unavailable. Never commit the secret to a repository or bake it into an image (this guide's advice; Docker documents that build ARG and ENV persist in the final image).
+- github-org-mfa (REASONED; github, github-2fa): GitHub OAuth has no ID token. An active organization membership check establishes membership only; inference from the pinned 2FA policy: membership alone does not prove MFA because a member without 2FA retains membership when required 2FA blocks resource access. Guide assessment: MFA depends on the organization's effective 2FA requirement and whether it is enabled; guide advice: verify that requirement before relying on it for MFA. This guide has not established that a member without 2FA fails the app's membership check; test with such an account before relying on it.
+- authjs-session-storage (REASONED; authjs): Auth.js stores an encrypted JWT or database session ID in an HttpOnly cookie; use database sessions or a server blocklist when copied-cookie revocation is required.
+- mfa-session-check (REASONED; entra, okta): An app may additionally refuse an ID-token session showing no second factor only where the provider documents that claim; do not assume a portable MFA claim across providers.
 <!-- version-basis:end -->
 
 Adding "Sign in with Google" takes an afternoon; the recurring defects are in what happens after the redirect comes back: an unvalidated ID token, an account matched by email, or an app that admits every Google or Microsoft account in existence because nobody checked whose it was. This guide gives the one flow every recipe shares, the exact claim to check per provider, the registration steps, and library pointers. Choosing a provider is covered in [identity-providers.md](identity-providers.md); login placed in front of an app without code changes is covered in [cloud-identity-proxies.md](cloud-identity-proxies.md). Authorizing an MCP client to a remote server layers additional obligations on this flow and is covered in [mcp-clients.md](mcp-clients.md).

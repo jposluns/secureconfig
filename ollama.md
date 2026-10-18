@@ -205,73 +205,87 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| local-auth: Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing. | Ollama v0.34.2; Ollama documentation (rolling) unknown | REASONED |
-| local-tls: Ollama serves plaintext; an https prefix in OLLAMA_HOST does not enable TLS. | Ollama v0.34.2 | REASONED |
-| host-bind: Standalone default is 127.0.0.1:11434; set OLLAMA_HOST in the service and reload/restart systemd. | Ollama v0.34.2; systemd v257 | REASONED |
-| container-bind: Official image sets 0.0.0.0:11434 internally; bridge publication and container binding are separate. | Ollama v0.34.2; Docker Engine localhost boundary 28.0 | REASONED |
-| publication: Use 127.0.0.1:11434:11434 with Engine 28.0+; earlier same-L2 access defeats this boundary; unpublished private networks are an alternative. | Docker Engine localhost boundary 28.0 | REASONED |
-| host-network: Host networking ignores publication flags; override the image listener and restrict authorized peers. | Ollama v0.34.2; Docker Engine localhost boundary 28.0 | REASONED |
-| basic-auth: nginx server-scope Basic auth protects permitted locations; denied paths/methods may reject before authentication. | nginx unknown | REASONED |
-| password-hash: Use prompted htpasswd -B -C 12; bare -B defaults to bcrypt cost 5, below the cited minimum 10. | Apache htpasswd unknown; OWASP password guidance unknown | REASONED |
-| tls-proxy: Publish authenticated TLS; encrypt the backend leg separately when proxy and Ollama are on different hosts. | nginx unknown | REASONED |
-| host-header: Proxy Host localhost:11434 avoids loopback middleware hostname rejection; it is not authentication. | Ollama v0.34.2; nginx unknown | REASONED |
-| idle-timeout: proxy_read_timeout 300s limits gaps between reads, not total generation duration. | nginx unknown | REASONED |
-| caddy-policy: Caddy Basic auth, exact POST /api/chat matcher and fallback deny other paths; supply admission limits separately. | Caddy unknown | REASONED |
-| bearer-policy: Exact nginx bearer comparison is a shared configuration secret without a constant-time guarantee; repeat it in every permitted location. | nginx unknown | REASONED |
-| mtls: Dedicated client CA and ssl_verify_client require certificate lifecycle management; combine Basic auth only deliberately. | nginx unknown | REASONED |
-| access: Access authenticates the tunnel; target a loopback policy proxy on 11435 to retain inference-only authorization. | Cloudflare unknown; nginx unknown | REASONED |
-| access-host: originRequest.httpHostHeader and the final proxy retain localhost:11434; keep both local listeners private. | Cloudflare unknown; Ollama v0.34.2 | REASONED |
-| access-limits: Access authentication supplies no inference budgets; retain proxy limits, optionally add WAF rate limits and trusted client-address handling. | Cloudflare unknown; nginx unknown | REASONED |
-| mfa: Human MFA belongs at the fronting identity layer; machine service tokens are not a human MFA flow. | Cloudflare unknown | REASONED |
-| inference-policy: Allow only exact required inference paths/methods; broad /api/ or /v1/ prefixes grant excessive authority. | nginx unknown; Ollama v0.34.2 | REASONED |
-| pull: Keep POST /api/pull private: acquisition consumes storage and network capacity. | Ollama v0.34.2 | REASONED |
-| push: Keep POST /api/push private: export has separate upstream authorization. | Ollama v0.34.2 | REASONED |
-| create: Keep POST /api/create private: it creates/replaces definitions and processes uploaded model material. | Ollama v0.34.2 | REASONED |
-| copy: Keep POST /api/copy private: it creates another model name. | Ollama v0.34.2 | REASONED |
-| delete: Keep DELETE /api/delete private: it removes models and associated data. | Ollama v0.34.2 | REASONED |
-| blob-write: Keep POST /api/blobs/:digest private: it uploads model-store bytes. | Ollama v0.34.2 | REASONED |
-| blob-read: Keep HEAD /api/blobs/:digest private: it reveals blob existence. | Ollama v0.34.2 | REASONED |
-| other-routes: Default denial excludes account, experimental web, desktop proxy and unused compatibility routes. | Ollama v0.34.2 | REASONED |
-| file-validation: Create validates relative filenames and blob paths; arbitrary host-file access is not established at this pin. | Ollama v0.34.2 | REASONED |
-| transfer: Management transfers are egress/disk-fill surfaces; insecure alters redirect protections, without demonstrating unrestricted SSRF. | Ollama v0.34.2; Ollama release commit dfabde4539e42ba1e1eab50a3a50b88aea7958a0 | REASONED |
-| origins: OLLAMA_ORIGINS adds to built-in origins; removing wildcards is neither authentication nor an exclusive-origin policy. | Ollama v0.34.2 | REASONED |
-| service-user: Use a dedicated account and writable store; preserve GPU access and do not assume the container shares installer identity. | Ollama v0.34.2 | REASONED |
-| store: Proposed 0700 directories, 0600 files and UMask=0077 need existing-permission/ACL inspection; separate service configuration and proxy keys. | Ollama v0.34.2; systemd v257 | REASONED |
-| model-path: OLLAMA_MODELS relocates models, not the entire service home or signing keys. | Ollama v0.34.2 | REASONED |
-| loaded-models: Loaded-model capacity is automatic unless configured; the example selects one model, not a total memory cap. | Ollama v0.34.2 | REASONED |
-| parallel: OLLAMA_NUM_PARALLEL defaults to 1. | Ollama v0.34.2 | REASONED |
-| queue: OLLAMA_MAX_QUEUE defaults to 512; the example selects 16 without promising the seventeenth HTTP request is refused. | Ollama v0.34.2 | REASONED |
-| keep-alive: Keep-alive defaults to five minutes; one minute is the example, and requests can override it. | Ollama v0.34.2 | REASONED |
-| context: Context defaults are VRAM-dependent 4K/32K/256K; implementation thresholds are roughly 23/47 GiB after overhead versus nominal 24/48 GiB. | Ollama v0.34.2 | REASONED |
-| rate: Example nginx source-address rate is 2r/s, burst 4 nodelay, with 429 responses; trusted client-address handling matters behind proxies. | nginx unknown | REASONED |
-| concurrency: Example nginx server-name budget is four active requests with 429; it does not cap every idle/incomplete connection. | nginx unknown | REASONED |
-| body-limit: Example body cap is 1 MiB; a larger valid fixture should get 413 without upstream work. | nginx unknown | REASONED |
-| parameters: Gateway must validate model, num_ctx, num_predict and keep_alive; defaults/path allowlists do not enforce JSON ceilings. | Ollama v0.34.2 | REASONED |
-| registry-names: Fully qualified registry names are supported; unqualified names select Ollama's registry and omitted tags select latest. | Ollama v0.34.2 | REASONED |
-| provenance: Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust. | Ollama v0.34.2; Ollama documentation (rolling) unknown | REASONED |
-| local-import: CLI imports reviewed local GGUF through a Modelfile; artifact SHA-256 and manifest digest are different identifiers. | Ollama v0.34.2 | REASONED |
-| registry-egress: Restrict acquisition/export to administrators and constrain egress; compare approved and controlled disallowed transfers. | Ollama v0.34.2 | REASONED |
-| cloud: OLLAMA_NO_CLOUD=1 disables cloud models and web search after restart; it is not a no-network switch. | Ollama v0.34.2 | REASONED |
-| remotes: OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist. | Ollama v0.34.2 | REASONED |
-| diagnostics: Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts. | Ollama v0.34.2; Ollama documentation (rolling) unknown | REASONED |
-| request-logs: Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup. | Ollama v0.34.2 | REASONED |
-| profiling: No metrics route was found in the main router; this guide's review of first-party v0.34.2 Go source found no net/http/pprof import or explicit profiling registration. Dependencies were not reviewed; shipped-binary pprof availability remains unestablished and cannot be inferred from debug settings. | Ollama v0.34.2 | REASONED |
-| verify-inventory: Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation. | Ollama v0.34.2; Docker Engine localhost boundary 28.0; systemd v257 | REASONED |
-| verify-bypass: HTTP means direct 11434 answered; fixed refusal needs the real remote path plus successful proxy inference; local errors are inconclusive. | Ollama v0.34.2; curl unknown | REASONED |
-| verify-auth: Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient. | nginx unknown; Ollama v0.34.2; curl unknown | REASONED |
-| verify-tls: Correct trust/hostname succeeds; wrong trust/hostname and missing/untrusted mTLS certificates must fail before inference. | nginx unknown; curl unknown | REASONED |
-| verify-management: Public management must be denied without upstream mutation; private admin operations and public chat supply positive controls. | Ollama v0.34.2 | REASONED |
-| verify-tags: Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test. | nginx unknown; Ollama documentation (rolling) unknown | REASONED |
-| verify-origins: Compare unwanted, required and built-in origins with actual browser calls; POST-only proxy preflight refusals differ by variant. | Ollama v0.34.2; nginx unknown; Caddy unknown | REASONED |
-| verify-rate: Eight bounded requests test admission with limiter/upstream evidence and recovery; the burst alone does not demonstrate both limiters. | nginx unknown | REASONED |
-| verify-concurrency: Hold four accepted requests active within the rate budget, reject another, then confirm a freed slot accepts work. | nginx unknown | REASONED |
-| verify-scheduler: Compare loading/eviction, keep-alive expiry and actual queue occupancy; public limits can prevent exercising the private queue. | Ollama v0.34.2 | REASONED |
-| verify-cloud: Authorized cloud chat works before disablement and refuses afterward while local chat succeeds; invalid credentials/models are inconclusive. | Ollama v0.34.2 | REASONED |
-| verify-captures: Compare completed canary requests with logging enabled/disabled in the actual temporary namespace; deny public diagnostics while private controls work. | Ollama v0.34.2 | REASONED |
-| proxy-parsing: nginx -t and caddy validate check configuration acceptance only; native parsing was not demonstrated here. | nginx unknown; Caddy unknown | REASONED |
-| curl-version: Displayed exitcode and errormsg write-out variables need curl 7.75.0 or later; no tested curl release is recorded. | curl unknown | REASONED |
+Components (recorded basis):
+
+- ollama: Ollama, v0.34.2
+- commit: Ollama release commit, dfabde4539e42ba1e1eab50a3a50b88aea7958a0
+- docker: Docker Engine localhost boundary, 28.0
+- systemd: systemd, v257
+- nginx: nginx, unknown
+- htpasswd: Apache htpasswd, unknown
+- owasp: OWASP password guidance, unknown
+- caddy: Caddy, unknown
+- cloudflare: Cloudflare, unknown
+- curl: curl, unknown
+- ollama-rolling: Ollama documentation (rolling), unknown
+
+Claims (full source mapping in the front matter):
+
+- local-auth (REASONED; ollama, ollama-rolling): Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing.
+- local-tls (REASONED; ollama): Ollama serves plaintext; an https prefix in OLLAMA_HOST does not enable TLS.
+- host-bind (REASONED; ollama, systemd): Standalone default is 127.0.0.1:11434; set OLLAMA_HOST in the service and reload/restart systemd.
+- container-bind (REASONED; ollama, docker): Official image sets 0.0.0.0:11434 internally; bridge publication and container binding are separate.
+- publication (REASONED; docker): Use 127.0.0.1:11434:11434 with Engine 28.0+; earlier same-L2 access defeats this boundary; unpublished private networks are an alternative.
+- host-network (REASONED; ollama, docker): Host networking ignores publication flags; override the image listener and restrict authorized peers.
+- basic-auth (REASONED; nginx): nginx server-scope Basic auth protects permitted locations; denied paths/methods may reject before authentication.
+- password-hash (REASONED; htpasswd, owasp): Use prompted htpasswd -B -C 12; bare -B defaults to bcrypt cost 5, below the cited minimum 10.
+- tls-proxy (REASONED; nginx): Publish authenticated TLS; encrypt the backend leg separately when proxy and Ollama are on different hosts.
+- host-header (REASONED; ollama, nginx): Proxy Host localhost:11434 avoids loopback middleware hostname rejection; it is not authentication.
+- idle-timeout (REASONED; nginx): proxy_read_timeout 300s limits gaps between reads, not total generation duration.
+- caddy-policy (REASONED; caddy): Caddy Basic auth, exact POST /api/chat matcher and fallback deny other paths; supply admission limits separately.
+- bearer-policy (REASONED; nginx): Exact nginx bearer comparison is a shared configuration secret without a constant-time guarantee; repeat it in every permitted location.
+- mtls (REASONED; nginx): Dedicated client CA and ssl_verify_client require certificate lifecycle management; combine Basic auth only deliberately.
+- access (REASONED; cloudflare, nginx): Access authenticates the tunnel; target a loopback policy proxy on 11435 to retain inference-only authorization.
+- access-host (REASONED; cloudflare, ollama): originRequest.httpHostHeader and the final proxy retain localhost:11434; keep both local listeners private.
+- access-limits (REASONED; cloudflare, nginx): Access authentication supplies no inference budgets; retain proxy limits, optionally add WAF rate limits and trusted client-address handling.
+- mfa (REASONED; cloudflare): Human MFA belongs at the fronting identity layer; machine service tokens are not a human MFA flow.
+- inference-policy (REASONED; nginx, ollama): Allow only exact required inference paths/methods; broad /api/ or /v1/ prefixes grant excessive authority.
+- pull (REASONED; ollama): Keep POST /api/pull private: acquisition consumes storage and network capacity.
+- push (REASONED; ollama): Keep POST /api/push private: export has separate upstream authorization.
+- create (REASONED; ollama): Keep POST /api/create private: it creates/replaces definitions and processes uploaded model material.
+- copy (REASONED; ollama): Keep POST /api/copy private: it creates another model name.
+- delete (REASONED; ollama): Keep DELETE /api/delete private: it removes models and associated data.
+- blob-write (REASONED; ollama): Keep POST /api/blobs/:digest private: it uploads model-store bytes.
+- blob-read (REASONED; ollama): Keep HEAD /api/blobs/:digest private: it reveals blob existence.
+- other-routes (REASONED; ollama): Default denial excludes account, experimental web, desktop proxy and unused compatibility routes.
+- file-validation (REASONED; ollama): Create validates relative filenames and blob paths; arbitrary host-file access is not established at this pin.
+- transfer (REASONED; ollama, commit): Management transfers are egress/disk-fill surfaces; insecure alters redirect protections, without demonstrating unrestricted SSRF.
+- origins (REASONED; ollama): OLLAMA_ORIGINS adds to built-in origins; removing wildcards is neither authentication nor an exclusive-origin policy.
+- service-user (REASONED; ollama): Use a dedicated account and writable store; preserve GPU access and do not assume the container shares installer identity.
+- store (REASONED; ollama, systemd): Proposed 0700 directories, 0600 files and UMask=0077 need existing-permission/ACL inspection; separate service configuration and proxy keys.
+- model-path (REASONED; ollama): OLLAMA_MODELS relocates models, not the entire service home or signing keys.
+- loaded-models (REASONED; ollama): Loaded-model capacity is automatic unless configured; the example selects one model, not a total memory cap.
+- parallel (REASONED; ollama): OLLAMA_NUM_PARALLEL defaults to 1.
+- queue (REASONED; ollama): OLLAMA_MAX_QUEUE defaults to 512; the example selects 16 without promising the seventeenth HTTP request is refused.
+- keep-alive (REASONED; ollama): Keep-alive defaults to five minutes; one minute is the example, and requests can override it.
+- context (REASONED; ollama): Context defaults are VRAM-dependent 4K/32K/256K; implementation thresholds are roughly 23/47 GiB after overhead versus nominal 24/48 GiB.
+- rate (REASONED; nginx): Example nginx source-address rate is 2r/s, burst 4 nodelay, with 429 responses; trusted client-address handling matters behind proxies.
+- concurrency (REASONED; nginx): Example nginx server-name budget is four active requests with 429; it does not cap every idle/incomplete connection.
+- body-limit (REASONED; nginx): Example body cap is 1 MiB; a larger valid fixture should get 413 without upstream work.
+- parameters (REASONED; ollama): Gateway must validate model, num_ctx, num_predict and keep_alive; defaults/path allowlists do not enforce JSON ceilings.
+- registry-names (REASONED; ollama): Fully qualified registry names are supported; unqualified names select Ollama's registry and omitted tags select latest.
+- provenance (REASONED; ollama, ollama-rolling): Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust.
+- local-import (REASONED; ollama): CLI imports reviewed local GGUF through a Modelfile; artifact SHA-256 and manifest digest are different identifiers.
+- registry-egress (REASONED; ollama): Restrict acquisition/export to administrators and constrain egress; compare approved and controlled disallowed transfers.
+- cloud (REASONED; ollama): OLLAMA_NO_CLOUD=1 disables cloud models and web search after restart; it is not a no-network switch.
+- remotes (REASONED; ollama): OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist.
+- diagnostics (REASONED; ollama, ollama-rolling): Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts.
+- request-logs (REASONED; ollama): Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup.
+- profiling (REASONED; ollama): No metrics route was found in the main router; this guide's review of first-party v0.34.2 Go source found no net/http/pprof import or explicit profiling registration. Dependencies were not reviewed; shipped-binary pprof availability remains unestablished and cannot be inferred from debug settings.
+- verify-inventory (REASONED; ollama, docker, systemd): Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation.
+- verify-bypass (REASONED; ollama, curl): HTTP means direct 11434 answered; fixed refusal needs the real remote path plus successful proxy inference; local errors are inconclusive.
+- verify-auth (REASONED; nginx, ollama, curl): Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient.
+- verify-tls (REASONED; nginx, curl): Correct trust/hostname succeeds; wrong trust/hostname and missing/untrusted mTLS certificates must fail before inference.
+- verify-management (REASONED; ollama): Public management must be denied without upstream mutation; private admin operations and public chat supply positive controls.
+- verify-tags (REASONED; nginx, ollama-rolling): Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test.
+- verify-origins (REASONED; ollama, nginx, caddy): Compare unwanted, required and built-in origins with actual browser calls; POST-only proxy preflight refusals differ by variant.
+- verify-rate (REASONED; nginx): Eight bounded requests test admission with limiter/upstream evidence and recovery; the burst alone does not demonstrate both limiters.
+- verify-concurrency (REASONED; nginx): Hold four accepted requests active within the rate budget, reject another, then confirm a freed slot accepts work.
+- verify-scheduler (REASONED; ollama): Compare loading/eviction, keep-alive expiry and actual queue occupancy; public limits can prevent exercising the private queue.
+- verify-cloud (REASONED; ollama): Authorized cloud chat works before disablement and refuses afterward while local chat succeeds; invalid credentials/models are inconclusive.
+- verify-captures (REASONED; ollama): Compare completed canary requests with logging enabled/disabled in the actual temporary namespace; deny public diagnostics while private controls work.
+- proxy-parsing (REASONED; nginx, caddy): nginx -t and caddy validate check configuration acceptance only; native parsing was not demonstrated here.
+- curl-version (REASONED; curl): Displayed exitcode and errormsg write-out variables need curl 7.75.0 or later; no tested curl release is recorded.
 <!-- version-basis:end -->
 
 Ollama's local HTTP API has **no native inbound authentication and no TLS**. A reachable listener gives callers inference and management capabilities, including model acquisition, replacement, export, and deletion. Model metadata may disclose templates and system prompts. Cloud credentials can also authorize upstream use. These capabilities do not establish arbitrary access to every host file. The security boundary for remote access is an authenticating proxy or tunnel, with a policy that separates inference from administration. See the [authentication reference](https://docs.ollama.com/api/authentication) and [server implementation](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go).

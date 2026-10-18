@@ -160,24 +160,41 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| tls-defaults: lighttpd 1.4.56 and later disables SSLv2, SSLv3, TLS 1.0 and TLS 1.1 by default. | lighttpd TLS minimum 1.4.56 | REASONED |
-| tls-listeners: Load mod_openssl and enable TLS on both :443 and [::]:443 with ssl.pemfile and ssl.privkey; omitting the IPv6 socket leaves IPv6 clients on plain HTTP. | lighttpd TLS minimum 1.4.56 | REASONED |
-| certificate-chain: ssl.pemfile uses fullchain.pem rather than a certificate without its chain. | lighttpd TLS minimum 1.4.56 | REASONED |
-| separate-key: ssl.privkey exists from 1.4.53; older versions need certificate and key concatenated into ssl.pemfile. | lighttpd separate-key minimum 1.4.53 | REASONED |
-| protocol-floor: ssl.openssl.ssl-conf-cmd sets MinProtocol to TLSv1.2 explicitly; recent versions already default to TLS 1.2. | lighttpd TLS minimum 1.4.56 | REASONED |
-| module-defaults: In lighttpd 1.4.75, mod_h2 is inserted unless server.feature-flags disables server.h2proto (enabled by default); when server.compat-module-load is enabled (the default), mod_indexfile and mod_dirlisting are conditionally added when enabled, mod_staticfile is added when absent, and compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. Load mod_redirect explicitly. | lighttpd documentation unknown; lighttpd module loader source 1.4.75 | REASONED |
-| http-redirect: For the http scheme, redirect to HTTPS preserving authority, path and query; port 80 must redirect rather than serve content. | lighttpd documentation unknown | REASONED |
-| redirect-code: Set url.redirect-code to 308 explicitly on versions before 1.4.75. | lighttpd redirect default transition 1.4.75 | REASONED |
-| basic-auth: Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable. | lighttpd documentation unknown | REASONED |
-| password-file: Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally, with other hashes of at least 13 characters checked through crypt() when built with crypt support; under USE_LIB_CRYPTO_MD4, the $1+ntlm$ path derives an NTLM hash and calls crypt() with that derived value and a $1$ salt. Check the build and platform's accepted hashes before choosing a flag; this check is this guide's compatibility advice. | lighttpd documentation unknown; lighttpd file authentication source 1.4.75; Apache htpasswd manual 2.4; Debian apache2-utils package trixie; Fedora httpd-tools package unknown | REASONED |
-| mfa: Basic authentication is single-factor; add MFA by fronting this service with Cloudflare Access or an MFA-capable proxy (this guide's requirement). Authelia v4.39.28's complete supported-proxy list has no lighttpd entry (this guide's inference from the table); Cloudflare Access documents self-hosted application and MFA policy controls; applying them to lighttpd is this guide's assessment. This guide assesses that a lighttpd origin reachable without passing through Access is not protected by it. | lighttpd documentation unknown; Authelia proxy support v4.39.28; Cloudflare Access documentation commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
-| verify-config: lighttpd 1.4.75 -tt -f /etc/lighttpd/lighttpd.conf tests the named file for syntax errors and initializes modules; configuration failures prevent the &amp;&amp; reload (this guide's inference from the nonzero process result and shell chaining). The cited upstream unit starts from that file and defines a USR1 reload through ExecReload; systemctl reload triggers the service action, whose signal does not establish completion. Confirm the installed unit uses that file and defines reload (this guide's advice). | lighttpd documentation unknown; lighttpd verify source 1.4.75; systemd reload manual v262 | REASONED |
-| verify-redirect: The HTTP header request should show a redirect to HTTPS; these are read-and-judge status checks. | lighttpd documentation unknown | REASONED |
-| verify-auth: An HTTPS request without credentials should return 401 once authentication is enabled. | lighttpd documentation unknown | REASONED |
-| verify-listeners: Read every listener with ss -tlnp: front-door authentication does not establish that no other listener serves content. The ss version is unrecorded. | lighttpd TLS minimum 1.4.56 | REASONED |
-| verify-host: In lighttpd 1.4.75, request-time $HTTP["host"] matching uses the HTTP Host value, while TLS SNI can select mod_openssl settings before request headers; a Host outside a conditional auth.require falls back to global configuration for that rule (this guide's inference from conditional merging and mod_auth documentation). On a protected path, this guide interprets 401 as the pass and 200 as the protected path served without authentication on this TLS connection to a client that sends another host. Apache 2.4.69 uses the SNI hostname, when the client sends it and the server supports SNI, for name-based TLS virtual-host selection; varying Host while keeping URL and SNI fixed is this guide's auth-check advice. | lighttpd documentation unknown; lighttpd verify source 1.4.75; Apache virtual-host source 2.4.69 | REASONED |
+Components (recorded basis):
+
+- tls: lighttpd TLS minimum, 1.4.56
+- key: lighttpd separate-key minimum, 1.4.53
+- redirect: lighttpd redirect default transition, 1.4.75
+- docs: lighttpd documentation, unknown
+- modules-source: lighttpd module loader source, 1.4.75
+- authn-source: lighttpd file authentication source, 1.4.75
+- htpasswd-tool: Apache htpasswd manual, 2.4
+- debian-package: Debian apache2-utils package, trixie
+- authelia: Authelia proxy support, v4.39.28
+- cloudflare-access: Cloudflare Access documentation, commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104
+- fedora-package: Fedora httpd-tools package, unknown
+- lighttpd-verify-source: lighttpd verify source, 1.4.75
+- systemd-reload: systemd reload manual, v262
+- apache-vhosts: Apache virtual-host source, 2.4.69
+
+Claims (full source mapping in the front matter):
+
+- tls-defaults (REASONED; tls): lighttpd 1.4.56 and later disables SSLv2, SSLv3, TLS 1.0 and TLS 1.1 by default.
+- tls-listeners (REASONED; tls): Load mod_openssl and enable TLS on both :443 and [::]:443 with ssl.pemfile and ssl.privkey; omitting the IPv6 socket leaves IPv6 clients on plain HTTP.
+- certificate-chain (REASONED; tls): ssl.pemfile uses fullchain.pem rather than a certificate without its chain.
+- separate-key (REASONED; key): ssl.privkey exists from 1.4.53; older versions need certificate and key concatenated into ssl.pemfile.
+- protocol-floor (REASONED; tls): ssl.openssl.ssl-conf-cmd sets MinProtocol to TLSv1.2 explicitly; recent versions already default to TLS 1.2.
+- module-defaults (REASONED; docs, modules-source): In lighttpd 1.4.75, mod_h2 is inserted unless server.feature-flags disables server.h2proto (enabled by default); when server.compat-module-load is enabled (the default), mod_indexfile and mod_dirlisting are conditionally added when enabled, mod_staticfile is added when absent, and compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. Load mod_redirect explicitly.
+- http-redirect (REASONED; docs): For the http scheme, redirect to HTTPS preserving authority, path and query; port 80 must redirect rather than serve content.
+- redirect-code (REASONED; redirect): Set url.redirect-code to 308 explicitly on versions before 1.4.75.
+- basic-auth (REASONED; docs): Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable.
+- password-file (REASONED; docs, authn-source, htpasswd-tool, debian-package, fedora-package): Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally, with other hashes of at least 13 characters checked through crypt() when built with crypt support; under USE_LIB_CRYPTO_MD4, the $1+ntlm$ path derives an NTLM hash and calls crypt() with that derived value and a $1$ salt. Check the build and platform's accepted hashes before choosing a flag; this check is this guide's compatibility advice.
+- mfa (REASONED; docs, authelia, cloudflare-access): Basic authentication is single-factor; add MFA by fronting this service with Cloudflare Access or an MFA-capable proxy (this guide's requirement). Authelia v4.39.28's complete supported-proxy list has no lighttpd entry (this guide's inference from the table); Cloudflare Access documents self-hosted application and MFA policy controls; applying them to lighttpd is this guide's assessment. This guide assesses that a lighttpd origin reachable without passing through Access is not protected by it.
+- verify-config (REASONED; docs, lighttpd-verify-source, systemd-reload): lighttpd 1.4.75 -tt -f /etc/lighttpd/lighttpd.conf tests the named file for syntax errors and initializes modules; configuration failures prevent the &amp;&amp; reload (this guide's inference from the nonzero process result and shell chaining). The cited upstream unit starts from that file and defines a USR1 reload through ExecReload; systemctl reload triggers the service action, whose signal does not establish completion. Confirm the installed unit uses that file and defines reload (this guide's advice).
+- verify-redirect (REASONED; docs): The HTTP header request should show a redirect to HTTPS; these are read-and-judge status checks.
+- verify-auth (REASONED; docs): An HTTPS request without credentials should return 401 once authentication is enabled.
+- verify-listeners (REASONED; tls): Read every listener with ss -tlnp: front-door authentication does not establish that no other listener serves content. The ss version is unrecorded.
+- verify-host (REASONED; docs, lighttpd-verify-source, apache-vhosts): In lighttpd 1.4.75, request-time $HTTP["host"] matching uses the HTTP Host value, while TLS SNI can select mod_openssl settings before request headers; a Host outside a conditional auth.require falls back to global configuration for that rule (this guide's inference from conditional merging and mod_auth documentation). On a protected path, this guide interprets 401 as the pass and 200 as the protected path served without authentication on this TLS connection to a client that sends another host. Apache 2.4.69 uses the SNI hostname, when the client sends it and the server supports SNI, for name-based TLS virtual-host selection; varying Host while keeping URL and SNI fixed is this guide's auth-check advice.
 <!-- version-basis:end -->
 
 Applies to lighttpd 1.4.56 and later, which disables SSLv2/SSLv3/TLS 1.0/TLS 1.1 by default. Get a certificate first: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).

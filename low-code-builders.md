@@ -208,59 +208,73 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| private: Keep builders private with fronting auth, claim admin early and protect databases storing connected-system credentials. | NocoDB 2026.09.0; Baserow 2.3.4; Appsmith v2.4.1; Budibase v3.46.0; Windmill v1.817.0 | REASONED |
-| nocodb-bind: PORT defaults 8080; listen omits host, so Node binds unspecified IPv6/IPv4. No application bind setting; restrict publication/firewall. | NocoDB 2026.09.0; Node.js v22.22.1 | REASONED |
-| nocodb-first: First signup becomes super-admin; claim first or seed NC_ADMIN_EMAIL/NC_ADMIN_PASSWORD. | NocoDB 2026.09.0 | REASONED |
-| nocodb-signup: invite_only_signup defaults false; enable to stop later self-signups. | NocoDB 2026.09.0 | REASONED |
-| nocodb-encryption: Unset NC_CONNECTION_ENCRYPT_KEY stores external DB credentials unchanged; set before adding sources, or startup encrypts existing sources when added later. | NocoDB 2026.09.0 | REASONED |
-| nocodb-jwt: Unset NC_AUTH_JWT_SECRET generates/stores a UUID as nc_auth_jwt_secret; replace README sample 569a1821-0a93-45e8-87ab-eb857f20a010. | NocoDB 2026.09.0 | REASONED |
-| nocodb-cors: Entry file allows every CORS origin. | NocoDB 2026.09.0 | REASONED |
-| nocodb-proxy: Startup resets trust proxy from NC_TRUST_PROXY, default no trust; restrict hops/subnets, never true with direct client access. | NocoDB 2026.09.0 | REASONED |
-| nocodb-packaging: README marks binaries for quick local testing and documents Docker image and Auto-upstall paths; the October 2026 release API record lists no assets; the 2026.09.0 tag carries package version 0.301.3. Use the image or vendor install script for production (guide advice). The README command fetches the script over plain HTTP and executes it with Bash; its source link points to develop. Fetch over HTTPS from a pinned, reviewed source and read before running (guide advice). | NocoDB 2026.09.0 | REASONED |
-| baserow-bind: Caddy publishes 80/443 on HOST_PUBLISH_IP default 0.0.0.0; set it or publish loopback. Docker wildcard publication bypasses UFW. | Baserow 2.3.4 | REASONED |
-| baserow-first: First signup becomes staff; claim before exposure. | Baserow 2.3.4 | REASONED |
-| baserow-signup: allow_new_signups defaults True; disable in admin settings, yielding Sign up is disabled. | Baserow 2.3.4 | REASONED |
-| baserow-secrets: Compose requires SECRET_KEY/DATABASE_PASSWORD/REDIS_PASSWORD; .env.example leaves them empty. Generate your own. | Baserow 2.3.4 | REASONED |
-| baserow-mfa: Core registers a TOTP provider. | Baserow 2.3.4 | REASONED |
-| appsmith-bind: Java defaults APPSMITH_SERVER_ADDRESS=127.0.0.1 and port 8080 inside the container. | Appsmith v2.4.1 | REASONED |
-| appsmith-publish: Bundled Caddy fronts port 80; development Compose publishes host 8080, AWS example 80/443. | Appsmith v2.4.1 | REASONED |
-| appsmith-first: First signup claims super-user while no users exist; claim before exposure. | Appsmith v2.4.1 | REASONED |
-| appsmith-signup: APPSMITH_SIGNUP_DISABLED defaults false; set true or restrict APPSMITH_SIGNUP_ALLOWED_DOMAINS. Refusal is SIGNUP_DISABLED. | Appsmith v2.4.1 | REASONED |
-| appsmith-encryption: Entrypoint generates 13-character encryption password/salt; external values override them. Development Compose sets both abcd; replace before first start. | Appsmith v2.4.1 | REASONED |
-| appsmith-rotation: Changing an existing abcd encryption pair presumably makes stored credentials unreadable; plan re-entry. Inferred, not tested. | Appsmith v2.4.1 | REASONED |
-| budibase-publish: Proxy publishes MAIN_PORT, sample 10000; LiteLLM publishes LITELLM_PORT default 4000. | Budibase v3.46.0 | REASONED |
-| budibase-couchdb: Proxy /db/ reaches CouchDB. Compose maps COUCH_DB_USER/PASSWORD to COUCHDB_USER/PASSWORD; the image entrypoint adds that admin only when both are non-empty and its existing-admin check finds none for that name. With unchanged samples and that condition, anyone reaching the proxy can try budibase/budibase. | Budibase v3.46.0 | REASONED |
-| budibase-secrets: Sample JWT_SECRET/API_ENCRYPTION_KEY are testsecret; service passwords, INTERNAL_API_KEY and LITELLM_MASTER_KEY are budibase. Replace all before first start. Compose pins docker.io/litellm/litellm:main-v1.83.10-stable.patch.3 and passes LITELLM_MASTER_KEY; acceptance of budibase by that image is not established. | Budibase v3.46.0 | REASONED |
-| budibase-sample-check: This guide's October 2026 search of the full v3.46.0 tag with git grep -l testsecret v3.46.0 found exactly hosting/.env, hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot, hosting/hosting.properties, packages/backend-core/tests/jestEnv.ts and scripts/dev/manage.js. This guide inspected those hits. This guide's assessment is that these hits do not establish absence of production rejection; no live safeguard test ran. | Budibase v3.46.0 | REASONED |
-| budibase-init: POST /api/global/users/init is public; its body validator requires string email and tenantId fields, permits an optional password, rejects unknown fields and precedes adminUser. In the supplied tenant context, checkAnyUserExists() truthy causes 403 with the exact vendor error quoted in the body. The helper definition was not fetched, so which users count and any multi-tenancy exception remain unestablished. This guide assesses this POST as unsafe for read-only claimed-state probing: invalid bodies can fail validation in both states, while accepted initialization creates an admin. | Budibase v3.46.0 | REASONED |
-| budibase-seed: Claim admin before exposure (guide advice), manually or with BB_ADMIN_USER_EMAIL/BB_ADMIN_USER_PASSWORD. Startup attempts seeding only with SELF_HOSTED truthy, MULTI_TENANCY falsy and both values non-empty; in tenancy.getTenantId() context, it calls createAdminUser when the admin checklist is not checked OR the email does not exist, with hashPassword/requirePassword/skipPasswordValidation true. | Budibase v3.46.0 | REASONED |
-| windmill-code: Workers execute user scripts; a login enables code execution on worker hosts. | Windmill v1.817.0 | REASONED |
-| windmill-bind: Default 0.0.0.0:8000; SERVER_BIND_ADDR changes binary binding. Default wildcard bind was not observed. | Windmill v1.817.0 | REASONED |
-| windmill-compose: Compose exposes server 8000 internally; Caddy publishes 80/25 on all host interfaces. Bind publications privately; container loopback cutting Caddy off is inferred. | Windmill v1.817.0 | REASONED |
-| windmill-sandbox: DISABLE_NSJAIL defaults true; sandboxing is not enabled by default. | Windmill v1.817.0 | REASONED |
-| windmill-privileged: Shipped worker uses privileged=true. | Windmill v1.817.0 | REASONED |
-| windmill-smtp: Port 25 serves email triggers; do not publish unless used. | Windmill v1.817.0 | REASONED |
-| windmill-debugger: Vendor warns REQUIRE_SIGNED_DEBUG_REQUESTS=false exposes an unauthenticated code-execution debugger on reachable deployments. | Windmill v1.817.0 | REASONED |
-| verify-nocodb-signup: Controlled signup creation is exposed; invite-only refusal is fixed. Hidden links prove nothing; inspect backend setting and confirm admin login. | NocoDB 2026.09.0 | REASONED |
-| verify-baserow-signup: Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login. | Baserow 2.3.4 | REASONED |
-| verify-appsmith-signup: Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts. | Appsmith v2.4.1 | REASONED |
-| verify-external: Probe each public IP; control proves only its port, refusal/timeout may be local filtering, and unexpected connections need host confirmation. | Baserow 2.3.4; Budibase v3.46.0; Windmill v1.817.0 | REASONED |
-| windmill-default-login: Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200. | Windmill v1.817.0 | DEMONSTRATED |
-| windmill-loopback: SERVER_BIND_ADDR=127.0.0.1 produced only a loopback listener on the test port. | Windmill v1.817.0 | DEMONSTRATED |
-| windmill-sandbox-run: Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation. | Windmill v1.817.0 | DEMONSTRATED |
-| verify-inventory: Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation. | Docker docs unknown; Baserow 2.3.4; Appsmith v2.4.1; Budibase v3.46.0; Windmill v1.817.0 | REASONED |
-| verify-port-display: IPv6 wildcard displays [::]: from v27.2.0 versus ::: through v27.1.2; both mean all host addresses unless filtered. | Docker docs unknown; Docker CLI v27.2.0; Docker CLI v27.1.2 | REASONED |
-| verify-sample-tokens: Whole-token search found sample secrets/variants, clean replaced copies and unreadable paths; harmless matches and external environment values limit scope. | NocoDB 2026.09.0; Appsmith v2.4.1; Budibase v3.46.0; Windmill v1.817.0 | DEMONSTRATED |
-| verify-nocodb-key: docker exec tests configured key presence without printing it or passing its value in argv; no real container run. Startup selection/process value remain unverified. | NocoDB 2026.09.0; Docker docs unknown | REASONED |
-| nocodb-key-limits: Trusted shells/startup assumed; environment remains readable to same-account/root or Docker-socket holders. Presence does not prove encryption; do not inject a replacement key. | NocoDB 2026.09.0; Docker docs unknown | REASONED |
-| nocodb-key-logic: A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated. | Docker docs unknown | DEMONSTRATED |
-| verify-windmill-control: Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed. | Windmill v1.817.0 | REASONED |
-| verify-couchdb: Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control. | Budibase v3.46.0; CouchDB 3.5.2 | REASONED |
-| verify-litellm: Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-&#96;sk-&#96; keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched. | Budibase v3.46.0; LiteLLM authentication source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| verify-tcp-outcomes: Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated. | Baserow 2.3.4; Budibase v3.46.0; Windmill v1.817.0 | DEMONSTRATED |
-| verify-tcp-inputs: Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control. | Baserow 2.3.4; Budibase v3.46.0; Windmill v1.817.0 | DEMONSTRATED |
+Components (recorded basis):
+
+- nocodb: NocoDB, 2026.09.0
+- docker: Docker docs, unknown
+- docker-new: Docker CLI, v27.2.0
+- docker-old: Docker CLI, v27.1.2
+- node: Node.js, v22.22.1
+- baserow: Baserow, 2.3.4
+- appsmith: Appsmith, v2.4.1
+- budibase: Budibase, v3.46.0
+- couchdb: CouchDB, 3.5.2
+- litellm: LiteLLM authentication source, 6ef7b86748118ceecd95271727c2fa167ce55fec
+- windmill: Windmill, v1.817.0
+
+Claims (full source mapping in the front matter):
+
+- private (REASONED; nocodb, baserow, appsmith, budibase, windmill): Keep builders private with fronting auth, claim admin early and protect databases storing connected-system credentials.
+- nocodb-bind (REASONED; nocodb, node): PORT defaults 8080; listen omits host, so Node binds unspecified IPv6/IPv4. No application bind setting; restrict publication/firewall.
+- nocodb-first (REASONED; nocodb): First signup becomes super-admin; claim first or seed NC_ADMIN_EMAIL/NC_ADMIN_PASSWORD.
+- nocodb-signup (REASONED; nocodb): invite_only_signup defaults false; enable to stop later self-signups.
+- nocodb-encryption (REASONED; nocodb): Unset NC_CONNECTION_ENCRYPT_KEY stores external DB credentials unchanged; set before adding sources, or startup encrypts existing sources when added later.
+- nocodb-jwt (REASONED; nocodb): Unset NC_AUTH_JWT_SECRET generates/stores a UUID as nc_auth_jwt_secret; replace README sample 569a1821-0a93-45e8-87ab-eb857f20a010.
+- nocodb-cors (REASONED; nocodb): Entry file allows every CORS origin.
+- nocodb-proxy (REASONED; nocodb): Startup resets trust proxy from NC_TRUST_PROXY, default no trust; restrict hops/subnets, never true with direct client access.
+- nocodb-packaging (REASONED; nocodb): README marks binaries for quick local testing and documents Docker image and Auto-upstall paths; the October 2026 release API record lists no assets; the 2026.09.0 tag carries package version 0.301.3. Use the image or vendor install script for production (guide advice). The README command fetches the script over plain HTTP and executes it with Bash; its source link points to develop. Fetch over HTTPS from a pinned, reviewed source and read before running (guide advice).
+- baserow-bind (REASONED; baserow): Caddy publishes 80/443 on HOST_PUBLISH_IP default 0.0.0.0; set it or publish loopback. Docker wildcard publication bypasses UFW.
+- baserow-first (REASONED; baserow): First signup becomes staff; claim before exposure.
+- baserow-signup (REASONED; baserow): allow_new_signups defaults True; disable in admin settings, yielding Sign up is disabled.
+- baserow-secrets (REASONED; baserow): Compose requires SECRET_KEY/DATABASE_PASSWORD/REDIS_PASSWORD; .env.example leaves them empty. Generate your own.
+- baserow-mfa (REASONED; baserow): Core registers a TOTP provider.
+- appsmith-bind (REASONED; appsmith): Java defaults APPSMITH_SERVER_ADDRESS=127.0.0.1 and port 8080 inside the container.
+- appsmith-publish (REASONED; appsmith): Bundled Caddy fronts port 80; development Compose publishes host 8080, AWS example 80/443.
+- appsmith-first (REASONED; appsmith): First signup claims super-user while no users exist; claim before exposure.
+- appsmith-signup (REASONED; appsmith): APPSMITH_SIGNUP_DISABLED defaults false; set true or restrict APPSMITH_SIGNUP_ALLOWED_DOMAINS. Refusal is SIGNUP_DISABLED.
+- appsmith-encryption (REASONED; appsmith): Entrypoint generates 13-character encryption password/salt; external values override them. Development Compose sets both abcd; replace before first start.
+- appsmith-rotation (REASONED; appsmith): Changing an existing abcd encryption pair presumably makes stored credentials unreadable; plan re-entry. Inferred, not tested.
+- budibase-publish (REASONED; budibase): Proxy publishes MAIN_PORT, sample 10000; LiteLLM publishes LITELLM_PORT default 4000.
+- budibase-couchdb (REASONED; budibase): Proxy /db/ reaches CouchDB. Compose maps COUCH_DB_USER/PASSWORD to COUCHDB_USER/PASSWORD; the image entrypoint adds that admin only when both are non-empty and its existing-admin check finds none for that name. With unchanged samples and that condition, anyone reaching the proxy can try budibase/budibase.
+- budibase-secrets (REASONED; budibase): Sample JWT_SECRET/API_ENCRYPTION_KEY are testsecret; service passwords, INTERNAL_API_KEY and LITELLM_MASTER_KEY are budibase. Replace all before first start. Compose pins docker.io/litellm/litellm:main-v1.83.10-stable.patch.3 and passes LITELLM_MASTER_KEY; acceptance of budibase by that image is not established.
+- budibase-sample-check (REASONED; budibase): This guide's October 2026 search of the full v3.46.0 tag with git grep -l testsecret v3.46.0 found exactly hosting/.env, hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot, hosting/hosting.properties, packages/backend-core/tests/jestEnv.ts and scripts/dev/manage.js. This guide inspected those hits. This guide's assessment is that these hits do not establish absence of production rejection; no live safeguard test ran.
+- budibase-init (REASONED; budibase): POST /api/global/users/init is public; its body validator requires string email and tenantId fields, permits an optional password, rejects unknown fields and precedes adminUser. In the supplied tenant context, checkAnyUserExists() truthy causes 403 with the exact vendor error quoted in the body. The helper definition was not fetched, so which users count and any multi-tenancy exception remain unestablished. This guide assesses this POST as unsafe for read-only claimed-state probing: invalid bodies can fail validation in both states, while accepted initialization creates an admin.
+- budibase-seed (REASONED; budibase): Claim admin before exposure (guide advice), manually or with BB_ADMIN_USER_EMAIL/BB_ADMIN_USER_PASSWORD. Startup attempts seeding only with SELF_HOSTED truthy, MULTI_TENANCY falsy and both values non-empty; in tenancy.getTenantId() context, it calls createAdminUser when the admin checklist is not checked OR the email does not exist, with hashPassword/requirePassword/skipPasswordValidation true.
+- windmill-code (REASONED; windmill): Workers execute user scripts; a login enables code execution on worker hosts.
+- windmill-bind (REASONED; windmill): Default 0.0.0.0:8000; SERVER_BIND_ADDR changes binary binding. Default wildcard bind was not observed.
+- windmill-compose (REASONED; windmill): Compose exposes server 8000 internally; Caddy publishes 80/25 on all host interfaces. Bind publications privately; container loopback cutting Caddy off is inferred.
+- windmill-sandbox (REASONED; windmill): DISABLE_NSJAIL defaults true; sandboxing is not enabled by default.
+- windmill-privileged (REASONED; windmill): Shipped worker uses privileged=true.
+- windmill-smtp (REASONED; windmill): Port 25 serves email triggers; do not publish unless used.
+- windmill-debugger (REASONED; windmill): Vendor warns REQUIRE_SIGNED_DEBUG_REQUESTS=false exposes an unauthenticated code-execution debugger on reachable deployments.
+- verify-nocodb-signup (REASONED; nocodb): Controlled signup creation is exposed; invite-only refusal is fixed. Hidden links prove nothing; inspect backend setting and confirm admin login.
+- verify-baserow-signup (REASONED; baserow): Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login.
+- verify-appsmith-signup (REASONED; appsmith): Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts.
+- verify-external (REASONED; baserow, budibase, windmill): Probe each public IP; control proves only its port, refusal/timeout may be local filtering, and unexpected connections need host confirmation.
+- windmill-default-login (DEMONSTRATED; windmill): Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200.
+- windmill-loopback (DEMONSTRATED; windmill): SERVER_BIND_ADDR=127.0.0.1 produced only a loopback listener on the test port.
+- windmill-sandbox-run (DEMONSTRATED; windmill): Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation.
+- verify-inventory (REASONED; docker, baserow, appsmith, budibase, windmill): Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation.
+- verify-port-display (REASONED; docker, docker-new, docker-old): IPv6 wildcard displays [::]: from v27.2.0 versus ::: through v27.1.2; both mean all host addresses unless filtered.
+- verify-sample-tokens (DEMONSTRATED; nocodb, appsmith, budibase, windmill): Whole-token search found sample secrets/variants, clean replaced copies and unreadable paths; harmless matches and external environment values limit scope.
+- verify-nocodb-key (REASONED; nocodb, docker): docker exec tests configured key presence without printing it or passing its value in argv; no real container run. Startup selection/process value remain unverified.
+- nocodb-key-limits (REASONED; nocodb, docker): Trusted shells/startup assumed; environment remains readable to same-account/root or Docker-socket holders. Presence does not prove encryption; do not inject a replacement key.
+- nocodb-key-logic (DEMONSTRATED; docker): A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated.
+- verify-windmill-control (REASONED; windmill): Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed.
+- verify-couchdb (REASONED; budibase, couchdb): Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control.
+- verify-litellm (REASONED; budibase, litellm): Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-&#96;sk-&#96; keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.
+- verify-tcp-outcomes (DEMONSTRATED; baserow, budibase, windmill): Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated.
+- verify-tcp-inputs (DEMONSTRATED; baserow, budibase, windmill): Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control.
 <!-- version-basis:end -->
 
 These tools sit on top of your databases and APIs and let people build internal apps, forms and

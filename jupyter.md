@@ -213,71 +213,90 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| native-auth: Generated tokens enable authentication by default; a password replaces the generated token by default, and configured token/password alternatives are not MFA. | Jupyter Server documentation (rolling) unknown | REASONED |
-| password: Standalone Server password prompt stores a hash in jupyter_server_config.json; generate-config writes jupyter_server_config.py under the operating account. | Jupyter Server documentation (rolling) unknown | REASONED |
-| endpoint-auth: Set allow_unauthenticated_access=False for unclassified Jupyter handlers; explicitly public handlers and third-party authentication need separate review. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
-| endpoint-default: Reference lists allow_unauthenticated_access=True; feature appears under 2.13.0 and 2.18.0, with 2.18+ the guide baseline, not introduction date. | Jupyter Server documentation (rolling) unknown | REASONED |
-| metrics-auth: authenticate_prometheus=True independently requires authentication for metrics. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
-| migration: Notebook 7 uses Server; migrate NotebookApp to ServerApp and Server 2 password/token traits to PasswordIdentityProvider and IdentityProvider; avoid credential argv. | Jupyter Server documentation (rolling) unknown; Notebook documentation (rolling) unknown | REASONED |
-| root: allow_root=False refuses Unix root startup; use a dedicated unprivileged account for server and kernels; it neither changes UID nor sandboxes execution. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b | REASONED |
-| terminals: terminals_enabled=False removes terminals but not kernel shell execution; reference False differs from the implementation's dynamic True subject to availability. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b; Jupyter Server documentation (rolling) unknown | REASONED |
-| native-tls: certfile/keyfile or --certfile/--keyfile enable native HTTPS; that listener no longer serves ordinary plaintext HTTP. | Jupyter Server 2.18.0; Jupyter Server documentation (rolling) unknown | REASONED |
-| private-bind: Retain loopback; do not expose 0.0.0.0 without authentication and HTTPS; disabling both password and token removes native authentication. | Jupyter Server documentation (rolling) unknown | REASONED |
-| proxy-tls: An authenticated HTTPS proxy before a loopback server can replace native TLS; authentication alone does not encrypt transport. | JupyterHub 5.5.2 | REASONED |
-| mfa: Standalone password is single-factor; fronting authentication or a Hub provider adds MFA only when explicitly enforced. | Jupyter Server documentation (rolling) unknown; JupyterHub documentation (rolling) unknown | REASONED |
-| origins: Same-origin settings keep allow_origin and allow_origin_pat empty and allow_credentials=False; cross-origin clients require reviewed exceptions. | Jupyter Server documentation (rolling) unknown | REASONED |
-| xsrf: Keep disable_check_xsrf=False; disabling it removes browser-session request-forgery protection. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
-| host: allow_remote_access=False retains Host checks; local_hostnames permits actual standalone hostnames; Hub servers need their generated hostnames. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
-| token-exception: Token-authenticated requests bypass origin and XSRF checks; test browser protections with a cookie session and no token. | Jupyter Server identity source 3df9a70b8aea53557ad04510a63c95ce9d4c3abc; Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
-| hub-admission: Hub 5+ PAM example disables allow_all and allow_existing_users, lists allowed_users and empties allowed_groups; other authenticators need separate review. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
-| hub-accounts: LocalProcessSpawner needs matching Unix accounts; use separate users/servers, and avoid SimpleLocalProcessSpawner, which provides no user isolation. | Jupyter Server documentation (rolling) unknown; JupyterHub documentation (rolling) unknown | REASONED |
-| hub-limits: Local processes are not containers; LocalProcessSpawner does not enforce generic CPU/memory limits, and PAM does not automatically provide MFA. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
-| hub-domains: For mutually untrusted Hub users, subdomain_host separates browser origins; provide HTTPS/DNS for every user domain on a separate application domain. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
-| hub-cookies: cookie_host_prefix_enabled requires Hub 4.1+, HTTPS and per-user domains; combined example targets Hub 5+. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
-| hub-user-config: disable_user_config ignores home configuration; administrator-controlled server executables, environments and launch paths prevent replacement; kernel environments may remain writable. | JupyterHub documentation (rolling) unknown | REASONED |
-| server-prefix: Server base_url defaults to /; configure /jupyter/ consistently with the proxy so registered routes remain within the intended boundary. | Jupyter Server 2.18.0 | REASONED |
-| hub-prefix: Hub prefix defaults to /; bind_url=http://127.0.0.1:8000/jupyter/ sets both listener and base_url; conflicting URL settings or proxy prefix flags are not an auth boundary. | JupyterHub 5.5.2; configurable-http-proxy 5.3.0 | REASONED |
-| server-headers: Server trust_xheaders defaults False; enable only behind a private, sanitizing ingress owning forwarded address and scheme headers. | Jupyter Server 2.18.0 | REASONED |
-| hub-headers: Hub enables forwarded-header trust; hub_ip and trusted_downstream_ips constrain address selection, not which peers may send headers; empty trusted hops do not disable trust. | JupyterHub 5.5.2 | REASONED |
-| forwarded-scheme: Ingress must normalize Forwarded and both X- address/scheme forms and reject unintended Host values; Hub reads Forwarded first; public_url and host-prefixed cookies guard specified scheme paths. | JupyterHub 5.5.2 | REASONED |
-| forwarded-host: Forwarded-header handling rewrites address/scheme, not Host; Hub 5 ignores X-Forwarded-Host and its forwarded_host_header trait is inert. | JupyterHub 5.5.2 | REASONED |
-| internal-tls: internal_ssl defaults False; enable it with protected persistent internal_certs_location for mutual TLS on Hub/proxy/single-user and spawn-readiness connections. | JupyterHub 5.5.2 | REASONED |
-| internal-certs: Spawners must deliver certificates and trust bundles; LocalProcessSpawner relocates them, remote spawners need move_certs, and ssl_alt_names must match connection names. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
-| internal-hostnames: Internal hostname verification defaults on from Hub 5.4, checked against 5.5.2; earlier 5.x left it disabled. | JupyterHub 5.5.2 | REASONED |
-| kernel-transport: Hub internal_ssl excludes server-to-kernel ZeroMQ; HMAC authenticates without encryption, local kernels bind loopback, and remote kernels need separate encrypted transport. | jupyter_client 8.6.3 | REASONED |
-| native-store: NativeAuthenticator replaces PAM credentials with bcrypt hashes in the Hub database, not the spawner's Unix account requirement; protect database/backups. | NativeAuthenticator 1.3.0; JupyterHub documentation (rolling) unknown | REASONED |
-| native-length: minimum_password_length effectively defaults 0 despite tag(default=1); set 12; zero admits empty passwords. | NativeAuthenticator 1.3.0 | REASONED |
-| native-common: check_common_password defaults False; True checks the bundled 10,000-entry list, not a breach corpus. | NativeAuthenticator 1.3.0 | REASONED |
-| native-lockout: allowed_failed_logins defaults 0, disabling lockout; set 5 consecutive failures per account. | NativeAuthenticator 1.3.0 | REASONED |
-| native-cooldown: seconds_before_next_try effectively defaults 0 despite the 600 annotation/help; set 1200 and distinguish by a correct password about two seconds after failure. | NativeAuthenticator 1.3.0 | REASONED |
-| native-counters: Failure counters are in memory and reset on restart; timedelta.seconds ignores days and can re-block at 24-hour multiples until success or restart. | NativeAuthenticator 1.3.0 | REASONED |
-| native-oracle: Pending accounts still disclose a distinct correct-password authorization-pending message during lockout; rate-limit the actual prefixed /hub/login route. | NativeAuthenticator 1.3.0 | REASONED |
-| native-policy-scope: Password strength applies at signup/password change; raising policy does not recheck existing passwords. | NativeAuthenticator 1.3.0 | REASONED |
-| native-approval: open_signup defaults False; new pending users need /hub/authorize approval; True pre-authorizes signup, still subject to Hub admission. | NativeAuthenticator 1.3.0 | REASONED |
-| native-preauthorization: allowed_users/admin_users names are pre-authorized at first signup even with open_signup=False; deliberate registration is required; later allowlisting does not approve an existing pending record. | NativeAuthenticator 1.3.0 | REASONED |
-| native-signup: enable_signup defaults True; False refuses signup GET/POST with 404; restrict signup to trusted users. | NativeAuthenticator 1.3.0 | REASONED |
-| verify-tls: Validated HTTPS must complete with exit=0; transport failures alone prove nothing; use real hostname and CA, retaining certificate validation. | curl documentation unknown | REASONED |
-| verify-api: Anonymous /api/kernels returns native 403 with auth, authenticated kernel JSON returns 200; fronting login may redirect, and password-only deployments need a browser positive control. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
-| verify-host: Wrong-Host token request is refused with native 403 while normal Host succeeds; a fronting rejection alone does not demonstrate Server Host checks. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
-| verify-metrics: Compare anonymous metrics with authenticate_prometheus off/on and authenticated metrics content; absent routes or generic errors are inconclusive. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca | REASONED |
-| verify-extension: Compare an actual unclassified extension route with allow_unauthenticated_access True/False and its authenticated content; protected kernel routes do not substitute. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
-| verify-xsrf: Cookie-session same-origin POST without XSRF creates a kernel when checks are disabled; fixed missing header gives 403, matching header gives 201 with successful cookie GET. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server kernel source c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac; Tornado documentation unknown | REASONED |
-| verify-origin: Wrong-Origin cookie GET returns kernel JSON with allow_origin=*; fixed APIHandler rejects with 404 while same-origin returns 200; also inspect browser CORS headers. | Jupyter Server handler source 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca; Jupyter Server documentation (rolling) unknown | REASONED |
-| verify-cleanup: Record and shut down every disposable kernel created in either state through the authenticated UI. | JupyterLab documentation unknown | REASONED |
-| verify-root: Compare allowed versus refused root startup and inspect server/kernel ownership; fixed unprivileged execution must retain its intended nonzero UID. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b | REASONED |
-| verify-terminals: Compare authenticated /api/terminals enabled/disabled, retaining a working /api/kernels positive control and kernel shell execution. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b; Jupyter Server documentation (rolling) unknown | REASONED |
-| verify-hub-admission: Compare valid extra and historical users against the allowlist, with allowed-user login and spawn as positive controls. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
-| verify-hub-accounts: Two users' server/kernel UIDs must differ as intended, compared with a shared-account fixture. | JupyterHub documentation (rolling) unknown | REASONED |
-| verify-hub-origins: Compare shared versus distinct user origins and inspect __Host- cookies for Secure, path / and no Domain attribute. | JupyterHub 5.5.2; JupyterHub documentation (rolling) unknown | REASONED |
-| verify-hub-config: Compare a user terminal override loading versus being ignored, deny server-environment writes, and retain a working notebook. | JupyterHub documentation (rolling) unknown | REASONED |
-| verify-listeners: ss inventories local binds, not firewall/NAT; confirm actual private listener and external entry point with a working positive control; failed netlink inventory proves no absence. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b; Jupyter Server port source c5c452c3d5f3060557e57caaadce8f2fffc1c417 | REASONED |
-| port-default: Standalone port starts at 8888 but configuration and retries can change it; inventory the actual listener. | Jupyter Server startup source 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b; Jupyter Server port source c5c452c3d5f3060557e57caaadce8f2fffc1c417 | REASONED |
-| verify-prefix: Probe prefixed and unprefixed Server/Hub routes; require no application alias outside the boundary and working authenticated prefixed access and kernel WebSocket. | JupyterHub 5.5.2; Jupyter Server 2.18.0 | REASONED |
-| verify-headers: Compare spoofed address/scheme/Forwarded headers through real ingress and direct backend access; inspect logs, redirects and cookies with login/WebSocket controls; test real Host separately. | JupyterHub 5.5.2; Jupyter Server 2.18.0 | REASONED |
-| verify-internal-tls: Compare each internal connection with TLS off/on; trusted client certificates succeed, untrusted certificates and wrong hostnames fail on Hub 5.4+; keep kernel ZeroMQ excluded. | JupyterHub 5.5.2; jupyter_client 8.6.3 | REASONED |
-| verify-native: Test length/common-password, threshold/cooldown and pending-account oracle independently; compare approval with allow_all and empty allowed_users, first-signup preauthorization, disabled signup and stored bcrypt. | NativeAuthenticator 1.3.0 | REASONED |
+Components (recorded basis):
+
+- server: Jupyter Server, 2.18.0
+- startup: Jupyter Server startup source, 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b
+- port: Jupyter Server port source, c5c452c3d5f3060557e57caaadce8f2fffc1c417
+- identity: Jupyter Server identity source, 3df9a70b8aea53557ad04510a63c95ce9d4c3abc
+- handlers: Jupyter Server handler source, 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca
+- kernels: Jupyter Server kernel source, c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac
+- hub: JupyterHub, 5.5.2
+- proxy: configurable-http-proxy, 5.3.0
+- native: NativeAuthenticator, 1.3.0
+- client: jupyter_client, 8.6.3
+- lab: JupyterLab documentation, unknown
+- tornado: Tornado documentation, unknown
+- curl: curl documentation, unknown
+- server-docs: Jupyter Server documentation (rolling), unknown
+- notebook-docs: Notebook documentation (rolling), unknown
+- hub-docs: JupyterHub documentation (rolling), unknown
+
+Claims (full source mapping in the front matter):
+
+- native-auth (REASONED; server-docs): Generated tokens enable authentication by default; a password replaces the generated token by default, and configured token/password alternatives are not MFA.
+- password (REASONED; server-docs): Standalone Server password prompt stores a hash in jupyter_server_config.json; generate-config writes jupyter_server_config.py under the operating account.
+- endpoint-auth (REASONED; handlers, server-docs): Set allow_unauthenticated_access=False for unclassified Jupyter handlers; explicitly public handlers and third-party authentication need separate review.
+- endpoint-default (REASONED; server-docs): Reference lists allow_unauthenticated_access=True; feature appears under 2.13.0 and 2.18.0, with 2.18+ the guide baseline, not introduction date.
+- metrics-auth (REASONED; handlers, server-docs): authenticate_prometheus=True independently requires authentication for metrics.
+- migration (REASONED; server-docs, notebook-docs): Notebook 7 uses Server; migrate NotebookApp to ServerApp and Server 2 password/token traits to PasswordIdentityProvider and IdentityProvider; avoid credential argv.
+- root (REASONED; startup): allow_root=False refuses Unix root startup; use a dedicated unprivileged account for server and kernels; it neither changes UID nor sandboxes execution.
+- terminals (REASONED; startup, server-docs): terminals_enabled=False removes terminals but not kernel shell execution; reference False differs from the implementation's dynamic True subject to availability.
+- native-tls (REASONED; server, server-docs): certfile/keyfile or --certfile/--keyfile enable native HTTPS; that listener no longer serves ordinary plaintext HTTP.
+- private-bind (REASONED; server-docs): Retain loopback; do not expose 0.0.0.0 without authentication and HTTPS; disabling both password and token removes native authentication.
+- proxy-tls (REASONED; hub): An authenticated HTTPS proxy before a loopback server can replace native TLS; authentication alone does not encrypt transport.
+- mfa (REASONED; server-docs, hub-docs): Standalone password is single-factor; fronting authentication or a Hub provider adds MFA only when explicitly enforced.
+- origins (REASONED; server-docs): Same-origin settings keep allow_origin and allow_origin_pat empty and allow_credentials=False; cross-origin clients require reviewed exceptions.
+- xsrf (REASONED; handlers, server-docs): Keep disable_check_xsrf=False; disabling it removes browser-session request-forgery protection.
+- host (REASONED; handlers, server-docs): allow_remote_access=False retains Host checks; local_hostnames permits actual standalone hostnames; Hub servers need their generated hostnames.
+- token-exception (REASONED; identity, handlers): Token-authenticated requests bypass origin and XSRF checks; test browser protections with a cookie session and no token.
+- hub-admission (REASONED; hub, hub-docs): Hub 5+ PAM example disables allow_all and allow_existing_users, lists allowed_users and empties allowed_groups; other authenticators need separate review.
+- hub-accounts (REASONED; server-docs, hub-docs): LocalProcessSpawner needs matching Unix accounts; use separate users/servers, and avoid SimpleLocalProcessSpawner, which provides no user isolation.
+- hub-limits (REASONED; hub, hub-docs): Local processes are not containers; LocalProcessSpawner does not enforce generic CPU/memory limits, and PAM does not automatically provide MFA.
+- hub-domains (REASONED; hub, hub-docs): For mutually untrusted Hub users, subdomain_host separates browser origins; provide HTTPS/DNS for every user domain on a separate application domain.
+- hub-cookies (REASONED; hub, hub-docs): cookie_host_prefix_enabled requires Hub 4.1+, HTTPS and per-user domains; combined example targets Hub 5+.
+- hub-user-config (REASONED; hub-docs): disable_user_config ignores home configuration; administrator-controlled server executables, environments and launch paths prevent replacement; kernel environments may remain writable.
+- server-prefix (REASONED; server): Server base_url defaults to /; configure /jupyter/ consistently with the proxy so registered routes remain within the intended boundary.
+- hub-prefix (REASONED; hub, proxy): Hub prefix defaults to /; bind_url=http://127.0.0.1:8000/jupyter/ sets both listener and base_url; conflicting URL settings or proxy prefix flags are not an auth boundary.
+- server-headers (REASONED; server): Server trust_xheaders defaults False; enable only behind a private, sanitizing ingress owning forwarded address and scheme headers.
+- hub-headers (REASONED; hub): Hub enables forwarded-header trust; hub_ip and trusted_downstream_ips constrain address selection, not which peers may send headers; empty trusted hops do not disable trust.
+- forwarded-scheme (REASONED; hub): Ingress must normalize Forwarded and both X- address/scheme forms and reject unintended Host values; Hub reads Forwarded first; public_url and host-prefixed cookies guard specified scheme paths.
+- forwarded-host (REASONED; hub): Forwarded-header handling rewrites address/scheme, not Host; Hub 5 ignores X-Forwarded-Host and its forwarded_host_header trait is inert.
+- internal-tls (REASONED; hub): internal_ssl defaults False; enable it with protected persistent internal_certs_location for mutual TLS on Hub/proxy/single-user and spawn-readiness connections.
+- internal-certs (REASONED; hub, hub-docs): Spawners must deliver certificates and trust bundles; LocalProcessSpawner relocates them, remote spawners need move_certs, and ssl_alt_names must match connection names.
+- internal-hostnames (REASONED; hub): Internal hostname verification defaults on from Hub 5.4, checked against 5.5.2; earlier 5.x left it disabled.
+- kernel-transport (REASONED; client): Hub internal_ssl excludes server-to-kernel ZeroMQ; HMAC authenticates without encryption, local kernels bind loopback, and remote kernels need separate encrypted transport.
+- native-store (REASONED; native, hub-docs): NativeAuthenticator replaces PAM credentials with bcrypt hashes in the Hub database, not the spawner's Unix account requirement; protect database/backups.
+- native-length (REASONED; native): minimum_password_length effectively defaults 0 despite tag(default=1); set 12; zero admits empty passwords.
+- native-common (REASONED; native): check_common_password defaults False; True checks the bundled 10,000-entry list, not a breach corpus.
+- native-lockout (REASONED; native): allowed_failed_logins defaults 0, disabling lockout; set 5 consecutive failures per account.
+- native-cooldown (REASONED; native): seconds_before_next_try effectively defaults 0 despite the 600 annotation/help; set 1200 and distinguish by a correct password about two seconds after failure.
+- native-counters (REASONED; native): Failure counters are in memory and reset on restart; timedelta.seconds ignores days and can re-block at 24-hour multiples until success or restart.
+- native-oracle (REASONED; native): Pending accounts still disclose a distinct correct-password authorization-pending message during lockout; rate-limit the actual prefixed /hub/login route.
+- native-policy-scope (REASONED; native): Password strength applies at signup/password change; raising policy does not recheck existing passwords.
+- native-approval (REASONED; native): open_signup defaults False; new pending users need /hub/authorize approval; True pre-authorizes signup, still subject to Hub admission.
+- native-preauthorization (REASONED; native): allowed_users/admin_users names are pre-authorized at first signup even with open_signup=False; deliberate registration is required; later allowlisting does not approve an existing pending record.
+- native-signup (REASONED; native): enable_signup defaults True; False refuses signup GET/POST with 404; restrict signup to trusted users.
+- verify-tls (REASONED; curl): Validated HTTPS must complete with exit=0; transport failures alone prove nothing; use real hostname and CA, retaining certificate validation.
+- verify-api (REASONED; handlers, server-docs): Anonymous /api/kernels returns native 403 with auth, authenticated kernel JSON returns 200; fronting login may redirect, and password-only deployments need a browser positive control.
+- verify-host (REASONED; handlers): Wrong-Host token request is refused with native 403 while normal Host succeeds; a fronting rejection alone does not demonstrate Server Host checks.
+- verify-metrics (REASONED; handlers): Compare anonymous metrics with authenticate_prometheus off/on and authenticated metrics content; absent routes or generic errors are inconclusive.
+- verify-extension (REASONED; handlers, server-docs): Compare an actual unclassified extension route with allow_unauthenticated_access True/False and its authenticated content; protected kernel routes do not substitute.
+- verify-xsrf (REASONED; handlers, kernels, tornado): Cookie-session same-origin POST without XSRF creates a kernel when checks are disabled; fixed missing header gives 403, matching header gives 201 with successful cookie GET.
+- verify-origin (REASONED; handlers, server-docs): Wrong-Origin cookie GET returns kernel JSON with allow_origin=*; fixed APIHandler rejects with 404 while same-origin returns 200; also inspect browser CORS headers.
+- verify-cleanup (REASONED; lab): Record and shut down every disposable kernel created in either state through the authenticated UI.
+- verify-root (REASONED; startup): Compare allowed versus refused root startup and inspect server/kernel ownership; fixed unprivileged execution must retain its intended nonzero UID.
+- verify-terminals (REASONED; startup, server-docs): Compare authenticated /api/terminals enabled/disabled, retaining a working /api/kernels positive control and kernel shell execution.
+- verify-hub-admission (REASONED; hub, hub-docs): Compare valid extra and historical users against the allowlist, with allowed-user login and spawn as positive controls.
+- verify-hub-accounts (REASONED; hub-docs): Two users' server/kernel UIDs must differ as intended, compared with a shared-account fixture.
+- verify-hub-origins (REASONED; hub, hub-docs): Compare shared versus distinct user origins and inspect __Host- cookies for Secure, path / and no Domain attribute.
+- verify-hub-config (REASONED; hub-docs): Compare a user terminal override loading versus being ignored, deny server-environment writes, and retain a working notebook.
+- verify-listeners (REASONED; startup, port): ss inventories local binds, not firewall/NAT; confirm actual private listener and external entry point with a working positive control; failed netlink inventory proves no absence.
+- port-default (REASONED; startup, port): Standalone port starts at 8888 but configuration and retries can change it; inventory the actual listener.
+- verify-prefix (REASONED; hub, server): Probe prefixed and unprefixed Server/Hub routes; require no application alias outside the boundary and working authenticated prefixed access and kernel WebSocket.
+- verify-headers (REASONED; hub, server): Compare spoofed address/scheme/Forwarded headers through real ingress and direct backend access; inspect logs, redirects and cookies with login/WebSocket controls; test real Host separately.
+- verify-internal-tls (REASONED; hub, client): Compare each internal connection with TLS off/on; trusted client certificates succeed, untrusted certificates and wrong hostnames fail on Hub 5.4+; keep kernel ZeroMQ excluded.
+- verify-native (REASONED; native): Test length/common-password, threshold/cooldown and pending-account oracle independently; compare approval with allow_all and empty allowed_users, first-signup preauthorization, disabled signup and stored bcrypt.
 <!-- version-basis:end -->
 
 An unauthenticated Jupyter server gives anyone who can reach it arbitrary code execution with the permissions of its server and kernel processes. Running those processes with administrative privileges gives an authenticated attacker those privileges too. Jupyter Server ships with authentication on through a generated token; keep authentication enabled. Setting a password replaces the automatically generated token by default. A token and a password can coexist as alternatives, but neither is a second factor. [Jupyter Server security](https://jupyter-server.readthedocs.io/en/latest/operators/security.html).

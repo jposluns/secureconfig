@@ -203,55 +203,75 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| searx-bind: Direct SearxNG defaults 127.0.0.1:8888 via server.bind_address/port; documented Docker wildcard 8888:8080 needs loopback replacement or removal. | SearxNG documentation unknown | REASONED |
-| searx-auth: Verified SearxNG configuration has no authentication; protect search with authenticated ingress. | SearxNG documentation unknown | REASONED |
-| searx-secret: Set unique server.secret_key/SEARXNG_SECRET; production startup refuses shipped ultrasecretkey, which is not user authentication. | SearxNG documentation unknown; SearxNG source d4ce87c23431f607162fc5c39ce52c538d64588f | REASONED |
-| searx-egress: Server-side search/image fetches, including image redirects, need outbound restrictions against internal/metadata destinations. | SearxNG source d4ce87c23431f607162fc5c39ce52c538d64588f | REASONED |
-| localai-bind: LocalAI defaults :8080; set LOCALAI_ADDRESS or --address for host loopback; documented 8080:8080 publication needs restriction. | LocalAI documentation unknown | REASONED |
-| localai-key: LOCALAI_API_KEY is unset by default; set unique native key and retain ingress authentication. | LocalAI documentation unknown | REASONED |
-| localai-oauth: LOCALAI_AUTH=true enables multi-user OAuth with per-user keys. | LocalAI documentation unknown | REASONED |
-| tei-bind: TEI CLI defaults 0.0.0.0:3000, distinct from documented container 80 mapped to host 8080; use hostname/port or private publication. | TEI documentation unknown | REASONED |
-| tei-key: API_KEY/--api-key is unset by default; configured key requires Authorization Bearer on inference routes. | TEI documentation unknown; TEI HTTP source v1.9.0 | REASONED |
-| tei-exempt: HTTP /, /health, /ping, /metrics, /docs and /api-doc/openapi.json remain outside inference auth on the main port. | TEI HTTP source v1.9.0 | REASONED |
-| tei-metrics: HTTP metrics share main port and expose model/request information; prometheus-port default 9000 starts standalone exporter only in gRPC build. | TEI documentation unknown; TEI HTTP source v1.9.0; TEI gRPC source 1bb59202500e5f69dd8be63dd1604f7625124fbe | REASONED |
-| langserve: Deprecated 2024-11-18; README recommends LangGraph Platform. Existing quickstart localhost:8000 needs FastAPI application auth or full authenticated proxy. | LangServe source 27e57afeda13007a7f4e007c5d1f5e8489963aa4 | REASONED |
-| private-publication: Container loopback is not host/proxy reachability; retain container-network access and remove or host-loopback-scope publications. | Docker unknown | REASONED |
-| firewall: No-host-IP Docker publications bind all host interfaces; Linux forwarding can bypass UFW. | Docker unknown | REASONED |
-| compose-reset: Ordinary override ports merge; use !reset [] to remove Mem0 Postgres publication, inspect effective invocation/model, or edit base if unsupported. | Docker unknown; Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
-| ingress: Publish only authenticated TLS ingress and gate every capability route; production Onyx publication boundary alone proves no certificate or access policy. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5; Docker unknown | REASONED |
-| mem0-auth: Mem0 auth defaults on: dashboard JWT, per-user X-API-Key m0sk_ or legacy ADMIN_API_KEY; do not deploy AUTH_DISABLED=true. | Mem0 documentation unknown | REASONED |
-| mem0-warnings: AUTH_DISABLED warning suppresses short nonempty ADMIN_API_KEY (&lt;16) warning via if/elif; unset key has separate branch; warnings do not stop startup. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
-| mem0-jwt: With auth on, missing JWT_SECRET raises at startup; generate with openssl rand -base64 48 and keep signing secret private. | Mem0 documentation unknown; Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
-| mem0-bootstrap: POST /auth/register grants first admin only while no user exists, then returns 403; bootstrap privately with make bootstrap or host-only wizard. | Mem0 documentation unknown | REASONED |
-| mem0-open: Root redirect, /docs and /openapi.json stay open and cannot prove protected-route authentication. | Mem0 documentation unknown | REASONED |
-| mem0-api-port: Compose runs API 0.0.0.0:8000 and wildcard host 8888:8000; remove publication or replace with host loopback. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
-| mem0-db-port: Compose publishes Postgres 8432:5432 independently of application auth; remove host mapping and retain database auth. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
-| mem0-dashboard: Compose dashboard 3000:3000 needs private publication and protected ingress; dashboard authentication coverage is unverified. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
-| mem0-reload: Compose uvicorn --reload is a development setting; remove for production. | Mem0 server source c7ee362aff94a369af70f13f2b4f853f6793ff4c | REASONED |
-| onyx-prod: Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
-| onyx-bootstrap: Email/password auth is on and first signup becomes admin; claim privately before exposure. | Onyx documentation unknown | REASONED |
-| onyx-auth-type: This guide infers from the v4.3.13 and v4.4.0 tag trees that AUTH_TYPE no longer selects runtime authentication in v4.4.0; legacy values remain for migrations, a one-time legacy SAML import at startup, and a stale-value warning. Tag names alone supply version identity, since neither tree's manifest records the release version; the recorded v4.5 removal plan and its completion are unverified by these files. | Onyx documentation unknown; Onyx v4.3 source v4.3.13; Onyx v4.4 source v4.4.0 | REASONED |
-| onyx-base: Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5; Onyx documentation unknown | REASONED |
-| onyx-api: Development override adds API 8080:8080; remove unless deliberately restricted for access. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
-| onyx-backing: Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
-| onyx-port-env: ${VAR:-default} changes or restores host port; an empty variable does not remove publication. | Onyx Compose a0370f232ba4e4625131fae518b86e5530e98ec5 | REASONED |
-| onyx-secrets: Connector credential_json persists in database; use least privilege, protect storage/backups and rotate after exposure. | Onyx data model 15ead4ca364e654d40dac842ee9d0bb9e0fe5471 | REASONED |
-| mfa: Native MFA coverage remains unverified; guide relies on identity/fronting MFA and separate machine credentials. | Mem0 documentation unknown; Onyx documentation unknown | REASONED |
-| secrets: Runtime provider/signing/service keys stay out of source/images; outbound provider credentials are not inbound authentication. | LocalAI documentation unknown; TEI documentation unknown; Mem0 documentation unknown; Onyx data model 15ead4ca364e654d40dac842ee9d0bb9e0fe5471 | REASONED |
-| verify-placeholder: Placeholder scan should print matched tokens with grep_exit=0, clean with 1; read errors are inconclusive. Local guard outcomes and a direct grep match are recorded in the Verify overview; the deployed-state outcomes remain unobserved. | curl documentation unknown; GNU grep 3.12 | DEMONSTRATED |
-| verify-guards: Whole-block marker/count and empty/placeholder guards are prerequisites, not exposure proof; omitted guards and matching inherited positional values remain limits. | curl documentation unknown | REASONED |
-| verify-inventory: Compare full IPv4/IPv6 socket, merged model and running Publishers inventory; DNAT may escape ss, exposed-only entries are not publications, and empty/error inventories do not pass. | Docker unknown | REASONED |
-| verify-direct: Any direct HTTP response or completed TCP connection proves reachability; refused actual backend plus inventory/working ingress supports isolation, timeout or http=000 alone does not. | curl documentation unknown; Docker unknown | REASONED |
-| verify-backing: Probe every actual private application/backing TCP port; connection success is exposure, refusal needs configuration evidence, timeout/local/netcat-option errors are inconclusive. | Docker unknown | REASONED |
-| verify-ingress: Harmless protected request should reject anonymous caller and admit authorized control; inspect redirect destination/body, and test routes outside native auth through ingress too. | LocalAI documentation unknown; TEI documentation unknown; TEI HTTP source v1.9.0; Mem0 documentation unknown; Onyx documentation unknown; curl documentation unknown | REASONED |
-| verify-tei: POST /embed with harmless inputs should reject missing key 401 and return embeddings with valid key; anonymous health/docs/metrics cannot test native auth. | TEI HTTP source v1.9.0 | REASONED |
-| verify-native: From trusted private position vary only empty/wrong/valid credential for same request; first two reject, third returns real output, without publishing a test port. | LocalAI documentation unknown; TEI documentation unknown; Mem0 documentation unknown; Onyx documentation unknown; LangServe source 27e57afeda13007a7f4e007c5d1f5e8489963aa4 | REASONED |
-| verify-native-limits: Intentionally anonymous private SearxNG/LangServe instead use authenticated ingress; exact selected Mem0/Onyx response codes and dashboard policy remain unverified. | SearxNG documentation unknown; LangServe source 27e57afeda13007a7f4e007c5d1f5e8489963aa4; Mem0 documentation unknown; Onyx documentation unknown | REASONED |
-| verify-positive: Authorized ingress request must return expected application body, paired with negative checks; 2xx alone, login page, errors or unreachable service cannot establish success. | curl documentation unknown; LocalAI documentation unknown; TEI documentation unknown; Mem0 documentation unknown; Onyx documentation unknown | REASONED |
-| verify-headers: Credential headers go on curl stdin under control-character guard; separate ingress/native credentials require both, not argv. | curl documentation unknown | REASONED |
-| verify-browser: A password-only attempt at an MFA-protected operation must be refused, and the operation must succeed after the second factor; a direct forged identity header must be refused at the network boundary, a valid authenticated session must reach the app through the proxy, and a forged trusted header sent through it must not change the identity in the app log; neither was demonstrated. | Mem0 documentation unknown; Onyx documentation unknown | REASONED |
+Components (recorded basis):
+
+- searx: SearxNG documentation, unknown
+- localai: LocalAI documentation, unknown
+- tei-docs: TEI documentation, unknown
+- tei: TEI HTTP source, v1.9.0
+- langserve: LangServe source, 27e57afeda13007a7f4e007c5d1f5e8489963aa4
+- mem0: Mem0 documentation, unknown
+- mem0-source: Mem0 server source, c7ee362aff94a369af70f13f2b4f853f6793ff4c
+- onyx: Onyx documentation, unknown
+- onyx-compose: Onyx Compose, a0370f232ba4e4625131fae518b86e5530e98ec5
+- docker: Docker, unknown
+- grep: GNU grep, 3.12
+- curl: curl documentation, unknown
+- searx-source: SearxNG source, d4ce87c23431f607162fc5c39ce52c538d64588f
+- onyx-data: Onyx data model, 15ead4ca364e654d40dac842ee9d0bb9e0fe5471
+- tei-grpc: TEI gRPC source, 1bb59202500e5f69dd8be63dd1604f7625124fbe
+- onyx-v43: Onyx v4.3 source, v4.3.13
+- onyx-v44: Onyx v4.4 source, v4.4.0
+
+Claims (full source mapping in the front matter):
+
+- searx-bind (REASONED; searx): Direct SearxNG defaults 127.0.0.1:8888 via server.bind_address/port; documented Docker wildcard 8888:8080 needs loopback replacement or removal.
+- searx-auth (REASONED; searx): Verified SearxNG configuration has no authentication; protect search with authenticated ingress.
+- searx-secret (REASONED; searx, searx-source): Set unique server.secret_key/SEARXNG_SECRET; production startup refuses shipped ultrasecretkey, which is not user authentication.
+- searx-egress (REASONED; searx-source): Server-side search/image fetches, including image redirects, need outbound restrictions against internal/metadata destinations.
+- localai-bind (REASONED; localai): LocalAI defaults :8080; set LOCALAI_ADDRESS or --address for host loopback; documented 8080:8080 publication needs restriction.
+- localai-key (REASONED; localai): LOCALAI_API_KEY is unset by default; set unique native key and retain ingress authentication.
+- localai-oauth (REASONED; localai): LOCALAI_AUTH=true enables multi-user OAuth with per-user keys.
+- tei-bind (REASONED; tei-docs): TEI CLI defaults 0.0.0.0:3000, distinct from documented container 80 mapped to host 8080; use hostname/port or private publication.
+- tei-key (REASONED; tei-docs, tei): API_KEY/--api-key is unset by default; configured key requires Authorization Bearer on inference routes.
+- tei-exempt (REASONED; tei): HTTP /, /health, /ping, /metrics, /docs and /api-doc/openapi.json remain outside inference auth on the main port.
+- tei-metrics (REASONED; tei-docs, tei, tei-grpc): HTTP metrics share main port and expose model/request information; prometheus-port default 9000 starts standalone exporter only in gRPC build.
+- langserve (REASONED; langserve): Deprecated 2024-11-18; README recommends LangGraph Platform. Existing quickstart localhost:8000 needs FastAPI application auth or full authenticated proxy.
+- private-publication (REASONED; docker): Container loopback is not host/proxy reachability; retain container-network access and remove or host-loopback-scope publications.
+- firewall (REASONED; docker): No-host-IP Docker publications bind all host interfaces; Linux forwarding can bypass UFW.
+- compose-reset (REASONED; docker, mem0-source): Ordinary override ports merge; use !reset [] to remove Mem0 Postgres publication, inspect effective invocation/model, or edit base if unsupported.
+- ingress (REASONED; onyx-compose, docker): Publish only authenticated TLS ingress and gate every capability route; production Onyx publication boundary alone proves no certificate or access policy.
+- mem0-auth (REASONED; mem0): Mem0 auth defaults on: dashboard JWT, per-user X-API-Key m0sk_ or legacy ADMIN_API_KEY; do not deploy AUTH_DISABLED=true.
+- mem0-warnings (REASONED; mem0-source): AUTH_DISABLED warning suppresses short nonempty ADMIN_API_KEY (&lt;16) warning via if/elif; unset key has separate branch; warnings do not stop startup.
+- mem0-jwt (REASONED; mem0, mem0-source): With auth on, missing JWT_SECRET raises at startup; generate with openssl rand -base64 48 and keep signing secret private.
+- mem0-bootstrap (REASONED; mem0): POST /auth/register grants first admin only while no user exists, then returns 403; bootstrap privately with make bootstrap or host-only wizard.
+- mem0-open (REASONED; mem0): Root redirect, /docs and /openapi.json stay open and cannot prove protected-route authentication.
+- mem0-api-port (REASONED; mem0-source): Compose runs API 0.0.0.0:8000 and wildcard host 8888:8000; remove publication or replace with host loopback.
+- mem0-db-port (REASONED; mem0-source): Compose publishes Postgres 8432:5432 independently of application auth; remove host mapping and retain database auth.
+- mem0-dashboard (REASONED; mem0-source): Compose dashboard 3000:3000 needs private publication and protected ingress; dashboard authentication coverage is unverified.
+- mem0-reload (REASONED; mem0-source): Compose uvicorn --reload is a development setting; remove for production.
+- onyx-prod (REASONED; onyx-compose): Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished.
+- onyx-bootstrap (REASONED; onyx): Email/password auth is on and first signup becomes admin; claim privately before exposure.
+- onyx-auth-type (REASONED; onyx, onyx-v43, onyx-v44): This guide infers from the v4.3.13 and v4.4.0 tag trees that AUTH_TYPE no longer selects runtime authentication in v4.4.0; legacy values remain for migrations, a one-time legacy SAML import at startup, and a stale-value warning. Tag names alone supply version identity, since neither tree's manifest records the release version; the recorded v4.5 removal plan and its completion are unverified by these files.
+- onyx-base (REASONED; onyx-compose, onyx): Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication.
+- onyx-api (REASONED; onyx-compose): Development override adds API 8080:8080; remove unless deliberately restricted for access.
+- onyx-backing (REASONED; onyx-compose): Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these.
+- onyx-port-env (REASONED; onyx-compose): ${VAR:-default} changes or restores host port; an empty variable does not remove publication.
+- onyx-secrets (REASONED; onyx-data): Connector credential_json persists in database; use least privilege, protect storage/backups and rotate after exposure.
+- mfa (REASONED; mem0, onyx): Native MFA coverage remains unverified; guide relies on identity/fronting MFA and separate machine credentials.
+- secrets (REASONED; localai, tei-docs, mem0, onyx-data): Runtime provider/signing/service keys stay out of source/images; outbound provider credentials are not inbound authentication.
+- verify-placeholder (DEMONSTRATED; curl, grep): Placeholder scan should print matched tokens with grep_exit=0, clean with 1; read errors are inconclusive. Local guard outcomes and a direct grep match are recorded in the Verify overview; the deployed-state outcomes remain unobserved.
+- verify-guards (REASONED; curl): Whole-block marker/count and empty/placeholder guards are prerequisites, not exposure proof; omitted guards and matching inherited positional values remain limits.
+- verify-inventory (REASONED; docker): Compare full IPv4/IPv6 socket, merged model and running Publishers inventory; DNAT may escape ss, exposed-only entries are not publications, and empty/error inventories do not pass.
+- verify-direct (REASONED; curl, docker): Any direct HTTP response or completed TCP connection proves reachability; refused actual backend plus inventory/working ingress supports isolation, timeout or http=000 alone does not.
+- verify-backing (REASONED; docker): Probe every actual private application/backing TCP port; connection success is exposure, refusal needs configuration evidence, timeout/local/netcat-option errors are inconclusive.
+- verify-ingress (REASONED; localai, tei-docs, tei, mem0, onyx, curl): Harmless protected request should reject anonymous caller and admit authorized control; inspect redirect destination/body, and test routes outside native auth through ingress too.
+- verify-tei (REASONED; tei): POST /embed with harmless inputs should reject missing key 401 and return embeddings with valid key; anonymous health/docs/metrics cannot test native auth.
+- verify-native (REASONED; localai, tei-docs, mem0, onyx, langserve): From trusted private position vary only empty/wrong/valid credential for same request; first two reject, third returns real output, without publishing a test port.
+- verify-native-limits (REASONED; searx, langserve, mem0, onyx): Intentionally anonymous private SearxNG/LangServe instead use authenticated ingress; exact selected Mem0/Onyx response codes and dashboard policy remain unverified.
+- verify-positive (REASONED; curl, localai, tei-docs, mem0, onyx): Authorized ingress request must return expected application body, paired with negative checks; 2xx alone, login page, errors or unreachable service cannot establish success.
+- verify-headers (REASONED; curl): Credential headers go on curl stdin under control-character guard; separate ingress/native credentials require both, not argv.
+- verify-browser (REASONED; mem0, onyx): A password-only attempt at an MFA-protected operation must be refused, and the operation must succeed after the second factor; a direct forged identity header must be refused at the network boundary, a valid authenticated session must reach the app through the proxy, and a forged trusted header sent through it must not change the identity in the app log; neither was demonstrated.
 <!-- version-basis:end -->
 
 These services expose search, inference, embeddings, document access, or an agent's memory. Their authentication stories differ: SearxNG and LangServe require a fronting layer or application authentication, LocalAI and Text Embeddings Inference each have a key that is unset by default, and Mem0 and Onyx ship authentication on. The deployment command decides what the network sees. Mem0's Compose file and Onyx's development Compose publish backing services beside the authenticated application, where application login cannot protect them.

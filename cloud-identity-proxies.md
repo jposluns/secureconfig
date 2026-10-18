@@ -138,59 +138,70 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| origin: Origins must accept only proxy traffic through loopback, security-group restriction or ingress controls; direct access bypasses login. | AWS ALB unknown; Google Cloud IAP unknown | REASONED |
-| assertions: Verify signed identity assertions before use; Azure's protected-header guarantee applies only to requests through its platform. | AWS ALB unknown; Google Cloud IAP unknown; Cloudflare Access unknown; Azure authentication unknown | REASONED |
-| mfa-idp: ALB, IAP, Azure, ngrok and Vercel inherit MFA from the identity provider; enforce it there. | AWS ALB unknown; Google Cloud IAP unknown; Azure authentication unknown; ngrok unknown; Vercel unknown | REASONED |
-| mfa-access: Cloudflare Access can enforce independent TOTP or WebAuthn MFA without IdP enforcement. | Cloudflare Access unknown | REASONED |
-| authorization: Authentication proves identity; application or proxy policy must still authorize access. | AWS ALB unknown; Google Cloud IAP unknown; ngrok unknown | REASONED |
-| fail-closed: Missing auth configuration, an unreachable auth service or unmatched route must never pass an unauthenticated request through. | AWS ALB unknown; Azure authentication unknown | REASONED |
-| alb-actions: authenticate-oidc or authenticate-cognito precedes forward and works only on HTTPS listeners. | AWS ALB unknown | REASONED |
-| alb-anonymous: OnUnauthenticatedRequest defaults authenticate; allow forwards without claims, and deny returns HTTP 401. | AWS ALB unknown | REASONED |
-| alb-session: SessionTimeout defaults seven days and permits a one-second minimum; the example selects 3600 seconds. | AWS ALB unknown | REASONED |
-| alb-callback: The IdP redirect URL is the load-balancer DNS/CNAME over HTTPS at /oauth2/idpresponse. | AWS ALB unknown | REASONED |
-| alb-jwt: Verify ES256 x-amzn-oidc-data using the regional public-key endpoint and key ID; bind signer ARN/client in the JWT header and check expiry. | AWS ALB unknown | REASONED |
-| alb-legacy: Unsigned x-amzn-oidc-accesstoken and x-amzn-oidc-identity must not supply trusted identity. | AWS ALB unknown | REASONED |
-| alb-target: Restrict target security groups to the ALB security group; use HTTPS targets when claims need last-hop encryption. | AWS ALB unknown | REASONED |
-| iap-backends: IAP protects supported App Engine, Cloud Run, Compute Engine, GKE and on-premises backends, not backend buckets. | Google Cloud IAP unknown | REASONED |
-| iap-iam: Google Accounts and Workforce Identity Federation require IAP-secured Web App User IAM access. | Google Cloud IAP unknown | REASONED |
-| iap-customer: Identity Platform customer identities bypass IAM authorization; the app must authorize verified assertion claims. | Google Cloud IAP unknown | REASONED |
-| iap-jwt: Verify ES256 x-goog-iap-jwt-assertion with Google's IAP JWKs, issuer https://cloud.google.com/iap and the resource audience. | Google Cloud IAP unknown | REASONED |
-| iap-audience: IAP audience paths differ for backendServices, regional Cloud Run services and App Engine apps. | Google Cloud IAP unknown | REASONED |
-| iap-unsigned: Unsigned authenticated-user-email/id headers are forgeable when IAP is bypassed; use the JWT. | Google Cloud IAP unknown | REASONED |
-| iap-run: Load-balancer IAP does not protect run.app; enable IAP on Cloud Run or disable the default URL/restrict ingress. | Google Cloud IAP unknown | REASONED |
-| iap-firewall: Compute Engine and GKE firewalls must block access that bypasses the load balancer. | Google Cloud IAP unknown | REASONED |
-| azure-providers: Easy Auth fronts the app without code changes; documented providers include Entra, Facebook, Google, X, GitHub, Apple preview and custom OIDC. | Azure authentication unknown | REASONED |
-| azure-require: Require authentication rejects anonymously with 302, 401, 403 or 404; Allow unauthenticated requests delegates the decision to the app. | Azure authentication unknown | REASONED |
-| azure-https: Enabling Easy Auth redirects to HTTPS regardless of the app setting; do not disable requireHttps in V2 configuration. | Azure authentication unknown | REASONED |
-| azure-paths: Authentication covers every path unless excluded paths are configured. | Azure authentication unknown | REASONED |
-| azure-headers: X-MS-CLIENT-PRINCIPAL carries Base64 claims with ID/NAME/IDP headers; external requests cannot set these platform headers. | Azure authentication unknown | REASONED |
-| azure-me: /.auth/me is available with the token store enabled. | Azure authentication unknown | REASONED |
-| azure-tenant: Entra defaults to allowing any tenant user to obtain a token; restrict the app registration to assigned users when needed. | Azure authentication unknown | REASONED |
-| container-auth: Container Apps uses per-replica auth sidecars, supported social/Entra/OIDC providers, Require/Allow choices and protected principal headers. | Azure authentication unknown | REASONED |
-| container-https: Container Apps authentication requires HTTPS-only ingress with allowInsecure disabled. | Azure authentication unknown | REASONED |
-| static-login: Static Web Apps preconfigures GitHub and Entra on all plans at /.auth/login/github and /.auth/login/aad; custom providers replace defaults. | Azure authentication unknown | REASONED |
-| static-roles: Signed-in Static Web Apps users have anonymous and authenticated roles; staticwebapp.config.json route rules restrict by role. | Azure authentication unknown | REASONED |
-| static-tenant: The preconfigured Static Web Apps Entra provider accepts any Microsoft account; a custom provider is needed for one tenant. | Azure authentication unknown | REASONED |
-| cf-jwt: Prefer Cf-Access-Jwt-Assertion over the non-guaranteed CF_Authorization cookie; validate team certs, application AUD and team-domain issuer. | Cloudflare Access unknown | REASONED |
-| cf-rotation: Access rotates signing keys every six weeks with seven-day previous-key validity; fetch endpoint keys instead of hard-coding. | Cloudflare Access unknown | REASONED |
-| ngrok-login: Traffic-policy oauth or openid-connect redirects to the provider; OIDC uses issuer_url, client_id, client_secret and scopes. | ngrok unknown | REASONED |
-| ngrok-deny: OAuth login alone admits unintended accounts; a deny expression must match identities outside the email/domain allowlist. | ngrok unknown | REASONED |
-| ngrok-managed: Empty client_id/client_secret selects ngrok's managed OAuth app for supported providers. | ngrok unknown | REASONED |
-| ngrok-cli: Use ngrok http 3000 --traffic-policy-file policy.yml; legacy OAuth allow-domain/email flags are deprecated. | ngrok unknown | REASONED |
-| ngrok-origin: Bind the app to 127.0.0.1 so a direct VM address cannot bypass ngrok login. | ngrok unknown | REASONED |
-| vercel-members: Deployment Protection is not end-user login; Vercel Authentication admits members/viewers, approved requesters, share links and automation bypass. | Vercel unknown | REASONED |
-| vercel-scope: Standard Protection excludes production domains; configure All Deployments. The guide records free availability on every plan from September 9, 2026. | Vercel unknown; Vercel production-protection announcement 2026-09-09 | REASONED |
-| vercel-exception: A domain Protection Exception disables protection for existing and future deployments; remove unintended exceptions. | Vercel unknown | REASONED |
-| vercel-password: At writing, Password Protection is Enterprise-included or USD 20/month/project on Pro; USD 150 legacy is existing-Pro only; Hobby lacks it. | Vercel unknown | REASONED |
-| vercel-enterprise: Trusted IPs and Passport are Enterprise-only at the time of writing. | Vercel unknown | REASONED |
-| verify-origin: An external direct-port-3000 probe must refuse/time out at the intended address; HTTP proves exposure and resolver/local errors are inconclusive. | AWS ALB unknown; Google Cloud IAP unknown; curl minimum write-out version 7.75.0 | REASONED |
-| verify-anonymous: Anonymous proxy requests must redirect to the IdP or return 401/403. | AWS ALB unknown; Azure authentication unknown | REASONED |
-| verify-headers: Forged unsigned identity headers through the proxy must still yield a login challenge or denial, never admin identity. | AWS ALB unknown; Google Cloud IAP unknown; Azure authentication unknown | REASONED |
-| verify-signature: At the origin, accept a valid assertion then reject a well-formed changed claim with the original signature; proxy overwrite or malformed JSON proves nothing. | AWS ALB unknown; Google Cloud IAP unknown; Cloudflare Access unknown | REASONED |
-| verify-platform: Probe a real route at run.app or the Vercel production domain: require the platform challenge; app content bypasses auth and 404/transport errors are inconclusive. | Google Cloud IAP unknown; Vercel unknown | REASONED |
-| verify-outage: Break authorization and require denial of a fresh unauthenticated request; established-session survival is a separate test. | AWS ALB unknown; Azure authentication unknown | REASONED |
+Components (recorded basis):
+
+- aws: AWS ALB, unknown
+- iap: Google Cloud IAP, unknown
+- azure: Azure authentication, unknown
+- cf: Cloudflare Access, unknown
+- ngrok: ngrok, unknown
+- vercel: Vercel, unknown
+- curl: curl minimum write-out version, 7.75.0
+- vercel-announcement: Vercel production-protection announcement, 2026-09-09
+
+Claims (full source mapping in the front matter):
+
+- origin (REASONED; aws, iap): Origins must accept only proxy traffic through loopback, security-group restriction or ingress controls; direct access bypasses login.
+- assertions (REASONED; aws, iap, cf, azure): Verify signed identity assertions before use; Azure's protected-header guarantee applies only to requests through its platform.
+- mfa-idp (REASONED; aws, iap, azure, ngrok, vercel): ALB, IAP, Azure, ngrok and Vercel inherit MFA from the identity provider; enforce it there.
+- mfa-access (REASONED; cf): Cloudflare Access can enforce independent TOTP or WebAuthn MFA without IdP enforcement.
+- authorization (REASONED; aws, iap, ngrok): Authentication proves identity; application or proxy policy must still authorize access.
+- fail-closed (REASONED; aws, azure): Missing auth configuration, an unreachable auth service or unmatched route must never pass an unauthenticated request through.
+- alb-actions (REASONED; aws): authenticate-oidc or authenticate-cognito precedes forward and works only on HTTPS listeners.
+- alb-anonymous (REASONED; aws): OnUnauthenticatedRequest defaults authenticate; allow forwards without claims, and deny returns HTTP 401.
+- alb-session (REASONED; aws): SessionTimeout defaults seven days and permits a one-second minimum; the example selects 3600 seconds.
+- alb-callback (REASONED; aws): The IdP redirect URL is the load-balancer DNS/CNAME over HTTPS at /oauth2/idpresponse.
+- alb-jwt (REASONED; aws): Verify ES256 x-amzn-oidc-data using the regional public-key endpoint and key ID; bind signer ARN/client in the JWT header and check expiry.
+- alb-legacy (REASONED; aws): Unsigned x-amzn-oidc-accesstoken and x-amzn-oidc-identity must not supply trusted identity.
+- alb-target (REASONED; aws): Restrict target security groups to the ALB security group; use HTTPS targets when claims need last-hop encryption.
+- iap-backends (REASONED; iap): IAP protects supported App Engine, Cloud Run, Compute Engine, GKE and on-premises backends, not backend buckets.
+- iap-iam (REASONED; iap): Google Accounts and Workforce Identity Federation require IAP-secured Web App User IAM access.
+- iap-customer (REASONED; iap): Identity Platform customer identities bypass IAM authorization; the app must authorize verified assertion claims.
+- iap-jwt (REASONED; iap): Verify ES256 x-goog-iap-jwt-assertion with Google's IAP JWKs, issuer https://cloud.google.com/iap and the resource audience.
+- iap-audience (REASONED; iap): IAP audience paths differ for backendServices, regional Cloud Run services and App Engine apps.
+- iap-unsigned (REASONED; iap): Unsigned authenticated-user-email/id headers are forgeable when IAP is bypassed; use the JWT.
+- iap-run (REASONED; iap): Load-balancer IAP does not protect run.app; enable IAP on Cloud Run or disable the default URL/restrict ingress.
+- iap-firewall (REASONED; iap): Compute Engine and GKE firewalls must block access that bypasses the load balancer.
+- azure-providers (REASONED; azure): Easy Auth fronts the app without code changes; documented providers include Entra, Facebook, Google, X, GitHub, Apple preview and custom OIDC.
+- azure-require (REASONED; azure): Require authentication rejects anonymously with 302, 401, 403 or 404; Allow unauthenticated requests delegates the decision to the app.
+- azure-https (REASONED; azure): Enabling Easy Auth redirects to HTTPS regardless of the app setting; do not disable requireHttps in V2 configuration.
+- azure-paths (REASONED; azure): Authentication covers every path unless excluded paths are configured.
+- azure-headers (REASONED; azure): X-MS-CLIENT-PRINCIPAL carries Base64 claims with ID/NAME/IDP headers; external requests cannot set these platform headers.
+- azure-me (REASONED; azure): /.auth/me is available with the token store enabled.
+- azure-tenant (REASONED; azure): Entra defaults to allowing any tenant user to obtain a token; restrict the app registration to assigned users when needed.
+- container-auth (REASONED; azure): Container Apps uses per-replica auth sidecars, supported social/Entra/OIDC providers, Require/Allow choices and protected principal headers.
+- container-https (REASONED; azure): Container Apps authentication requires HTTPS-only ingress with allowInsecure disabled.
+- static-login (REASONED; azure): Static Web Apps preconfigures GitHub and Entra on all plans at /.auth/login/github and /.auth/login/aad; custom providers replace defaults.
+- static-roles (REASONED; azure): Signed-in Static Web Apps users have anonymous and authenticated roles; staticwebapp.config.json route rules restrict by role.
+- static-tenant (REASONED; azure): The preconfigured Static Web Apps Entra provider accepts any Microsoft account; a custom provider is needed for one tenant.
+- cf-jwt (REASONED; cf): Prefer Cf-Access-Jwt-Assertion over the non-guaranteed CF_Authorization cookie; validate team certs, application AUD and team-domain issuer.
+- cf-rotation (REASONED; cf): Access rotates signing keys every six weeks with seven-day previous-key validity; fetch endpoint keys instead of hard-coding.
+- ngrok-login (REASONED; ngrok): Traffic-policy oauth or openid-connect redirects to the provider; OIDC uses issuer_url, client_id, client_secret and scopes.
+- ngrok-deny (REASONED; ngrok): OAuth login alone admits unintended accounts; a deny expression must match identities outside the email/domain allowlist.
+- ngrok-managed (REASONED; ngrok): Empty client_id/client_secret selects ngrok's managed OAuth app for supported providers.
+- ngrok-cli (REASONED; ngrok): Use ngrok http 3000 --traffic-policy-file policy.yml; legacy OAuth allow-domain/email flags are deprecated.
+- ngrok-origin (REASONED; ngrok): Bind the app to 127.0.0.1 so a direct VM address cannot bypass ngrok login.
+- vercel-members (REASONED; vercel): Deployment Protection is not end-user login; Vercel Authentication admits members/viewers, approved requesters, share links and automation bypass.
+- vercel-scope (REASONED; vercel, vercel-announcement): Standard Protection excludes production domains; configure All Deployments. The guide records free availability on every plan from September 9, 2026.
+- vercel-exception (REASONED; vercel): A domain Protection Exception disables protection for existing and future deployments; remove unintended exceptions.
+- vercel-password (REASONED; vercel): At writing, Password Protection is Enterprise-included or USD 20/month/project on Pro; USD 150 legacy is existing-Pro only; Hobby lacks it.
+- vercel-enterprise (REASONED; vercel): Trusted IPs and Passport are Enterprise-only at the time of writing.
+- verify-origin (REASONED; aws, iap, curl): An external direct-port-3000 probe must refuse/time out at the intended address; HTTP proves exposure and resolver/local errors are inconclusive.
+- verify-anonymous (REASONED; aws, azure): Anonymous proxy requests must redirect to the IdP or return 401/403.
+- verify-headers (REASONED; aws, iap, azure): Forged unsigned identity headers through the proxy must still yield a login challenge or denial, never admin identity.
+- verify-signature (REASONED; aws, iap, cf): At the origin, accept a valid assertion then reject a well-formed changed claim with the original signature; proxy overwrite or malformed JSON proves nothing.
+- verify-platform (REASONED; iap, vercel): Probe a real route at run.app or the Vercel production domain: require the platform challenge; app content bypasses auth and 404/transport errors are inconclusive.
+- verify-outage (REASONED; aws, azure): Break authorization and require denial of a fresh unauthenticated request; established-session survival is a separate test.
 <!-- version-basis:end -->
 
 An identity-aware proxy puts a login page in front of an application without changing the application: the cloud's load balancer, platform edge, or tunnel authenticates the user against an identity provider and forwards the request with the user's identity in headers. [cloudflare.md](cloudflare.md) documents the pattern for Cloudflare Access; this guide covers the equivalents in AWS, Google Cloud, Azure, ngrok, and Vercel. The pattern fails in two ways: the origin stays reachable around the proxy, or the app trusts an identity header anyone can type. Both are addressed below.

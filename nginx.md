@@ -149,36 +149,50 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| certbot: The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides. | nginx documentation unknown; Certbot nginx configurator v2.3.0 | REASONED |
-| tls: 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off. | nginx documentation unknown | REASONED |
-| http2: At nginx release-1.26.3, http2 on is the HTTP/2 module directive; nginx 1.25.1 introduced it and deprecated the older listen 443 ssl http2 parameter. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
-| tokens: server_tokens off suppresses nginx version in headers and error pages. | nginx documentation unknown | REASONED |
-| hsts: Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age. | nginx documentation unknown; HSTS specification RFC 6797; nginx source release-1.26.3 | REASONED |
-| hsts-inheritance: At nginx release-1.26.3, a location add_header replaces inherited server headers; always changes response-code coverage, not inheritance. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
-| proxy: Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host. | nginx documentation unknown | REASONED |
-| forwarded-host: Overwrite X-Forwarded-Host: client-set values otherwise pass upstream. | nginx documentation unknown | REASONED |
-| cipher-policy: Use Mozilla for explicit cipher policy; retain the stated protocol floor. | nginx documentation unknown; Mozilla TLS policy unknown | REASONED |
-| tickets: At nginx release-1.26.3, ssl_session_tickets defaults on; nginx 1.23.2 introduced automatic ticket-key rotation with a shared ssl_session_cache. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
-| redirect: Port 80 on IPv4/IPv6 redirects with 301; a default server reflecting $host can redirect unmatched hosts off-site, so use 444 or a canonical host. | nginx documentation unknown | REASONED |
-| password-file: At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils. | nginx documentation unknown; Apache httpd source 2.4.69; OWASP Password Storage Cheat Sheet commit 72865b1e; Debian apache2 packaging 2.4.69-1 | REASONED |
-| basic: auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers. | nginx documentation unknown | REASONED |
-| mtls: At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification. | nginx documentation unknown; nginx source release-1.26.3 | REASONED |
-| mfa: At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia v4.39.28 and oauth2-proxy v7.15.4 document nginx auth_request integration, and Cloudflare Access documents protecting self-hosted web applications; the nginx source cited here does not cover those integrations. MFA is this guide's requirement; whether a given installation enforces it depends on its configured portal or Access policy (this guide's assessment). | nginx documentation unknown; nginx source release-1.26.3; Authelia nginx integration v4.39.28; oauth2-proxy nginx integration v7.15.4; Cloudflare Access web applications unknown | REASONED |
-| body-limit: client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check. | nginx documentation unknown | REASONED |
-| rate-limit: Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503. | nginx documentation unknown | REASONED |
-| connection-limit: limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503. | nginx documentation unknown | REASONED |
-| location-auth: Keep limits in the authenticated location; sibling locations do not inherit its auth or proxy headers. Repeat auth or inherit it from server; auth_basic off is deliberate. | nginx documentation unknown | REASONED |
-| read-timeout: proxy_read_timeout 60s limits gaps between upstream reads, not total response duration; active streams can continue indefinitely. | nginx documentation unknown | REASONED |
-| client-address: At a direct edge trust the appended last X-Forwarded-For entry; behind a CDN, recover the client with trusted set_real_ip_from and real_ip_header before per-client limits. | nginx documentation unknown | REASONED |
-| verify-config: Run nginx -t before reload; no configuration-test outcome is recorded. | nginx documentation unknown | REASONED |
-| verify-redirect: HTTP should return 301 with an HTTPS Location. | nginx documentation unknown | REASONED |
-| verify-tls: HTTPS must validate without -k; TLS 1.1-only rejection must be protocol_version, not a generic/local failure; test TLS 1.0 separately. | nginx documentation unknown | REASONED |
-| verify-auth: An open path may return 200; the protected path must reject no credentials with 401/403, and valid credentials reach the app rather than 401. | nginx documentation unknown | REASONED |
-| verify-size: Authenticated 9M succeeds normally only after raising the 1m default; 11M returns 413. Disable the check with 0 in isolation to distinguish backend refusal. | nginx documentation unknown | REASONED |
-| verify-rate: Concurrent unauthenticated probes exercise pre-auth limits; 503 does not identify the limiter. Compare both off and each alone with measured arrival rate. | nginx documentation unknown | REASONED |
-| verify-backend: Inspect every listener: direct public access to backend 3000 bypasses proxy TLS/auth even when front-door probes pass. | nginx documentation unknown | REASONED |
+Components (recorded basis):
+
+- ng: nginx documentation, unknown
+- policy: Mozilla TLS policy, unknown
+- certbot: Certbot nginx configurator, v2.3.0
+- hsts: HSTS specification, RFC 6797
+- nginx-source: nginx source, release-1.26.3
+- authelia: Authelia nginx integration, v4.39.28
+- oauth2-proxy: oauth2-proxy nginx integration, v7.15.4
+- cloudflare-access: Cloudflare Access web applications, unknown
+- httpd: Apache httpd source, 2.4.69
+- debian-apache2: Debian apache2 packaging, 2.4.69-1
+- owasp: OWASP Password Storage Cheat Sheet, commit 72865b1e
+
+Claims (full source mapping in the front matter):
+
+- certbot (REASONED; ng, certbot): The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides.
+- tls (REASONED; ng): 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off.
+- http2 (REASONED; ng, nginx-source): At nginx release-1.26.3, http2 on is the HTTP/2 module directive; nginx 1.25.1 introduced it and deprecated the older listen 443 ssl http2 parameter.
+- tokens (REASONED; ng): server_tokens off suppresses nginx version in headers and error pages.
+- hsts (REASONED; ng, hsts, nginx-source): Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age.
+- hsts-inheritance (REASONED; ng, nginx-source): At nginx release-1.26.3, a location add_header replaces inherited server headers; always changes response-code coverage, not inheritance.
+- proxy (REASONED; ng): Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host.
+- forwarded-host (REASONED; ng): Overwrite X-Forwarded-Host: client-set values otherwise pass upstream.
+- cipher-policy (REASONED; ng, policy): Use Mozilla for explicit cipher policy; retain the stated protocol floor.
+- tickets (REASONED; ng, nginx-source): At nginx release-1.26.3, ssl_session_tickets defaults on; nginx 1.23.2 introduced automatic ticket-key rotation with a shared ssl_session_cache.
+- redirect (REASONED; ng): Port 80 on IPv4/IPv6 redirects with 301; a default server reflecting $host can redirect unmatched hosts off-site, so use 444 or a canonical host.
+- password-file (REASONED; ng, httpd, owasp, debian-apache2): At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils.
+- basic (REASONED; ng): auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers.
+- mtls (REASONED; ng, nginx-source): At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification.
+- mfa (REASONED; ng, nginx-source, authelia, oauth2-proxy, cloudflare-access): At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia v4.39.28 and oauth2-proxy v7.15.4 document nginx auth_request integration, and Cloudflare Access documents protecting self-hosted web applications; the nginx source cited here does not cover those integrations. MFA is this guide's requirement; whether a given installation enforces it depends on its configured portal or Access policy (this guide's assessment).
+- body-limit (REASONED; ng): client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check.
+- rate-limit (REASONED; ng): Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503.
+- connection-limit (REASONED; ng): limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503.
+- location-auth (REASONED; ng): Keep limits in the authenticated location; sibling locations do not inherit its auth or proxy headers. Repeat auth or inherit it from server; auth_basic off is deliberate.
+- read-timeout (REASONED; ng): proxy_read_timeout 60s limits gaps between upstream reads, not total response duration; active streams can continue indefinitely.
+- client-address (REASONED; ng): At a direct edge trust the appended last X-Forwarded-For entry; behind a CDN, recover the client with trusted set_real_ip_from and real_ip_header before per-client limits.
+- verify-config (REASONED; ng): Run nginx -t before reload; no configuration-test outcome is recorded.
+- verify-redirect (REASONED; ng): HTTP should return 301 with an HTTPS Location.
+- verify-tls (REASONED; ng): HTTPS must validate without -k; TLS 1.1-only rejection must be protocol_version, not a generic/local failure; test TLS 1.0 separately.
+- verify-auth (REASONED; ng): An open path may return 200; the protected path must reject no credentials with 401/403, and valid credentials reach the app rather than 401.
+- verify-size (REASONED; ng): Authenticated 9M succeeds normally only after raising the 1m default; 11M returns 413. Disable the check with 0 in isolation to distinguish backend refusal.
+- verify-rate (REASONED; ng): Concurrent unauthenticated probes exercise pre-auth limits; 503 does not identify the limiter. Compare both off and each alone with measured arrival rate.
+- verify-backend (REASONED; ng): Inspect every listener: direct public access to backend 3000 bypasses proxy TLS/auth even when front-door probes pass.
 <!-- version-basis:end -->
 
 Get a certificate first: [free-certificates.md](free-certificates.md) for a public host (note that `certbot --nginx` edits the server block for you), or [self-signed.md](self-signed.md) for internal use.

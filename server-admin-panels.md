@@ -145,46 +145,58 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| private: Keep root-capable panels off the internet, bound/restricted to management networks with private access and a second factor. | Cockpit 368; Webmin docs 8ceae26c5a074053905cbcc6c0053be573633f3a; Proxmox VE 9.2 docs 9.2.12 | REASONED |
-| cockpit-bind: Bare ListenStream=9090 binds IPv6 and, by default, IPv4 wildcard addresses. | Cockpit 368; systemd v262 | REASONED |
-| cockpit-dropin: Use a socket drop-in, not cockpit.conf: reset ListenStream, set 10.0.0.5:9090 and FreeBind=yes, then daemon-reload/restart. | Cockpit 368 | REASONED |
-| cockpit-tls: One port serves HTTP/HTTPS, redirecting HTTP except localhost; AllowUnencrypted defaults false and missing certificates cause self-signed creation. | Cockpit 368 | REASONED |
-| cockpit-pam: Local accounts use Cockpit PAM with normal SSH-equivalent privileges. | Cockpit 368 | REASONED |
-| cockpit-root: First-install packages write root to disallowed-users; onerr=succeed permits root if that file is missing/unreadable. | Cockpit 368 | REASONED |
-| cockpit-escalation: Users allowed sudo/polkit escalation get an immediately elevated session and terminal. | Cockpit 368 | REASONED |
-| cockpit-mfa: No built-in second factor; use PAM, Kerberos or client certificates. | Cockpit 368 | REASONED |
-| cockpit-rate: MaxStartups defaults to 10 concurrent attempts, not repeated-password lockout. | Cockpit 368 | REASONED |
-| cockpit-loginto: Set LoginTo=false to prevent unauthenticated scanning of reachable private networks. | Cockpit 368 | REASONED |
-| webmin-bind: Webmin/Usermin TCP ports are 10000/20000; omitted bind makes miniserv listen on all IPv4/IPv6 addresses. | Webmin 2.670; Usermin 2.570 | REASONED |
-| webmin-discovery: Installed listen=10000/20000 opens discovery UDP on every IPv4 address; delete when unused. | Webmin 2.670; Usermin 2.570 | REASONED |
-| webmin-access: Set management bind and allow networks, then restart; empty allow admits all except denied clients. | Webmin 2.670; Webmin docs 8ceae26c5a074053905cbcc6c0053be573633f3a | REASONED |
-| webmin-tls: Deb/RPM packages enable ssl=1 with a self-signed certificate. | Webmin 2.670 | REASONED |
-| webmin-root: Installed root crypt=x accepts the Unix root password with all modules; Command Shell defaults to root. | Webmin 2.670 | REASONED |
-| webmin-sudo: Installed sudo=1 lets sudo-permitted Unix users log in effectively as root. | Webmin 2.670 | REASONED |
-| webmin-mfa: TOTP/Authy exists but is not configured at install; enable and enrol every user. | Webmin 2.670 | REASONED |
-| webmin-advisories: Advisories list Basic-auth MFA bypasses CVE-2026-42210/CVE-2026-56022 under Webmin prior to 2.641; use a current release. | Webmin docs 8ceae26c5a074053905cbcc6c0053be573633f3a | REASONED |
-| webmin-rate: Defaults blockhost_failures=5/blockhost_time=60 block a host for 60 seconds, not a user lockout; Basic-auth failures count only with installed passdelay=1. | Webmin 2.670 | REASONED |
-| pve-bind: pveproxy HTTPS API 8006 and spiceproxy 3128 share LISTEN_IP in /etc/default/pveproxy; new sockets without it try :: then 0.0.0.0. Dual-stack defaults and bindv6only=1 effects are documentation-backed; socket-library behaviour and installed versions remain unverified. | Proxmox VE 9.2 docs 9.2.12; pve-manager 9.2.20; Proxmox HTTP server 5119ff9bec08c69584c0c98bea3edd0098179e5f; libpve-common-perl 9.1.21 5054082fe492429fc37574985c2ca812af9a3125 | REASONED |
-| pve-cluster: The vendor warns against LISTEN_IP on clustered systems: nodes need peer pveproxy access, possibly across subnets. This guide advises management-only ACLs and firewall rules. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
-| pve-acl: Both daemons share ALLOW_FROM/DENY_FROM/POLICY; default allow admits unmatched clients and dual matches. Deny rejects both cases. This guide advises ALLOW_FROM with DENY_FROM=all or POLICY=deny, one of the two, not both, because deny plus DENY_FROM=all refuses everyone. | Proxmox VE 9.2 docs 9.2.12; pve-manager 9.2.20; Proxmox HTTP server 5119ff9bec08c69584c0c98bea3edd0098179e5f | REASONED |
-| pve-firewall: Firewall defaults disabled; enable and restrict 8006/22/3128 to management addresses. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
-| pve-root: root@pam can always log in as unconfined admin; installer sets the web-interface root password. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
-| pve-shell: Node shell opens /bin/login -f root without another password. | pve-manager 9.2.20 | REASONED |
-| pve-mfa: Configure TOTP, WebAuthn, recovery keys or realm-enforced TOTP/YubiKey OTP; no default second factor. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
-| pve-lockout: Eight TOTP failures disable TOTP; 100 WebAuthn/recovery-key failures block all factors for an hour. These are second-factor lockouts. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
-| pve-password-delay: Unauthorized API responses delay three seconds; this is not password lockout. | Proxmox HTTP server 5119ff9bec08c69584c0c98bea3edd0098179e5f | REASONED |
-| pve-certificates: Each cluster creates its own self-signed CA. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
-| pve-tokens: API tokens default to separated privileges and cannot access VM/node consoles. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
-| verify-cockpit: Inspect effective socket reset/address and root deny file; bare port or missing deny file exposes documented defaults. | Cockpit 368 | REASONED |
-| verify-pve: Inspect the shared LISTEN_IP/ACL configuration for both daemons, enabled/running firewall and management-only rules, and every admin's second factor including root@pam. This guide assesses management bind on a single node or management ALLOW_FROM with DENY_FROM=all or POLICY=deny, one of the two, not both, as fixed; grep alone does not establish effective settings. | Proxmox VE 9.2 docs 9.2.12; pve-manager 9.2.20; Proxmox HTTP server 5119ff9bec08c69584c0c98bea3edd0098179e5f; libpve-common-perl 9.1.21 5054082fe492429fc37574985c2ca812af9a3125 | REASONED |
-| verify-external: Probe each public IP with a reachable control; refusal/timeout is only consistent with isolation. TCP does not test Webmin UDP. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12 | REASONED |
-| webmin-loopback: Loopback bind with no listen line produced one TCP socket and no UDP. | Webmin 2.670 | DEMONSTRATED |
-| webmin-rate-run: Fifth wrong password exceeded a five-second timeout; then even the right password received host-block 403. | Webmin 2.670 | DEMONSTRATED |
-| verify-listeners: Expect management TCP binds and no discovery UDP; this guide assesses clustered Proxmox wildcards as fixed only with management-only ACLs and firewall rules. Pinned new-socket code tries :: then 0.0.0.0; dual-stack operation remains documentation-backed and must be checked on the host. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12; pve-manager 9.2.20; Proxmox HTTP server 5119ff9bec08c69584c0c98bea3edd0098179e5f; libpve-common-perl 9.1.21 5054082fe492429fc37574985c2ca812af9a3125 | REASONED |
-| verify-webmin-parser: Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof. | Webmin 2.670 | DEMONSTRATED |
-| verify-tcp-loopback: Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12 | DEMONSTRATED |
+Components (recorded basis):
+
+- cockpit: Cockpit, 368
+- systemd: systemd, v262
+- webmin: Webmin, 2.670
+- webmin-docs: Webmin docs, 8ceae26c5a074053905cbcc6c0053be573633f3a
+- usermin: Usermin, 2.570
+- pve-docs: Proxmox VE 9.2 docs, 9.2.12
+- pve-manager: pve-manager, 9.2.20
+- pve-http: Proxmox HTTP server, 5119ff9bec08c69584c0c98bea3edd0098179e5f
+- pve-common: libpve-common-perl 9.1.21, 5054082fe492429fc37574985c2ca812af9a3125
+
+Claims (full source mapping in the front matter):
+
+- private (REASONED; cockpit, webmin-docs, pve-docs): Keep root-capable panels off the internet, bound/restricted to management networks with private access and a second factor.
+- cockpit-bind (REASONED; cockpit, systemd): Bare ListenStream=9090 binds IPv6 and, by default, IPv4 wildcard addresses.
+- cockpit-dropin (REASONED; cockpit): Use a socket drop-in, not cockpit.conf: reset ListenStream, set 10.0.0.5:9090 and FreeBind=yes, then daemon-reload/restart.
+- cockpit-tls (REASONED; cockpit): One port serves HTTP/HTTPS, redirecting HTTP except localhost; AllowUnencrypted defaults false and missing certificates cause self-signed creation.
+- cockpit-pam (REASONED; cockpit): Local accounts use Cockpit PAM with normal SSH-equivalent privileges.
+- cockpit-root (REASONED; cockpit): First-install packages write root to disallowed-users; onerr=succeed permits root if that file is missing/unreadable.
+- cockpit-escalation (REASONED; cockpit): Users allowed sudo/polkit escalation get an immediately elevated session and terminal.
+- cockpit-mfa (REASONED; cockpit): No built-in second factor; use PAM, Kerberos or client certificates.
+- cockpit-rate (REASONED; cockpit): MaxStartups defaults to 10 concurrent attempts, not repeated-password lockout.
+- cockpit-loginto (REASONED; cockpit): Set LoginTo=false to prevent unauthenticated scanning of reachable private networks.
+- webmin-bind (REASONED; webmin, usermin): Webmin/Usermin TCP ports are 10000/20000; omitted bind makes miniserv listen on all IPv4/IPv6 addresses.
+- webmin-discovery (REASONED; webmin, usermin): Installed listen=10000/20000 opens discovery UDP on every IPv4 address; delete when unused.
+- webmin-access (REASONED; webmin, webmin-docs): Set management bind and allow networks, then restart; empty allow admits all except denied clients.
+- webmin-tls (REASONED; webmin): Deb/RPM packages enable ssl=1 with a self-signed certificate.
+- webmin-root (REASONED; webmin): Installed root crypt=x accepts the Unix root password with all modules; Command Shell defaults to root.
+- webmin-sudo (REASONED; webmin): Installed sudo=1 lets sudo-permitted Unix users log in effectively as root.
+- webmin-mfa (REASONED; webmin): TOTP/Authy exists but is not configured at install; enable and enrol every user.
+- webmin-advisories (REASONED; webmin-docs): Advisories list Basic-auth MFA bypasses CVE-2026-42210/CVE-2026-56022 under Webmin prior to 2.641; use a current release.
+- webmin-rate (REASONED; webmin): Defaults blockhost_failures=5/blockhost_time=60 block a host for 60 seconds, not a user lockout; Basic-auth failures count only with installed passdelay=1.
+- pve-bind (REASONED; pve-docs, pve-manager, pve-http, pve-common): pveproxy HTTPS API 8006 and spiceproxy 3128 share LISTEN_IP in /etc/default/pveproxy; new sockets without it try :: then 0.0.0.0. Dual-stack defaults and bindv6only=1 effects are documentation-backed; socket-library behaviour and installed versions remain unverified.
+- pve-cluster (REASONED; pve-docs): The vendor warns against LISTEN_IP on clustered systems: nodes need peer pveproxy access, possibly across subnets. This guide advises management-only ACLs and firewall rules.
+- pve-acl (REASONED; pve-docs, pve-manager, pve-http): Both daemons share ALLOW_FROM/DENY_FROM/POLICY; default allow admits unmatched clients and dual matches. Deny rejects both cases. This guide advises ALLOW_FROM with DENY_FROM=all or POLICY=deny, one of the two, not both, because deny plus DENY_FROM=all refuses everyone.
+- pve-firewall (REASONED; pve-docs): Firewall defaults disabled; enable and restrict 8006/22/3128 to management addresses.
+- pve-root (REASONED; pve-docs): root@pam can always log in as unconfined admin; installer sets the web-interface root password.
+- pve-shell (REASONED; pve-manager): Node shell opens /bin/login -f root without another password.
+- pve-mfa (REASONED; pve-docs): Configure TOTP, WebAuthn, recovery keys or realm-enforced TOTP/YubiKey OTP; no default second factor.
+- pve-lockout (REASONED; pve-docs): Eight TOTP failures disable TOTP; 100 WebAuthn/recovery-key failures block all factors for an hour. These are second-factor lockouts.
+- pve-password-delay (REASONED; pve-http): Unauthorized API responses delay three seconds; this is not password lockout.
+- pve-certificates (REASONED; pve-docs): Each cluster creates its own self-signed CA.
+- pve-tokens (REASONED; pve-docs): API tokens default to separated privileges and cannot access VM/node consoles.
+- verify-cockpit (REASONED; cockpit): Inspect effective socket reset/address and root deny file; bare port or missing deny file exposes documented defaults.
+- verify-pve (REASONED; pve-docs, pve-manager, pve-http, pve-common): Inspect the shared LISTEN_IP/ACL configuration for both daemons, enabled/running firewall and management-only rules, and every admin's second factor including root@pam. This guide assesses management bind on a single node or management ALLOW_FROM with DENY_FROM=all or POLICY=deny, one of the two, not both, as fixed; grep alone does not establish effective settings.
+- verify-external (REASONED; cockpit, webmin, usermin, pve-docs): Probe each public IP with a reachable control; refusal/timeout is only consistent with isolation. TCP does not test Webmin UDP.
+- webmin-loopback (DEMONSTRATED; webmin): Loopback bind with no listen line produced one TCP socket and no UDP.
+- webmin-rate-run (DEMONSTRATED; webmin): Fifth wrong password exceeded a five-second timeout; then even the right password received host-block 403.
+- verify-listeners (REASONED; cockpit, webmin, usermin, pve-docs, pve-manager, pve-http, pve-common): Expect management TCP binds and no discovery UDP; this guide assesses clustered Proxmox wildcards as fixed only with management-only ACLs and firewall rules. Pinned new-socket code tries :: then 0.0.0.0; dual-stack operation remains documentation-backed and must be checked on the host.
+- verify-webmin-parser (DEMONSTRATED; webmin): Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof.
+- verify-tcp-loopback (DEMONSTRATED; cockpit, webmin, usermin, pve-docs): Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard.
 <!-- version-basis:end -->
 
 A server administration panel is root on the host behind a login form. Cockpit gives any user who can

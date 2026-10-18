@@ -225,58 +225,78 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| ingress-migration: ingress-nginx retired in March 2026 with no subsequent updates; detect its labeled pods and migrate. Gateway API is recommended and Ingress API is frozen. | Kubernetes documentation unknown | REASONED |
-| gateway-install: Install Envoy Gateway chart v1.9.1 and its default Gateway CRDs; separately create GatewayClass eg with the documented controllerName and confirm Accepted=True. | Envoy Gateway v1.9.1; Gateway API documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
-| gateway-alternatives: Traefik uses providers.kubernetesGateway; Cilium uses gatewayAPI.enabled=true and requires kube-proxy replacement. | Traefik documentation unknown; Cilium documentation unknown | REASONED |
-| gateway-tls: Gateway HTTPS listener 443 terminates TLS using app-tls for app.example.com; HTTP 80 is for redirect and ACME challenges. | Gateway API documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
-| gateway-route: HTTPRoute app attaches only to the HTTPS listener via sectionName and forwards to the ClusterIP app Service on port 80. | Gateway API documentation unknown | REASONED |
-| gateway-redirect: The HTTP route uses RequestRedirect with scheme https and statusCode 301. | Gateway API documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
-| cert-manager-enable: From cert-manager 1.15, enable config.gatewayAPI.enabled; install Gateway CRDs before startup or restart cert-manager afterwards. | cert-manager Gateway support minimum 1.15 | REASONED |
-| cert-manager-issue: Gateway issuer annotations produce Certificates per HTTPS-listener Secret using listener hostnames; ACME gatewayHTTPRoute parentRefs selects the challenge Gateway. | cert-manager Gateway support minimum 1.15 | REASONED |
-| basic-auth-policy: Gateway API has no standard auth filter; Envoy SecurityPolicy attaches Basic auth to Gateway/HTTPRoute/GRPCRoute using an htpasswd Secret. | Gateway API documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
-| basic-auth-hash: Envoy supports SHA hashes only; htpasswd -s is weak SHA-1, so use long random passwords over TLS and keep application login. | Apache htpasswd documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
-| basic-auth-input: htpasswd -i reads stdin, unlike argv-exposing -b; confirm twice, create with -cis, verify with -vi and only then create the Kubernetes Secret. | Apache htpasswd documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
-| oidc: Envoy SecurityPolicy oidc uses issuer, clientID, clientSecret and redirectURL; enforce MFA at the identity provider. | Envoy Gateway documentation (rolling) unknown | REASONED |
-| external-auth: Authelia is an authorization endpoint, not a traffic proxy; Envoy extAuth.http targets its Service and /api/authz/ext-authz/. | Authelia documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
-| workload-exposure: Expose workloads only through the Gateway LoadBalancer; keep databases on ClusterIP without routes and enforce pod access with NetworkPolicies plus database TLS/auth. | Envoy Gateway documentation (rolling) unknown; Kubernetes documentation unknown | REASONED |
-| secrets: Store credentials in Secrets or an external operator, not committed ConfigMaps or environment literals; kubeconfigs containing credentials also need secret handling. | Kubernetes documentation unknown | REASONED |
-| eks-endpoint: EKS API defaults public; restrict public CIDRs or use private access. Private-only endpoints can resolve publicly to private VPC addresses. | Amazon EKS documentation unknown | REASONED |
-| gke-endpoints: GKE authorized networks constrain IP-based access, not its separately IAM-gated DNS endpoint; inspect both and disable unused DNS access. | GKE documentation unknown | REASONED |
-| aks-endpoint: Restrict AKS API access with authorized IP ranges; workload Gateway protection does not secure the control plane. | AKS documentation unknown | REASONED |
-| kubeconfig: Embedded tokens or client keys confer their RBAC access without another factor; exec-plugin configs may be only pointers, but args/env can themselves hold credentials. | Kubernetes documentation unknown | REASONED |
-| api-port: API server commonly uses 6443, but providers may use 443; use the complete kubeconfig endpoint and its actual port. | Kubernetes documentation unknown; Amazon EKS documentation unknown | REASONED |
-| etcd-ports: etcd client/peer defaults are 2379/2380; require certificates, restrict holders and private access, and retain loopback listeners used by the local API server. | Kubernetes documentation unknown | REASONED |
-| etcd-storage: API resources default to plaintext storage in etcd; valid client certificates are the boundary and etcd access is equivalent to cluster root. | Kubernetes documentation unknown | REASONED |
-| scheduler-port: Scheduler default 10259 must remain restricted to cluster clients. | Kubernetes documentation unknown | REASONED |
-| controller-port: Controller-manager default 10257 must remain restricted to cluster clients. | Kubernetes documentation unknown | REASONED |
-| proxy-port: Worker kube-proxy health default 10256 needs separate node exposure checks. | Kubernetes documentation unknown | REASONED |
-| nodeports: NodePort defaults span 30000 to 32767 TCP/UDP; Service listings do not actively probe that range. | Kubernetes documentation unknown | REASONED |
-| kubelet-legacy-anonymous: Legacy kubelet flags default anonymous-auth=true; explicitly disable it where flags control authentication. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
-| kubelet-legacy-webhook: Legacy authentication-token-webhook defaults false; explicitly enable it where flags configure authentication. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
-| kubelet-legacy-authz: Legacy authorization-mode defaults AlwaysAllow; set Webhook where flags configure authorization. | Kubernetes kubelet/kubeadm source v1.37.1; Kubernetes documentation unknown | REASONED |
-| kubelet-file-anonymous: v1beta1 KubeletConfiguration instead defaults authentication.anonymous.enabled=false. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
-| kubelet-file-webhook: v1beta1 KubeletConfiguration defaults authentication.webhook.enabled=true. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
-| kubelet-file-authz: v1beta1 KubeletConfiguration defaults authorization.mode=Webhook. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
-| kubelet-precedence: Explicit flags override --config; --config-dir drop-ins override defaults and the file. Inspect all effective settings together. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
-| kubeadm: kubeadm sets anonymous false, token webhook true, Webhook authorization and readOnlyPort 0; user overrides are preserved with warnings. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
-| eks-bootstrap: The pinned EKS AMI bootstrap writes Anonymous.Enabled=false, Mode=Webhook and ReadOnlyPort=0; do not generalize to all managed nodes. | Amazon EKS AMI bootstrap 6caf8311a3c6a8da71ac7e5e83f9c2e06287039a | REASONED |
-| kubelet-bind: Secured kubelet defaults to address 0.0.0.0 on 10250; wildcard help includes both families. Bind private addresses and restrict authorized callers. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
-| kubelet-exec: 10250 debugging handlers can execute in containers; authentication does not justify public reachability. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
-| readonly-default: Legacy read-only port defaults 10255, while v1beta1 readOnlyPort defaults 0; explicitly disable it and remove enabling overrides. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
-| readonly-auth: Read-only server uses plain HTTP with no authentication or authorization filter; its caller-supplied bind wiring was outside the inspected source subset. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
-| readonly-paths: Read-only handlers expose /pods, /stats/summary, metrics variants and health; v1.37.1 has no /spec handler. Securing 10250 does not secure 10255. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
-| gke-readonly: GKE disables the read-only port by default only for new clusters running 1.32+; inspect effective configuration on older or upgraded clusters. | GKE new-cluster read-only-port boundary 1.32 | REASONED |
-| verify-services: Only the Gateway should have NodePort/LoadBalancer exposure; verify its public address/DNS and Certificate Ready=True. | Kubernetes documentation unknown; Envoy Gateway documentation (rolling) unknown; cert-manager Gateway support minimum 1.15 | REASONED |
-| verify-redirect: HTTP should return 301 to the HTTPS application URL. | Gateway API documentation unknown | REASONED |
-| verify-basic: Anonymous Basic-protected access should return 401; require SecurityPolicy Accepted=True and a valid credential reaching the app without the gateway Basic challenge. | curl documentation unknown; Envoy Gateway documentation (rolling) unknown | REASONED |
-| verify-api-target: Use the whole kubeconfig endpoint, preserving IPv6 and inferring a schemeless endpoint from both cluster and user TLS settings, not a hardcoded 6443. | Kubernetes documentation unknown | REASONED |
-| verify-proxies: Disable curl config and configured proxies for direct probes; a transparent TLS middlebox can still answer for an unreachable target. | curl documentation unknown | REASONED |
-| verify-api-tcp: Outside allowed ranges, nc success proves something accepted TCP; corroborate failed probes with provider ranges and multiple vantage points. | Kubernetes documentation unknown; Amazon EKS documentation unknown | REASONED |
-| verify-api-http: Any HTTP status with curl exit 0 means answered; exit 60 means a TLS peer answered, 7 failed connect, 28 is ambiguous timeout and 6 is DNS failure, not privacy proof. | curl documentation unknown; Amazon EKS documentation unknown | REASONED |
-| verify-node-scan: Scan control-plane hosts first and every public node address in both families; workers alone miss API/etcd and separate etcd hosts are absent from kubectl nodes. | Kubernetes documentation unknown; Nmap documentation unknown | REASONED |
-| verify-kubelet: Untrusted clients should reach neither kubelet port after isolation, while authorized clients still reach 10250; readOnlyPort=0 should leave no 10255 listener even for authorized clients. | Kubernetes kubelet/kubeadm source v1.37.1 | REASONED |
+Components (recorded basis):
+
+- kubernetes: Kubernetes documentation, unknown
+- kubelet: Kubernetes kubelet/kubeadm source, v1.37.1
+- envoy: Envoy Gateway, v1.9.1
+- gateway: Gateway API documentation, unknown
+- cert-manager: cert-manager Gateway support minimum, 1.15
+- apache: Apache htpasswd documentation, unknown
+- authelia: Authelia documentation, unknown
+- eks: Amazon EKS documentation, unknown
+- eks-ami: Amazon EKS AMI bootstrap, 6caf8311a3c6a8da71ac7e5e83f9c2e06287039a
+- gke: GKE documentation, unknown
+- gke-min: GKE new-cluster read-only-port boundary, 1.32
+- aks: AKS documentation, unknown
+- curl: curl documentation, unknown
+- nmap: Nmap documentation, unknown
+- traefik: Traefik documentation, unknown
+- cilium: Cilium documentation, unknown
+- envoy-rolling: Envoy Gateway documentation (rolling), unknown
+
+Claims (full source mapping in the front matter):
+
+- ingress-migration (REASONED; kubernetes): ingress-nginx retired in March 2026 with no subsequent updates; detect its labeled pods and migrate. Gateway API is recommended and Ingress API is frozen.
+- gateway-install (REASONED; envoy, gateway, envoy-rolling): Install Envoy Gateway chart v1.9.1 and its default Gateway CRDs; separately create GatewayClass eg with the documented controllerName and confirm Accepted=True.
+- gateway-alternatives (REASONED; traefik, cilium): Traefik uses providers.kubernetesGateway; Cilium uses gatewayAPI.enabled=true and requires kube-proxy replacement.
+- gateway-tls (REASONED; gateway, envoy-rolling): Gateway HTTPS listener 443 terminates TLS using app-tls for app.example.com; HTTP 80 is for redirect and ACME challenges.
+- gateway-route (REASONED; gateway): HTTPRoute app attaches only to the HTTPS listener via sectionName and forwards to the ClusterIP app Service on port 80.
+- gateway-redirect (REASONED; gateway, envoy-rolling): The HTTP route uses RequestRedirect with scheme https and statusCode 301.
+- cert-manager-enable (REASONED; cert-manager): From cert-manager 1.15, enable config.gatewayAPI.enabled; install Gateway CRDs before startup or restart cert-manager afterwards.
+- cert-manager-issue (REASONED; cert-manager): Gateway issuer annotations produce Certificates per HTTPS-listener Secret using listener hostnames; ACME gatewayHTTPRoute parentRefs selects the challenge Gateway.
+- basic-auth-policy (REASONED; gateway, envoy-rolling): Gateway API has no standard auth filter; Envoy SecurityPolicy attaches Basic auth to Gateway/HTTPRoute/GRPCRoute using an htpasswd Secret.
+- basic-auth-hash (REASONED; apache, envoy-rolling): Envoy supports SHA hashes only; htpasswd -s is weak SHA-1, so use long random passwords over TLS and keep application login.
+- basic-auth-input (REASONED; apache, envoy-rolling): htpasswd -i reads stdin, unlike argv-exposing -b; confirm twice, create with -cis, verify with -vi and only then create the Kubernetes Secret.
+- oidc (REASONED; envoy-rolling): Envoy SecurityPolicy oidc uses issuer, clientID, clientSecret and redirectURL; enforce MFA at the identity provider.
+- external-auth (REASONED; authelia, envoy-rolling): Authelia is an authorization endpoint, not a traffic proxy; Envoy extAuth.http targets its Service and /api/authz/ext-authz/.
+- workload-exposure (REASONED; envoy-rolling, kubernetes): Expose workloads only through the Gateway LoadBalancer; keep databases on ClusterIP without routes and enforce pod access with NetworkPolicies plus database TLS/auth.
+- secrets (REASONED; kubernetes): Store credentials in Secrets or an external operator, not committed ConfigMaps or environment literals; kubeconfigs containing credentials also need secret handling.
+- eks-endpoint (REASONED; eks): EKS API defaults public; restrict public CIDRs or use private access. Private-only endpoints can resolve publicly to private VPC addresses.
+- gke-endpoints (REASONED; gke): GKE authorized networks constrain IP-based access, not its separately IAM-gated DNS endpoint; inspect both and disable unused DNS access.
+- aks-endpoint (REASONED; aks): Restrict AKS API access with authorized IP ranges; workload Gateway protection does not secure the control plane.
+- kubeconfig (REASONED; kubernetes): Embedded tokens or client keys confer their RBAC access without another factor; exec-plugin configs may be only pointers, but args/env can themselves hold credentials.
+- api-port (REASONED; kubernetes, eks): API server commonly uses 6443, but providers may use 443; use the complete kubeconfig endpoint and its actual port.
+- etcd-ports (REASONED; kubernetes): etcd client/peer defaults are 2379/2380; require certificates, restrict holders and private access, and retain loopback listeners used by the local API server.
+- etcd-storage (REASONED; kubernetes): API resources default to plaintext storage in etcd; valid client certificates are the boundary and etcd access is equivalent to cluster root.
+- scheduler-port (REASONED; kubernetes): Scheduler default 10259 must remain restricted to cluster clients.
+- controller-port (REASONED; kubernetes): Controller-manager default 10257 must remain restricted to cluster clients.
+- proxy-port (REASONED; kubernetes): Worker kube-proxy health default 10256 needs separate node exposure checks.
+- nodeports (REASONED; kubernetes): NodePort defaults span 30000 to 32767 TCP/UDP; Service listings do not actively probe that range.
+- kubelet-legacy-anonymous (REASONED; kubelet): Legacy kubelet flags default anonymous-auth=true; explicitly disable it where flags control authentication.
+- kubelet-legacy-webhook (REASONED; kubelet): Legacy authentication-token-webhook defaults false; explicitly enable it where flags configure authentication.
+- kubelet-legacy-authz (REASONED; kubelet, kubernetes): Legacy authorization-mode defaults AlwaysAllow; set Webhook where flags configure authorization.
+- kubelet-file-anonymous (REASONED; kubelet): v1beta1 KubeletConfiguration instead defaults authentication.anonymous.enabled=false.
+- kubelet-file-webhook (REASONED; kubelet): v1beta1 KubeletConfiguration defaults authentication.webhook.enabled=true.
+- kubelet-file-authz (REASONED; kubelet): v1beta1 KubeletConfiguration defaults authorization.mode=Webhook.
+- kubelet-precedence (REASONED; kubelet): Explicit flags override --config; --config-dir drop-ins override defaults and the file. Inspect all effective settings together.
+- kubeadm (REASONED; kubelet): kubeadm sets anonymous false, token webhook true, Webhook authorization and readOnlyPort 0; user overrides are preserved with warnings.
+- eks-bootstrap (REASONED; eks-ami): The pinned EKS AMI bootstrap writes Anonymous.Enabled=false, Mode=Webhook and ReadOnlyPort=0; do not generalize to all managed nodes.
+- kubelet-bind (REASONED; kubelet): Secured kubelet defaults to address 0.0.0.0 on 10250; wildcard help includes both families. Bind private addresses and restrict authorized callers.
+- kubelet-exec (REASONED; kubelet): 10250 debugging handlers can execute in containers; authentication does not justify public reachability.
+- readonly-default (REASONED; kubelet): Legacy read-only port defaults 10255, while v1beta1 readOnlyPort defaults 0; explicitly disable it and remove enabling overrides.
+- readonly-auth (REASONED; kubelet): Read-only server uses plain HTTP with no authentication or authorization filter; its caller-supplied bind wiring was outside the inspected source subset.
+- readonly-paths (REASONED; kubelet): Read-only handlers expose /pods, /stats/summary, metrics variants and health; v1.37.1 has no /spec handler. Securing 10250 does not secure 10255.
+- gke-readonly (REASONED; gke-min): GKE disables the read-only port by default only for new clusters running 1.32+; inspect effective configuration on older or upgraded clusters.
+- verify-services (REASONED; kubernetes, envoy-rolling, cert-manager): Only the Gateway should have NodePort/LoadBalancer exposure; verify its public address/DNS and Certificate Ready=True.
+- verify-redirect (REASONED; gateway): HTTP should return 301 to the HTTPS application URL.
+- verify-basic (REASONED; curl, envoy-rolling): Anonymous Basic-protected access should return 401; require SecurityPolicy Accepted=True and a valid credential reaching the app without the gateway Basic challenge.
+- verify-api-target (REASONED; kubernetes): Use the whole kubeconfig endpoint, preserving IPv6 and inferring a schemeless endpoint from both cluster and user TLS settings, not a hardcoded 6443.
+- verify-proxies (REASONED; curl): Disable curl config and configured proxies for direct probes; a transparent TLS middlebox can still answer for an unreachable target.
+- verify-api-tcp (REASONED; kubernetes, eks): Outside allowed ranges, nc success proves something accepted TCP; corroborate failed probes with provider ranges and multiple vantage points.
+- verify-api-http (REASONED; curl, eks): Any HTTP status with curl exit 0 means answered; exit 60 means a TLS peer answered, 7 failed connect, 28 is ambiguous timeout and 6 is DNS failure, not privacy proof.
+- verify-node-scan (REASONED; kubernetes, nmap): Scan control-plane hosts first and every public node address in both families; workers alone miss API/etcd and separate etcd hosts are absent from kubectl nodes.
+- verify-kubelet (REASONED; kubelet): Untrusted clients should reach neither kubelet port after isolation, while authorized clients still reach 10250; readOnlyPort=0 should leave no 10255 listener even for authorized clients.
 <!-- version-basis:end -->
 
 The cluster equivalents of this repository's rules: nothing reaches a workload except through the TLS-terminating entry point (a Gateway API `Gateway`), and no Service becomes public through a casual `type: LoadBalancer` or `NodePort`; the entry point's own Service is the only exception.

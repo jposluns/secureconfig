@@ -189,36 +189,53 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| comfy-bind: Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login. | ComfyUI v0.37.0; ComfyUI documentation (rolling) unknown | REASONED |
-| comfy-nodes: ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment. | ComfyUI January 2025 security advisory unknown; ComfyUI Registry documentation (rolling) unknown; ComfyUI documentation (rolling) unknown | REASONED |
-| fooocus-login: Fooocus is unauthenticated by default and offers optional auth.json login; keep it off public interfaces. | Fooocus v2.5.5 | REASONED |
-| manager: Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together. | ComfyUI-Manager security advisory unknown | REASONED |
-| node-flags: --disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure. | ComfyUI documentation (rolling) unknown | REASONED |
-| webui-auth: UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy. | AUTOMATIC1111 v1.10.1 | REASONED |
-| webui-flags: --listen, --share relay and insecure extension access affect exposure. Without --port, Gradio searches from GRADIO_SERVER_PORT (7860 when unset) for up to GRADIO_NUM_PORTS ports (default 100); explicit --port 7860 pins the UI port. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
-| api-input: API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth. | AUTOMATIC1111 v1.10.1 | REASONED |
-| api-leak: cmd-flags reveals all options; API auth users can read API passwords, unauthenticated API can expose UI argv credentials. | AUTOMATIC1111 v1.10.1 | REASONED |
-| argv: COMMANDLINE_ARGS becomes argv; launcher prints credentials and local argv/environment readers may read them. | AUTOMATIC1111 v1.10.1 | REASONED |
-| file-create: Create-once owner-only credential file uses hex password and clean-shell guards, refuses a default ACL or missing getfacl and checks mode 0600 after the write; directory races, backups and plaintext storage limit protection. Filesystem is unrecorded. | AUTOMATIC1111 v1.10.1; Linux permissions and tools unknown | REASONED |
-| file-launch: Clear inherited launch/bind variables, validate regular non-symlink credential file, reject empty/malformed/duplicate entries and read failures. Shell/grep/awk versions are unrecorded. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
-| webui-bind: Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
-| sysinfo: Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix. | AUTOMATIC1111 v1.10.1; Gradio 3.41.2 | REASONED |
-| invoke-config: Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login. | InvokeAI documentation (rolling) unknown | REASONED |
-| invoke-login: Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS. | InvokeAI documentation (rolling) unknown | REASONED |
-| fooocus-flags: Loopback by default, bare --listen wildcard, --share public relay; auth.json supplies optional login. | Fooocus v2.5.5 | REASONED |
-| fooocus-loader: Isolated loader returns credentials only for valid data; unreadable raises PermissionError, malformed/empty returns none. | Fooocus v2.5.5 | DEMONSTRATED |
-| fooocus-auth: Relative auth.json location, pass/hash SHA-256 handling, permissions and expected fail-open for malformed/empty data; no live server test. | Fooocus v2.5.5 | REASONED |
-| fooocus-port: Fooocus v2.5.5 pins Gradio 3.41.2; inherited port or occupied 7865 can move the UI; explicit --port makes Gradio try only that port. | Fooocus v2.5.5; Gradio 3.41.2 | REASONED |
-| fooocus-pin: entry_with_update updates the checkout; use launch.py from exact v2.5.5, with working-tree caveat. | Fooocus v2.5.5 | REASONED |
-| container: CMDARGS bare --listen plus wildcard publication exposes image; bridge uses internal wildcard and loopback publish, host networking needs loopback bind. | Fooocus v2.5.5; Docker Engine minimum loopback boundary 28.0 | REASONED |
-| image-build: Build pinned source, not unchecked GHCR default; Compose build/image pull policy and --build determine selected/tagged image. | Fooocus v2.5.5; Compose Specification 914ec15d1fa4; Docker Compose source v2.32.4 | REASONED |
-| auth-mount: Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked. | Fooocus v2.5.5 | REASONED |
-| argparse: Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration. | Fooocus v2.5.5 | DEMONSTRATED |
-| verify-network: Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope. | ComfyUI v0.37.0; AUTOMATIC1111 v1.10.1; Fooocus v2.5.5; Docker Engine minimum loopback boundary 28.0; curl minimum write-out version 7.75.0; InvokeAI documentation (rolling) unknown | REASONED |
-| verify-invoke: Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available. | InvokeAI documentation (rolling) unknown | REASONED |
-| verify-proxy: TLS/header and browser checks should require login before UI; no service/proxy listeners were run. | Fooocus v2.5.5; ComfyUI documentation (rolling) unknown | REASONED |
+Components (recorded basis):
+
+- comfy: ComfyUI, v0.37.0
+- webui: AUTOMATIC1111, v1.10.1
+- gradio: Gradio, 3.41.2
+- fooocus: Fooocus, v2.5.5
+- engine: Docker Engine minimum loopback boundary, 28.0
+- compose: Compose Specification, 914ec15d1fa4
+- compose-cli: Docker Compose source, v2.32.4
+- curl: curl minimum write-out version, 7.75.0
+- linux: Linux permissions and tools, unknown
+- comfy-rolling: ComfyUI documentation (rolling), unknown
+- comfy-registry-rolling: ComfyUI Registry documentation (rolling), unknown
+- comfy-advisory: ComfyUI January 2025 security advisory, unknown
+- invoke-rolling: InvokeAI documentation (rolling), unknown
+- comfy-manager-advisory: ComfyUI-Manager security advisory, unknown
+
+Claims (full source mapping in the front matter):
+
+- comfy-bind (REASONED; comfy, comfy-rolling): Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login.
+- comfy-nodes (REASONED; comfy-advisory, comfy-registry-rolling, comfy-rolling): ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment.
+- fooocus-login (REASONED; fooocus): Fooocus is unauthenticated by default and offers optional auth.json login; keep it off public interfaces.
+- manager (REASONED; comfy-manager-advisory): Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together.
+- node-flags (REASONED; comfy-rolling): --disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure.
+- webui-auth (REASONED; webui): UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy.
+- webui-flags (REASONED; webui, gradio): --listen, --share relay and insecure extension access affect exposure. Without --port, Gradio searches from GRADIO_SERVER_PORT (7860 when unset) for up to GRADIO_NUM_PORTS ports (default 100); explicit --port 7860 pins the UI port.
+- api-input (REASONED; webui): API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth.
+- api-leak (REASONED; webui): cmd-flags reveals all options; API auth users can read API passwords, unauthenticated API can expose UI argv credentials.
+- argv (REASONED; webui): COMMANDLINE_ARGS becomes argv; launcher prints credentials and local argv/environment readers may read them.
+- file-create (REASONED; webui, linux): Create-once owner-only credential file uses hex password and clean-shell guards, refuses a default ACL or missing getfacl and checks mode 0600 after the write; directory races, backups and plaintext storage limit protection. Filesystem is unrecorded.
+- file-launch (REASONED; webui, gradio): Clear inherited launch/bind variables, validate regular non-symlink credential file, reject empty/malformed/duplicate entries and read failures. Shell/grep/awk versions are unrecorded.
+- webui-bind (REASONED; webui, gradio): Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback.
+- sysinfo (REASONED; webui, gradio): Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix.
+- invoke-config (REASONED; invoke-rolling): Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login.
+- invoke-login (REASONED; invoke-rolling): Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS.
+- fooocus-flags (REASONED; fooocus): Loopback by default, bare --listen wildcard, --share public relay; auth.json supplies optional login.
+- fooocus-loader (DEMONSTRATED; fooocus): Isolated loader returns credentials only for valid data; unreadable raises PermissionError, malformed/empty returns none.
+- fooocus-auth (REASONED; fooocus): Relative auth.json location, pass/hash SHA-256 handling, permissions and expected fail-open for malformed/empty data; no live server test.
+- fooocus-port (REASONED; fooocus, gradio): Fooocus v2.5.5 pins Gradio 3.41.2; inherited port or occupied 7865 can move the UI; explicit --port makes Gradio try only that port.
+- fooocus-pin (REASONED; fooocus): entry_with_update updates the checkout; use launch.py from exact v2.5.5, with working-tree caveat.
+- container (REASONED; fooocus, engine): CMDARGS bare --listen plus wildcard publication exposes image; bridge uses internal wildcard and loopback publish, host networking needs loopback bind.
+- image-build (REASONED; fooocus, compose, compose-cli): Build pinned source, not unchecked GHCR default; Compose build/image pull policy and --build determine selected/tagged image.
+- auth-mount (REASONED; fooocus): Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked.
+- argparse (DEMONSTRATED; fooocus): Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration.
+- verify-network (REASONED; comfy, webui, fooocus, engine, curl, invoke-rolling): Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope.
+- verify-invoke (REASONED; invoke-rolling): Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available.
+- verify-proxy (REASONED; fooocus, comfy-rolling): TLS/header and browser checks should require login before UI; no service/proxy listeners were run.
 <!-- version-basis:end -->
 
 None of these tools ships real authentication by default, and each accepts arbitrary Python through custom nodes or extensions. **Binding one to a public interface is host compromise, not just data exposure.** Keep every instance on loopback and reach it only through a tunnel or an authenticated TLS proxy: [fronting-auth.md](fronting-auth.md), [cloudflare.md](cloudflare.md), [tailscale.md](tailscale.md), or a reverse proxy per [nginx.md](nginx.md)/[caddy.md](caddy.md).

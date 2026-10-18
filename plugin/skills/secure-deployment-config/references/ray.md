@@ -237,54 +237,70 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| boundary: Dashboard, Jobs and Client access permits arbitrary code execution; use an isolated cluster network and separate clusters for mutually untrusted jobs. | Ray documentation unknown | REASONED |
-| dashboard: Dashboard defaults to resolved localhost, IPv4 before IPv6 then 127.0.0.1, on port 8265; state loopback explicitly. | Ray pinned source ray-2.58.0 | REASONED |
-| docker: Bridge publishing uses host loopback and container-interface bind; this guide assesses Docker 28.0.0 or later with normal NAT as the loopback-isolation minimum because the 28.0.0 release notes record a fix for neighbour hosts reaching loopback-mapped ports. | Docker publishing documentation unknown; Docker Engine release notes 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
-| access: Reach Dashboard/Jobs through loopback SSH forwarding, launcher forwarding, KubeRay forwarding or a private tailnet; public browser access needs an authenticating TLS proxy. | Ray documentation unknown; KubeRay authentication documentation unknown | REASONED |
-| head-ports: Head GCS uses 6379 and Client 10001; worker ports default 10002-19999 plus randomized listeners. | Ray documentation unknown | REASONED |
-| core-bind: Core gRPC source binds all interfaces unless node address is exactly 127.0.0.1, ::1 or localhost; private node IP does not imply private bind. | Ray pinned source ray-2.58.0 | REASONED |
-| gcs-observation: Four attempted Ray 2.58.0 loopback starts still showed GCS *:6379; the cause was not established and the watcher stopped the runs. | Ray pinned source ray-2.58.0 | DEMONSTRATED |
-| client-bind: Ray Client server/proxier listen on the supplied node address plus loopback; restrict access and prefer Jobs over publishing Client. | Ray pinned source ray-2.58.0 | REASONED |
-| serve-replica: Serve inter-deployment gRPC binds [::] on an OS-chosen port; this is source reasoning, not a run. | Ray pinned source ray-2.58.0 | REASONED |
-| agents: --include-dashboard=false does not stop dashboard/runtime-env agents; head dashboard itself is reduced to usage stats. | Ray pinned source ray-2.58.0 | REASONED |
-| minimal: Missing optional imports select minimal mode: no agent HTTP/gRPC or metrics reporter; runtime-env HTTP remains. Base installs may have full dependencies. | Ray pinned source ray-2.58.0 | REASONED |
-| agent-http: Non-minimal agent HTTP defaults 52365, including ray.init; --dashboard-agent-listen-port changes it, with node-IP plus conditional localhost binds. | Ray pinned source ray-2.58.0 | REASONED |
-| agent-jobs: Direct /api/job_agent/jobs/ submission and stop/delete/log routes bypass a proxy on 8265; head forwarding reaches its agent job manager. | Ray pinned source ray-2.58.0 | REASONED |
-| agent-placement: Worker agents accept cluster submissions with their own managers; drivers normally use the head unless resources, labels or worker-placement override permit workers. | Ray pinned source ray-2.58.0 | REASONED |
-| agent-logs: Agent static /logs exposes the node log directory and index. | Ray pinned source ray-2.58.0 | REASONED |
-| agent-http-auth: Without token mode a browser heuristic is the only filter; token mode guards all agent HTTP paths except two health endpoints. | Ray pinned source ray-2.58.0 | REASONED |
-| agent-grpc: Agent gRPC defaults OS-assigned with --dashboard-agent-grpc-port override; localhost or wildcard bind serves log/profiling RPCs with optional token interception. | Ray pinned source ray-2.58.0 | REASONED |
-| runtime-agent: Runtime-env HTTP defaults OS-assigned on node IP with --runtime-env-agent-port override; create/delete installs packages, and token middleware exempts no route. | Ray pinned source ray-2.58.0 | REASONED |
-| metrics-agent: Metrics default enabled; non-minimal reporter uses an OS-assigned port or --metrics-export-port, outside all token middleware. | Ray pinned source ray-2.58.0 | REASONED |
-| metrics-ipv4: WSGI metrics uses AF_INET: empty address is IPv4 wildcard, localhost is used for local node addresses, and resolved ::1 cannot bind this socket. | Ray pinned source ray-2.58.0; CPython WSGI server v3.11.0 | REASONED |
-| node-normalization: Both CLI and ray.init normalize localhost node arguments to a discovered address; cluster-mode setting changes whole-node selection, not independent agent binds. | Ray pinned source ray-2.58.0 | REASONED |
-| agent-family: Agent gRPC wildcard selection is 0.0.0.0 or :: based on resolved localhost, independently of node address family. | Ray pinned source ray-2.58.0 | REASONED |
-| gcs-not-redis: 6379 is GCS, not Redis; Redis stopped being launched by default in 1.11. | Ray Redis history announcement unknown; Ray documentation unknown | REASONED |
-| redis-backend: External Redis is opt-in GCS fault-tolerance storage; Redis credentials do not authenticate GCS clients and RAY_REDIS_PASSWORD is not a head flag substitute. | Ray documentation unknown | REASONED |
-| token-default: Shared token authentication exists since 2.52.0 but is disabled by default as of 2.58.0; it supplements network isolation and does not protect Serve apps. | Ray token authentication introduction 2.52.0; Ray pinned source ray-2.58.0 | REASONED |
-| token-input: Enable RAY_AUTH_MODE=token; precedence is RAY_AUTH_TOKEN, RAY_AUTH_TOKEN_PATH then ~/.ray/auth_token, shared by every node/client. | Ray pinned source ray-2.58.0 | REASONED |
-| token-storage: Generate/protect token files and copy before startup; tokens are plaintext, do not expire and must never be committed. | Ray pinned source ray-2.58.0 | REASONED |
-| token-transport: Token HTTP headers require a trusted tunnel or TLS; plaintext HTTP exposes them on the network. | Ray documentation unknown; Ray pinned source ray-2.58.0 | REASONED |
-| kuberay-token: KubeRay v1.6.0 defines authOptions; v1.5.0 RayClusterSpec lacks it. With token mode enabled, the controller creates a random-token Secret when Kubernetes ServiceAccount token authentication is off, SecretName is null or empty, and the generated-name Secret does not already exist; it leaves an existing generated-name Secret or a supplied named Secret in place and creates no Secret in ServiceAccount mode. The pod builder sets RAY_AUTH_MODE when unset on head and worker Ray containers, on the wait-gcs-ready init container when present, and on the head autoscaler when autoscaling is enabled; outside ServiceAccount mode it adds RAY_AUTH_TOKEN from the selected Secret when unset, and in ServiceAccount mode it does not add RAY_AUTH_TOKEN. This guide infers support in v1.6.0 and later from the compared tags; later releases have not been checked. | KubeRay authentication documentation unknown; KubeRay authentication source v1.6.0; KubeRay prior RayCluster types v1.5.0 | REASONED |
-| mfa: Ray has no user accounts; MFA belongs on SSH, tailnet or identity-aware proxy access. | Ray documentation unknown | REASONED |
-| grpc-tls: RAY_USE_TLS defaults 0; export it and server certificate/key/CA variables on every node before startup for internal gRPC mutual TLS. | Ray documentation unknown | REASONED |
-| tls-scope: gRPC TLS can cost performance and does not replace isolation or the dashboard/Jobs HTTP TLS proxy. | Ray documentation unknown | REASONED |
-| runtime-code: Job runtime_env installs before entrypoint; ray.init environments apply to child tasks/actors. Packages, archives, py_executable and setup hooks execute submitted code. | Ray documentation unknown | REASONED |
-| runtime-policy: No built-in package/URI/hook admission policy; eager_install and setup_timeout_seconds control timing, not trust. Prebuild reviewed dependencies. | Ray documentation unknown | REASONED |
-| serve-bind: Serve HTTP defaults port 8000, Python host 127.0.0.1 but config-file host 0.0.0.0; EveryNode puts proxies on nodes with replicas. | Ray documentation unknown | REASONED |
-| serve-auth: Serve apps have no built-in application auth and are outside cluster token mode; restrict origins and add proxy or FastAPI authentication. | Ray documentation unknown | REASONED |
-| serve-tls: Serve ssl_keyfile/ssl_certfile/ssl_ca_certs default None; supplying a CA does not itself require client certificates. | Ray documentation unknown | REASONED |
-| serve-grpc: Optional Serve gRPC uses 9000 only with configured servicer functions. | Ray documentation unknown; Ray pinned source ray-2.58.0 | REASONED |
-| image-privilege: Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation. | Ray pinned source ray-2.58.0 | REASONED |
-| pod-security: KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp. | KubeRay chart v1.7.0; Kubernetes security contexts unknown | REASONED |
-| verify-inventory: Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available. | Ray pinned source ray-2.58.0 | REASONED |
-| verify-external: Probe every routed IPv4/IPv6 origin and inventoried port; completed TCP, even HTTP 401 or non-HTTP, proves exposure. Resolver/local errors are inconclusive. | Ray documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
-| verify-jobs: Through the trusted tunnel valid-token submission must succeed and token-free submission must fail authentication with 401, not a connection error. | Ray pinned source ray-2.58.0; KubeRay authentication documentation unknown | REASONED |
-| verify-grpc-tls: ray health-check must pass with the correct CA and fail certificate verification with a wrong CA/name; local config errors are inconclusive. | Ray documentation unknown | REASONED |
-| verify-agent: Direct non-browser /logs/ must expose an index with token mode off, allow a valid token with it on and reject absent tokens with 401; health exemptions cannot discriminate. | Ray pinned source ray-2.58.0 | REASONED |
-| verify-token-secret: Trusted-path hidden prompt and stdin header avoid new token argv/history exposure and set +x avoids tracing; account owner/root can still read memory. | Ray pinned source ray-2.58.0; curl minimum write-out version 7.75.0 | REASONED |
+Components (recorded basis):
+
+- ray: Ray pinned source, ray-2.58.0
+- docs: Ray documentation, unknown
+- token-min: Ray token authentication introduction, 2.52.0
+- redis-history: Ray Redis history announcement, unknown
+- docker: Docker publishing documentation, unknown
+- kuberay-auth: KubeRay authentication documentation, unknown
+- kuberay: KubeRay chart, v1.7.0
+- kubernetes: Kubernetes security contexts, unknown
+- python: CPython WSGI server, v3.11.0
+- curl: curl minimum write-out version, 7.75.0
+- docker-release: Docker Engine release notes, 4e9a5751518ed8223a8dcde53693badddd72604f
+- kuberay-auth-source: KubeRay authentication source, v1.6.0
+- kuberay-auth-prior: KubeRay prior RayCluster types, v1.5.0
+
+Claims (full source mapping in the front matter):
+
+- boundary (REASONED; docs): Dashboard, Jobs and Client access permits arbitrary code execution; use an isolated cluster network and separate clusters for mutually untrusted jobs.
+- dashboard (REASONED; ray): Dashboard defaults to resolved localhost, IPv4 before IPv6 then 127.0.0.1, on port 8265; state loopback explicitly.
+- docker (REASONED; docker, docker-release): Bridge publishing uses host loopback and container-interface bind; this guide assesses Docker 28.0.0 or later with normal NAT as the loopback-isolation minimum because the 28.0.0 release notes record a fix for neighbour hosts reaching loopback-mapped ports.
+- access (REASONED; docs, kuberay-auth): Reach Dashboard/Jobs through loopback SSH forwarding, launcher forwarding, KubeRay forwarding or a private tailnet; public browser access needs an authenticating TLS proxy.
+- head-ports (REASONED; docs): Head GCS uses 6379 and Client 10001; worker ports default 10002-19999 plus randomized listeners.
+- core-bind (REASONED; ray): Core gRPC source binds all interfaces unless node address is exactly 127.0.0.1, ::1 or localhost; private node IP does not imply private bind.
+- gcs-observation (DEMONSTRATED; ray): Four attempted Ray 2.58.0 loopback starts still showed GCS *:6379; the cause was not established and the watcher stopped the runs.
+- client-bind (REASONED; ray): Ray Client server/proxier listen on the supplied node address plus loopback; restrict access and prefer Jobs over publishing Client.
+- serve-replica (REASONED; ray): Serve inter-deployment gRPC binds [::] on an OS-chosen port; this is source reasoning, not a run.
+- agents (REASONED; ray): --include-dashboard=false does not stop dashboard/runtime-env agents; head dashboard itself is reduced to usage stats.
+- minimal (REASONED; ray): Missing optional imports select minimal mode: no agent HTTP/gRPC or metrics reporter; runtime-env HTTP remains. Base installs may have full dependencies.
+- agent-http (REASONED; ray): Non-minimal agent HTTP defaults 52365, including ray.init; --dashboard-agent-listen-port changes it, with node-IP plus conditional localhost binds.
+- agent-jobs (REASONED; ray): Direct /api/job_agent/jobs/ submission and stop/delete/log routes bypass a proxy on 8265; head forwarding reaches its agent job manager.
+- agent-placement (REASONED; ray): Worker agents accept cluster submissions with their own managers; drivers normally use the head unless resources, labels or worker-placement override permit workers.
+- agent-logs (REASONED; ray): Agent static /logs exposes the node log directory and index.
+- agent-http-auth (REASONED; ray): Without token mode a browser heuristic is the only filter; token mode guards all agent HTTP paths except two health endpoints.
+- agent-grpc (REASONED; ray): Agent gRPC defaults OS-assigned with --dashboard-agent-grpc-port override; localhost or wildcard bind serves log/profiling RPCs with optional token interception.
+- runtime-agent (REASONED; ray): Runtime-env HTTP defaults OS-assigned on node IP with --runtime-env-agent-port override; create/delete installs packages, and token middleware exempts no route.
+- metrics-agent (REASONED; ray): Metrics default enabled; non-minimal reporter uses an OS-assigned port or --metrics-export-port, outside all token middleware.
+- metrics-ipv4 (REASONED; ray, python): WSGI metrics uses AF_INET: empty address is IPv4 wildcard, localhost is used for local node addresses, and resolved ::1 cannot bind this socket.
+- node-normalization (REASONED; ray): Both CLI and ray.init normalize localhost node arguments to a discovered address; cluster-mode setting changes whole-node selection, not independent agent binds.
+- agent-family (REASONED; ray): Agent gRPC wildcard selection is 0.0.0.0 or :: based on resolved localhost, independently of node address family.
+- gcs-not-redis (REASONED; redis-history, docs): 6379 is GCS, not Redis; Redis stopped being launched by default in 1.11.
+- redis-backend (REASONED; docs): External Redis is opt-in GCS fault-tolerance storage; Redis credentials do not authenticate GCS clients and RAY_REDIS_PASSWORD is not a head flag substitute.
+- token-default (REASONED; token-min, ray): Shared token authentication exists since 2.52.0 but is disabled by default as of 2.58.0; it supplements network isolation and does not protect Serve apps.
+- token-input (REASONED; ray): Enable RAY_AUTH_MODE=token; precedence is RAY_AUTH_TOKEN, RAY_AUTH_TOKEN_PATH then ~/.ray/auth_token, shared by every node/client.
+- token-storage (REASONED; ray): Generate/protect token files and copy before startup; tokens are plaintext, do not expire and must never be committed.
+- token-transport (REASONED; docs, ray): Token HTTP headers require a trusted tunnel or TLS; plaintext HTTP exposes them on the network.
+- kuberay-token (REASONED; kuberay-auth, kuberay-auth-source, kuberay-auth-prior): KubeRay v1.6.0 defines authOptions; v1.5.0 RayClusterSpec lacks it. With token mode enabled, the controller creates a random-token Secret when Kubernetes ServiceAccount token authentication is off, SecretName is null or empty, and the generated-name Secret does not already exist; it leaves an existing generated-name Secret or a supplied named Secret in place and creates no Secret in ServiceAccount mode. The pod builder sets RAY_AUTH_MODE when unset on head and worker Ray containers, on the wait-gcs-ready init container when present, and on the head autoscaler when autoscaling is enabled; outside ServiceAccount mode it adds RAY_AUTH_TOKEN from the selected Secret when unset, and in ServiceAccount mode it does not add RAY_AUTH_TOKEN. This guide infers support in v1.6.0 and later from the compared tags; later releases have not been checked.
+- mfa (REASONED; docs): Ray has no user accounts; MFA belongs on SSH, tailnet or identity-aware proxy access.
+- grpc-tls (REASONED; docs): RAY_USE_TLS defaults 0; export it and server certificate/key/CA variables on every node before startup for internal gRPC mutual TLS.
+- tls-scope (REASONED; docs): gRPC TLS can cost performance and does not replace isolation or the dashboard/Jobs HTTP TLS proxy.
+- runtime-code (REASONED; docs): Job runtime_env installs before entrypoint; ray.init environments apply to child tasks/actors. Packages, archives, py_executable and setup hooks execute submitted code.
+- runtime-policy (REASONED; docs): No built-in package/URI/hook admission policy; eager_install and setup_timeout_seconds control timing, not trust. Prebuild reviewed dependencies.
+- serve-bind (REASONED; docs): Serve HTTP defaults port 8000, Python host 127.0.0.1 but config-file host 0.0.0.0; EveryNode puts proxies on nodes with replicas.
+- serve-auth (REASONED; docs): Serve apps have no built-in application auth and are outside cluster token mode; restrict origins and add proxy or FastAPI authentication.
+- serve-tls (REASONED; docs): Serve ssl_keyfile/ssl_certfile/ssl_ca_certs default None; supplying a CA does not itself require client certificates.
+- serve-grpc (REASONED; docs, ray): Optional Serve gRPC uses 9000 only with configured servicer functions.
+- image-privilege (REASONED; ray): Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation.
+- pod-security (REASONED; kuberay, kubernetes): KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp.
+- verify-inventory (REASONED; ray): Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available.
+- verify-external (REASONED; docs, curl): Probe every routed IPv4/IPv6 origin and inventoried port; completed TCP, even HTTP 401 or non-HTTP, proves exposure. Resolver/local errors are inconclusive.
+- verify-jobs (REASONED; ray, kuberay-auth): Through the trusted tunnel valid-token submission must succeed and token-free submission must fail authentication with 401, not a connection error.
+- verify-grpc-tls (REASONED; docs): ray health-check must pass with the correct CA and fail certificate verification with a wrong CA/name; local config errors are inconclusive.
+- verify-agent (REASONED; ray): Direct non-browser /logs/ must expose an index with token mode off, allow a valid token with it on and reject absent tokens with 401; health exemptions cannot discriminate.
+- verify-token-secret (REASONED; ray, curl): Trusted-path hidden prompt and stdin header avoid new token argv/history exposure and set +x avoids tracing; account owner/root can still read memory.
 <!-- version-basis:end -->
 
 Ray's own security page is blunt: if you expose the Ray Dashboard, Ray Jobs, or Ray Client services, "anybody who can access the associated ports can execute arbitrary code on your Ray Cluster", explicitly by submitting a Job or connecting a Client, indirectly through the Dashboard REST API, and implicitly because Ray deserializes arbitrary Python objects with cloudpickle. Ray "doesn't implement access controls for developers interacting with a given cluster"; security and isolation "must be enforced outside of the Ray Cluster". The head ports in question are the dashboard (and Jobs API) on `8265`, the Ray Client server on `10001`, and the head node port `6379`, all plain HTTP or gRPC with no login of their own unless you enable token authentication (step 3). The per-node agent listeners in step 2 add independent paths to job submission, logs, profiling, runtime environments and metrics.

@@ -49,26 +49,30 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| ssh: Vendor prefers SSH forwarding; bind the local 8080 forwarding listener to loopback and open the local browser URL. | code-server v4.137.0 | REASONED |
-| config: Edit generated config.yaml and retain a supported credential; precreating it suppresses random-password generation and password auth without either credential fails startup. | code-server v4.137.0 | REASONED |
-| bind: bind-addr 127.0.0.1:8080 keeps the editor private behind a proxy or tunnel. | code-server v4.137.0 | REASONED |
-| auth-default: auth defaults password; replace the generated value with a long random secret and protect config.yaml. | code-server v4.137.0 | REASONED |
-| rate-limit: Password attempts are limited to two per minute plus twelve per hour. | code-server v4.137.0 | REASONED |
-| credential-precedence: PASSWORD/HASHED_PASSWORD override file credentials and hashed form wins; --password is not a supported CLI flag. | code-server v4.137.0 | REASONED |
-| config-precedence: CLI flags override config; inspect --bind-addr, --config, CODE_SERVER_CONFIG and XDG_CONFIG_HOME for the effective launcher and file. | code-server v4.137.0 | REASONED |
-| tls-default: cert defaults false; public access needs authenticated encryption, normally a reverse proxy with a trusted certificate. | code-server v4.137.0 | REASONED |
-| tls-native: Bare --cert or cert:true generates ~/.local/share/code-server/self-signed.crt; --cert with --cert-key selects supplied material; retain certificate validation. | code-server v4.137.0 | REASONED |
-| mfa: Built-in login is single-factor; fronting MFA must cover every enabled path, subdomain and WebSocket. | code-server v4.137.0 | REASONED |
-| path-proxy: /proxy/&lt;port&gt;/ strips its prefix; /absproxy/&lt;port&gt;/ retains it; both use code-server authentication and auth:none exposes them. | code-server v4.137.0 | REASONED |
-| domain-proxy: --proxy-domain exposes per-port subdomains using code-server authentication; apply fronting policy to each. | code-server v4.137.0 | REASONED |
-| preflight: --skip-auth-preflight allows unauthenticated preflight requests. | code-server v4.137.0 | REASONED |
-| disable-proxy: --disable-proxy turns off unneeded port forwarding. | code-server v4.137.0 | REASONED |
-| least-privilege: Loopback limits inbound reach, not terminal/extension/proxied-service outbound access; minimize permissions and egress, including metadata/internal destinations. | code-server v4.137.0 | REASONED |
-| verify-origin: ss inventories only this namespace; probe each public IPv4/IPv6 and port directly with intended TLS hostname; any HTTP response is reachability, and http=000 is inconclusive. | code-server v4.137.0 | REASONED |
-| verify-editor: At the same editor URL, anonymous requests must reach login/challenge and valid-session requests the editor; a proxy 401 alone or failed positive control proves nothing. | code-server v4.137.0 | REASONED |
-| verify-mfa: Password-only access must not open the editor while completing the second factor must; also confirm in a fresh browser. | code-server v4.137.0 | REASONED |
+Components (recorded basis):
+
+- server: code-server, v4.137.0
+
+Claims (full source mapping in the front matter):
+
+- ssh (REASONED; server): Vendor prefers SSH forwarding; bind the local 8080 forwarding listener to loopback and open the local browser URL.
+- config (REASONED; server): Edit generated config.yaml and retain a supported credential; precreating it suppresses random-password generation and password auth without either credential fails startup.
+- bind (REASONED; server): bind-addr 127.0.0.1:8080 keeps the editor private behind a proxy or tunnel.
+- auth-default (REASONED; server): auth defaults password; replace the generated value with a long random secret and protect config.yaml.
+- rate-limit (REASONED; server): Password attempts are limited to two per minute plus twelve per hour.
+- credential-precedence (REASONED; server): PASSWORD/HASHED_PASSWORD override file credentials and hashed form wins; --password is not a supported CLI flag.
+- config-precedence (REASONED; server): CLI flags override config; inspect --bind-addr, --config, CODE_SERVER_CONFIG and XDG_CONFIG_HOME for the effective launcher and file.
+- tls-default (REASONED; server): cert defaults false; public access needs authenticated encryption, normally a reverse proxy with a trusted certificate.
+- tls-native (REASONED; server): Bare --cert or cert:true generates ~/.local/share/code-server/self-signed.crt; --cert with --cert-key selects supplied material; retain certificate validation.
+- mfa (REASONED; server): Built-in login is single-factor; fronting MFA must cover every enabled path, subdomain and WebSocket.
+- path-proxy (REASONED; server): /proxy/&lt;port&gt;/ strips its prefix; /absproxy/&lt;port&gt;/ retains it; both use code-server authentication and auth:none exposes them.
+- domain-proxy (REASONED; server): --proxy-domain exposes per-port subdomains using code-server authentication; apply fronting policy to each.
+- preflight (REASONED; server): --skip-auth-preflight allows unauthenticated preflight requests.
+- disable-proxy (REASONED; server): --disable-proxy turns off unneeded port forwarding.
+- least-privilege (REASONED; server): Loopback limits inbound reach, not terminal/extension/proxied-service outbound access; minimize permissions and egress, including metadata/internal destinations.
+- verify-origin (REASONED; server): ss inventories only this namespace; probe each public IPv4/IPv6 and port directly with intended TLS hostname; any HTTP response is reachability, and http=000 is inconclusive.
+- verify-editor (REASONED; server): At the same editor URL, anonymous requests must reach login/challenge and valid-session requests the editor; a proxy 401 alone or failed positive control proves nothing.
+- verify-mfa (REASONED; server): Password-only access must not open the editor while completing the second factor must; also confirm in a fresh browser.
 <!-- version-basis:end -->
 
 code-server runs a terminal in the browser, so exposure equals remote code execution. Its own documentation is blunt: never expose it directly to the internet without authentication and encryption.

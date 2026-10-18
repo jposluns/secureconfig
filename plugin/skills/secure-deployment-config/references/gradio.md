@@ -118,61 +118,69 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| bind: server_name=None resolves through GRADIO_SERVER_NAME to 127.0.0.1 when unset; set loopback explicitly behind the proxy; 0.0.0.0 exposes all interfaces. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| port: With server_port=None, port search starts at 7860 unless GRADIO_SERVER_PORT changes it; native TLS example explicitly uses 8443. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| password: auth accepts one tuple, a tuple list or a credential-checking callable; auth_message customizes login; keep credentials outside source. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| login-limits: Native auth is single-factor without throttling, rate limiting or lockout; a TOTP callable also needs enrollment, secret custody and replay rejection. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| external-auth: auth_dependency returns a user ID or None and cannot combine with auth; validate identity, sanitize proxy headers and prevent direct backend bypass. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| sessions: Native bearer tokens live in process memory without server-side expiry; login issues HttpOnly Secure and insecure fallback cookies, and accepts either. | Gradio 6.28.0 | REASONED |
-| revocation: Restart clears native tokens; /logout defaults all_session=True, revoking all sessions for a username; cookie lifetime is not server revocation. | Gradio 6.28.0 | REASONED |
-| external-policy: Require HTTPS and externally enforced MFA, throttling, lockout and finite lifetime on every request; a copied native cookie must not bypass that boundary. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| tls: ssl_certfile/ssl_keyfile enable HTTPS and ssl_keyfile_password supports encrypted keys; ssl_verify=False affects launcher self-checks and is only needed for self-signed certificates. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| prefix: root_path builds URLs beneath the proxy prefix; it neither authenticates nor prevents direct backend access. | Gradio documentation (rolling) unknown | REASONED |
-| share: share=True publishes a public relay URL; omitted share may inherit GRADIO_SHARE=True or auto-enable in hosted notebooks; deploy with explicit False. | Gradio 6.28.0 | REASONED |
-| file-route: /gradio_api/file= serves registered static paths, allowed_paths and cache; returned file outputs can expose eligible working/temp paths to every app user. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| allowed-paths: allowed_paths adds exposure, not a sandbox; empty lists do not disable cache or eligible outputs, and granted directories expose descendants. | Gradio documentation (rolling) unknown | REASONED |
-| dotfiles: Working-directory dotfiles are excluded from automatic caching unless explicitly permitted; this does not protect other eligible files or justify colocated secrets. | Gradio documentation (rolling) unknown | REASONED |
-| blocked-paths: blocked_paths overrides default/static/allowed grants but is a backstop; minimize the process filesystem and never return untrusted file paths. | Gradio security advisories unknown; Gradio documentation (rolling) unknown | REASONED |
-| path-environment: allowed_paths and blocked_paths default None; even [] falls back to comma-separated GRADIO_ALLOWED_PATHS and GRADIO_BLOCKED_PATHS. | Gradio 6.28.0 | REASONED |
-| cache: GRADIO_TEMP_DIR relocates cache; restrict permissions, quota and cleanup, but relocation and local permissions do not provide per-user download authorization. | Gradio documentation (rolling) unknown | REASONED |
-| upload-limit: max_file_size defaults None; set bytes or 5mb for a per-file limit, adding separate storage/rate controls. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| multipart-fix: 6.20.0 fixed missing max_file_size enforcement on multipart /component_server uploads; retain the 6.28.0 deployment baseline. | Gradio 6.28.0; Gradio historical fixes 6.20.0 | REASONED |
-| historical-traversal: 4.11.0 fixed the historical /file traversal and associated SSRF; this is a historical floor, not the deployment baseline. | Gradio security advisories unknown | REASONED |
-| historical-files: 6.16.0 includes FileExplorer traversal fixes; the case-handling advisory has conflicting patched-version records and no precise fix version here. | Gradio security advisories unknown; Gradio historical fixes 6.16.0 | REASONED |
-| vibe: GRADIO_VIBE_MODE defaults empty; any nonempty value including False or 0 enables unauthenticated source read/write handlers and arbitrary execution; leave unset and avoid --vibe. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| mcp: mcp_server defaults None, consulting GRADIO_MCP_SERVER (False); explicitly disable unless tools beneath /gradio_api/mcp/ are deliberately protected and tested. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| footer: footer_links can hide API documentation; it replaces show_api=False and does not disable the API. | Gradio documentation (rolling) unknown | REASONED |
-| visibility: api_visibility defaults public; undocumented hides docs and private blocks Gradio-client use, but direct HTTP remains subject to separate auth/queue policy. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| api-name: api_name=None derives a function name; api_name=False is no longer a supported public argument and hiding names is not authorization. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| protected-routes: Native auth/auth_dependency checks cover /config, /gradio_api/info, prediction and queue join/data routes; public assets and a login page do not prove API protection. | Gradio 6.28.0 | REASONED |
-| queue-bypass: queue(api_open=None) is effectively True off Spaces; False refuses direct run/api calls for queued functions, while queued API and queue=False events remain. | Gradio 6.28.0 | REASONED |
-| concurrency: default_concurrency_limit defaults 1 unless changed through GRADIO_DEFAULT_CONCURRENCY_LIMIT; listener overrides apply, not a global per-user limit. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| queue-size: max_size defaults None with a ZeroGPU Spaces exception; 20 bounds waiting work but is not a per-user quota. | Gradio 6.28.0 | REASONED |
-| threads: max_threads defaults 40; the example sets 8, separately from queue and listener capacity. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| egress: URL inputs and component/MCP fetches need application destination allowlists and deployment egress controls, including redirects/resolution; no general fetch allowlist covers all surfaces. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| fetch-fixes: 6.16.0 fixed SVG/Audio SSRF; 6.20.0 changed /gradio_api/file=&lt;url&gt; from open redirect to SSRF-protected streaming proxy. | Gradio historical fixes 6.16.0; Gradio historical fixes 6.20.0 | REASONED |
-| load-token: Keep gr.load name/src trusted; token can inherit HF_TOKEN, model loading can use a saved token, and a loaded Space can read a supplied token. | Gradio documentation (rolling) unknown | REASONED |
-| flagging: Interface flagging_mode defaults through GRADIO_FLAGGING_MODE to manual; auto records every submission/output; never disables collection, not existing files. | Gradio documentation (rolling) unknown | REASONED |
-| flag-storage: Default CSVLogger writes .gradio/flagged including file data; required collection needs explicit access and retention policy. | Gradio documentation (rolling) unknown | REASONED |
-| history: run_history defaults None through GRADIO_RUN_HISTORY to True; False disables recording/page and removes saved browser history, not separately retained bucket data. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| analytics: Blocks/Interface analytics_enabled defaults None through GRADIO_ANALYTICS_ENABLED to True; False disables basic telemetry independently of flagging/history and application logs. | Gradio documentation (rolling) unknown | REASONED |
-| verify-bind-share: Inventory bind and terminate the prior process/tunnel, set share=False, and inspect this fresh run's full startup output; loopback ss alone cannot exclude a relay. | Gradio 6.28.0 | REASONED |
-| verify-native: Compare /gradio_api/info without native cookies (200 exposed, native 401 fixed), retaining proxy authorization; fresh login cookie must restore 200 with app content. | Gradio 6.28.0 | REASONED |
-| verify-tls: Use validated HTTPS at the same host/port/prefix and trust the actual CA; TLS, DNS and connection failures do not demonstrate auth refusal. | Gradio documentation (rolling) unknown | REASONED |
-| verify-files: Both markers must serve before blocking; after restart use fresh cookies and confirm both files remain, with blocked 403 and allowed marker content; missing files also yield 403. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| verify-environment: With allowed_paths=[], an environment-granted marker serves; remove grant and restart to require refusal with an allowed control; relocated cache remains readable across app users. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| verify-upload: Compare valid below/above-limit uploads on upload and multipart component_server independently; malformed requests or proxy refusal do not demonstrate Gradio enforcement. | Gradio 6.28.0; Gradio historical fixes 6.20.0 | REASONED |
-| verify-vibe: Unauthenticated GET /gradio_api/vibe-code returns demo source with GRADIO_VIBE_MODE=False as a string; unset/restart requires handler 403, not merely a missing file. | Gradio 6.28.0 | REASONED |
-| verify-mcp: Enabled MCP must list/invoke a harmless tool; disabled MCP must stop both with ordinary app still working; published tools need their own anonymous/authorized comparison. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| verify-visibility: Direct echo HTTP can still work with undocumented/private visibility; auth must reject missing cookies and fresh cookies restore marker content, including config/info/queue comparisons. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| verify-queue: Authenticated queued run/echo and api/echo succeed with api_open=True and return 404 with False; call/echo plus its event URL must still complete. | Gradio 6.28.0 | REASONED |
-| verify-capacity: Fill 20 waiting slots with a bounded slow handler, compare queue-full refusal and overlap against controls, and inspect thread/listener settings separately. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| verify-external: auth_dependency user ID permits prefixed config and None yields 401; forged headers/direct origin must fail, with a fresh authorized session as control. | Gradio 6.28.0; Gradio documentation (rolling) unknown | REASONED |
-| verify-revocation: Create two native sessions, require logout to invalidate both, test restart separately, inspect both cookies, and test external lifetime/throttling at the enforcing layer. | Gradio 6.28.0 | REASONED |
-| verify-egress: Allowed markers must arrive; denied or redirected destinations must receive no request after policy enforcement; confirm with destination/egress logs across used fetch surfaces. | Gradio 6.28.0; Gradio historical fixes 6.16.0; Gradio historical fixes 6.20.0; Gradio documentation (rolling) unknown | REASONED |
-| verify-collection: Compare manual/auto flag records against never, history runs/page on/off and telemetry on/off while predictions work; inspect old files and buckets separately. | Gradio documentation (rolling) unknown | REASONED |
+Components (recorded basis):
+
+- gradio: Gradio, 6.28.0
+- fixes: Gradio historical fixes, 6.16.0
+- multipart: Gradio historical fixes, 6.20.0
+- advisory: Gradio security advisories, unknown
+- gradio-rolling: Gradio documentation (rolling), unknown
+
+Claims (full source mapping in the front matter):
+
+- bind (REASONED; gradio, gradio-rolling): server_name=None resolves through GRADIO_SERVER_NAME to 127.0.0.1 when unset; set loopback explicitly behind the proxy; 0.0.0.0 exposes all interfaces.
+- port (REASONED; gradio, gradio-rolling): With server_port=None, port search starts at 7860 unless GRADIO_SERVER_PORT changes it; native TLS example explicitly uses 8443.
+- password (REASONED; gradio, gradio-rolling): auth accepts one tuple, a tuple list or a credential-checking callable; auth_message customizes login; keep credentials outside source.
+- login-limits (REASONED; gradio, gradio-rolling): Native auth is single-factor without throttling, rate limiting or lockout; a TOTP callable also needs enrollment, secret custody and replay rejection.
+- external-auth (REASONED; gradio, gradio-rolling): auth_dependency returns a user ID or None and cannot combine with auth; validate identity, sanitize proxy headers and prevent direct backend bypass.
+- sessions (REASONED; gradio): Native bearer tokens live in process memory without server-side expiry; login issues HttpOnly Secure and insecure fallback cookies, and accepts either.
+- revocation (REASONED; gradio): Restart clears native tokens; /logout defaults all_session=True, revoking all sessions for a username; cookie lifetime is not server revocation.
+- external-policy (REASONED; gradio, gradio-rolling): Require HTTPS and externally enforced MFA, throttling, lockout and finite lifetime on every request; a copied native cookie must not bypass that boundary.
+- tls (REASONED; gradio, gradio-rolling): ssl_certfile/ssl_keyfile enable HTTPS and ssl_keyfile_password supports encrypted keys; ssl_verify=False affects launcher self-checks and is only needed for self-signed certificates.
+- prefix (REASONED; gradio-rolling): root_path builds URLs beneath the proxy prefix; it neither authenticates nor prevents direct backend access.
+- share (REASONED; gradio): share=True publishes a public relay URL; omitted share may inherit GRADIO_SHARE=True or auto-enable in hosted notebooks; deploy with explicit False.
+- file-route (REASONED; gradio, gradio-rolling): /gradio_api/file= serves registered static paths, allowed_paths and cache; returned file outputs can expose eligible working/temp paths to every app user.
+- allowed-paths (REASONED; gradio-rolling): allowed_paths adds exposure, not a sandbox; empty lists do not disable cache or eligible outputs, and granted directories expose descendants.
+- dotfiles (REASONED; gradio-rolling): Working-directory dotfiles are excluded from automatic caching unless explicitly permitted; this does not protect other eligible files or justify colocated secrets.
+- blocked-paths (REASONED; advisory, gradio-rolling): blocked_paths overrides default/static/allowed grants but is a backstop; minimize the process filesystem and never return untrusted file paths.
+- path-environment (REASONED; gradio): allowed_paths and blocked_paths default None; even [] falls back to comma-separated GRADIO_ALLOWED_PATHS and GRADIO_BLOCKED_PATHS.
+- cache (REASONED; gradio-rolling): GRADIO_TEMP_DIR relocates cache; restrict permissions, quota and cleanup, but relocation and local permissions do not provide per-user download authorization.
+- upload-limit (REASONED; gradio, gradio-rolling): max_file_size defaults None; set bytes or 5mb for a per-file limit, adding separate storage/rate controls.
+- multipart-fix (REASONED; gradio, multipart): 6.20.0 fixed missing max_file_size enforcement on multipart /component_server uploads; retain the 6.28.0 deployment baseline.
+- historical-traversal (REASONED; advisory): 4.11.0 fixed the historical /file traversal and associated SSRF; this is a historical floor, not the deployment baseline.
+- historical-files (REASONED; advisory, fixes): 6.16.0 includes FileExplorer traversal fixes; the case-handling advisory has conflicting patched-version records and no precise fix version here.
+- vibe (REASONED; gradio, gradio-rolling): GRADIO_VIBE_MODE defaults empty; any nonempty value including False or 0 enables unauthenticated source read/write handlers and arbitrary execution; leave unset and avoid --vibe.
+- mcp (REASONED; gradio, gradio-rolling): mcp_server defaults None, consulting GRADIO_MCP_SERVER (False); explicitly disable unless tools beneath /gradio_api/mcp/ are deliberately protected and tested.
+- footer (REASONED; gradio-rolling): footer_links can hide API documentation; it replaces show_api=False and does not disable the API.
+- visibility (REASONED; gradio, gradio-rolling): api_visibility defaults public; undocumented hides docs and private blocks Gradio-client use, but direct HTTP remains subject to separate auth/queue policy.
+- api-name (REASONED; gradio, gradio-rolling): api_name=None derives a function name; api_name=False is no longer a supported public argument and hiding names is not authorization.
+- protected-routes (REASONED; gradio): Native auth/auth_dependency checks cover /config, /gradio_api/info, prediction and queue join/data routes; public assets and a login page do not prove API protection.
+- queue-bypass (REASONED; gradio): queue(api_open=None) is effectively True off Spaces; False refuses direct run/api calls for queued functions, while queued API and queue=False events remain.
+- concurrency (REASONED; gradio, gradio-rolling): default_concurrency_limit defaults 1 unless changed through GRADIO_DEFAULT_CONCURRENCY_LIMIT; listener overrides apply, not a global per-user limit.
+- queue-size (REASONED; gradio): max_size defaults None with a ZeroGPU Spaces exception; 20 bounds waiting work but is not a per-user quota.
+- threads (REASONED; gradio, gradio-rolling): max_threads defaults 40; the example sets 8, separately from queue and listener capacity.
+- egress (REASONED; gradio, gradio-rolling): URL inputs and component/MCP fetches need application destination allowlists and deployment egress controls, including redirects/resolution; no general fetch allowlist covers all surfaces.
+- fetch-fixes (REASONED; fixes, multipart): 6.16.0 fixed SVG/Audio SSRF; 6.20.0 changed /gradio_api/file=&lt;url&gt; from open redirect to SSRF-protected streaming proxy.
+- load-token (REASONED; gradio-rolling): Keep gr.load name/src trusted; token can inherit HF_TOKEN, model loading can use a saved token, and a loaded Space can read a supplied token.
+- flagging (REASONED; gradio-rolling): Interface flagging_mode defaults through GRADIO_FLAGGING_MODE to manual; auto records every submission/output; never disables collection, not existing files.
+- flag-storage (REASONED; gradio-rolling): Default CSVLogger writes .gradio/flagged including file data; required collection needs explicit access and retention policy.
+- history (REASONED; gradio, gradio-rolling): run_history defaults None through GRADIO_RUN_HISTORY to True; False disables recording/page and removes saved browser history, not separately retained bucket data.
+- analytics (REASONED; gradio-rolling): Blocks/Interface analytics_enabled defaults None through GRADIO_ANALYTICS_ENABLED to True; False disables basic telemetry independently of flagging/history and application logs.
+- verify-bind-share (REASONED; gradio): Inventory bind and terminate the prior process/tunnel, set share=False, and inspect this fresh run's full startup output; loopback ss alone cannot exclude a relay.
+- verify-native (REASONED; gradio): Compare /gradio_api/info without native cookies (200 exposed, native 401 fixed), retaining proxy authorization; fresh login cookie must restore 200 with app content.
+- verify-tls (REASONED; gradio-rolling): Use validated HTTPS at the same host/port/prefix and trust the actual CA; TLS, DNS and connection failures do not demonstrate auth refusal.
+- verify-files (REASONED; gradio, gradio-rolling): Both markers must serve before blocking; after restart use fresh cookies and confirm both files remain, with blocked 403 and allowed marker content; missing files also yield 403.
+- verify-environment (REASONED; gradio, gradio-rolling): With allowed_paths=[], an environment-granted marker serves; remove grant and restart to require refusal with an allowed control; relocated cache remains readable across app users.
+- verify-upload (REASONED; gradio, multipart): Compare valid below/above-limit uploads on upload and multipart component_server independently; malformed requests or proxy refusal do not demonstrate Gradio enforcement.
+- verify-vibe (REASONED; gradio): Unauthenticated GET /gradio_api/vibe-code returns demo source with GRADIO_VIBE_MODE=False as a string; unset/restart requires handler 403, not merely a missing file.
+- verify-mcp (REASONED; gradio, gradio-rolling): Enabled MCP must list/invoke a harmless tool; disabled MCP must stop both with ordinary app still working; published tools need their own anonymous/authorized comparison.
+- verify-visibility (REASONED; gradio, gradio-rolling): Direct echo HTTP can still work with undocumented/private visibility; auth must reject missing cookies and fresh cookies restore marker content, including config/info/queue comparisons.
+- verify-queue (REASONED; gradio): Authenticated queued run/echo and api/echo succeed with api_open=True and return 404 with False; call/echo plus its event URL must still complete.
+- verify-capacity (REASONED; gradio, gradio-rolling): Fill 20 waiting slots with a bounded slow handler, compare queue-full refusal and overlap against controls, and inspect thread/listener settings separately.
+- verify-external (REASONED; gradio, gradio-rolling): auth_dependency user ID permits prefixed config and None yields 401; forged headers/direct origin must fail, with a fresh authorized session as control.
+- verify-revocation (REASONED; gradio): Create two native sessions, require logout to invalidate both, test restart separately, inspect both cookies, and test external lifetime/throttling at the enforcing layer.
+- verify-egress (REASONED; gradio, fixes, multipart, gradio-rolling): Allowed markers must arrive; denied or redirected destinations must receive no request after policy enforcement; confirm with destination/egress logs across used fetch surfaces.
+- verify-collection (REASONED; gradio-rolling): Compare manual/auto flag records against never, history runs/page on/off and telemetry on/off while predictions work; inspect old files and buckets separately.
 <!-- version-basis:end -->
 
 Gradio binds to `127.0.0.1` by default. Two launch choices create exposure: `server_name="0.0.0.0"` (all interfaces) and `share=True` (a public `*.gradio.live` URL through Gradio's relay). Neither is acceptable without authentication.

@@ -121,32 +121,45 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| trust-scope: Self-signed TLS encrypts transit but needs explicit client trust and triggers browser warnings; the guide prefers publicly trusted certificates for browser users and external parties. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
-| rsa-certificate: OpenSSL 3.0 or later generates an RSA 4096-bit self-signed certificate with SHA-256, 365-day validity, an unencrypted key and the shown subject and extensions. | OpenSSL documentation (rolling) unknown | REASONED |
-| ec-certificate: Generate a prime256v1 EC key first, then a SHA-256 self-signed certificate with 365-day validity and the shown subject and extensions; the guide describes ECDSA as smaller and faster. | OpenSSL documentation (rolling) unknown | REASONED |
-| san: SAN must cover every client DNS name and IP (this guide's requirement, based on RFC 9525's matching rules); replace the documentation IP or omit IP entries for name-only access. RFC 9525 requires DNS identity matching label by label except under its wildcard rule; an IP-ID reference identifier MUST exactly match an iPAddress subjectAltName entry. It forbids the subject Common Name as a service identifier. On mismatch, an automated client SHOULD terminate; a configured exception MUST NOT disable this control by default. A human-facing client SHOULD warn and terminate but MAY offer advanced users an override. Ad hoc pinning SHOULD NOT restrict future connections to only the pinned certificate. | OpenSSL documentation (rolling) unknown; RFC 9525 service identity RFC 9525 | REASONED |
-| leaf-constraint: Set basicConstraints=critical,CA:FALSE because the stated stock req -x509 configuration otherwise marks a trusted certificate CA:TRUE, allowing its unencrypted server key to sign for any name. | OpenSSL documentation (rolling) unknown | REASONED |
-| extension-history: The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension. | OpenSSL documentation (rolling) unknown | REASONED |
-| unencrypted-key: -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions. | OpenSSL documentation (rolling) unknown | REASONED |
-| expiry: Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves. | OpenSSL documentation (rolling) unknown | REASONED |
-| key-permissions: chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded. | OpenSSL documentation (rolling) unknown | REASONED |
-| key-compromise: Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat. | OpenSSL documentation (rolling) unknown; Git ignore documentation v2.43.0 | REASONED |
-| mkcert: mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs. | mkcert unknown | REASONED |
-| mkcert-custody: Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users. | mkcert unknown | REASONED |
-| debian-trust: Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie and Ubuntu noble; use on other Debian and Ubuntu releases is this guide's assessment, with platform-specific Sources entries for those releases absent. | mkcert unknown; Debian ca-certificates trixie; Ubuntu ca-certificates noble | REASONED |
-| rhel-trust: Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract on RHEL 9; Fedora and other RHEL releases are this guide's assessment, with platform-specific Sources entries for those releases absent. | mkcert unknown; RHEL shared system certificates RHEL 9 | REASONED |
-| curl-trust: curl --cacert server.crt supplies explicit trust for app.internal. | OpenSSL documentation (rolling) unknown; curl command documentation curl-8_12_1 | REASONED |
-| requests-trust: REQUESTS_CA_BUNDLE supplies the certificate path to Python requests. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3 | REASONED |
-| node-trust: NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js. | mkcert unknown; Node.js extra CA certificates v22.19.0 | REASONED |
-| verification-bypasses: Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but Node.js bypass-specific Sources entries are absent. | OpenSSL documentation (rolling) unknown; Requests TLS documentation v2.32.3; curl command documentation curl-8_12_1 | REASONED |
-| verify-extensions: Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN. | OpenSSL documentation (rolling) unknown | DEMONSTRATED |
-| verify-tls: The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0. | OpenSSL documentation (rolling) unknown | REASONED |
-| verify-failures: Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62. | OpenSSL documentation (rolling) unknown | REASONED |
-| verify-identity: Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks. | OpenSSL documentation (rolling) unknown | REASONED |
-| verify-store: Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after. | OpenSSL documentation (rolling) unknown; mkcert unknown; curl command documentation curl-8_12_1 | REASONED |
-| trust-limits: Self-signed certificates have no revocation or third-party accountability and need manual trust distribution; move beyond them as the audience grows and retain authentication. | OpenSSL documentation (rolling) unknown; mkcert unknown | REASONED |
+Components (recorded basis):
+
+- openssl: OpenSSL documentation (rolling), unknown
+- mkcert: mkcert, unknown
+- requests: Requests TLS documentation, v2.32.3
+- git: Git ignore documentation, v2.43.0
+- curl-source: curl command documentation, curl-8_12_1
+- node: Node.js extra CA certificates, v22.19.0
+- rfc9525: RFC 9525 service identity, RFC 9525
+- debian-ca: Debian ca-certificates, trixie
+- ubuntu-ca: Ubuntu ca-certificates, noble
+- rhel-ca: RHEL shared system certificates, RHEL 9
+
+Claims (full source mapping in the front matter):
+
+- trust-scope (REASONED; openssl, mkcert): Self-signed TLS encrypts transit but needs explicit client trust and triggers browser warnings; the guide prefers publicly trusted certificates for browser users and external parties.
+- rsa-certificate (REASONED; openssl): OpenSSL 3.0 or later generates an RSA 4096-bit self-signed certificate with SHA-256, 365-day validity, an unencrypted key and the shown subject and extensions.
+- ec-certificate (REASONED; openssl): Generate a prime256v1 EC key first, then a SHA-256 self-signed certificate with 365-day validity and the shown subject and extensions; the guide describes ECDSA as smaller and faster.
+- san (REASONED; openssl, rfc9525): SAN must cover every client DNS name and IP (this guide's requirement, based on RFC 9525's matching rules); replace the documentation IP or omit IP entries for name-only access. RFC 9525 requires DNS identity matching label by label except under its wildcard rule; an IP-ID reference identifier MUST exactly match an iPAddress subjectAltName entry. It forbids the subject Common Name as a service identifier. On mismatch, an automated client SHOULD terminate; a configured exception MUST NOT disable this control by default. A human-facing client SHOULD warn and terminate but MAY offer advanced users an override. Ad hoc pinning SHOULD NOT restrict future connections to only the pinned certificate.
+- leaf-constraint (REASONED; openssl): Set basicConstraints=critical,CA:FALSE because the stated stock req -x509 configuration otherwise marks a trusted certificate CA:TRUE, allowing its unencrypted server key to sign for any name.
+- extension-history (REASONED; openssl): The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension.
+- unencrypted-key (REASONED; openssl): -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions.
+- expiry (REASONED; openssl): Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves.
+- key-permissions (REASONED; openssl): chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded.
+- key-compromise (REASONED; openssl, git): Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat.
+- mkcert (REASONED; mkcert): mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs.
+- mkcert-custody (REASONED; mkcert): Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.
+- debian-trust (REASONED; mkcert, debian-ca, ubuntu-ca): Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie and Ubuntu noble; use on other Debian and Ubuntu releases is this guide's assessment, with platform-specific Sources entries for those releases absent.
+- rhel-trust (REASONED; mkcert, rhel-ca): Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract on RHEL 9; Fedora and other RHEL releases are this guide's assessment, with platform-specific Sources entries for those releases absent.
+- curl-trust (REASONED; openssl, curl-source): curl --cacert server.crt supplies explicit trust for app.internal.
+- requests-trust (REASONED; openssl, requests): REQUESTS_CA_BUNDLE supplies the certificate path to Python requests.
+- node-trust (REASONED; mkcert, node): NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js.
+- verification-bypasses (REASONED; openssl, requests, curl-source): Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but Node.js bypass-specific Sources entries are absent.
+- verify-extensions (DEMONSTRATED; openssl): Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN.
+- verify-tls (REASONED; openssl): The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0.
+- verify-failures (REASONED; openssl): Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62.
+- verify-identity (REASONED; openssl): Use -verify_ip for IP identities; -verify_hostname can fall back to CN without a DNS SAN, even with an IP SAN, so CN-only or IP-only certificates can pass hostname checks.
+- verify-store (REASONED; openssl, mkcert, curl-source): Explicit -CAfile proves certificate and name, not the system-store installation; test each normally configured client separately, expecting plain curl without --cacert to fail before trust installation and succeed after.
+- trust-limits (REASONED; openssl, mkcert): Self-signed certificates have no revocation or third-party accountability and need manual trust distribution; move beyond them as the audience grows and retain authentication.
 <!-- version-basis:end -->
 
 Use a self-signed certificate when the service has no public DNS name, when an ACME CA cannot reach it, and when [cloudflare.md](cloudflare.md) is not an option: internal tools, lab and development environments, and machine-to-machine links on private networks. For anything a browser user or external party reaches, prefer [free-certificates.md](free-certificates.md); self-signed certificates trigger browser warnings and every client must be configured to trust them.

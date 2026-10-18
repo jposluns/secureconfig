@@ -182,30 +182,51 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| bind: Use loopback behind a same-host TLS proxy; wildcard is for authenticated direct TLS or private managed ingress. Platform-specific address/port mappings are cross-guide guidance without a listed platform source. | Gunicorn documentation unknown; Uvicorn source 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9 | REASONED |
-| flask-tls: Flask development server binds 127.0.0.1:8443 with cert/key ssl_context; adhoc requires cryptography and remains development-only. | Werkzeug documentation unknown | REASONED |
-| gunicorn-tls: Gunicorn binds 0.0.0.0:8443 with --certfile and --keyfile for direct TLS. | Gunicorn documentation unknown | REASONED |
-| uvicorn-tls: Uvicorn binds 0.0.0.0:8443 with --ssl-certfile and --ssl-keyfile for direct TLS. | Uvicorn source 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9 | REASONED |
-| django-redirect: Set SECURE_SSL_REDIRECT=True. | Django documentation 6.1 | REASONED |
-| django-proxy: Set SECURE_PROXY_SSL_HEADER only behind a trusted proxy that strips and replaces X-Forwarded-Proto; prevent direct bypass. | Django documentation 6.1 | REASONED |
-| django-cookies: Set SESSION_COOKIE_SECURE and CSRF_COOKIE_SECURE true. | Django documentation 6.1 | REASONED |
-| django-hsts: Begin HSTS at 3600 seconds and include-subdomains false; raise duration and scope only after valid HTTPS is confirmed. | Django documentation 6.1 | REASONED |
-| deploy-check: Run manage.py check --deploy and fix its findings. | Django documentation 6.1 | REASONED |
-| password: Keep Django built-in hashing; Flask/FastAPI require an application user store and argon2-cffi or bcrypt. PasswordHasher.verify raises on mismatch; bcrypt and user-store assertions lack listed sources. | Django documentation 6.1; argon2-cffi documentation unknown | REASONED |
-| secrets: Generate secrets.token_urlsafe(32) and load secrets from the environment; the choice of 32 bytes is not covered by listed Sources. | Django documentation 6.1; Python standard library documentation 3.14 | REASONED |
-| credential-extraction: FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry. | FastAPI documentation unknown | REASONED |
-| oidc: OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately. | FastAPI documentation unknown; FastAPI OpenIdConnect source 31bbb380748ccead62fc0f42dbf4273f11dadccf | REASONED |
-| login-limit: Rate-limiting login routes and a proxy-level limit are this guide's advice. slowapi v0.1.10 documents limits for Starlette/FastAPI HTTP endpoints; endpoints using its limit decorator must take an explicit request argument, and WebSocket endpoints are not supported. | FastAPI documentation unknown; slowapi source v0.1.10 | REASONED |
-| mfa: Use pyotp and qrcode, django-otp for Django, or linked MFA guidance. | Django documentation 6.1; PyOTP v2.9.0; qrcode v8.2; django-otp 1.6.1 | REASONED |
-| client-validation: Never ship requests/httpx verify=False or ssl._create_unverified_context; HTTPX documents verify=False and CPython defines _create_unverified_context. The prohibition is this guide's advice. | Python http.server documentation 3.14.4; Requests v2.32.3; HTTPX source and documentation 0.28.1; CPython ssl source and documentation v3.14.8 | REASONED |
-| client-ca: REQUESTS_CA_BUNDLE selects a requests CA. HTTPX 0.28.1's transport passes verify and trust_env to create_ssl_context, which reads SSL_CERT_FILE when verify=True and trust_env=True; its SSL guide contradicts that source. Its environment guide says environment variables are used by default but does not list SSL_CERT_FILE. CPython's ssl module reports OpenSSL default verify paths; with no CA specified and verification enabled, ssl.create_default_context() tries to load default CAs, which may fail silently. OpenSSL names SSL_CERT_FILE as an environment override for its default CA file; CPython's cited files do not name that variable, so whether a given ssl configuration uses it remains unverified. The export and explicit-context choices are this guide's advice. | Python http.server documentation 3.14.4; Requests v2.32.3; HTTPX source and documentation 0.28.1; CPython ssl source and documentation v3.14.8; OpenSSL documentation openssl-4.0.3 | REASONED |
-| http-server-bind: As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000. | Python http.server source v3.14.4 | REASONED |
-| http-server-files: http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel. | Python http.server documentation 3.14.4 | REASONED |
-| verify-tls: Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation. | Gunicorn documentation unknown; Uvicorn source 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9 | REASONED |
-| verify-auth: A real protected route denies no credentials with 401/403 and accepts valid file-supplied credentials with 2xx; logs or direct probing distinguish app from proxy enforcement. | Django documentation 6.1; FastAPI documentation unknown | REASONED |
-| verify-bind: Inspect every listener for loopback behind a same-host proxy or the required managed-ingress address and port. | Gunicorn documentation unknown; Uvicorn source 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9 | REASONED |
+Components (recorded basis):
+
+- python: Python http.server documentation, 3.14.4
+- gunicorn: Gunicorn documentation, unknown
+- uvicorn: Uvicorn source, 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9
+- django: Django documentation, 6.1
+- argon: argon2-cffi documentation, unknown
+- werkzeug: Werkzeug documentation, unknown
+- fastapi: FastAPI documentation, unknown
+- oidc-stub: FastAPI OpenIdConnect source, 31bbb380748ccead62fc0f42dbf4273f11dadccf
+- python-pin: Python http.server source, v3.14.4
+- stdlib-docs: Python standard library documentation, 3.14
+- pyotp: PyOTP, v2.9.0
+- qrcode: qrcode, v8.2
+- django-otp: django-otp, 1.6.1
+- requests: Requests, v2.32.3
+- slowapi: slowapi source, v0.1.10
+- httpx: HTTPX source and documentation, 0.28.1
+- cpython-ssl: CPython ssl source and documentation, v3.14.8
+- openssl: OpenSSL documentation, openssl-4.0.3
+
+Claims (full source mapping in the front matter):
+
+- bind (REASONED; gunicorn, uvicorn): Use loopback behind a same-host TLS proxy; wildcard is for authenticated direct TLS or private managed ingress. Platform-specific address/port mappings are cross-guide guidance without a listed platform source.
+- flask-tls (REASONED; werkzeug): Flask development server binds 127.0.0.1:8443 with cert/key ssl_context; adhoc requires cryptography and remains development-only.
+- gunicorn-tls (REASONED; gunicorn): Gunicorn binds 0.0.0.0:8443 with --certfile and --keyfile for direct TLS.
+- uvicorn-tls (REASONED; uvicorn): Uvicorn binds 0.0.0.0:8443 with --ssl-certfile and --ssl-keyfile for direct TLS.
+- django-redirect (REASONED; django): Set SECURE_SSL_REDIRECT=True.
+- django-proxy (REASONED; django): Set SECURE_PROXY_SSL_HEADER only behind a trusted proxy that strips and replaces X-Forwarded-Proto; prevent direct bypass.
+- django-cookies (REASONED; django): Set SESSION_COOKIE_SECURE and CSRF_COOKIE_SECURE true.
+- django-hsts (REASONED; django): Begin HSTS at 3600 seconds and include-subdomains false; raise duration and scope only after valid HTTPS is confirmed.
+- deploy-check (REASONED; django): Run manage.py check --deploy and fix its findings.
+- password (REASONED; django, argon): Keep Django built-in hashing; Flask/FastAPI require an application user store and argon2-cffi or bcrypt. PasswordHasher.verify raises on mismatch; bcrypt and user-store assertions lack listed sources.
+- secrets (REASONED; django, stdlib-docs): Generate secrets.token_urlsafe(32) and load secrets from the environment; the choice of 32 bytes is not covered by listed Sources.
+- credential-extraction (REASONED; fastapi): FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry.
+- oidc (REASONED; fastapi, oidc-stub): OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately.
+- login-limit (REASONED; fastapi, slowapi): Rate-limiting login routes and a proxy-level limit are this guide's advice. slowapi v0.1.10 documents limits for Starlette/FastAPI HTTP endpoints; endpoints using its limit decorator must take an explicit request argument, and WebSocket endpoints are not supported.
+- mfa (REASONED; django, pyotp, qrcode, django-otp): Use pyotp and qrcode, django-otp for Django, or linked MFA guidance.
+- client-validation (REASONED; python, requests, httpx, cpython-ssl): Never ship requests/httpx verify=False or ssl._create_unverified_context; HTTPX documents verify=False and CPython defines _create_unverified_context. The prohibition is this guide's advice.
+- client-ca (REASONED; python, requests, httpx, cpython-ssl, openssl): REQUESTS_CA_BUNDLE selects a requests CA. HTTPX 0.28.1's transport passes verify and trust_env to create_ssl_context, which reads SSL_CERT_FILE when verify=True and trust_env=True; its SSL guide contradicts that source. Its environment guide says environment variables are used by default but does not list SSL_CERT_FILE. CPython's ssl module reports OpenSSL default verify paths; with no CA specified and verification enabled, ssl.create_default_context() tries to load default CAs, which may fail silently. OpenSSL names SSL_CERT_FILE as an environment override for its default CA file; CPython's cited files do not name that variable, so whether a given ssl configuration uses it remains unverified. The export and explicit-context choices are this guide's advice.
+- http-server-bind (REASONED; python-pin): As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000.
+- http-server-files (REASONED; python): http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel.
+- verify-tls (REASONED; gunicorn, uvicorn): Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation.
+- verify-auth (REASONED; django, fastapi): A real protected route denies no credentials with 401/403 and accepts valid file-supplied credentials with 2xx; logs or direct probing distinguish app from proxy enforcement.
+- verify-bind (REASONED; gunicorn, uvicorn): Inspect every listener for loopback behind a same-host proxy or the required managed-ingress address and port.
 <!-- version-basis:end -->
 
 Covers Flask, FastAPI/Uvicorn, Gunicorn, and Django. Preferred production layout: bind the app server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). On a managed platform the platform terminates TLS at its edge and you bind the address it requires ([paas.md](paas.md)). The app servers can also terminate TLS themselves, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).

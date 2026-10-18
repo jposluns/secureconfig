@@ -202,58 +202,70 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| git-boundary: Repository writers exercise reconciliation permissions; review platform changes, separate tenants and scope credentials. | Argo CD documentation unknown; Flux documentation unknown | REASONED |
-| secret-storage: Protect bootstrap, registry, cluster, webhook and decryption credentials; commit only encrypted secrets and keep SOPS/age keys out of Git. | Argo CD documentation unknown; Flux documentation unknown | REASONED |
-| egress: Restrict fetch, API, identity and notification egress; Argo repository allowlists do not constrain remote bases or Helm dependencies. | Argo CD documentation unknown; Flux documentation unknown | REASONED |
-| argo-bootstrap: Rotate the initial admin password before deleting argocd-initial-admin-secret; deletion alone does not rotate it. | Argo CD documentation unknown | REASONED |
-| argo-sso: The built-in admin is unrestricted; configure named SSO roles and IdP MFA, then set admin.enabled=false. | Argo CD documentation unknown | REASONED |
-| argo-origin: Keep the ClusterIP origin private behind authenticated TLS and protect both REST/browser and CLI/gRPC routes. | Argo CD documentation unknown; Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| argo-server: Server defaults to 0.0.0.0:8080; the Service maps 80 and 443 to it. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| argo-tls: Server --insecure/server.insecure defaults false and disables backend TLS, not authentication; use only behind protected TLS termination. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Argo CD documentation unknown | REASONED |
-| argo-client-tls: argocd login --insecure skips client certificate verification; the server initially uses a self-signed certificate. | Argo CD documentation unknown | REASONED |
-| argo-metrics: Server HTTP metrics on 8083 are unauthenticated and bind to --address, not --metrics-address. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| argo-profiler: Server and repo-server pprof paths return 401 unless the profiler file contains exactly true with no newline; enabled profiling has no caller authentication. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| argo-profiler-file: ARGOCD_ENABLE_PROFILER_FILE_PATH defaults to /home/argocd/params/profiler.enabled; the server mounts ConfigMap key server.profile.enabled there. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| repo-grpc: Repo-server gRPC binds 0.0.0.0:8081 with TLS by default; mTLS is skipped without the client CA, separate from the serving certificate. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| repo-http: Repo-server HTTP metrics and health bind 0.0.0.0:8084 without an authentication wrapper. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| repo-limits: Repo-server requires verified client certificates with a loaded client CA; missing or unstatable serving files trigger a session self-signed certificate, while an invalid present pair errors. No authorization interceptor appears; service method authorization is unverified. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| controller-metrics: Application-controller metrics and health use 8082; the command passes that port to the controller, but the fetched files do not establish the bind address. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| applicationset-webhook: ApplicationSet webhook binds :7000; its container and Service declare 7000. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| applicationset-metrics: ApplicationSet metrics bind :8080; its container and Service declare 8080. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| applicationset-health: ApplicationSet health probes bind :8081 without a container or Service port declaration; missing declarations do not close sockets. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| notifications: Notifications HTTP metrics bind 0.0.0.0:9001 without authentication; a metrics Service and TCP liveness probe exist without containerPort. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| dex-http: Dex starts only with nonempty generated configuration; HTTP defaults to TLS on 0.0.0.0:5556 using /tmp/tls.crt and /tmp/tls.key. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| dex-grpc: Generated Dex gRPC uses 0.0.0.0:5557 without TLS or client-auth settings; Dex v2.45.1 source sets no transport credentials or authentication interceptor for this configuration, while API method authorization is unverified; this assumes the deployed ghcr.io/dexidp/dex:v2.45.1 tag was built from Dex v2.45.1. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Dex v2.45.1 source v2.45.1 | REASONED |
-| dex-telemetry: Dex telemetry uses HTTP on 0.0.0.0:5558; all three Dex ports have Services. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| redis-password: Redis receives --requirepass from argocd-redis/auth; secret-init generates and checks that Secret. The redis:8.2.3-alpine tag, taken as built from docker-library-redis v8.2.3, uses Redis wildcard bind defaults and patches protected mode off. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; docker-library-redis v8.2.3 source bcbc692165ce2241e194035041c5b5e01d2e1a5f; Redis 8.2.3 source 8.2.3 | REASONED |
-| redis-tls: Base manifests configure no Redis TLS and the Argo Redis client defaults --redis-use-tls=false; protect traffic, Secret and cache. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| component-policies: Base policies restrict repo gRPC, Redis and Dex callers by component; enforcement needs a supporting CNI. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| broad-policies: Server policy allows all ingress; other metrics and ApplicationSet webhook allowances admit every namespace. Narrow existing additive allowances and egress separately. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| argo-anonymous: users.anonymous.enabled defaults off; anonymous callers otherwise inherit policy.default. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Argo CD documentation unknown | REASONED |
-| argo-disable-auth: server.disable.auth defaults false; inspect effective args and environment because anonymous-off does not compensate for disabled authentication. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| argo-default-role: Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings. Server-side wiring remains unverified. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Argo CD documentation unknown | REASONED |
-| argo-webhook: /api/webhook accepts unauthenticated refresh events without a shared secret; configure one to limit spoofed reconciliation and resource exhaustion. | Argo CD documentation unknown | REASONED |
-| argo-projects: Restrict AppProjects including the built-in default project; project constraints do not reduce a compromised controller's Kubernetes credentials. | Argo CD documentation unknown | REASONED |
-| argo-cluster-rbac: Reduce controller and registered-cluster argocd-manager write permissions to needed namespaces/resources while retaining required read access. | Argo CD documentation unknown | REASONED |
-| flux-api: Flux has no standalone management login/API; Kubernetes authenticates its custom-resource operations, while separate dashboards need their own controls. | Flux documentation unknown | REASONED |
-| flux-bootstrap: GitHub bootstrap --token-auth retains a PAT in flux-system; --token-auth=false creates a read-only SSH deploy key by default. Protect bootstrap input and Secrets. | Flux documentation unknown | REASONED |
-| flux-writeback: Image automation needs Git write access, including --read-write-key=true for the bootstrap key; scope the repository and protect update branches and objects. | Flux documentation unknown | REASONED |
-| flux-artifacts: Source-controller serves fetched artifacts over internal HTTP; enforced NetworkPolicy, not ClusterIP alone, isolates them. | Flux documentation unknown | REASONED |
-| flux-receiver-port: Webhook receiver listens on 9292 behind Service port 80; external exposure needs a route and TLS termination. | Flux documentation unknown | REASONED |
-| flux-receiver-types: generic validates nothing; generic-hmac, GitHub, Bitbucket and Nexus use HMAC, while gitlab compares X-Gitlab-Token. | Flux documentation unknown | REASONED |
-| flux-oidc: generic-oidc, introduced in Flux 2.9, rejects secretRef and validates bearer tokens; constrain issuer validations and audience, whose default is notification-controller. | Flux documentation unknown; Flux OIDC introduction v2.9 | REASONED |
-| flux-rbac: Only kustomize-controller and helm-controller hold cluster-admin; other controllers still have meaningful permissions including Secret access. | Flux documentation unknown | REASONED |
-| flux-lockdown: Use scoped reconciliation ServiceAccounts, --no-cross-namespace-refs and --no-remote-bases; --default-service-account fills an omission, not an explicit serviceAccountName. | Flux documentation unknown | REASONED |
-| verify-argo: Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC. | Argo CD documentation unknown; Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; curl curl-8_14_1 | REASONED |
-| verify-bootstrap: Absence of the bootstrap Secret proves removal of that material, not password rotation. | Argo CD documentation unknown | REASONED |
-| verify-inventory: Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; Flux documentation unknown | REASONED |
-| verify-repo-metrics: Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| verify-server-metrics: Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| verify-profiler: From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control. | Argo CD v3.5.3 source c9c369efcc5b2a0bd720803f8d14a1c3eaddf579 | REASONED |
-| verify-flux: Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. Sources has no curl --data-binary reference. | Flux documentation unknown; Python documentation unknown; curl curl-8_14_1 | REASONED |
-| verify-receiver-status: Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection. | Flux documentation unknown | REASONED |
+Components (recorded basis):
+
+- argo: Argo CD v3.5.3 source, c9c369efcc5b2a0bd720803f8d14a1c3eaddf579
+- dex: Dex v2.45.1 source, v2.45.1
+- redis-image: docker-library-redis v8.2.3 source, bcbc692165ce2241e194035041c5b5e01d2e1a5f
+- redis-source: Redis 8.2.3 source, 8.2.3
+- argo-docs: Argo CD documentation, unknown
+- curl: curl, curl-8_14_1
+- flux: Flux documentation, unknown
+- flux-oidc: Flux OIDC introduction, v2.9
+- python: Python documentation, unknown
+
+Claims (full source mapping in the front matter):
+
+- git-boundary (REASONED; argo-docs, flux): Repository writers exercise reconciliation permissions; review platform changes, separate tenants and scope credentials.
+- secret-storage (REASONED; argo-docs, flux): Protect bootstrap, registry, cluster, webhook and decryption credentials; commit only encrypted secrets and keep SOPS/age keys out of Git.
+- egress (REASONED; argo-docs, flux): Restrict fetch, API, identity and notification egress; Argo repository allowlists do not constrain remote bases or Helm dependencies.
+- argo-bootstrap (REASONED; argo-docs): Rotate the initial admin password before deleting argocd-initial-admin-secret; deletion alone does not rotate it.
+- argo-sso (REASONED; argo-docs): The built-in admin is unrestricted; configure named SSO roles and IdP MFA, then set admin.enabled=false.
+- argo-origin (REASONED; argo-docs, argo): Keep the ClusterIP origin private behind authenticated TLS and protect both REST/browser and CLI/gRPC routes.
+- argo-server (REASONED; argo): Server defaults to 0.0.0.0:8080; the Service maps 80 and 443 to it.
+- argo-tls (REASONED; argo, argo-docs): Server --insecure/server.insecure defaults false and disables backend TLS, not authentication; use only behind protected TLS termination.
+- argo-client-tls (REASONED; argo-docs): argocd login --insecure skips client certificate verification; the server initially uses a self-signed certificate.
+- argo-metrics (REASONED; argo): Server HTTP metrics on 8083 are unauthenticated and bind to --address, not --metrics-address.
+- argo-profiler (REASONED; argo): Server and repo-server pprof paths return 401 unless the profiler file contains exactly true with no newline; enabled profiling has no caller authentication.
+- argo-profiler-file (REASONED; argo): ARGOCD_ENABLE_PROFILER_FILE_PATH defaults to /home/argocd/params/profiler.enabled; the server mounts ConfigMap key server.profile.enabled there.
+- repo-grpc (REASONED; argo): Repo-server gRPC binds 0.0.0.0:8081 with TLS by default; mTLS is skipped without the client CA, separate from the serving certificate.
+- repo-http (REASONED; argo): Repo-server HTTP metrics and health bind 0.0.0.0:8084 without an authentication wrapper.
+- repo-limits (REASONED; argo): Repo-server requires verified client certificates with a loaded client CA; missing or unstatable serving files trigger a session self-signed certificate, while an invalid present pair errors. No authorization interceptor appears; service method authorization is unverified.
+- controller-metrics (REASONED; argo): Application-controller metrics and health use 8082; the command passes that port to the controller, but the fetched files do not establish the bind address.
+- applicationset-webhook (REASONED; argo): ApplicationSet webhook binds :7000; its container and Service declare 7000.
+- applicationset-metrics (REASONED; argo): ApplicationSet metrics bind :8080; its container and Service declare 8080.
+- applicationset-health (REASONED; argo): ApplicationSet health probes bind :8081 without a container or Service port declaration; missing declarations do not close sockets.
+- notifications (REASONED; argo): Notifications HTTP metrics bind 0.0.0.0:9001 without authentication; a metrics Service and TCP liveness probe exist without containerPort.
+- dex-http (REASONED; argo): Dex starts only with nonempty generated configuration; HTTP defaults to TLS on 0.0.0.0:5556 using /tmp/tls.crt and /tmp/tls.key.
+- dex-grpc (REASONED; argo, dex): Generated Dex gRPC uses 0.0.0.0:5557 without TLS or client-auth settings; Dex v2.45.1 source sets no transport credentials or authentication interceptor for this configuration, while API method authorization is unverified; this assumes the deployed ghcr.io/dexidp/dex:v2.45.1 tag was built from Dex v2.45.1.
+- dex-telemetry (REASONED; argo): Dex telemetry uses HTTP on 0.0.0.0:5558; all three Dex ports have Services.
+- redis-password (REASONED; argo, redis-image, redis-source): Redis receives --requirepass from argocd-redis/auth; secret-init generates and checks that Secret. The redis:8.2.3-alpine tag, taken as built from docker-library-redis v8.2.3, uses Redis wildcard bind defaults and patches protected mode off.
+- redis-tls (REASONED; argo): Base manifests configure no Redis TLS and the Argo Redis client defaults --redis-use-tls=false; protect traffic, Secret and cache.
+- component-policies (REASONED; argo): Base policies restrict repo gRPC, Redis and Dex callers by component; enforcement needs a supporting CNI.
+- broad-policies (REASONED; argo): Server policy allows all ingress; other metrics and ApplicationSet webhook allowances admit every namespace. Narrow existing additive allowances and egress separately.
+- argo-anonymous (REASONED; argo, argo-docs): users.anonymous.enabled defaults off; anonymous callers otherwise inherit policy.default.
+- argo-disable-auth (REASONED; argo): server.disable.auth defaults false; inspect effective args and environment because anonymous-off does not compensate for disabled authentication.
+- argo-default-role (REASONED; argo, argo-docs): Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings. Server-side wiring remains unverified.
+- argo-webhook (REASONED; argo-docs): /api/webhook accepts unauthenticated refresh events without a shared secret; configure one to limit spoofed reconciliation and resource exhaustion.
+- argo-projects (REASONED; argo-docs): Restrict AppProjects including the built-in default project; project constraints do not reduce a compromised controller's Kubernetes credentials.
+- argo-cluster-rbac (REASONED; argo-docs): Reduce controller and registered-cluster argocd-manager write permissions to needed namespaces/resources while retaining required read access.
+- flux-api (REASONED; flux): Flux has no standalone management login/API; Kubernetes authenticates its custom-resource operations, while separate dashboards need their own controls.
+- flux-bootstrap (REASONED; flux): GitHub bootstrap --token-auth retains a PAT in flux-system; --token-auth=false creates a read-only SSH deploy key by default. Protect bootstrap input and Secrets.
+- flux-writeback (REASONED; flux): Image automation needs Git write access, including --read-write-key=true for the bootstrap key; scope the repository and protect update branches and objects.
+- flux-artifacts (REASONED; flux): Source-controller serves fetched artifacts over internal HTTP; enforced NetworkPolicy, not ClusterIP alone, isolates them.
+- flux-receiver-port (REASONED; flux): Webhook receiver listens on 9292 behind Service port 80; external exposure needs a route and TLS termination.
+- flux-receiver-types (REASONED; flux): generic validates nothing; generic-hmac, GitHub, Bitbucket and Nexus use HMAC, while gitlab compares X-Gitlab-Token.
+- flux-oidc (REASONED; flux, flux-oidc): generic-oidc, introduced in Flux 2.9, rejects secretRef and validates bearer tokens; constrain issuer validations and audience, whose default is notification-controller.
+- flux-rbac (REASONED; flux): Only kustomize-controller and helm-controller hold cluster-admin; other controllers still have meaningful permissions including Secret access.
+- flux-lockdown (REASONED; flux): Use scoped reconciliation ServiceAccounts, --no-cross-namespace-refs and --no-remote-bases; --default-service-account fills an omission, not an explicit serviceAccountName.
+- verify-argo (REASONED; argo-docs, argo, curl): Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC.
+- verify-bootstrap (REASONED; argo-docs): Absence of the bootstrap Secret proves removal of that material, not password rotation.
+- verify-inventory (REASONED; argo, flux): Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation.
+- verify-repo-metrics (REASONED; argo): Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control.
+- verify-server-metrics (REASONED; argo): Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive.
+- verify-profiler (REASONED; argo): From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control.
+- verify-flux (REASONED; flux, python, curl): Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. Sources has no curl --data-binary reference.
+- verify-receiver-status (REASONED; flux): Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection.
 <!-- version-basis:end -->
 
 Argo CD and Flux reconcile a git repository into a Kubernetes cluster, so both hold

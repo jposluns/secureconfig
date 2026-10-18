@@ -236,67 +236,84 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| baseline: Redis 6.0+ supplies TLS and ACLs; TLS needs TLS-enabled server/client builds. Restrict bind and credentials before remote access. | Redis documentation unknown; Redis configuration 6.0.20 | REASONED |
-| optional-bind: Redis 6.2+ -::1 makes an absent interface optional, not an occupied address; Redis 6.0 uses plain loopback binding. | Redis configuration 6.2.14; Redis configuration 6.0.20 | REASONED |
-| protected-mode: 6.0/6.2 protected mode requires default nopass and no explicit bind; 7.0 drops the bind condition. Explicit wildcard bind can expose passwordless 6.x. | Redis configuration 6.0.20; Redis configuration 6.2.14; Redis configuration 7.0.15 | REASONED |
-| image-protected: Pinned 6.2-7.4 images and the checked 8.x tag patch protected-mode to no and run redis-server without a config; publish privately with explicit credentials. | Redis image source 584feaab6cd12a77866c121beff1bb16ff239486; Redis image tag v8.10.2 | REASONED |
-| compiled-bind: 7.4.8/8.10.2 compiled bind is * -::*; IPv6 wildcard applies where available. | Redis compiled defaults 7.4.8; Redis compiled defaults 8.10.2 | REASONED |
-| compiled-user: Checked 7.4.8/8.10.2 default users are on nopass +@all; disabled DEBUG/MODULE commands remain disabled. | Redis compiled defaults 7.4.8; Redis compiled defaults 8.10.2; Redis configuration 8.2.1 | REASONED |
-| password: requirepass supplies one shared AUTH password; prefer separate least-privilege ACL identities. | Redis documentation unknown | REASONED |
-| keyless: ~app:* constrains key arguments, not keyless commands: write categories include global flush/swap and 7+ FUNCTION writes; reads include keyspace walking. | Redis documentation unknown | REASONED |
-| allowlist: Removing flushall/flushdb/swapdb removes only those commands; replace broad grants with reset and explicit required commands such as GET/SET. | Redis documentation unknown | REASONED |
-| default-user: Default starts on nopass ~* +@all, adding &amp;* from 6.2; secure or disable it only after named clients/admin work; existing sessions survive. | Redis documentation unknown | REASONED |
-| mfa: Redis has no second-factor dialogue; mutual TLS adds machine possession alongside passwords, not human MFA. | Redis documentation unknown | REASONED |
-| cert-user: Redis 8.6+ tls-auth-clients-user defaults off; enabling it can authenticate without passwords. Keep off for these NOAUTH checks and omit the unknown directive on older releases. | Redis configuration 8.6.0; Redis release notes unknown | REASONED |
-| reset: ACL SETUSER changes users incrementally and applies rules left-to-right; reset removes old grants/passwords and, on 7+, selectors. | Redis documentation unknown | REASONED |
-| channel-default: resetchannels needs 6.2+; 6.0 lacks channel ACLs. Redis 6.2 default allchannels became resetchannels in 7.0. | Redis configuration 8.2.1; Redis documentation unknown | REASONED |
-| inline-persistence: CONFIG REWRITE persists inline users only with a writable startup configuration and OK; it also rewrites other runtime settings. | Redis documentation unknown | REASONED |
-| acl-file: External aclfile excludes inline users and requirepass; ACL SAVE persists, ACL LOAD replaces, invalid loads retain old policy, and CONFIG REWRITE does not save ACLs. | Redis configuration 8.2.1; Redis documentation unknown | REASONED |
-| revocation: Disabling a user blocks new auth but CLIENT KILL USER closes existing sessions; password replacement also needs forced reconnect and persistence. | Redis documentation unknown | REASONED |
-| directional-keys: Redis 7+ %R~/%W~ separate read/write key access; commands still need grants and broader ~ patterns can defeat separation. | Redis documentation unknown | REASONED |
-| channels: Channel patterns are independent of keys; reset then allow required channels/commands. PSUBSCRIBE patterns must literally match an allowed pattern. | Redis documentation unknown | REASONED |
-| scripting: Subtract admin/dangerous/scripting after grants; SCRIPT/FUNCTION removal alone misses execution commands. Omit FUNCTION on 6.x and rebuild unknown selectors first. | Redis documentation unknown | REASONED |
-| startup-commands: Redis 7+ enable-debug-command and enable-module-command default no in the pin; local/yes and startup-loaded modules still require ACL review. | Redis configuration 8.2.1 | REASONED |
-| renaming: rename-command is deprecated; use ACL command restrictions. | Redis documentation unknown | REASONED |
-| tls-listener: port 0 removes plaintext while tls-port 6379 serves TLS with configured CA/certificate/key; set mutual TLS for certificate-capable clients. | Redis documentation unknown; Redis configuration 8.2.1 | REASONED |
-| tls-cert-default: tls-auth-clients defaults yes; this guide's initial no removes client-certificate requirements, including incoming replicas, not the TLS cluster bus. | Redis HA source 8.10.1 | REASONED |
-| cli: Use CA trust, --user and masked --askpass with history disabled; GET app:probe is allowed while PING is not granted to app. | Redis documentation unknown | REASONED |
-| verify-listeners: Inventory all listeners; only intended loopback/private addresses pass, and socket errors establish nothing. | Redis configuration 8.2.1 | REASONED |
-| verify-plaintext: Any plaintext RESP reply proves plaintext availability; TLS-only 6379 must close/reset plaintext while TLS reaches the same endpoint. | Redis documentation unknown | REASONED |
-| verify-noauth: Secured default produces NOAUTH over TLS, exposed nopass produces PONG; certificate failures precede this test, and authenticated GET is the positive control. | Redis documentation unknown | REASONED |
-| verify-acl: Read effective users including selectors/passwords without publishing hashes; app GET succeeds and CONFIG GET bind returns NOPERM, not NOAUTH or unknown command. | Redis documentation unknown | REASONED |
-| verify-acl-log: Correlate denied CONFIG with user and age in ACL LOG; preserve events before resets, and bounded in-memory emptiness proves no absence of failures. | Redis documentation unknown; Redis configuration 8.2.1 | REASONED |
-| verify-direction: Redis 7+ DRYRUN allows input reads/output writes/allowed publication and denies reverse access/unrelated publication; it does not execute or prove authentication. | Redis documentation unknown | REASONED |
-| verify-persistence: Repeat policy and permissions after restart; runtime-only changes revert. Retired users must lose old sessions and fail fresh auth. | Redis documentation unknown | REASONED |
-| replication-auth: Use PING/REPLCONF/PSYNC-only replication users and masteruser/masterauth on every potential primary; outbound credentials do not protect incoming access or limit the stream by key. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
-| sentinel-default: Sentinel normally listens on 26379 with protected mode disabled and no active auth rule; data-port protection does not protect it. | Redis HA source 8.10.1 | REASONED |
-| sentinel-auth: Password-only Sentinel auth applies throughout 6.0+; ACLs require 6.2+. Provision separate peer/admin and narrow discovery identities; do not combine the two arrangements. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
-| sentinel-announcement: Private bind and network policy restrict Sentinel; announce-ip/port only publish discovery information. Password-only peers share a distinct Sentinel password. | Redis HA source 8.10.1 | REASONED |
-| monitor-auth: Sentinel monitored-server credentials start unset and differ from peer credentials; provision every potential primary/replica. | Redis HA source 8.10.1 | REASONED |
-| monitor-acl: Monitored-server ACLs require 6.0+, channel isolation 6.2+; the 8.10.1-reviewed operational policy permits only __sentinel__:hello publication/subscription. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
-| cluster-bus: Opt-in cluster adds a binary bus, normally data port+10000 (16379); data RESP AUTH is not a bus gate. Restrict node and client paths separately. | Redis documentation unknown | REASONED |
-| cluster-announcement: 8.10.1 cluster-port selects the bus listener; announce fields are not firewalls. TLS offset uses tls-port; binds and remapped advertisements must agree. | Redis HA source 8.10.1 | REASONED |
-| ha-tls: Client TLS does not enable outgoing replication or cluster TLS; tls-replication and tls-cluster default disabled and must be configured separately. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
-| outgoing-cert: Outgoing TLS normally reuses the server certificate; separate tls-client-cert/key need 6.2+. Older builds require one dual-purpose certificate and reject unknown directives. | Redis configuration 6.0.20; Redis configuration 6.2.0 | REASONED |
-| bus-cert: The TLS cluster bus always requires a trusted peer certificate, independently of data-port tls-auth-clients. | Redis HA source 8.10.1 | REASONED |
-| sentinel-tls: Sentinel tls-port independently creates incoming TLS; tls-replication selects outgoing data/peer TLS and default TLS-port advertisement; explicit announce-port overrides it. | Redis HA source 8.10.1 | REASONED |
-| peer-name: Redis 8.10+ tls-expected-peer-name defaults unset; it adds shared trust-group identity to outgoing replication/bus/MIGRATE and incoming bus, not node-ID binding. | Redis HA source 8.10.1; Redis release notes unknown | REASONED |
-| peer-limits: TLS_NO_PEER_NAME_VERIFICATION builds warn and skip name enforcement; 8.10.1 Sentinel's outgoing hiredis path does not apply this check; use a dedicated trust boundary. | Redis HA source 8.10.1 | REASONED |
-| verify-replication: Wrong/missing replica credentials must fail; correct auth restores link and fresh canary transfer. Test replica incoming auth and repeat through promotion. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
-| verify-replication-acl: Redis 7+ DRYRUN PSYNC permits replication and denies app; synchronization and promotion require separate runtime tests. | Redis documentation unknown | REASONED |
-| verify-sentinel: Uncredentialed discovery returns endpoint exposed and NOAUTH secured; discovery credentials restore it but administrative commands get NOPERM. Peer announcements alone prove no communication. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
-| verify-monitor: sentinel-monitor permits PING but denies GET/unrelated publication; wrong auth-pass stops monitoring, correct credentials restore it, including after promotion. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
-| verify-bus: Compare actual bus TCP access from forbidden and allowed locations; only forbidden access must fail. CLUSTER NODES announcements and listener evidence complement reachability. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
-| verify-replication-tls: Correlate TLS-only primary listener, replica connection to that port and a fresh replicated canary; link status or a separate TLS probe alone proves no encryption. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
-| verify-replica-cert: Without automatic certificate-user auth, missing client cert must fail TLS and trusted cert reach NOAUTH; with tls-auth-clients no both reach NOAUTH. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
-| verify-bus-cert: TLS 1.2 bus probes reject absent/untrusted certificates and accept trusted peers under either data-port client-auth setting; handshake success is not cluster membership. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
-| verify-sentinel-tls: 26379 must reject plaintext RESP, require client certificates and Redis credentials, and restore discovery with both; outgoing TLS/failover need separate topology evidence. | Redis documentation unknown; Redis HA source 8.10.1 | REASONED |
-| verify-peer-name: Same-CA bus certificates both pass without name restriction; enabled enforcement rejects wrong SAN/CN and accepts matching identity. Build warnings/readback alone are insufficient. | Redis HA source 8.10.1 | REASONED |
-| verify-outbound-name: Force new replication connections: wrong-name server works unrestricted, fails with explicit name-verification evidence when restricted, then recovers with matching certificate/canary. | Redis HA source 8.10.1; Redis documentation unknown | REASONED |
-| valkey: Valkey shares requirepass/ACL/TLS concepts; verify its version-specific syntax. Redis HA findings and limitations have not been established for Valkey. | Valkey documentation unknown | REASONED |
-| local-sentinel: Historical Sentinel shell parsing and invalid-input rejection tested local dispatch only, not Redis behavior. | Redis documentation unknown | DEMONSTRATED |
+Components (recorded basis):
+
+- docs: Redis documentation, unknown
+- r60: Redis configuration, 6.0.20
+- r62: Redis configuration, 6.2.14
+- r620: Redis configuration, 6.2.0
+- r70: Redis configuration, 7.0.15
+- r82: Redis configuration, 8.2.1
+- r86: Redis configuration, 8.6.0
+- ha: Redis HA source, 8.10.1
+- image: Redis image source, 584feaab6cd12a77866c121beff1bb16ff239486
+- image8: Redis image tag, v8.10.2
+- r74: Redis compiled defaults, 7.4.8
+- r8102: Redis compiled defaults, 8.10.2
+- valkey: Valkey documentation, unknown
+- release-notes: Redis release notes, unknown
+
+Claims (full source mapping in the front matter):
+
+- baseline (REASONED; docs, r60): Redis 6.0+ supplies TLS and ACLs; TLS needs TLS-enabled server/client builds. Restrict bind and credentials before remote access.
+- optional-bind (REASONED; r62, r60): Redis 6.2+ -::1 makes an absent interface optional, not an occupied address; Redis 6.0 uses plain loopback binding.
+- protected-mode (REASONED; r60, r62, r70): 6.0/6.2 protected mode requires default nopass and no explicit bind; 7.0 drops the bind condition. Explicit wildcard bind can expose passwordless 6.x.
+- image-protected (REASONED; image, image8): Pinned 6.2-7.4 images and the checked 8.x tag patch protected-mode to no and run redis-server without a config; publish privately with explicit credentials.
+- compiled-bind (REASONED; r74, r8102): 7.4.8/8.10.2 compiled bind is * -::*; IPv6 wildcard applies where available.
+- compiled-user (REASONED; r74, r8102, r82): Checked 7.4.8/8.10.2 default users are on nopass +@all; disabled DEBUG/MODULE commands remain disabled.
+- password (REASONED; docs): requirepass supplies one shared AUTH password; prefer separate least-privilege ACL identities.
+- keyless (REASONED; docs): ~app:* constrains key arguments, not keyless commands: write categories include global flush/swap and 7+ FUNCTION writes; reads include keyspace walking.
+- allowlist (REASONED; docs): Removing flushall/flushdb/swapdb removes only those commands; replace broad grants with reset and explicit required commands such as GET/SET.
+- default-user (REASONED; docs): Default starts on nopass ~* +@all, adding &amp;* from 6.2; secure or disable it only after named clients/admin work; existing sessions survive.
+- mfa (REASONED; docs): Redis has no second-factor dialogue; mutual TLS adds machine possession alongside passwords, not human MFA.
+- cert-user (REASONED; r86, release-notes): Redis 8.6+ tls-auth-clients-user defaults off; enabling it can authenticate without passwords. Keep off for these NOAUTH checks and omit the unknown directive on older releases.
+- reset (REASONED; docs): ACL SETUSER changes users incrementally and applies rules left-to-right; reset removes old grants/passwords and, on 7+, selectors.
+- channel-default (REASONED; r82, docs): resetchannels needs 6.2+; 6.0 lacks channel ACLs. Redis 6.2 default allchannels became resetchannels in 7.0.
+- inline-persistence (REASONED; docs): CONFIG REWRITE persists inline users only with a writable startup configuration and OK; it also rewrites other runtime settings.
+- acl-file (REASONED; r82, docs): External aclfile excludes inline users and requirepass; ACL SAVE persists, ACL LOAD replaces, invalid loads retain old policy, and CONFIG REWRITE does not save ACLs.
+- revocation (REASONED; docs): Disabling a user blocks new auth but CLIENT KILL USER closes existing sessions; password replacement also needs forced reconnect and persistence.
+- directional-keys (REASONED; docs): Redis 7+ %R~/%W~ separate read/write key access; commands still need grants and broader ~ patterns can defeat separation.
+- channels (REASONED; docs): Channel patterns are independent of keys; reset then allow required channels/commands. PSUBSCRIBE patterns must literally match an allowed pattern.
+- scripting (REASONED; docs): Subtract admin/dangerous/scripting after grants; SCRIPT/FUNCTION removal alone misses execution commands. Omit FUNCTION on 6.x and rebuild unknown selectors first.
+- startup-commands (REASONED; r82): Redis 7+ enable-debug-command and enable-module-command default no in the pin; local/yes and startup-loaded modules still require ACL review.
+- renaming (REASONED; docs): rename-command is deprecated; use ACL command restrictions.
+- tls-listener (REASONED; docs, r82): port 0 removes plaintext while tls-port 6379 serves TLS with configured CA/certificate/key; set mutual TLS for certificate-capable clients.
+- tls-cert-default (REASONED; ha): tls-auth-clients defaults yes; this guide's initial no removes client-certificate requirements, including incoming replicas, not the TLS cluster bus.
+- cli (REASONED; docs): Use CA trust, --user and masked --askpass with history disabled; GET app:probe is allowed while PING is not granted to app.
+- verify-listeners (REASONED; r82): Inventory all listeners; only intended loopback/private addresses pass, and socket errors establish nothing.
+- verify-plaintext (REASONED; docs): Any plaintext RESP reply proves plaintext availability; TLS-only 6379 must close/reset plaintext while TLS reaches the same endpoint.
+- verify-noauth (REASONED; docs): Secured default produces NOAUTH over TLS, exposed nopass produces PONG; certificate failures precede this test, and authenticated GET is the positive control.
+- verify-acl (REASONED; docs): Read effective users including selectors/passwords without publishing hashes; app GET succeeds and CONFIG GET bind returns NOPERM, not NOAUTH or unknown command.
+- verify-acl-log (REASONED; docs, r82): Correlate denied CONFIG with user and age in ACL LOG; preserve events before resets, and bounded in-memory emptiness proves no absence of failures.
+- verify-direction (REASONED; docs): Redis 7+ DRYRUN allows input reads/output writes/allowed publication and denies reverse access/unrelated publication; it does not execute or prove authentication.
+- verify-persistence (REASONED; docs): Repeat policy and permissions after restart; runtime-only changes revert. Retired users must lose old sessions and fail fresh auth.
+- replication-auth (REASONED; docs, ha): Use PING/REPLCONF/PSYNC-only replication users and masteruser/masterauth on every potential primary; outbound credentials do not protect incoming access or limit the stream by key.
+- sentinel-default (REASONED; ha): Sentinel normally listens on 26379 with protected mode disabled and no active auth rule; data-port protection does not protect it.
+- sentinel-auth (REASONED; docs, ha): Password-only Sentinel auth applies throughout 6.0+; ACLs require 6.2+. Provision separate peer/admin and narrow discovery identities; do not combine the two arrangements.
+- sentinel-announcement (REASONED; ha): Private bind and network policy restrict Sentinel; announce-ip/port only publish discovery information. Password-only peers share a distinct Sentinel password.
+- monitor-auth (REASONED; ha): Sentinel monitored-server credentials start unset and differ from peer credentials; provision every potential primary/replica.
+- monitor-acl (REASONED; docs, ha): Monitored-server ACLs require 6.0+, channel isolation 6.2+; the 8.10.1-reviewed operational policy permits only __sentinel__:hello publication/subscription.
+- cluster-bus (REASONED; docs): Opt-in cluster adds a binary bus, normally data port+10000 (16379); data RESP AUTH is not a bus gate. Restrict node and client paths separately.
+- cluster-announcement (REASONED; ha): 8.10.1 cluster-port selects the bus listener; announce fields are not firewalls. TLS offset uses tls-port; binds and remapped advertisements must agree.
+- ha-tls (REASONED; docs, ha): Client TLS does not enable outgoing replication or cluster TLS; tls-replication and tls-cluster default disabled and must be configured separately.
+- outgoing-cert (REASONED; r60, r620): Outgoing TLS normally reuses the server certificate; separate tls-client-cert/key need 6.2+. Older builds require one dual-purpose certificate and reject unknown directives.
+- bus-cert (REASONED; ha): The TLS cluster bus always requires a trusted peer certificate, independently of data-port tls-auth-clients.
+- sentinel-tls (REASONED; ha): Sentinel tls-port independently creates incoming TLS; tls-replication selects outgoing data/peer TLS and default TLS-port advertisement; explicit announce-port overrides it.
+- peer-name (REASONED; ha, release-notes): Redis 8.10+ tls-expected-peer-name defaults unset; it adds shared trust-group identity to outgoing replication/bus/MIGRATE and incoming bus, not node-ID binding.
+- peer-limits (REASONED; ha): TLS_NO_PEER_NAME_VERIFICATION builds warn and skip name enforcement; 8.10.1 Sentinel's outgoing hiredis path does not apply this check; use a dedicated trust boundary.
+- verify-replication (REASONED; ha, docs): Wrong/missing replica credentials must fail; correct auth restores link and fresh canary transfer. Test replica incoming auth and repeat through promotion.
+- verify-replication-acl (REASONED; docs): Redis 7+ DRYRUN PSYNC permits replication and denies app; synchronization and promotion require separate runtime tests.
+- verify-sentinel (REASONED; docs, ha): Uncredentialed discovery returns endpoint exposed and NOAUTH secured; discovery credentials restore it but administrative commands get NOPERM. Peer announcements alone prove no communication.
+- verify-monitor (REASONED; docs, ha): sentinel-monitor permits PING but denies GET/unrelated publication; wrong auth-pass stops monitoring, correct credentials restore it, including after promotion.
+- verify-bus (REASONED; docs, ha): Compare actual bus TCP access from forbidden and allowed locations; only forbidden access must fail. CLUSTER NODES announcements and listener evidence complement reachability.
+- verify-replication-tls (REASONED; ha, docs): Correlate TLS-only primary listener, replica connection to that port and a fresh replicated canary; link status or a separate TLS probe alone proves no encryption.
+- verify-replica-cert (REASONED; docs, ha): Without automatic certificate-user auth, missing client cert must fail TLS and trusted cert reach NOAUTH; with tls-auth-clients no both reach NOAUTH.
+- verify-bus-cert (REASONED; ha, docs): TLS 1.2 bus probes reject absent/untrusted certificates and accept trusted peers under either data-port client-auth setting; handshake success is not cluster membership.
+- verify-sentinel-tls (REASONED; docs, ha): 26379 must reject plaintext RESP, require client certificates and Redis credentials, and restore discovery with both; outgoing TLS/failover need separate topology evidence.
+- verify-peer-name (REASONED; ha): Same-CA bus certificates both pass without name restriction; enabled enforcement rejects wrong SAN/CN and accepts matching identity. Build warnings/readback alone are insufficient.
+- verify-outbound-name (REASONED; ha, docs): Force new replication connections: wrong-name server works unrestricted, fails with explicit name-verification evidence when restricted, then recovers with matching certificate/canary.
+- valkey (REASONED; valkey): Valkey shares requirepass/ACL/TLS concepts; verify its version-specific syntax. Redis HA findings and limitations have not been established for Valkey.
+- local-sentinel (DEMONSTRATED; docs): Historical Sentinel shell parsing and invalid-input rejection tested local dispatch only, not Redis behavior.
 <!-- version-basis:end -->
 
 Redis trusts its network by design, so the network boundary and credentials are your job. An exposed unauthenticated Redis leaks its data, and historic attack tooling has also used the CONFIG command against open instances to write files and take over hosts. Applies to Redis 6.0 and later for TLS and ACLs; the server and client must be built with TLS support. Additional controls below carry their minimum versions. See the [Redis security](https://redis.io/docs/latest/operate/oss_and_stack/management/security/) and [TLS documentation](https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/).

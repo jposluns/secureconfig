@@ -129,52 +129,58 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| lifecycle: Community repository was archived 2026-04-25 and receives no fixes; guide settings target AIStor Free/Enterprise and call for migration. | AIStor documentation unknown; MinIO console source f0b91e5504663c4672da451877857b57c3345295 | REASONED |
-| root-files: Root credentials come from protected regular 0600 files without whitespace/newlines; set only *_FILE paths, remove overriding direct values and start a fresh process. | AIStor documentation unknown | REASONED |
-| root-default: Without direct credentials or files, root defaults minioadmin/minioadmin; root is administrative and applications need scoped keys. | AIStor documentation unknown | REASONED |
-| tls: public.crt/private.key under HOME/.minio/certs or certs-dir enable HTTPS; clients trust the CA without disabling verification. | AIStor documentation unknown | REASONED |
-| api-bind: API address defaults :9000 across IPv4/IPv6 interfaces; bind explicit loopback/private and expose only intended TLS endpoints. | AIStor documentation unknown | REASONED |
-| console-bind: Console address is independent of API binding; unset chooses a logged dynamic port and a hostless address binds wildcard; set explicit private host/port. | AIStor documentation unknown; MinIO console source f0b91e5504663c4672da451877857b57c3345295 | REASONED |
-| anonymous: Buckets are private unless policy grants access; inspect complete anonymous JSON including uploads, prefixes and conditions, independently of identity policies. | AIStor documentation unknown | REASONED |
-| console-disable: MINIO_BROWSER=off disables embedded Console after restart on every node; disabling browser redirection alone does not. | AIStor documentation unknown | REASONED |
-| concurrency: Automatic API budget follows RAM; REQUESTS_MAX is cluster-wide concurrent S3/admin requests divided among nodes, not RPS or connections; 64 is only an illustrative choice. | AIStor documentation unknown | REASONED |
-| builtin-policies: readonly/writeonly cover deployment-wide object operations; readwrite grants all S3 actions, consoleAdmin adds admin access, and readonly does not list buckets. | AIStor documentation unknown | REASONED |
-| parent: Create a non-root app parent in Console with narrow user/group grants; documented mc admin user add requires a positional secret. | AIStor documentation unknown | REASONED |
-| policy: Custom app policy grants location/list plus object read/write for one bucket, without deletion/admin; remove unused actions and avoid replacing an existing policy inadvertently. | AIStor documentation unknown | REASONED |
-| access-key: Create an explicit-parent generated key with 24h expiry and protected output; inline policy only restricts inherited rights and is limited to 4096 bytes; rotate before expiry. | AIStor documentation unknown | REASONED |
-| alias: Alias import reads protected JSON from stdin; protect imported and mc configuration credentials, and prove authentication with a signed operation. | AIStor documentation unknown | REASONED |
-| oidc-role: RoleArn mapping assigns configured policies to every admitted identity using the role; choose a narrow existing role policy. | AIStor documentation unknown | REASONED |
-| oidc-claim: Claim mapping uses IdP-controlled policy names; role_policy and claim_name are mutually exclusive, named suffixes are case-sensitive, and only one provider can use claim mapping. | AIStor documentation unknown | REASONED |
-| oidc-unmapped: Unmapped identities gain no identity-based access, but anonymous bucket grants still apply. | AIStor documentation unknown | REASONED |
-| sts-duration: WebIdentity explicit DurationSeconds accepts 900-31536000 and can override JWT expiry; MINIO_STS_DURATION is a default, with sts:DurationSeconds available as a policy restriction. | AIStor documentation unknown | REASONED |
-| presign: Presigned URLs are credentials; mc share download defaults seven days, while the example requests five minutes and stores output privately. | AIStor documentation unknown | REASONED |
-| signature-age: Explicit deny for signatureAge above 600000 ms restricts the attached parent identity, not unrelated identities/OIDC/anonymous grants; AIStor behavior is reasoned from supported keys and AWS semantics. | AIStor documentation unknown; AWS signature-condition semantics unknown | REASONED |
-| kms: SSE-S3 uses the default external key and SSE-KMS selects a key; configure MinIO KMS endpoint/enclave/key/API key with trusted CA before restarting. | AIStor documentation unknown | REASONED |
-| kes: Legacy KES supports third-party KMS; use certificate/key together with CAPATH, mutually exclusive with KES API key and with MinIO KMS configuration. | AIStor documentation unknown | REASONED |
-| auto-encryption: AUTO_ENCRYPTION defaults on only with a configured key manager and encrypts new writes using SSE-KMS; off needs explicit bucket encryption. | AIStor documentation unknown | REASONED |
-| bucket-encryption: mc encrypt set selects SSE-KMS key or SSE-S3 default; settings affect subsequent writes, not historical objects or versions. | AIStor documentation unknown | REASONED |
-| backend-encryption: Enabling SSE encrypts IAM/configuration backend data irreversibly; startup depends on retained backend key and key-manager access, regardless of automatic object encryption. | AIStor documentation unknown | REASONED |
-| object-lock: New bucket with-lock enables versioning but no retention duration; AIStor RELEASE.2025-05-20T20-30-00Z+ can retrofit existing versioned buckets, not through Console. | AIStor documentation unknown | REASONED |
-| retention-modes: GOVERNANCE permits authorized bypass; COMPLIANCE prevents protected-version deletion even by root until expiry. Remove bypass permission from application identities. | AIStor documentation unknown | REASONED |
-| retention-default: Default retention ignores other flags including recursive and governs new objects without overrides; explicitly protect historical version IDs and inspect retain-until dates. | AIStor documentation unknown | REASONED |
-| legal-hold: Legal hold is indefinite and requires PutObjectLegalHold to set/lift; both hold release and retention expiry are needed when combined. | AIStor documentation unknown | REASONED |
-| delete-marker: Ordinary deletes can hide retained versions behind a delete marker; verify exact version IDs. | AIStor documentation unknown | REASONED |
-| audit-default: No audit destination is enabled by default; publish sensitive records to independently protected remote storage. | AIStor documentation unknown | REASONED |
-| audit-webhook: Enable HTTPS webhook with authentication value supplied verbatim, certificate verification and persistent audit queue; restart every node. | AIStor documentation unknown | REASONED |
-| audit-kafka: Kafka TLS defaults off; explicitly enable verified TLS and supported SASL with topic-scoped credentials; example PLAIN is only over TLS. | AIStor documentation unknown | REASONED |
-| audit-queue: Persistent per-node queue needs service read/write/list access; delivery retries can lose events when full, and webhook 2xx proves acknowledgement rather than durability. | AIStor documentation unknown | REASONED |
-| verify-exposure: Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls. | AIStor documentation unknown | REASONED |
-| verify-scope: Root reads both known private fixtures; app reads/writes its own bucket but cannot read the other after anonymous grants are excluded. | AIStor documentation unknown | REASONED |
-| verify-encryption: New ordinary write must succeed with intended SSE/key metadata versus a successful unencrypted control; bucket info alone proves no historical-object state. | AIStor documentation unknown | REASONED |
-| verify-retention: Under the same root identity, unlocked exact-version deletion succeeds and COMPLIANCE-protected deletion fails while that version and future retention remain readable. | AIStor documentation unknown | REASONED |
-| verify-audit: Correlate successful write/read and denied read with persisted receiver events and durability; S3 success or webhook acknowledgement alone proves no stored audit. | AIStor documentation unknown | REASONED |
-| verify-oidc: Fresh mapped STS credentials must read only the app fixture versus a broad-policy control; also test an unmapped identity and explicit duration beyond shorter JWT/default. | AIStor documentation unknown | REASONED |
-| verify-url-expiry: Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial. | AIStor documentation unknown | REASONED |
-| verify-signature-age: One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors. | AIStor documentation unknown; AWS signature-condition semantics unknown | REASONED |
-| verify-console: After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available. | AIStor documentation unknown | REASONED |
-| verify-concurrency: Four-node budget 64 should constrain admission to 16 per node under saturating signed load; compare measured inflight/waiting metrics with automatic sizing, not RPS or a guessed rejection code. | AIStor documentation unknown | REASONED |
+Components (recorded basis):
+
+- aistor: AIStor documentation, unknown
+- console: MinIO console source, f0b91e5504663c4672da451877857b57c3345295
+- aws: AWS signature-condition semantics, unknown
+
+Claims (full source mapping in the front matter):
+
+- lifecycle (REASONED; aistor, console): Community repository was archived 2026-04-25 and receives no fixes; guide settings target AIStor Free/Enterprise and call for migration.
+- root-files (REASONED; aistor): Root credentials come from protected regular 0600 files without whitespace/newlines; set only *_FILE paths, remove overriding direct values and start a fresh process.
+- root-default (REASONED; aistor): Without direct credentials or files, root defaults minioadmin/minioadmin; root is administrative and applications need scoped keys.
+- tls (REASONED; aistor): public.crt/private.key under HOME/.minio/certs or certs-dir enable HTTPS; clients trust the CA without disabling verification.
+- api-bind (REASONED; aistor): API address defaults :9000 across IPv4/IPv6 interfaces; bind explicit loopback/private and expose only intended TLS endpoints.
+- console-bind (REASONED; aistor, console): Console address is independent of API binding; unset chooses a logged dynamic port and a hostless address binds wildcard; set explicit private host/port.
+- anonymous (REASONED; aistor): Buckets are private unless policy grants access; inspect complete anonymous JSON including uploads, prefixes and conditions, independently of identity policies.
+- console-disable (REASONED; aistor): MINIO_BROWSER=off disables embedded Console after restart on every node; disabling browser redirection alone does not.
+- concurrency (REASONED; aistor): Automatic API budget follows RAM; REQUESTS_MAX is cluster-wide concurrent S3/admin requests divided among nodes, not RPS or connections; 64 is only an illustrative choice.
+- builtin-policies (REASONED; aistor): readonly/writeonly cover deployment-wide object operations; readwrite grants all S3 actions, consoleAdmin adds admin access, and readonly does not list buckets.
+- parent (REASONED; aistor): Create a non-root app parent in Console with narrow user/group grants; documented mc admin user add requires a positional secret.
+- policy (REASONED; aistor): Custom app policy grants location/list plus object read/write for one bucket, without deletion/admin; remove unused actions and avoid replacing an existing policy inadvertently.
+- access-key (REASONED; aistor): Create an explicit-parent generated key with 24h expiry and protected output; inline policy only restricts inherited rights and is limited to 4096 bytes; rotate before expiry.
+- alias (REASONED; aistor): Alias import reads protected JSON from stdin; protect imported and mc configuration credentials, and prove authentication with a signed operation.
+- oidc-role (REASONED; aistor): RoleArn mapping assigns configured policies to every admitted identity using the role; choose a narrow existing role policy.
+- oidc-claim (REASONED; aistor): Claim mapping uses IdP-controlled policy names; role_policy and claim_name are mutually exclusive, named suffixes are case-sensitive, and only one provider can use claim mapping.
+- oidc-unmapped (REASONED; aistor): Unmapped identities gain no identity-based access, but anonymous bucket grants still apply.
+- sts-duration (REASONED; aistor): WebIdentity explicit DurationSeconds accepts 900-31536000 and can override JWT expiry; MINIO_STS_DURATION is a default, with sts:DurationSeconds available as a policy restriction.
+- presign (REASONED; aistor): Presigned URLs are credentials; mc share download defaults seven days, while the example requests five minutes and stores output privately.
+- signature-age (REASONED; aistor, aws): Explicit deny for signatureAge above 600000 ms restricts the attached parent identity, not unrelated identities/OIDC/anonymous grants; AIStor behavior is reasoned from supported keys and AWS semantics.
+- kms (REASONED; aistor): SSE-S3 uses the default external key and SSE-KMS selects a key; configure MinIO KMS endpoint/enclave/key/API key with trusted CA before restarting.
+- kes (REASONED; aistor): Legacy KES supports third-party KMS; use certificate/key together with CAPATH, mutually exclusive with KES API key and with MinIO KMS configuration.
+- auto-encryption (REASONED; aistor): AUTO_ENCRYPTION defaults on only with a configured key manager and encrypts new writes using SSE-KMS; off needs explicit bucket encryption.
+- bucket-encryption (REASONED; aistor): mc encrypt set selects SSE-KMS key or SSE-S3 default; settings affect subsequent writes, not historical objects or versions.
+- backend-encryption (REASONED; aistor): Enabling SSE encrypts IAM/configuration backend data irreversibly; startup depends on retained backend key and key-manager access, regardless of automatic object encryption.
+- object-lock (REASONED; aistor): New bucket with-lock enables versioning but no retention duration; AIStor RELEASE.2025-05-20T20-30-00Z+ can retrofit existing versioned buckets, not through Console.
+- retention-modes (REASONED; aistor): GOVERNANCE permits authorized bypass; COMPLIANCE prevents protected-version deletion even by root until expiry. Remove bypass permission from application identities.
+- retention-default (REASONED; aistor): Default retention ignores other flags including recursive and governs new objects without overrides; explicitly protect historical version IDs and inspect retain-until dates.
+- legal-hold (REASONED; aistor): Legal hold is indefinite and requires PutObjectLegalHold to set/lift; both hold release and retention expiry are needed when combined.
+- delete-marker (REASONED; aistor): Ordinary deletes can hide retained versions behind a delete marker; verify exact version IDs.
+- audit-default (REASONED; aistor): No audit destination is enabled by default; publish sensitive records to independently protected remote storage.
+- audit-webhook (REASONED; aistor): Enable HTTPS webhook with authentication value supplied verbatim, certificate verification and persistent audit queue; restart every node.
+- audit-kafka (REASONED; aistor): Kafka TLS defaults off; explicitly enable verified TLS and supported SASL with topic-scoped credentials; example PLAIN is only over TLS.
+- audit-queue (REASONED; aistor): Persistent per-node queue needs service read/write/list access; delivery retries can lose events when full, and webhook 2xx proves acknowledgement rather than durability.
+- verify-exposure (REASONED; aistor): Anonymous service/bucket/object reads must be denied at MinIO with known fixtures; full policy review and actual console-port external probes are independent controls.
+- verify-scope (REASONED; aistor): Root reads both known private fixtures; app reads/writes its own bucket but cannot read the other after anonymous grants are excluded.
+- verify-encryption (REASONED; aistor): New ordinary write must succeed with intended SSE/key metadata versus a successful unencrypted control; bucket info alone proves no historical-object state.
+- verify-retention (REASONED; aistor): Under the same root identity, unlocked exact-version deletion succeeds and COMPLIANCE-protected deletion fails while that version and future retention remain readable.
+- verify-audit (REASONED; aistor): Correlate successful write/read and denied read with persisted receiver events and durability; S3 success or webhook acknowledgement alone proves no stored audit.
+- verify-oidc (REASONED; aistor): Fresh mapped STS credentials must read only the app fixture versus a broad-policy control; also test an unmapped identity and explicit duration beyond shorter JWT/default.
+- verify-url-expiry (REASONED; aistor): Same five-minute URL succeeds immediately and fails after six minutes while a new URL works; protect URL stdin and correlate AIStor denial.
+- verify-signature-age (REASONED; aistor, aws): One-hour URL should work after eleven minutes without age denial, fail then with the policy, and still work fresh; exclude expiry and transport errors.
+- verify-console (REASONED; aistor): After BROWSER=off restart, verify effective setting, absent Console listener and successful S3 read; redirect-only disablement leaves direct UI available.
+- verify-concurrency (REASONED; aistor): Four-node budget 64 should constrain admission to 16 per node under saturating signed load; compare measured inflight/waiting metrics with automatic sizing, not RPS or a guessed rejection code.
 <!-- version-basis:end -->
 
 MinIO serves S3-compatible object storage; an exposed instance with weak or well-known credentials hands over every bucket. Both the S3 API port and the web console need the same care.
