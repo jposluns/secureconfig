@@ -52,13 +52,9 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
-| 1.232 | `mfa.md`: push-matching, webauthn-recovery and verify-offboarding: source verified push, the administrator second-hardware-key preference and operator alert, and app-level authorization revocation; map the sections of the NIST SP 800-63B-4 document already in Sources (the cited URL targets section 3.1.2) to the portions they support (citation-location maintenance, not missing support): section 3.1.3 for the authentication-fatigue rationale for secret transfer, section 3.2.5 for the non-phishing-resistance of OTP and out-of-band authenticators, sections 3.1.3.1 and 3.1.3.3 for the email prohibition and PSTN restriction, sections 4.2.1.1 and 4.2.3 for recovery-code throttling and recovery notification, and section 4.5 for invalidation of enrolled authenticators when the subscriber no longer meets eligibility requirements. (M, M) | `[gap]` |
 | 1.233 | `mfa.md`: admin-factors and authelia-factors: cite administrator policy and Authelia passkey behaviour. (M, M) | `[gap]` |
 | 1.234 | `mfa.md`: webauthn-library and unattended-mtls: cite library and mTLS deployment behaviour or label guidance as assessment. (M, M) | `[gap]` |
 | 1.235 | `mfa.md`: verify-recovery-history: cite the recovery-code scan behaviour. (M, M) | `[gap]` |
-| 1.236 | `identity-providers.md`: auth0-passkey-policy and admin-passkeys: cite Auth0/passkey tiers, password disablement and WebAuthn policy behaviour. (M, M) | `[gap]` |
-| 1.237 | `identity-providers.md`: entra-every-signin and application-allowlist: cite Entra Conditional Access and Google/Microsoft application allowlists. (M, M) | `[gap]` |
-| 1.238 | `identity-providers.md`: firebase-data-policy and github-proxy-workloads: cite Firebase Rules and GitHub Actions OIDC behaviour. (M, M) | `[gap]` |
 | 1.239 | `identity-providers.md`: google-org-mfa: pin the remaining OIDC pricing claim while preserving the cited 2SV enforcement scope. (M, M) | `[gap]` |
 | 1.240 | `identity-providers.md`: self-hosted-mfa: cite maintenance expectations for Keycloak, authentik and Ory beyond their already pinned factor behaviour. (M, M) | `[gap]` |
 | 1.241 | `oidc-integration.md`: client-secret-storage: pin a secret-storage reference for the client-secret handling claim. (M, M) | `[gap]` |
