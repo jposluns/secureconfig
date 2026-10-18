@@ -58,8 +58,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.239 | `identity-providers.md`: google-org-mfa: pin the remaining OIDC pricing claim while preserving the cited 2SV enforcement scope. (M, M) | `[gap]` |
 | 1.240 | `identity-providers.md`: self-hosted-mfa: cite maintenance expectations for Keycloak, authentik and Ory beyond their already pinned factor behaviour. (M, M) | `[gap]` |
 | 1.241 | `oidc-integration.md`: client-secret-storage: pin a secret-storage reference for the client-secret handling claim. (M, M) | `[gap]` |
-| 1.244 | `self-hosted-idp.md`: authentik-mfa and outpost-boundaries: cite authentik factor/flow binding and outpost listeners. (M, M) | `[gap]` |
-| 1.245 | `self-hosted-idp.md`: verify-authentik-routes and idp-maintenance: cite replacement-route and maintenance behaviour. (M, M) | `[gap]` |
 | 1.246 | `php.md`: plain-auth: pin plain-PHP throttling and MFA mechanisms or label the recommendation as guide advice. (M, M) | `[gap]` |
 | 1.247 | `frontend-frameworks.md`: svelte-handle: establish layout coverage, every-request hook and calling-page metadata qualifications from SvelteKit source. (M, M) | `[gap]` |
 | 1.248 | `frontend-frameworks.md`: verify-host: source non-Vite Host allowlists and platform behaviour not established by the pinned SvelteKit/Nuxt paths. (M, M) | `[gap]` |
