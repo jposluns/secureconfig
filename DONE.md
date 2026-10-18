@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.251 | `admin-uis.md`: private: source RedisInsight private/NAT-without-host-listener behaviour. (M, M) | Done, #654. Cited RedisInsight defaults and authentication-code limits plus Docker publication and proxy sources, retained the host-listener gap as assessment, and removed the unsupported RedisInsight two-200 assertion. |
 | 1.253 | `server-admin-panels.md`: pin Proxmox bind/LISTEN_IP/access-list behaviour as one versioned conjunction. (M, M) | Done, #653. Pinned the Proxmox bind and shared access-list implementation with dependency bounds, documenting the IPv4 fallback, residual runtime gap and guide assessments. |
 | 1.246 | `php.md`: plain-auth: pin plain-PHP throttling and MFA mechanisms or label the recommendation as guide advice. (M, M) | Done, #651. Labelled plain-PHP throttling and MFA choices as guide advice, narrowed the PHP assessment, pinned fail2ban log-based mechanics, and retained application-filter and PHP TOTP-library gaps. |
 | 1.249 | `web-exposure.md`: apache-listing: cite Debian/Ubuntu Apache defaults and index-list behaviour. (M, M) | Done, #652. Cited Debian 2.4.69-1 listing defaults and the exact index list, retaining Ubuntu packaging as unchecked. |
