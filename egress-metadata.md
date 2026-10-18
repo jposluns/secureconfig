@@ -130,35 +130,48 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| aws-endpoints: IMDS uses 169.254.169.254 and, on Nitro in IPv6-enabled subnets, [fd00:ec2::254]; block or verify-disabled both paths. | AWS metadata and networking unknown | REASONED |
-| aws-token: IMDSv2 requires a PUT-issued session token on subsequent GETs; required tokens make missing/invalid-token requests return 401. | AWS metadata and networking unknown | REASONED |
-| hop-default: PUT response hop limit is often 1, but launch/account/Region options and ImdsSupport: v2.0 AMIs can make it 2; set it explicitly. | AWS metadata and networking unknown | REASONED |
-| hop-control: Set required tokens, hop limit 1 and endpoint enabled; a container an extra routing hop away cannot receive the token, but this does not exclude every proxy path. | AWS metadata and networking unknown | REASONED |
-| aws-ipv6: The modify command leaves HttpProtocolIpv6 unchanged; IPv6 IMDS defaults disabled. If deliberately enabled, block and probe it too. | AWS metadata and networking unknown | REASONED |
-| gcp-header: GCP metadata uses metadata.google.internal or 169.254.169.254, requires Metadata-Flavor: Google and stays on the physical host. | Google Cloud metadata and firewall unknown | REASONED |
-| gcp-ipv6: IPv6-only GCP instances also expose metadata at [fd20:ce::254]; include it in workload restrictions. | Google Cloud metadata and firewall unknown | REASONED |
-| azure-header: Azure IMDS is VM-local at 169.254.169.254, requires Metadata: true and rejects X-Forwarded-For; the example instance API uses 2025-04-07. | Azure IMDS API 2025-04-07 | REASONED |
-| guest-block: Headers do not stop a fetcher that can add them; use guest/workload metadata restrictions, accounting for DNS use of the address and all enabled IPv6 endpoints. | Google Cloud metadata and firewall unknown; Azure IMDS API 2025-04-07; AWS metadata and networking unknown | REASONED |
-| gcp-firewall: GCP VPC and hierarchical firewall rules do not block metadata-server traffic; use a host firewall, CNI or enforced egress proxy path. | Google Cloud metadata and firewall unknown | REASONED |
-| cloud-egress: AWS security groups and Google Cloud VPC firewalls start with broad outbound allowances; Azure NSGs include outbound allow rules. At the time of writing, the fetched Azure page says subnets in new virtual networks created with API versions released after March 31, 2026, and through the portal default to private; existing virtual networks are unchanged. Those private subnets need explicit outbound connectivity to public endpoints. This guide recommends permitting only DNS and required provider APIs. | AWS metadata and networking unknown; Google Cloud metadata and firewall unknown; Azure network security groups 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f; Azure outbound access unknown | REASONED |
-| aws-groups: Security groups are allow-only and additive across attached groups; remove default allow-all egress and add narrow rules. A subnet network ACL supplies deny rules but is stateless. | AWS metadata and networking unknown | REASONED |
-| aws-metadata-bypass: AWS security groups do not filter 169.254.169.254; use IMDSv2/hop limit or disable unused metadata, keeping egress rules for other destinations. | AWS metadata and networking unknown | REASONED |
-| policy-default: Pod egress is unrestricted until a selecting policy includes Egress; policies add allowances, so audit every selecting policy. | Kubernetes NetworkPolicy unknown | REASONED |
-| policy-limits: NetworkPolicy needs an enforcing CNI and has undefined hostNetwork behaviour; confirm enforcement before relying on it. | Kubernetes NetworkPolicy unknown | REASONED |
-| policy-dns: agent-egress selects app: agent and allows UDP/TCP 53 to kube-system pods labeled k8s-app: kube-dns. | Kubernetes NetworkPolicy unknown | REASONED |
-| policy-api: The API allowance permits TCP 443 to 203.0.113.0/24 as a replaceable destination placeholder. | Kubernetes NetworkPolicy unknown | REASONED |
-| docker-internal: An internal Docker network has no default route out and firewall rules drop external traffic while peer containers communicate. | Docker network create unknown | REASONED |
-| host-owner: Hop limit 1 still permits host processes; this guide recommends OUTPUT owner filtering and matching IPv6 rules. The owner match applies to locally generated packets, not forwarded containers; an nftables equivalent must be in a base chain hooked at the output path, or in a regular chain reached from that base chain by a jump. | AWS metadata and networking unknown; iptables owner match v1.8.13; nftables packet filtering v1.1.7 | REASONED |
-| proxy-bypass: A destination-allowlist proxy controls only traversing traffic; pair it with a direct metadata block and test its path separately. | curl documentation unknown | REASONED |
-| verify-headers: Tokenless AWS must return 401; headerless GCP/Azure must not return metadata. These header checks alone do not demonstrate network isolation. | AWS metadata and networking unknown; Google Cloud metadata and firewall unknown; Azure IMDS API 2025-04-07 | REASONED |
-| verify-token: AWS network checks acquire a token then GET with it, separately over IPv4/IPv6; failed PUT needs enforcement evidence. Token/session reachability is not IAM credential issuance. | AWS metadata and networking unknown; curl documentation unknown | REASONED |
-| verify-provider-paths: Required-header GCP token and Azure instance requests test reachability; any HTTP response means reachable. GCP returns credentials; Azure instance data is separate from managed-identity tokens. | Google Cloud metadata and firewall unknown; Azure IMDS API 2025-04-07 | REASONED |
-| verify-deny: Run positive metadata controls before blocking; http=000 alone is inconclusive. Require no completed connection plus a matching enforcement deny record; metadata is excluded from AWS VPC Flow Logs. | curl documentation unknown; AWS metadata and networking unknown | REASONED |
-| verify-allow: A positive-control bare unauthenticated GET can target any host on this workload's egress allow list; the fetched STS pages document the global endpoint and authentication errors, and that endpoint is one example when allowed. Receiving an HTTP response is this guide's REASONED expectation; the exact status and body of the bare unauthenticated GET are unknown. --noproxy tests direct egress, so proxy allowlists require separate probes. | curl documentation unknown; AWS metadata and networking unknown | REASONED |
-| verify-negative: Known-live disallowed egress must fail: curl success is failure, exit 6 is DNS-inconclusive, and 7/28 need zero time_connect plus correlated deny evidence. | curl documentation unknown | REASONED |
-| verify-options: Read MetadataOptions for required tokens, hop limit 1, intended IPv6 state and State applied rather than pending, then repeat workload probes. | AWS metadata and networking unknown | REASONED |
+Components (recorded basis):
+
+- aws: AWS metadata and networking, unknown
+- gcp: Google Cloud metadata and firewall, unknown
+- azure: Azure IMDS API, 2025-04-07
+- kubernetes: Kubernetes NetworkPolicy, unknown
+- docker: Docker network create, unknown
+- curl: curl documentation, unknown
+- azure-nsg: Azure network security groups, 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f
+- azure-outbound: Azure outbound access, unknown
+- iptables: iptables owner match, v1.8.13
+- nftables: nftables packet filtering, v1.1.7
+
+Claims (full source mapping in the front matter):
+
+- aws-endpoints (REASONED; aws): IMDS uses 169.254.169.254 and, on Nitro in IPv6-enabled subnets, [fd00:ec2::254]; block or verify-disabled both paths.
+- aws-token (REASONED; aws): IMDSv2 requires a PUT-issued session token on subsequent GETs; required tokens make missing/invalid-token requests return 401.
+- hop-default (REASONED; aws): PUT response hop limit is often 1, but launch/account/Region options and ImdsSupport: v2.0 AMIs can make it 2; set it explicitly.
+- hop-control (REASONED; aws): Set required tokens, hop limit 1 and endpoint enabled; a container an extra routing hop away cannot receive the token, but this does not exclude every proxy path.
+- aws-ipv6 (REASONED; aws): The modify command leaves HttpProtocolIpv6 unchanged; IPv6 IMDS defaults disabled. If deliberately enabled, block and probe it too.
+- gcp-header (REASONED; gcp): GCP metadata uses metadata.google.internal or 169.254.169.254, requires Metadata-Flavor: Google and stays on the physical host.
+- gcp-ipv6 (REASONED; gcp): IPv6-only GCP instances also expose metadata at [fd20:ce::254]; include it in workload restrictions.
+- azure-header (REASONED; azure): Azure IMDS is VM-local at 169.254.169.254, requires Metadata: true and rejects X-Forwarded-For; the example instance API uses 2025-04-07.
+- guest-block (REASONED; gcp, azure, aws): Headers do not stop a fetcher that can add them; use guest/workload metadata restrictions, accounting for DNS use of the address and all enabled IPv6 endpoints.
+- gcp-firewall (REASONED; gcp): GCP VPC and hierarchical firewall rules do not block metadata-server traffic; use a host firewall, CNI or enforced egress proxy path.
+- cloud-egress (REASONED; aws, gcp, azure-nsg, azure-outbound): AWS security groups and Google Cloud VPC firewalls start with broad outbound allowances; Azure NSGs include outbound allow rules. At the time of writing, the fetched Azure page says subnets in new virtual networks created with API versions released after March 31, 2026, and through the portal default to private; existing virtual networks are unchanged. Those private subnets need explicit outbound connectivity to public endpoints. This guide recommends permitting only DNS and required provider APIs.
+- aws-groups (REASONED; aws): Security groups are allow-only and additive across attached groups; remove default allow-all egress and add narrow rules. A subnet network ACL supplies deny rules but is stateless.
+- aws-metadata-bypass (REASONED; aws): AWS security groups do not filter 169.254.169.254; use IMDSv2/hop limit or disable unused metadata, keeping egress rules for other destinations.
+- policy-default (REASONED; kubernetes): Pod egress is unrestricted until a selecting policy includes Egress; policies add allowances, so audit every selecting policy.
+- policy-limits (REASONED; kubernetes): NetworkPolicy needs an enforcing CNI and has undefined hostNetwork behaviour; confirm enforcement before relying on it.
+- policy-dns (REASONED; kubernetes): agent-egress selects app: agent and allows UDP/TCP 53 to kube-system pods labeled k8s-app: kube-dns.
+- policy-api (REASONED; kubernetes): The API allowance permits TCP 443 to 203.0.113.0/24 as a replaceable destination placeholder.
+- docker-internal (REASONED; docker): An internal Docker network has no default route out and firewall rules drop external traffic while peer containers communicate.
+- host-owner (REASONED; aws, iptables, nftables): Hop limit 1 still permits host processes; this guide recommends OUTPUT owner filtering and matching IPv6 rules. The owner match applies to locally generated packets, not forwarded containers; an nftables equivalent must be in a base chain hooked at the output path, or in a regular chain reached from that base chain by a jump.
+- proxy-bypass (REASONED; curl): A destination-allowlist proxy controls only traversing traffic; pair it with a direct metadata block and test its path separately.
+- verify-headers (REASONED; aws, gcp, azure): Tokenless AWS must return 401; headerless GCP/Azure must not return metadata. These header checks alone do not demonstrate network isolation.
+- verify-token (REASONED; aws, curl): AWS network checks acquire a token then GET with it, separately over IPv4/IPv6; failed PUT needs enforcement evidence. Token/session reachability is not IAM credential issuance.
+- verify-provider-paths (REASONED; gcp, azure): Required-header GCP token and Azure instance requests test reachability; any HTTP response means reachable. GCP returns credentials; Azure instance data is separate from managed-identity tokens.
+- verify-deny (REASONED; curl, aws): Run positive metadata controls before blocking; http=000 alone is inconclusive. Require no completed connection plus a matching enforcement deny record; metadata is excluded from AWS VPC Flow Logs.
+- verify-allow (REASONED; curl, aws): A positive-control bare unauthenticated GET can target any host on this workload's egress allow list; the fetched STS pages document the global endpoint and authentication errors, and that endpoint is one example when allowed. Receiving an HTTP response is this guide's REASONED expectation; the exact status and body of the bare unauthenticated GET are unknown. --noproxy tests direct egress, so proxy allowlists require separate probes.
+- verify-negative (REASONED; curl): Known-live disallowed egress must fail: curl success is failure, exit 6 is DNS-inconclusive, and 7/28 need zero time_connect plus correlated deny evidence.
+- verify-options (REASONED; aws): Read MetadataOptions for required tokens, hop limit 1, intended IPv6 state and State applied rather than pending, then repeat workload probes.
 <!-- version-basis:end -->
 
 An AI agent, RAG fetcher, or webhook handler that retrieves URLs can be steered by a prompt injection into requesting the cloud metadata endpoint or an internal service instead of the URL it was meant to fetch. Making the fetcher refuse that request is application security; this guide covers the deployment-side backstop, metadata hardening so the endpoint rejects an unqualified request, plus default-deny egress so the request never leaves the workload at all.

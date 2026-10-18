@@ -124,70 +124,76 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| signup: ENABLE_SIGNUP defaults true; disable ordinary registration after accounts exist. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| persistence: ConfigVar database values override environment after first launch unless ENABLE_PERSISTENT_CONFIG=false; default is true. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| roles: DEFAULT_USER_ROLE defaults pending; user auto-approves and admin grants administrative privileges to later registrations. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| first-admin: First account is admin regardless of DEFAULT_USER_ROLE; bootstrap privately or preset admin email/password. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| signup-auto-disable: First normal registration and successful environment admin creation disable signup under normal persisted configuration. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| bootstrap-exception: Empty-database signup bypasses ENABLE_SIGNUP with ENABLE_LOGIN_FORM=true, its default; disabled-form bootstrap needs ENABLE_INITIAL_ADMIN_SIGNUP=true, default false. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| password-auth: ENABLE_PASSWORD_AUTH=false blocks password and trusted-header signin because its check runs first; use for OAuth/OIDC-only login. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| sso-mfa: OAuth/OIDC MFA belongs at the identity provider; ordinary signup refusal does not close alternative provisioning. | Open WebUI documentation (rolling) unknown | REASONED |
-| publication: Publish host 127.0.0.1:3000 to container 8080 with Engine 28.0+; inspect NAT and external reachability as well as ss. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Docker Engine localhost boundary 28.0.0 | REASONED |
-| data-volume: Retain /app/backend/data for accounts/config; lost data reopens first-admin bootstrap, so keep ingress closed until claimed. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| transport: Open WebUI has no native TLS; use a TLS fronting layer and keep authentication enabled behind public access paths. | Open WebUI documentation (rolling) unknown | REASONED |
-| session-cookie: Set WEBUI_SESSION_COOKIE_SECURE=true before HTTPS publication; default is false. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| auth-cookie: WEBUI_AUTH_COOKIE_SECURE inherits the session setting unless overridden; set it true explicitly, since TLS termination alone does not set Secure. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| cookie-test: Issued token and owui-session cookies need Secure/HttpOnly and intended SameSite, lax by default; no issued cookie is inconclusive. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| auth: WEBUI_AUTH defaults true; do not disable it to bypass empty signing-key startup refusal. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| jwt-lifetime: JWT_EXPIRES_IN defaults 4w; 24h is an example finite lifetime. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| signing-key: Inject the same persistent WEBUI_SECRET_KEY into every replica; HS256 signing-key disclosure permits existing-user impersonation. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| key-file: Launcher generates .webui_secret_key only when absent; default /app/backend location is outside the data volume and can be lost on replacement. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| revocation: Without Redis signout does not revoke a copied JWT before expiry; shared revocation needs Redis across workers. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| rotation: WEBUI_JWT_SECRET_KEY is deprecated; signing-key rotation invalidates tokens and affects default OAuth encryption keys. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| key-persistence-test: Unexpired JWT should survive recreation with retained key/data and work across replicas; a changed key rejects it. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| oauth-signup: ENABLE_OAUTH_SIGNUP defaults false and independently controls OAuth provisioning; test new and already-linked identities. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| oauth-domains: OAUTH_ALLOWED_DOMAINS defaults *; set approved domains and test excluded-domain refusal. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| oauth-merge: OAUTH_MERGE_ACCOUNTS_BY_EMAIL defaults false; retain it absent verified-email guarantees. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| oauth-roles: ENABLE_OAUTH_ROLE_MANAGEMENT defaults false; enable only after reviewing role claims. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| oauth-persistence: ENABLE_OAUTH_PERSISTENT_CONFIG defaults false with environment authority/read-only admin UI; enabling persistence permits stored precedence. | Open WebUI documentation (rolling) unknown | REASONED |
-| trusted-headers: Leave identity headers unset unless a sole trusted proxy strips client values and supplies authenticated identity; forged headers can impersonate/provision users. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| plugins: ENABLE_PLUGINS defaults true; uploaded Tools/Functions execute server-side Python, including top-level code at load. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| plugin-scope: Disabling plugins blocks loading/execution, not every management endpoint, built-in tool, MCP/OpenAPI connection or terminal. | Open WebUI documentation (rolling) unknown | REASONED |
-| tools-access: USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS defaults false; ordinary Tool creation depends on workspace.tools, Function creation is administrative. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| tools-import: USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT defaults false; remove unintended import grants from every group. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| code-execution: ENABLE_CODE_EXECUTION defaults true with pyodide engine; disable unused legacy execution independently of server plugins. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| code-interpreter: ENABLE_CODE_INTERPRETER defaults true with pyodide engine; test its own request path separately. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| groups: Group permissions add grants; a false default or another false membership cannot cancel a true grant. | Open WebUI documentation (rolling) unknown | REASONED |
-| model-bypass: BYPASS_MODEL_ACCESS_CONTROL defaults false; keep bypass disabled. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| model-workspace: USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS defaults false and controls creation/editing, not invocation of existing models. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| model-grants: Private models need user/group grants; current payloads use access_grants; permitted completion is the positive control for excluded-user refusal. | Open WebUI documentation (rolling) unknown | REASONED |
-| ollama-admin: Pull/create/copy/delete require admin role, not ENABLE_MODEL_* switches; test ordinary-user refusal, including DELETE /ollama/api/delete, against valid admin controls. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| connections: Pin every backend; initial OpenAI destination is https://api.openai.com/v1, and connection URLs do not enforce network egress. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| direct-connections: ENABLE_DIRECT_CONNECTIONS defaults false; enabling it sends browser-to-provider inference, not server-side SSRF protection. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| admin-chat: ENABLE_ADMIN_CHAT_ACCESS defaults true; disable/restart and test admin list-user refusal while owner access works. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| admin-export: ENABLE_ADMIN_EXPORT defaults true; disable separately and test /api/v1/chats/all/db refusal; operator/database access remains possible. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| community: ENABLE_COMMUNITY_SHARING defaults true; false removes community UI, not all local sharing/export. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| docs: ENV defaults dev in backend and prod in official image; prod removes docs/schema registration, not APIs; inspect content rather than HTTP 200 alone. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| api-keys: ENABLE_API_KEYS defaults false; disabling rejects existing keys without deleting them or disabling JWTs. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| key-permission: API-key permission defaults false; ordinary users need it and global enablement, admins need the global switch; keys inherit owner authority. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| key-routes: Endpoint restrictions default false; allowed exact paths also admit slash descendants and do not constrain methods or vary per key. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| local-fetch: ENABLE_LOCAL_WEB_FETCH defaults false; ENABLE_RAG_LOCAL_WEB_FETCH is its deprecated alias. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| redirects: AIOHTTP_CLIENT_ALLOW_REDIRECTS defaults false; keep redirects disabled and enforce independent egress. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| fetch-filter: WEB_FETCH_FILTER_LIST uses comma-separated allow entries and ! deny entries extending the built-in blocklist. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| web-search: ENABLE_WEB_SEARCH defaults false; disabling should stop controlled search-provider calls. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| file-size: RAG_FILE_MAX_SIZE defaults unset; 10 MB is an example and handler checks after storage upload, so proxy body limits are also needed. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| file-count: RAG_FILE_MAX_COUNT defaults unset; five is an example count, not aggregate storage/request quota. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| file-permission: Chat file-upload permission defaults true; false alone does not block verified-user POST /api/v1/files/, requiring proxy denial when prohibited. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| web-permission: Chat web-upload permission defaults true; false alone does not block web/youtube/url handlers; test each proxy denial with a working fixture. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| search-permission: USER_PERMISSIONS_FEATURES_WEB_SEARCH defaults true; audit every group grant alongside global search disablement. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| signin-rate: Password signin is limited to 15 attempts per 180 seconds per email; this is not an inference quota. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| inference-limits: Apply proxy rate/concurrency and provider/gateway spend limits; under-limit requests work while excess work is refused without provider calls. | Open WebUI documentation (rolling) unknown | REASONED |
-| verify-signup: After bootstrap require disabled feature flag, absent signup option and actual registration refusal; enabled signup should yield pending, not access. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944 | REASONED |
-| verify-network: Actual host port 3000 must not answer from a second LAN/VPC host while trusted HTTPS works; DNS/local errors do not prove isolation. | Docker Engine localhost boundary 28.0.0 | REASONED |
-| verify-ssrf: Compare allowed public, controlled private, filter-denied and redirected destinations using contact/egress logs; failed fetch alone proves no boundary. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
-| recorded-version: Pinned package identifies v0.11.3; the environment reference describes coverage through v0.11.1; introduction versions remain unverified. | Open WebUI 0a7c15832fb30b1903753e83f81dc7d27e5b0944; Open WebUI documentation (rolling) unknown | REASONED |
+Components (recorded basis):
+
+- webui: Open WebUI, 0a7c15832fb30b1903753e83f81dc7d27e5b0944
+- docker: Docker Engine localhost boundary, 28.0.0
+- webui-docs: Open WebUI documentation (rolling), unknown
+
+Claims (full source mapping in the front matter):
+
+- signup (REASONED; webui): ENABLE_SIGNUP defaults true; disable ordinary registration after accounts exist.
+- persistence (REASONED; webui, webui-docs): ConfigVar database values override environment after first launch unless ENABLE_PERSISTENT_CONFIG=false; default is true.
+- roles (REASONED; webui): DEFAULT_USER_ROLE defaults pending; user auto-approves and admin grants administrative privileges to later registrations.
+- first-admin (REASONED; webui): First account is admin regardless of DEFAULT_USER_ROLE; bootstrap privately or preset admin email/password.
+- signup-auto-disable (REASONED; webui, webui-docs): First normal registration and successful environment admin creation disable signup under normal persisted configuration.
+- bootstrap-exception (REASONED; webui): Empty-database signup bypasses ENABLE_SIGNUP with ENABLE_LOGIN_FORM=true, its default; disabled-form bootstrap needs ENABLE_INITIAL_ADMIN_SIGNUP=true, default false.
+- password-auth (REASONED; webui): ENABLE_PASSWORD_AUTH=false blocks password and trusted-header signin because its check runs first; use for OAuth/OIDC-only login.
+- sso-mfa (REASONED; webui-docs): OAuth/OIDC MFA belongs at the identity provider; ordinary signup refusal does not close alternative provisioning.
+- publication (REASONED; webui, docker): Publish host 127.0.0.1:3000 to container 8080 with Engine 28.0+; inspect NAT and external reachability as well as ss.
+- data-volume (REASONED; webui): Retain /app/backend/data for accounts/config; lost data reopens first-admin bootstrap, so keep ingress closed until claimed.
+- transport (REASONED; webui-docs): Open WebUI has no native TLS; use a TLS fronting layer and keep authentication enabled behind public access paths.
+- session-cookie (REASONED; webui): Set WEBUI_SESSION_COOKIE_SECURE=true before HTTPS publication; default is false.
+- auth-cookie (REASONED; webui): WEBUI_AUTH_COOKIE_SECURE inherits the session setting unless overridden; set it true explicitly, since TLS termination alone does not set Secure.
+- cookie-test (REASONED; webui): Issued token and owui-session cookies need Secure/HttpOnly and intended SameSite, lax by default; no issued cookie is inconclusive.
+- auth (REASONED; webui): WEBUI_AUTH defaults true; do not disable it to bypass empty signing-key startup refusal.
+- jwt-lifetime (REASONED; webui): JWT_EXPIRES_IN defaults 4w; 24h is an example finite lifetime.
+- signing-key (REASONED; webui): Inject the same persistent WEBUI_SECRET_KEY into every replica; HS256 signing-key disclosure permits existing-user impersonation.
+- key-file (REASONED; webui): Launcher generates .webui_secret_key only when absent; default /app/backend location is outside the data volume and can be lost on replacement.
+- revocation (REASONED; webui): Without Redis signout does not revoke a copied JWT before expiry; shared revocation needs Redis across workers.
+- rotation (REASONED; webui, webui-docs): WEBUI_JWT_SECRET_KEY is deprecated; signing-key rotation invalidates tokens and affects default OAuth encryption keys.
+- key-persistence-test (REASONED; webui): Unexpired JWT should survive recreation with retained key/data and work across replicas; a changed key rejects it.
+- oauth-signup (REASONED; webui, webui-docs): ENABLE_OAUTH_SIGNUP defaults false and independently controls OAuth provisioning; test new and already-linked identities.
+- oauth-domains (REASONED; webui, webui-docs): OAUTH_ALLOWED_DOMAINS defaults *; set approved domains and test excluded-domain refusal.
+- oauth-merge (REASONED; webui, webui-docs): OAUTH_MERGE_ACCOUNTS_BY_EMAIL defaults false; retain it absent verified-email guarantees.
+- oauth-roles (REASONED; webui, webui-docs): ENABLE_OAUTH_ROLE_MANAGEMENT defaults false; enable only after reviewing role claims.
+- oauth-persistence (REASONED; webui-docs): ENABLE_OAUTH_PERSISTENT_CONFIG defaults false with environment authority/read-only admin UI; enabling persistence permits stored precedence.
+- trusted-headers (REASONED; webui, webui-docs): Leave identity headers unset unless a sole trusted proxy strips client values and supplies authenticated identity; forged headers can impersonate/provision users.
+- plugins (REASONED; webui, webui-docs): ENABLE_PLUGINS defaults true; uploaded Tools/Functions execute server-side Python, including top-level code at load.
+- plugin-scope (REASONED; webui-docs): Disabling plugins blocks loading/execution, not every management endpoint, built-in tool, MCP/OpenAPI connection or terminal.
+- tools-access (REASONED; webui, webui-docs): USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS defaults false; ordinary Tool creation depends on workspace.tools, Function creation is administrative.
+- tools-import (REASONED; webui, webui-docs): USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT defaults false; remove unintended import grants from every group.
+- code-execution (REASONED; webui, webui-docs): ENABLE_CODE_EXECUTION defaults true with pyodide engine; disable unused legacy execution independently of server plugins.
+- code-interpreter (REASONED; webui, webui-docs): ENABLE_CODE_INTERPRETER defaults true with pyodide engine; test its own request path separately.
+- groups (REASONED; webui-docs): Group permissions add grants; a false default or another false membership cannot cancel a true grant.
+- model-bypass (REASONED; webui): BYPASS_MODEL_ACCESS_CONTROL defaults false; keep bypass disabled.
+- model-workspace (REASONED; webui, webui-docs): USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS defaults false and controls creation/editing, not invocation of existing models.
+- model-grants (REASONED; webui-docs): Private models need user/group grants; current payloads use access_grants; permitted completion is the positive control for excluded-user refusal.
+- ollama-admin (REASONED; webui): Pull/create/copy/delete require admin role, not ENABLE_MODEL_* switches; test ordinary-user refusal, including DELETE /ollama/api/delete, against valid admin controls.
+- connections (REASONED; webui, webui-docs): Pin every backend; initial OpenAI destination is https://api.openai.com/v1, and connection URLs do not enforce network egress.
+- direct-connections (REASONED; webui, webui-docs): ENABLE_DIRECT_CONNECTIONS defaults false; enabling it sends browser-to-provider inference, not server-side SSRF protection.
+- admin-chat (REASONED; webui): ENABLE_ADMIN_CHAT_ACCESS defaults true; disable/restart and test admin list-user refusal while owner access works.
+- admin-export (REASONED; webui): ENABLE_ADMIN_EXPORT defaults true; disable separately and test /api/v1/chats/all/db refusal; operator/database access remains possible.
+- community (REASONED; webui, webui-docs): ENABLE_COMMUNITY_SHARING defaults true; false removes community UI, not all local sharing/export.
+- docs (REASONED; webui): ENV defaults dev in backend and prod in official image; prod removes docs/schema registration, not APIs; inspect content rather than HTTP 200 alone.
+- api-keys (REASONED; webui, webui-docs): ENABLE_API_KEYS defaults false; disabling rejects existing keys without deleting them or disabling JWTs.
+- key-permission (REASONED; webui, webui-docs): API-key permission defaults false; ordinary users need it and global enablement, admins need the global switch; keys inherit owner authority.
+- key-routes (REASONED; webui, webui-docs): Endpoint restrictions default false; allowed exact paths also admit slash descendants and do not constrain methods or vary per key.
+- local-fetch (REASONED; webui, webui-docs): ENABLE_LOCAL_WEB_FETCH defaults false; ENABLE_RAG_LOCAL_WEB_FETCH is its deprecated alias.
+- redirects (REASONED; webui, webui-docs): AIOHTTP_CLIENT_ALLOW_REDIRECTS defaults false; keep redirects disabled and enforce independent egress.
+- fetch-filter (REASONED; webui, webui-docs): WEB_FETCH_FILTER_LIST uses comma-separated allow entries and ! deny entries extending the built-in blocklist.
+- web-search (REASONED; webui, webui-docs): ENABLE_WEB_SEARCH defaults false; disabling should stop controlled search-provider calls.
+- file-size (REASONED; webui): RAG_FILE_MAX_SIZE defaults unset; 10 MB is an example and handler checks after storage upload, so proxy body limits are also needed.
+- file-count (REASONED; webui, webui-docs): RAG_FILE_MAX_COUNT defaults unset; five is an example count, not aggregate storage/request quota.
+- file-permission (REASONED; webui): Chat file-upload permission defaults true; false alone does not block verified-user POST /api/v1/files/, requiring proxy denial when prohibited.
+- web-permission (REASONED; webui): Chat web-upload permission defaults true; false alone does not block web/youtube/url handlers; test each proxy denial with a working fixture.
+- search-permission (REASONED; webui, webui-docs): USER_PERMISSIONS_FEATURES_WEB_SEARCH defaults true; audit every group grant alongside global search disablement.
+- signin-rate (REASONED; webui): Password signin is limited to 15 attempts per 180 seconds per email; this is not an inference quota.
+- inference-limits (REASONED; webui-docs): Apply proxy rate/concurrency and provider/gateway spend limits; under-limit requests work while excess work is refused without provider calls.
+- verify-signup (REASONED; webui): After bootstrap require disabled feature flag, absent signup option and actual registration refusal; enabled signup should yield pending, not access.
+- verify-network (REASONED; docker): Actual host port 3000 must not answer from a second LAN/VPC host while trusted HTTPS works; DNS/local errors do not prove isolation.
+- verify-ssrf (REASONED; webui, webui-docs): Compare allowed public, controlled private, filter-denied and redirected destinations using contact/egress logs; failed fetch alone proves no boundary.
+- recorded-version (REASONED; webui, webui-docs): Pinned package identifies v0.11.3; the environment reference describes coverage through v0.11.1; introduction versions remain unverified.
 <!-- version-basis:end -->
 
 Open WebUI has account-based authentication built in; the risks are open signup on an exposed instance and running it on plain HTTP. It provides no TLS of its own, so encryption comes from a fronting layer.

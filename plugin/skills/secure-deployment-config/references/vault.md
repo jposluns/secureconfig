@@ -153,44 +153,54 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| dev: Dev modes, token-helper storage and production config-file startup. | Vault documentation unknown | REASONED |
-| listeners: API/UI 8200, cluster 8201, private bind, advertised addresses and cluster TLS; optional KMIP, Agent and Proxy listeners. | Vault documentation unknown | REASONED |
-| mfa: Login MFA belongs on human auth methods; token auth cannot use it. | Vault documentation unknown | REASONED |
-| raft-tls: Raft node fields, UI disabled, TLS certificate/key/minimum, anonymous monitoring disabled; address/path substitutions only in the recorded run. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| defaults: Listener loopback, TLS enabled, UI disabled and anonymous metrics/profiling disabled are documentation defaults. | Vault documentation unknown | REASONED |
-| seal: Shamir init/unseal prompts, auto-unseal/recovery, Community Transit and Enterprise seal wrapping/HA; key loss and rekey custody. | Vault documentation unknown | REASONED |
-| audit: Enable file and independent syslog auditing, fail-closed availability, HMAC defaults, log_raw, exemptions and SIGHUP rotation. | Vault documentation unknown | REASONED |
-| root: Bootstrap root has unlimited access and no expiry; retire after testing another auth method, remove helper copy, regenerate only by quorum. | Vault documentation unknown | REASONED |
-| cli: Credential prompts, token environment/helper selection and protected stdin/files avoid credential arguments. | Vault documentation unknown | REASONED |
-| policy: Deny-by-default non-root policies, additive grants, KV v2 data path, no writes/listing/sudo, bounded TTL and service-token tradeoffs. | Vault documentation unknown | REASONED |
-| role: Every displayed AppRole role parameter is returned by role inspection; example budgets are not defaults. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| delivery: Delivery policy requires wrapping TTL 1s to 60s; protect transfer and lookup JSON, check path/time/original TTL before unwrap. | Vault documentation unknown | REASONED |
-| identity: Existing workload identity is preferred; Kubernetes names/namespaces and JWT identity/audience binding apply, including the stated 1.17 qualification. | Vault documentation unknown; Vault JWT audience minimum 1.17 | REASONED |
-| bootstrap: Unauthenticated health, seal-status, init and leader paths need network isolation; policies cannot close bootstrap paths. | Vault documentation unknown | REASONED |
-| storage: Unprivileged process, protected snapshots/storage, no swap/core dumps; disable_mlock is Raft-specific. | Vault documentation unknown | REASONED |
-| bind-test: Loopback socket inventory and TLS/plaintext discrimination; extra unintended loopback listener detected. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| cluster-address: cluster_address defaults to the address port + 1; the follow-up loopback run observed 127.0.0.2:8200 and :8201 for a second listener. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| bind-limits: Wildcard binds, ss as root and actual firewall isolation remain unobserved. | Vault documentation unknown | REASONED |
-| health-test: Single-node health 501/503/200 and status sealed/unsealed exits; stopped-server failure is inconclusive. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| health-ha: Standby, removed-node and Enterprise health/status codes and query overrides are documentation reasoning. | Vault documentation unknown | REASONED |
-| audit-test: Empty/one/two file-device inspection and request-ID correlation demonstrate local delivery. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| audit-remote: Independent failure-domain audit delivery remains unobserved. | Vault documentation unknown | REASONED |
-| root-test: Root self-revocation rejects lookups and revokes non-orphan children; independent logins continue. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| acl-test: Own-secret, cross-application denial and collector isolation distinguish narrow from broad policies with fixture controls. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| monitor-test: Active-node anonymous metrics/pprof reject while authorized identities succeed; enabling anonymous access exposes both. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| monitor-ha: Root namespace, active-node targeting, separate profiling policy, HA redirects/local-only forwarding and every-node checks. | Vault documentation unknown; Vault handler source v1.21.0; Vault forwarding source v1.20.0 | REASONED |
-| secretid: SecretID one-use and TTL/tidy discrimination use fresh positive controls; expired IDs can work until tidy. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| cidr: SecretID and token source restrictions discriminate on two loopback addresses; curl --interface replaces CLI source selection. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| token: Service/batch prefixes, TTL, 100-use limit and shortened renewal-ceiling experiment have exposed/fixed controls. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| wrap-test: No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| lookup-test: Lookup returns path/time/original TTL; consumed and expired tokens fail. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| recipient: Receiving application must reject an unexpected creation path; its implementation is not demonstrated. | Vault documentation unknown | REASONED |
-| unwrap-test: First unwrap succeeds, reuse fails, fresh control succeeds. | Vault documentation unknown; Vault loopback run 2.1.1 | DEMONSTRATED |
-| connection-test: Loopback reachable/refused shapes distinguish TCP connection from TLS/HTTP success, not real external isolation. | Vault documentation unknown; curl minimum write-out version 7.75.0; Vault loopback run 2.1.1 | DEMONSTRATED |
-| external: Test actual 8200/8201 destinations from permitted and forbidden sources; routing, local errors and unavailable controls are inconclusive. | Vault documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
-| wrapping-history: Some wrapping-token features date from 0.8; do not generalize current behavior to earlier versions. | Vault historical wrapping qualification 0.8 | REASONED |
+Components (recorded basis):
+
+- docs: Vault documentation, unknown
+- run: Vault loopback run, 2.1.1
+- ha: Vault handler source, v1.21.0
+- forward: Vault forwarding source, v1.20.0
+- curl: curl minimum write-out version, 7.75.0
+- jwt-min: Vault JWT audience minimum, 1.17
+- wrap-history: Vault historical wrapping qualification, 0.8
+
+Claims (full source mapping in the front matter):
+
+- dev (REASONED; docs): Dev modes, token-helper storage and production config-file startup.
+- listeners (REASONED; docs): API/UI 8200, cluster 8201, private bind, advertised addresses and cluster TLS; optional KMIP, Agent and Proxy listeners.
+- mfa (REASONED; docs): Login MFA belongs on human auth methods; token auth cannot use it.
+- raft-tls (DEMONSTRATED; docs, run): Raft node fields, UI disabled, TLS certificate/key/minimum, anonymous monitoring disabled; address/path substitutions only in the recorded run.
+- defaults (REASONED; docs): Listener loopback, TLS enabled, UI disabled and anonymous metrics/profiling disabled are documentation defaults.
+- seal (REASONED; docs): Shamir init/unseal prompts, auto-unseal/recovery, Community Transit and Enterprise seal wrapping/HA; key loss and rekey custody.
+- audit (REASONED; docs): Enable file and independent syslog auditing, fail-closed availability, HMAC defaults, log_raw, exemptions and SIGHUP rotation.
+- root (REASONED; docs): Bootstrap root has unlimited access and no expiry; retire after testing another auth method, remove helper copy, regenerate only by quorum.
+- cli (REASONED; docs): Credential prompts, token environment/helper selection and protected stdin/files avoid credential arguments.
+- policy (REASONED; docs): Deny-by-default non-root policies, additive grants, KV v2 data path, no writes/listing/sudo, bounded TTL and service-token tradeoffs.
+- role (DEMONSTRATED; docs, run): Every displayed AppRole role parameter is returned by role inspection; example budgets are not defaults.
+- delivery (REASONED; docs): Delivery policy requires wrapping TTL 1s to 60s; protect transfer and lookup JSON, check path/time/original TTL before unwrap.
+- identity (REASONED; docs, jwt-min): Existing workload identity is preferred; Kubernetes names/namespaces and JWT identity/audience binding apply, including the stated 1.17 qualification.
+- bootstrap (REASONED; docs): Unauthenticated health, seal-status, init and leader paths need network isolation; policies cannot close bootstrap paths.
+- storage (REASONED; docs): Unprivileged process, protected snapshots/storage, no swap/core dumps; disable_mlock is Raft-specific.
+- bind-test (DEMONSTRATED; docs, run): Loopback socket inventory and TLS/plaintext discrimination; extra unintended loopback listener detected.
+- cluster-address (DEMONSTRATED; docs, run): cluster_address defaults to the address port + 1; the follow-up loopback run observed 127.0.0.2:8200 and :8201 for a second listener.
+- bind-limits (REASONED; docs): Wildcard binds, ss as root and actual firewall isolation remain unobserved.
+- health-test (DEMONSTRATED; docs, run): Single-node health 501/503/200 and status sealed/unsealed exits; stopped-server failure is inconclusive.
+- health-ha (REASONED; docs): Standby, removed-node and Enterprise health/status codes and query overrides are documentation reasoning.
+- audit-test (DEMONSTRATED; docs, run): Empty/one/two file-device inspection and request-ID correlation demonstrate local delivery.
+- audit-remote (REASONED; docs): Independent failure-domain audit delivery remains unobserved.
+- root-test (DEMONSTRATED; docs, run): Root self-revocation rejects lookups and revokes non-orphan children; independent logins continue.
+- acl-test (DEMONSTRATED; docs, run): Own-secret, cross-application denial and collector isolation distinguish narrow from broad policies with fixture controls.
+- monitor-test (DEMONSTRATED; docs, run): Active-node anonymous metrics/pprof reject while authorized identities succeed; enabling anonymous access exposes both.
+- monitor-ha (REASONED; docs, ha, forward): Root namespace, active-node targeting, separate profiling policy, HA redirects/local-only forwarding and every-node checks.
+- secretid (DEMONSTRATED; docs, run): SecretID one-use and TTL/tidy discrimination use fresh positive controls; expired IDs can work until tidy.
+- cidr (DEMONSTRATED; docs, run): SecretID and token source restrictions discriminate on two loopback addresses; curl --interface replaces CLI source selection.
+- token (DEMONSTRATED; docs, run): Service/batch prefixes, TTL, 100-use limit and shortened renewal-ceiling experiment have exposed/fixed controls.
+- wrap-test (DEMONSTRATED; docs, run): No-wrap/61s issuance refused, 60s succeeds; unrestricted delivery policy supplies exposed control.
+- lookup-test (DEMONSTRATED; docs, run): Lookup returns path/time/original TTL; consumed and expired tokens fail.
+- recipient (REASONED; docs): Receiving application must reject an unexpected creation path; its implementation is not demonstrated.
+- unwrap-test (DEMONSTRATED; docs, run): First unwrap succeeds, reuse fails, fresh control succeeds.
+- connection-test (DEMONSTRATED; docs, curl, run): Loopback reachable/refused shapes distinguish TCP connection from TLS/HTTP success, not real external isolation.
+- external (REASONED; docs, curl): Test actual 8200/8201 destinations from permitted and forbidden sources; routing, local errors and unavailable controls are inconclusive.
+- wrapping-history (REASONED; wrap-history): Some wrapping-token features date from 0.8; do not generalize current behavior to earlier versions.
 <!-- version-basis:end -->
 
 Vault's own defaults are careful: the listener binds loopback, TLS is assumed (`tls_disable` is

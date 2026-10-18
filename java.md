@@ -176,65 +176,78 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| tls: Direct HTTPS on 8443 uses PEM certificate/key or PKCS12 and TLSv1.2/TLSv1.3; older releases must confirm PEM property support. | Spring Boot documentation unknown; Spring Boot documentation (rolling) unknown | REASONED |
-| connector: Properties configure one HTTP or HTTPS connector; add the port-80 redirect connector in code, or let the proxy redirect. | Spring Boot documentation unknown | REASONED |
-| https-redirect: Spring Security 6.5+ redirectToHttps redirects insecure requests; trusted forwarded headers determine secure status behind TLS termination. | Spring Security documentation (rolling) unknown; Spring Security HSTS 6.5 | REASONED |
-| hsts: Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false. | Spring Security HSTS 6.5; Spring Security documentation (rolling) unknown | REASONED |
-| proxy-bind: Bind 127.0.0.1:8080 behind the TLS proxy. | Spring Boot documentation unknown; Spring Boot documentation (rolling) unknown | REASONED |
-| forwarding: NATIVE delegates forwarded headers to the server, FRAMEWORK uses ForwardedHeaderFilter; outside supported cloud platforms the default is NONE. | Spring Boot documentation unknown | REASONED |
-| proxy-trust: Restrict Tomcat internal-proxies, strip inbound Forwarded/X-Forwarded-* at the edge and prevent direct listener bypass. | Spring Boot documentation unknown; Spring Framework documentation unknown | REASONED |
-| proxy-redirect: Tomcat redirect-context-root=false preserves HTTPS redirects behind TLS termination. | Spring Boot documentation unknown | REASONED |
-| server-import: ServerProperties moves from boot.autoconfigure.web in Boot 3.5 to boot.web.server.autoconfigure in Boot 4. | Spring Boot documentation (rolling) unknown | REASONED |
-| default-web-auth: With starter-security and default web configuration, require authentication except Actuator health; form login, Basic, CSRF and security headers are enabled. | Spring Boot documentation unknown; Spring Security documentation (rolling) unknown; Spring Boot documentation (rolling) unknown | REASONED |
-| custom-chain: Any custom SecurityFilterChain replaces Boot default web and Actuator rules; unmatched requests need a fallback chain or remain unprotected. | Spring Boot documentation (rolling) unknown; Spring Security documentation (rolling) unknown | REASONED |
-| default-user: Separate default-user auto-configuration creates user with a normally logged generated password; a custom chain alone does not remove it. Production needs deliberate authentication. | Spring Boot documentation (rolling) unknown | REASONED |
-| password: Use DelegatingPasswordEncoder, bcrypt by default with {bcrypt}; BCrypt strength defaults to 10 and is tuned to about one second; Argon2 v5_8 defaults are an alternative. | Spring Security documentation (rolling) unknown | REASONED |
-| cookies: Set secure/http-only cookies, SameSite=lax and a 30m servlet session timeout. | Spring Boot documentation unknown; Spring Boot documentation (rolling) unknown | REASONED |
-| login-limit: Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts. | Spring Security documentation (rolling) unknown | REASONED |
-| oidc-starter: Boot 3.5 uses starter-oauth2-client; Boot 4 uses starter-security-oauth2-client and deprecates the old name. | Spring Boot starter migration 4.0 | REASONED |
-| oidc: Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC. | Spring Boot documentation unknown; Spring Security documentation (rolling) unknown | REASONED |
-| mfa: Enforce MFA at the identity provider or a fronting layer per linked guides; these MFA controls lack a direct listed source. | Spring Security documentation (rolling) unknown | REASONED |
-| csrf: Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection. | Spring Security documentation (rolling) unknown | REASONED |
-| session-fixation: Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled. | Spring Security documentation (rolling) unknown | REASONED |
-| client-validation: Do not install trust-all TrustManager or hostname verifiers; this client-validation warning has no direct listed API source. | Spring Boot documentation unknown; JDK keytool documentation 21 | REASONED |
-| client-ca: Import an internal CA with keytool into cacerts and change its default changeit password, or configure and apply a named SSL bundle to the client. | Spring Boot documentation unknown; JDK keytool documentation 21 | REASONED |
-| client-import: RestClientSsl and WebClientSsl imports differ between Boot 3.5.16 and 4.1.1; apply ssl.fromBundle to the selected client. | Spring Boot documentation (rolling) unknown; Spring Boot 4.1.1 | REASONED |
-| actuator-exposure: Boot 3.5.16/4.1.1 default web exposure is health; use an explicit allowlist. Exposure, access and authorization are separate. | Spring Boot documentation (rolling) unknown | REASONED |
-| management-bind: Management binds 127.0.0.1:8081 separately; a distinct management address requires a distinct port and no public proxy forwarding. | Spring Boot documentation (rolling) unknown | REASONED |
-| management-disable: management.server.port=-1 disables management HTTP, not JMX exposure. | Spring Boot documentation (rolling) unknown | REASONED |
-| sanitize: env/configprops show-values default to never; sanitization does not justify exposing metadata. | Spring Boot documentation (rolling) unknown | REASONED |
-| metadata-endpoints: beans, mappings and threaddump expose components, routes and thread stacks. | Spring Boot documentation (rolling) unknown | REASONED |
-| heapdump: heapdump may expose secrets and consume resources; access defaults to none in specifically checked 3.5.16/4.1.1, and is explicitly disabled. | Spring Boot documentation (rolling) unknown | REASONED |
-| loggers: loggers can read/change logging levels, increasing volume and possible information disclosure. | Spring Boot documentation (rolling) unknown | REASONED |
-| shutdown: shutdown stops the application; access defaults to none and is explicitly disabled. | Spring Boot documentation (rolling) unknown | REASONED |
-| management-auth: The first servlet chain requires ROLE_ENDPOINT_ADMIN for all exposed Actuator endpoints including health; the second authenticates application requests. Provision identities separately. | Spring Boot documentation (rolling) unknown; Spring Security documentation (rolling) unknown | REASONED |
-| endpoint-import: EndpointRequest moves from boot.actuate.autoconfigure.security.servlet in Boot 3.5 to boot.security.autoconfigure.actuate.web.servlet in Boot 4. | Spring Boot documentation (rolling) unknown | REASONED |
-| error-message: Error message inclusion defaults to never in checked releases; use server.error in Boot 3.5 and spring.web.error in Boot 4. | Spring Boot documentation (rolling) unknown | REASONED |
-| error-stack: Stacktrace inclusion defaults to never in checked releases, using the version-appropriate error prefix. | Spring Boot documentation (rolling) unknown | REASONED |
-| error-binding: Binding-error inclusion defaults to never in checked releases, using the version-appropriate error prefix. | Spring Boot documentation (rolling) unknown | REASONED |
-| error-exception: Exception-class inclusion defaults to false in checked releases, using the version-appropriate error prefix. | Spring Boot documentation (rolling) unknown | REASONED |
-| error-policy: on-param lets requesters request details; disabling whitelabel HTML alone does not protect JSON/custom/container errors. | Spring Boot documentation (rolling) unknown | REASONED |
-| h2: H2 console defaults disabled in checked releases; explicitly set spring.h2.console.enabled=false. | Spring Boot documentation (rolling) unknown | REASONED |
-| devtools: Exclude production devtools; active development defaults enable H2 when components exist and set message/trace/binding errors to always. | Spring Boot documentation (rolling) unknown | REASONED |
-| multipart-file: Servlet multipart max-file-size defaults to 1MB per file in checked releases. | Spring Boot documentation (rolling) unknown | REASONED |
-| multipart-request: Servlet multipart max-request-size defaults to 10MB including parts and overhead in checked releases. | Spring Boot documentation (rolling) unknown | REASONED |
-| form-limit: Tomcat max-http-form-post-size defaults to 2MB for form-to-parameter processing, not arbitrary request bodies. | Spring Boot documentation (rolling) unknown; Tomcat HTTP connector 10.1 | REASONED |
-| header-limit: max-http-request-header-size defaults to 8KB; Tomcat counts request line and all header names/values together. | Spring Boot documentation (rolling) unknown; Tomcat HTTP connector 10.1 | REASONED |
-| json-limit: These properties do not establish a universal JSON body limit; bound other bodies at the proxy/application and test the actual route and content type. | Spring Boot documentation (rolling) unknown; Tomcat HTTP connector 10.1 | REASONED |
-| verify-tls: HTTPS must succeed without -k and show HSTS. | Spring Boot documentation unknown; Spring Security HSTS 6.5; Spring Security documentation (rolling) unknown | REASONED |
-| verify-auth: Unauthenticated /api should return 401 or a 302 login redirect. | Spring Boot documentation (rolling) unknown | REASONED |
-| verify-bind: Inspect every listener for loopback-only Java binding behind the proxy. | Spring Boot documentation (rolling) unknown | REASONED |
-| verify-user: Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account. | Spring Boot documentation (rolling) unknown | REASONED |
-| verify-public-management: Public origin must serve no Actuator content to anonymous or administrator identities; health-only exposure leaves other endpoints unavailable even to administrators. | Spring Boot documentation (rolling) unknown | REASONED |
-| verify-management-auth: On private 8081, anonymous health should get 401, non-admin 403 and admin a health response that may be 503; sensitive routes normally 404 after successful authentication. | Spring Boot documentation (rolling) unknown | REASONED |
-| verify-management-port: Any HTTP response on external 8081 proves reachability; corroborate failure with socket inventory and successful intended-path access. | Spring Boot documentation (rolling) unknown | REASONED |
-| verify-dangerous: Inspect heapdump/shutdown access=none without invoking them; exposed behavior needs an isolated fixture. | Spring Boot documentation (rolling) unknown | REASONED |
-| verify-errors: Controlled exception/binding markers appear with always/on-param but should disappear with production settings, including parameter requests; check JSON, HTML and custom responses after auth. | Spring Boot documentation (rolling) unknown | REASONED |
-| verify-h2: Enabled console can return content or redirect; disabled console normally yields 404 after app authorization. Login/401/403 alone do not prove absence. | Spring Boot documentation (rolling) unknown | REASONED |
-| verify-upload: 1024-byte file must succeed; 1048577-byte file must fail for size under the 1MB policy; both succeed with raised limits. Auth, CSRF, route and transport failures are inconclusive. | Spring Boot documentation (rolling) unknown | REASONED |
-| verify-credentials: Use private mode-0600 header files via stdin, valid session/CSRF headers and curl 7.75.0+ diagnostics; transport errors do not prove secure configuration. | curl minimum diagnostics version 7.75.0 | REASONED |
+Components (recorded basis):
+
+- boot: Spring Boot documentation, unknown
+- boot-docs: Spring Boot documentation (rolling), unknown
+- boot41: Spring Boot, 4.1.1
+- boot40: Spring Boot starter migration, 4.0
+- security: Spring Security documentation (rolling), unknown
+- jdk: JDK keytool documentation, 21
+- framework: Spring Framework documentation, unknown
+- security65: Spring Security HSTS, 6.5
+- tomcat: Tomcat HTTP connector, 10.1
+- curl: curl minimum diagnostics version, 7.75.0
+
+Claims (full source mapping in the front matter):
+
+- tls (REASONED; boot, boot-docs): Direct HTTPS on 8443 uses PEM certificate/key or PKCS12 and TLSv1.2/TLSv1.3; older releases must confirm PEM property support.
+- connector (REASONED; boot): Properties configure one HTTP or HTTPS connector; add the port-80 redirect connector in code, or let the proxy redirect.
+- https-redirect (REASONED; security, security65): Spring Security 6.5+ redirectToHttps redirects insecure requests; trusted forwarded headers determine secure status behind TLS termination.
+- hsts (REASONED; security65, security): Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false.
+- proxy-bind (REASONED; boot, boot-docs): Bind 127.0.0.1:8080 behind the TLS proxy.
+- forwarding (REASONED; boot): NATIVE delegates forwarded headers to the server, FRAMEWORK uses ForwardedHeaderFilter; outside supported cloud platforms the default is NONE.
+- proxy-trust (REASONED; boot, framework): Restrict Tomcat internal-proxies, strip inbound Forwarded/X-Forwarded-* at the edge and prevent direct listener bypass.
+- proxy-redirect (REASONED; boot): Tomcat redirect-context-root=false preserves HTTPS redirects behind TLS termination.
+- server-import (REASONED; boot-docs): ServerProperties moves from boot.autoconfigure.web in Boot 3.5 to boot.web.server.autoconfigure in Boot 4.
+- default-web-auth (REASONED; boot, security, boot-docs): With starter-security and default web configuration, require authentication except Actuator health; form login, Basic, CSRF and security headers are enabled.
+- custom-chain (REASONED; boot-docs, security): Any custom SecurityFilterChain replaces Boot default web and Actuator rules; unmatched requests need a fallback chain or remain unprotected.
+- default-user (REASONED; boot-docs): Separate default-user auto-configuration creates user with a normally logged generated password; a custom chain alone does not remove it. Production needs deliberate authentication.
+- password (REASONED; security): Use DelegatingPasswordEncoder, bcrypt by default with {bcrypt}; BCrypt strength defaults to 10 and is tuned to about one second; Argon2 v5_8 defaults are an alternative.
+- cookies (REASONED; boot, boot-docs): Set secure/http-only cookies, SameSite=lax and a 30m servlet session timeout.
+- login-limit (REASONED; security): Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts.
+- oidc-starter (REASONED; boot40): Boot 3.5 uses starter-oauth2-client; Boot 4 uses starter-security-oauth2-client and deprecates the old name.
+- oidc (REASONED; boot, security): Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC.
+- mfa (REASONED; security): Enforce MFA at the identity provider or a fronting layer per linked guides; these MFA controls lack a direct listed source.
+- csrf (REASONED; security): Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection.
+- session-fixation (REASONED; security): Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled.
+- client-validation (REASONED; boot, jdk): Do not install trust-all TrustManager or hostname verifiers; this client-validation warning has no direct listed API source.
+- client-ca (REASONED; boot, jdk): Import an internal CA with keytool into cacerts and change its default changeit password, or configure and apply a named SSL bundle to the client.
+- client-import (REASONED; boot-docs, boot41): RestClientSsl and WebClientSsl imports differ between Boot 3.5.16 and 4.1.1; apply ssl.fromBundle to the selected client.
+- actuator-exposure (REASONED; boot-docs): Boot 3.5.16/4.1.1 default web exposure is health; use an explicit allowlist. Exposure, access and authorization are separate.
+- management-bind (REASONED; boot-docs): Management binds 127.0.0.1:8081 separately; a distinct management address requires a distinct port and no public proxy forwarding.
+- management-disable (REASONED; boot-docs): management.server.port=-1 disables management HTTP, not JMX exposure.
+- sanitize (REASONED; boot-docs): env/configprops show-values default to never; sanitization does not justify exposing metadata.
+- metadata-endpoints (REASONED; boot-docs): beans, mappings and threaddump expose components, routes and thread stacks.
+- heapdump (REASONED; boot-docs): heapdump may expose secrets and consume resources; access defaults to none in specifically checked 3.5.16/4.1.1, and is explicitly disabled.
+- loggers (REASONED; boot-docs): loggers can read/change logging levels, increasing volume and possible information disclosure.
+- shutdown (REASONED; boot-docs): shutdown stops the application; access defaults to none and is explicitly disabled.
+- management-auth (REASONED; boot-docs, security): The first servlet chain requires ROLE_ENDPOINT_ADMIN for all exposed Actuator endpoints including health; the second authenticates application requests. Provision identities separately.
+- endpoint-import (REASONED; boot-docs): EndpointRequest moves from boot.actuate.autoconfigure.security.servlet in Boot 3.5 to boot.security.autoconfigure.actuate.web.servlet in Boot 4.
+- error-message (REASONED; boot-docs): Error message inclusion defaults to never in checked releases; use server.error in Boot 3.5 and spring.web.error in Boot 4.
+- error-stack (REASONED; boot-docs): Stacktrace inclusion defaults to never in checked releases, using the version-appropriate error prefix.
+- error-binding (REASONED; boot-docs): Binding-error inclusion defaults to never in checked releases, using the version-appropriate error prefix.
+- error-exception (REASONED; boot-docs): Exception-class inclusion defaults to false in checked releases, using the version-appropriate error prefix.
+- error-policy (REASONED; boot-docs): on-param lets requesters request details; disabling whitelabel HTML alone does not protect JSON/custom/container errors.
+- h2 (REASONED; boot-docs): H2 console defaults disabled in checked releases; explicitly set spring.h2.console.enabled=false.
+- devtools (REASONED; boot-docs): Exclude production devtools; active development defaults enable H2 when components exist and set message/trace/binding errors to always.
+- multipart-file (REASONED; boot-docs): Servlet multipart max-file-size defaults to 1MB per file in checked releases.
+- multipart-request (REASONED; boot-docs): Servlet multipart max-request-size defaults to 10MB including parts and overhead in checked releases.
+- form-limit (REASONED; boot-docs, tomcat): Tomcat max-http-form-post-size defaults to 2MB for form-to-parameter processing, not arbitrary request bodies.
+- header-limit (REASONED; boot-docs, tomcat): max-http-request-header-size defaults to 8KB; Tomcat counts request line and all header names/values together.
+- json-limit (REASONED; boot-docs, tomcat): These properties do not establish a universal JSON body limit; bound other bodies at the proxy/application and test the actual route and content type.
+- verify-tls (REASONED; boot, security65, security): HTTPS must succeed without -k and show HSTS.
+- verify-auth (REASONED; boot-docs): Unauthenticated /api should return 401 or a 302 login redirect.
+- verify-bind (REASONED; boot-docs): Inspect every listener for loopback-only Java binding behind the proxy.
+- verify-user (REASONED; boot-docs): Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account.
+- verify-public-management (REASONED; boot-docs): Public origin must serve no Actuator content to anonymous or administrator identities; health-only exposure leaves other endpoints unavailable even to administrators.
+- verify-management-auth (REASONED; boot-docs): On private 8081, anonymous health should get 401, non-admin 403 and admin a health response that may be 503; sensitive routes normally 404 after successful authentication.
+- verify-management-port (REASONED; boot-docs): Any HTTP response on external 8081 proves reachability; corroborate failure with socket inventory and successful intended-path access.
+- verify-dangerous (REASONED; boot-docs): Inspect heapdump/shutdown access=none without invoking them; exposed behavior needs an isolated fixture.
+- verify-errors (REASONED; boot-docs): Controlled exception/binding markers appear with always/on-param but should disappear with production settings, including parameter requests; check JSON, HTML and custom responses after auth.
+- verify-h2 (REASONED; boot-docs): Enabled console can return content or redirect; disabled console normally yields 404 after app authorization. Login/401/403 alone do not prove absence.
+- verify-upload (REASONED; boot-docs): 1024-byte file must succeed; 1048577-byte file must fail for size under the 1MB policy; both succeed with raised limits. Auth, CSRF, route and transport failures are inconclusive.
+- verify-credentials (REASONED; curl): Use private mode-0600 header files via stdin, valid session/CSRF headers and curl 7.75.0+ diagnostics; transport errors do not prove secure configuration.
 <!-- version-basis:end -->
 
 Preferred production layout: bind the embedded server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). Spring Boot can also terminate TLS itself, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).

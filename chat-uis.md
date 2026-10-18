@@ -154,38 +154,54 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| anything-single: Docker single-user password protection is optional and grants every holder settings/admin/chat access, not per-user isolation. | AnythingLLM documentation unknown | REASONED |
-| anything-roles: Multi-user mode is preferred: Admin has full access, Manager all workspaces without provider/store settings, Default only assigned workspaces. | AnythingLLM documentation unknown | REASONED |
-| anything-mode: Enabling multi-user mode cannot be reverted to single-user; choose deliberately. | AnythingLLM documentation unknown | REASONED |
-| anything-bind: Publish AnythingLLM only on loopback 3001 and put proxy TLS/login in front. | AnythingLLM documentation unknown; Docker CLI v27.5.1 | REASONED |
-| lobe-vault: KEY_VAULTS_SECRET encrypts stored provider credentials; generate with openssl rand -base64 32 and preserve it for the data lifetime, not as a login password. | LobeHub v2.2.16 | REASONED |
-| lobe-session: Better Auth requires AUTH_SECRET, generated the same way, to sign sessions. | LobeHub v2.2.16; LobeHub documentation (rolling) unknown | REASONED |
-| lobe-sso: AUTH_SSO_PROVIDERS selects providers and matching credentials; AUTH_DISABLE_EMAIL_PASSWORD=1 forces SSO-only login. | LobeHub v2.2.16; LobeHub documentation (rolling) unknown | REASONED |
-| lobe-admission: AUTH_ALLOWED_EMAILS defaults empty, permitting all emails; set explicit addresses/domains for registration. | LobeHub v2.2.16; LobeHub documentation (rolling) unknown | REASONED |
-| lobe-mfa: Enforce MFA at the configured SSO provider; LobeChat login has no second factor of its own. | LobeHub documentation (rolling) unknown | REASONED |
-| docker-input: Docker --env-file reads a named file, not stdin; -e NAME uses CLI environment, while -e NAME=value exposes argv. | Docker CLI v27.5.1 | REASONED |
-| docker-envfile: Bare names in env files import CLI environment; validate exactly the intended secret assignments and reject extra/missing/duplicate lines. | Docker CLI v27.5.1 | REASONED |
-| compose-envfile: Compose env_file resolves environment via compose-go v2.4.7, pinned by Compose v2.32.4. | Docker Compose v2.32.4; compose-go v2.4.7 | REASONED |
-| compose-secrets: Compose file secrets mount read-only under /run/secrets; environment secrets are copied there, default 0444, and need an application reader. | Docker Compose v2.32.4 | REASONED |
-| lobe-file-input: LobeHub documents environment inputs; the recorded v2.2.16 search found no KEY_VAULTS_SECRET_FILE, AUTH_SECRET_FILE or AUTH_GOOGLE_SECRET_FILE. | LobeHub v2.2.16 | REASONED |
-| lobe-file: Create the durable plaintext env file once in protected directories; never replace a live encryption key, refuse a default ACL or missing getfacl, check mode 0600 after the write and discard partial failed writes. | LobeHub v2.2.16; Docker CLI v27.5.1; Linux permissions and tools unknown | REASONED |
-| lobe-launch: Use validated env-file with loopback 3210 publication and non-secret SSO/admission settings on argv. | LobeHub v2.2.16; Docker CLI v27.5.1 | REASONED |
-| container-secrets: Environment values remain readable through Docker inspect for running/stopped containers and process environ during lifetime; env-file avoids CLI argv, not operator access. | Moby v27.5.1; Docker CLI v27.5.1 | REASONED |
-| chainlit-default: Chainlit applications are public by default; set CHAINLIT_AUTH_SECRET and at least one password/OAuth/header callback. | Chainlit documentation unknown | REASONED |
-| chainlit-callback: Password callback returns a user on success and None on refusal; shared credential creates one identity without individual revocation. | Chainlit documentation unknown | REASONED |
-| chainlit-environment: Example reads credentials once at import, fails on missing or empty values, and requires restart to adopt replacements. | Python documentation unknown; Chainlit documentation unknown | REASONED |
-| chainlit-comparison: Both compare_digest calls run before combining results; content-based short-circuiting is avoided, but types/lengths and whole callback timing are not concealed. | Python documentation unknown | REASONED |
-| chainlit-rotation: Password replacement stops new logins, not existing signed sessions; rotate CHAINLIT_AUTH_SECRET too to invalidate them. | Chainlit documentation unknown | REASONED |
-| chainlit-accounts: Chainlit persists users but supplies no password-account management; per-user store/verification are the application's responsibility, with Argon2id for new hashes. | Chainlit documentation unknown; OWASP password guidance unknown | REASONED |
-| chainlit-mfa: Chainlit has no built-in MFA; use an enforcing identity provider or authenticating proxy. | Chainlit documentation unknown | REASONED |
-| openhands-boundary: OpenHands is single-user; shared-key API access is not per-user identity, and execution isolation depends on backend/mount/socket choices. | OpenHands documentation unknown | REASONED |
-| openhands-bind: Quickstart publishes 3000 on every interface; use 127.0.0.1:3000:3000 and an authenticated tunnel. | OpenHands documentation unknown | REASONED |
-| verify-listeners: Inventory loopback UI listeners 3001/3210/3000; external refusal must name the real remote path, with DNS/local failures inconclusive. | Docker CLI v27.5.1; OpenHands documentation unknown; curl minimum write-out version 7.75.0 | REASONED |
-| verify-login: Verify proxy HTTPS and login requirement; generic API refusal is a deployment-specific check requiring an actual protected route. | AnythingLLM documentation unknown; Chainlit documentation unknown; OpenHands documentation unknown; LobeHub documentation (rolling) unknown; curl minimum write-out version 7.75.0 | REASONED |
-| verify-registration: A new Google identity absent from AUTH_ALLOWED_EMAILS should fail registration; this does not revoke an existing user's session. | LobeHub v2.2.16; LobeHub documentation (rolling) unknown | REASONED |
-| verify-isolation: User A's retrieval must succeed before user B is checked for denial; independently test documents, history, memory and caches, not login alone. | AnythingLLM documentation unknown | REASONED |
+Components (recorded basis):
+
+- anything: AnythingLLM documentation, unknown
+- lobe: LobeHub, v2.2.16
+- docker: Docker CLI, v27.5.1
+- compose: Docker Compose, v2.32.4
+- compose-go: compose-go, v2.4.7
+- moby: Moby, v27.5.1
+- chainlit: Chainlit documentation, unknown
+- python: Python documentation, unknown
+- owasp: OWASP password guidance, unknown
+- openhands: OpenHands documentation, unknown
+- curl: curl minimum write-out version, 7.75.0
+- linux: Linux permissions and tools, unknown
+- lobe-docs: LobeHub documentation (rolling), unknown
+
+Claims (full source mapping in the front matter):
+
+- anything-single (REASONED; anything): Docker single-user password protection is optional and grants every holder settings/admin/chat access, not per-user isolation.
+- anything-roles (REASONED; anything): Multi-user mode is preferred: Admin has full access, Manager all workspaces without provider/store settings, Default only assigned workspaces.
+- anything-mode (REASONED; anything): Enabling multi-user mode cannot be reverted to single-user; choose deliberately.
+- anything-bind (REASONED; anything, docker): Publish AnythingLLM only on loopback 3001 and put proxy TLS/login in front.
+- lobe-vault (REASONED; lobe): KEY_VAULTS_SECRET encrypts stored provider credentials; generate with openssl rand -base64 32 and preserve it for the data lifetime, not as a login password.
+- lobe-session (REASONED; lobe, lobe-docs): Better Auth requires AUTH_SECRET, generated the same way, to sign sessions.
+- lobe-sso (REASONED; lobe, lobe-docs): AUTH_SSO_PROVIDERS selects providers and matching credentials; AUTH_DISABLE_EMAIL_PASSWORD=1 forces SSO-only login.
+- lobe-admission (REASONED; lobe, lobe-docs): AUTH_ALLOWED_EMAILS defaults empty, permitting all emails; set explicit addresses/domains for registration.
+- lobe-mfa (REASONED; lobe-docs): Enforce MFA at the configured SSO provider; LobeChat login has no second factor of its own.
+- docker-input (REASONED; docker): Docker --env-file reads a named file, not stdin; -e NAME uses CLI environment, while -e NAME=value exposes argv.
+- docker-envfile (REASONED; docker): Bare names in env files import CLI environment; validate exactly the intended secret assignments and reject extra/missing/duplicate lines.
+- compose-envfile (REASONED; compose, compose-go): Compose env_file resolves environment via compose-go v2.4.7, pinned by Compose v2.32.4.
+- compose-secrets (REASONED; compose): Compose file secrets mount read-only under /run/secrets; environment secrets are copied there, default 0444, and need an application reader.
+- lobe-file-input (REASONED; lobe): LobeHub documents environment inputs; the recorded v2.2.16 search found no KEY_VAULTS_SECRET_FILE, AUTH_SECRET_FILE or AUTH_GOOGLE_SECRET_FILE.
+- lobe-file (REASONED; lobe, docker, linux): Create the durable plaintext env file once in protected directories; never replace a live encryption key, refuse a default ACL or missing getfacl, check mode 0600 after the write and discard partial failed writes.
+- lobe-launch (REASONED; lobe, docker): Use validated env-file with loopback 3210 publication and non-secret SSO/admission settings on argv.
+- container-secrets (REASONED; moby, docker): Environment values remain readable through Docker inspect for running/stopped containers and process environ during lifetime; env-file avoids CLI argv, not operator access.
+- chainlit-default (REASONED; chainlit): Chainlit applications are public by default; set CHAINLIT_AUTH_SECRET and at least one password/OAuth/header callback.
+- chainlit-callback (REASONED; chainlit): Password callback returns a user on success and None on refusal; shared credential creates one identity without individual revocation.
+- chainlit-environment (REASONED; python, chainlit): Example reads credentials once at import, fails on missing or empty values, and requires restart to adopt replacements.
+- chainlit-comparison (REASONED; python): Both compare_digest calls run before combining results; content-based short-circuiting is avoided, but types/lengths and whole callback timing are not concealed.
+- chainlit-rotation (REASONED; chainlit): Password replacement stops new logins, not existing signed sessions; rotate CHAINLIT_AUTH_SECRET too to invalidate them.
+- chainlit-accounts (REASONED; chainlit, owasp): Chainlit persists users but supplies no password-account management; per-user store/verification are the application's responsibility, with Argon2id for new hashes.
+- chainlit-mfa (REASONED; chainlit): Chainlit has no built-in MFA; use an enforcing identity provider or authenticating proxy.
+- openhands-boundary (REASONED; openhands): OpenHands is single-user; shared-key API access is not per-user identity, and execution isolation depends on backend/mount/socket choices.
+- openhands-bind (REASONED; openhands): Quickstart publishes 3000 on every interface; use 127.0.0.1:3000:3000 and an authenticated tunnel.
+- verify-listeners (REASONED; docker, openhands, curl): Inventory loopback UI listeners 3001/3210/3000; external refusal must name the real remote path, with DNS/local failures inconclusive.
+- verify-login (REASONED; anything, chainlit, openhands, lobe-docs, curl): Verify proxy HTTPS and login requirement; generic API refusal is a deployment-specific check requiring an actual protected route.
+- verify-registration (REASONED; lobe, lobe-docs): A new Google identity absent from AUTH_ALLOWED_EMAILS should fail registration; this does not revoke an existing user's session.
+- verify-isolation (REASONED; anything): User A's retrieval must succeed before user B is checked for denial; independently test documents, history, memory and caches, not login alone.
 <!-- version-basis:end -->
 
 These tools hold provider API keys and full conversation history, and several are wide open the moment they start. Bind every one to loopback, front it with TLS and a login ([caddy.md](caddy.md)/[nginx.md](nginx.md), [free-certificates.md](free-certificates.md)), and turn on the tool's own authentication as a second layer, never as a substitute for the network boundary. See also [open-webui.md](open-webui.md) for the Open WebUI case, [secrets.md](secrets.md) for the provider keys these apps store, and [fronting-auth.md](fronting-auth.md)/[mfa.md](mfa.md) for the identity layer in front.

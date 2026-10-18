@@ -134,32 +134,44 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| placement: Set response headers at a proxy with nginx add_header, Apache Header or Caddy header, in application middleware, or in a Cloudflare Pages _headers file for static asset responses; Pages Functions responses will likely need headers set in Functions code. Applying the three proxy directives to all six listed headers is this guide's inference. | MDN HTTP documentation unknown; Helmet v8.1.0; Django 5.2; nginx source release-1.26.3; Apache HTTP Server 2.4.69; Caddy source v2.11.4; Cloudflare Pages documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
-| hsts: Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS. | MDN HTTP documentation unknown | REASONED |
-| hsts-preload: Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates. | MDN HTTP documentation unknown | REASONED |
-| csp: Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy. | MDN HTTP documentation unknown | REASONED |
-| csp-report-only: Roll out Content-Security-Policy-Report-Only first on existing apps to find breakage; it enforces nothing and is not a substitute for enforcing CSP. | MDN HTTP documentation unknown | REASONED |
-| nosniff: Send X-Content-Type-Options: nosniff and verify that value on the final response. | MDN HTTP documentation unknown | REASONED |
-| referrer: Send Referrer-Policy: strict-origin-when-cross-origin and verify that final-response value. | MDN HTTP documentation unknown | REASONED |
-| permissions: Permissions-Policy disables camera, microphone and geolocation with empty allowlists; verify all three restrictions. | MDN HTTP documentation unknown | REASONED |
-| framing: X-Frame-Options: DENY or enforcing CSP frame-ancestors 'none' denies framing; supported frame-ancestors supersedes X-Frame-Options, and default-src does not cover it. frame-ancestors * overrides DENY. | MDN HTTP documentation unknown | REASONED |
-| all-responses: Send headers on every response, including errors; nginx add_header inherits parent headers only when the child has no header list, and always covers statuses outside its default set. This guide assesses setting headers only on 200 / as a common proxy misconfiguration. | MDN HTTP documentation unknown; nginx source release-1.26.3 | REASONED |
-| shared-cache: Use Cache-Control: private for authenticated responses or no-store for sensitive ones; cache only public content unless authenticated caching is explicitly configured. | MDN HTTP documentation unknown | REASONED |
-| cache-key: A URL-only shared cache can leak one user's response to another; explicitly vary authenticated cache entries on the cookie or authorization header. | MDN HTTP documentation unknown | REASONED |
-| browser-cache: private still permits browser storage; no-store forbids private and shared storage and belongs on authenticated responses and responses setting session cookies. | MDN HTTP documentation unknown | REASONED |
-| history-cache: no-cache does not prevent a Back navigation from restoring a back/forward-cache snapshot without revalidation. | MDN HTTP documentation unknown | REASONED |
-| logout-cache: Send Clear-Site-Data on logout confirmation; cache clears browser cache and may clear back/forward cache depending on the browser. | MDN HTTP documentation unknown | REASONED |
-| logout-cookies: Clear-Site-Data cookies clears cookies across the registered domain and all subdomains, plus HTTP authentication credentials; invalidate the server session separately. | MDN HTTP documentation unknown | REASONED |
-| logout-storage: Clear-Site-Data storage removes origin local/session storage, IndexedDB and service-worker registrations; understand effects on companion applications before clearing. | MDN HTTP documentation unknown | REASONED |
-| logout-header: The cited MDN logout example includes cache, cookies, storage, executionContexts, prefetchCache and prerenderCache. | MDN HTTP documentation unknown | REASONED |
-| verify-fetch: Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while &#96;-D -&#96; printing each response's header block, and selecting the last one, are this guide's assessment. | MDN HTTP documentation unknown; curl 8.23.0 | REASONED |
-| verify-values: Judge header values on the final response, not presence on an earlier hop; missing final headers are findings and a failed fetch is inconclusive. | MDN HTTP documentation unknown | REASONED |
-| verify-scanner: Use the external Security Headers scanner for a second opinion; the guide states that it fetches with GET. | Security Headers scanner unknown | REASONED |
-| verify-csp: Unexpected console violations must be absent in normal use, but this alone is insufficient; confirm a deliberately disallowed resource is blocked while an allowed one loads. | MDN HTTP documentation unknown | REASONED |
-| verify-cache: Warm an authenticated URL in the shared cache, then request it as user A, user B and anonymously; each response must belong only to its caller. | MDN HTTP documentation unknown | REASONED |
-| verify-logout: After logout, Back must not restore authenticated content; verify a request to the login screen and inspect no-store and Clear-Site-Data separately in every supported browser. | MDN HTTP documentation unknown | REASONED |
+Components (recorded basis):
+
+- mdn: MDN HTTP documentation, unknown
+- nginx-source: nginx source, release-1.26.3
+- apache-source: Apache HTTP Server, 2.4.69
+- caddy-source: Caddy source, v2.11.4
+- cloudflare-pages: Cloudflare Pages documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
+- scanner: Security Headers scanner, unknown
+- helmet: Helmet, v8.1.0
+- django: Django, 5.2
+- curl: curl, 8.23.0
+
+Claims (full source mapping in the front matter):
+
+- placement (REASONED; mdn, helmet, django, nginx-source, apache-source, caddy-source, cloudflare-pages): Set response headers at a proxy with nginx add_header, Apache Header or Caddy header, in application middleware, or in a Cloudflare Pages _headers file for static asset responses; Pages Functions responses will likely need headers set in Functions code. Applying the three proxy directives to all six listed headers is this guide's inference.
+- hsts (REASONED; mdn): Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS.
+- hsts-preload (REASONED; mdn): Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates.
+- csp (REASONED; mdn): Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy.
+- csp-report-only (REASONED; mdn): Roll out Content-Security-Policy-Report-Only first on existing apps to find breakage; it enforces nothing and is not a substitute for enforcing CSP.
+- nosniff (REASONED; mdn): Send X-Content-Type-Options: nosniff and verify that value on the final response.
+- referrer (REASONED; mdn): Send Referrer-Policy: strict-origin-when-cross-origin and verify that final-response value.
+- permissions (REASONED; mdn): Permissions-Policy disables camera, microphone and geolocation with empty allowlists; verify all three restrictions.
+- framing (REASONED; mdn): X-Frame-Options: DENY or enforcing CSP frame-ancestors 'none' denies framing; supported frame-ancestors supersedes X-Frame-Options, and default-src does not cover it. frame-ancestors * overrides DENY.
+- all-responses (REASONED; mdn, nginx-source): Send headers on every response, including errors; nginx add_header inherits parent headers only when the child has no header list, and always covers statuses outside its default set. This guide assesses setting headers only on 200 / as a common proxy misconfiguration.
+- shared-cache (REASONED; mdn): Use Cache-Control: private for authenticated responses or no-store for sensitive ones; cache only public content unless authenticated caching is explicitly configured.
+- cache-key (REASONED; mdn): A URL-only shared cache can leak one user's response to another; explicitly vary authenticated cache entries on the cookie or authorization header.
+- browser-cache (REASONED; mdn): private still permits browser storage; no-store forbids private and shared storage and belongs on authenticated responses and responses setting session cookies.
+- history-cache (REASONED; mdn): no-cache does not prevent a Back navigation from restoring a back/forward-cache snapshot without revalidation.
+- logout-cache (REASONED; mdn): Send Clear-Site-Data on logout confirmation; cache clears browser cache and may clear back/forward cache depending on the browser.
+- logout-cookies (REASONED; mdn): Clear-Site-Data cookies clears cookies across the registered domain and all subdomains, plus HTTP authentication credentials; invalidate the server session separately.
+- logout-storage (REASONED; mdn): Clear-Site-Data storage removes origin local/session storage, IndexedDB and service-worker registrations; understand effects on companion applications before clearing.
+- logout-header (REASONED; mdn): The cited MDN logout example includes cache, cookies, storage, executionContexts, prefetchCache and prerenderCache.
+- verify-fetch (REASONED; mdn, curl): Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while &#96;-D -&#96; printing each response's header block, and selecting the last one, are this guide's assessment.
+- verify-values (REASONED; mdn): Judge header values on the final response, not presence on an earlier hop; missing final headers are findings and a failed fetch is inconclusive.
+- verify-scanner (REASONED; scanner): Use the external Security Headers scanner for a second opinion; the guide states that it fetches with GET.
+- verify-csp (REASONED; mdn): Unexpected console violations must be absent in normal use, but this alone is insufficient; confirm a deliberately disallowed resource is blocked while an allowed one loads.
+- verify-cache (REASONED; mdn): Warm an authenticated URL in the shared cache, then request it as user A, user B and anonymously; each response must belong only to its caller.
+- verify-logout (REASONED; mdn): After logout, Back must not restore authenticated content; verify a request to the login screen and inspect no-store and Clear-Site-Data separately in every supported browser.
 <!-- version-basis:end -->
 
 TLS protects the transport; these response headers protect the page. Set them at the proxy ([`add_header`](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L110-L116) in [nginx.md](nginx.md), [`Header`](https://github.com/apache/httpd/blob/2.4.69/docs/manual/mod/mod_headers.xml#L311-L328) in [apache.md](apache.md), [`header`](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/headers/caddyfile.go#L27-L48) in Caddy), in app middleware (helmet for Express per [nodejs.md](nodejs.md), Django's security settings per [python.md](python.md)), or in a [`_headers` file](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/pages/configuration/headers.mdx#L14) for Cloudflare Pages static asset responses. Cloudflare Pages does not apply `_headers` to Pages Functions responses; set those headers in [Functions code](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/pages/configuration/headers.mdx#L26). Applying the three proxy directives to all six headers below is this guide's inference.

@@ -170,39 +170,55 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| public-trust: ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; this guide advises preferring them for public DNS names, including private hosts using DNS-01. | Let's Encrypt documentation unknown; ZeroSSL unknown | REASONED |
-| http-challenge: HTTP-01 needs a public A/AAAA or CNAME pointing to the server and inbound internet access to port 80. | Let's Encrypt documentation unknown | REASONED |
-| alpn-challenge: TLS-ALPN-01 needs a public DNS record and inbound port 443; Caddy's ACME issuer enables the TLS-ALPN-01 solver when DNS-01 is not configured and TLS-ALPN-01 is not disabled, and can use an alternate local port if port 443 forwards to it; Traefik also uses TLS-ALPN-01. | Let's Encrypt documentation unknown; Caddy automatic HTTPS v2.11.4; certmagic ACME implementation v0.25.3; Traefik ACME documentation v3.5 | REASONED |
-| dns-challenge: DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards; automated issuance and renewal need an automated way to update TXT records, and this guide advises a provider DNS plugin and scoped API credentials, while Certbot also supports manual DNS-01 and an authentication hook for automatic renewal. | Let's Encrypt documentation unknown; Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
-| certbot-install: Install Certbot and nginx/Apache plugins from the distribution, or the classic snap with /usr/bin/certbot pointing to /snap/bin/certbot. | Certbot documentation unknown | REASONED |
-| server-plugins: certbot --nginx or --apache issues and installs certificates for the supplied domain names when the server is supported. | Certbot documentation unknown | REASONED |
-| standalone: certonly --standalone binds port 80; stop its current owner and arrange webroot, a server plugin or port-freeing hooks for unattended renewal. | Certbot documentation unknown | REASONED |
-| webroot: certonly --webroot uses /var/www/html to serve challenge files while the existing web server keeps running. | Certbot documentation unknown | REASONED |
-| dns-credentials: The Cloudflare DNS plugin uses a credentials file and a Zone:DNS:Edit token limited to required zones; this guide requires never using the Global API Key and protecting the file with mode 600 in a 700 directory. | Certbot documentation unknown; Certbot Cloudflare DNS plugin v2.3.0 | REASONED |
-| certificate-paths: Configure servers against stable /etc/letsencrypt/live/example.com/fullchain.pem and privkey.pem paths for the chain and private key. | Certbot documentation unknown | REASONED |
-| renewal-schedule: The Certbot v2.3.0 user guide says most installations have a scheduled task running certbot renew and says that, on Linux and BSD, you can check cron or systemd timers if unsure; this guide requires confirming the task and testing renewal plus reload with --dry-run --run-deploy-hooks, including package and snap installations. | Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
-| deploy-hook: This guide requires persisting a reload hook during successful initial issuance or successful renewal, or installing an executable in renewal-hooks/deploy; Certbot v2.3.0 saves the renewal-relevant options set on the command line to a lineage after successful renewal, and a renew --deploy-hook invocation with no renewal due does not save that hook. | Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
-| reconfigure: certbot reconfigure can add the reload hook later on Certbot 2.3.0 and later. | Certbot reconfigure minimum 2.3.0 | REASONED |
-| expiry-monitoring: Monitor the served certificate's expiry and renewal failures instead of relying on CA reminder emails; include a dry run in the deployment checklist. This guide assesses that any renewal step involving a person will fail at those scheduled shorter certificate lifetimes and that unattended automation is the only viable path. | Let's Encrypt documentation unknown; Certbot documentation unknown | REASONED |
-| default-lifetime: At the guide's September 2026 documentation check, Let's Encrypt's default certificate lifetime is 90 days. | Let's Encrypt documentation unknown | REASONED |
-| short-lifetime: Optional 6-day short-lived certificates are available to every subscriber as of the guide's September 2026 check. | Let's Encrypt documentation unknown | REASONED |
-| lifetime-schedule: The classic profile moves to 64 days on 2027-02-10 and 45 days on 2028-02-16; industry rules cap publicly trusted certificates at 47 days from 2029-03-15. | Let's Encrypt documentation unknown | REASONED |
-| revocation: Let's Encrypt ended OCSP on 2025-08-06 and publishes revocation through CRLs only; do not add OCSP stapling directives for its certificates. | Let's Encrypt documentation unknown | REASONED |
-| staging: Let's Encrypt limits per-domain issuance; test with certbot --staging or --test-cert before real issuance. | Let's Encrypt documentation unknown; Certbot documentation unknown | REASONED |
-| caa: CAA restricts issuing CAs, using issue letsencrypt.org for Let's Encrypt; certificate-transparency monitoring detects mis-issuance afterwards and complements CAA. | Let's Encrypt documentation unknown | REASONED |
-| zerossl-eab: ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials. | ZeroSSL unknown | REASONED |
-| acme-default: acme.sh registers with ZeroSSL by default. | acme.sh unknown | REASONED |
-| acme-install: acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell. | acme.sh unknown | REASONED |
-| server-automation: This guide advises Caddy or Traefik for built-in issuance and renewal without an external client; it assesses them as the lowest-effort correct option for new deployments. | Let's Encrypt documentation unknown; Caddy automatic HTTPS v2.11.4; Traefik ACME documentation v3.5 | REASONED |
-| origin-certificates: Cloudflare lists Origin CA certificates on its Free plan, refers to long-lived origin CA certificates and says the validity period is chosen at creation, says they only encrypt traffic between Cloudflare and the origin, and warns that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled; this guide requires using them only for origins that receive traffic only through Cloudflare-proxied records. | Let's Encrypt documentation unknown; Cloudflare Origin CA documentation checked October 2026 | REASONED |
-| verify-inventory: certbot certificates lists issued certificates and their expiry dates. | Certbot documentation unknown | REASONED |
-| verify-https: Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k. | Let's Encrypt documentation unknown; curl command documentation curl-8_12_1 | REASONED |
-| verify-certificate: The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates. | Let's Encrypt documentation unknown; OpenSSL certificate commands 3.0 | REASONED |
-| authentication: A certificate alone is insufficient protection; continue with server controls and authentication. | Let's Encrypt documentation unknown | REASONED |
-| dns-automation: For automated DNS-01 issuance and renewal, this guide advises using a provider DNS plugin and least-privilege API credentials; Certbot also documents manual TXT entry and authentication hooks that automate the challenge. | Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
-| dns-manual: certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; the Certbot v2.3.0 guide says certificates created with --manual do not support automatic renewal without a --manual-auth-hook that automates the challenge. | Certbot documentation unknown; Certbot user guide and source v2.3.0 | REASONED |
+Components (recorded basis):
+
+- le: Let's Encrypt documentation, unknown
+- certbot: Certbot documentation, unknown
+- reconfigure: Certbot reconfigure minimum, 2.3.0
+- zerossl: ZeroSSL, unknown
+- acme: acme.sh, unknown
+- caddy: Caddy automatic HTTPS, v2.11.4
+- certmagic: certmagic ACME implementation, v0.25.3
+- traefik: Traefik ACME documentation, v3.5
+- openssl-cli: OpenSSL certificate commands, 3.0
+- curl-source: curl command documentation, curl-8_12_1
+- certbot-v230: Certbot user guide and source, v2.3.0
+- certbot-dns-cloudflare-v230: Certbot Cloudflare DNS plugin, v2.3.0
+- cloudflare-origin-ca: Cloudflare Origin CA documentation, checked October 2026
+
+Claims (full source mapping in the front matter):
+
+- public-trust (REASONED; le, zerossl): ACME CAs such as Let's Encrypt and ZeroSSL issue free publicly trusted certificates; this guide advises preferring them for public DNS names, including private hosts using DNS-01.
+- http-challenge (REASONED; le): HTTP-01 needs a public A/AAAA or CNAME pointing to the server and inbound internet access to port 80.
+- alpn-challenge (REASONED; le, caddy, certmagic, traefik): TLS-ALPN-01 needs a public DNS record and inbound port 443; Caddy's ACME issuer enables the TLS-ALPN-01 solver when DNS-01 is not configured and TLS-ALPN-01 is not disabled, and can use an alternate local port if port 443 forwards to it; Traefik also uses TLS-ALPN-01.
+- dns-challenge (REASONED; le, certbot, certbot-v230): DNS-01 needs control of the challenge TXT record, no public address record or inbound port, and supports wildcards; automated issuance and renewal need an automated way to update TXT records, and this guide advises a provider DNS plugin and scoped API credentials, while Certbot also supports manual DNS-01 and an authentication hook for automatic renewal.
+- certbot-install (REASONED; certbot): Install Certbot and nginx/Apache plugins from the distribution, or the classic snap with /usr/bin/certbot pointing to /snap/bin/certbot.
+- server-plugins (REASONED; certbot): certbot --nginx or --apache issues and installs certificates for the supplied domain names when the server is supported.
+- standalone (REASONED; certbot): certonly --standalone binds port 80; stop its current owner and arrange webroot, a server plugin or port-freeing hooks for unattended renewal.
+- webroot (REASONED; certbot): certonly --webroot uses /var/www/html to serve challenge files while the existing web server keeps running.
+- dns-credentials (REASONED; certbot, certbot-dns-cloudflare-v230): The Cloudflare DNS plugin uses a credentials file and a Zone:DNS:Edit token limited to required zones; this guide requires never using the Global API Key and protecting the file with mode 600 in a 700 directory.
+- certificate-paths (REASONED; certbot): Configure servers against stable /etc/letsencrypt/live/example.com/fullchain.pem and privkey.pem paths for the chain and private key.
+- renewal-schedule (REASONED; certbot, certbot-v230): The Certbot v2.3.0 user guide says most installations have a scheduled task running certbot renew and says that, on Linux and BSD, you can check cron or systemd timers if unsure; this guide requires confirming the task and testing renewal plus reload with --dry-run --run-deploy-hooks, including package and snap installations.
+- deploy-hook (REASONED; certbot, certbot-v230): This guide requires persisting a reload hook during successful initial issuance or successful renewal, or installing an executable in renewal-hooks/deploy; Certbot v2.3.0 saves the renewal-relevant options set on the command line to a lineage after successful renewal, and a renew --deploy-hook invocation with no renewal due does not save that hook.
+- reconfigure (REASONED; reconfigure): certbot reconfigure can add the reload hook later on Certbot 2.3.0 and later.
+- expiry-monitoring (REASONED; le, certbot): Monitor the served certificate's expiry and renewal failures instead of relying on CA reminder emails; include a dry run in the deployment checklist. This guide assesses that any renewal step involving a person will fail at those scheduled shorter certificate lifetimes and that unattended automation is the only viable path.
+- default-lifetime (REASONED; le): At the guide's September 2026 documentation check, Let's Encrypt's default certificate lifetime is 90 days.
+- short-lifetime (REASONED; le): Optional 6-day short-lived certificates are available to every subscriber as of the guide's September 2026 check.
+- lifetime-schedule (REASONED; le): The classic profile moves to 64 days on 2027-02-10 and 45 days on 2028-02-16; industry rules cap publicly trusted certificates at 47 days from 2029-03-15.
+- revocation (REASONED; le): Let's Encrypt ended OCSP on 2025-08-06 and publishes revocation through CRLs only; do not add OCSP stapling directives for its certificates.
+- staging (REASONED; le, certbot): Let's Encrypt limits per-domain issuance; test with certbot --staging or --test-cert before real issuance.
+- caa (REASONED; le): CAA restricts issuing CAs, using issue letsencrypt.org for Let's Encrypt; certificate-transparency monitoring detects mis-issuance afterwards and complements CAA.
+- zerossl-eab (REASONED; zerossl): ZeroSSL offers free ACME certificates; some clients need dashboard EAB credentials.
+- acme-default (REASONED; acme): acme.sh registers with ZeroSSL by default.
+- acme-install (REASONED; acme): acme.sh is a shell ACME client supporting many DNS providers; the guide recommends installation from a repository release instead of piping a download into a shell.
+- server-automation (REASONED; le, caddy, traefik): This guide advises Caddy or Traefik for built-in issuance and renewal without an external client; it assesses them as the lowest-effort correct option for new deployments.
+- origin-certificates (REASONED; le, cloudflare-origin-ca): Cloudflare lists Origin CA certificates on its Free plan, refers to long-lived origin CA certificates and says the validity period is chosen at creation, says they only encrypt traffic between Cloudflare and the origin, and warns that visitors may see untrusted certificate errors when Cloudflare is paused or proxying is disabled; this guide requires using them only for origins that receive traffic only through Cloudflare-proxied records.
+- verify-inventory (REASONED; certbot): certbot certificates lists issued certificates and their expiry dates.
+- verify-https (REASONED; le, curl-source): Use the deployment's public hostname rather than example.com; curl HTTPS should succeed without -k.
+- verify-certificate (REASONED; le, openssl-cli): The OpenSSL probe targets the hostname on port 443 with SNI, hostname verification and verification errors enabled, then displays issuer and dates.
+- authentication (REASONED; le): A certificate alone is insufficient protection; continue with server controls and authentication.
+- dns-automation (REASONED; certbot, certbot-v230): For automated DNS-01 issuance and renewal, this guide advises using a provider DNS plugin and least-privilege API credentials; Certbot also documents manual TXT entry and authentication hooks that automate the challenge.
+- dns-manual (REASONED; certbot, certbot-v230): certbot certonly --manual --preferred-challenges dns permits hand-created TXT records; the Certbot v2.3.0 guide says certificates created with --manual do not support automatic renewal without a --manual-auth-hook that automates the challenge.
 <!-- version-basis:end -->
 
 Publicly trusted certificates are free through ACME certificate authorities such as Let's Encrypt and ZeroSSL. Browsers and libraries accept them without any client-side configuration, which is why this guide assesses them as the correct choice for every service with a public DNS name. Use [self-signed.md](self-signed.md) only when no public domain exists; a host that cannot accept inbound connections can still get a publicly trusted certificate through the DNS-01 challenge (below), or serve behind [cloudflare.md](cloudflare.md).

@@ -197,78 +197,86 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| public-config: Firebase API keys/config and Supabase publishable/anon keys are public identifiers, not authorization; hosted endpoints handle TLS. | Firebase documentation unknown; Supabase documentation unknown | REASONED |
-| firebase-ownership: Require authentication and ownership separately in Firestore, RTDB and Storage; authentication-only rules do not isolate users. | Firebase documentation unknown | REASONED |
-| firebase-starting: Firestore production and RTDB locked modes deny clients; test templates expose data for about a month. Inspect expiry and replace open rules. | Firebase documentation unknown | REASONED |
-| firestore-rules: Rules version 2 recursive wildcards include the user document and descendants; version 1 excludes the parent. Unmatched paths deny and overlapping grants can reopen access. | Firebase documentation unknown | REASONED |
-| rtdb-rules: Owner rules under users.$uid need ancestor grants removed; child rules cannot revoke parent grants or filter parent reads. | Firebase documentation unknown | REASONED |
-| firebase-storage: Storage has separate rules; conflicting default prose/example warrants explicit deny-all followed by deliberate owner-path access. | Firebase documentation unknown | REASONED |
-| firebase-download: Storage download URLs are non-expiring bearer credentials unaffected by tighter Rules; revoke tokens and use authorized getBlob/getBytes direct downloads. | Firebase documentation unknown | REASONED |
-| firebase-rule-deploy: Inspect and test deployed rules for every database/bucket/instance; keep local and deployed definitions synchronized. | Firebase documentation unknown | REASONED |
-| firebase-server: Admin SDK/server credentials bypass client Rules; keep credentials server-side and apply IAM and caller authorization. | Firebase documentation unknown | REASONED |
-| firebase-callable: Callable ID-token validation is optional authentication; reject missing request.auth, use its UID and validate resource access. First-generation handlers use context.auth. | Firebase documentation unknown | REASONED |
-| firebase-callable-appcheck: onCall enforceAppCheck needs firebase-functions 4.0.0 or newer; App Check does not replace caller/resource authorization. | Firebase documentation unknown | REASONED |
-| firebase-http: onRequest does not inherit callable auth; verify end-user tokens with verifyIdToken or restrict IAM invokers, then authorize the intended principal. | Firebase documentation unknown | REASONED |
-| firebase-appcheck: Register compatible clients and inspect metrics, then enforce App Check per product and per callable; registration alone enforces nothing. | Firebase documentation unknown | REASONED |
-| firebase-key-restrictions: Apply one app-restriction type per key plus API restrictions; separate platforms and unrelated billable APIs, using the full Firebase product table. | Firebase documentation unknown | REASONED |
-| firebase-anonymous: Anonymous sign-in is opt-in; disable unused providers because anonymous accounts still satisfy authentication-only Rules. | Firebase documentation unknown | REASONED |
-| firebase-enumeration: Email enumeration protection defaults on only for projects created from September 15, 2023; signup can still return EMAIL_EXISTS. | Firebase documentation unknown | REASONED |
-| firebase-emulators: Emulators default to localhost but missing Firestore/RTDB/Storage Rules configuration means open data; keep listeners, UI, hub, proxies and tunnels private. | Firebase documentation unknown | REASONED |
-| supabase-network: Restrict hosted database/pooler client IPs with Network Restrictions, enforce SSL and protect database-role passwords. | Supabase documentation unknown | REASONED |
-| supabase-grants: Data API access needs grants plus RLS; automatic-grant defaults are transitioning. Table Editor enables RLS, while SQL creation needs explicit enablement. | Supabase documentation unknown | REASONED |
-| supabase-select: The profiles baseline enables RLS, revokes broad grants and permits authenticated owners SELECT; audit inherited/column grants and existing policies. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
-| supabase-bypass: With RLS enabled and no policy, ordinary subject roles get no rows; owners normally bypass, as do superusers/BYPASSRLS roles. TRUNCATE is outside RLS. | PostgreSQL documentation unknown | REASONED |
-| supabase-writes: Grant and policy INSERT/UPDATE/DELETE only when intended; UPDATE checks old/new ownership and needs applicable SELECT when reading columns. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
-| supabase-schemas: public is exposed by default; restrict exposed schemas and deliberately grant schema/object access. Schema selection does not replace RLS. | Supabase documentation unknown | REASONED |
-| supabase-api-disable: Disable an unused Data API to close generated REST endpoints; this does not disable all other services. | Supabase documentation unknown | REASONED |
-| supabase-keys: Publishable keys select anon or authenticated by session; secret and legacy service_role keys bypass RLS and belong only on trusted servers. | Supabase documentation unknown | REASONED |
-| supabase-key-retire: Replacement keys do not disable legacy keys; migrate consumers then explicitly deactivate legacy keys, or delete compromised secret keys. | Supabase documentation unknown | REASONED |
-| supabase-jwt-retire: Rotation changes the signing key but retains previous trust until revocation; account for verifier caches and propagation. | Supabase documentation unknown | REASONED |
-| supabase-view-owner: Views use owner privileges/policies by default; disclosure depends on reachable schemas, grants, query and owner privileges, not anon-key possession alone. | PostgreSQL documentation unknown; Supabase documentation unknown | REASONED |
-| supabase-view-invoker: PostgreSQL 15+ security_invoker views apply caller policies and require underlying privileges. | PostgreSQL invoker-view minimum 15; PostgreSQL documentation unknown | REASONED |
-| supabase-view-legacy: PostgreSQL 14 and earlier require revoking all view privileges from PUBLIC/anon/authenticated or unexposing the schema; updatable views can bypass RLS for writes. | PostgreSQL documentation unknown | REASONED |
-| supabase-functions: Prefer INVOKER; restrict DEFINER execution, use empty search_path with qualified references and enforce caller authorization including required MFA. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
-| supabase-function-defaults: New functions grant PUBLIC execution; create privileged functions and restrict grants transactionally. Global/default revocations are creator-specific and do not fix existing functions. | PostgreSQL documentation unknown | REASONED |
-| supabase-http: Audit http/pg_net wrappers and revoke unneeded execute grants; constrain callers/destinations/data. Extension enablement alone does not prove exploitable SSRF. | Supabase documentation unknown | REASONED |
-| supabase-vault: Restrict vault.decrypted_secrets and privileged wrappers and keep Vault unexposed; at-rest encryption cannot prevent authorized plaintext queries. | Supabase documentation unknown | REASONED |
-| supabase-buckets: Private downloads need authorized access or time-limited signed URLs; public buckets bypass retrieval checks but not upload/delete/move/copy controls. | Supabase documentation unknown | REASONED |
-| supabase-storage-policies: Authorize storage.objects separately by bucket and owner path; upload needs INSERT, upsert also SELECT/UPDATE, and deletion needs deliberate permission. | Supabase documentation unknown | REASONED |
-| supabase-realtime-default: Public Realtime channels are allowed by default; disable them project-wide and also set client config.private. | Supabase documentation unknown | REASONED |
-| supabase-realtime-policy: Broadcast/Presence receive/send need separate SELECT/INSERT policies on realtime.messages, constrained by topic ownership and extension. | Supabase documentation unknown | REASONED |
-| supabase-changes: Postgres Changes uses source-table authorization; private-channel policies are not universal and DELETE has separate limitations. | Supabase documentation unknown | REASONED |
-| supabase-signup: Disable signup, anonymous sign-ins and unused providers when unwanted; inspect hosted settings instead of assuming universal defaults. | Supabase documentation unknown | REASONED |
-| supabase-cli-auth: CLI enable_signup defaults true and enable_anonymous_sign_ins false; local config edits do not prove hosted settings changed. | Supabase documentation unknown | REASONED |
-| supabase-mfa: TOTP is available on every plan at writing; enrollment alone does not constrain data. Require aal2 using a restrictive policy alongside permissive ownership policies. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
-| supabase-edge-jwt: Per-function verify_jwt defaults true; --no-verify-jwt disables platform checking and requires handler authentication before protected work. | Supabase documentation unknown | REASONED |
-| supabase-edge-auth: Platform JWT success is not resource authorization and API-key compatibility can pass it; separately authorize users or verify webhook signatures. | Supabase documentation unknown | REASONED |
-| supabase-edge-secrets: Edge environments contain privileged credentials including SUPABASE_SERVICE_ROLE_KEY; protect managed/local secrets, responses, logs and client bundles. | Supabase documentation unknown | REASONED |
-| verify-firestore: Compare unsigned/A/B reads and writes to user documents and descendants, with a successful owner control; test parent documents to distinguish recursive-rule versions. | Firebase documentation unknown | REASONED |
-| verify-rtdb: Compare unsigned/A/B reads/writes to seeded RTDB owner paths; ancestor grants expose them while ownership rules deny unauthorized callers. | Firebase documentation unknown | REASONED |
-| verify-firebase-storage: Compare unsigned/A/B object reads and uploads; ownership rules must deny unrelated callers while owner operations succeed. | Firebase documentation unknown | REASONED |
-| verify-download-token: Same sessionless download URL works after Rules tightening but must lose bytes after token revocation; owner getBytes remains successful and network/CORS failures are inconclusive. | Firebase documentation unknown | REASONED |
-| verify-tables: Pair unsigned/A/B profiles GETs against seeded rows, using ordinary credentials and required MFA; test intended writes and persisted effects separately. | Supabase documentation unknown; PostgreSQL documentation unknown; curl curl-8_14_1 | REASONED |
-| verify-views: Compare view reads with table boundaries; owner-privileged exposure must close under invoker/revoked access while intended reads or deliberate removal are confirmed. | PostgreSQL documentation unknown | REASONED |
-| verify-rpc: Test every API function overload with valid harmless arguments as unsigned/A/B; unauthorized data or operations must be denied while the intended caller succeeds. | Supabase documentation unknown | REASONED |
-| verify-http: Probe HTTP wrappers with a controlled collector and marker; unauthorized fixed calls must emit no request. Commit pg_net fixture transactions before expecting delivery. | Supabase documentation unknown | REASONED |
-| verify-vault: Use a disposable Vault canary to compare exposed/fixed wrappers; inspect function and table privileges as supporting evidence. | Supabase documentation unknown; PostgreSQL documentation unknown | REASONED |
-| verify-storage: Compare public URL and A/B private downloads plus intended uploads/upserts; unauthorized callers must receive no bytes or cross-owner writes. | Supabase documentation unknown | REASONED |
-| verify-realtime: Compare A/B join, Broadcast and Presence delivery; public-disabled clients lacking private=true must fail, and connection alone is insufficient. | Supabase documentation unknown | REASONED |
-| verify-changes: Observe A/B INSERT/UPDATE subscription events against seeded rows; fixed table authorization withholds unrelated events. Evaluate DELETE separately. | Supabase documentation unknown | REASONED |
-| verify-edge: Compare no/invalid Bearer without apikey, authorized owners and valid webhook signatures; distinguish platform 401 from handler authorization and inspect effects/secrets. | Supabase documentation unknown | REASONED |
-| verify-firebase-functions: Compare callable requests with valid App Check but missing user auth and A/B operations; HTTP endpoints need separate invalid/valid user or IAM comparisons. | Firebase documentation unknown | REASONED |
-| verify-appcheck: Repeat owner requests with/without App Check per product/callable; enforcement must deny missing attestation while compatible clients work. | Firebase documentation unknown | REASONED |
-| verify-api-restrictions: Test intended versus excluded apps/referrers after key restrictions, retaining successful intended product traffic. | Firebase documentation unknown | REASONED |
-| verify-emulators: Enumerate hub /emulators and sockets, compare missing versus loaded Rules and second-host connectivity, and retain local owner controls. | Firebase documentation unknown | REASONED |
-| verify-firebase-accounts: Sign out before each Anonymous signup test and check isNewUser; disabled providers must reject creation. Enumeration tests compare sign-in errors, not EMAIL_EXISTS signup behavior. | Firebase documentation unknown | REASONED |
-| verify-supabase-accounts: Fresh signup and anonymous creation must fail under invite-only/anonymous-disabled settings while an invited account still signs in. | Supabase documentation unknown | REASONED |
-| verify-mfa: Owner profiles GET with aal1 must yield no protected rows under the restrictive policy, while fresh aal2 returns the seeded owner row. | Supabase documentation unknown | REASONED |
-| verify-key-retirement: Compare old/new API keys after explicit deactivation and old/new JWTs after revocation, accounting for propagation and caches. | Supabase documentation unknown | REASONED |
-| verify-api-removal: Previously successful profiles requests must stop returning fixtures after schema removal or Data API disabling; retained schemas need authorized controls. | Supabase documentation unknown | REASONED |
-| verify-bundle: Filename-only service_role/eyJ/sb_secret_ scanning yields review candidates, not proof of leaks; public anon JWTs are legitimate. Use a marker control and inspect encoded/split secrets separately. | Supabase documentation unknown | REASONED |
-| local-guards: Historical local guard tests rejected placeholders and malformed set lines; this demonstrates shell behavior only, not live authorization. Shell/tool versions are not sourced. | Supabase documentation unknown | DEMONSTRATED |
-| local-syntax: Recorded ShellCheck/bash and JSON/TOML/JavaScript parsing passed; these checks do not compile Firebase Rules, execute SQL or demonstrate services. | Firebase documentation unknown; Supabase documentation unknown | DEMONSTRATED |
+Components (recorded basis):
+
+- firebase: Firebase documentation, unknown
+- supabase: Supabase documentation, unknown
+- postgres: PostgreSQL documentation, unknown
+- postgres-view: PostgreSQL invoker-view minimum, 15
+- curl: curl, curl-8_14_1
+
+Claims (full source mapping in the front matter):
+
+- public-config (REASONED; firebase, supabase): Firebase API keys/config and Supabase publishable/anon keys are public identifiers, not authorization; hosted endpoints handle TLS.
+- firebase-ownership (REASONED; firebase): Require authentication and ownership separately in Firestore, RTDB and Storage; authentication-only rules do not isolate users.
+- firebase-starting (REASONED; firebase): Firestore production and RTDB locked modes deny clients; test templates expose data for about a month. Inspect expiry and replace open rules.
+- firestore-rules (REASONED; firebase): Rules version 2 recursive wildcards include the user document and descendants; version 1 excludes the parent. Unmatched paths deny and overlapping grants can reopen access.
+- rtdb-rules (REASONED; firebase): Owner rules under users.$uid need ancestor grants removed; child rules cannot revoke parent grants or filter parent reads.
+- firebase-storage (REASONED; firebase): Storage has separate rules; conflicting default prose/example warrants explicit deny-all followed by deliberate owner-path access.
+- firebase-download (REASONED; firebase): Storage download URLs are non-expiring bearer credentials unaffected by tighter Rules; revoke tokens and use authorized getBlob/getBytes direct downloads.
+- firebase-rule-deploy (REASONED; firebase): Inspect and test deployed rules for every database/bucket/instance; keep local and deployed definitions synchronized.
+- firebase-server (REASONED; firebase): Admin SDK/server credentials bypass client Rules; keep credentials server-side and apply IAM and caller authorization.
+- firebase-callable (REASONED; firebase): Callable ID-token validation is optional authentication; reject missing request.auth, use its UID and validate resource access. First-generation handlers use context.auth.
+- firebase-callable-appcheck (REASONED; firebase): onCall enforceAppCheck needs firebase-functions 4.0.0 or newer; App Check does not replace caller/resource authorization.
+- firebase-http (REASONED; firebase): onRequest does not inherit callable auth; verify end-user tokens with verifyIdToken or restrict IAM invokers, then authorize the intended principal.
+- firebase-appcheck (REASONED; firebase): Register compatible clients and inspect metrics, then enforce App Check per product and per callable; registration alone enforces nothing.
+- firebase-key-restrictions (REASONED; firebase): Apply one app-restriction type per key plus API restrictions; separate platforms and unrelated billable APIs, using the full Firebase product table.
+- firebase-anonymous (REASONED; firebase): Anonymous sign-in is opt-in; disable unused providers because anonymous accounts still satisfy authentication-only Rules.
+- firebase-enumeration (REASONED; firebase): Email enumeration protection defaults on only for projects created from September 15, 2023; signup can still return EMAIL_EXISTS.
+- firebase-emulators (REASONED; firebase): Emulators default to localhost but missing Firestore/RTDB/Storage Rules configuration means open data; keep listeners, UI, hub, proxies and tunnels private.
+- supabase-network (REASONED; supabase): Restrict hosted database/pooler client IPs with Network Restrictions, enforce SSL and protect database-role passwords.
+- supabase-grants (REASONED; supabase): Data API access needs grants plus RLS; automatic-grant defaults are transitioning. Table Editor enables RLS, while SQL creation needs explicit enablement.
+- supabase-select (REASONED; supabase, postgres): The profiles baseline enables RLS, revokes broad grants and permits authenticated owners SELECT; audit inherited/column grants and existing policies.
+- supabase-bypass (REASONED; postgres): With RLS enabled and no policy, ordinary subject roles get no rows; owners normally bypass, as do superusers/BYPASSRLS roles. TRUNCATE is outside RLS.
+- supabase-writes (REASONED; supabase, postgres): Grant and policy INSERT/UPDATE/DELETE only when intended; UPDATE checks old/new ownership and needs applicable SELECT when reading columns.
+- supabase-schemas (REASONED; supabase): public is exposed by default; restrict exposed schemas and deliberately grant schema/object access. Schema selection does not replace RLS.
+- supabase-api-disable (REASONED; supabase): Disable an unused Data API to close generated REST endpoints; this does not disable all other services.
+- supabase-keys (REASONED; supabase): Publishable keys select anon or authenticated by session; secret and legacy service_role keys bypass RLS and belong only on trusted servers.
+- supabase-key-retire (REASONED; supabase): Replacement keys do not disable legacy keys; migrate consumers then explicitly deactivate legacy keys, or delete compromised secret keys.
+- supabase-jwt-retire (REASONED; supabase): Rotation changes the signing key but retains previous trust until revocation; account for verifier caches and propagation.
+- supabase-view-owner (REASONED; postgres, supabase): Views use owner privileges/policies by default; disclosure depends on reachable schemas, grants, query and owner privileges, not anon-key possession alone.
+- supabase-view-invoker (REASONED; postgres-view, postgres): PostgreSQL 15+ security_invoker views apply caller policies and require underlying privileges.
+- supabase-view-legacy (REASONED; postgres): PostgreSQL 14 and earlier require revoking all view privileges from PUBLIC/anon/authenticated or unexposing the schema; updatable views can bypass RLS for writes.
+- supabase-functions (REASONED; supabase, postgres): Prefer INVOKER; restrict DEFINER execution, use empty search_path with qualified references and enforce caller authorization including required MFA.
+- supabase-function-defaults (REASONED; postgres): New functions grant PUBLIC execution; create privileged functions and restrict grants transactionally. Global/default revocations are creator-specific and do not fix existing functions.
+- supabase-http (REASONED; supabase): Audit http/pg_net wrappers and revoke unneeded execute grants; constrain callers/destinations/data. Extension enablement alone does not prove exploitable SSRF.
+- supabase-vault (REASONED; supabase): Restrict vault.decrypted_secrets and privileged wrappers and keep Vault unexposed; at-rest encryption cannot prevent authorized plaintext queries.
+- supabase-buckets (REASONED; supabase): Private downloads need authorized access or time-limited signed URLs; public buckets bypass retrieval checks but not upload/delete/move/copy controls.
+- supabase-storage-policies (REASONED; supabase): Authorize storage.objects separately by bucket and owner path; upload needs INSERT, upsert also SELECT/UPDATE, and deletion needs deliberate permission.
+- supabase-realtime-default (REASONED; supabase): Public Realtime channels are allowed by default; disable them project-wide and also set client config.private.
+- supabase-realtime-policy (REASONED; supabase): Broadcast/Presence receive/send need separate SELECT/INSERT policies on realtime.messages, constrained by topic ownership and extension.
+- supabase-changes (REASONED; supabase): Postgres Changes uses source-table authorization; private-channel policies are not universal and DELETE has separate limitations.
+- supabase-signup (REASONED; supabase): Disable signup, anonymous sign-ins and unused providers when unwanted; inspect hosted settings instead of assuming universal defaults.
+- supabase-cli-auth (REASONED; supabase): CLI enable_signup defaults true and enable_anonymous_sign_ins false; local config edits do not prove hosted settings changed.
+- supabase-mfa (REASONED; supabase, postgres): TOTP is available on every plan at writing; enrollment alone does not constrain data. Require aal2 using a restrictive policy alongside permissive ownership policies.
+- supabase-edge-jwt (REASONED; supabase): Per-function verify_jwt defaults true; --no-verify-jwt disables platform checking and requires handler authentication before protected work.
+- supabase-edge-auth (REASONED; supabase): Platform JWT success is not resource authorization and API-key compatibility can pass it; separately authorize users or verify webhook signatures.
+- supabase-edge-secrets (REASONED; supabase): Edge environments contain privileged credentials including SUPABASE_SERVICE_ROLE_KEY; protect managed/local secrets, responses, logs and client bundles.
+- verify-firestore (REASONED; firebase): Compare unsigned/A/B reads and writes to user documents and descendants, with a successful owner control; test parent documents to distinguish recursive-rule versions.
+- verify-rtdb (REASONED; firebase): Compare unsigned/A/B reads/writes to seeded RTDB owner paths; ancestor grants expose them while ownership rules deny unauthorized callers.
+- verify-firebase-storage (REASONED; firebase): Compare unsigned/A/B object reads and uploads; ownership rules must deny unrelated callers while owner operations succeed.
+- verify-download-token (REASONED; firebase): Same sessionless download URL works after Rules tightening but must lose bytes after token revocation; owner getBytes remains successful and network/CORS failures are inconclusive.
+- verify-tables (REASONED; supabase, postgres, curl): Pair unsigned/A/B profiles GETs against seeded rows, using ordinary credentials and required MFA; test intended writes and persisted effects separately.
+- verify-views (REASONED; postgres): Compare view reads with table boundaries; owner-privileged exposure must close under invoker/revoked access while intended reads or deliberate removal are confirmed.
+- verify-rpc (REASONED; supabase): Test every API function overload with valid harmless arguments as unsigned/A/B; unauthorized data or operations must be denied while the intended caller succeeds.
+- verify-http (REASONED; supabase): Probe HTTP wrappers with a controlled collector and marker; unauthorized fixed calls must emit no request. Commit pg_net fixture transactions before expecting delivery.
+- verify-vault (REASONED; supabase, postgres): Use a disposable Vault canary to compare exposed/fixed wrappers; inspect function and table privileges as supporting evidence.
+- verify-storage (REASONED; supabase): Compare public URL and A/B private downloads plus intended uploads/upserts; unauthorized callers must receive no bytes or cross-owner writes.
+- verify-realtime (REASONED; supabase): Compare A/B join, Broadcast and Presence delivery; public-disabled clients lacking private=true must fail, and connection alone is insufficient.
+- verify-changes (REASONED; supabase): Observe A/B INSERT/UPDATE subscription events against seeded rows; fixed table authorization withholds unrelated events. Evaluate DELETE separately.
+- verify-edge (REASONED; supabase): Compare no/invalid Bearer without apikey, authorized owners and valid webhook signatures; distinguish platform 401 from handler authorization and inspect effects/secrets.
+- verify-firebase-functions (REASONED; firebase): Compare callable requests with valid App Check but missing user auth and A/B operations; HTTP endpoints need separate invalid/valid user or IAM comparisons.
+- verify-appcheck (REASONED; firebase): Repeat owner requests with/without App Check per product/callable; enforcement must deny missing attestation while compatible clients work.
+- verify-api-restrictions (REASONED; firebase): Test intended versus excluded apps/referrers after key restrictions, retaining successful intended product traffic.
+- verify-emulators (REASONED; firebase): Enumerate hub /emulators and sockets, compare missing versus loaded Rules and second-host connectivity, and retain local owner controls.
+- verify-firebase-accounts (REASONED; firebase): Sign out before each Anonymous signup test and check isNewUser; disabled providers must reject creation. Enumeration tests compare sign-in errors, not EMAIL_EXISTS signup behavior.
+- verify-supabase-accounts (REASONED; supabase): Fresh signup and anonymous creation must fail under invite-only/anonymous-disabled settings while an invited account still signs in.
+- verify-mfa (REASONED; supabase): Owner profiles GET with aal1 must yield no protected rows under the restrictive policy, while fresh aal2 returns the seeded owner row.
+- verify-key-retirement (REASONED; supabase): Compare old/new API keys after explicit deactivation and old/new JWTs after revocation, accounting for propagation and caches.
+- verify-api-removal (REASONED; supabase): Previously successful profiles requests must stop returning fixtures after schema removal or Data API disabling; retained schemas need authorized controls.
+- verify-bundle (REASONED; supabase): Filename-only service_role/eyJ/sb_secret_ scanning yields review candidates, not proof of leaks; public anon JWTs are legitimate. Use a marker control and inspect encoded/split secrets separately.
+- local-guards (DEMONSTRATED; supabase): Historical local guard tests rejected placeholders and malformed set lines; this demonstrates shell behavior only, not live authorization. Shell/tool versions are not sourced.
+- local-syntax (DEMONSTRATED; firebase, supabase): Recorded ShellCheck/bash and JSON/TOML/JavaScript parsing passed; these checks do not compile Firebase Rules, execute SQL or demonstrate services.
 <!-- version-basis:end -->
 
 These platforms handle TLS for you on their hosted endpoints; the exposure works differently.

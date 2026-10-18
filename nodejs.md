@@ -119,30 +119,43 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| tls: Direct HTTPS uses a certificate plus chain and private key on all-interface 443. | Node.js documentation unknown | REASONED |
-| redirect: All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended. | Node.js documentation unknown | REASONED |
-| bind: Same-host proxy uses 127.0.0.1; managed ingress uses platform-required addresses and ports with edge TLS and application auth. Platform mappings are cross-guide guidance, not covered by listed Sources. | Node.js documentation unknown; Express proxy documentation unknown | REASONED |
-| privilege: On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout. | Node.js documentation unknown; Linux man-pages ip(7) 6.19; Linux man-pages capabilities(7) 6.19 | REASONED |
-| proxy: Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten. | Express proxy documentation unknown | REASONED |
-| headers: Install helmet() for security headers including HSTS. | Helmet documentation unknown | REASONED |
-| password: Prefer argon2id for new apps; existing bcrypt systems use hash cost 12 and compare. Password-library APIs are not covered by listed Sources. | express-session documentation unknown | REASONED |
-| session-secret: Load a long random SESSION_SECRET from the environment. | express-session documentation unknown | REASONED |
-| session-save: Set resave=false and saveUninitialized=false. | express-session documentation unknown | REASONED |
-| cookies: Set Secure, HttpOnly, SameSite=lax and an eight-hour cookie maxAge in milliseconds. | express-session documentation unknown | REASONED |
-| store: Default MemoryStore is development-only, leaks memory and cannot scale past one process; supply a production store. | express-session documentation unknown | REASONED |
-| expiry: No cookie maximum age is set by default; set cookie.maxAge. | express-session documentation unknown | REASONED |
-| login-limit: Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls. | express-rate-limit minimum v8 | REASONED |
-| tokens: This guide advises loading API keys and tokens from process.env, never from source literals, and comparing self-checked secret values with crypto.timingSafeEqual using equal-byte-length byte inputs; process.env exposes the user environment, while timingSafeEqual's input requirements and surrounding-code limit are documented. | Node.js documentation unknown; Node.js API documentation v24.22.0 | REASONED |
-| mfa: Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; the fronting identity layer is not covered by listed Sources. | express-session documentation unknown; otplib v12.0.1; qrcode v1.5.4 | REASONED |
-| tls-validation: This guide advises never setting NODE_TLS_REJECT_UNAUTHORIZED=0 for the Node.js process's TLS connections or rejectUnauthorized=false for a client TLS connection or an HTTPS agent whose requests use it; Node.js documents the TLS validation effects, and the agent reach is this guide's assessment of the documented options flow. | Node.js documentation unknown; Node.js API documentation v24.22.0 | REASONED |
-| client-ca: This guide advises setting NODE_EXTRA_CA_CERTS to a PEM file before launching Node.js for an internal CA or self-signed server; it extends well-known roots, is read only at launch, and is ignored when Node.js runs as setuid root or with Linux file capabilities; neither it nor the well-known roots is used by a TLS or HTTPS client or server given an explicit ca option. | Node.js documentation unknown; Node.js API documentation v24.22.0 | REASONED |
-| verify-redirect: HTTP should return 301 with an HTTPS Location. | Node.js documentation unknown | REASONED |
-| verify-tls: HTTPS must succeed without -k and show Helmet headers. | Node.js documentation unknown; Helmet documentation unknown | REASONED |
-| verify-auth: A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial. | express-session documentation unknown | REASONED |
-| verify-bind: Inspect every listener for loopback behind a same-host proxy or the managed platform address and port. | Node.js documentation unknown; Express proxy documentation unknown | REASONED |
-| verify-proxy: Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust. | Express proxy documentation unknown | REASONED |
+Components (recorded basis):
+
+- node: Node.js documentation, unknown
+- linux-ip: Linux man-pages ip(7), 6.19
+- linux-capabilities: Linux man-pages capabilities(7), 6.19
+- express: Express proxy documentation, unknown
+- session: express-session documentation, unknown
+- helmet: Helmet documentation, unknown
+- rate: express-rate-limit minimum, v8
+- otplib: otplib, v12.0.1
+- qrcode: qrcode, v1.5.4
+- node-v24: Node.js API documentation, v24.22.0
+
+Claims (full source mapping in the front matter):
+
+- tls (REASONED; node): Direct HTTPS uses a certificate plus chain and private key on all-interface 443.
+- redirect (REASONED; node): All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.
+- bind (REASONED; node, express): Same-host proxy uses 127.0.0.1; managed ingress uses platform-required addresses and ports with edge TLS and application auth. Platform mappings are cross-guide guidance, not covered by listed Sources.
+- privilege (REASONED; node, linux-ip, linux-capabilities): On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout.
+- proxy (REASONED; express): Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.
+- headers (REASONED; helmet): Install helmet() for security headers including HSTS.
+- password (REASONED; session): Prefer argon2id for new apps; existing bcrypt systems use hash cost 12 and compare. Password-library APIs are not covered by listed Sources.
+- session-secret (REASONED; session): Load a long random SESSION_SECRET from the environment.
+- session-save (REASONED; session): Set resave=false and saveUninitialized=false.
+- cookies (REASONED; session): Set Secure, HttpOnly, SameSite=lax and an eight-hour cookie maxAge in milliseconds.
+- store (REASONED; session): Default MemoryStore is development-only, leaks memory and cannot scale past one process; supply a production store.
+- expiry (REASONED; session): No cookie maximum age is set by default; set cookie.maxAge.
+- login-limit (REASONED; rate): Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls.
+- tokens (REASONED; node, node-v24): This guide advises loading API keys and tokens from process.env, never from source literals, and comparing self-checked secret values with crypto.timingSafeEqual using equal-byte-length byte inputs; process.env exposes the user environment, while timingSafeEqual's input requirements and surrounding-code limit are documented.
+- mfa (REASONED; session, otplib, qrcode): Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; the fronting identity layer is not covered by listed Sources.
+- tls-validation (REASONED; node, node-v24): This guide advises never setting NODE_TLS_REJECT_UNAUTHORIZED=0 for the Node.js process's TLS connections or rejectUnauthorized=false for a client TLS connection or an HTTPS agent whose requests use it; Node.js documents the TLS validation effects, and the agent reach is this guide's assessment of the documented options flow.
+- client-ca (REASONED; node, node-v24): This guide advises setting NODE_EXTRA_CA_CERTS to a PEM file before launching Node.js for an internal CA or self-signed server; it extends well-known roots, is read only at launch, and is ignored when Node.js runs as setuid root or with Linux file capabilities; neither it nor the well-known roots is used by a TLS or HTTPS client or server given an explicit ca option.
+- verify-redirect (REASONED; node): HTTP should return 301 with an HTTPS Location.
+- verify-tls (REASONED; node, helmet): HTTPS must succeed without -k and show Helmet headers.
+- verify-auth (REASONED; session): A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial.
+- verify-bind (REASONED; node, express): Inspect every listener for loopback behind a same-host proxy or the managed platform address and port.
+- verify-proxy (REASONED; express): Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust.
 <!-- version-basis:end -->
 
 Preferred production layout: bind the Node app to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). On a managed platform the platform terminates TLS at its edge and you bind the address it requires, not `127.0.0.1` ([paas.md](paas.md)). Node can also terminate TLS itself, shown below. Get a certificate per [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).

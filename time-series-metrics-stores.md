@@ -177,53 +177,66 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| influx2-setup: 8086 shares API/UI/write; private onboarding creates operator user/org/token, setup allowed changes true to false, scoped app tokens. | InfluxDB OSS 2.x | REASONED |
-| influx2-tls: INFLUXD_CONFIG_PATH selects config; http-bind-address, tls-cert and tls-key set private HTTPS. | InfluxDB OSS 2.x | REASONED |
-| influx1-auth: 8086 auth defaults off; create admin then set bind-address, auth-enabled and HTTPS certificate/key fields. | InfluxDB OSS 1.x | REASONED |
-| influx1-other: prom-read-auth-enabled=false by default; set it true with auth-enabled for remote-read auth; 8088 backup RPC defaults loopback; optional unauthenticated ingest stays disabled. | InfluxDB OSS 1.x | REASONED |
-| vm-bind: Single-node HTTP fallback :8428, tcp4 default, enableTCP6 false; explicit private bind and TLS flags. | VictoriaMetrics single-node v1.152.0; VictoriaMetrics single-node source commit 540b91da031aa8b7d53d3784693bb451e2be980a | REASONED |
-| vm-image: Source tag ships Compose using image v1.151.0, wildcard 8428 publication and additional ingest listeners. | VictoriaMetrics single-node v1.152.0; VictoriaMetrics shipped Compose image v1.151.0 | REASONED |
-| vm-basic: Empty username disables Basic auth even with password; ordinary query/UI/HTTP ingest and aliases share the credential. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| vm-exempt: Health/ping/readiness/robots/favicon, OPTIONS and prefix handling exemptions differ from authenticated ready and influx/health. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| vm-keys: Registered endpoint keys default empty and fall back to Basic; nonempty authKey replaces Basic, wrong/missing gives 401; other aliases may require both. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| vm-optional: Graphite/Influx/OpenTSDB/native-query listeners default disabled; no TLS, and only OpenTSDB HTTP put checks Basic. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| cluster-http: vminsert/vmselect/vmstorage fall back to 8480/8481/8482 on IPv4 wildcard; optional IPv6, empty Basic credentials and HTTP-only TLS. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da | REASONED |
-| cluster-rpc: 8400/8401 wildcard RPC has no credentials/TLS; handshake/compression permits writes, reads, deletion and metadata mutations, outside HTTP auth. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da | REASONED |
-| cluster-native: Optional clusternativeListenAddr is disabled by default; restrict enabled native listeners to trusted cluster peers. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics security/vmauth documentation unknown | REASONED |
-| cluster-key-snapshot: vmstorage: -snapshotAuthKey gates /snapshot/create, /snapshot/list, /snapshot/delete and /snapshot/delete_all. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
-| cluster-key-merge: vmstorage: -forceMergeAuthKey gates /internal/force_merge. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
-| cluster-key-flush: vmstorage: -forceFlushAuthKey gates /internal/force_flush. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
-| cluster-key-logging: vmstorage: -logNewSeriesAuthKey gates /internal/log_new_series. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
-| cluster-key-delete: vmselect: -deleteAuthKey gates POSTs to /delete/{accountID}/prometheus/api/v1/admin/tsdb/delete_series and /select/{accountID}/graphite/tags/delSeries. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
-| cluster-key-cache: vmselect: -search.resetCacheAuthKey gates /internal/resetRollupResultCache. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
-| cluster-key-stats: vmselect: -metricNamesStatsResetAuthKey gates /admin/api/v1/admin/status/metric_names_stats/reset. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
-| cluster-key-metrics: All three HTTP components: -metricsAuthKey gates /metrics. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
-| cluster-key-flags: All three HTTP components: -flagsAuthKey gates /flags. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
-| cluster-key-pprof: All three HTTP components: -pprofAuthKey gates /debug/pprof/*. | VictoriaMetrics cluster v1.152.0-cluster | REASONED |
-| cluster-precedence: Empty keys fall back to Basic; nonempty keys replace it, not add a factor or protect other routes; allowlist proxy routes. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da; VictoriaMetrics security/vmauth documentation unknown | REASONED |
-| quest-http: 9000 HTTP/console/SQL defaults unauthenticated; set http.user/password in server.conf. 9003 health requires auth when HTTP does by default; http.health.check.authentication.required=false disables that health check requirement. | QuestDB documentation unknown | REASONED |
-| quest-pg: 8812 PostgreSQL wire defaults admin/quest; replace pg.user/password and protect its separate listener. | QuestDB documentation unknown | REASONED |
-| quest-ilp: 9009 TCP writes default unauthenticated; line.tcp.auth.db.path selects P-256 public-key file. | QuestDB documentation unknown | REASONED |
-| quest-tls: OSS requires proxy TLS; Enterprise uses RBAC/tls.enabled and rejects HTTP credential keys since stated Enterprise 4.0.0. | QuestDB documentation unknown; QuestDB Enterprise qualification 4.0.0 | REASONED |
-| verify-inventory: Inventory TCP/UDP and every enabled listener; local binds do not prove external isolation. | InfluxDB OSS 1.x; VictoriaMetrics single-node v1.152.0; VictoriaMetrics cluster v1.152.0-cluster; QuestDB documentation unknown | REASONED |
-| verify-rpc: Actual storage IPs must refuse outside TCP while permitted hosts connect; protocol is not HTTP and failure alone proves no isolation. | VictoriaMetrics cluster v1.152.0-cluster; VictoriaMetrics cluster source e4b1d55683f0da20410dc765787bd4e9b5afa0da; VictoriaMetrics security/vmauth documentation unknown | REASONED |
-| verify-http: Setup body, Influx1 database list/401, VM query/401 and Quest SQL/401 discriminate per target; redirects/errors are inconclusive. | InfluxDB OSS 2.x; InfluxDB OSS 1.x; VictoriaMetrics single-node v1.152.0; QuestDB documentation unknown | REASONED |
-| verify-extra: Reject default PG credential separately; repeat HTTPS auth and plaintext isolation; console MFA does not protect native protocols. | QuestDB documentation unknown; VictoriaMetrics security/vmauth documentation unknown | REASONED |
-| verify-keys: Read-only snapshot/list and metrics probes test empty/Basic/endpoint-key cases; health exemptions and optional listeners need separate checks. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| key-snapshot: snapshotAuthKey gates snapshot create/list/delete/delete_all and admin TSDB snapshot. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| key-delete: deleteAuthKey gates Prometheus delete_series and Graphite delSeries aliases. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| key-merge: forceMergeAuthKey gates internal/force_merge. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| key-flush: forceFlushAuthKey gates internal/force_flush. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| key-cache: search.resetCacheAuthKey gates internal/resetRollupResultCache. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| key-logging: logNewSeriesAuthKey gates internal/log_new_series. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| key-stats: metricNamesStatsResetAuthKey gates admin/status/metric_names_stats/reset. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| key-config: configAuthKey gates config and API status/config with Prometheus aliases. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| key-reload: reloadAuthKey gates -/reload and Prometheus alias. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| key-metrics: metricsAuthKey gates metrics. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| key-flags: flagsAuthKey gates flags. | VictoriaMetrics single-node v1.152.0 | REASONED |
-| key-pprof: pprofAuthKey gates debug/pprof/* including trailing slash. | VictoriaMetrics single-node v1.152.0 | REASONED |
+Components (recorded basis):
+
+- influx2: InfluxDB OSS, 2.x
+- influx1: InfluxDB OSS, 1.x
+- single: VictoriaMetrics single-node, v1.152.0
+- cluster: VictoriaMetrics cluster, v1.152.0-cluster
+- rpc: VictoriaMetrics cluster source, e4b1d55683f0da20410dc765787bd4e9b5afa0da
+- proxy: VictoriaMetrics security/vmauth documentation, unknown
+- quest: QuestDB documentation, unknown
+- single-commit: VictoriaMetrics single-node source commit, 540b91da031aa8b7d53d3784693bb451e2be980a
+- image: VictoriaMetrics shipped Compose image, v1.151.0
+- enterprise: QuestDB Enterprise qualification, 4.0.0
+
+Claims (full source mapping in the front matter):
+
+- influx2-setup (REASONED; influx2): 8086 shares API/UI/write; private onboarding creates operator user/org/token, setup allowed changes true to false, scoped app tokens.
+- influx2-tls (REASONED; influx2): INFLUXD_CONFIG_PATH selects config; http-bind-address, tls-cert and tls-key set private HTTPS.
+- influx1-auth (REASONED; influx1): 8086 auth defaults off; create admin then set bind-address, auth-enabled and HTTPS certificate/key fields.
+- influx1-other (REASONED; influx1): prom-read-auth-enabled=false by default; set it true with auth-enabled for remote-read auth; 8088 backup RPC defaults loopback; optional unauthenticated ingest stays disabled.
+- vm-bind (REASONED; single, single-commit): Single-node HTTP fallback :8428, tcp4 default, enableTCP6 false; explicit private bind and TLS flags.
+- vm-image (REASONED; single, image): Source tag ships Compose using image v1.151.0, wildcard 8428 publication and additional ingest listeners.
+- vm-basic (REASONED; single): Empty username disables Basic auth even with password; ordinary query/UI/HTTP ingest and aliases share the credential.
+- vm-exempt (REASONED; single): Health/ping/readiness/robots/favicon, OPTIONS and prefix handling exemptions differ from authenticated ready and influx/health.
+- vm-keys (REASONED; single): Registered endpoint keys default empty and fall back to Basic; nonempty authKey replaces Basic, wrong/missing gives 401; other aliases may require both.
+- vm-optional (REASONED; single): Graphite/Influx/OpenTSDB/native-query listeners default disabled; no TLS, and only OpenTSDB HTTP put checks Basic.
+- cluster-http (REASONED; cluster, rpc): vminsert/vmselect/vmstorage fall back to 8480/8481/8482 on IPv4 wildcard; optional IPv6, empty Basic credentials and HTTP-only TLS.
+- cluster-rpc (REASONED; cluster, rpc): 8400/8401 wildcard RPC has no credentials/TLS; handshake/compression permits writes, reads, deletion and metadata mutations, outside HTTP auth.
+- cluster-native (REASONED; cluster, proxy): Optional clusternativeListenAddr is disabled by default; restrict enabled native listeners to trusted cluster peers.
+- cluster-key-snapshot (REASONED; cluster): vmstorage: -snapshotAuthKey gates /snapshot/create, /snapshot/list, /snapshot/delete and /snapshot/delete_all.
+- cluster-key-merge (REASONED; cluster): vmstorage: -forceMergeAuthKey gates /internal/force_merge.
+- cluster-key-flush (REASONED; cluster): vmstorage: -forceFlushAuthKey gates /internal/force_flush.
+- cluster-key-logging (REASONED; cluster): vmstorage: -logNewSeriesAuthKey gates /internal/log_new_series.
+- cluster-key-delete (REASONED; cluster): vmselect: -deleteAuthKey gates POSTs to /delete/{accountID}/prometheus/api/v1/admin/tsdb/delete_series and /select/{accountID}/graphite/tags/delSeries.
+- cluster-key-cache (REASONED; cluster): vmselect: -search.resetCacheAuthKey gates /internal/resetRollupResultCache.
+- cluster-key-stats (REASONED; cluster): vmselect: -metricNamesStatsResetAuthKey gates /admin/api/v1/admin/status/metric_names_stats/reset.
+- cluster-key-metrics (REASONED; cluster): All three HTTP components: -metricsAuthKey gates /metrics.
+- cluster-key-flags (REASONED; cluster): All three HTTP components: -flagsAuthKey gates /flags.
+- cluster-key-pprof (REASONED; cluster): All three HTTP components: -pprofAuthKey gates /debug/pprof/*.
+- cluster-precedence (REASONED; cluster, rpc, proxy): Empty keys fall back to Basic; nonempty keys replace it, not add a factor or protect other routes; allowlist proxy routes.
+- quest-http (REASONED; quest): 9000 HTTP/console/SQL defaults unauthenticated; set http.user/password in server.conf. 9003 health requires auth when HTTP does by default; http.health.check.authentication.required=false disables that health check requirement.
+- quest-pg (REASONED; quest): 8812 PostgreSQL wire defaults admin/quest; replace pg.user/password and protect its separate listener.
+- quest-ilp (REASONED; quest): 9009 TCP writes default unauthenticated; line.tcp.auth.db.path selects P-256 public-key file.
+- quest-tls (REASONED; quest, enterprise): OSS requires proxy TLS; Enterprise uses RBAC/tls.enabled and rejects HTTP credential keys since stated Enterprise 4.0.0.
+- verify-inventory (REASONED; influx1, single, cluster, quest): Inventory TCP/UDP and every enabled listener; local binds do not prove external isolation.
+- verify-rpc (REASONED; cluster, rpc, proxy): Actual storage IPs must refuse outside TCP while permitted hosts connect; protocol is not HTTP and failure alone proves no isolation.
+- verify-http (REASONED; influx2, influx1, single, quest): Setup body, Influx1 database list/401, VM query/401 and Quest SQL/401 discriminate per target; redirects/errors are inconclusive.
+- verify-extra (REASONED; quest, proxy): Reject default PG credential separately; repeat HTTPS auth and plaintext isolation; console MFA does not protect native protocols.
+- verify-keys (REASONED; single): Read-only snapshot/list and metrics probes test empty/Basic/endpoint-key cases; health exemptions and optional listeners need separate checks.
+- key-snapshot (REASONED; single): snapshotAuthKey gates snapshot create/list/delete/delete_all and admin TSDB snapshot.
+- key-delete (REASONED; single): deleteAuthKey gates Prometheus delete_series and Graphite delSeries aliases.
+- key-merge (REASONED; single): forceMergeAuthKey gates internal/force_merge.
+- key-flush (REASONED; single): forceFlushAuthKey gates internal/force_flush.
+- key-cache (REASONED; single): search.resetCacheAuthKey gates internal/resetRollupResultCache.
+- key-logging (REASONED; single): logNewSeriesAuthKey gates internal/log_new_series.
+- key-stats (REASONED; single): metricNamesStatsResetAuthKey gates admin/status/metric_names_stats/reset.
+- key-config (REASONED; single): configAuthKey gates config and API status/config with Prometheus aliases.
+- key-reload (REASONED; single): reloadAuthKey gates -/reload and Prometheus alias.
+- key-metrics (REASONED; single): metricsAuthKey gates metrics.
+- key-flags (REASONED; single): flagsAuthKey gates flags.
+- key-pprof (REASONED; single): pprofAuthKey gates debug/pprof/* including trailing slash.
 <!-- version-basis:end -->
 
 A metrics store ingests over HTTP and answers queries over an HTTP API, and most ship a web console beside it. Several of them either authenticate nothing by default or ship a known default credential, so an instance that is reachable from off-host lets a stranger read your operational and business series, write false points that poison dashboards and alerts, or delete history. This guide covers three that AI-assisted projects commonly stand up. The controls are the same shape in each: bind the listeners privately, put authentication and TLS in front where the engine has none of its own, and change every default credential. [fronting-auth.md](fronting-auth.md) is the reverse-proxy pattern these lean on, [secrets.md](secrets.md) covers the tokens and passwords, and [mfa.md](mfa.md) is the account layer. All ports below bind all interfaces (`0.0.0.0`) unless noted, and native TLS is off unless you configure it. Replace every illustrative address and name.

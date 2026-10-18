@@ -130,30 +130,43 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| docker-user: Dockerfile USER sets build/runtime identity; set user and group, since no primary group uses root. Compose user overrides it; unset in both runs as root. | Docker documentation unknown | REASONED |
-| docker-rootfs: Compose read_only makes the root filesystem read-only; provide tmpfs only for required writable paths. | Docker documentation unknown | REASONED |
-| docker-capabilities: cap_drop: [ALL] removes capabilities; add back only specific required capabilities with cap_add. | Docker documentation unknown | REASONED |
-| docker-escalation: no-new-privileges prevents setuid privilege gain; the guide lists bare, equals-true and colon-true spellings as equivalent. | Docker documentation unknown | REASONED |
-| docker-socket: Never mount /var/run/docker.sock. In Docker's default rootful configuration, daemon control lets a user start a container that can alter the host filesystem without restriction, and docker-group membership grants root-level privileges; Rootless mode runs the daemon and containers without root privileges. Docker documents mounted-socket daemon control with a Docker client, and documents --privileged and host bind mounts; a socket-holding container starting a privileged sibling or bind-mounting host / to escape is this guide's assessment. Rootless mode narrowing the available host privilege but not making the mount safe is this guide's assessment. | Docker documentation unknown; Docker daemon security documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
-| kube-user: runAsNonRoot rejects root; pin runAsUser and runAsGroup to 10001, with the guide noting runtime-default GID 0 if unset. | Kubernetes documentation unknown | REASONED |
-| kube-rootfs: Set readOnlyRootFilesystem per container; this is a separate recommendation, not a restricted Pod Security requirement. | Kubernetes documentation unknown | REASONED |
-| kube-escalation: Set allowPrivilegeEscalation: false in the container securityContext. | Kubernetes documentation unknown | REASONED |
-| kube-capabilities: Drop ALL capabilities in the container securityContext. | Kubernetes documentation unknown | REASONED |
-| kube-seccomp: RuntimeDefault selects the runtime syscall filter instead of Unconfined. | Kubernetes documentation unknown | REASONED |
-| admission: Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp. | Kubernetes documentation unknown; Kubernetes Pod Security Admission 1.34 | REASONED |
-| existing-pods: Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads. | Kubernetes documentation unknown; Kubernetes Pod Security Admission 1.34 | REASONED |
-| policy-semantics: NetworkPolicies are additive and require an enforcing CNI; both source egress and destination ingress must allow a connection. | Kubernetes documentation unknown | REASONED |
-| default-deny: The empty podSelector with Ingress and Egress isolates all pods selected in the namespace before narrow allowances. | Kubernetes documentation unknown | REASONED |
-| dns: The app egress rule permits UDP/TCP 53 to all kube-system pods, not just CoreDNS; narrow it to the actual resolver. | Kubernetes documentation unknown | REASONED |
-| database-path: Allow app egress to role: db and db ingress from role: app on TCP 5432; other paths governed by these namespace policies are refused. | Kubernetes documentation unknown | REASONED |
-| policy-limits: hostNetwork and same-node traffic handling are implementation-dependent; database TLS/authentication remain separate controls. | Kubernetes documentation unknown | REASONED |
-| verify-user: Compose exec targets the app service in the resolved project and id must report a nonzero UID; using the actual container name for bare docker exec is this guide's advice. | Docker documentation unknown; Docker Compose source and reference v2.32.4 | REASONED |
-| verify-rootfs: With read_only false, touch on an existing owned path must print WRITABLE; after docker compose up -d --force-recreate with read_only true, it must print blocked. ENOENT or EACCES can also print blocked on a writable filesystem, so blocked alone is not proof of a read-only root. This guide's assessment: the errno, including typical EROFS, depends on the image and path; the probe's exit 0 does not discriminate. | Docker documentation unknown; Docker Compose source and reference v2.32.4 | REASONED |
-| verify-context: kubectl get reads the declared context; kubectl exec inspects the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities. Clearing CapBnd under drop:[ALL] is this guide's expected runtime state; with shareProcessNamespace, PID 1 belongs to the pod sandbox, so select the application PID. | Kubernetes documentation unknown; kubectl source v1.34.0; Linux process status and capabilities manuals man-pages-6.19; Kubernetes process namespace documentation 47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8 | REASONED |
-| verify-probe: Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified. | Kubernetes documentation unknown; kubectl source v1.34.0; JSON Merge Patch RFC 7396; BusyBox source 1_36_1 | REASONED |
-| verify-segmentation: The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently. | Kubernetes documentation unknown | REASONED |
+Components (recorded basis):
+
+- docker: Docker documentation, unknown
+- docker-daemon: Docker daemon security documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
+- compose-2324: Docker Compose source and reference, v2.32.4
+- procfs-619: Linux process status and capabilities manuals, man-pages-6.19
+- kubernetes-website: Kubernetes process namespace documentation, 47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8
+- kubernetes: Kubernetes documentation, unknown
+- kubernetes-134: Kubernetes Pod Security Admission, 1.34
+- kubectl-134: kubectl source, v1.34.0
+- rfc7396: JSON Merge Patch, RFC 7396
+- busybox-1361: BusyBox source, 1_36_1
+
+Claims (full source mapping in the front matter):
+
+- docker-user (REASONED; docker): Dockerfile USER sets build/runtime identity; set user and group, since no primary group uses root. Compose user overrides it; unset in both runs as root.
+- docker-rootfs (REASONED; docker): Compose read_only makes the root filesystem read-only; provide tmpfs only for required writable paths.
+- docker-capabilities (REASONED; docker): cap_drop: [ALL] removes capabilities; add back only specific required capabilities with cap_add.
+- docker-escalation (REASONED; docker): no-new-privileges prevents setuid privilege gain; the guide lists bare, equals-true and colon-true spellings as equivalent.
+- docker-socket (REASONED; docker, docker-daemon): Never mount /var/run/docker.sock. In Docker's default rootful configuration, daemon control lets a user start a container that can alter the host filesystem without restriction, and docker-group membership grants root-level privileges; Rootless mode runs the daemon and containers without root privileges. Docker documents mounted-socket daemon control with a Docker client, and documents --privileged and host bind mounts; a socket-holding container starting a privileged sibling or bind-mounting host / to escape is this guide's assessment. Rootless mode narrowing the available host privilege but not making the mount safe is this guide's assessment.
+- kube-user (REASONED; kubernetes): runAsNonRoot rejects root; pin runAsUser and runAsGroup to 10001, with the guide noting runtime-default GID 0 if unset.
+- kube-rootfs (REASONED; kubernetes): Set readOnlyRootFilesystem per container; this is a separate recommendation, not a restricted Pod Security requirement.
+- kube-escalation (REASONED; kubernetes): Set allowPrivilegeEscalation: false in the container securityContext.
+- kube-capabilities (REASONED; kubernetes): Drop ALL capabilities in the container securityContext.
+- kube-seccomp (REASONED; kubernetes): RuntimeDefault selects the runtime syscall filter instead of Unconfined.
+- admission (REASONED; kubernetes, kubernetes-134): Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp.
+- existing-pods (REASONED; kubernetes, kubernetes-134): Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads.
+- policy-semantics (REASONED; kubernetes): NetworkPolicies are additive and require an enforcing CNI; both source egress and destination ingress must allow a connection.
+- default-deny (REASONED; kubernetes): The empty podSelector with Ingress and Egress isolates all pods selected in the namespace before narrow allowances.
+- dns (REASONED; kubernetes): The app egress rule permits UDP/TCP 53 to all kube-system pods, not just CoreDNS; narrow it to the actual resolver.
+- database-path (REASONED; kubernetes): Allow app egress to role: db and db ingress from role: app on TCP 5432; other paths governed by these namespace policies are refused.
+- policy-limits (REASONED; kubernetes): hostNetwork and same-node traffic handling are implementation-dependent; database TLS/authentication remain separate controls.
+- verify-user (REASONED; docker, compose-2324): Compose exec targets the app service in the resolved project and id must report a nonzero UID; using the actual container name for bare docker exec is this guide's advice.
+- verify-rootfs (REASONED; docker, compose-2324): With read_only false, touch on an existing owned path must print WRITABLE; after docker compose up -d --force-recreate with read_only true, it must print blocked. ENOENT or EACCES can also print blocked on a writable filesystem, so blocked alone is not proof of a read-only root. This guide's assessment: the errno, including typical EROFS, depends on the image and path; the probe's exit 0 does not discriminate.
+- verify-context (REASONED; kubernetes, kubectl-134, procfs-619, kubernetes-website): kubectl get reads the declared context; kubectl exec inspects the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities. Clearing CapBnd under drop:[ALL] is this guide's expected runtime state; with shareProcessNamespace, PID 1 belongs to the pod sandbox, so select the application PID.
+- verify-probe (REASONED; kubernetes, kubectl-134, rfc7396, busybox-1361): Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified.
+- verify-segmentation (REASONED; kubernetes): The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently.
 <!-- version-basis:end -->
 
 A model server, chat UI, or proxy is the thing most likely to face untrusted input, so treat its container as compromised eventually and limit what that gets an attacker: not root, not the host's capabilities, not a writable filesystem, and not a route to the rest of the network.

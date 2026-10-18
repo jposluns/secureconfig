@@ -231,30 +231,58 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| gitignore: Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked. | OWASP secret handling unknown; Next.js unknown; Git ignore patterns 2.42.0 | REASONED |
-| runtime-storage: Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value. | OWASP secret handling unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f; AWS Secrets Manager overview unknown; Google Cloud Secret Manager overview unknown; Azure Key Vault overview unknown | REASONED |
-| random: Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials. | OWASP secret handling unknown; OpenSSL random bytes 3.0; Python secrets 3.13 | REASONED |
-| scanners: Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner. | gitleaks command minimum 8.19+; TruffleHog unknown | REASONED |
-| argv: Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history. | Linux procfs unknown; htpasswd unknown | REASONED |
-| stdin: Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments. | htpasswd unknown; Docker login unknown; GitHub CLI unknown | REASONED |
-| credential-files: Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass. | PostgreSQL password file unknown; curl netrc unknown | REASONED |
-| shell-input: As this guide's assessment, hidden read input avoids history; as this guide's advice, tracing must be off around expansion. The clean-Bash login block clears inherited TOKEN attributes, turns tracing, allexport and errexit off, enables pipefail, and removes TOKEN on exit. | GNU Bash reference manual bash-5.3; Docker login unknown; Linux procfs unknown | REASONED |
-| shell-limits: As this guide's assessment under the stated clean-Bash assumptions, the prompted token stays out of argv and environment; same-account/root memory access and earlier exports remain outside this protection. | GNU Bash reference manual bash-5.3; Linux procfs unknown; Docker login unknown | REASONED |
-| argv-review: A ps/grep snapshot misses unlabelled secrets and short-lived processes; review secret-input paths instead of treating a clean snapshot as proof. | Linux procfs unknown | REASONED |
-| ci-store: Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts. | OWASP secret handling unknown | REASONED |
-| prompt-secrets: Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model. | OWASP secret handling unknown | REASONED |
-| business-rules: Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it. | OWASP secret handling unknown; Next.js unknown; Vite environment variables 6 | REASONED |
-| terraform-state: Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and *.tfstate.* including backups and workspace copies. | Terraform unknown | REASONED |
-| kubeconfig: Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control. | Kubernetes kubeconfig unknown | REASONED |
-| docker-store: Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets. | Docker login unknown; OWASP secret handling unknown | REASONED |
-| leak-rotation: Revoke and replace a leaked credential before cleanup; deletion cannot undo public repository, chat, log or paste exposure. | OWASP secret handling unknown | REASONED |
-| history-cleanup: History rewriting with git-filter-repo is hygiene after rotation, not containment or unpublishing. | git-filter-repo unknown; OWASP secret handling unknown | REASONED |
-| leak-audit: Review provider logs for use of the leaked credential during its exposure window. | OWASP secret handling unknown | REASONED |
-| encrypted-git: SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository. | SOPS unknown; age unknown | REASONED |
-| verify-scan: gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate. | gitleaks command minimum 8.19+ | REASONED |
-| verify-patterns: Supplementary grep prints filenames only, when null binary data is discovered assumes unprocessed input does not match, skips excluded trees; as this guide's advice, a non-zero exit caused by a read error is a failed check; as this guide's assessment, empty output is not proof of no secret. GNU grep documents -E as extended regular expression syntax. | GNU grep unknown; OWASP secret handling unknown | REASONED |
+Components (recorded basis):
+
+- docker-build: Docker build and image history documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
+- bash: GNU Bash reference manual, bash-5.3
+- grep: GNU grep, unknown
+- owasp: OWASP secret handling, unknown
+- gitleaks: gitleaks command minimum, 8.19+
+- trufflehog: TruffleHog, unknown
+- sops: SOPS, unknown
+- age: age, unknown
+- git-filter-repo: git-filter-repo, unknown
+- proc: Linux procfs, unknown
+- docker: Docker login, unknown
+- terraform: Terraform, unknown
+- kubernetes: Kubernetes kubeconfig, unknown
+- gh: GitHub CLI, unknown
+- apache: htpasswd, unknown
+- postgres: PostgreSQL password file, unknown
+- curl: curl netrc, unknown
+- next: Next.js, unknown
+- git-ignore: Git ignore patterns, 2.42.0
+- openssl-rand: OpenSSL random bytes, 3.0
+- python-secrets: Python secrets, 3.13
+- vite-env: Vite environment variables, 6
+- aws-store: AWS Secrets Manager overview, unknown
+- google-store: Google Cloud Secret Manager overview, unknown
+- azure-store: Azure Key Vault overview, unknown
+
+Claims (full source mapping in the front matter):
+
+- gitignore (REASONED; owasp, next, git-ignore): Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.
+- runtime-storage (REASONED; owasp, docker-build, aws-store, google-store, azure-store): Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value.
+- random (REASONED; owasp, openssl-rand, python-secrets): Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.
+- scanners (REASONED; gitleaks, trufflehog): Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.
+- argv (REASONED; proc, apache): Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.
+- stdin (REASONED; apache, docker, gh): Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.
+- credential-files (REASONED; postgres, curl): Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass.
+- shell-input (REASONED; bash, docker, proc): As this guide's assessment, hidden read input avoids history; as this guide's advice, tracing must be off around expansion. The clean-Bash login block clears inherited TOKEN attributes, turns tracing, allexport and errexit off, enables pipefail, and removes TOKEN on exit.
+- shell-limits (REASONED; bash, proc, docker): As this guide's assessment under the stated clean-Bash assumptions, the prompted token stays out of argv and environment; same-account/root memory access and earlier exports remain outside this protection.
+- argv-review (REASONED; proc): A ps/grep snapshot misses unlabelled secrets and short-lived processes; review secret-input paths instead of treating a clean snapshot as proof.
+- ci-store (REASONED; owasp): Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts.
+- prompt-secrets (REASONED; owasp): Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model.
+- business-rules (REASONED; owasp, next, vite-env): Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it.
+- terraform-state (REASONED; terraform): Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and *.tfstate.* including backups and workspace copies.
+- kubeconfig (REASONED; kubernetes): Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control.
+- docker-store (REASONED; docker, owasp): Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets.
+- leak-rotation (REASONED; owasp): Revoke and replace a leaked credential before cleanup; deletion cannot undo public repository, chat, log or paste exposure.
+- history-cleanup (REASONED; git-filter-repo, owasp): History rewriting with git-filter-repo is hygiene after rotation, not containment or unpublishing.
+- leak-audit (REASONED; owasp): Review provider logs for use of the leaked credential during its exposure window.
+- encrypted-git (REASONED; sops, age): SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository.
+- verify-scan (REASONED; gitleaks): gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate.
+- verify-patterns (REASONED; grep, owasp): Supplementary grep prints filenames only, when null binary data is discovered assumes unprocessed input does not match, skips excluded trees; as this guide's advice, a non-zero exit caused by a read error is a failed check; as this guide's assessment, empty output is not proof of no secret. GNU grep documents -E as extended regular expression syntax.
 <!-- version-basis:end -->
 
 Leaked API keys and credentials in public repositories are the most common security incident in AI-assisted projects, and scanners harvest fresh commits within minutes. [authentication.md](authentication.md) states the baseline; this guide covers the handling.

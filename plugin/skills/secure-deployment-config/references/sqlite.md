@@ -275,48 +275,66 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| filesystem: No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect. | SQLite documentation (rolling) unknown | REASONED |
-| extensions: Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries. | SQLite documentation (rolling) unknown | REASONED |
-| web-files: Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names. | SQLite documentation (rolling) unknown | REASONED |
-| git-files: Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. This guide assesses committed database rows as permanently available to anyone who clones, even after a later deletion commit. | SQLite documentation (rolling) unknown; Git documentation v2.56.0 | REASONED |
-| permissions: Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation. | SQLite documentation (rolling) unknown | REASONED |
-| temporary: Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions. | SQLite documentation (rolling) unknown | REASONED |
-| encryption: Public-domain SQLite has no file encryption; SEE is licensed and SQLCipher is a third-party alternative, otherwise use filesystem or volume encryption. | SQLite Encryption Extension unknown; SQLCipher unknown | REASONED |
-| encryption-keys: Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak. | SQLite Encryption Extension unknown; SQLite documentation (rolling) unknown | REASONED |
-| turso-http: Turso serves libSQL over HTTPS at the database/organization turso.io URL using bearer authentication; TURSO_DATABASE_URL and TURSO_AUTH_TOKEN belong in application configuration, never a client bundle or git. | Turso documentation unknown | REASONED |
-| turso-scope: db tokens create --read-only scopes away writes; --expiration accepts never or durations such as 7d3h. Prefer scoped, expiring tokens. | Turso documentation unknown | REASONED |
-| replicas: Litestream replicates to supported object stores; scope AWS credentials and IAM to the required bucket/prefix, keep replicas private, and restore with scoped credentials. | Litestream documentation unknown | REASONED |
-| metrics: Litestream addr metrics listener defaults disabled; leave off unless needed, otherwise bind loopback, for example 127.0.0.1:9090. | Litestream documentation unknown | REASONED |
-| mcp: Litestream MCP mcp-addr is documented for v0.5.0 and later, defaults disabled and has no built-in authentication; protect information and restore access with an authenticated tunnel/proxy, for example at loopback:3001. | Litestream MCP minimum v0.5.0 | REASONED |
-| litefs-backups: LiteFS replicates among cluster nodes; its pre-1.0 documentation recommends separate off-site backups with private destinations. | LiteFS documentation unknown | REASONED |
-| litefs-transport: LiteFS v0.5.14 routes have no credential gate; the server accepts cleartext HTTP/1 and h2c, and its client uses h2c. Litefs-Id comparisons reject self-connections, not unauthenticated callers. | LiteFS source v0.5.14; Go library documentation unknown | REASONED |
-| litefs-bind: http.addr defaults to host-less :20202, including the example; an empty address still listens on all interfaces at a system-chosen port. | LiteFS source v0.5.14; Go library documentation unknown | REASONED |
-| litefs-config: Set API bind in the config file; no direct address flag. Search working directory, available home directory, then /etc/litefs.yml; -config overrides and -no-expand-env disables ${VAR} expansion. | LiteFS source v0.5.14 | REASONED |
-| import: POST /import creates or replaces a named database on the primary only; replicas return 503 before creation without forwarding, and DB.Import also checks primary status. | LiteFS source v0.5.14 | REASONED |
-| export: GET /export returns the full existing local database, including applicable WAL pages, on either role; missing databases return 404. | LiteFS source v0.5.14 | REASONED |
-| stream: POST /stream requires primary, HTTP/2 and a valid position map; replicas return 503. Unfiltered streams cover every database, filters narrow them, and fresh positions receive snapshots. | LiteFS source v0.5.14 | REASONED |
-| tx: POST /tx applies a validated LTX file to an existing local database on either role without forwarding, primary or halt-owner checks; non-snapshots must match next transaction/checksum, missing databases return 404. | LiteFS source v0.5.14 | REASONED |
-| halt: POST /halt on either role creates the database if absent and acquires write locks with a nonzero id, stalling primary writes or replica updates; DELETE releases an existing lock for a matching id. | LiteFS source v0.5.14 | REASONED |
-| halt-ttl: LiteFS halt-lock TTL defaults to 30 seconds. | LiteFS source v0.5.14 | REASONED |
-| promote: POST /promote needs an eligible candidate, succeeds unchanged for an existing primary, and asks a known primary for handoff from a candidate replica; no database name is required. | LiteFS source v0.5.14 | REASONED |
-| handoff: POST /handoff requires primary, a connected target subscriber and a handoff-capable lease; static leases refuse it and no database name is required. | LiteFS source v0.5.14 | REASONED |
-| information: GET /info, /events and /metrics disclose node, cluster and database state on either role without a named database. | LiteFS source v0.5.14 | REASONED |
-| debug: Unconditional /debug/pprof/ exposes command line and live profiles; /debug/vars exposes command line, memory and store database/lock state on either role without a database name. | LiteFS source v0.5.14; Go library documentation unknown | REASONED |
-| debug-rand: /debug/rand streams deterministic pseudo-random data; its minute timeout is checked between writes and no server write timeout bounds a slow or non-reading client. | LiteFS source v0.5.14 | REASONED |
-| cluster-private: Bind each LiteFS API to its private node address and restrict reachability to cluster nodes; never publish 20202 through an internet-facing mapping or proxy. | LiteFS source v0.5.14; LiteFS documentation unknown | REASONED |
-| consul-url: Consul lease.advertise-url names each node private API; when unset it derives http:// plus lease.hostname or OS hostname and the actual listening port. | LiteFS source v0.5.14 | REASONED |
-| static-url: Static leasing uses lease.advertise-url as configured: the primary points at itself and each replica at the primary private API. | LiteFS source v0.5.14 | REASONED |
-| container: LiteFS image supplies no configuration or EXPOSE; default wildcard binding applies within its namespace. Peers, host/shared networking, routing, firewall and publication determine reachability. | LiteFS source v0.5.14; Docker documentation unknown | REASONED |
-| proxy: LiteFS application proxy is separate: proxy.target enables attempted startup, proxy.db and proxy.addr must be nonempty, example :8080; application TLS and authentication remain necessary. | LiteFS source v0.5.14 | REASONED |
-| verify-download: Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available. | SQLite documentation (rolling) unknown; GNU Bash reference manual bash-5.3; curl curl-8_14_1 | REASONED |
-| verify-bundle: Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths. | Turso documentation unknown; GNU Bash reference manual bash-5.3; GNU grep documentation v3.12 | DEMONSTRATED |
-| verify-git: Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded. | SQLite documentation (rolling) unknown | DEMONSTRATED |
-| verify-modes: SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised. | SQLite documentation (rolling) unknown; GNU Coreutils stat manual v9.7 | REASONED |
-| verify-listeners: Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available. | LiteFS source v0.5.14; Litestream documentation unknown; Litestream MCP minimum v0.5.0; GNU Bash reference manual bash-5.3; curl curl-8_14_1 | REASONED |
-| verify-turso: Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available. | Turso documentation unknown; GNU Bash reference manual bash-5.3; curl curl-8_14_1 | REASONED |
-| halt-expiration: LiteFS checks halt-lock expiration every 5 seconds. | LiteFS source v0.5.14 | REASONED |
+Components (recorded basis):
+
+- see: SQLite Encryption Extension, unknown
+- cipher: SQLCipher, unknown
+- turso: Turso documentation, unknown
+- litestream: Litestream documentation, unknown
+- mcp: Litestream MCP minimum, v0.5.0
+- litefs: LiteFS source, v0.5.14
+- litefs-docs: LiteFS documentation, unknown
+- go: Go library documentation, unknown
+- docker: Docker documentation, unknown
+- sqlite-rolling: SQLite documentation (rolling), unknown
+- git: Git documentation, v2.56.0
+- coreutils: GNU Coreutils stat manual, v9.7
+- bash: GNU Bash reference manual, bash-5.3
+- curl: curl, curl-8_14_1
+- grep-docs: GNU grep documentation, v3.12
+
+Claims (full source mapping in the front matter):
+
+- filesystem (REASONED; sqlite-rolling): No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect.
+- extensions (REASONED; sqlite-rolling): Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries.
+- web-files (REASONED; sqlite-rolling): Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names.
+- git-files (REASONED; sqlite-rolling, git): Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. This guide assesses committed database rows as permanently available to anyone who clones, even after a later deletion commit.
+- permissions (REASONED; sqlite-rolling): Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation.
+- temporary (REASONED; sqlite-rolling): Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions.
+- encryption (REASONED; see, cipher): Public-domain SQLite has no file encryption; SEE is licensed and SQLCipher is a third-party alternative, otherwise use filesystem or volume encryption.
+- encryption-keys (REASONED; see, sqlite-rolling): Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak.
+- turso-http (REASONED; turso): Turso serves libSQL over HTTPS at the database/organization turso.io URL using bearer authentication; TURSO_DATABASE_URL and TURSO_AUTH_TOKEN belong in application configuration, never a client bundle or git.
+- turso-scope (REASONED; turso): db tokens create --read-only scopes away writes; --expiration accepts never or durations such as 7d3h. Prefer scoped, expiring tokens.
+- replicas (REASONED; litestream): Litestream replicates to supported object stores; scope AWS credentials and IAM to the required bucket/prefix, keep replicas private, and restore with scoped credentials.
+- metrics (REASONED; litestream): Litestream addr metrics listener defaults disabled; leave off unless needed, otherwise bind loopback, for example 127.0.0.1:9090.
+- mcp (REASONED; mcp): Litestream MCP mcp-addr is documented for v0.5.0 and later, defaults disabled and has no built-in authentication; protect information and restore access with an authenticated tunnel/proxy, for example at loopback:3001.
+- litefs-backups (REASONED; litefs-docs): LiteFS replicates among cluster nodes; its pre-1.0 documentation recommends separate off-site backups with private destinations.
+- litefs-transport (REASONED; litefs, go): LiteFS v0.5.14 routes have no credential gate; the server accepts cleartext HTTP/1 and h2c, and its client uses h2c. Litefs-Id comparisons reject self-connections, not unauthenticated callers.
+- litefs-bind (REASONED; litefs, go): http.addr defaults to host-less :20202, including the example; an empty address still listens on all interfaces at a system-chosen port.
+- litefs-config (REASONED; litefs): Set API bind in the config file; no direct address flag. Search working directory, available home directory, then /etc/litefs.yml; -config overrides and -no-expand-env disables ${VAR} expansion.
+- import (REASONED; litefs): POST /import creates or replaces a named database on the primary only; replicas return 503 before creation without forwarding, and DB.Import also checks primary status.
+- export (REASONED; litefs): GET /export returns the full existing local database, including applicable WAL pages, on either role; missing databases return 404.
+- stream (REASONED; litefs): POST /stream requires primary, HTTP/2 and a valid position map; replicas return 503. Unfiltered streams cover every database, filters narrow them, and fresh positions receive snapshots.
+- tx (REASONED; litefs): POST /tx applies a validated LTX file to an existing local database on either role without forwarding, primary or halt-owner checks; non-snapshots must match next transaction/checksum, missing databases return 404.
+- halt (REASONED; litefs): POST /halt on either role creates the database if absent and acquires write locks with a nonzero id, stalling primary writes or replica updates; DELETE releases an existing lock for a matching id.
+- halt-ttl (REASONED; litefs): LiteFS halt-lock TTL defaults to 30 seconds.
+- promote (REASONED; litefs): POST /promote needs an eligible candidate, succeeds unchanged for an existing primary, and asks a known primary for handoff from a candidate replica; no database name is required.
+- handoff (REASONED; litefs): POST /handoff requires primary, a connected target subscriber and a handoff-capable lease; static leases refuse it and no database name is required.
+- information (REASONED; litefs): GET /info, /events and /metrics disclose node, cluster and database state on either role without a named database.
+- debug (REASONED; litefs, go): Unconditional /debug/pprof/ exposes command line and live profiles; /debug/vars exposes command line, memory and store database/lock state on either role without a database name.
+- debug-rand (REASONED; litefs): /debug/rand streams deterministic pseudo-random data; its minute timeout is checked between writes and no server write timeout bounds a slow or non-reading client.
+- cluster-private (REASONED; litefs, litefs-docs): Bind each LiteFS API to its private node address and restrict reachability to cluster nodes; never publish 20202 through an internet-facing mapping or proxy.
+- consul-url (REASONED; litefs): Consul lease.advertise-url names each node private API; when unset it derives http:// plus lease.hostname or OS hostname and the actual listening port.
+- static-url (REASONED; litefs): Static leasing uses lease.advertise-url as configured: the primary points at itself and each replica at the primary private API.
+- container (REASONED; litefs, docker): LiteFS image supplies no configuration or EXPOSE; default wildcard binding applies within its namespace. Peers, host/shared networking, routing, firewall and publication determine reachability.
+- proxy (REASONED; litefs): LiteFS application proxy is separate: proxy.target enables attempted startup, proxy.db and proxy.addr must be nonempty, example :8080; application TLS and authentication remain necessary.
+- verify-download (REASONED; sqlite-rolling, bash, curl): Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available.
+- verify-bundle (DEMONSTRATED; turso, bash, grep-docs): Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths.
+- verify-git (DEMONSTRATED; sqlite-rolling): Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded.
+- verify-modes (REASONED; sqlite-rolling, coreutils): SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised.
+- verify-listeners (REASONED; litefs, litestream, mcp, bash, curl): Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available.
+- verify-turso (REASONED; turso, bash, curl): Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available.
+- halt-expiration (REASONED; litefs): LiteFS checks halt-lock expiration every 5 seconds.
 <!-- version-basis:end -->
 
 SQLite has no server process and no network listener: "there are no other processes, threads, machines, or other mechanisms (apart from host computer OS and filesystem) to help provide database services" ([SQLite: serverless](https://www.sqlite.org/serverless.html)), so there is no database-side authentication and the only access control is the filesystem's. Its security page warns that "any database file which might have ever been writable by an agent in a different security domain should be treated as suspect." So the deployment exposure is rarely a flaw in SQLite itself; it is wherever the database file ends up: under a web root, inside a git repository, readable by another local account, or replicated to a public bucket. Run the application with access only to the files it needs, since `ATTACH` opens further databases under the process's filesystem authority; keep extension loading disabled unless required (core SQLite disables it by default, though the SQLite CLI enables it) and load only trusted extension libraries. Application-level SQL-injection prevention is outside this guide's scope.

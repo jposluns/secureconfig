@@ -245,70 +245,94 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| private: Keep panels private; public front doors need proxy TLS/auth and MFA. Complete first-run administration before exposure. | Portainer unknown; Docker Engine unknown | REASONED |
-| portainer-ports: UI HTTPS 9443 is self-signed by default; supply a certificate/proxy. Leave legacy HTTP 9000 unpublished; publish tunnel 8000 only for Edge Compute. | Portainer unknown | REASONED |
-| portainer-setup: Setup requires the logged setup_token; first user is admin with a password of at least 12 characters. | Portainer unknown | REASONED |
-| portainer-auth: Internal, LDAP, AD or OAuth login; no documented native second factor. Enforce MFA at the OAuth provider. | Portainer unknown | REASONED |
-| portainer-socket: Mounted docker.sock grants host-root power; treat a Portainer admin accordingly. | Portainer unknown; Docker Engine unknown | REASONED |
-| coolify-setup: HTTP dashboard starts on 8000; first registration claims server control, so create admin immediately. | Coolify unknown | REASONED |
-| coolify-tls: Custom domain in /settings lets Traefik/Caddy issue/renew TLS; dashboard ports 8000/6001/6002 can then close. | Coolify unknown | REASONED |
-| coolify-firewall: Docker bypasses UFW; restrict dashboard ports at the cloud firewall. | Coolify unknown | REASONED |
-| coolify-ssh: Server SSH keys require no passphrase; stored key material is the whole secret. | Coolify unknown | REASONED |
-| dokploy-ports: UI is 3000, Traefik 80/443; first setup creates admin. | Dokploy unknown | REASONED |
-| dokploy-tls: Configure a panel domain and Let's Encrypt/custom certificate, then remove published 3000. | Dokploy unknown | REASONED |
-| npm-ports: Admin is 81, proxy 80/443; publish 127.0.0.1:81:81 and tunnel in. | Nginx Proxy Manager unknown | REASONED |
-| npm-admin: Change default first-run admin credentials before other work. | Nginx Proxy Manager unknown | REASONED |
-| vaultwarden-tls: Web-vault crypto needs HTTPS; prefer proxy TLS over ROCKET_TLS and set DOMAIN=https://vault.example.com. | Vaultwarden docs unknown; Vaultwarden config 3347698712d3e99e652ad4394ef2fc0ce2800fdd | REASONED |
-| vaultwarden-signup: SIGNUPS_ALLOWED defaults true; set false to close registration. | Vaultwarden docs unknown; Vaultwarden config 3347698712d3e99e652ad4394ef2fc0ce2800fdd | REASONED |
-| vaultwarden-invites: INVITATIONS_ALLOWED=true still permits owner/admin invitations; SIGNUPS_DOMAINS_WHITELIST admits selected domains. | Vaultwarden docs unknown; Vaultwarden config 3347698712d3e99e652ad4394ef2fc0ce2800fdd | REASONED |
-| vaultwarden-admin: ADMIN_TOKEN enables the disabled admin page; enable HTTPS first, use vaultwarden hash argon2id PHC, and escape Compose dollars as $$. | Vaultwarden docs unknown; Vaultwarden config 3347698712d3e99e652ad4394ef2fc0ce2800fdd | REASONED |
-| vaultwarden-session: Admin sessions expire after 20 minutes by default. | Vaultwarden docs unknown; Vaultwarden config 3347698712d3e99e652ad4394ef2fc0ce2800fdd | REASONED |
-| vaultwarden-port: Container port 80 or non-Docker 8000; publish only to loopback/proxy network. | Vaultwarden config 3347698712d3e99e652ad4394ef2fc0ce2800fdd | REASONED |
-| dashboard-lifecycle: Recorded September 2026: deprecated/unmaintained, archived January 2026; Kubernetes points new installs to Headlamp. | Dashboard docs unknown | REASONED |
-| dashboard-forward: Avoid public LoadBalancer/Ingress; port-forward kong-proxy 8443:443 and use https://localhost:8443 on the operator machine. | Dashboard docs unknown | REASONED |
-| dashboard-token: Use minimally privileged ServiceAccount bearer tokens; sample cluster-admin is demonstration-only. | Dashboard docs unknown | REASONED |
-| dashboard-old-flags: Older 2.x enable-skip-login and enable-insecure-login default false; keep both false. | Dashboard arguments v2.7.0 | REASONED |
-| dashboard-mfa: API-server OIDC gives ServiceAccount tokens no MFA; enforce human MFA on the access path or an IdP-aware UI. | Dashboard docs unknown | REASONED |
-| jenkins-auth: Realm/authorization are separate; setup creates one local admin. Disable signup because strategy grants apply to new users too. | Jenkins unknown | REASONED |
-| jenkins-matrix: Use Matrix Authorization; grant nothing significant to anonymous/authenticated. Anonymous Overall/Administer is full control. | Jenkins unknown | REASONED |
-| jenkins-csrf: Keep CSRF enabled even privately; disabling uses hudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION, not a UI switch. | Jenkins unknown | REASONED |
-| jenkins-agents: Inbound agents use fixed/random TCP or WebSocket on HTTPS; prefer WebSocket or isolate the extra port. | Jenkins unknown | REASONED |
-| jenkins-mfa: No native second factor; enforce MFA through SSO/fronting identity. | Jenkins unknown | REASONED |
-| gitea-bind: HTTP_ADDR=0.0.0.0 and HTTP_PORT=3000 default; set 127.0.0.1 behind a proxy. | Gitea listener v1.27.3 | REASONED |
-| gitea-tls: Native TLS uses PROTOCOL=https, CERT_FILE and KEY_FILE. | Gitea docs unknown | REASONED |
-| gitea-registration: Set service DISABLE_REGISTRATION=true; default false. | Gitea docs unknown | REASONED |
-| gitea-private: Set service REQUIRE_SIGNIN_VIEW=true for a private forge; default false. | Gitea docs unknown | REASONED |
-| gitea-mfa: Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later. | Gitea docs unknown; Gitea MFA minimum 1.24 | REASONED |
-| gitea-tokens: With MFA, Git HTTP uses tokens that bypass MFA; scope and revoke unused tokens. | Gitea docs unknown | REASONED |
-| gitlab-root: Rotate generated initial_root_password; file deletion is on first restart after 24 hours. Alternatively preset through gitlab.rb/OMNIBUS_CONFIG. | GitLab CE unknown | REASONED |
-| gitlab-signup: signup_enabled defaults true; disable for a private forge. | GitLab CE unknown | REASONED |
-| gitlab-approval: New instances require admin approval after signup by default; do not rely on approval alone. | GitLab CE unknown | REASONED |
-| gitlab-visibility: Project/group visibility default private; internal admits every signed-in non-external user, including allowed registrants. | GitLab CE unknown | REASONED |
-| gitlab-mfa: Enforce two-factor authentication for every user; available on all tiers. | GitLab CE unknown | REASONED |
-| kuma-proxy: Port 3001 uses WebSockets; proxy Upgrade/Connection headers are required. | Uptime Kuma unknown | REASONED |
-| kuma-admin: Finish account setup before others, enable 2FA and keep dashboard private even if status pages are public. | Uptime Kuma unknown | REASONED |
-| docker-root: Docker socket grants host-root power; never expose unauthenticated 0.0.0.0:2375. | Docker Engine unknown | REASONED |
-| docker-ssh: DOCKER_HOST/context can select SSH to the Unix socket without a new listener. | Docker Engine unknown | REASONED |
-| docker-mtls: 2376 requires tlsverify, CA, server cert/key and client TLS settings. Without tlsverify clients are not authenticated; firewall source addresses too. | Docker Engine unknown | REASONED |
-| dozzle-socket: Docker-socket access has host-level power; keep Dozzle private with fronting MFA. | Dozzle unknown; Docker Engine unknown | REASONED |
-| dozzle-auth: Auth defaults off; generate users.yml with stdin password prompt and set simple auth, or delegate with forward-proxy. | Dozzle unknown | REASONED |
-| dozzle-actions: Leave optional container actions/shell off unless needed; either enables remote command execution. | Dozzle unknown | REASONED |
-| registry-auth: registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution. | Docker Registry documentation (rolling) unknown | REASONED |
-| registry-bcrypt: Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ. | Docker Registry documentation (rolling) unknown; Apache htpasswd 2.4; OWASP password storage 1a3f58ed2714f258a1d713966457f1a0f426e841 | REASONED |
-| registry-private: Use private networking and tunnels/Access with fronting MFA. | Docker Registry documentation (rolling) unknown | REASONED |
-| filebrowser-admin: Change first-run admin credentials, historically admin/admin. Guide records September 1, 2026 archival and the warning against internet exposure. | Filebrowser unknown | REASONED |
-| filebrowser-private: Keep Filebrowser private through tunnel/tailnet/Access with fronting MFA. | Filebrowser unknown | REASONED |
-| nodered-default: Editor/admin API on 1880 defaults unauthenticated, permitting flow viewing/deployment/modification. | Node-RED unknown | REASONED |
-| nodered-auth: Set adminAuth with bcrypt passwords from node-red admin hash-pw. | Node-RED unknown | REASONED |
-| nodered-secret: Set credentialSecret yourself; otherwise generated, and stored credentials depend on it. | Node-RED unknown | REASONED |
-| nodered-private: Keep editor private with fronting MFA; it has the power of its flows. | Node-RED unknown | REASONED |
-| verify-listeners: Read every panel/API listener; expect loopback or absence, never wildcard exposure. | Portainer unknown; Dokploy unknown; Nginx Proxy Manager unknown; Uptime Kuma unknown; Docker Engine unknown | REASONED |
-| verify-panel: Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded. | Portainer unknown; Jenkins unknown; Gitea docs unknown | REASONED |
-| verify-docker-plain: Public-IP 2375 must be refused/filtered by the remote host; local client failure is inconclusive. | Docker Engine unknown | REASONED |
-| verify-docker-mtls: 2376 /_ping without a client certificate must fail client-certificate authentication; correct certificate/key must return 200. | Docker Engine unknown | REASONED |
-| verify-gitlab: Present initial_root_password requires rotation; absence does not prove rotation. Failed/unexpected docker exec output is not a result. | GitLab CE unknown | REASONED |
+Components (recorded basis):
+
+- portainer: Portainer, unknown
+- coolify: Coolify, unknown
+- dokploy: Dokploy, unknown
+- npm: Nginx Proxy Manager, unknown
+- vaultwarden: Vaultwarden docs, unknown
+- vaultwarden-pin: Vaultwarden config, 3347698712d3e99e652ad4394ef2fc0ce2800fdd
+- dashboard: Dashboard docs, unknown
+- dashboard-old: Dashboard arguments, v2.7.0
+- jenkins: Jenkins, unknown
+- gitea: Gitea docs, unknown
+- gitlab: GitLab CE, unknown
+- kuma: Uptime Kuma, unknown
+- docker: Docker Engine, unknown
+- dozzle: Dozzle, unknown
+- filebrowser: Filebrowser, unknown
+- nodered: Node-RED, unknown
+- gitea-pin: Gitea listener, v1.27.3
+- gitea-mfa-min: Gitea MFA minimum, 1.24
+- registry-docs: Docker Registry documentation (rolling), unknown
+- htpasswd: Apache htpasswd, 2.4
+- owasp-passwords: OWASP password storage, 1a3f58ed2714f258a1d713966457f1a0f426e841
+
+Claims (full source mapping in the front matter):
+
+- private (REASONED; portainer, docker): Keep panels private; public front doors need proxy TLS/auth and MFA. Complete first-run administration before exposure.
+- portainer-ports (REASONED; portainer): UI HTTPS 9443 is self-signed by default; supply a certificate/proxy. Leave legacy HTTP 9000 unpublished; publish tunnel 8000 only for Edge Compute.
+- portainer-setup (REASONED; portainer): Setup requires the logged setup_token; first user is admin with a password of at least 12 characters.
+- portainer-auth (REASONED; portainer): Internal, LDAP, AD or OAuth login; no documented native second factor. Enforce MFA at the OAuth provider.
+- portainer-socket (REASONED; portainer, docker): Mounted docker.sock grants host-root power; treat a Portainer admin accordingly.
+- coolify-setup (REASONED; coolify): HTTP dashboard starts on 8000; first registration claims server control, so create admin immediately.
+- coolify-tls (REASONED; coolify): Custom domain in /settings lets Traefik/Caddy issue/renew TLS; dashboard ports 8000/6001/6002 can then close.
+- coolify-firewall (REASONED; coolify): Docker bypasses UFW; restrict dashboard ports at the cloud firewall.
+- coolify-ssh (REASONED; coolify): Server SSH keys require no passphrase; stored key material is the whole secret.
+- dokploy-ports (REASONED; dokploy): UI is 3000, Traefik 80/443; first setup creates admin.
+- dokploy-tls (REASONED; dokploy): Configure a panel domain and Let's Encrypt/custom certificate, then remove published 3000.
+- npm-ports (REASONED; npm): Admin is 81, proxy 80/443; publish 127.0.0.1:81:81 and tunnel in.
+- npm-admin (REASONED; npm): Change default first-run admin credentials before other work.
+- vaultwarden-tls (REASONED; vaultwarden, vaultwarden-pin): Web-vault crypto needs HTTPS; prefer proxy TLS over ROCKET_TLS and set DOMAIN=https://vault.example.com.
+- vaultwarden-signup (REASONED; vaultwarden, vaultwarden-pin): SIGNUPS_ALLOWED defaults true; set false to close registration.
+- vaultwarden-invites (REASONED; vaultwarden, vaultwarden-pin): INVITATIONS_ALLOWED=true still permits owner/admin invitations; SIGNUPS_DOMAINS_WHITELIST admits selected domains.
+- vaultwarden-admin (REASONED; vaultwarden, vaultwarden-pin): ADMIN_TOKEN enables the disabled admin page; enable HTTPS first, use vaultwarden hash argon2id PHC, and escape Compose dollars as $$.
+- vaultwarden-session (REASONED; vaultwarden, vaultwarden-pin): Admin sessions expire after 20 minutes by default.
+- vaultwarden-port (REASONED; vaultwarden-pin): Container port 80 or non-Docker 8000; publish only to loopback/proxy network.
+- dashboard-lifecycle (REASONED; dashboard): Recorded September 2026: deprecated/unmaintained, archived January 2026; Kubernetes points new installs to Headlamp.
+- dashboard-forward (REASONED; dashboard): Avoid public LoadBalancer/Ingress; port-forward kong-proxy 8443:443 and use https://localhost:8443 on the operator machine.
+- dashboard-token (REASONED; dashboard): Use minimally privileged ServiceAccount bearer tokens; sample cluster-admin is demonstration-only.
+- dashboard-old-flags (REASONED; dashboard-old): Older 2.x enable-skip-login and enable-insecure-login default false; keep both false.
+- dashboard-mfa (REASONED; dashboard): API-server OIDC gives ServiceAccount tokens no MFA; enforce human MFA on the access path or an IdP-aware UI.
+- jenkins-auth (REASONED; jenkins): Realm/authorization are separate; setup creates one local admin. Disable signup because strategy grants apply to new users too.
+- jenkins-matrix (REASONED; jenkins): Use Matrix Authorization; grant nothing significant to anonymous/authenticated. Anonymous Overall/Administer is full control.
+- jenkins-csrf (REASONED; jenkins): Keep CSRF enabled even privately; disabling uses hudson.security.csrf.GlobalCrumbIssuerConfiguration.DISABLE_CSRF_PROTECTION, not a UI switch.
+- jenkins-agents (REASONED; jenkins): Inbound agents use fixed/random TCP or WebSocket on HTTPS; prefer WebSocket or isolate the extra port.
+- jenkins-mfa (REASONED; jenkins): No native second factor; enforce MFA through SSO/fronting identity.
+- gitea-bind (REASONED; gitea-pin): HTTP_ADDR=0.0.0.0 and HTTP_PORT=3000 default; set 127.0.0.1 behind a proxy.
+- gitea-tls (REASONED; gitea): Native TLS uses PROTOCOL=https, CERT_FILE and KEY_FILE.
+- gitea-registration (REASONED; gitea): Set service DISABLE_REGISTRATION=true; default false.
+- gitea-private (REASONED; gitea): Set service REQUIRE_SIGNIN_VIEW=true for a private forge; default false.
+- gitea-mfa (REASONED; gitea, gitea-mfa-min): Enrol TOTP/WebAuthn; security TWO_FACTOR_AUTH=enforced requires MFA in Gitea 1.24 and later.
+- gitea-tokens (REASONED; gitea): With MFA, Git HTTP uses tokens that bypass MFA; scope and revoke unused tokens.
+- gitlab-root (REASONED; gitlab): Rotate generated initial_root_password; file deletion is on first restart after 24 hours. Alternatively preset through gitlab.rb/OMNIBUS_CONFIG.
+- gitlab-signup (REASONED; gitlab): signup_enabled defaults true; disable for a private forge.
+- gitlab-approval (REASONED; gitlab): New instances require admin approval after signup by default; do not rely on approval alone.
+- gitlab-visibility (REASONED; gitlab): Project/group visibility default private; internal admits every signed-in non-external user, including allowed registrants.
+- gitlab-mfa (REASONED; gitlab): Enforce two-factor authentication for every user; available on all tiers.
+- kuma-proxy (REASONED; kuma): Port 3001 uses WebSockets; proxy Upgrade/Connection headers are required.
+- kuma-admin (REASONED; kuma): Finish account setup before others, enable 2FA and keep dashboard private even if status pages are public.
+- docker-root (REASONED; docker): Docker socket grants host-root power; never expose unauthenticated 0.0.0.0:2375.
+- docker-ssh (REASONED; docker): DOCKER_HOST/context can select SSH to the Unix socket without a new listener.
+- docker-mtls (REASONED; docker): 2376 requires tlsverify, CA, server cert/key and client TLS settings. Without tlsverify clients are not authenticated; firewall source addresses too.
+- dozzle-socket (REASONED; dozzle, docker): Docker-socket access has host-level power; keep Dozzle private with fronting MFA.
+- dozzle-auth (REASONED; dozzle): Auth defaults off; generate users.yml with stdin password prompt and set simple auth, or delegate with forward-proxy.
+- dozzle-actions (REASONED; dozzle): Leave optional container actions/shell off unless needed; either enables remote command execution.
+- registry-auth (REASONED; registry-docs): registry:2 defaults to unauthenticated push/pull; configure TLS before htpasswd/token auth or use an authenticated distribution.
+- registry-bcrypt (REASONED; registry-docs, htpasswd, owasp-passwords): Native htpasswd accepts bcrypt only; use -B -C 12. Proxy hashing rules differ.
+- registry-private (REASONED; registry-docs): Use private networking and tunnels/Access with fronting MFA.
+- filebrowser-admin (REASONED; filebrowser): Change first-run admin credentials, historically admin/admin. Guide records September 1, 2026 archival and the warning against internet exposure.
+- filebrowser-private (REASONED; filebrowser): Keep Filebrowser private through tunnel/tailnet/Access with fronting MFA.
+- nodered-default (REASONED; nodered): Editor/admin API on 1880 defaults unauthenticated, permitting flow viewing/deployment/modification.
+- nodered-auth (REASONED; nodered): Set adminAuth with bcrypt passwords from node-red admin hash-pw.
+- nodered-secret (REASONED; nodered): Set credentialSecret yourself; otherwise generated, and stored credentials depend on it.
+- nodered-private (REASONED; nodered): Keep editor private with fronting MFA; it has the power of its flows.
+- verify-listeners (REASONED; portainer, dokploy, npm, kuma, docker): Read every panel/API listener; expect loopback or absence, never wildcard exposure.
+- verify-panel (REASONED; portainer, jenkins, gitea): Expect denial/login redirect with valid TLS; anonymous host/container/repository data is a finding. No live panel outcome recorded.
+- verify-docker-plain (REASONED; docker): Public-IP 2375 must be refused/filtered by the remote host; local client failure is inconclusive.
+- verify-docker-mtls (REASONED; docker): 2376 /_ping without a client certificate must fail client-certificate authentication; correct certificate/key must return 200.
+- verify-gitlab (REASONED; gitlab): Present initial_root_password requires rotation; absence does not prove rotation. Failed/unexpected docker exec output is not a result.
 <!-- version-basis:end -->
 
 These panels control hosts, containers, clusters, deploy keys, and secrets; a login to one of them is a login to everything it manages. One rule dominates everything tool-specific below: **a DevOps panel is never reachable from the public internet.** Bind it to loopback or a private interface and reach it through SSH port forwarding, a tailnet ([tailscale.md](tailscale.md)), or Cloudflare Access ([cloudflare.md](cloudflare.md)); anything that must be public sits behind a TLS proxy with its own authentication ([nginx.md](nginx.md), [caddy.md](caddy.md)) and the admin login gets MFA ([mfa.md](mfa.md)). Several of these tools create their administrator on first visit, so whoever reaches a fresh install first owns it: create the account before the port is reachable by anyone else.

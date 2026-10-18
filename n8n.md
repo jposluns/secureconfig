@@ -126,37 +126,48 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-17; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| bind-default: n8n 2.40.6 defaults N8N_LISTEN_ADDRESS to :: and N8N_PORT to 5678, exposing all interfaces. | n8n listener source n8n@2.40.6 | REASONED |
-| protocol-default: N8N_PROTOCOL defaults http; private deployment sets listener, port and host explicitly. | n8n documentation unknown | REASONED |
-| container-bind: Host loopback is for a same-host proxy; container loopback blocks sibling/published access, so use a private network without publication or host-loopback 127.0.0.1:5678:5678. | n8n documentation unknown | REASONED |
-| other-ports: Keep Postgres and task-runner broker ports unpublished and publish only the HTTPS proxy. | n8n documentation unknown | REASONED |
-| public-url: Set N8N_PROTOCOL=https and the full N8N_WEBHOOK_URL; WEBHOOK_URL is deprecated from 2.35.0 but still warns and works. | n8n documentation unknown | REASONED |
-| secure-cookie: Retain N8N_SECURE_COOKIE=true, its default. | n8n documentation unknown; n8n listener source n8n@2.40.6 | REASONED |
-| proxy-hops: Set N8N_PROXY_HOPS to the trusted hop count for forwarded client IPs and rate limiting; public webhooks do not require a public editor. | n8n documentation unknown | REASONED |
-| native-tls: N8N_PROTOCOL=https with N8N_SSL_KEY/N8N_SSL_CERT enables native TLS. | n8n documentation unknown | REASONED |
-| owner: Finish first-run owner setup before publication. The pinned owner setup handler skips authentication and issues an owner session cookie. | n8n runtime source n8n@2.40.6 | REASONED |
-| user-mfa: Individual users can enable two-factor authentication, subject to version/licence availability. | n8n documentation unknown | REASONED |
-| mfa-enforcement: Enforce MFA through Settings &gt; Security or N8N_MFA_ENFORCED_ENABLED with N8N_SECURITY_POLICY_MANAGED_BY_ENV; env policy requires 2.18.0+ and self-hosted Business/Enterprise. | n8n environment policy minimum 2.18.0 | REASONED |
-| sso-mfa: Instance MFA enforcement excludes SSO logins; enforce their MFA at the identity provider. | n8n documentation unknown | REASONED |
-| encryption: Stored credentials are encrypted; unset N8N_ENCRYPTION_KEY generates a key under ~/.n8n, not plaintext; losing it makes retained credentials unrecoverable. | n8n documentation unknown | REASONED |
-| key-custody: Set the same encryption key across workers/replicas, back it up separately from the database and exclude it from source and images. | n8n documentation unknown | REASONED |
-| webhook-auth: Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential. | n8n documentation unknown | REASONED |
-| auth-boundaries: Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries. | n8n documentation unknown | REASONED |
-| signature: A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials. | n8n documentation unknown | REASONED |
-| code-execution: Code executes JavaScript/Python; Execute Command runs the command through a shell in a child process of the n8n process executing the node and is excluded by default at n8n 2.40.6. The pinned n8n 2.0.0 default excludes Execute Command and Local File Trigger; the pinned 1.x line at n8n 1.123.85 excludes none. This guide infers a 2.0 default boundary from those snapshots; the rolling 2.0 changes page dates the default to 2.0. Source gap: the rolling 2.0 changes page is unversioned and the first introducing release is unverified. | n8n documentation unknown; n8n 2.0 breaking changes unknown; n8n runtime source n8n@2.40.6; n8n 2.0 default exclusion source n8n@2.0.0; n8n 1.x default exclusion source n8n@1.123.85 | REASONED |
-| runners: Use hardened external task runners; vendor describes internal mode as insecure by design. | n8n documentation unknown | REASONED |
-| environment: N8N_BLOCK_ENV_ACCESS_IN_NODE blocks the workflow $env data proxy unless set to false; this source does not establish isolation of every node or Code process.env. | n8n runtime source n8n@2.40.6 | REASONED |
-| js-modules: Narrow NODE_FUNCTION_ALLOW_BUILTIN/NODE_FUNCTION_ALLOW_EXTERNAL in external launcher's /etc/n8n-task-runners.json env-overrides; main-container values are overridden. | n8n documentation unknown | REASONED |
-| python-modules: Set N8N_RUNNERS_STDLIB_ALLOW/N8N_RUNNERS_EXTERNAL_ALLOW explicitly; wildcard grants broad module access and version-dependent defaults need confirmation. | n8n documentation unknown | REASONED |
-| ssrf: Enable N8N_SSRF_PROTECTION_ENABLED from 2.12.0 and restrict network egress; the app filter does not contain arbitrary code/command networking. | n8n SSRF filter minimum 2.12.0 | REASONED |
-| verify-inventory: Confirm completed owner setup without creating an owner as a probe; the pinned setup handler skips authentication. ss is local inventory, not firewall/NAT proof; check actual public IPv4/IPv6 paths separately. | n8n documentation unknown; n8n runtime source n8n@2.40.6 | REASONED |
-| verify-tls: HTTPS reachability tests TLS, not authentication. | n8n documentation unknown | REASONED |
-| verify-api: At the same /api/v1/workflows URL, test without and with X-N8N-API-KEY; n8n authenticates the public API through its auth registry. Treat 401 without a key and 200 workflow JSON with a valid key as expected results to verify, not sourced native status guarantees; retain proxy credentials and feed the key on stdin. | n8n documentation unknown; n8n runtime source n8n@2.40.6 | REASONED |
-| verify-editor: Confirm editor session login at /rest/login separately; the pinned login controller registers POST /login under the default rest endpoint, which is configurable. A protected public API does not prove editor protection. | n8n runtime source n8n@2.40.6 | REASONED |
-| verify-webhook: Use each production /webhook/ method and valid payload with missing/wrong/valid credentials; the pinned Webhook handler returns 401 for missing Basic/JWT credentials and 403 for missing Header credentials when node credentials are configured. Verify actions, not status alone. | n8n documentation unknown; n8n runtime source n8n@2.40.6 | REASONED |
-| verify-signature: For None plus workflow signature checks, unsigned calls must run no action; 404 from inactive/wrong path/method is not protection. | n8n documentation unknown | REASONED |
+Components (recorded basis):
+
+- docs: n8n documentation, unknown
+- server: n8n listener source, n8n@2.40.6
+- runtime: n8n runtime source, n8n@2.40.6
+- policy: n8n environment policy minimum, 2.18.0
+- ssrf: n8n SSRF filter minimum, 2.12.0
+- v2-default: n8n 2.0 default exclusion source, n8n@2.0.0
+- v1-default: n8n 1.x default exclusion source, n8n@1.123.85
+- v2-docs: n8n 2.0 breaking changes, unknown
+
+Claims (full source mapping in the front matter):
+
+- bind-default (REASONED; server): n8n 2.40.6 defaults N8N_LISTEN_ADDRESS to :: and N8N_PORT to 5678, exposing all interfaces.
+- protocol-default (REASONED; docs): N8N_PROTOCOL defaults http; private deployment sets listener, port and host explicitly.
+- container-bind (REASONED; docs): Host loopback is for a same-host proxy; container loopback blocks sibling/published access, so use a private network without publication or host-loopback 127.0.0.1:5678:5678.
+- other-ports (REASONED; docs): Keep Postgres and task-runner broker ports unpublished and publish only the HTTPS proxy.
+- public-url (REASONED; docs): Set N8N_PROTOCOL=https and the full N8N_WEBHOOK_URL; WEBHOOK_URL is deprecated from 2.35.0 but still warns and works.
+- secure-cookie (REASONED; docs, server): Retain N8N_SECURE_COOKIE=true, its default.
+- proxy-hops (REASONED; docs): Set N8N_PROXY_HOPS to the trusted hop count for forwarded client IPs and rate limiting; public webhooks do not require a public editor.
+- native-tls (REASONED; docs): N8N_PROTOCOL=https with N8N_SSL_KEY/N8N_SSL_CERT enables native TLS.
+- owner (REASONED; runtime): Finish first-run owner setup before publication. The pinned owner setup handler skips authentication and issues an owner session cookie.
+- user-mfa (REASONED; docs): Individual users can enable two-factor authentication, subject to version/licence availability.
+- mfa-enforcement (REASONED; policy): Enforce MFA through Settings &gt; Security or N8N_MFA_ENFORCED_ENABLED with N8N_SECURITY_POLICY_MANAGED_BY_ENV; env policy requires 2.18.0+ and self-hosted Business/Enterprise.
+- sso-mfa (REASONED; docs): Instance MFA enforcement excludes SSO logins; enforce their MFA at the identity provider.
+- encryption (REASONED; docs): Stored credentials are encrypted; unset N8N_ENCRYPTION_KEY generates a key under ~/.n8n, not plaintext; losing it makes retained credentials unrecoverable.
+- key-custody (REASONED; docs): Set the same encryption key across workers/replicas, back it up separately from the database and exclude it from source and images.
+- webhook-auth (REASONED; docs): Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential.
+- auth-boundaries (REASONED; docs): Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries.
+- signature (REASONED; docs): A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials.
+- code-execution (REASONED; docs, v2-docs, runtime, v2-default, v1-default): Code executes JavaScript/Python; Execute Command runs the command through a shell in a child process of the n8n process executing the node and is excluded by default at n8n 2.40.6. The pinned n8n 2.0.0 default excludes Execute Command and Local File Trigger; the pinned 1.x line at n8n 1.123.85 excludes none. This guide infers a 2.0 default boundary from those snapshots; the rolling 2.0 changes page dates the default to 2.0. Source gap: the rolling 2.0 changes page is unversioned and the first introducing release is unverified.
+- runners (REASONED; docs): Use hardened external task runners; vendor describes internal mode as insecure by design.
+- environment (REASONED; runtime): N8N_BLOCK_ENV_ACCESS_IN_NODE blocks the workflow $env data proxy unless set to false; this source does not establish isolation of every node or Code process.env.
+- js-modules (REASONED; docs): Narrow NODE_FUNCTION_ALLOW_BUILTIN/NODE_FUNCTION_ALLOW_EXTERNAL in external launcher's /etc/n8n-task-runners.json env-overrides; main-container values are overridden.
+- python-modules (REASONED; docs): Set N8N_RUNNERS_STDLIB_ALLOW/N8N_RUNNERS_EXTERNAL_ALLOW explicitly; wildcard grants broad module access and version-dependent defaults need confirmation.
+- ssrf (REASONED; ssrf): Enable N8N_SSRF_PROTECTION_ENABLED from 2.12.0 and restrict network egress; the app filter does not contain arbitrary code/command networking.
+- verify-inventory (REASONED; docs, runtime): Confirm completed owner setup without creating an owner as a probe; the pinned setup handler skips authentication. ss is local inventory, not firewall/NAT proof; check actual public IPv4/IPv6 paths separately.
+- verify-tls (REASONED; docs): HTTPS reachability tests TLS, not authentication.
+- verify-api (REASONED; docs, runtime): At the same /api/v1/workflows URL, test without and with X-N8N-API-KEY; n8n authenticates the public API through its auth registry. Treat 401 without a key and 200 workflow JSON with a valid key as expected results to verify, not sourced native status guarantees; retain proxy credentials and feed the key on stdin.
+- verify-editor (REASONED; runtime): Confirm editor session login at /rest/login separately; the pinned login controller registers POST /login under the default rest endpoint, which is configurable. A protected public API does not prove editor protection.
+- verify-webhook (REASONED; docs, runtime): Use each production /webhook/ method and valid payload with missing/wrong/valid credentials; the pinned Webhook handler returns 401 for missing Basic/JWT credentials and 403 for missing Header credentials when node credentials are configured. Verify actions, not status alone.
+- verify-signature (REASONED; docs): For None plus workflow signature checks, unsigned calls must run no action; 404 from inactive/wrong path/method is not protection.
 <!-- version-basis:end -->
 
 n8n includes user management (complete the owner setup on first run), but its network defaults deserve attention: `N8N_LISTEN_ADDRESS` defaults to `::` and `N8N_PORT` to `5678` (both as of n8n 2.40.6), so n8n listens on **all interfaces** over plain HTTP.

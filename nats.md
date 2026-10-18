@@ -204,73 +204,84 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| baseline: v2.14.7 and its recorded commit are the review baseline, not a latest-release claim. | NATS Server v2.14.7; NATS baseline commit 8d8b69a8c46a46a150eabb7f312607c4d9c58faf | REASONED |
-| client-default: Client port 4222 defaults to no authentication and wildcard host; select loopback or a private interface. | NATS Server documentation (rolling) unknown | REASONED |
-| image-config: Published 2.14/2.15 variants load bundled configuration only with the recorded default command, working directory and mounts. | NATS image catalogue dcd3db677d8919c3a42d369bd48a6f1c234b3ae8; NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
-| image-client: Bundled images enable unauthenticated client 4222; mount and explicitly select protected configuration. | NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
-| image-monitor: Bundled images enable unauthenticated monitoring 8222; remove or bind privately. | NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
-| image-route: Bundled route 6222 uses published ruser/T0pS3cr3t and my_cluster; remove or replace with private credentials. | NATS image source 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5 | REASONED |
-| image-bind: Bundled listeners without hosts use 0.0.0.0, dual-stack where IPv4-mapped IPv6 is supported; restrict publication. | NATS image listener source v2.15.0; Go socket source go1.26.8 | REASONED |
-| static-auth: Separate password/NKey users may coexist; a user's NKey replaces its password pair, without requiring JWT mode. | NATS Server documentation (rolling) unknown | REASONED |
-| passwords: Generate bcrypt interactively; protect seeds and password inputs; hashes do not replace TLS. | natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
-| anonymous: no_auth_user admits anonymous clients as a named identity; omit unless deliberate. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| operator: Operator signs account JWTs, accounts sign users; preload resolver accounts and protect signing seeds off the broker. | NATS Server documentation (rolling) unknown | REASONED |
-| jwt-proof: Non-bearer users prove seed possession by nonce signature; bearer JWT possession is sufficient. | NATS Server documentation (rolling) unknown | REASONED |
-| permissions-default: Absent user/default permissions means unrestricted account access; explicit permissions replace defaults. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| allow-lists: Publish/subscribe lists are independent; nonempty allows restrict, empty allows do not; matching static deny wins. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| inboxes: Use identity-specific reply inboxes; broad _INBOX.&gt; exposes other clients' replies. | NATS Server documentation (rolling) unknown | REASONED |
-| queues: Require the assigned queue in subscription permissions; a bare subject grant defeats queue-only restriction. | NATS Server documentation (rolling) unknown | REASONED |
-| responses: allow_responses can override static publish denial for tracked replies; bound count/expiry, not an absolute subject allow-list. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| tls: Client TLS validates endpoint identity; verify requires client certificates but password requirements come from authentication. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| tls-map: verify_and_map derives configured identity from certificate attributes and enables verification itself. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| monitor-default: Native monitoring is off unless enabled, conventionally 8222; HTTPS adds transport security, not NATS login or client mTLS. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| monitor-data: /varz, /connz, /routez and JetStream /jsz disclose metadata; subs/auth query options add details, not authentication. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| monitor-boundary: Bind monitoring privately; an authenticating proxy needs direct-backend bypass prevention. | NATS Server documentation (rolling) unknown | REASONED |
-| jetstream-port: JetStream shares the server and monitoring endpoint; it adds no listener of its own. | NATS Server documentation (rolling) unknown | REASONED |
-| cluster: Conditional private 6222 routes have separate credentials/TLS; explicit URLs need credentials; cluster TLS verifies peers. | NATS Server documentation (rolling) unknown | REASONED |
-| gateway: Conditional private 7222 gateways verify peers; reject_unknown_cluster supplements credentials, not replaces them. | NATS Server documentation (rolling) unknown | REASONED |
-| peer-urls: Match SANs, advertisements and URLs; keep insecure disabled; known-URL certificate checks constrain dynamic growth. | NATS Server documentation (rolling) unknown | REASONED |
-| leaf: Conditional 7422 leaf auth/TLS is independent; static password and operator credentials recipes are alternatives. | NATS Server documentation (rolling) unknown | REASONED |
-| leaf-accounts: Outbound account is local; remote credentials select hub account; remotes-only creates no inbound listener. | NATS Server documentation (rolling) unknown | REASONED |
-| connection-default: Documented client-connection default is 65,536; configured limits are capacities, not attempt-rate limits. | NATS Server documentation (rolling) unknown | REASONED |
-| payload-default: Documented payload default is 1 MiB; max_payload must not exceed max_pending. | NATS Server documentation (rolling) unknown | REASONED |
-| runtime-budgets: Set per-server/account connections, per-client subscriptions, control-line/pending limits and TLS/auth/write deadlines for workload. | NATS Server documentation (rolling) unknown | REASONED |
-| accounts: Top-level users share $G; separate account spaces and restrict exports to intended importing accounts. | NATS Server documentation (rolling) unknown | REASONED |
-| system-account: Default system name is $SYS; selected SYS contains administrative identities, not application users. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| jetstream-server: Conditional store_dir and memory/file budgets bound storage, not all process memory or filesystem use. | NATS Server documentation (rolling) unknown | REASONED |
-| jetstream-queue: request_queue_limit bounds pending JetStream API work, not connection attempts. | NATS Server documentation (rolling) unknown | REASONED |
-| jetstream-account: Set account memory/file, stream count, required max_bytes, per-stream byte and acknowledgement ceilings; inspect effective reload results. | NATS Server documentation (rolling) unknown | REASONED |
-| consumer-limit: v2.14.7 account max_consumers is enforced per stream, not as a total account consumer count. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| jetstream-auth: Core-only users deny API subjects; legitimate JetStream apps need reviewed resource, reply and acknowledgement permissions. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| domains: EDGE/HUB domains select independent JetStream systems, not tenant authorization boundaries. | NATS Server documentation (rolling) unknown | REASONED |
-| encryption: Conditional server-wide file-store encryption uses protected key material, recommended at least 32 bytes; aes selects AES-GCM. | NATS Server documentation (rolling) unknown | REASONED |
-| rotation: Previous-key transition needs restart and recovery tests; protect keys and backups separately. | NATS Server documentation (rolling) unknown | REASONED |
-| mqtt: Optional private MQTT TLS needs JetStream, scoped translated subjects, protocol-restricted users and reviewed anonymous overrides. | NATS Server documentation (rolling) unknown | REASONED |
-| mqtt-jwt: Operator-mode MQTT uses explicitly permitted bearer JWT passwords, not normal NKey nonce proof. | NATS Server documentation (rolling) unknown | REASONED |
-| websocket: Optional 8443 WSS needs scoped users/inboxes and origin policy; non-browser Origin is not authentication. | NATS Server documentation (rolling) unknown | REASONED |
-| websocket-tls: WebSocket TLS is required unless no_tls disables it; protect proxy backends and review listener auth overrides. | NATS Server documentation (rolling) unknown | REASONED |
-| callout: Conditional auth callout needs dedicated AUTH account, narrow bypass users, signed responses and encrypted XKey exchanges. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| callout-mode: Static and operator workflows differ; allowed_accounts is mode-dependent; unavailable authenticator must reject admission. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| files: Dedicated non-root broker reads necessary secrets and writes state; application/signing seeds stay with their owners. | NATS Server documentation (rolling) unknown | REASONED |
-| verify-offline: Native parsing/key generation remain unobserved; pair valid parsing fixtures with malformed controls and separately scan placeholders. | NATS Server v2.14.7; natscli v0.4.0 | REASONED |
-| verify-identity: Inspect running identity, effective config/limits, every listener namespace and host publication; file inspection alone is insufficient. | NATS Server documentation (rolling) unknown | REASONED |
-| cli-input: Clear inherited NATS_* and saved contexts; password uses guarded one-command environment input, still locally readable. | natscli v0.4.0 | REASONED |
-| verify-auth: Require allowed publish, missing/wrong-password rejection, certificate/hostname discrimination and forbidden subject errors. | NATS Server v2.14.7; natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
-| verify-delivery: Require exact live markers; quiet subscribers and publish success alone prove no delivery. | natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
-| verify-queue: Assigned queue receives marker; wrong/no queue rejects with matched positive delivery. | NATS Server v2.14.7; natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
-| verify-response: Same worker connection sends one timely reply; extra, expired and unrelated replies must fail. | NATS Server v2.14.7; natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
-| verify-accounts: Created marker stays in ORDERS; shipped marker reaches ANALYTICS; keep count controls live and reject third-account imports. | natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
-| verify-system: sys-admin gets system response; tenant gets corresponding publish-permission rejection. | natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
-| verify-js-auth: Provisioner creates, inspects, retrieves and deletes fixtures; Core-only identity must receive API-subject denials. | NATS Server v2.14.7; natscli v0.4.0; NATS Server documentation (rolling) unknown | REASONED |
-| verify-js-limits: Test byte reservations, stored bytes, stream/consumer counts and ack ceiling independently with below-limit controls. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| verify-recovery: Copied encrypted store must recover with correct key and fail with missing/wrong key; test rotation, not just marker absence. | NATS Server v2.14.7; NATS Server documentation (rolling) unknown | REASONED |
-| verify-peers: Actual links need cross-server delivery plus credential/certificate/network denials; client-port/TCP/TLS checks do not substitute. | NATS Server documentation (rolling) unknown | REASONED |
-| verify-monitor: Collector retrieves expected JSON; unauthorized direct backend cannot answer; pair refusal with identity/inventory and live control. | NATS Server documentation (rolling) unknown | REASONED |
-| verify-proxy: Conditional proxy needs anonymous refusal, authenticated JSON success and direct-backend bypass denial. | NATS Server documentation (rolling) unknown | REASONED |
-| verify-optional: Test MQTT translated subjects/bearer identity, WSS origins versus auth, and callout outage, grants and XKey failures separately. | NATS Server documentation (rolling) unknown | REASONED |
-| verify-pressure: Bounded workloads distinguish connection/subscription/payload/control-line/timeouts/slow-consumer/API limits with healthy controls. | NATS Server documentation (rolling) unknown | REASONED |
+Components (recorded basis):
+
+- server: NATS Server, v2.14.7
+- commit: NATS baseline commit, 8d8b69a8c46a46a150eabb7f312607c4d9c58faf
+- library: NATS image catalogue, dcd3db677d8919c3a42d369bd48a6f1c234b3ae8
+- image: NATS image source, 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5
+- image-server: NATS image listener source, v2.15.0
+- go: Go socket source, go1.26.8
+- cli: natscli, v0.4.0
+- server-docs: NATS Server documentation (rolling), unknown
+
+Claims (full source mapping in the front matter):
+
+- baseline (REASONED; server, commit): v2.14.7 and its recorded commit are the review baseline, not a latest-release claim.
+- client-default (REASONED; server-docs): Client port 4222 defaults to no authentication and wildcard host; select loopback or a private interface.
+- image-config (REASONED; library, image): Published 2.14/2.15 variants load bundled configuration only with the recorded default command, working directory and mounts.
+- image-client (REASONED; image): Bundled images enable unauthenticated client 4222; mount and explicitly select protected configuration.
+- image-monitor (REASONED; image): Bundled images enable unauthenticated monitoring 8222; remove or bind privately.
+- image-route (REASONED; image): Bundled route 6222 uses published ruser/T0pS3cr3t and my_cluster; remove or replace with private credentials.
+- image-bind (REASONED; image-server, go): Bundled listeners without hosts use 0.0.0.0, dual-stack where IPv4-mapped IPv6 is supported; restrict publication.
+- static-auth (REASONED; server-docs): Separate password/NKey users may coexist; a user's NKey replaces its password pair, without requiring JWT mode.
+- passwords (REASONED; cli, server-docs): Generate bcrypt interactively; protect seeds and password inputs; hashes do not replace TLS.
+- anonymous (REASONED; server, server-docs): no_auth_user admits anonymous clients as a named identity; omit unless deliberate.
+- operator (REASONED; server-docs): Operator signs account JWTs, accounts sign users; preload resolver accounts and protect signing seeds off the broker.
+- jwt-proof (REASONED; server-docs): Non-bearer users prove seed possession by nonce signature; bearer JWT possession is sufficient.
+- permissions-default (REASONED; server, server-docs): Absent user/default permissions means unrestricted account access; explicit permissions replace defaults.
+- allow-lists (REASONED; server, server-docs): Publish/subscribe lists are independent; nonempty allows restrict, empty allows do not; matching static deny wins.
+- inboxes (REASONED; server-docs): Use identity-specific reply inboxes; broad _INBOX.&gt; exposes other clients' replies.
+- queues (REASONED; server-docs): Require the assigned queue in subscription permissions; a bare subject grant defeats queue-only restriction.
+- responses (REASONED; server, server-docs): allow_responses can override static publish denial for tracked replies; bound count/expiry, not an absolute subject allow-list.
+- tls (REASONED; server, server-docs): Client TLS validates endpoint identity; verify requires client certificates but password requirements come from authentication.
+- tls-map (REASONED; server, server-docs): verify_and_map derives configured identity from certificate attributes and enables verification itself.
+- monitor-default (REASONED; server, server-docs): Native monitoring is off unless enabled, conventionally 8222; HTTPS adds transport security, not NATS login or client mTLS.
+- monitor-data (REASONED; server, server-docs): /varz, /connz, /routez and JetStream /jsz disclose metadata; subs/auth query options add details, not authentication.
+- monitor-boundary (REASONED; server-docs): Bind monitoring privately; an authenticating proxy needs direct-backend bypass prevention.
+- jetstream-port (REASONED; server-docs): JetStream shares the server and monitoring endpoint; it adds no listener of its own.
+- cluster (REASONED; server-docs): Conditional private 6222 routes have separate credentials/TLS; explicit URLs need credentials; cluster TLS verifies peers.
+- gateway (REASONED; server-docs): Conditional private 7222 gateways verify peers; reject_unknown_cluster supplements credentials, not replaces them.
+- peer-urls (REASONED; server-docs): Match SANs, advertisements and URLs; keep insecure disabled; known-URL certificate checks constrain dynamic growth.
+- leaf (REASONED; server-docs): Conditional 7422 leaf auth/TLS is independent; static password and operator credentials recipes are alternatives.
+- leaf-accounts (REASONED; server-docs): Outbound account is local; remote credentials select hub account; remotes-only creates no inbound listener.
+- connection-default (REASONED; server-docs): Documented client-connection default is 65,536; configured limits are capacities, not attempt-rate limits.
+- payload-default (REASONED; server-docs): Documented payload default is 1 MiB; max_payload must not exceed max_pending.
+- runtime-budgets (REASONED; server-docs): Set per-server/account connections, per-client subscriptions, control-line/pending limits and TLS/auth/write deadlines for workload.
+- accounts (REASONED; server-docs): Top-level users share $G; separate account spaces and restrict exports to intended importing accounts.
+- system-account (REASONED; server, server-docs): Default system name is $SYS; selected SYS contains administrative identities, not application users.
+- jetstream-server (REASONED; server-docs): Conditional store_dir and memory/file budgets bound storage, not all process memory or filesystem use.
+- jetstream-queue (REASONED; server-docs): request_queue_limit bounds pending JetStream API work, not connection attempts.
+- jetstream-account (REASONED; server-docs): Set account memory/file, stream count, required max_bytes, per-stream byte and acknowledgement ceilings; inspect effective reload results.
+- consumer-limit (REASONED; server, server-docs): v2.14.7 account max_consumers is enforced per stream, not as a total account consumer count.
+- jetstream-auth (REASONED; server, server-docs): Core-only users deny API subjects; legitimate JetStream apps need reviewed resource, reply and acknowledgement permissions.
+- domains (REASONED; server-docs): EDGE/HUB domains select independent JetStream systems, not tenant authorization boundaries.
+- encryption (REASONED; server-docs): Conditional server-wide file-store encryption uses protected key material, recommended at least 32 bytes; aes selects AES-GCM.
+- rotation (REASONED; server-docs): Previous-key transition needs restart and recovery tests; protect keys and backups separately.
+- mqtt (REASONED; server-docs): Optional private MQTT TLS needs JetStream, scoped translated subjects, protocol-restricted users and reviewed anonymous overrides.
+- mqtt-jwt (REASONED; server-docs): Operator-mode MQTT uses explicitly permitted bearer JWT passwords, not normal NKey nonce proof.
+- websocket (REASONED; server-docs): Optional 8443 WSS needs scoped users/inboxes and origin policy; non-browser Origin is not authentication.
+- websocket-tls (REASONED; server-docs): WebSocket TLS is required unless no_tls disables it; protect proxy backends and review listener auth overrides.
+- callout (REASONED; server, server-docs): Conditional auth callout needs dedicated AUTH account, narrow bypass users, signed responses and encrypted XKey exchanges.
+- callout-mode (REASONED; server, server-docs): Static and operator workflows differ; allowed_accounts is mode-dependent; unavailable authenticator must reject admission.
+- files (REASONED; server-docs): Dedicated non-root broker reads necessary secrets and writes state; application/signing seeds stay with their owners.
+- verify-offline (REASONED; server, cli): Native parsing/key generation remain unobserved; pair valid parsing fixtures with malformed controls and separately scan placeholders.
+- verify-identity (REASONED; server-docs): Inspect running identity, effective config/limits, every listener namespace and host publication; file inspection alone is insufficient.
+- cli-input (REASONED; cli): Clear inherited NATS_* and saved contexts; password uses guarded one-command environment input, still locally readable.
+- verify-auth (REASONED; server, cli, server-docs): Require allowed publish, missing/wrong-password rejection, certificate/hostname discrimination and forbidden subject errors.
+- verify-delivery (REASONED; cli, server-docs): Require exact live markers; quiet subscribers and publish success alone prove no delivery.
+- verify-queue (REASONED; server, cli, server-docs): Assigned queue receives marker; wrong/no queue rejects with matched positive delivery.
+- verify-response (REASONED; server, cli, server-docs): Same worker connection sends one timely reply; extra, expired and unrelated replies must fail.
+- verify-accounts (REASONED; cli, server-docs): Created marker stays in ORDERS; shipped marker reaches ANALYTICS; keep count controls live and reject third-account imports.
+- verify-system (REASONED; cli, server-docs): sys-admin gets system response; tenant gets corresponding publish-permission rejection.
+- verify-js-auth (REASONED; server, cli, server-docs): Provisioner creates, inspects, retrieves and deletes fixtures; Core-only identity must receive API-subject denials.
+- verify-js-limits (REASONED; server, server-docs): Test byte reservations, stored bytes, stream/consumer counts and ack ceiling independently with below-limit controls.
+- verify-recovery (REASONED; server, server-docs): Copied encrypted store must recover with correct key and fail with missing/wrong key; test rotation, not just marker absence.
+- verify-peers (REASONED; server-docs): Actual links need cross-server delivery plus credential/certificate/network denials; client-port/TCP/TLS checks do not substitute.
+- verify-monitor (REASONED; server-docs): Collector retrieves expected JSON; unauthorized direct backend cannot answer; pair refusal with identity/inventory and live control.
+- verify-proxy (REASONED; server-docs): Conditional proxy needs anonymous refusal, authenticated JSON success and direct-backend bypass denial.
+- verify-optional (REASONED; server-docs): Test MQTT translated subjects/bearer identity, WSS origins versus auth, and callout outage, grants and XKey failures separately.
+- verify-pressure (REASONED; server-docs): Bounded workloads distinguish connection/subscription/payload/control-line/timeouts/slow-consumer/API limits with healthy controls.
 <!-- version-basis:end -->
 
 NATS accepts client connections on 4222 with no authentication configured by default. A separately enabled HTTP monitoring endpoint, conventionally 8222, reveals connection metadata, subscription subjects, and message/byte counters without a login of its own. Both need explicit configuration. JetStream, the persistence layer for streams and consumers, runs in the same server process: it adds no listening port of its own, and its state surfaces through the same monitoring endpoint at `/jsz`.

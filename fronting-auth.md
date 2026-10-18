@@ -128,40 +128,52 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| isolate: Bind app and auth service to loopback or an unpublished private container network; only the fronting proxy may reach them. | oauth2-proxy v7.15.4; oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
-| oauth-bind: oauth2-proxy --http-address defaults to 127.0.0.1:4180. | oauth2-proxy v7.15.4 | REASONED |
-| authelia-bind: Authelia server.address defaults tcp://:9091/; its empty host reaches Go net.Listen and binds every local address. | Authelia v4.39.28; Go net.Listen unknown | REASONED |
-| authenticate: oauth2-proxy, Authelia or Pomerium must check the session before forwarding to the app. | Pomerium unknown; oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
-| header-trust: The app must trust only headers overwritten from verified proxy responses; other client headers pass through, so isolation alone is insufficient. | oauth2-proxy v7.15.4; Traefik unknown; oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
-| oauth-provider: OAUTH2_PROXY_ environment variables map core flags; configure provider and IdP client-id/client-secret. | oauth2-proxy v7.15.4 | REASONED |
-| oauth-domain: --email-domain restricts a domain; * admits any authenticated user. | oauth2-proxy v7.15.4 | REASONED |
-| oauth-upstream: --upstream targets the app, or static://202 when another proxy handles forwarding. | oauth2-proxy v7.15.4 | REASONED |
-| oauth-cookie: --cookie-secret must be 16, 24 or 32 bytes, optionally base64-encoded; generate randomly and do not reuse or commit it. | oauth2-proxy v7.15.4 | REASONED |
-| oauth-nginx: nginx auth_request at /oauth2/auth needs --reverse-proxy; --set-xauthrequest supplies User/Email response headers. | oauth2-proxy documentation (rolling) unknown | REASONED |
-| oauth-nginx-identity: nginx maps verified X-Auth-Request-User/Email to X-User/Email before forwarding to 127.0.0.1:3000. | oauth2-proxy documentation (rolling) unknown | REASONED |
-| oauth-signin: The nginx example forwards /oauth2/ to 127.0.0.1:4180 and redirects auth 401 to /oauth2/sign_in with the return URL. | oauth2-proxy documentation (rolling) unknown | REASONED |
-| oauth-traefik: Traefik forwardAuth calls oauth2-proxy:4180/oauth2/auth with static://202, reverse-proxy and set-xauthrequest enabled. | oauth2-proxy v7.15.4 | REASONED |
-| traefik-headers: authResponseHeaders must include every trusted identity header; only those replace client values, with other headers forwarded unchanged. | Traefik unknown; oauth2-proxy v7.15.4 | REASONED |
-| traefik-attach: Attach oauth-auth to every protected router; defining middleware without a router reference protects nothing. | oauth2-proxy v7.15.4; Traefik unknown | REASONED |
-| authelia-support: Authelia supports the listed nginx, Traefik, Caddy, HAProxy/Lua, Envoy, Skipper, NGINX Proxy Manager and SWAG integrations, not Apache/IIS. | Authelia documentation (rolling) unknown | REASONED |
-| caddy-min: Authelia's documented Caddy support requires 2.5.1+. | Authelia documentation (rolling) unknown | REASONED |
-| authelia-nginx: nginx uses the dedicated /api/authz/auth-request endpoint through an internal location with original method/URL and no request body. | Authelia documentation (rolling) unknown | REASONED |
-| authelia-dns: Variable proxy_pass needs runtime DNS resolution or a matching upstream; the shown 127.0.0.11 resolver assumes Docker DNS. | Authelia documentation (rolling) unknown | REASONED |
-| authelia-identity: nginx copies verified Remote-User/Groups/Name/Email and uses the auth Location for 401 redirection; trusted client headers must be overwritten. | Authelia documentation (rolling) unknown | REASONED |
-| authelia-traefik: Traefik calls authelia:9091/api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia documentation (rolling) unknown | REASONED |
-| authelia-caddy: Caddy forward_auth calls authelia:9091 with /api/authz/forward-auth and copies the four Remote-* identity headers. | Authelia documentation (rolling) unknown | REASONED |
-| authelia-session: Authelia needs a random session secret and path access rules selecting one_factor or two_factor. | Authelia documentation (rolling) unknown; Authelia v4.39.28 | REASONED |
-| authelia-mfa: Authelia enforces TOTP, WebAuthn/passkeys or Duo push itself. | Authelia documentation (rolling) unknown | REASONED |
-| pomerium-idp: Pomerium combines routing, TLS and access control; configure idp_provider, idp_provider_url, idp_client_id and idp_client_secret. | Pomerium unknown | REASONED |
-| pomerium-policy: Each Pomerium route carries policy restricting users, domains or claims. | Pomerium unknown; Pomerium policy documentation 691714e2f0ae74fab47412275e8b64b68acdc0d3 | REASONED |
-| idp-mfa: oauth2-proxy and Pomerium rely on MFA enforced by their identity provider. | oauth2-proxy v7.15.4; Pomerium unknown | REASONED |
-| verify-listeners: Inspect every listener: app 3000, oauth2-proxy 4180 and Authelia 9091 must be reachable only by the proxy. | oauth2-proxy v7.15.4; Authelia v4.39.28 | REASONED |
-| verify-direct: From another host, all three ports must refuse/time out at the actual address; HTTP proves exposure and local/resolver failures are inconclusive. | curl minimum write-out version 7.75.0; oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
-| verify-forged-direct: A forged X-User sent directly to app port 3000 must be refused by network isolation. | curl minimum write-out version 7.75.0; oauth2-proxy documentation (rolling) unknown | REASONED |
-| verify-login: Without a session, expect 401 or a 302 to the sign-in page; other redirects do not pass. A real session must reach the app. | oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
-| verify-overwrite: With a valid session, replay a forged trusted identity header through each proxy; the app log must show the real identity, not admin. | oauth2-proxy v7.15.4; Traefik unknown; oauth2-proxy documentation (rolling) unknown; Authelia documentation (rolling) unknown | REASONED |
+Components (recorded basis):
+
+- oauth: oauth2-proxy, v7.15.4
+- authelia: Authelia, v4.39.28
+- traefik: Traefik, unknown
+- go: Go net.Listen, unknown
+- pomerium: Pomerium, unknown
+- curl: curl minimum write-out version, 7.75.0
+- oauth-rolling: oauth2-proxy documentation (rolling), unknown
+- authelia-rolling: Authelia documentation (rolling), unknown
+- pomerium-docs: Pomerium policy documentation, 691714e2f0ae74fab47412275e8b64b68acdc0d3
+
+Claims (full source mapping in the front matter):
+
+- isolate (REASONED; oauth, oauth-rolling, authelia-rolling): Bind app and auth service to loopback or an unpublished private container network; only the fronting proxy may reach them.
+- oauth-bind (REASONED; oauth): oauth2-proxy --http-address defaults to 127.0.0.1:4180.
+- authelia-bind (REASONED; authelia, go): Authelia server.address defaults tcp://:9091/; its empty host reaches Go net.Listen and binds every local address.
+- authenticate (REASONED; pomerium, oauth-rolling, authelia-rolling): oauth2-proxy, Authelia or Pomerium must check the session before forwarding to the app.
+- header-trust (REASONED; oauth, traefik, oauth-rolling, authelia-rolling): The app must trust only headers overwritten from verified proxy responses; other client headers pass through, so isolation alone is insufficient.
+- oauth-provider (REASONED; oauth): OAUTH2_PROXY_ environment variables map core flags; configure provider and IdP client-id/client-secret.
+- oauth-domain (REASONED; oauth): --email-domain restricts a domain; * admits any authenticated user.
+- oauth-upstream (REASONED; oauth): --upstream targets the app, or static://202 when another proxy handles forwarding.
+- oauth-cookie (REASONED; oauth): --cookie-secret must be 16, 24 or 32 bytes, optionally base64-encoded; generate randomly and do not reuse or commit it.
+- oauth-nginx (REASONED; oauth-rolling): nginx auth_request at /oauth2/auth needs --reverse-proxy; --set-xauthrequest supplies User/Email response headers.
+- oauth-nginx-identity (REASONED; oauth-rolling): nginx maps verified X-Auth-Request-User/Email to X-User/Email before forwarding to 127.0.0.1:3000.
+- oauth-signin (REASONED; oauth-rolling): The nginx example forwards /oauth2/ to 127.0.0.1:4180 and redirects auth 401 to /oauth2/sign_in with the return URL.
+- oauth-traefik (REASONED; oauth): Traefik forwardAuth calls oauth2-proxy:4180/oauth2/auth with static://202, reverse-proxy and set-xauthrequest enabled.
+- traefik-headers (REASONED; traefik, oauth): authResponseHeaders must include every trusted identity header; only those replace client values, with other headers forwarded unchanged.
+- traefik-attach (REASONED; oauth, traefik): Attach oauth-auth to every protected router; defining middleware without a router reference protects nothing.
+- authelia-support (REASONED; authelia-rolling): Authelia supports the listed nginx, Traefik, Caddy, HAProxy/Lua, Envoy, Skipper, NGINX Proxy Manager and SWAG integrations, not Apache/IIS.
+- caddy-min (REASONED; authelia-rolling): Authelia's documented Caddy support requires 2.5.1+.
+- authelia-nginx (REASONED; authelia-rolling): nginx uses the dedicated /api/authz/auth-request endpoint through an internal location with original method/URL and no request body.
+- authelia-dns (REASONED; authelia-rolling): Variable proxy_pass needs runtime DNS resolution or a matching upstream; the shown 127.0.0.11 resolver assumes Docker DNS.
+- authelia-identity (REASONED; authelia-rolling): nginx copies verified Remote-User/Groups/Name/Email and uses the auth Location for 401 redirection; trusted client headers must be overwritten.
+- authelia-traefik (REASONED; authelia-rolling): Traefik calls authelia:9091/api/authz/forward-auth and copies the four Remote-* identity headers.
+- authelia-caddy (REASONED; authelia-rolling): Caddy forward_auth calls authelia:9091 with /api/authz/forward-auth and copies the four Remote-* identity headers.
+- authelia-session (REASONED; authelia-rolling, authelia): Authelia needs a random session secret and path access rules selecting one_factor or two_factor.
+- authelia-mfa (REASONED; authelia-rolling): Authelia enforces TOTP, WebAuthn/passkeys or Duo push itself.
+- pomerium-idp (REASONED; pomerium): Pomerium combines routing, TLS and access control; configure idp_provider, idp_provider_url, idp_client_id and idp_client_secret.
+- pomerium-policy (REASONED; pomerium, pomerium-docs): Each Pomerium route carries policy restricting users, domains or claims.
+- idp-mfa (REASONED; oauth, pomerium): oauth2-proxy and Pomerium rely on MFA enforced by their identity provider.
+- verify-listeners (REASONED; oauth, authelia): Inspect every listener: app 3000, oauth2-proxy 4180 and Authelia 9091 must be reachable only by the proxy.
+- verify-direct (REASONED; curl, oauth-rolling, authelia-rolling): From another host, all three ports must refuse/time out at the actual address; HTTP proves exposure and local/resolver failures are inconclusive.
+- verify-forged-direct (REASONED; curl, oauth-rolling): A forged X-User sent directly to app port 3000 must be refused by network isolation.
+- verify-login (REASONED; oauth-rolling, authelia-rolling): Without a session, expect 401 or a 302 to the sign-in page; other redirects do not pass. A real session must reach the app.
+- verify-overwrite (REASONED; oauth, traefik, oauth-rolling, authelia-rolling): With a valid session, replay a forged trusted identity header through each proxy; the app log must show the real identity, not admin.
 <!-- version-basis:end -->
 
 Many self-hosted apps (internal tools, dashboards, webhook receivers) ship with no login at all. The fix is the same shape every time: the app binds to loopback, a proxy in front does authentication and MFA, and it passes the app a verified identity, which the app must not accept from anywhere else. This guide is what [mfa.md](mfa.md), [nginx.md](nginx.md), [traefik.md](traefik.md), and [caddy.md](caddy.md) point at.

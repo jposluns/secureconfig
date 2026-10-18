@@ -198,7 +198,10 @@ def main():
         from version_basis import START, END
         marked_pilot = PLAIN.replace("echo ok", "# " + MARK + "\necho ok")
         front = '---\nversion_basis: {"schema": 1}\n---\n'
-        summary = START + "\n**Version basis**\n\n| Claim | Status |\n" + END + "\n\n"
+        summary = (START + "\n**Version basis**\n\nComponents (recorded basis):\n\n"
+                   "- product: Product, unknown\n\n"
+                   "Claims (full source mapping in the front matter):\n\n"
+                   "- control (REASONED; product): Requires authentication.\n" + END + "\n\n")
         pilot = marked_pilot.replace("## Verify", summary + "## Verify")
         run(front + pilot, 0, "leading strict front matter and generated pair")
         run(front + marked_pilot, 0, "front matter closing delimiter is not Setext")

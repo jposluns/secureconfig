@@ -157,28 +157,46 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| private: Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight 3.8.0 config defaults to 0.0.0.0:5540 via RI_APP_HOST/RI_APP_PORT, with empty excludeAuthRoutes; fetched session/window middleware does not establish complete inbound authentication or login/dashboard 200 responses. Keeping RedisInsight and similar tools on loopback or a private network is this guide's advice. | Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown; RedisInsight 3.8.0 | REASONED |
-| mongo-enable: Recent login defaults off; current ENABLED and deprecated BASICAUTH fallback differ from some 1.0.x username-triggered builds. Set both flags and verify. | mongo-express unknown | REASONED |
-| mongo-credentials: Set nonempty BASICAUTH_USERNAME/PASSWORD instead of admin/pass defaults. | mongo-express unknown | REASONED |
-| mongo-database: Web Basic auth is separate from MongoDB credentials in ME_CONFIG_MONGODB_URL. | mongo-express unknown | REASONED |
-| grafana-admin: First login uses admin/admin and prompts for replacement; use strong credentials and individual accounts. | Grafana docs unknown | REASONED |
-| grafana-anonymous: Disable Grafana anonymous access if enabled. | Grafana docs unknown | REASONED |
-| grafana-mfa: Prefer SSO with MFA at the identity provider. | Grafana docs unknown | REASONED |
-| grafana-bind: Empty http_addr joins the port and binds all interfaces; set 127.0.0.1. | Grafana v13.2.2; Go net unknown | REASONED |
-| grafana-tls: Native HTTPS uses server protocol=https, cert_file and cert_key. | Grafana docs unknown | REASONED |
-| prometheus-auth: Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes. | Prometheus docs unknown | REASONED |
-| prometheus-bcrypt: Use htpasswd -nB -C 12; Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, by this guide's comparison below OWASP's minimum work factor of 10 for legacy bcrypt. | Prometheus docs unknown; Apache htpasswd 2.4; Apache httpd htpasswd source 2.4.69; OWASP Password Storage Cheat Sheet 72865b1e3b5754246a101778dc00b37f9c233373 | REASONED |
-| prometheus-bind: Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090. | Prometheus v3.14.0 | REASONED |
-| prometheus-tls: web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config. | Prometheus docs unknown | REASONED |
-| database-panels: Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated. | phpMyAdmin unknown; pgAdmin unknown | REASONED |
-| pgadmin-login: pgAdmin server mode has its own accounts/login. | pgAdmin unknown | REASONED |
-| adminer-login: Adminer uses database credentials, not a separate account store; server-side connections expose even private databases to login attempts. | Adminer unknown | REASONED |
-| adminer-file: Renaming Adminer is no access control; require private access or proxy TLS/auth/MFA, updates and removal of unused copies. | Adminer unknown | REASONED |
-| verify-listeners: Inventory sockets and Docker publications; as this guide's assessment, a protected frontend or absent socket does not prove backend isolation or reachability. Docker documents explicit publish addresses and IPv6-to-IPv4 proxying when no host IP is given, the bridge is IPv4-only and --userland-proxy=true (default). Fetched sources do not establish NAT publication without a host listener; the fetched Moby TCP path listens even without a proxy. | Grafana v13.2.2; Prometheus v3.14.0; Docker Engine networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f; Moby port mapping source v28.3.3 | REASONED |
-| verify-login: Anonymous dashboard data is a finding; require denial or verified login challenge. Arbitrary redirects and DNS/TLS/proxy errors are inconclusive. | mongo-express unknown; Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown | REASONED |
-| verify-data: A 200 login shell proves nothing; require a known data route to succeed authorized and deny anonymous access; 404/server errors are inconclusive. | mongo-express unknown; Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown | REASONED |
+Components (recorded basis):
+
+- mongo: mongo-express, unknown
+- grafana: Grafana docs, unknown
+- prometheus: Prometheus docs, unknown
+- phpmyadmin: phpMyAdmin, unknown
+- pgadmin: pgAdmin, unknown
+- adminer: Adminer, unknown
+- prometheus-pin: Prometheus, v3.14.0
+- grafana-pin: Grafana, v13.2.2
+- go: Go net, unknown
+- htpasswd: Apache htpasswd, 2.4
+- httpd-source: Apache httpd htpasswd source, 2.4.69
+- owasp-source: OWASP Password Storage Cheat Sheet, 72865b1e3b5754246a101778dc00b37f9c233373
+- redisinsight: RedisInsight, 3.8.0
+- engine-pinned: Docker Engine networking documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
+- moby-pinned: Moby port mapping source, v28.3.3
+
+Claims (full source mapping in the front matter):
+
+- private (REASONED; grafana, prometheus, phpmyadmin, pgadmin, adminer, redisinsight): Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight 3.8.0 config defaults to 0.0.0.0:5540 via RI_APP_HOST/RI_APP_PORT, with empty excludeAuthRoutes; fetched session/window middleware does not establish complete inbound authentication or login/dashboard 200 responses. Keeping RedisInsight and similar tools on loopback or a private network is this guide's advice.
+- mongo-enable (REASONED; mongo): Recent login defaults off; current ENABLED and deprecated BASICAUTH fallback differ from some 1.0.x username-triggered builds. Set both flags and verify.
+- mongo-credentials (REASONED; mongo): Set nonempty BASICAUTH_USERNAME/PASSWORD instead of admin/pass defaults.
+- mongo-database (REASONED; mongo): Web Basic auth is separate from MongoDB credentials in ME_CONFIG_MONGODB_URL.
+- grafana-admin (REASONED; grafana): First login uses admin/admin and prompts for replacement; use strong credentials and individual accounts.
+- grafana-anonymous (REASONED; grafana): Disable Grafana anonymous access if enabled.
+- grafana-mfa (REASONED; grafana): Prefer SSO with MFA at the identity provider.
+- grafana-bind (REASONED; grafana-pin, go): Empty http_addr joins the port and binds all interfaces; set 127.0.0.1.
+- grafana-tls (REASONED; grafana): Native HTTPS uses server protocol=https, cert_file and cert_key.
+- prometheus-auth (REASONED; prometheus): Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes.
+- prometheus-bcrypt (REASONED; prometheus, htpasswd, httpd-source, owasp-source): Use htpasswd -nB -C 12; Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, by this guide's comparison below OWASP's minimum work factor of 10 for legacy bcrypt.
+- prometheus-bind (REASONED; prometheus-pin): Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090.
+- prometheus-tls (REASONED; prometheus): web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config.
+- database-panels (REASONED; phpmyadmin, pgadmin): Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated.
+- pgadmin-login (REASONED; pgadmin): pgAdmin server mode has its own accounts/login.
+- adminer-login (REASONED; adminer): Adminer uses database credentials, not a separate account store; server-side connections expose even private databases to login attempts.
+- adminer-file (REASONED; adminer): Renaming Adminer is no access control; require private access or proxy TLS/auth/MFA, updates and removal of unused copies.
+- verify-listeners (REASONED; grafana-pin, prometheus-pin, engine-pinned, moby-pinned): Inventory sockets and Docker publications; as this guide's assessment, a protected frontend or absent socket does not prove backend isolation or reachability. Docker documents explicit publish addresses and IPv6-to-IPv4 proxying when no host IP is given, the bridge is IPv4-only and --userland-proxy=true (default). Fetched sources do not establish NAT publication without a host listener; the fetched Moby TCP path listens even without a proxy.
+- verify-login (REASONED; mongo, grafana, prometheus, phpmyadmin, pgadmin, adminer): Anonymous dashboard data is a finding; require denial or verified login challenge. Arbitrary redirects and DNS/TLS/proxy errors are inconclusive.
+- verify-data (REASONED; mongo, grafana, prometheus, phpmyadmin, pgadmin, adminer): A 200 login shell proves nothing; require a known data route to succeed authorized and deny anonymous access; 404/server errors are inconclusive.
 <!-- version-basis:end -->
 
 Database and monitoring panels are the most-scanned targets on the internet, and several ship with known default credentials. One rule dominates everything tool-specific below: **an admin panel is never reachable from the public internet.** Bind it to loopback and reach it through SSH port forwarding, a VPN or tailnet ([tailscale.md](tailscale.md)), or Cloudflare Access ([cloudflare.md](cloudflare.md)); anything public sits behind a TLS proxy with its own authentication ([nginx.md](nginx.md), [caddy.md](caddy.md)) plus MFA ([mfa.md](mfa.md)).

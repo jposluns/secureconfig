@@ -150,43 +150,55 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| guest: Upstream guest/guest is an administrator restricted to localhost; create real users and delete or change guest. | RabbitMQ documentation unknown; RabbitMQ source v4.3.6 | REASONED |
-| docker-guest: Shipped official 4.3 images disable guest loopback restriction; later configuration can restore it. | RabbitMQ image source 76efb370838e36e4b120e252e75cf0dac70a7d55 | REASONED |
-| vhosts: Separate users/vhosts and remove old grants; vhosts isolate resources, not CPU or memory. | RabbitMQ documentation unknown | REASONED |
-| resource-grants: Configure/write/read regexes scope app.*; amq.default is excluded; binding needs queue write and exchange read. | RabbitMQ documentation unknown | REASONED |
-| roles: Tags replace previous tags and grant management authority, not resource permissions; observer gets monitoring and empty grants. | RabbitMQ documentation unknown | REASONED |
-| definitions-boot: Reviewed local boot imports need no management plugin, do not overwrite existing definitions, and suppress blank-node default creation. | RabbitMQ documentation unknown | REASONED |
-| definitions-runtime: Runtime imports merge, retain omitted objects and immutable conflicts, and can fail partially; they are not reconciliation. | RabbitMQ documentation unknown | REASONED |
-| definitions-export: v2 export transformations remove users, permissions and runtime parameters; protect TOML credentials and review remaining secrets. | RabbitMQ documentation unknown; rabbitmqadmin v2 | REASONED |
-| amqp-tls: Private 5671 requires trusted client certificates; remove plaintext 5672 after migration. | RabbitMQ documentation unknown | REASONED |
-| tls-depth: ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates. | RabbitMQ documentation unknown | REASONED |
-| tls-identity: mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured. | RabbitMQ documentation unknown | REASONED |
-| management-bind: Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management. | RabbitMQ documentation unknown | REASONED |
-| management-default: v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0. | RabbitMQ source v4.3.6; RabbitMQ management documentation source db23826ebaa810b3cdd525fd290125d65f6c3005 | REASONED |
-| management-auth: Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access. | RabbitMQ documentation unknown | REASONED |
-| epmd: epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains. | RabbitMQ documentation unknown | REASONED |
-| distribution-port: Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
-| cli-ports: CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset. | RabbitMQ source v4.3.6; RabbitMQ documentation unknown | REASONED |
-| cookie: Matching owner-only cookie files grant powerful node/CLI access; protect secret delivery and restrict peer reachability. | RabbitMQ documentation unknown | REASONED |
-| distribution-tls: Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27. | RabbitMQ documentation unknown; Erlang/OTP distribution 27; RabbitMQ source v4.3.6 | REASONED |
-| distribution-identity: Verify peer certificates both ways and outbound node hostnames; coordinate transport changes and retain cookie/firewall controls. | Erlang/OTP distribution 27 | REASONED |
-| topic-default: Topic authorization dates from 3.7; absent or cleared topic permissions leave topic operations unrestricted by that layer. | RabbitMQ documentation unknown; RabbitMQ topic authorization introduction 3.7.0 | REASONED |
-| topic-patterns: Topic write/read regexes gate publish/binding keys; tenant1 exact keys exclude wildcard bindings, not existing queued messages. | RabbitMQ documentation unknown | REASONED |
-| topic-bypass: Exchange relay can bypass direct topic-write checks; strong isolation needs admin-owned routes, no configure and queue-only read grants. | RabbitMQ documentation unknown | REASONED |
-| verify-accounts: Inspect migrated vhost grants, observer tags/empty patterns and guest removal; failed listings prove nothing. | RabbitMQ documentation unknown | REASONED |
-| verify-inventory: Inventory all listeners and cookie ownership/mode; local binds and mode do not establish isolation or secrecy. | RabbitMQ documentation unknown | REASONED |
-| verify-network: Forbidden external connections must fail while allowed private peers connect; confirm plaintext 5672 removal with live AMQPS. | RabbitMQ documentation unknown | REASONED |
-| verify-distribution: Allowed CLI host must authenticate ping to the actual node with matching cookie; TCP reachability alone is insufficient. | RabbitMQ documentation unknown | REASONED |
-| verify-loopback: Authenticated loopback /api/overview must return 200 while private HTTP 15672 is unreachable. | RabbitMQ documentation unknown; curl documentation unknown | REASONED |
-| verify-management: Observer overview and ops user listing return 200; anonymous overview and observer user listing refuse with actual auth errors. | RabbitMQ documentation unknown; curl documentation unknown | REASONED |
-| verify-mtls: Certificate-present handshake succeeds and absent certificate gets broker-attributed rejection; server Verification: OK is insufficient. | RabbitMQ documentation unknown | REASONED |
-| queue-default: RabbitMQ 4.3 disables transient non-exclusive queues by default; the protocol fixture uses a durable queue. | RabbitMQ documentation unknown | REASONED |
-| verify-amqp: Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons. | RabbitMQ documentation unknown; Pika documentation unknown | REASONED |
-| verify-definitions: Compare approved blank-node users/grants and reduced versus private full exports; empty selected sections do not prove secrecy. | RabbitMQ documentation unknown; rabbitmqadmin v2 | REASONED |
-| verify-distribution-tls: TLS CLI/nodes succeed; plaintext and missing/untrusted certificate peers fail with TLS evidence, not cookie/DNS errors. | RabbitMQ documentation unknown; Erlang/OTP distribution 27 | REASONED |
-| verify-topic: Tenant1 operations succeed; other keys/wildcards fail; compare relay bypass with hardened route-creation denial. | RabbitMQ documentation unknown | REASONED |
+Components (recorded basis):
+
+- docs: RabbitMQ documentation, unknown
+- source: RabbitMQ source, v4.3.6
+- image: RabbitMQ image source, 76efb370838e36e4b120e252e75cf0dac70a7d55
+- admin: rabbitmqadmin, v2
+- otp: Erlang/OTP distribution, 27
+- topic-min: RabbitMQ topic authorization introduction, 3.7.0
+- curl: curl documentation, unknown
+- pika: Pika documentation, unknown
+- management-source: RabbitMQ management documentation source, db23826ebaa810b3cdd525fd290125d65f6c3005
+
+Claims (full source mapping in the front matter):
+
+- guest (REASONED; docs, source): Upstream guest/guest is an administrator restricted to localhost; create real users and delete or change guest.
+- docker-guest (REASONED; image): Shipped official 4.3 images disable guest loopback restriction; later configuration can restore it.
+- vhosts (REASONED; docs): Separate users/vhosts and remove old grants; vhosts isolate resources, not CPU or memory.
+- resource-grants (REASONED; docs): Configure/write/read regexes scope app.*; amq.default is excluded; binding needs queue write and exchange read.
+- roles (REASONED; docs): Tags replace previous tags and grant management authority, not resource permissions; observer gets monitoring and empty grants.
+- definitions-boot (REASONED; docs): Reviewed local boot imports need no management plugin, do not overwrite existing definitions, and suppress blank-node default creation.
+- definitions-runtime (REASONED; docs): Runtime imports merge, retain omitted objects and immutable conflicts, and can fail partially; they are not reconciliation.
+- definitions-export (REASONED; docs, admin): v2 export transformations remove users, permissions and runtime parameters; protect TOML credentials and review remaining secrets.
+- amqp-tls (REASONED; docs): Private 5671 requires trusted client certificates; remove plaintext 5672 after migration.
+- tls-depth (REASONED; docs): ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates.
+- tls-identity (REASONED; docs): mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured.
+- management-bind (REASONED; docs): Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management.
+- management-default (REASONED; source, management-source): v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0.
+- management-auth (REASONED; docs): Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access.
+- epmd (REASONED; docs): epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains.
+- distribution-port (REASONED; source, docs): Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it.
+- cli-ports (REASONED; source, docs): CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset.
+- cookie (REASONED; docs): Matching owner-only cookie files grant powerful node/CLI access; protect secret delivery and restrict peer reachability.
+- distribution-tls (REASONED; docs, otp, source): Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27.
+- distribution-identity (REASONED; otp): Verify peer certificates both ways and outbound node hostnames; coordinate transport changes and retain cookie/firewall controls.
+- topic-default (REASONED; docs, topic-min): Topic authorization dates from 3.7; absent or cleared topic permissions leave topic operations unrestricted by that layer.
+- topic-patterns (REASONED; docs): Topic write/read regexes gate publish/binding keys; tenant1 exact keys exclude wildcard bindings, not existing queued messages.
+- topic-bypass (REASONED; docs): Exchange relay can bypass direct topic-write checks; strong isolation needs admin-owned routes, no configure and queue-only read grants.
+- verify-accounts (REASONED; docs): Inspect migrated vhost grants, observer tags/empty patterns and guest removal; failed listings prove nothing.
+- verify-inventory (REASONED; docs): Inventory all listeners and cookie ownership/mode; local binds and mode do not establish isolation or secrecy.
+- verify-network (REASONED; docs): Forbidden external connections must fail while allowed private peers connect; confirm plaintext 5672 removal with live AMQPS.
+- verify-distribution (REASONED; docs): Allowed CLI host must authenticate ping to the actual node with matching cookie; TCP reachability alone is insufficient.
+- verify-loopback (REASONED; docs, curl): Authenticated loopback /api/overview must return 200 while private HTTP 15672 is unreachable.
+- verify-management (REASONED; docs, curl): Observer overview and ops user listing return 200; anonymous overview and observer user listing refuse with actual auth errors.
+- verify-mtls (REASONED; docs): Certificate-present handshake succeeds and absent certificate gets broker-attributed rejection; server Verification: OK is insufficient.
+- queue-default (REASONED; docs): RabbitMQ 4.3 disables transient non-exclusive queues by default; the protocol fixture uses a durable queue.
+- verify-amqp (REASONED; docs, pika): Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons.
+- verify-definitions (REASONED; docs, admin): Compare approved blank-node users/grants and reduced versus private full exports; empty selected sections do not prove secrecy.
+- verify-distribution-tls (REASONED; docs, otp): TLS CLI/nodes succeed; plaintext and missing/untrusted certificate peers fail with TLS evidence, not cookie/DNS errors.
+- verify-topic (REASONED; docs): Tenant1 operations succeed; other keys/wildcards fail; compare relay bypass with hardened route-creation denial.
 <!-- version-basis:end -->
 
 RabbitMQ's default `guest`/`guest` account can only connect from localhost, which protects fresh installs exactly until someone "fixes" it. The official Docker image ships that fix: its `/etc/rabbitmq/conf.d/10-defaults.conf` sets `loopback_users.guest = false`, so in a container from that image as shipped (a later configuration layer can set it back) the default `guest`/`guest` administrator, wherever it exists, can log in from any address that reaches the broker. The documented recommendation is to create real users and delete `guest` or change its password.

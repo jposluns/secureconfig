@@ -85,31 +85,39 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| dsn: Client DSNs authorize event submission, not reading tracker data. | Sentry documentation unknown | REASONED |
-| sentry-bind: SENTRY_BIND=9000 publishes nginx on all interfaces; set 127.0.0.1:9000 behind a TLS proxy. | Sentry and self-hosted distribution 26.8.0 | REASONED |
-| sentry-stores: Leave web, relay and backing stores unpublished; their internal credentials are not a public boundary. | Sentry and self-hosted distribution 26.8.0 | REASONED |
-| sentry-registration: auth.allow-registration defaults False; keep it false on an internet-facing tracker. | Sentry and self-hosted distribution 26.8.0 | REASONED |
-| sentry-admin: createuser --superuser explicitly creates an administrator; plain createuser defaults its superuser prompt to no. | Sentry and self-hosted distribution 26.8.0 | REASONED |
-| sentry-url: Set system.url-prefix to the public HTTPS origin. | Sentry and self-hosted distribution 26.8.0 | REASONED |
-| sentry-secret: Generate system.secret-key once and keep it out of version control. | Sentry and self-hosted distribution 26.8.0 | REASONED |
-| sentry-cookies: Enable forwarded scheme/host recognition and secure session/CSRF cookies; bundled settings are commented out. | Sentry and self-hosted distribution 26.8.0 | REASONED |
-| sentry-nginx: Bundled nginx overwrites X-Forwarded-Proto with its scheme; terminate TLS there or propagate the real scheme. | Sentry and self-hosted distribution 26.8.0 | REASONED |
-| sentry-mfa: Enforce organization member MFA with require2FA. | Sentry documentation unknown | REASONED |
-| sentry-scrubbing: Use dataScrubber, dataScrubberDefaults and scrubIPAddresses to reduce sensitive intake. | Sentry documentation unknown | REASONED |
-| sentry-precedence: auth.allow-registration prioritizes config.yml over the database; verify SSO provisioning and effective scrubbing separately. | Sentry and self-hosted distribution 26.8.0; Sentry documentation unknown | REASONED |
-| glitchtip-port: GlitchTip Compose publishes 8000; bind privately behind TLS and verify the actual sample host bind. | GlitchTip documentation unknown | REASONED |
-| glitchtip-registration: ENABLE_USER_REGISTRATION defaults True; False disables self-signup after the first user exists. | GlitchTip documentation unknown | REASONED |
-| glitchtip-secret: Use a unique SECRET_KEY for Django signing and keep it out of version control. | GlitchTip documentation unknown | REASONED |
-| glitchtip-mfa: Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version. | GlitchTip MFA announcement unknown | REASONED |
-| glitchtip-stores: Keep PostgreSQL and optional Valkey or Redis internal. | GlitchTip documentation unknown | REASONED |
-| membership: Sentry single-organization signups join the default organization; at GlitchTip backend v6.2.6, on login the signal adds a user with a linked social provider to an organization linked to that provider, with the first member of a memberless organization becoming owner. | Sentry and self-hosted distribution 26.8.0; GlitchTip backend v6.2.6 | REASONED |
-| verify-listeners: Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
-| verify-sentry: Follow the single-organization login redirect and inspect the create-account path; HTTP 200 alone cannot distinguish registration. | Sentry and self-hosted distribution 26.8.0 | REASONED |
-| verify-glitchtip: On an operator-controlled fixture, signup succeeds with registration True and is refused with False after the first user. | GlitchTip documentation unknown | REASONED |
-| verify-stores: Off-host backing-port probes judge TCP connection outcomes, not HTTP codes; distinguish the public HTTPS proxy and backend ports. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
-| verify-https: Confirm plaintext web requests redirect to the HTTPS proxy; login pages, 404s and TLS errors do not prove controls. | Sentry and self-hosted distribution 26.8.0; GlitchTip documentation unknown | REASONED |
+Components (recorded basis):
+
+- sentry: Sentry and self-hosted distribution, 26.8.0
+- sentry-docs: Sentry documentation, unknown
+- glitchtip: GlitchTip documentation, unknown
+- glitchtip-mfa: GlitchTip MFA announcement, unknown
+- glitchtip-backend: GlitchTip backend, v6.2.6
+
+Claims (full source mapping in the front matter):
+
+- dsn (REASONED; sentry-docs): Client DSNs authorize event submission, not reading tracker data.
+- sentry-bind (REASONED; sentry): SENTRY_BIND=9000 publishes nginx on all interfaces; set 127.0.0.1:9000 behind a TLS proxy.
+- sentry-stores (REASONED; sentry): Leave web, relay and backing stores unpublished; their internal credentials are not a public boundary.
+- sentry-registration (REASONED; sentry): auth.allow-registration defaults False; keep it false on an internet-facing tracker.
+- sentry-admin (REASONED; sentry): createuser --superuser explicitly creates an administrator; plain createuser defaults its superuser prompt to no.
+- sentry-url (REASONED; sentry): Set system.url-prefix to the public HTTPS origin.
+- sentry-secret (REASONED; sentry): Generate system.secret-key once and keep it out of version control.
+- sentry-cookies (REASONED; sentry): Enable forwarded scheme/host recognition and secure session/CSRF cookies; bundled settings are commented out.
+- sentry-nginx (REASONED; sentry): Bundled nginx overwrites X-Forwarded-Proto with its scheme; terminate TLS there or propagate the real scheme.
+- sentry-mfa (REASONED; sentry-docs): Enforce organization member MFA with require2FA.
+- sentry-scrubbing (REASONED; sentry-docs): Use dataScrubber, dataScrubberDefaults and scrubIPAddresses to reduce sensitive intake.
+- sentry-precedence (REASONED; sentry, sentry-docs): auth.allow-registration prioritizes config.yml over the database; verify SSO provisioning and effective scrubbing separately.
+- glitchtip-port (REASONED; glitchtip): GlitchTip Compose publishes 8000; bind privately behind TLS and verify the actual sample host bind.
+- glitchtip-registration (REASONED; glitchtip): ENABLE_USER_REGISTRATION defaults True; False disables self-signup after the first user exists.
+- glitchtip-secret (REASONED; glitchtip): Use a unique SECRET_KEY for Django signing and keep it out of version control.
+- glitchtip-mfa (REASONED; glitchtip-mfa): Two-factor authentication is available since v1.8; confirm enforcement and SSO registration paths in the deployed version.
+- glitchtip-stores (REASONED; glitchtip): Keep PostgreSQL and optional Valkey or Redis internal.
+- membership (REASONED; sentry, glitchtip-backend): Sentry single-organization signups join the default organization; at GlitchTip backend v6.2.6, on login the signal adds a user with a linked social provider to an organization linked to that provider, with the first member of a memberless organization becoming owner.
+- verify-listeners (REASONED; sentry, glitchtip): Inventory private 9000/8000 and backing ports; Docker forwarding can expose ports without host sockets.
+- verify-sentry (REASONED; sentry): Follow the single-organization login redirect and inspect the create-account path; HTTP 200 alone cannot distinguish registration.
+- verify-glitchtip (REASONED; glitchtip): On an operator-controlled fixture, signup succeeds with registration True and is refused with False after the first user.
+- verify-stores (REASONED; sentry, glitchtip): Off-host backing-port probes judge TCP connection outcomes, not HTTP codes; distinguish the public HTTPS proxy and backend ports.
+- verify-https (REASONED; sentry, glitchtip): Confirm plaintext web requests redirect to the HTTPS proxy; login pages, 404s and TLS errors do not prove controls.
 <!-- version-basis:end -->
 
 An error tracker exists to collect what your application would otherwise hide: stack traces, the source lines around each frame, request bodies and headers, environment variables, release and server names, and whatever user context the SDK attaches. That makes an exposed tracker one of the richest leaks in a deployment, because it aggregates secrets, tokens, and personal data that were never meant to leave the app, and it does so in a searchable UI. The two common self-hosted choices behave differently at their most important default, so the guide takes them one at a time. [fronting-auth.md](fronting-auth.md) is the reverse-proxy pattern both rely on for TLS, [secrets.md](secrets.md) covers the signing keys, and [mfa.md](mfa.md) is the account layer. Values below are illustrative; replace them.

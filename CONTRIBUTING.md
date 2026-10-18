@@ -150,6 +150,7 @@ then `---`, each delimiter on its own line. Use double-quoted JSON keys and stri
 tags, comments, block scalars, trailing commas, duplicate keys, non-JSON numbers and unknown fields
 are rejected. `--write` emits one component source and one claim per line. Use a renderer that
 understands front matter; the llms bundle strips it and retains the visible summary.
+Directly after the H1, the summary keeps its preamble, lists each component and recorded basis once, then lists each claim with its status, component IDs and full text in front-matter order.
 
 Schema 1 requires exactly these top-level fields:
 

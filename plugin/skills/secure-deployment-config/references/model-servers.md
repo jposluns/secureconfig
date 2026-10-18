@@ -328,83 +328,102 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| llama-bind: llama-server defaults to 127.0.0.1:8080; retain loopback and exclude inherited LLAMA_ARG_* overrides. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1 | REASONED |
-| llama-key: api-key-file reads one key per line, with # comments; protect the plaintext file and avoid argv/environment secret exposure. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1 | REASONED |
-| llama-env: Clear LLAMA_API_KEY and LLAMA_ARG_API_KEY_FILE; reject a file without a key line and test native refusal/acceptance directly. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1 | REASONED |
-| llama-tls: Native PEM TLS needs a build with DLLAMA_OPENSSL=ON and ssl-key-file/ssl-cert-file; otherwise use a TLS proxy. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1 | REASONED |
-| vllm-key: At both source commits --api-key takes precedence over VLLM_API_KEY fallback; keep secrets out of launch argv. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910; vLLM second source 8c1557a79c539ffe82d004d2a0c8d7b5e71159ce | REASONED |
-| vllm-file: Use protected YAML via two-word --config FILE; --config=FILE is accepted without loading the key; clear inherited VLLM_API_KEY. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | REASONED |
-| vllm-process: Python spawn transfers API server arguments through a pipe; opt-in Rust frontend puts api_key in --args-json argv, so clear VLLM_USE_RUST_FRONTEND. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | REASONED |
-| vllm-logs: HTTP startup redacts api_key, but gRPC logs the argument set unredacted; protect those logs. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | REASONED |
-| vllm-scope: API key covers /v1, /v2, /inference and /cohere; /invocations, enabled profiler routes and unprotected plugins remain outside it. | vLLM v0.30.0 | REASONED |
-| vllm-bind: Unset frontend host listens on 0.0.0.0:8000; explicitly select 127.0.0.1. | vLLM v0.30.0 | REASONED |
-| vllm-tls: Frontend ssl-keyfile, ssl-certfile and ssl-ca-certs support TLS; proxy or tunnel remains the recommended boundary. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | REASONED |
-| vllm-isolation: HTTP key/TLS do not protect internal TCPStore, ZMQ or collective channels; isolate trusted cluster members and treat Ray as one trust domain. | vLLM v0.30.0 | REASONED |
-| vllm-store: TCPStore can bind all interfaces; stateless rank-zero binding and other rendezvous paths differ; inventory actual transport sockets. | vLLM v0.30.0 | REASONED |
-| vllm-master: Multi-node multiprocessing uses master-addr and master-port, default 29501; DP adds ports and Ray V2 can bind port zero. | vLLM v0.30.0 | REASONED |
-| vllm-handshake: Remote/elastic multiprocessing DP uses startup TCP handshake on data-parallel-address/rpc-port, default 29550; otherwise IPC, with Ray bypassing that constructor. | vLLM v0.30.0 | REASONED |
-| vllm-channels: Remote engine request/result and coordinator channels use dynamic TCP, local paths generally IPC with elastic exceptions. | vLLM v0.30.0 | REASONED |
-| vllm-queues: Worker queues add dynamic TCP only for remote readers, using detected multiprocessing or Ray node addresses; headless removes only the HTTP frontend. | vLLM v0.30.0 | REASONED |
-| nixl: Opt-in NIXL handshake defaults localhost:5600 plus DP index and starts with metadata; its host/port settings are separate. | vLLM v0.30.0 | REASONED |
-| mooncake: Producer/kv_both bootstrap uses wildcard 8998 at selected ranks; producer workers use node IP/dynamic ports; consumer-only workers omit those listeners. | vLLM v0.30.0 | REASONED |
-| vllm-grpc: Optional gRPC replaces HTTP with unauthenticated plaintext on host/port, default 0.0.0.0:8000; the documented grpc-port does not match this CLI. | vLLM v0.30.0 | REASONED |
-| vllm-supervisor: Multi-port external-LB mode adds keyless health supervision after child readiness on host:9256 by default; frontend TLS options apply. | vLLM v0.30.0 | REASONED |
-| vllm-node-ip: Set per-node VLLM_HOST_IP and serving master/DP addresses deliberately; automatic node detection can choose public IP or fall back to wildcard. | vLLM v0.30.0 | REASONED |
-| vllm-ports: VLLM_PORT starts allocation, not a firewall range; DP fallback variables are not serving-flag substitutes and DP master port also reserves ten ports. | vLLM v0.30.0 | REASONED |
-| vllm-single: Single-GPU normally uses file store/local IPC with ROCm AITER TCP exception; Gloo groups still require listener inventory. | vLLM v0.30.0 | REASONED |
-| tgi-bind: Launcher defaults 0.0.0.0:3000 via hostname/port flags or HOSTNAME/PORT; bind privately. | TGI launcher/image v3.3.7 | REASONED |
-| tgi-image: Main image sets PORT=80; Docker's non-IP hostname makes router fall back to wildcard. | TGI launcher/image v3.3.7 | REASONED |
-| tgi-lifecycle: Guide records maintenance mode and archive on 2026-03-21; retain controls and plan migration. | TGI documentation unknown | REASONED |
-| tgi-key-argv: Launcher passes API_KEY or --api-key to router argv; no launcher input avoids that exposure to local process observers. | TGI launcher/image v3.3.7 | REASONED |
-| tgi-auth: Bearer middleware protects base inference routes with 401, not health/info/metrics, KServe, v1/models or Vertex prediction; enforce proxy allowlists/auth. | TGI router 24ee40d143d8d046039f12f76940a85886cbe152 | REASONED |
-| tgi-tls: Launcher has no TLS option; terminate TLS in front. | TGI documentation unknown | REASONED |
-| tgi-metrics: Separate Prometheus listener defaults 9000 and is unauthenticated; keep it private. | TGI documentation unknown; TGI launcher/image v3.3.7 | REASONED |
-| sglang-bind: SGLang defaults 127.0.0.1:30000; retain private host/port. | SGLang v0.5.20 | REASONED |
-| sglang-auth: api-key protects ordinary endpoints; admin-api-key separately protects administrative operations, not server_info; an empty API key leaves ordinary requests open. | SGLang v0.5.20 | REASONED |
-| sglang-file: Protected YAML --config keeps both keys out of kernel argv; no documented stdin/environment input exists at the pin. | SGLang v0.5.20 | REASONED |
-| sglang-log: INFO startup logs all resolved server_args including both keys; protect the log. | SGLang v0.5.20 | REASONED |
-| sglang-info: server_info/get_server_info expose resolved keys and launch_command to ordinary API-key holders; exclude them or trust those holders with admin authority. | SGLang v0.5.20 | REASONED |
-| sglang-tls: ssl-keyfile/ssl-certfile/ssl-ca-certs provide native TLS; enable-ssl-refresh reloads renewed certificates. | SGLang documentation (rolling) unknown | REASONED |
-| triton-listeners: Triton defaults to wildcard HTTP 8000, gRPC 8001 and metrics 8002; bind each privately. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-protocols: HTTP/gRPC default enabled; disable unused protocols and metrics, while keeping gateway authorization. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df; Triton documentation (rolling) unknown | REASONED |
-| triton-tls: gRPC supports TLS and mutual TLS with certificate/key flags; HTTP requires fronting TLS. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-secrets: The restricted-API handlers pass getopt_long optarg to ParseRestrictedFeatureOption, which extracts the literal key/value from the argument; these flags put the secret in argv. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-categories: All nine compiled categories default unrestricted; restrictions are per category/protocol, and groups must not overlap. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-health: Unrestricted health/metadata/inference, including HTTP generate/generate_stream, need no key; restricting health also affects probes. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-logging: Logging API reads settings/file path and changes verbosity/format/levels, but cannot change log_file. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-trace: Trace settings API remains available when tracing is OFF; default triton mode needs a startup file path before enabling tracing, and API cannot change that path. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-shm: Shared-memory status is readable; registration/use defaults off until allow-client-shm=true, with GPU/platform restrictions. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-repository: Repository index is readable; API load/unload require explicit mode, not default none or poll, and can accept config/inline files or unload dependents. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-reads: Model-config and supported statistics reads are independent of model-control mode. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-denial: HTTP expects configured header and returns 403 on failure; gRPC prefixes triton-grpc-protocol- and returns UNAVAILABLE with restriction message. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-cloud: Conditional Vertex/SageMaker listeners need separate inventory/isolation; SageMaker invoke bypasses restrictions and Vertex redirect headers can reach unrestricted metrics. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| triton-metrics: Metrics 8002 at /metrics or /metrics/ is unauthenticated and outside both restriction flags; isolate or disable it. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | REASONED |
-| lmstudio-bind: Desktop server uses localhost:1234; Serve on Local Network or bind 0.0.0.0 widens access. | LM Studio documentation unknown | REASONED |
-| lmstudio-auth: Authentication defaults off; Require Authentication and bearer tokens are documented for 0.4.0+; enable before remote access. | LM Studio documentation unknown | REASONED |
-| lmstudio-tls: Server settings list no TLS; use a tailnet or authenticated TLS proxy for remote access. | LM Studio documentation unknown | REASONED |
-| webui-listeners: Gradio defaults 127.0.0.1:7860; optional --api defaults 127.0.0.1:5000; both start unauthenticated. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
-| webui-bind: --listen widens both enabled surfaces; listen-port/api-port move them and listen-host only works with listen. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
-| webui-publication: --share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
-| webui-ui-auth: gradio-auth-path protects UI only; file entries split on commas/newlines and every colon, so use permitted username and generated hex password. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
-| webui-api-auth: api-key protects OpenAI routes via bearer and Anthropic messages via x-api-key; admin-key protects administration and defaults to api-key, not vice versa. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui API documentation ceade2eb1ba3f84518076270df2240b6bbb01da0 | REASONED |
-| webui-key-logs: API startup logs api-key and distinct admin-key in plaintext at INFO; protect output and rotate after disclosure. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
-| webui-file: API keys lack file/environment flags; private external user-data-dir CMD_FLAGS.txt supplies in-process arguments, keeping keys out of kernel argv. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
-| webui-checkout: Checkout CMD_FLAGS.txt is tracked; git diff/stash and one-click autostash/reset can expose or discard keys; use a new private directory outside checkout. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
-| webui-launcher: Run server.py directly: one-click unquoted argument joining and shell=True can split paths or execute shell syntax. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | REASONED |
-| webui-api-only: --api --nowebui removes UI; ssl-keyfile/ssl-certfile provide both surfaces TLS, with proxy TLS/auth the recommended pattern. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; text-generation-webui API documentation ceade2eb1ba3f84518076270df2240b6bbb01da0 | REASONED |
-| webui-host: Loopback API rejects Host other than localhost/127.0.0.1 with 400 unless listen/public-api is set; proxy must rewrite Host. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f | REASONED |
-| verify-listeners: Inspect all backend listeners, namespaces and publications; ss alone proves no external isolation. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1; vLLM v0.30.0; TGI launcher/image v3.3.7; Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df; SGLang v0.5.20 | REASONED |
-| verify-proxy-auth: Proxy model-list probes expect no-key 401 and keyed 200/list; TGI model listing does not establish native key enforcement. | TGI router 24ee40d143d8d046039f12f76940a85886cbe152; curl minimum write-out version 7.75.0 | REASONED |
-| verify-invocations: Use valid JSON/served model and upstream evidence: unknown-model 404 or proxy-intercepted errors cannot establish vLLM route denial. | vLLM v0.30.0 | REASONED |
-| verify-webui: No-key API model-list 200 is exposure, 401 auth; TLS/transport errors or invalid Host are inconclusive and proxy rejection proves only proxy policy. | text-generation-webui API source 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f; curl minimum write-out version 7.75.0 | REASONED |
-| verify-triton: Direct HTTP logging should change from 200/settings to 403/restriction; other errors prove neither this control nor other categories/protocols. | Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df; curl minimum write-out version 7.75.0 | REASONED |
-| verify-cluster: Inventory startup/dynamic sockets; trusted peers connect to cross-node endpoints while outsiders fail with firewall evidence; local-only endpoints need local positive controls. | vLLM v0.30.0 | REASONED |
-| verify-transport: TCP probe establishes only reachability; stale ports, wrong address or stopped service are inconclusive, and RDMA/non-TCP need separate tests. | vLLM v0.30.0 | REASONED |
-| vllm-parser-run: Isolated parser harness with stubbed logger/minimal serve parser loaded --config FILE but not --config=FILE; no vLLM server was run. | vLLM source dee37d89115db4c94a820a79a78a7828e141c910 | DEMONSTRATED |
-| webui-parser-run: Imported shared.py parsed keys and a later flag from a private path containing a space while kernel cmdline held neither; no server was run. | text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08 | DEMONSTRATED |
-| argv-test: Recorded procps-ng 4.0.4 stub-process checks distinguish named secret flags from file flags; JSON, abbreviations, hidden/scrubbed argv remain misses. | llama.cpp e0dff58475bc9ed68eedcb265ee998f2fcabb3b1; vLLM source dee37d89115db4c94a820a79a78a7828e141c910; SGLang v0.5.20; TGI launcher/image v3.3.7; text-generation-webui source c022565b1257a9c7d9a5128c8b4c03587559cf08; Triton source 546a78766fb112128aa0b10a70c55f4f39c3b1df | DEMONSTRATED |
+Components (recorded basis):
+
+- llama: llama.cpp, e0dff58475bc9ed68eedcb265ee998f2fcabb3b1
+- vllm: vLLM, v0.30.0
+- vllm-a: vLLM source, dee37d89115db4c94a820a79a78a7828e141c910
+- vllm-b: vLLM second source, 8c1557a79c539ffe82d004d2a0c8d7b5e71159ce
+- tgi: TGI launcher/image, v3.3.7
+- tgi-router: TGI router, 24ee40d143d8d046039f12f76940a85886cbe152
+- tgi-docs: TGI documentation, unknown
+- sglang: SGLang, v0.5.20
+- triton: Triton source, 546a78766fb112128aa0b10a70c55f4f39c3b1df
+- lmstudio: LM Studio documentation, unknown
+- webui: text-generation-webui source, c022565b1257a9c7d9a5128c8b4c03587559cf08
+- webui-api: text-generation-webui API source, 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f
+- webui-docs: text-generation-webui API documentation, ceade2eb1ba3f84518076270df2240b6bbb01da0
+- curl: curl minimum write-out version, 7.75.0
+- sglang-rolling: SGLang documentation (rolling), unknown
+- triton-rolling: Triton documentation (rolling), unknown
+
+Claims (full source mapping in the front matter):
+
+- llama-bind (REASONED; llama): llama-server defaults to 127.0.0.1:8080; retain loopback and exclude inherited LLAMA_ARG_* overrides.
+- llama-key (REASONED; llama): api-key-file reads one key per line, with # comments; protect the plaintext file and avoid argv/environment secret exposure.
+- llama-env (REASONED; llama): Clear LLAMA_API_KEY and LLAMA_ARG_API_KEY_FILE; reject a file without a key line and test native refusal/acceptance directly.
+- llama-tls (REASONED; llama): Native PEM TLS needs a build with DLLAMA_OPENSSL=ON and ssl-key-file/ssl-cert-file; otherwise use a TLS proxy.
+- vllm-key (REASONED; vllm-a, vllm-b): At both source commits --api-key takes precedence over VLLM_API_KEY fallback; keep secrets out of launch argv.
+- vllm-file (REASONED; vllm-a): Use protected YAML via two-word --config FILE; --config=FILE is accepted without loading the key; clear inherited VLLM_API_KEY.
+- vllm-process (REASONED; vllm-a): Python spawn transfers API server arguments through a pipe; opt-in Rust frontend puts api_key in --args-json argv, so clear VLLM_USE_RUST_FRONTEND.
+- vllm-logs (REASONED; vllm-a): HTTP startup redacts api_key, but gRPC logs the argument set unredacted; protect those logs.
+- vllm-scope (REASONED; vllm): API key covers /v1, /v2, /inference and /cohere; /invocations, enabled profiler routes and unprotected plugins remain outside it.
+- vllm-bind (REASONED; vllm): Unset frontend host listens on 0.0.0.0:8000; explicitly select 127.0.0.1.
+- vllm-tls (REASONED; vllm-a): Frontend ssl-keyfile, ssl-certfile and ssl-ca-certs support TLS; proxy or tunnel remains the recommended boundary.
+- vllm-isolation (REASONED; vllm): HTTP key/TLS do not protect internal TCPStore, ZMQ or collective channels; isolate trusted cluster members and treat Ray as one trust domain.
+- vllm-store (REASONED; vllm): TCPStore can bind all interfaces; stateless rank-zero binding and other rendezvous paths differ; inventory actual transport sockets.
+- vllm-master (REASONED; vllm): Multi-node multiprocessing uses master-addr and master-port, default 29501; DP adds ports and Ray V2 can bind port zero.
+- vllm-handshake (REASONED; vllm): Remote/elastic multiprocessing DP uses startup TCP handshake on data-parallel-address/rpc-port, default 29550; otherwise IPC, with Ray bypassing that constructor.
+- vllm-channels (REASONED; vllm): Remote engine request/result and coordinator channels use dynamic TCP, local paths generally IPC with elastic exceptions.
+- vllm-queues (REASONED; vllm): Worker queues add dynamic TCP only for remote readers, using detected multiprocessing or Ray node addresses; headless removes only the HTTP frontend.
+- nixl (REASONED; vllm): Opt-in NIXL handshake defaults localhost:5600 plus DP index and starts with metadata; its host/port settings are separate.
+- mooncake (REASONED; vllm): Producer/kv_both bootstrap uses wildcard 8998 at selected ranks; producer workers use node IP/dynamic ports; consumer-only workers omit those listeners.
+- vllm-grpc (REASONED; vllm): Optional gRPC replaces HTTP with unauthenticated plaintext on host/port, default 0.0.0.0:8000; the documented grpc-port does not match this CLI.
+- vllm-supervisor (REASONED; vllm): Multi-port external-LB mode adds keyless health supervision after child readiness on host:9256 by default; frontend TLS options apply.
+- vllm-node-ip (REASONED; vllm): Set per-node VLLM_HOST_IP and serving master/DP addresses deliberately; automatic node detection can choose public IP or fall back to wildcard.
+- vllm-ports (REASONED; vllm): VLLM_PORT starts allocation, not a firewall range; DP fallback variables are not serving-flag substitutes and DP master port also reserves ten ports.
+- vllm-single (REASONED; vllm): Single-GPU normally uses file store/local IPC with ROCm AITER TCP exception; Gloo groups still require listener inventory.
+- tgi-bind (REASONED; tgi): Launcher defaults 0.0.0.0:3000 via hostname/port flags or HOSTNAME/PORT; bind privately.
+- tgi-image (REASONED; tgi): Main image sets PORT=80; Docker's non-IP hostname makes router fall back to wildcard.
+- tgi-lifecycle (REASONED; tgi-docs): Guide records maintenance mode and archive on 2026-03-21; retain controls and plan migration.
+- tgi-key-argv (REASONED; tgi): Launcher passes API_KEY or --api-key to router argv; no launcher input avoids that exposure to local process observers.
+- tgi-auth (REASONED; tgi-router): Bearer middleware protects base inference routes with 401, not health/info/metrics, KServe, v1/models or Vertex prediction; enforce proxy allowlists/auth.
+- tgi-tls (REASONED; tgi-docs): Launcher has no TLS option; terminate TLS in front.
+- tgi-metrics (REASONED; tgi-docs, tgi): Separate Prometheus listener defaults 9000 and is unauthenticated; keep it private.
+- sglang-bind (REASONED; sglang): SGLang defaults 127.0.0.1:30000; retain private host/port.
+- sglang-auth (REASONED; sglang): api-key protects ordinary endpoints; admin-api-key separately protects administrative operations, not server_info; an empty API key leaves ordinary requests open.
+- sglang-file (REASONED; sglang): Protected YAML --config keeps both keys out of kernel argv; no documented stdin/environment input exists at the pin.
+- sglang-log (REASONED; sglang): INFO startup logs all resolved server_args including both keys; protect the log.
+- sglang-info (REASONED; sglang): server_info/get_server_info expose resolved keys and launch_command to ordinary API-key holders; exclude them or trust those holders with admin authority.
+- sglang-tls (REASONED; sglang-rolling): ssl-keyfile/ssl-certfile/ssl-ca-certs provide native TLS; enable-ssl-refresh reloads renewed certificates.
+- triton-listeners (REASONED; triton): Triton defaults to wildcard HTTP 8000, gRPC 8001 and metrics 8002; bind each privately.
+- triton-protocols (REASONED; triton, triton-rolling): HTTP/gRPC default enabled; disable unused protocols and metrics, while keeping gateway authorization.
+- triton-tls (REASONED; triton): gRPC supports TLS and mutual TLS with certificate/key flags; HTTP requires fronting TLS.
+- triton-secrets (REASONED; triton): The restricted-API handlers pass getopt_long optarg to ParseRestrictedFeatureOption, which extracts the literal key/value from the argument; these flags put the secret in argv.
+- triton-categories (REASONED; triton): All nine compiled categories default unrestricted; restrictions are per category/protocol, and groups must not overlap.
+- triton-health (REASONED; triton): Unrestricted health/metadata/inference, including HTTP generate/generate_stream, need no key; restricting health also affects probes.
+- triton-logging (REASONED; triton): Logging API reads settings/file path and changes verbosity/format/levels, but cannot change log_file.
+- triton-trace (REASONED; triton): Trace settings API remains available when tracing is OFF; default triton mode needs a startup file path before enabling tracing, and API cannot change that path.
+- triton-shm (REASONED; triton): Shared-memory status is readable; registration/use defaults off until allow-client-shm=true, with GPU/platform restrictions.
+- triton-repository (REASONED; triton): Repository index is readable; API load/unload require explicit mode, not default none or poll, and can accept config/inline files or unload dependents.
+- triton-reads (REASONED; triton): Model-config and supported statistics reads are independent of model-control mode.
+- triton-denial (REASONED; triton): HTTP expects configured header and returns 403 on failure; gRPC prefixes triton-grpc-protocol- and returns UNAVAILABLE with restriction message.
+- triton-cloud (REASONED; triton): Conditional Vertex/SageMaker listeners need separate inventory/isolation; SageMaker invoke bypasses restrictions and Vertex redirect headers can reach unrestricted metrics.
+- triton-metrics (REASONED; triton): Metrics 8002 at /metrics or /metrics/ is unauthenticated and outside both restriction flags; isolate or disable it.
+- lmstudio-bind (REASONED; lmstudio): Desktop server uses localhost:1234; Serve on Local Network or bind 0.0.0.0 widens access.
+- lmstudio-auth (REASONED; lmstudio): Authentication defaults off; Require Authentication and bearer tokens are documented for 0.4.0+; enable before remote access.
+- lmstudio-tls (REASONED; lmstudio): Server settings list no TLS; use a tailnet or authenticated TLS proxy for remote access.
+- webui-listeners (REASONED; webui, webui-api): Gradio defaults 127.0.0.1:7860; optional --api defaults 127.0.0.1:5000; both start unauthenticated.
+- webui-bind (REASONED; webui, webui-api): --listen widens both enabled surfaces; listen-port/api-port move them and listen-host only works with listen.
+- webui-publication (REASONED; webui-api, webui): --share publishes Gradio UI and --public-api publishes API through a Cloudflare tunnel; treat both as publication.
+- webui-ui-auth (REASONED; webui): gradio-auth-path protects UI only; file entries split on commas/newlines and every colon, so use permitted username and generated hex password.
+- webui-api-auth (REASONED; webui-api, webui-docs): api-key protects OpenAI routes via bearer and Anthropic messages via x-api-key; admin-key protects administration and defaults to api-key, not vice versa.
+- webui-key-logs (REASONED; webui-api, webui): API startup logs api-key and distinct admin-key in plaintext at INFO; protect output and rotate after disclosure.
+- webui-file (REASONED; webui): API keys lack file/environment flags; private external user-data-dir CMD_FLAGS.txt supplies in-process arguments, keeping keys out of kernel argv.
+- webui-checkout (REASONED; webui): Checkout CMD_FLAGS.txt is tracked; git diff/stash and one-click autostash/reset can expose or discard keys; use a new private directory outside checkout.
+- webui-launcher (REASONED; webui): Run server.py directly: one-click unquoted argument joining and shell=True can split paths or execute shell syntax.
+- webui-api-only (REASONED; webui, webui-docs): --api --nowebui removes UI; ssl-keyfile/ssl-certfile provide both surfaces TLS, with proxy TLS/auth the recommended pattern.
+- webui-host (REASONED; webui-api): Loopback API rejects Host other than localhost/127.0.0.1 with 400 unless listen/public-api is set; proxy must rewrite Host.
+- verify-listeners (REASONED; llama, vllm, tgi, triton, sglang): Inspect all backend listeners, namespaces and publications; ss alone proves no external isolation.
+- verify-proxy-auth (REASONED; tgi-router, curl): Proxy model-list probes expect no-key 401 and keyed 200/list; TGI model listing does not establish native key enforcement.
+- verify-invocations (REASONED; vllm): Use valid JSON/served model and upstream evidence: unknown-model 404 or proxy-intercepted errors cannot establish vLLM route denial.
+- verify-webui (REASONED; webui-api, curl): No-key API model-list 200 is exposure, 401 auth; TLS/transport errors or invalid Host are inconclusive and proxy rejection proves only proxy policy.
+- verify-triton (REASONED; triton, curl): Direct HTTP logging should change from 200/settings to 403/restriction; other errors prove neither this control nor other categories/protocols.
+- verify-cluster (REASONED; vllm): Inventory startup/dynamic sockets; trusted peers connect to cross-node endpoints while outsiders fail with firewall evidence; local-only endpoints need local positive controls.
+- verify-transport (REASONED; vllm): TCP probe establishes only reachability; stale ports, wrong address or stopped service are inconclusive, and RDMA/non-TCP need separate tests.
+- vllm-parser-run (DEMONSTRATED; vllm-a): Isolated parser harness with stubbed logger/minimal serve parser loaded --config FILE but not --config=FILE; no vLLM server was run.
+- webui-parser-run (DEMONSTRATED; webui): Imported shared.py parsed keys and a later flag from a private path containing a space while kernel cmdline held neither; no server was run.
+- argv-test (DEMONSTRATED; llama, vllm-a, sglang, tgi, webui, triton): Recorded procps-ng 4.0.4 stub-process checks distinguish named secret flags from file flags; JSON, abbreviations, hidden/scrubbed argv remain misses.
 <!-- version-basis:end -->
 
 Self-hosted model servers follow the [ollama.md](ollama.md) pattern: exposing one means someone else's prompts run on your GPU. Most default to local use, but vLLM, TGI, and Triton bind to `0.0.0.0` out of the box, and Triton enables no authentication by default (its native controls, gRPC mutual TLS and shared-secret restricted APIs, do not replace the gateway). Keep every server on loopback or a private network, require an API key where the server supports one, and terminate TLS in front. LocalAI is an OpenAI-compatible model server too, but its bind and authentication controls are documented in [ai-infra-services.md](ai-infra-services.md) rather than here, so the facts live in one place.

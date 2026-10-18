@@ -226,56 +226,77 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| lf-signup: Email/password and public signup default on; AUTH_DISABLE_SIGNUP=true also prevents invite acceptance by new users. | Langfuse documentation unknown | REASONED |
-| lf-bootstrap: Create first account before closing signup, or initialize org before headless user/project with LANGFUSE_INIT_*. | Langfuse documentation unknown | REASONED |
-| lf-sso: AUTH_DISABLE_USERNAME_PASSWORD=true requires SSO; supported Auth.js providers need correct NEXTAUTH_URL beyond password login. | Langfuse documentation unknown | REASONED |
-| lf-session: AUTH_SESSION_MAX_AGE must be integer &gt;5 minutes; source default is 20160, while documentation says 43200; check pinned release. | Langfuse session source 24c949d8dd5617219a8415f80e4c65ad611ff05c; Langfuse documentation unknown | REASONED |
-| lf-api: Ingestion/public API use project public-key username and secret-key password via Basic auth, separately from UI credentials. | Langfuse documentation unknown | REASONED |
-| lf-mfa: Langfuse login has no native MFA; enforce it at the identity provider. | Langfuse documentation unknown | REASONED |
-| lf-session-secret: Replace shipped NEXTAUTH_SECRET=mysecret before first start; known session protection secret permits forged sessions bypassing sign-in controls. | Langfuse documentation unknown; Langfuse Compose 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab | REASONED |
-| lf-salt: Replace shipped SALT=mysalt used for API-key hashes with a separate random value. | Langfuse documentation unknown; Langfuse Compose 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab | REASONED |
-| lf-encryption: Replace all-zero ENCRYPTION_KEY with 32 random hex bytes; later changes need re-encryption and exposed provider credentials need rotation. | Langfuse documentation unknown; Langfuse Compose 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab | REASONED |
-| lf-minio: Rotate bundled minio/miniosecret and matching LANGFUSE_S3_* keys; MinIO S3 host 9090 is wildcard-published. | Langfuse Compose 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab; Langfuse documentation unknown | REASONED |
-| lf-ports: langfuse-web host 3000 is wildcard-published; bundled Postgres, ClickHouse and Redis default loopback; keep all publications private. | Langfuse Compose 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab | REASONED |
-| lf-tls: Container deployment needs proxy TLS; an HTTPS public URL does not establish native Langfuse TLS. | Langfuse documentation unknown | REASONED |
-| phoenix-enable: Phoenix auth defaults disabled; enable PHOENIX_ENABLE_AUTH=True with random PHOENIX_SECRET. | Phoenix documentation unknown | REASONED |
-| phoenix-admin: Auth creates admin@localhost/admin unless first-account startup sets PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD; later environment changes are inert. | Phoenix documentation unknown | REASONED |
-| phoenix-password: Existing admin needs UI password replacement before exposure; remove the inert initial-password variable afterwards. | Phoenix documentation unknown | REASONED |
-| phoenix-http: HTTP UI/REST/OTLP defaults to 0.0.0.0:6006; restrict its bind/publication and backing database exposure. | Phoenix listener source arize-phoenix-v20.16.0; Phoenix documentation unknown | REASONED |
-| phoenix-grpc: Separate OTLP gRPC defaults to [::]:4317 independently of PHOENIX_HOST; isolate namespace/publication/firewall separately. | Phoenix listener source arize-phoenix-v20.16.0 | REASONED |
-| phoenix-keys: Enabling auth blocks collection/API access until system or user API keys exist; PHOENIX_API_KEY is sent as Bearer. | Phoenix documentation unknown | REASONED |
-| phoenix-mfa: No native MFA; federate OAuth2/OIDC or use identity-aware ingress and enforce MFA there. | Phoenix documentation unknown | REASONED |
-| phoenix-signup: PHOENIX_OAUTH2_&lt;IDP&gt;_ALLOW_SIGN_UP defaults True; set False and restrict provider membership. | Phoenix documentation unknown | REASONED |
-| phoenix-basic: Local password login remains beside SSO; PHOENIX_DISABLE_BASIC_AUTH=True closes it after an approved IdP administrator is tested. | Phoenix documentation unknown | REASONED |
-| phoenix-tls: Native HTTP/gRPC TLS exists from 8.29, defaults off, uses certificate/key files; later per-protocol switches override PHOENIX_TLS_ENABLED. | Phoenix TLS announcement unknown; Phoenix TLS source 080959576563900038688ddf01f3bee110005df5 | REASONED |
-| helicone-login: Better Auth uses signup and organizations; test@helicone.ai/password is a local manual trial, not the deployment security model. | Helicone documentation unknown | REASONED |
-| helicone-secret: Replace BETTER_AUTH_SECRET examples change-me-in-production and Compose your-secret-key before first start. | Helicone documentation unknown; Helicone Compose b12ebaccb824ab9778757ca197ff302d97fda421 | REASONED |
-| helicone-ports: Backing Postgres/ClickHouse/MinIO/Redis/MailHog publications bypass UI login, including 54388:5432 and 18123:8123; remove or loopback-scope them. | Helicone Compose b12ebaccb824ab9778757ca197ff302d97fda421 | REASONED |
-| helicone-boundary: Restrict signup, protect dashboard/Jawn/S3 and gateway separately with private networking or authenticated ingress and MFA; rotate example storage credentials. | Helicone documentation unknown; Helicone Compose b12ebaccb824ab9778757ca197ff302d97fda421 | REASONED |
-| helicone-ingest: AI Gateway ingestion and provider environment keys are separate from web sessions; protect those secrets. | Helicone documentation unknown | REASONED |
-| otel-default: OTLP factory defaults localhost:4317 gRPC and localhost:4318 HTTP at v0.161.0; bind every enabled receiver explicitly. | OpenTelemetry Collector v0.161.0; Collector security guidance unknown | REASONED |
-| otel-history: OTLP localhost transition was v0.104.0; UseLocalHostAsDefaultHost stabilized v0.110.0 and was removed v0.112.0. | OpenTelemetry Collector v0.161.0 | REASONED |
-| otel-shipped: Both shipped configs override component defaults with unauthenticated IPv4 wildcard OTLP 4317/4318, Jaeger 14250/6832/6831/14268 and Zipkin 9411. | Collector distributions v0.161.0 | REASONED |
-| otel-diagnostics: Shipped pprof 1777 and zPages 55679 are wildcard and unauthenticated; remove from extensions/service.extensions or restrict separately. | Collector distributions v0.161.0; OpenTelemetry Collector v0.161.0; Collector pprof source 443567a6a00d7cff8cae1432a6fef655d8698e94 | REASONED |
-| otel-images: Dockerfiles COPY/select shipped config; EXPOSE 4317/4318/55679 is not host publication, but container peers may reach wildcard listeners. | Collector distributions v0.161.0 | REASONED |
-| otel-packages: Systemd reads distribution otelcol.conf; OTELCOL_OPTIONS selects config.yaml; config&#124;noreplace installation can retain local config, and postinstall manages service. | Collector distributions v0.161.0 | REASONED |
-| otel-tls: Require TLS on receivers/exporters and authentication on every receiver protocol accepting off-host data. | Collector security guidance unknown | REASONED |
-| otel-auth: Declare authenticator, start it in service.extensions, and attach each receiver protocol with auth.authenticator; Basic supports htpasswd/client_auth. | Collector security guidance unknown; Collector Basic auth extension 1c897ba9c67afc3c9e218b5cd05a6de49435f4de | REASONED |
-| otel-bearer: bearertokenauth accepts a static token or token file; filename takes precedence over token, and each file line with a non-whitespace field contributes its first whitespace-delimited field. The configurable header (default Authorization) and scheme (default Bearer) apply to HTTP and gRPC outgoing calls; the header becomes the lower-case gRPC metadata key. On incoming requests, Authenticate checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with each configured scheme-prefixed token and accepts any match; outgoing calls send only the first token. | Collector security guidance unknown; Collector bearer token auth extension 1c897ba9c67afc3c9e218b5cd05a6de49435f4de | REASONED |
-| otel-metrics: Internal metrics factory defaults localhost:8888; shipped configs set 127.0.0.1:8888; 0.0.0.0:8888 scrape target is outbound. | OpenTelemetry Collector v0.161.0; Collector distributions v0.161.0 | REASONED |
-| otel-health: Review enabled health-check 13133 independently of receiver authentication. | Collector health source d922ffb299c6b9be026f97dd7d6a5f0f507efdeb; Collector distributions v0.161.0 | REASONED |
-| otel-k8s: otelcol-k8s Dockerfile supplies no default config COPY/CMD; EXPOSE alone establishes no listener; Helm/operator are out of scope. | Collector distributions v0.161.0 | REASONED |
-| otel-minimal: Run only required components and use a non-root process. | Collector security guidance unknown | REASONED |
-| verify-inventory: Inspect effective config, namespace TCP/UDP, publications and firewall; shipped wildcard listeners should become intended private listeners; outside failures need positive controls. | Collector distributions v0.161.0; Collector security guidance unknown; Phoenix listener source arize-phoenix-v20.16.0 | REASONED |
-| verify-dashboard: Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data. | Langfuse documentation unknown | REASONED |
-| verify-lf-api: Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth. | Langfuse documentation unknown | REASONED |
-| verify-collector: Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive. | Collector security guidance unknown; Collector Basic auth extension 1c897ba9c67afc3c9e218b5cd05a6de49435f4de | REASONED |
-| verify-phoenix-admin: Default admin/admin must fail with replacement password succeeding; with basic auth disabled, require local-login refusal and approved MFA IdP success. | Phoenix documentation unknown | REASONED |
-| verify-phoenix-read: Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive. | Phoenix documentation unknown; curl minimum 7.75.0 | REASONED |
-| verify-phoenix-http: Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key is not a positive control. | Phoenix documentation unknown; Phoenix gRPC auth source f11c885c063f1c9b6146693cda401c5d645d8294 | REASONED |
-| verify-phoenix-grpc: Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned. | Phoenix gRPC auth source f11c885c063f1c9b6146693cda401c5d645d8294; Phoenix listener source arize-phoenix-v20.16.0 | REASONED |
+Components (recorded basis):
+
+- langfuse: Langfuse documentation, unknown
+- lf-session: Langfuse session source, 24c949d8dd5617219a8415f80e4c65ad611ff05c
+- lf-compose: Langfuse Compose, 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab
+- phoenix: Phoenix documentation, unknown
+- phoenix-tls-min: Phoenix TLS announcement, unknown
+- phoenix-tls: Phoenix TLS source, 080959576563900038688ddf01f3bee110005df5
+- helicone: Helicone documentation, unknown
+- helicone-compose: Helicone Compose, b12ebaccb824ab9778757ca197ff302d97fda421
+- otel: OpenTelemetry Collector, v0.161.0
+- otel-dist: Collector distributions, v0.161.0
+- otel-docs: Collector security guidance, unknown
+- basicauth: Collector Basic auth extension, 1c897ba9c67afc3c9e218b5cd05a6de49435f4de
+- bearertokenauth: Collector bearer token auth extension, 1c897ba9c67afc3c9e218b5cd05a6de49435f4de
+- phoenix-auth: Phoenix gRPC auth source, f11c885c063f1c9b6146693cda401c5d645d8294
+- pprof: Collector pprof source, 443567a6a00d7cff8cae1432a6fef655d8698e94
+- health: Collector health source, d922ffb299c6b9be026f97dd7d6a5f0f507efdeb
+- curl: curl minimum, 7.75.0
+- phoenix-bind: Phoenix listener source, arize-phoenix-v20.16.0
+
+Claims (full source mapping in the front matter):
+
+- lf-signup (REASONED; langfuse): Email/password and public signup default on; AUTH_DISABLE_SIGNUP=true also prevents invite acceptance by new users.
+- lf-bootstrap (REASONED; langfuse): Create first account before closing signup, or initialize org before headless user/project with LANGFUSE_INIT_*.
+- lf-sso (REASONED; langfuse): AUTH_DISABLE_USERNAME_PASSWORD=true requires SSO; supported Auth.js providers need correct NEXTAUTH_URL beyond password login.
+- lf-session (REASONED; lf-session, langfuse): AUTH_SESSION_MAX_AGE must be integer &gt;5 minutes; source default is 20160, while documentation says 43200; check pinned release.
+- lf-api (REASONED; langfuse): Ingestion/public API use project public-key username and secret-key password via Basic auth, separately from UI credentials.
+- lf-mfa (REASONED; langfuse): Langfuse login has no native MFA; enforce it at the identity provider.
+- lf-session-secret (REASONED; langfuse, lf-compose): Replace shipped NEXTAUTH_SECRET=mysecret before first start; known session protection secret permits forged sessions bypassing sign-in controls.
+- lf-salt (REASONED; langfuse, lf-compose): Replace shipped SALT=mysalt used for API-key hashes with a separate random value.
+- lf-encryption (REASONED; langfuse, lf-compose): Replace all-zero ENCRYPTION_KEY with 32 random hex bytes; later changes need re-encryption and exposed provider credentials need rotation.
+- lf-minio (REASONED; lf-compose, langfuse): Rotate bundled minio/miniosecret and matching LANGFUSE_S3_* keys; MinIO S3 host 9090 is wildcard-published.
+- lf-ports (REASONED; lf-compose): langfuse-web host 3000 is wildcard-published; bundled Postgres, ClickHouse and Redis default loopback; keep all publications private.
+- lf-tls (REASONED; langfuse): Container deployment needs proxy TLS; an HTTPS public URL does not establish native Langfuse TLS.
+- phoenix-enable (REASONED; phoenix): Phoenix auth defaults disabled; enable PHOENIX_ENABLE_AUTH=True with random PHOENIX_SECRET.
+- phoenix-admin (REASONED; phoenix): Auth creates admin@localhost/admin unless first-account startup sets PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD; later environment changes are inert.
+- phoenix-password (REASONED; phoenix): Existing admin needs UI password replacement before exposure; remove the inert initial-password variable afterwards.
+- phoenix-http (REASONED; phoenix-bind, phoenix): HTTP UI/REST/OTLP defaults to 0.0.0.0:6006; restrict its bind/publication and backing database exposure.
+- phoenix-grpc (REASONED; phoenix-bind): Separate OTLP gRPC defaults to [::]:4317 independently of PHOENIX_HOST; isolate namespace/publication/firewall separately.
+- phoenix-keys (REASONED; phoenix): Enabling auth blocks collection/API access until system or user API keys exist; PHOENIX_API_KEY is sent as Bearer.
+- phoenix-mfa (REASONED; phoenix): No native MFA; federate OAuth2/OIDC or use identity-aware ingress and enforce MFA there.
+- phoenix-signup (REASONED; phoenix): PHOENIX_OAUTH2_&lt;IDP&gt;_ALLOW_SIGN_UP defaults True; set False and restrict provider membership.
+- phoenix-basic (REASONED; phoenix): Local password login remains beside SSO; PHOENIX_DISABLE_BASIC_AUTH=True closes it after an approved IdP administrator is tested.
+- phoenix-tls (REASONED; phoenix-tls-min, phoenix-tls): Native HTTP/gRPC TLS exists from 8.29, defaults off, uses certificate/key files; later per-protocol switches override PHOENIX_TLS_ENABLED.
+- helicone-login (REASONED; helicone): Better Auth uses signup and organizations; test@helicone.ai/password is a local manual trial, not the deployment security model.
+- helicone-secret (REASONED; helicone, helicone-compose): Replace BETTER_AUTH_SECRET examples change-me-in-production and Compose your-secret-key before first start.
+- helicone-ports (REASONED; helicone-compose): Backing Postgres/ClickHouse/MinIO/Redis/MailHog publications bypass UI login, including 54388:5432 and 18123:8123; remove or loopback-scope them.
+- helicone-boundary (REASONED; helicone, helicone-compose): Restrict signup, protect dashboard/Jawn/S3 and gateway separately with private networking or authenticated ingress and MFA; rotate example storage credentials.
+- helicone-ingest (REASONED; helicone): AI Gateway ingestion and provider environment keys are separate from web sessions; protect those secrets.
+- otel-default (REASONED; otel, otel-docs): OTLP factory defaults localhost:4317 gRPC and localhost:4318 HTTP at v0.161.0; bind every enabled receiver explicitly.
+- otel-history (REASONED; otel): OTLP localhost transition was v0.104.0; UseLocalHostAsDefaultHost stabilized v0.110.0 and was removed v0.112.0.
+- otel-shipped (REASONED; otel-dist): Both shipped configs override component defaults with unauthenticated IPv4 wildcard OTLP 4317/4318, Jaeger 14250/6832/6831/14268 and Zipkin 9411.
+- otel-diagnostics (REASONED; otel-dist, otel, pprof): Shipped pprof 1777 and zPages 55679 are wildcard and unauthenticated; remove from extensions/service.extensions or restrict separately.
+- otel-images (REASONED; otel-dist): Dockerfiles COPY/select shipped config; EXPOSE 4317/4318/55679 is not host publication, but container peers may reach wildcard listeners.
+- otel-packages (REASONED; otel-dist): Systemd reads distribution otelcol.conf; OTELCOL_OPTIONS selects config.yaml; config&#124;noreplace installation can retain local config, and postinstall manages service.
+- otel-tls (REASONED; otel-docs): Require TLS on receivers/exporters and authentication on every receiver protocol accepting off-host data.
+- otel-auth (REASONED; otel-docs, basicauth): Declare authenticator, start it in service.extensions, and attach each receiver protocol with auth.authenticator; Basic supports htpasswd/client_auth.
+- otel-bearer (REASONED; otel-docs, bearertokenauth): bearertokenauth accepts a static token or token file; filename takes precedence over token, and each file line with a non-whitespace field contributes its first whitespace-delimited field. The configurable header (default Authorization) and scheme (default Bearer) apply to HTTP and gRPC outgoing calls; the header becomes the lower-case gRPC metadata key. On incoming requests, Authenticate checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with each configured scheme-prefixed token and accepts any match; outgoing calls send only the first token.
+- otel-metrics (REASONED; otel, otel-dist): Internal metrics factory defaults localhost:8888; shipped configs set 127.0.0.1:8888; 0.0.0.0:8888 scrape target is outbound.
+- otel-health (REASONED; health, otel-dist): Review enabled health-check 13133 independently of receiver authentication.
+- otel-k8s (REASONED; otel-dist): otelcol-k8s Dockerfile supplies no default config COPY/CMD; EXPOSE alone establishes no listener; Helm/operator are out of scope.
+- otel-minimal (REASONED; otel-docs): Run only required components and use a non-root process.
+- verify-inventory (REASONED; otel-dist, otel-docs, phoenix-bind): Inspect effective config, namespace TCP/UDP, publications and firewall; shipped wildcard listeners should become intended private listeners; outside failures need positive controls.
+- verify-dashboard (REASONED; langfuse): Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data.
+- verify-lf-api (REASONED; langfuse): Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth.
+- verify-collector (REASONED; otel-docs, basicauth): Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive.
+- verify-phoenix-admin (REASONED; phoenix): Default admin/admin must fail with replacement password succeeding; with basic auth disabled, require local-login refusal and approved MFA IdP success.
+- verify-phoenix-read (REASONED; phoenix, curl): Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive.
+- verify-phoenix-http (REASONED; phoenix, phoenix-auth): Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key is not a positive control.
+- verify-phoenix-grpc (REASONED; phoenix-auth, phoenix-bind): Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned.
 <!-- version-basis:end -->
 
 These tools store full prompts, completions, and often the provider API keys used to generate them, so an

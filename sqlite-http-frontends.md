@@ -247,63 +247,87 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| release: The recorded stable Datasette documentation lists 0.65.5 with a table-permission bypass fix; deploy a supported release containing the security fixes. | Datasette documentation (rolling) unknown | REASONED |
-| datasette-bind: Bare datasette serve without host or port flags listened on 127.0.0.1:8001 in the recorded unprivileged local ss inventory. | Datasette documentation (rolling) unknown | DEMONSTRATED |
-| immutable: Use --immutable only for an unchanged snapshot; SQLite skips locking/change detection, so changing it can yield incorrect results or corruption errors. | SQLite documentation unknown; Datasette documentation (rolling) unknown | REASONED |
-| datasette-docker: Documented Docker launch binds 0.0.0.0:8001 and publishes 8001:8001; container bind and host publication are separate. | Datasette documentation (rolling) unknown | REASONED |
-| container-generator: At the pinned commit, make_dockerfile starts datasette serve --host 0.0.0.0, adds -i per supplied file (immutable mode), always adds --cors and --inspect-file inspect-data.json, conditionally adds --metadata, --template-dir templates/, --plugins-dir plugins/ and --version-note for truthy inputs, --static mount:mount per supplied mount, and whitespace-split truthy extra_options. It quotes those tokens with shlex.quote, then appends literal unquoted --port $PORT in shell-form CMD; port defaults to 8001 for ENV PORT and EXPOSE. Runtime expansion is not demonstrated. Package and publish cloudrun use the wrapper; Heroku has a separate Procfile path, and other publishers are not established. This guide advises reviewing the generated command, not just its bind address. | Datasette container generator caf238aac86ebe370959b25384d6e05f6a1e2359 | REASONED |
-| cloudrun: Inspected publisher uses --allow-unauthenticated; Cloud Run requires 0.0.0.0 and PORT, ingress default 8080, with external TLS termination but no implied application authorization. | Datasette Cloud Run publisher e889403d3bbe143854262682161c98a57bdb6594; Cloud Run documentation unknown | REASONED |
-| publish-plugins: Review each publishing plugin and provider hostname; datasette-publish-fly documents app.fly.dev and no universal plugin authentication default was established. | Datasette Fly publishing plugin unknown; Datasette documentation (rolling) unknown | REASONED |
-| docker-publication: Address-less Docker publication binds all host addresses; use explicit host loopback mappings for 8001 or 8080, and check direct routing and the pre-28.0.0 caveat externally. | Docker localhost-publication boundary 28.0.0 | REASONED |
-| actor-policy: Metadata allow blocks authorize actors at instance, database, table and canned-query scope; authentication alone does not restrict access. GitHub authentication explicitly leaves anonymous access until permissions restrict it. | datasette-auth-github unknown; Datasette documentation (rolling) unknown | REASONED |
-| root-url: datasette --root issues a one-use root-cookie login URL, not an anonymous-access restriction; treat the URL as a credential. | Datasette documentation (rolling) unknown | REASONED |
-| canned-writes: Ordinary SQL is read-only; canned queries enable writes with write:true and plugins may add further mutable routes, not a global write mode. | Datasette documentation (rolling) unknown | REASONED |
-| write-plugin: datasette-write adds /db/-/write governed by its own permission, root-only by default; installing it does not grant anonymous writes. | datasette-write 0.4; Datasette documentation (rolling) unknown | REASONED |
-| sql-policy: ?sql= and .json?sql= allow arbitrary reads; table/view allow rules do not prevent SQL reading those objects. Set allow_sql policy or default_allow_sql off; no generic --setting permissions exists. | Datasette documentation (rolling) unknown | REASONED |
-| query-limits: Queries default to a one-second time limit; repeated expensive requests may still consume resources, an inference rather than demonstrated denial of service. | Datasette documentation (rolling) unknown | REASONED |
-| downloads: allow_download defaults on for immutable file-backed databases; disabling it controls whole-file downloads, not ordinary exports. Local /published.db changed from 200 to 403. | Datasette documentation (rolling) unknown | DEMONSTRATED |
-| cors: The local --cors run added Access-Control-Allow-Origin: *; the header was absent without the flag. | Datasette documentation (rolling) unknown | DEMONSTRATED |
-| introspection: /-/metadata, /-/plugins, /-/versions, /-/settings and /-/databases, including JSON forms, expose instance details; permissions debugger separately requires root or its permission. | Datasette documentation (rolling) unknown | REASONED |
-| hash-urls: Core hash_urls was removed in 0.61; datasette-hashed-urls provides cache-oriented content hashes, not secrecy or authorization. | Datasette documentation (rolling) unknown | REASONED |
-| csrf: Datasette asgi-csrf compares ds_csrftoken cookie with csrftoken form field or x-csrftoken header; preserve it for writes and review skip_csrf plugins. It does not restrict anonymous reads. | Datasette documentation (rolling) unknown | REASONED |
-| plugin-secrets: The local analyst saw inline password hashes in metadata, but only $env references after environment indirection. | datasette-auth-passwords 1.1.1; Datasette documentation (rolling) unknown | DEMONSTRATED |
-| web-bind: Bare sqlite_web listened on 127.0.0.1:8080 in the recorded unprivileged local ss inventory. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
-| web-capabilities: sqlite-web supports queries, imports/exports, row changes and dropping schema objects; reachable unauthenticated write access implies database compromise, not automatic host compromise. | sqlite-web package 0.8.1 | REASONED |
-| web-container: sqlite-web Dockerfile starts -H 0.0.0.0 and exposes 8080; README publishes 8080:8080. Use explicit loopback publication for a same-host proxy. | sqlite-web Dockerfile 7f6658b012a789f0b9418cad543e7798ce850130; sqlite-web package 0.8.1 | REASONED |
-| web-password: Local SQLITE_WEB_PASSWORD without -P left anonymous query access at 200; with -P the anonymous query redirected to /login/. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
-| web-readonly: In the local --read-only run the anonymous read still returned 200 while the insert changed nothing. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2; SQLite documentation unknown | DEMONSTRATED |
-| web-methods: Inspected sqlite-web query handler permits read GETs; writes, scripts and drops require POST. A harmless query GET establishes anonymous read access. | sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | REASONED |
-| web-tls: sqlite-web documents native --ssl-cert and --ssl-key; this deployment baseline uses the shared TLS proxy. | sqlite-web package 0.8.1 | REASONED |
-| web-csrf: sqlite-web 0.8.1 loopback insert accepted an authenticated POST without a token and with foreign Origin; the form has no CSRF field. Prefer read-only behind the proxy. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
-| web-cookie: sqlite-web 0.8.1 set HttpOnly; Path=/ without SameSite or Secure even over TLS; cross-site cookie sending therefore depends on browser defaults. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
-| fronting: Keep same-host origins on loopback and apply TLS and authentication to every UI, SQL, JSON, export, download and auxiliary route. | nginx documentation unknown; Caddy documentation (rolling) unknown; Datasette documentation (rolling) unknown | REASONED |
-| identity-proxy: IAP and Cloudflare Access evaluate access before forwarding; no tenancy was available to demonstrate these routes. | Google IAP documentation unknown; Cloudflare Access documentation unknown | REASONED |
-| mfa: Neither reviewed core authentication interface supplies native MFA; enforce it at the identity provider or through Cloudflare Access independent MFA. | sqlite-web package 0.8.1; Cloudflare Access documentation unknown; Datasette documentation (rolling) unknown | REASONED |
-| tailnet: Tailscale Serve shares inside the tailnet; Funnel publishes publicly. Verify which path is configured. | Tailscale documentation unknown | REASONED |
-| origin-bypass: Inventory direct origins and provider hostnames so proxy login cannot be bypassed; IAP documents backend and Cloud Run hostname precautions. | Google IAP documentation unknown | REASONED |
-| os-account: Use a dedicated unprivileged account and curated snapshot whose file and parent it cannot modify; protect sidecars and temporary files under SQLite filesystem authority. | SQLite documentation unknown | REASONED |
-| verify-inventory: Inspect complete listener table, IPv6 and unexpected ports; empty output after an error is inconclusive. Root ss, wildcard binds, Docker publication and managed ingress remain reasoned without sudo/container capability. | sqlite-web package 0.8.1; ss documentation unknown; Docker localhost-publication boundary 28.0.0; Cloud Run documentation unknown; Datasette documentation (rolling) unknown | REASONED |
-| verify-external: External origin/provider tests require a successful local control and actual deployment targets; any HTTP response proves reachability, while transport failures alone prove no isolation. No second network/provider deployment was available. | sqlite-web package 0.8.1; Google IAP documentation unknown; curl minimum write-out version 7.75.0; Datasette documentation (rolling) unknown | REASONED |
-| verify-anonymous: UI, schema or row data without credentials is exposure; login pages, unexplained 404s and HTTP success alone do not establish protection. SQL-disabled tests also need an authorized browsing control. | sqlite-web package 0.8.1; Datasette documentation (rolling) unknown | REASONED |
-| datasette-exposed: Local bare Datasette returned listing and known SQL row with 200 and /-/versions.json anonymously with 200; baseline SQL returned 403 while table JSON still returned 200. | Datasette documentation (rolling) unknown | DEMONSTRATED |
-| web-exposed: Local bare sqlite-web returned query GET 200 anonymously and accepted an anonymous insert into a disposable database. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
-| verify-authorized: Private mode-0600 header file supplies credentials by path, not argv values; compare known authorized data with anonymous denial and repeat with an unauthorized actor. File guards establish readability/type, not privacy; identity-proxy scenarios lack a tenancy. | sqlite-web package 0.8.1; curl minimum write-out version 7.75.0; Google IAP documentation unknown; Cloudflare Access documentation unknown; Datasette documentation (rolling) unknown | REASONED |
-| actor-results: Local password-plugin analyst cookie returned table rows with 200, anonymous and guest requests got 403, and analyst SQL got 403 under allow_sql:false. | datasette-auth-passwords 1.1.1; Datasette documentation (rolling) unknown | DEMONSTRATED |
-| web-auth-results: Local sqlite-web -P session cookie returned the row with 200 and the anonymous request redirected to /login/. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | DEMONSTRATED |
-| introspection-results: Under the local metadata policy, all five auxiliary JSON routes returned 403 anonymously and 200 to a freshly logged-in analyst. | datasette-auth-passwords 1.1.1; Datasette documentation (rolling) unknown | DEMONSTRATED |
-| caddy-results: Caddy v2.11.4 loopback TLS/Basic proxy denied anonymous UI, SQL, database download, versions and CSV with 401 and allowed credentials with 200; direct backend remained anonymous. Protection depends on backend isolation. | Caddy documentation (rolling) unknown; Datasette documentation (rolling) unknown | DEMONSTRATED |
-| local-checks: Recorded bash parsing, metadata JSON parsing and 120 guard executions passed; curl argument recording tested guards separately from service outcomes. | curl minimum write-out version 7.75.0 | DEMONSTRATED |
-| guard-limits: Use Bash with real unshadowed builtins and curl 7.75.0 or newer; paste whole blocks, escape apostrophes, avoid credential URLs, and retain TLS verification. Partial pastes and inherited matching marker/arguments remain outside guard coverage. | curl minimum write-out version 7.75.0 | DEMONSTRATED |
-| datasette-cli: Bare datasette invokes serve; -h/--host and -p/--port override its bind and port. | Datasette documentation (rolling) unknown | REASONED |
-| web-cli: sqlite-web -H/--host uses uppercase H and -p/--port overrides the port; the documented default is 127.0.0.1:8080. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2 | REASONED |
-| write-test: Local anonymous write and root write without CSRF were denied; root write with the token returned 302 and wrote the row. | datasette-write 0.4; Datasette documentation (rolling) unknown | DEMONSTRATED |
-| secret-indirection: Keep plugin secrets out of public metadata with documented environment or file indirection, and protect root login URLs and credential files. | Datasette documentation (rolling) unknown | REASONED |
-| web-auth-config: In tagged sqlite-web 0.8.1, a nonempty shared password requires -P/--password; SQLITE_WEB_PASSWORD is read only inside that option branch, and an unset or empty variable leads to a prompt. The shared login supplies no per-table roles. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2; sqlite-web tagged implementation 0.8.1 | REASONED |
-| web-readonly-config: --read-only opens SQLite with mode=ro and reduces exposure to reads; it does not authenticate callers. | sqlite-web package 0.8.1; sqlite-web implementation 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2; SQLite documentation unknown | REASONED |
-| cors-policy: --cors permits cross-origin JSON access and should be omitted unless intended; its absence does not authenticate requests. | Datasette documentation (rolling) unknown | REASONED |
-| query-pages: Queries return at most 1,000 rows at a time by default; pagination retrieves more, so that limit is not a confidentiality boundary. | Datasette documentation (rolling) unknown | REASONED |
+Components (recorded basis):
+
+- ds-container: Datasette container generator, caf238aac86ebe370959b25384d6e05f6a1e2359
+- ds-cloud: Datasette Cloud Run publisher, e889403d3bbe143854262682161c98a57bdb6594
+- fly: Datasette Fly publishing plugin, unknown
+- passwords: datasette-auth-passwords, 1.1.1
+- github-auth: datasette-auth-github, unknown
+- write: datasette-write, 0.4
+- web: sqlite-web package, 0.8.1
+- web-source: sqlite-web implementation, 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2
+- web-tag-source: sqlite-web tagged implementation, 0.8.1
+- web-image: sqlite-web Dockerfile, 7f6658b012a789f0b9418cad543e7798ce850130
+- sqlite: SQLite documentation, unknown
+- docker: Docker localhost-publication boundary, 28.0.0
+- cloudrun: Cloud Run documentation, unknown
+- nginx: nginx documentation, unknown
+- iap: Google IAP documentation, unknown
+- access: Cloudflare Access documentation, unknown
+- tailscale: Tailscale documentation, unknown
+- curl: curl minimum write-out version, 7.75.0
+- ss: ss documentation, unknown
+- datasette-docs: Datasette documentation (rolling), unknown
+- caddy-docs: Caddy documentation (rolling), unknown
+
+Claims (full source mapping in the front matter):
+
+- release (REASONED; datasette-docs): The recorded stable Datasette documentation lists 0.65.5 with a table-permission bypass fix; deploy a supported release containing the security fixes.
+- datasette-bind (DEMONSTRATED; datasette-docs): Bare datasette serve without host or port flags listened on 127.0.0.1:8001 in the recorded unprivileged local ss inventory.
+- immutable (REASONED; sqlite, datasette-docs): Use --immutable only for an unchanged snapshot; SQLite skips locking/change detection, so changing it can yield incorrect results or corruption errors.
+- datasette-docker (REASONED; datasette-docs): Documented Docker launch binds 0.0.0.0:8001 and publishes 8001:8001; container bind and host publication are separate.
+- container-generator (REASONED; ds-container): At the pinned commit, make_dockerfile starts datasette serve --host 0.0.0.0, adds -i per supplied file (immutable mode), always adds --cors and --inspect-file inspect-data.json, conditionally adds --metadata, --template-dir templates/, --plugins-dir plugins/ and --version-note for truthy inputs, --static mount:mount per supplied mount, and whitespace-split truthy extra_options. It quotes those tokens with shlex.quote, then appends literal unquoted --port $PORT in shell-form CMD; port defaults to 8001 for ENV PORT and EXPOSE. Runtime expansion is not demonstrated. Package and publish cloudrun use the wrapper; Heroku has a separate Procfile path, and other publishers are not established. This guide advises reviewing the generated command, not just its bind address.
+- cloudrun (REASONED; ds-cloud, cloudrun): Inspected publisher uses --allow-unauthenticated; Cloud Run requires 0.0.0.0 and PORT, ingress default 8080, with external TLS termination but no implied application authorization.
+- publish-plugins (REASONED; fly, datasette-docs): Review each publishing plugin and provider hostname; datasette-publish-fly documents app.fly.dev and no universal plugin authentication default was established.
+- docker-publication (REASONED; docker): Address-less Docker publication binds all host addresses; use explicit host loopback mappings for 8001 or 8080, and check direct routing and the pre-28.0.0 caveat externally.
+- actor-policy (REASONED; github-auth, datasette-docs): Metadata allow blocks authorize actors at instance, database, table and canned-query scope; authentication alone does not restrict access. GitHub authentication explicitly leaves anonymous access until permissions restrict it.
+- root-url (REASONED; datasette-docs): datasette --root issues a one-use root-cookie login URL, not an anonymous-access restriction; treat the URL as a credential.
+- canned-writes (REASONED; datasette-docs): Ordinary SQL is read-only; canned queries enable writes with write:true and plugins may add further mutable routes, not a global write mode.
+- write-plugin (REASONED; write, datasette-docs): datasette-write adds /db/-/write governed by its own permission, root-only by default; installing it does not grant anonymous writes.
+- sql-policy (REASONED; datasette-docs): ?sql= and .json?sql= allow arbitrary reads; table/view allow rules do not prevent SQL reading those objects. Set allow_sql policy or default_allow_sql off; no generic --setting permissions exists.
+- query-limits (REASONED; datasette-docs): Queries default to a one-second time limit; repeated expensive requests may still consume resources, an inference rather than demonstrated denial of service.
+- downloads (DEMONSTRATED; datasette-docs): allow_download defaults on for immutable file-backed databases; disabling it controls whole-file downloads, not ordinary exports. Local /published.db changed from 200 to 403.
+- cors (DEMONSTRATED; datasette-docs): The local --cors run added Access-Control-Allow-Origin: *; the header was absent without the flag.
+- introspection (REASONED; datasette-docs): /-/metadata, /-/plugins, /-/versions, /-/settings and /-/databases, including JSON forms, expose instance details; permissions debugger separately requires root or its permission.
+- hash-urls (REASONED; datasette-docs): Core hash_urls was removed in 0.61; datasette-hashed-urls provides cache-oriented content hashes, not secrecy or authorization.
+- csrf (REASONED; datasette-docs): Datasette asgi-csrf compares ds_csrftoken cookie with csrftoken form field or x-csrftoken header; preserve it for writes and review skip_csrf plugins. It does not restrict anonymous reads.
+- plugin-secrets (DEMONSTRATED; passwords, datasette-docs): The local analyst saw inline password hashes in metadata, but only $env references after environment indirection.
+- web-bind (DEMONSTRATED; web, web-source): Bare sqlite_web listened on 127.0.0.1:8080 in the recorded unprivileged local ss inventory.
+- web-capabilities (REASONED; web): sqlite-web supports queries, imports/exports, row changes and dropping schema objects; reachable unauthenticated write access implies database compromise, not automatic host compromise.
+- web-container (REASONED; web-image, web): sqlite-web Dockerfile starts -H 0.0.0.0 and exposes 8080; README publishes 8080:8080. Use explicit loopback publication for a same-host proxy.
+- web-password (DEMONSTRATED; web, web-source): Local SQLITE_WEB_PASSWORD without -P left anonymous query access at 200; with -P the anonymous query redirected to /login/.
+- web-readonly (DEMONSTRATED; web, web-source, sqlite): In the local --read-only run the anonymous read still returned 200 while the insert changed nothing.
+- web-methods (REASONED; web-source): Inspected sqlite-web query handler permits read GETs; writes, scripts and drops require POST. A harmless query GET establishes anonymous read access.
+- web-tls (REASONED; web): sqlite-web documents native --ssl-cert and --ssl-key; this deployment baseline uses the shared TLS proxy.
+- web-csrf (DEMONSTRATED; web, web-source): sqlite-web 0.8.1 loopback insert accepted an authenticated POST without a token and with foreign Origin; the form has no CSRF field. Prefer read-only behind the proxy.
+- web-cookie (DEMONSTRATED; web, web-source): sqlite-web 0.8.1 set HttpOnly; Path=/ without SameSite or Secure even over TLS; cross-site cookie sending therefore depends on browser defaults.
+- fronting (REASONED; nginx, caddy-docs, datasette-docs): Keep same-host origins on loopback and apply TLS and authentication to every UI, SQL, JSON, export, download and auxiliary route.
+- identity-proxy (REASONED; iap, access): IAP and Cloudflare Access evaluate access before forwarding; no tenancy was available to demonstrate these routes.
+- mfa (REASONED; web, access, datasette-docs): Neither reviewed core authentication interface supplies native MFA; enforce it at the identity provider or through Cloudflare Access independent MFA.
+- tailnet (REASONED; tailscale): Tailscale Serve shares inside the tailnet; Funnel publishes publicly. Verify which path is configured.
+- origin-bypass (REASONED; iap): Inventory direct origins and provider hostnames so proxy login cannot be bypassed; IAP documents backend and Cloud Run hostname precautions.
+- os-account (REASONED; sqlite): Use a dedicated unprivileged account and curated snapshot whose file and parent it cannot modify; protect sidecars and temporary files under SQLite filesystem authority.
+- verify-inventory (REASONED; web, ss, docker, cloudrun, datasette-docs): Inspect complete listener table, IPv6 and unexpected ports; empty output after an error is inconclusive. Root ss, wildcard binds, Docker publication and managed ingress remain reasoned without sudo/container capability.
+- verify-external (REASONED; web, iap, curl, datasette-docs): External origin/provider tests require a successful local control and actual deployment targets; any HTTP response proves reachability, while transport failures alone prove no isolation. No second network/provider deployment was available.
+- verify-anonymous (REASONED; web, datasette-docs): UI, schema or row data without credentials is exposure; login pages, unexplained 404s and HTTP success alone do not establish protection. SQL-disabled tests also need an authorized browsing control.
+- datasette-exposed (DEMONSTRATED; datasette-docs): Local bare Datasette returned listing and known SQL row with 200 and /-/versions.json anonymously with 200; baseline SQL returned 403 while table JSON still returned 200.
+- web-exposed (DEMONSTRATED; web, web-source): Local bare sqlite-web returned query GET 200 anonymously and accepted an anonymous insert into a disposable database.
+- verify-authorized (REASONED; web, curl, iap, access, datasette-docs): Private mode-0600 header file supplies credentials by path, not argv values; compare known authorized data with anonymous denial and repeat with an unauthorized actor. File guards establish readability/type, not privacy; identity-proxy scenarios lack a tenancy.
+- actor-results (DEMONSTRATED; passwords, datasette-docs): Local password-plugin analyst cookie returned table rows with 200, anonymous and guest requests got 403, and analyst SQL got 403 under allow_sql:false.
+- web-auth-results (DEMONSTRATED; web, web-source): Local sqlite-web -P session cookie returned the row with 200 and the anonymous request redirected to /login/.
+- introspection-results (DEMONSTRATED; passwords, datasette-docs): Under the local metadata policy, all five auxiliary JSON routes returned 403 anonymously and 200 to a freshly logged-in analyst.
+- caddy-results (DEMONSTRATED; caddy-docs, datasette-docs): Caddy v2.11.4 loopback TLS/Basic proxy denied anonymous UI, SQL, database download, versions and CSV with 401 and allowed credentials with 200; direct backend remained anonymous. Protection depends on backend isolation.
+- local-checks (DEMONSTRATED; curl): Recorded bash parsing, metadata JSON parsing and 120 guard executions passed; curl argument recording tested guards separately from service outcomes.
+- guard-limits (DEMONSTRATED; curl): Use Bash with real unshadowed builtins and curl 7.75.0 or newer; paste whole blocks, escape apostrophes, avoid credential URLs, and retain TLS verification. Partial pastes and inherited matching marker/arguments remain outside guard coverage.
+- datasette-cli (REASONED; datasette-docs): Bare datasette invokes serve; -h/--host and -p/--port override its bind and port.
+- web-cli (REASONED; web, web-source): sqlite-web -H/--host uses uppercase H and -p/--port overrides the port; the documented default is 127.0.0.1:8080.
+- write-test (DEMONSTRATED; write, datasette-docs): Local anonymous write and root write without CSRF were denied; root write with the token returned 302 and wrote the row.
+- secret-indirection (REASONED; datasette-docs): Keep plugin secrets out of public metadata with documented environment or file indirection, and protect root login URLs and credential files.
+- web-auth-config (REASONED; web, web-source, web-tag-source): In tagged sqlite-web 0.8.1, a nonempty shared password requires -P/--password; SQLITE_WEB_PASSWORD is read only inside that option branch, and an unset or empty variable leads to a prompt. The shared login supplies no per-table roles.
+- web-readonly-config (REASONED; web, web-source, sqlite): --read-only opens SQLite with mode=ro and reduces exposure to reads; it does not authenticate callers.
+- cors-policy (REASONED; datasette-docs): --cors permits cross-origin JSON access and should be omitted unless intended; its absence does not authenticate requests.
+- query-pages (REASONED; datasette-docs): Queries return at most 1,000 rows at a time by default; pagination retrieves more, so that limit is not a confidentiality boundary.
 <!-- version-basis:end -->
 
 An SQLite HTTP front-end turns a local file into a network service: **the port is the exposure**. Datasette allows anonymous browsing and read-only SQL by default; sqlite-web provides queries, imports, exports, row changes, and schema deletion. An unprotected, reachable instance exposes those capabilities. See Datasette permissions and sqlite-web features.

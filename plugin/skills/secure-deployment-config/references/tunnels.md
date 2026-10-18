@@ -163,43 +163,57 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| frps-port: frps bindPort defaults to 7000. | frps source v0.71.0 | REASONED |
-| frp-token: Token authentication is the default; set the same long random auth.token on frps and every frpc. | frp documentation unknown; frps source v0.71.0 | REASONED |
-| frp-empty: Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure. | frp documentation unknown; frps source v0.71.0 | REASONED |
-| frp-oidc: auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation. | frp documentation unknown; frps source v0.71.0 | REASONED |
-| proxy-bind: proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0. | frps source v0.71.0 | REASONED |
-| proxy-tcp: Registered TCP proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
-| proxy-udp: Registered UDP proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
-| proxy-http: HTTP and HTTPS proxy listeners bind proxyBindAddr. | frps source v0.71.0 | REASONED |
-| proxy-tcpmux: tcpmux proxies listen on proxyBindAddr. | frps source v0.71.0 | REASONED |
-| proxy-visitors: stcp, sudp and xtcp open no listener of their own on frps. | frps source v0.71.0 | REASONED |
-| service-auth: frp token/OIDC authenticates tunnel clients, not service callers; add app auth or a loopback authenticated TLS proxy. | frp documentation unknown; frps source v0.71.0 | REASONED |
-| tls-default: transport.tls.enable defaults true from v0.50.0, encrypting frpc-to-frps traffic. | frp TLS default minimum v0.50.0 | REASONED |
-| tls-verify: frpc does not verify frps certificates by default; configure server certFile/keyFile and client trustedCaFile. | frp documentation unknown | REASONED |
-| tls-force: Set server transport.tls.force=true to reject clients that do not negotiate TLS. | frp documentation unknown | REASONED |
-| wg-keys: WireGuard uses per-peer key pairs, not passwords; generate under umask 077 and share only public keys. | WireGuard unknown | REASONED |
-| wg-endpoint: wg set configures wg0 listen-port 51820, private key, peer public key, AllowedIPs and UDP endpoint 203.0.113.10:51820. | WireGuard unknown | REASONED |
-| wg-send: AllowedIPs selects the sending peer by destination; scope to the peer subnet, using 0.0.0.0/0 only for a full-tunnel gateway. | WireGuard unknown | REASONED |
-| wg-receive: Receiving AllowedIPs checks the decrypted source address, not allowed destinations; enforce destination limits with a server firewall. | WireGuard unknown; nftables unknown | REASONED |
-| wg-forward: The nftables drop matches the peer's whole allowed source prefix and destinations outside its permitted subnet. | WireGuard unknown; nftables unknown | REASONED |
-| nft-hook: Use a forward base chain with IP forwarding enabled; append order matters because earlier accepts short-circuit the drop. | nftables unknown | REASONED |
-| nft-input: Forward rules do not restrict services on the server itself; those need input rules. | nftables unknown | REASONED |
-| nft-ipv6: The example matches IPv4 only; IPv6 AllowedIPs needs corresponding ip6 source/destination rules. | nftables unknown | REASONED |
-| wg-port: WireGuard is normally silent when idle; open only its configured UDP ListenPort and keep other inbound services closed. | WireGuard unknown | REASONED |
-| ssh-map: ssh -R 8080:localhost:3000 forwards server port 8080 to the client's localhost:3000. | OpenSSH unknown | REASONED |
-| ssh-no: GatewayPorts defaults no: loopback-only remote forwarding overrides a requested wildcard bind. | OpenSSH unknown | REASONED |
-| ssh-yes: GatewayPorts yes forces wildcard listening regardless of the requested bind. | OpenSSH unknown | REASONED |
-| ssh-client: GatewayPorts clientspecified honours requested wildcard or loopback binding. | OpenSSH unknown | REASONED |
-| ssh-auth: SSH authenticates the tunnel, not callers; retain GatewayPorts no and front localhost:8080 with authenticated TLS. | OpenSSH unknown | REASONED |
-| ssh-persist: Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding. | OpenSSH unknown; autossh source 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476 | REASONED |
-| verify-token: Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client. | frp documentation unknown; frps source v0.71.0 | REASONED |
-| verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
-| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw status verbose shows ufw-managed rules and defaults but omits rules from ufw's rules files. Check IPV6 in /etc/default/ufw. The pinned manual describes ufw show raw as displaying filter, nat, mangle and raw tables using iptables and ip6tables; the pinned backend raw branch lists IPv4 filter, nat, mangle and raw tables and IPv6 filter, mangle and raw tables. Confirm nothing admits unauthorized external traffic to the tunneled service beyond the intended tunnel or proxy path, for both IPv4 and IPv6. This guide's reasoning is that ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual unknown; iproute2 manuals v6.12.0; Linux source v6.8; Ubuntu Noble ufw source 4992be7722389108d5f2ebb5ca221b228f0c68b1 | REASONED |
-| verify-route: An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause. | WireGuard unknown; nftables unknown | REASONED |
-| verify-counter: Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer. | WireGuard unknown; nftables unknown | REASONED |
-| verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown; iproute2 manuals v6.12.0 | REASONED |
+Components (recorded basis):
+
+- frp: frp documentation, unknown
+- frps: frps source, v0.71.0
+- tls-min: frp TLS default minimum, v0.50.0
+- wg: WireGuard, unknown
+- nft: nftables, unknown
+- ssh: OpenSSH, unknown
+- autossh-source: autossh source, 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476
+- ufw-docs: Ubuntu Noble ufw manual, unknown
+- iproute2-docs: iproute2 manuals, v6.12.0
+- linux-source: Linux source, v6.8
+- ufw-source: Ubuntu Noble ufw source, 4992be7722389108d5f2ebb5ca221b228f0c68b1
+
+Claims (full source mapping in the front matter):
+
+- frps-port (REASONED; frps): frps bindPort defaults to 7000.
+- frp-token (REASONED; frp, frps): Token authentication is the default; set the same long random auth.token on frps and every frpc.
+- frp-empty (REASONED; frp, frps): Omitted auth defaults to an empty token and accepts empty-token clients; configure token or OIDC before exposure.
+- frp-oidc (REASONED; frp, frps): auth.method=oidc uses Client Credentials Grant for frpc-to-frps authentication; set issuer and nonempty audience because an empty audience skips validation.
+- proxy-bind (REASONED; frps): proxyBindAddr defaults to bindAddr, whose default is 0.0.0.0.
+- proxy-tcp (REASONED; frps): Registered TCP proxies listen on proxyBindAddr.
+- proxy-udp (REASONED; frps): Registered UDP proxies listen on proxyBindAddr.
+- proxy-http (REASONED; frps): HTTP and HTTPS proxy listeners bind proxyBindAddr.
+- proxy-tcpmux (REASONED; frps): tcpmux proxies listen on proxyBindAddr.
+- proxy-visitors (REASONED; frps): stcp, sudp and xtcp open no listener of their own on frps.
+- service-auth (REASONED; frp, frps): frp token/OIDC authenticates tunnel clients, not service callers; add app auth or a loopback authenticated TLS proxy.
+- tls-default (REASONED; tls-min): transport.tls.enable defaults true from v0.50.0, encrypting frpc-to-frps traffic.
+- tls-verify (REASONED; frp): frpc does not verify frps certificates by default; configure server certFile/keyFile and client trustedCaFile.
+- tls-force (REASONED; frp): Set server transport.tls.force=true to reject clients that do not negotiate TLS.
+- wg-keys (REASONED; wg): WireGuard uses per-peer key pairs, not passwords; generate under umask 077 and share only public keys.
+- wg-endpoint (REASONED; wg): wg set configures wg0 listen-port 51820, private key, peer public key, AllowedIPs and UDP endpoint 203.0.113.10:51820.
+- wg-send (REASONED; wg): AllowedIPs selects the sending peer by destination; scope to the peer subnet, using 0.0.0.0/0 only for a full-tunnel gateway.
+- wg-receive (REASONED; wg, nft): Receiving AllowedIPs checks the decrypted source address, not allowed destinations; enforce destination limits with a server firewall.
+- wg-forward (REASONED; wg, nft): The nftables drop matches the peer's whole allowed source prefix and destinations outside its permitted subnet.
+- nft-hook (REASONED; nft): Use a forward base chain with IP forwarding enabled; append order matters because earlier accepts short-circuit the drop.
+- nft-input (REASONED; nft): Forward rules do not restrict services on the server itself; those need input rules.
+- nft-ipv6 (REASONED; nft): The example matches IPv4 only; IPv6 AllowedIPs needs corresponding ip6 source/destination rules.
+- wg-port (REASONED; wg): WireGuard is normally silent when idle; open only its configured UDP ListenPort and keep other inbound services closed.
+- ssh-map (REASONED; ssh): ssh -R 8080:localhost:3000 forwards server port 8080 to the client's localhost:3000.
+- ssh-no (REASONED; ssh): GatewayPorts defaults no: loopback-only remote forwarding overrides a requested wildcard bind.
+- ssh-yes (REASONED; ssh): GatewayPorts yes forces wildcard listening regardless of the requested bind.
+- ssh-client (REASONED; ssh): GatewayPorts clientspecified honours requested wildcard or loopback binding.
+- ssh-auth (REASONED; ssh): SSH authenticates the tunnel, not callers; retain GatewayPorts no and front localhost:8080 with authenticated TLS.
+- ssh-persist (REASONED; ssh, autossh-source): Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding.
+- verify-token (REASONED; frp, frps): Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client.
+- verify-wg (REASONED; wg, iproute2-docs, linux-source): wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface.
+- verify-firewall (REASONED; wg, nft, ufw-docs, iproute2-docs, linux-source, ufw-source): Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw status verbose shows ufw-managed rules and defaults but omits rules from ufw's rules files. Check IPV6 in /etc/default/ufw. The pinned manual describes ufw show raw as displaying filter, nat, mangle and raw tables using iptables and ip6tables; the pinned backend raw branch lists IPv4 filter, nat, mangle and raw tables and IPv6 filter, mangle and raw tables. Confirm nothing admits unauthorized external traffic to the tunneled service beyond the intended tunnel or proxy path, for both IPv4 and IPv6. This guide's reasoning is that ufw's view does not replace native nftables inspection.
+- verify-route (REASONED; wg, nft): An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause.
+- verify-counter (REASONED; wg, nft): Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer.
+- verify-ssh (REASONED; ssh, iproute2-docs): On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no.
 <!-- version-basis:end -->
 
 All three expose a private host to the internet without a public IP, the same job [cloudflare.md](cloudflare.md) and [tailscale.md](tailscale.md) do, but with no vendor edge: you run and secure both ends yourself, on a host still hardened per [host.md](host.md). frp with a weak or absent token lets anyone bind proxies through your server; WireGuard has no login at all, only key pairs and the traffic scoping you configure; and `ssh -R` forwards a local port through your own SSH login, kept on the server's loopback by default but reachable by anyone if `GatewayPorts` is widened.

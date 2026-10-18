@@ -179,61 +179,72 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| listen-default: Base config comments out listen_host; server code falls back to IPv4/IPv6 loopback when unset; widening listeners can expose services. | ClickHouse server config source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6; ClickHouse documentation unknown | REASONED |
-| default-user: Upstream default has empty password, ::/0 origins and access_management; full bootstrap needs additional capabilities. | ClickHouse users source b40982f9416bb4bc2d423d7e75ec384e79494b99 | REASONED |
-| docker-default: Official image installs wildcard listeners; with no arguments or a first argument starting --, entrypoint writes a loopback-only default networks override only when setup is not skipped, no non-default user, nonempty password (an existing password file replaces the variable), or nonempty access-management value other than 0 is requested, and default is unchanged; other commands bypass this setup. | ClickHouse Docker source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6 | REASONED |
-| ports: 8123 HTTP, 9000 native, 9004 MySQL, 9005 PostgreSQL and 9009 interserver are documented, not necessarily active. | ClickHouse documentation unknown | REASONED |
-| interserver-bind: interserver_listen_host defaults to listen_host but can independently widen replica exposure. | ClickHouse documentation unknown | REASONED |
-| xml-merge: config.d/users.d retain clickhouse roots; remove/replace inherited entries explicitly and inspect merged configuration. | ClickHouse documentation unknown | REASONED |
-| passwords: Replace inherited password with protected SHA-256 hash and loopback origins; SQL bcrypt has a 72-character limit. | ClickHouse documentation unknown | REASONED |
-| bootstrap: Complete administrator bootstrap needs access_management, named_collection_control and show_named_collections_secrets. | ClickHouse documentation unknown | REASONED |
-| access-storage: Persist SQL access storage; configured user_directories takes precedence over access_control_path. | ClickHouse documentation unknown | REASONED |
-| admin: Separate SQL administrator gets global grants and restricted HOST IP; host restrictions do not enforce TLS. | ClickHouse documentation unknown | REASONED |
-| reader: Table-scoped reader role combines with direct/inherited grants; remove excessive privileges and separate ingestion. | ClickHouse documentation unknown | REASONED |
-| retire-default: After matched replacement login and dependency migration, remove temporary bootstrap and inherited default definition. | ClickHouse documentation unknown | REASONED |
-| profiles: Bind locked settings directly to the account so disabling roles cannot remove them; review overlapping profiles. | ClickHouse documentation unknown | REASONED |
-| memory: Query/per-user memory limits apply per server, are incompletely tracked, and do not bound all process memory. | ClickHouse documentation unknown | REASONED |
-| timeout: Zero speed-check delay makes timeout elapsed-time based; cancellation checkpoints can exceed the example 30 seconds. | ClickHouse documentation unknown | REASONED |
-| quota: Username-keyed cumulative quotas are receiving-server local, reset on restart, and do not limit concurrency; some reads are exempt. | ClickHouse documentation unknown | REASONED |
-| readonly: readonly/allow_ddl do not replace grants; readonly=2 permits more operations and is not a READONLY constraint. | ClickHouse documentation unknown | REASONED |
-| tls-ports: Enable HTTPS 8443/native TLS 9440 and remove plaintext 8123/9000; baseline removes both replication listeners. | ClickHouse documentation unknown | REASONED |
-| replica-tls: Replica variant uses private HTTPS 9010, matching advertised hostname and verified outbound TLS, while removing 9009. | ClickHouse documentation unknown | REASONED |
-| replica-auth: Omitted interserver credentials disable auth; allow_empty true admits anonymous peers; match protected secrets across replicas. | ClickHouse documentation unknown | REASONED |
-| cluster-tls: Distributed-query and Keeper paths require separate TLS configuration beyond replication data HTTPS. | ClickHouse documentation unknown | REASONED |
-| emulation: Remove unused 9004/9005 listeners; PostgreSQL emulation can support TLS. | ClickHouse documentation unknown | REASONED |
-| client-tls: Explicit client trust file and certificate hostname are required; extendedVerification defaults false, so enable it. | ClickHouse documentation unknown | REASONED |
-| certificate-auth: ssl_certificate CN authentication supplies a machine possession factor, separate from human MFA. | ClickHouse documentation unknown | REASONED |
-| totp: 26.2 introduced XML-user TOTP with password auth; SQL access control lacks it and each code is accepted at most once. | ClickHouse documentation unknown; ClickHouse TOTP release announcement unknown | REASONED |
-| source-grants: Withhold all source privileges and inherited grants; separate READ/WRITE needs 25.7+, filtering 25.8+, and enable_read_write_grants. | ClickHouse documentation unknown; ClickHouse privilege registry 37c6c8c9bfc1de323e9a27711c5649352364bcba | REASONED |
-| source-interfaces: url/HTTP dictionaries fetch remote data, file reads under user_files_path, and remote reaches other servers. | ClickHouse documentation unknown | REASONED |
-| url-default: Omitted remote_url_allow_hosts allows covered URL hosts; hostname-only permits every port. | ClickHouse server config source 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6; ClickHouse documentation unknown | REASONED |
-| url-matching: Host matching precedes DNS and applies on redirects; host:port does not require HTTPS or constrain every protocol. | ClickHouse documentation unknown | REASONED |
-| engine-grants: OSS engine enforcement defaults disabled; enable it and grant only required engines alongside scoped CREATE TABLE. | ClickHouse documentation unknown | REASONED |
-| dictionaries: Separate dictionary management from scoped dictGet use; ordinary readers need no management privilege. | ClickHouse documentation unknown | REASONED |
-| executables: Administrator-controlled script/UDF discovery paths restrict modification; existing executable objects still need review. | ClickHouse documentation unknown | REASONED |
-| direct-exec: execute_direct runs the approved program directly; zero invokes a shell; neither is a sandbox. | ClickHouse documentation unknown | REASONED |
-| log-retention: Configure query/session logs and explicit 30-day TTL; deprecated database option is omitted; custom engine conflicts need review. | ClickHouse documentation unknown | REASONED |
-| log-profile: Lock query logging and sampling settings for each relevant account; overlapping profiles can conflict. | ClickHouse documentation unknown | REASONED |
-| log-events: Query log records activity/errors, not results; session log records login/logout/failure; inspect every serving interface/node. | ClickHouse documentation unknown | REASONED |
-| log-access: Require system-table grants, withhold application log access, mask sensitive query text and export to independent storage. | ClickHouse documentation unknown | REASONED |
-| log-upgrades: Upgrades can rename old log tables; inspect their retention; no separate immutable OSS audit_log or imported Cloud retention is established. | ClickHouse documentation unknown | REASONED |
-| verify-inventory: Inventory intended 8443/9440 and optional private 9010; removed listeners absent; local ss proves no remote isolation/authentication. | ClickHouse documentation unknown | REASONED |
-| verify-http: Matched no_password fixture accepts supplied/empty/wrong passwords; fixed HTTPS requires correct password and returns 1. | ClickHouse documentation unknown; curl documentation unknown | REASONED |
-| verify-plaintext: Any HTTP status on 8123 proves reachability; HTTP 000 needs inventory and successful TLS controls. | ClickHouse documentation unknown | REASONED |
-| verify-native: Native wrong password needs authentication error/nonzero exit; correct credentials return 1; transport failures are inconclusive. | ClickHouse documentation unknown | REASONED |
-| verify-tables: Fixed reader reads populated events and rejects private_events; test allowed/disallowed origins with matched reachable controls. | ClickHouse documentation unknown | REASONED |
-| verify-retirement: Fresh default login fails after retirement on native/HTTPS while same-origin sql_admin still succeeds. | ClickHouse documentation unknown | REASONED |
-| verify-settings: Reject unlocked override; inspect four limits and require successful SET ROLE NONE/DEFAULT with account profile retained. | ClickHouse role source 1163c482760fb0204e40f8fb5d81ffa1272bc9ea; ClickHouse documentation unknown | REASONED |
-| verify-memory: Calibrated aggregation fails at lower memory limit while simple read succeeds; test concurrent user budget and timeout separately. | ClickHouse documentation unknown | REASONED |
-| verify-quota: Fresh fixture accepts first two application reads and rejects the third; test restart reset and independent server counters. | ClickHouse documentation unknown | REASONED |
-| verify-file: Isolate FILE privilege with existing fixture and constant prerequisites; missing-file/readonly errors prove no source denial. | ClickHouse documentation unknown | REASONED |
-| verify-url: Approved HTTPS fixture succeeds and unlisted host gets allow-list rejection; other errors are inconclusive. | ClickHouse documentation unknown | REASONED |
-| verify-engine: With engine enforcement enabled MergeTree succeeds and TinyLog gets engine-privilege denial; remove fixtures between runs. | ClickHouse documentation unknown | REASONED |
-| verify-logs: Require new marker/login-failure records, locked logging, reader denial and admin/collector success with correlated provenance. | ClickHouse documentation unknown | REASONED |
-| verify-retention: Inspect table TTLs and historical tables; expired records disappear while recent ones remain in isolated retention test. | ClickHouse documentation unknown | REASONED |
-| verify-totp: Fixed XML human account rejects missing/invalid OTP and accepts password with fresh code; do not reuse positive code. | ClickHouse documentation unknown | REASONED |
+Components (recorded basis):
+
+- docs: ClickHouse documentation, unknown
+- config: ClickHouse server config source, 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6
+- docker: ClickHouse Docker source, 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6
+- users: ClickHouse users source, b40982f9416bb4bc2d423d7e75ec384e79494b99
+- totp: ClickHouse TOTP release announcement, unknown
+- sources: ClickHouse privilege registry, 37c6c8c9bfc1de323e9a27711c5649352364bcba
+- curl: curl documentation, unknown
+- roles: ClickHouse role source, 1163c482760fb0204e40f8fb5d81ffa1272bc9ea
+
+Claims (full source mapping in the front matter):
+
+- listen-default (REASONED; config, docs): Base config comments out listen_host; server code falls back to IPv4/IPv6 loopback when unset; widening listeners can expose services.
+- default-user (REASONED; users): Upstream default has empty password, ::/0 origins and access_management; full bootstrap needs additional capabilities.
+- docker-default (REASONED; docker): Official image installs wildcard listeners; with no arguments or a first argument starting --, entrypoint writes a loopback-only default networks override only when setup is not skipped, no non-default user, nonempty password (an existing password file replaces the variable), or nonempty access-management value other than 0 is requested, and default is unchanged; other commands bypass this setup.
+- ports (REASONED; docs): 8123 HTTP, 9000 native, 9004 MySQL, 9005 PostgreSQL and 9009 interserver are documented, not necessarily active.
+- interserver-bind (REASONED; docs): interserver_listen_host defaults to listen_host but can independently widen replica exposure.
+- xml-merge (REASONED; docs): config.d/users.d retain clickhouse roots; remove/replace inherited entries explicitly and inspect merged configuration.
+- passwords (REASONED; docs): Replace inherited password with protected SHA-256 hash and loopback origins; SQL bcrypt has a 72-character limit.
+- bootstrap (REASONED; docs): Complete administrator bootstrap needs access_management, named_collection_control and show_named_collections_secrets.
+- access-storage (REASONED; docs): Persist SQL access storage; configured user_directories takes precedence over access_control_path.
+- admin (REASONED; docs): Separate SQL administrator gets global grants and restricted HOST IP; host restrictions do not enforce TLS.
+- reader (REASONED; docs): Table-scoped reader role combines with direct/inherited grants; remove excessive privileges and separate ingestion.
+- retire-default (REASONED; docs): After matched replacement login and dependency migration, remove temporary bootstrap and inherited default definition.
+- profiles (REASONED; docs): Bind locked settings directly to the account so disabling roles cannot remove them; review overlapping profiles.
+- memory (REASONED; docs): Query/per-user memory limits apply per server, are incompletely tracked, and do not bound all process memory.
+- timeout (REASONED; docs): Zero speed-check delay makes timeout elapsed-time based; cancellation checkpoints can exceed the example 30 seconds.
+- quota (REASONED; docs): Username-keyed cumulative quotas are receiving-server local, reset on restart, and do not limit concurrency; some reads are exempt.
+- readonly (REASONED; docs): readonly/allow_ddl do not replace grants; readonly=2 permits more operations and is not a READONLY constraint.
+- tls-ports (REASONED; docs): Enable HTTPS 8443/native TLS 9440 and remove plaintext 8123/9000; baseline removes both replication listeners.
+- replica-tls (REASONED; docs): Replica variant uses private HTTPS 9010, matching advertised hostname and verified outbound TLS, while removing 9009.
+- replica-auth (REASONED; docs): Omitted interserver credentials disable auth; allow_empty true admits anonymous peers; match protected secrets across replicas.
+- cluster-tls (REASONED; docs): Distributed-query and Keeper paths require separate TLS configuration beyond replication data HTTPS.
+- emulation (REASONED; docs): Remove unused 9004/9005 listeners; PostgreSQL emulation can support TLS.
+- client-tls (REASONED; docs): Explicit client trust file and certificate hostname are required; extendedVerification defaults false, so enable it.
+- certificate-auth (REASONED; docs): ssl_certificate CN authentication supplies a machine possession factor, separate from human MFA.
+- totp (REASONED; docs, totp): 26.2 introduced XML-user TOTP with password auth; SQL access control lacks it and each code is accepted at most once.
+- source-grants (REASONED; docs, sources): Withhold all source privileges and inherited grants; separate READ/WRITE needs 25.7+, filtering 25.8+, and enable_read_write_grants.
+- source-interfaces (REASONED; docs): url/HTTP dictionaries fetch remote data, file reads under user_files_path, and remote reaches other servers.
+- url-default (REASONED; config, docs): Omitted remote_url_allow_hosts allows covered URL hosts; hostname-only permits every port.
+- url-matching (REASONED; docs): Host matching precedes DNS and applies on redirects; host:port does not require HTTPS or constrain every protocol.
+- engine-grants (REASONED; docs): OSS engine enforcement defaults disabled; enable it and grant only required engines alongside scoped CREATE TABLE.
+- dictionaries (REASONED; docs): Separate dictionary management from scoped dictGet use; ordinary readers need no management privilege.
+- executables (REASONED; docs): Administrator-controlled script/UDF discovery paths restrict modification; existing executable objects still need review.
+- direct-exec (REASONED; docs): execute_direct runs the approved program directly; zero invokes a shell; neither is a sandbox.
+- log-retention (REASONED; docs): Configure query/session logs and explicit 30-day TTL; deprecated database option is omitted; custom engine conflicts need review.
+- log-profile (REASONED; docs): Lock query logging and sampling settings for each relevant account; overlapping profiles can conflict.
+- log-events (REASONED; docs): Query log records activity/errors, not results; session log records login/logout/failure; inspect every serving interface/node.
+- log-access (REASONED; docs): Require system-table grants, withhold application log access, mask sensitive query text and export to independent storage.
+- log-upgrades (REASONED; docs): Upgrades can rename old log tables; inspect their retention; no separate immutable OSS audit_log or imported Cloud retention is established.
+- verify-inventory (REASONED; docs): Inventory intended 8443/9440 and optional private 9010; removed listeners absent; local ss proves no remote isolation/authentication.
+- verify-http (REASONED; docs, curl): Matched no_password fixture accepts supplied/empty/wrong passwords; fixed HTTPS requires correct password and returns 1.
+- verify-plaintext (REASONED; docs): Any HTTP status on 8123 proves reachability; HTTP 000 needs inventory and successful TLS controls.
+- verify-native (REASONED; docs): Native wrong password needs authentication error/nonzero exit; correct credentials return 1; transport failures are inconclusive.
+- verify-tables (REASONED; docs): Fixed reader reads populated events and rejects private_events; test allowed/disallowed origins with matched reachable controls.
+- verify-retirement (REASONED; docs): Fresh default login fails after retirement on native/HTTPS while same-origin sql_admin still succeeds.
+- verify-settings (REASONED; roles, docs): Reject unlocked override; inspect four limits and require successful SET ROLE NONE/DEFAULT with account profile retained.
+- verify-memory (REASONED; docs): Calibrated aggregation fails at lower memory limit while simple read succeeds; test concurrent user budget and timeout separately.
+- verify-quota (REASONED; docs): Fresh fixture accepts first two application reads and rejects the third; test restart reset and independent server counters.
+- verify-file (REASONED; docs): Isolate FILE privilege with existing fixture and constant prerequisites; missing-file/readonly errors prove no source denial.
+- verify-url (REASONED; docs): Approved HTTPS fixture succeeds and unlisted host gets allow-list rejection; other errors are inconclusive.
+- verify-engine (REASONED; docs): With engine enforcement enabled MergeTree succeeds and TinyLog gets engine-privilege denial; remove fixtures between runs.
+- verify-logs (REASONED; docs): Require new marker/login-failure records, locked logging, reader denial and admin/collector success with correlated provenance.
+- verify-retention (REASONED; docs): Inspect table TTLs and historical tables; expired records disappear while recent ones remain in isolated retention test.
+- verify-totp (REASONED; docs): Fixed XML human account rejects missing/invalid OTP and accepts password with fresh code; do not reuse positive code.
 <!-- version-basis:end -->
 
 With no `listen_host` configured, the pinned server code falls back to `::1` and `127.0.0.1`; the pinned base `config.xml` comments out all its listener examples. A separately pinned upstream `users.xml` defines `default` with an empty password, `<ip>::/0</ip>` networks and `access_management=1`. Together, a wildcard listener and this user configuration can expose a passwordless account on enabled plaintext interfaces. The official image instead copies a config.d override with `::` and `0.0.0.0` listeners. When the container gets no arguments or its first argument starts with `--`, its entrypoint writes a loopback-only `default` networks override only when `CLICKHOUSE_SKIP_USER_SETUP` is not `1`, no non-default `CLICKHOUSE_USER`, nonempty password (an existing `CLICKHOUSE_PASSWORD_FILE` replaces `CLICKHOUSE_PASSWORD`), or `CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT` with a nonempty value other than `0` requests user creation, and the processed `default` user matches the original. With another command, the entrypoint runs `exec "$@"` without user setup. If those conditions differ, inspect the effective listener and user configuration; the entrypoint can create a user with `::/0` networks or leave a customized `default` untouched. For other packages, images, or versions, inspect the effective merged configuration. Complete account and TLS setup before allowing remote access. The full administrator bootstrap needs the additional capabilities in step 2. [Server fallback](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/Server.cpp#L644-L652), [base configuration](https://raw.githubusercontent.com/ClickHouse/ClickHouse/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/programs/server/config.xml), [separately pinned user configuration](https://raw.githubusercontent.com/ClickHouse/ClickHouse/b40982f9416bb4bc2d423d7e75ec384e79494b99/programs/server/users.xml), [image override](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/docker_related_config.xml#L1-L5), [image copy](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/Dockerfile.ubuntu#L160-L168), [entrypoint](https://github.com/ClickHouse/ClickHouse/blob/9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6/docker/server/entrypoint.sh#L45-L270).

@@ -60,21 +60,28 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| exact-origins: Allow exact browser origins, illustrated by Access-Control-Allow-Origin: https://app.example.com; keep environment-specific lists in configuration instead of production localhost entries. | MDN CORS documentation unknown | REASONED |
-| wildcard-credentials: Browsers refuse wildcard Access-Control-Allow-Origin with credentials; the guide restricts wildcard use to public, unauthenticated, read-only resources. | MDN CORS documentation unknown | REASONED |
-| origin-reflection: Reflect only origins checked against an explicit allowlist; reflecting arbitrary Origin values permits hostile sites to read credentialed responses. | MDN CORS documentation unknown | REASONED |
-| authentication: CORS controls browsers rather than curl or other attackers, does not expose a port and does not replace endpoint authentication. | MDN CORS documentation unknown; Express cors middleware unknown | REASONED |
-| express-origins: Express cors uses origin: ['https://app.example.com'] as the allowed origin list. | Express cors middleware unknown | REASONED |
-| express-credentials: The Express example enables credentials with credentials: true. | Express cors middleware unknown | REASONED |
-| fastapi-origins: FastAPI adds CORSMiddleware with allow_origins restricted to https://app.example.com. | FastAPI CORSMiddleware unknown | REASONED |
-| fastapi-credentials: The FastAPI example enables allow_credentials=True. | FastAPI CORSMiddleware unknown | REASONED |
-| fastapi-methods: The FastAPI example allows only GET and POST through allow_methods. | FastAPI CORSMiddleware unknown | REASONED |
-| fastapi-headers: The FastAPI example allows Authorization and Content-Type through allow_headers. | FastAPI CORSMiddleware unknown | REASONED |
-| verify-hostile: The exposed API echoes https://evil.example in Access-Control-Allow-Origin; the fixed API omits that hostile origin. No deployed API or browser run is recorded. | MDN CORS documentation unknown; Express cors middleware unknown; FastAPI CORSMiddleware unknown; Fetch Standard credentials unknown | REASONED |
-| verify-allowed: The allowed-Origin probe should return the listed app origin, with Allow-Credentials only where the browser must send cookies, HTTP authentication or TLS client certificates; no actual response is recorded. | MDN CORS documentation unknown; Express cors middleware unknown; FastAPI CORSMiddleware unknown; Fetch Standard credentials unknown | REASONED |
-| credential-types: Browser credentials include cookies, HTTP authentication and TLS client certificates; Access-Control-Allow-Credentials: true is needed only where the browser must send credentials. | Fetch Standard credentials unknown; MDN CORS documentation unknown | REASONED |
+Components (recorded basis):
+
+- protocol: MDN CORS documentation, unknown
+- express: Express cors middleware, unknown
+- fastapi: FastAPI CORSMiddleware, unknown
+- fetch: Fetch Standard credentials, unknown
+
+Claims (full source mapping in the front matter):
+
+- exact-origins (REASONED; protocol): Allow exact browser origins, illustrated by Access-Control-Allow-Origin: https://app.example.com; keep environment-specific lists in configuration instead of production localhost entries.
+- wildcard-credentials (REASONED; protocol): Browsers refuse wildcard Access-Control-Allow-Origin with credentials; the guide restricts wildcard use to public, unauthenticated, read-only resources.
+- origin-reflection (REASONED; protocol): Reflect only origins checked against an explicit allowlist; reflecting arbitrary Origin values permits hostile sites to read credentialed responses.
+- authentication (REASONED; protocol, express): CORS controls browsers rather than curl or other attackers, does not expose a port and does not replace endpoint authentication.
+- express-origins (REASONED; express): Express cors uses origin: ['https://app.example.com'] as the allowed origin list.
+- express-credentials (REASONED; express): The Express example enables credentials with credentials: true.
+- fastapi-origins (REASONED; fastapi): FastAPI adds CORSMiddleware with allow_origins restricted to https://app.example.com.
+- fastapi-credentials (REASONED; fastapi): The FastAPI example enables allow_credentials=True.
+- fastapi-methods (REASONED; fastapi): The FastAPI example allows only GET and POST through allow_methods.
+- fastapi-headers (REASONED; fastapi): The FastAPI example allows Authorization and Content-Type through allow_headers.
+- verify-hostile (REASONED; protocol, express, fastapi, fetch): The exposed API echoes https://evil.example in Access-Control-Allow-Origin; the fixed API omits that hostile origin. No deployed API or browser run is recorded.
+- verify-allowed (REASONED; protocol, express, fastapi, fetch): The allowed-Origin probe should return the listed app origin, with Allow-Credentials only where the browser must send cookies, HTTP authentication or TLS client certificates; no actual response is recorded.
+- credential-types (REASONED; fetch, protocol): Browser credentials include cookies, HTTP authentication and TLS client certificates; Access-Control-Allow-Credentials: true is needed only where the browser must send credentials.
 <!-- version-basis:end -->
 
 CORS misconfiguration does not expose a port; it lets hostile websites use your users' browsers, cookies included, against your API. AI assistants reach for `Access-Control-Allow-Origin: *` the moment a browser console shows a CORS error; that is the wrong fix for any API that authenticates.

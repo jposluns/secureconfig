@@ -182,56 +182,71 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| strapi-bootstrap: No default admin password: privately register the first administrator before exposing /admin or management routes. | Strapi documentation (rolling) unknown | REASONED |
-| strapi-bind: Documented localhost differs from generated HOST=0.0.0.0; use host loopback or Docker 127.0.0.1:1337:1337 without binding container loopback. | Strapi documentation (rolling) unknown | REASONED |
-| strapi-mfa: Strapi admin has no native MFA; protect UI and backend management routes with MFA proxy or available SSO, closing local-login bypasses. | Strapi MFA announcement unknown; Strapi documentation (rolling) unknown | REASONED |
-| strapi-public: Content types are private by default; Public-role grants determine anonymous access and denied requests normally return 403. | Strapi documentation (rolling) unknown | REASONED |
-| strapi-files: Local Media Library files use unauthenticated static serving despite private content types; use access-controlled storage for confidential files. | Strapi documentation (rolling) unknown | REASONED |
-| strapi-signup: Disable unneeded POST /api/auth/local/register signups; v5.58.0 initially allows registration when advanced settings are absent; as this guide's assessment, an existing project's stored setting and other releases need separate verification; new users receive the configured Default role. | Strapi documentation (rolling) unknown; Strapi Users and Permissions source v5.58.0 | REASONED |
-| strapi-tokens: Review pre-generated Full access/Read-only Content API tokens, delete unused tokens and bound lifetimes; use Custom scopes when find/findOne is too broad. | Strapi documentation (rolling) unknown | REASONED |
-| strapi-secrets: Protect and rotate APP_KEYS, ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_TOKEN_SALT, JWT_SECRET and configured ENCRYPTION_KEY; salts are not bearer tokens. | Strapi documentation (rolling) unknown | REASONED |
-| strapi-graphql: Optional /graphql shadowCRUD generates operations; disable unnecessary apolloServer.introspection and landingPage without replacing resolver authorization. | Apollo Server documentation (rolling) unknown; Strapi documentation (rolling) unknown | REASONED |
-| apollo-default: Apollo introspection is enabled unless NODE_ENV=production. | Apollo Server documentation (rolling) unknown | REASONED |
-| strapi-tls: Front Strapi with TLS and authentication; the guide records no native TLS termination. | Strapi documentation (rolling) unknown | REASONED |
-| directus-bootstrap: ADMIN_EMAIL/PASSWORD and optional ADMIN_TOKEN bootstrap admin access; 12.0.2 quickstart also allows browser onboarding, so claim the instance privately. | Directus documentation unknown; Directus quickstart 12.0.2 | REASONED |
-| directus-secret: Set a unique protected SECRET; omission generates a random value that does not persist consistently across restarts or replicas. | Directus documentation unknown | REASONED |
-| directus-cookies: SESSION_COOKIE_SECURE and REFRESH_TOKEN_COOKIE_SECURE default false; set both true behind HTTPS. | Directus documentation unknown | REASONED |
-| directus-token: ADMIN_TOKEN is an unexpiring admin credential independent of interactive MFA; omit unless needed and prefer scoped machine credentials. | Directus documentation unknown | REASONED |
-| directus-mfa: Require two-factor authentication for Directus administrator accounts. | Directus documentation unknown | REASONED |
-| directus-public: Public permissions are off by default; audit actual collection and /assets grants, including separate upload/import/update/delete rights and storage bypasses. | Directus documentation unknown | REASONED |
-| verify-directus: The paired private-collection request must return the known canary to its authorized identity and 403 with FORBIDDEN to the anonymous caller. | Directus documentation unknown | REASONED |
-| directus-import: IMPORT_IP_DENY_LIST defaults to 0.0.0.0,169.254.169.254; this import-specific setting does not establish Flow or extension egress protection. | Directus documentation unknown | REASONED |
-| directus-signup: Registration is disabled by default; empty 204 responses do not establish rejection or account creation. | Directus documentation unknown | REASONED |
-| directus-introspection: GRAPHQL_INTROSPECTION defaults true; disable unnecessary discovery and apply the same roles and policies as REST. | Directus documentation unknown | REASONED |
-| directus-bind: At v12.4.1 HOST defaults 0.0.0.0 and PORT 8055; UNIX_SOCKET_PATH replaces both. Use private binding or loopback publication. | Directus listener source v12.4.1 | REASONED |
-| directus-studio: Root redirects to /admin; SERVE_APP hides Studio without replacing API authorization. Terminate TLS in front. | Directus documentation unknown | REASONED |
-| hasura-admin: An unset HASURA_GRAPHQL_ADMIN_SECRET permits full admin rights; keep the configured bearer secret server-side and use scoped JWT/webhook client auth. | Hasura GraphQL Engine documentation unknown | REASONED |
-| hasura-bind: HASURA_GRAPHQL_SERVER_HOST defaults * on 8080; bind privately and terminate TLS in front. | Hasura GraphQL Engine documentation unknown | REASONED |
-| hasura-console: Binary console default is false, but 2.46.0 quickstart enables / and /console; disable console where unnecessary. | Hasura GraphQL Engine documentation unknown; Hasura quickstart image 2.46.0 | REASONED |
-| hasura-dev: Keep HASURA_GRAPHQL_DEV_MODE=false in production. | Hasura GraphQL Engine documentation unknown | REASONED |
-| hasura-agent: Quickstart publishes data-connector 8081 and literal Postgres credentials; isolate the additional listener and replace credentials. | Hasura quickstart image 2.46.0 | REASONED |
-| hasura-apis: ENABLED_APIS defaults metadata, graphql, pgdump, config; narrow unused APIs and protect them with the admin secret. | Hasura GraphQL Engine documentation unknown | REASONED |
-| hasura-anon: Leave UNAUTHORIZED_ROLE unset unless deliberately granting anonymous access. | Hasura GraphQL Engine documentation unknown | REASONED |
-| hasura-introspection: Introspection is enabled by default; its documented per-role disabling control is self-hosted Enterprise, not assumed available in Community. | Hasura GraphQL Engine documentation unknown | REASONED |
-| postgrest-anon: Unset db-anon-role refuses missing JWTs with 401 PGRST302; intended anonymous access needs a dedicated minimal NOLOGIN role. | PostgREST documentation unknown | REASONED |
-| postgrest-invalid: Malformed/bad-signature JWTs return 401 PGRST301; expired or invalid-claims JWTs return 401 PGRST303 instead of anonymous fallback. | PostgREST documentation unknown | REASONED |
-| postgrest-grants: GRANT/REVOKE govern API access; PUBLIC function EXECUTE, DEFINER functions and owner-privileged views can widen it. | PostgREST documentation unknown | REASONED |
-| postgrest-schema: db-schemas defaults public; expose a deliberate API schema and note that root OpenAPI output follows the requesting role privileges. | PostgREST documentation unknown | REASONED |
-| postgrest-secret: Set random jwt-secret of at least 32 characters; a supplied token with no secret configured fails with 500 PGRST300. | PostgREST documentation unknown | REASONED |
-| postgrest-bind: At v16.4 server-host defaults !4 on 3000; optional admin server inherits that host unless overridden. Isolate both and terminate TLS in front. | PostgREST documentation unknown; PostgREST listener source v16.4 | REASONED |
-| egress: Restrict webhook, Flow, trigger, remote-schema and database-function egress after DNS resolution and redirects; IMPORT_IP_DENY_LIST covers imports only. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
-| database-boundary: Protect database credentials, use dedicated minimal database roles, private listeners and verified encrypted remote database transport. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
-| human-machine-auth: Use MFA at human administrative boundaries, with separately scoped, expiring and revocable machine credentials. | Strapi MFA announcement unknown; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
-| verify-canary: Pair authorized canary retrieval with identical anonymous requests; empty/missing/unrelated responses and transport errors are inconclusive. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
-| verify-hasura: Hasura defaults to HTTP 200 even for auth errors; inspect admin-secret-required JSON. PRESERVE_401_ERRORS requires Community 2.48.0, beyond quickstart 2.46.0. | Hasura GraphQL Engine documentation unknown; Hasura authentication-status minimum 2.48.0; Hasura quickstart image 2.46.0 | REASONED |
-| verify-retirement: Repeat the same successful canary with retired credentials; require authentication failure, not permission/proxy errors. Bootstrap ADMIN_TOKEN edits do not rotate existing users. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
-| verify-password: Fresh admin login must accept operator-controlled credentials and reject actual old/copied passwords; missing OTP or lockout does not prove retirement. | Directus documentation unknown; Strapi documentation (rolling) unknown | REASONED |
-| verify-console: Enabled Hasura / and /console serve HTML; disabled engine returns JSON not-found. Proxy 404 or a failed positive control is inconclusive. | Hasura GraphQL Engine documentation unknown | REASONED |
-| verify-introspection: Require an introspection-specific rejection while an ordinary permitted GraphQL query still succeeds. | Apollo Server documentation (rolling) unknown; Directus documentation unknown; Hasura GraphQL Engine documentation unknown; Strapi documentation (rolling) unknown | REASONED |
-| verify-other-controls: Test writes, registration, private files, MFA and outbound fetches separately with authorized/unauthorized fixtures and persisted effects. | Directus documentation unknown; Hasura GraphQL Engine documentation unknown; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
-| verify-isolation: Inventory host/container listeners and mappings; probe every direct IPv4/IPv6 origin with an allowed control. Any HTTP response proves reachability; failures alone do not prove isolation. | Directus listener source v12.4.1; Hasura GraphQL Engine documentation unknown; PostgREST listener source v16.4; PostgREST documentation unknown; Strapi documentation (rolling) unknown | REASONED |
+Components (recorded basis):
+
+- strapi: Strapi MFA announcement, unknown
+- directus: Directus documentation, unknown
+- directus-bind: Directus listener source, v12.4.1
+- directus-start: Directus quickstart, 12.0.2
+- hasura: Hasura GraphQL Engine documentation, unknown
+- hasura-start: Hasura quickstart image, 2.46.0
+- hasura-status: Hasura authentication-status minimum, 2.48.0
+- postgrest: PostgREST documentation, unknown
+- postgrest-bind: PostgREST listener source, v16.4
+- apollo: Apollo Server documentation (rolling), unknown
+- strapi-signup-source: Strapi Users and Permissions source, v5.58.0
+- strapi-rolling: Strapi documentation (rolling), unknown
+
+Claims (full source mapping in the front matter):
+
+- strapi-bootstrap (REASONED; strapi-rolling): No default admin password: privately register the first administrator before exposing /admin or management routes.
+- strapi-bind (REASONED; strapi-rolling): Documented localhost differs from generated HOST=0.0.0.0; use host loopback or Docker 127.0.0.1:1337:1337 without binding container loopback.
+- strapi-mfa (REASONED; strapi, strapi-rolling): Strapi admin has no native MFA; protect UI and backend management routes with MFA proxy or available SSO, closing local-login bypasses.
+- strapi-public (REASONED; strapi-rolling): Content types are private by default; Public-role grants determine anonymous access and denied requests normally return 403.
+- strapi-files (REASONED; strapi-rolling): Local Media Library files use unauthenticated static serving despite private content types; use access-controlled storage for confidential files.
+- strapi-signup (REASONED; strapi-rolling, strapi-signup-source): Disable unneeded POST /api/auth/local/register signups; v5.58.0 initially allows registration when advanced settings are absent; as this guide's assessment, an existing project's stored setting and other releases need separate verification; new users receive the configured Default role.
+- strapi-tokens (REASONED; strapi-rolling): Review pre-generated Full access/Read-only Content API tokens, delete unused tokens and bound lifetimes; use Custom scopes when find/findOne is too broad.
+- strapi-secrets (REASONED; strapi-rolling): Protect and rotate APP_KEYS, ADMIN_JWT_SECRET, API_TOKEN_SALT, TRANSFER_TOKEN_SALT, JWT_SECRET and configured ENCRYPTION_KEY; salts are not bearer tokens.
+- strapi-graphql (REASONED; apollo, strapi-rolling): Optional /graphql shadowCRUD generates operations; disable unnecessary apolloServer.introspection and landingPage without replacing resolver authorization.
+- apollo-default (REASONED; apollo): Apollo introspection is enabled unless NODE_ENV=production.
+- strapi-tls (REASONED; strapi-rolling): Front Strapi with TLS and authentication; the guide records no native TLS termination.
+- directus-bootstrap (REASONED; directus, directus-start): ADMIN_EMAIL/PASSWORD and optional ADMIN_TOKEN bootstrap admin access; 12.0.2 quickstart also allows browser onboarding, so claim the instance privately.
+- directus-secret (REASONED; directus): Set a unique protected SECRET; omission generates a random value that does not persist consistently across restarts or replicas.
+- directus-cookies (REASONED; directus): SESSION_COOKIE_SECURE and REFRESH_TOKEN_COOKIE_SECURE default false; set both true behind HTTPS.
+- directus-token (REASONED; directus): ADMIN_TOKEN is an unexpiring admin credential independent of interactive MFA; omit unless needed and prefer scoped machine credentials.
+- directus-mfa (REASONED; directus): Require two-factor authentication for Directus administrator accounts.
+- directus-public (REASONED; directus): Public permissions are off by default; audit actual collection and /assets grants, including separate upload/import/update/delete rights and storage bypasses.
+- verify-directus (REASONED; directus): The paired private-collection request must return the known canary to its authorized identity and 403 with FORBIDDEN to the anonymous caller.
+- directus-import (REASONED; directus): IMPORT_IP_DENY_LIST defaults to 0.0.0.0,169.254.169.254; this import-specific setting does not establish Flow or extension egress protection.
+- directus-signup (REASONED; directus): Registration is disabled by default; empty 204 responses do not establish rejection or account creation.
+- directus-introspection (REASONED; directus): GRAPHQL_INTROSPECTION defaults true; disable unnecessary discovery and apply the same roles and policies as REST.
+- directus-bind (REASONED; directus-bind): At v12.4.1 HOST defaults 0.0.0.0 and PORT 8055; UNIX_SOCKET_PATH replaces both. Use private binding or loopback publication.
+- directus-studio (REASONED; directus): Root redirects to /admin; SERVE_APP hides Studio without replacing API authorization. Terminate TLS in front.
+- hasura-admin (REASONED; hasura): An unset HASURA_GRAPHQL_ADMIN_SECRET permits full admin rights; keep the configured bearer secret server-side and use scoped JWT/webhook client auth.
+- hasura-bind (REASONED; hasura): HASURA_GRAPHQL_SERVER_HOST defaults * on 8080; bind privately and terminate TLS in front.
+- hasura-console (REASONED; hasura, hasura-start): Binary console default is false, but 2.46.0 quickstart enables / and /console; disable console where unnecessary.
+- hasura-dev (REASONED; hasura): Keep HASURA_GRAPHQL_DEV_MODE=false in production.
+- hasura-agent (REASONED; hasura-start): Quickstart publishes data-connector 8081 and literal Postgres credentials; isolate the additional listener and replace credentials.
+- hasura-apis (REASONED; hasura): ENABLED_APIS defaults metadata, graphql, pgdump, config; narrow unused APIs and protect them with the admin secret.
+- hasura-anon (REASONED; hasura): Leave UNAUTHORIZED_ROLE unset unless deliberately granting anonymous access.
+- hasura-introspection (REASONED; hasura): Introspection is enabled by default; its documented per-role disabling control is self-hosted Enterprise, not assumed available in Community.
+- postgrest-anon (REASONED; postgrest): Unset db-anon-role refuses missing JWTs with 401 PGRST302; intended anonymous access needs a dedicated minimal NOLOGIN role.
+- postgrest-invalid (REASONED; postgrest): Malformed/bad-signature JWTs return 401 PGRST301; expired or invalid-claims JWTs return 401 PGRST303 instead of anonymous fallback.
+- postgrest-grants (REASONED; postgrest): GRANT/REVOKE govern API access; PUBLIC function EXECUTE, DEFINER functions and owner-privileged views can widen it.
+- postgrest-schema (REASONED; postgrest): db-schemas defaults public; expose a deliberate API schema and note that root OpenAPI output follows the requesting role privileges.
+- postgrest-secret (REASONED; postgrest): Set random jwt-secret of at least 32 characters; a supplied token with no secret configured fails with 500 PGRST300.
+- postgrest-bind (REASONED; postgrest, postgrest-bind): At v16.4 server-host defaults !4 on 3000; optional admin server inherits that host unless overridden. Isolate both and terminate TLS in front.
+- egress (REASONED; directus, hasura, postgrest, strapi-rolling): Restrict webhook, Flow, trigger, remote-schema and database-function egress after DNS resolution and redirects; IMPORT_IP_DENY_LIST covers imports only.
+- database-boundary (REASONED; directus, hasura, postgrest, strapi-rolling): Protect database credentials, use dedicated minimal database roles, private listeners and verified encrypted remote database transport.
+- human-machine-auth (REASONED; strapi, directus, hasura, postgrest, strapi-rolling): Use MFA at human administrative boundaries, with separately scoped, expiring and revocable machine credentials.
+- verify-canary (REASONED; directus, hasura, postgrest, strapi-rolling): Pair authorized canary retrieval with identical anonymous requests; empty/missing/unrelated responses and transport errors are inconclusive.
+- verify-hasura (REASONED; hasura, hasura-status, hasura-start): Hasura defaults to HTTP 200 even for auth errors; inspect admin-secret-required JSON. PRESERVE_401_ERRORS requires Community 2.48.0, beyond quickstart 2.46.0.
+- verify-retirement (REASONED; directus, hasura, postgrest, strapi-rolling): Repeat the same successful canary with retired credentials; require authentication failure, not permission/proxy errors. Bootstrap ADMIN_TOKEN edits do not rotate existing users.
+- verify-password (REASONED; directus, strapi-rolling): Fresh admin login must accept operator-controlled credentials and reject actual old/copied passwords; missing OTP or lockout does not prove retirement.
+- verify-console (REASONED; hasura): Enabled Hasura / and /console serve HTML; disabled engine returns JSON not-found. Proxy 404 or a failed positive control is inconclusive.
+- verify-introspection (REASONED; apollo, directus, hasura, strapi-rolling): Require an introspection-specific rejection while an ordinary permitted GraphQL query still succeeds.
+- verify-other-controls (REASONED; directus, hasura, postgrest, strapi-rolling): Test writes, registration, private files, MFA and outbound fetches separately with authorized/unauthorized fixtures and persisted effects.
+- verify-isolation (REASONED; directus-bind, hasura, postgrest-bind, postgrest, strapi-rolling): Inventory host/container listeners and mappings; probe every direct IPv4/IPv6 origin with an allowed control. Any HTTP response proves reachability; failures alone do not prove isolation.
 <!-- version-basis:end -->
 
 These tools turn a database or a schema into a ready-made API with little or no code, which is

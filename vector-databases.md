@@ -407,63 +407,89 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| private-publication: Bind privately and publish only a TLS proxy, tunnel or tailnet; Docker loopback mapping avoids default wildcard publication. | Docker documentation unknown | REASONED |
-| qdrant-ports: Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer. | Qdrant security documentation unknown | REASONED |
-| qdrant-bind: Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order. | Qdrant source v1.19.1 | REASONED |
-| qdrant-image: Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments. | Qdrant source v1.19.1 | REASONED |
-| qdrant-client-auth: Self-deployed Qdrant defaults insecure; api_key and read_only_api_key gate client REST/gRPC through api-key or Bearer headers, with QDRANT__SERVICE__ environment equivalents. | Qdrant security documentation unknown | REASONED |
-| qdrant-client-tls: service.enable_tls with tls.cert/key enables client TLS; keys without TLS are insecure. | Qdrant security documentation unknown | REASONED |
-| qdrant-peer-auth: Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, off by default and deferred through rolling upgrades; retain peer-only network restriction. | Qdrant security documentation unknown | REASONED |
-| qdrant-peer-tls: cluster.p2p.enable_tls is separate from client TLS and needs a provisioned tls.ca_cert; compiled default path is not a substitute for provisioning. | Qdrant security documentation unknown | REASONED |
-| qdrant-rotation: alt_api_key accepts an additional client key from v1.17.0; rotate peer-by-peer, with internal use only under enforce_internal_auth from v1.18.0. | Qdrant security documentation unknown | REASONED |
-| weaviate-precedence: File, environment then flags override settings; environment reapplies gRPC/Raft port defaults when unset/empty and gossip/API defaults when unset; empty cluster port variables fail startup. | Weaviate source v1.39.6 | REASONED |
-| weaviate-rest: Default scheme is HTTPS requiring certificates or startup fails; TLS host falls back to host and TLS port is random. HTTP host defaults localhost unless HOST is exported empty; port defaults random; unix uses socket-path. | Weaviate source v1.39.6; go-flags v1.6.1 | REASONED |
-| weaviate-image: Official image selects HTTP on 0.0.0.0:8080; documented proxy forwards both 8080 and gRPC 50051 with TLS at the proxy. | Weaviate source v1.39.6; Weaviate documentation unknown | REASONED |
-| weaviate-grpc: gRPC always starts on a wildcard address with default port 50051 (configurable via GRPC_PORT) and ignores REST host; keep it unpublished except through the intended proxy. | Weaviate source v1.39.6 | REASONED |
-| weaviate-debug: Debug HTTP defaults wildcard 6060 unless GO_PROFILING_DISABLE is true; debug endpoints return 404 until enabled. | Weaviate source v1.39.6 | REASONED |
-| weaviate-metrics: Enabled Prometheus listener exposes metrics and tenant-activity on wildcard, default 2112 when enabled through environment; admit only scraper traffic. | Weaviate source v1.39.6 | REASONED |
-| weaviate-gossip: Even one node opens TCP/UDP gossip 7946 at CLUSTER_BIND_ADDR, defaulting to wildcard when unset/empty; admit only peers. | Weaviate source v1.39.6; memberlist (Weaviate v1.39.6 go.mod) v0.5.4 | REASONED |
-| weaviate-cluster-api: Internal cluster API binds wildcard 7947, default gossip port plus one, independently of REST host. | Weaviate source v1.39.6 | REASONED |
-| weaviate-raft: Raft 8300 and RPC 8301 bind nonempty CLUSTER_BIND_ADDR, then CLUSTER_ADVERTISE_ADDR, then memberlist private advertise address; keep peer-only. | Weaviate source v1.39.6; memberlist (Weaviate v1.39.6 go.mod) v0.5.4 | REASONED |
-| weaviate-auth: Anonymous access defaults true; disable it and enable API keys with positional key-to-user mapping. | Weaviate documentation unknown | REASONED |
-| weaviate-rbac: Enable RBAC, root only the admin, and scope app roles to collections; RBAC is stated generally available from v1.29 and cannot combine with admin-list authorization. | Weaviate documentation unknown | REASONED |
-| weaviate-oidc: OIDC issuer/client settings delegate human authentication to the IdP, where MFA can be enforced; authentication alone is not authorization. | Weaviate documentation unknown | REASONED |
-| milvus-config: Compose mounts only data; mount user.yaml and TLS files read-only under /milvus, accounting for MILVUSCONF and milvus.yaml/_test.yaml/default.yaml/user.yaml precedence. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-env: Environment formatter lowercases, strips leading milvus. and removes slash/underscore/dot; use COMMON_SECURITY_* and TLS_* names, remove conflicting sources and recreate changed mounts/environment. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-user: v3.0.2 Ubuntu image runs as milvus; make config/certificates readable and restrict the private key to the service and trusted administrators. | Milvus v3.0.2 | REASONED |
-| milvus-auth: Enable common.security.authorizationEnabled, replace built-in root/Milvus and create a per-app user; proxy auth does not protect internal services. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-tls: tls server/key/CA paths and common.security.tlsMode 1 enable server TLS; mode 2 requires client certificates; enable authentication independently. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-client: External client gRPC uses 19530; publish only that port privately, apart from the optional loopback management mapping. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-internal: Internal proxy 19529, query 21123, data 21124, mix coordinator 22125 and streaming 22222 bind wildcard; node ports can fall back randomly and advertised ip is not a bind. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-internal-auth: Internal routing interceptors pass calls without metadata and do not authenticate Search/Query; standalone runs all five components. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-internal-tls: internaltlsEnabled defaults off; internal TLS is one-way and failed certificate/key loading logs a warning then serves plaintext. | Milvus v2.6.24; Milvus v3.0.2; grpc-go (Milvus v2.6.24 go.mod) v1.82.1; grpc-go (Milvus v3.0.2 go.mod) v1.82.2; Go standard library go1.25.8; Go standard library go1.26.6 | REASONED |
-| milvus-isolation: Use a dedicated network, no host/shared namespace, and default-deny rules admitting peers by source including random fallback ports; exclude untrusted workloads/users from component hosts. | Docker documentation unknown; Kubernetes documentation unknown | REASONED |
-| milvus-minio-ports: Bundled MinIO publishes wildcard 9000 API and 9001 console while etcd remains internal; restrict both and replace default credentials. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-storage-credentials: Pinned Compose selects MinIO RELEASE.2024-05-28T17-19-04Z with MINIO_ACCESS_KEY/SECRET_KEY=minioadmin; Milvus uses MINIO_ACCESS_KEY_ID/SECRET_ACCESS_KEY; rotate matching pairs together. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-env-files: Use protected untracked env-files, delete overriding Compose environment credential entries, retain ETCD_ENDPOINTS/MINIO_ADDRESS/MINIO_REGION and recreate both services; container environment remains inspectable. | Docker documentation unknown | REASONED |
-| milvus-compose-images: Compose at v2.6.24 and v3.0.2 selects older Milvus images v2.6.23 and v3.0.1; explicitly choose and recheck the intended image. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-management: Management HTTP defaults wildcard 9091 with no bind-address control; METRICS_PORT parse failures fall back, 0 chooses random and other out-of-range values fail listen without stopping Milvus. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-control: Management routes bypass proxy authorization: log-level changes, process-role stop, GC/balancing/node controls and transfers remain exposed even with WebUI disabled. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-key-backup: Management encryption-zone backup returns the plugin backup for eligible databases; v3.0.2 also adds queued-read clearing and path-supplied backfill commit. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-coordinator: Activated mix coordinator adds mutable configuration and WAL changes alongside GC, balancing, suspension and transfer controls. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-profiling: proxy.http.enablePprof defaults true; disabling profiling omits pprof but leaves control routes registered. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-eventlog: First successful eventlog request opens an unauthenticated, non-TLS wildcard gRPC listener on a random port; repeat inventory after requests. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| milvus-health: Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| chroma-bind: Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000. | Chroma source 1.5.9 | REASONED |
-| chroma-auth: Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting. | Chroma migration documentation v1.0.0; Chroma source 1.5.9 | REASONED |
-| pgvector: pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles. | pgvector source v0.8.2 | REASONED |
-| pgvector-rls: Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k. | PostgreSQL documentation unknown | REASONED |
-| hosted-mfa: Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity management solution on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it. | Qdrant Cloud documentation unknown; Pinecone organization documentation unknown; Weaviate documentation unknown | REASONED |
-| verify-inventory: Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure. | Qdrant security documentation unknown; Docker documentation unknown | REASONED |
-| verify-peer: Probe real backend 6333/6334/6335 from non-peers; require connection failure with filtering evidence and a positive peer control for 6335; auth/TLS rejection is still reachability. | Qdrant security documentation unknown; curl documentation (rolling) unknown | REASONED |
-| verify-curl: exit 3/6 is invalid input; 7 or a five-second 28 needs corroboration; nonzero HTTP, 52/56 or a twenty-second 28 indicates reachability, including HTTP 000 cases. | curl documentation (rolling) unknown | REASONED |
-| verify-qdrant-auth: Frontend collections check expects anonymous 401/403 and keyed 200 over verified TLS; both can pass while peer port 6335 is exposed. | Qdrant security documentation unknown | REASONED |
-| verify-fronting: Weaviate schema rejects anonymous access and allows a valid key; Chroma requires fronting denial and authorized success because it has no native auth. | Weaviate documentation unknown; Chroma migration documentation v1.0.0 | REASONED |
-| verify-milvus-auth: MilvusClient without a token must fail after authorization is enabled, while the same operation with the application identity succeeds. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
-| verify-milvus-management: Outside-admin reachability fails; private control needs healthy Compose status and the milvus-owned listener, since healthz can pass before registration and bind failure is nonfatal. | Milvus v2.6.24; Milvus v3.0.2; Docker documentation unknown | REASONED |
-| milvus-kubernetes-service: Helm chart 5.0.30 and Operator v1.3.11 place metrics 9091 on the client Service, with a declared ClusterIP default; the port list includes both ports whatever the Service type unless Helm metrics.enabled is false. Helm removes only the Service metrics port; Operator disableMetric skips PodMonitor reconciliation, not the Service port. Chart appVersion 3.0.1 is separate from the audited Milvus versions. | Milvus Helm chart 5.0.30; Milvus Operator v1.3.11 | REASONED |
+Components (recorded basis):
+
+- q: Qdrant source, v1.19.1
+- qd: Qdrant security documentation, unknown
+- w: Weaviate source, v1.39.6
+- wd: Weaviate documentation, unknown
+- m2: Milvus, v2.6.24
+- m3: Milvus, v3.0.2
+- chroma: Chroma source, 1.5.9
+- pc: Pinecone organization documentation, unknown
+- qc: Qdrant Cloud documentation, unknown
+- cd: Chroma migration documentation, v1.0.0
+- pg: PostgreSQL documentation, unknown
+- docker: Docker documentation, unknown
+- k8s: Kubernetes documentation, unknown
+- grpc2: grpc-go (Milvus v2.6.24 go.mod), v1.82.1
+- grpc3: grpc-go (Milvus v3.0.2 go.mod), v1.82.2
+- ml: memberlist (Weaviate v1.39.6 go.mod), v0.5.4
+- goflags: go-flags, v1.6.1
+- gostd2: Go standard library, go1.25.8
+- gostd3: Go standard library, go1.26.6
+- curl-docs: curl documentation (rolling), unknown
+- milvus-helm: Milvus Helm chart, 5.0.30
+- milvus-operator: Milvus Operator, v1.3.11
+- pgvector-source: pgvector source, v0.8.2
+
+Claims (full source mapping in the front matter):
+
+- private-publication (REASONED; docker): Bind privately and publish only a TLS proxy, tunnel or tailnet; Docker loopback mapping avoids default wildcard publication.
+- qdrant-ports (REASONED; qd): Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer.
+- qdrant-bind (REASONED; q): Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order.
+- qdrant-image (REASONED; q): Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments.
+- qdrant-client-auth (REASONED; qd): Self-deployed Qdrant defaults insecure; api_key and read_only_api_key gate client REST/gRPC through api-key or Bearer headers, with QDRANT__SERVICE__ environment equivalents.
+- qdrant-client-tls (REASONED; qd): service.enable_tls with tls.cert/key enables client TLS; keys without TLS are insecure.
+- qdrant-peer-auth (REASONED; qd): Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, off by default and deferred through rolling upgrades; retain peer-only network restriction.
+- qdrant-peer-tls (REASONED; qd): cluster.p2p.enable_tls is separate from client TLS and needs a provisioned tls.ca_cert; compiled default path is not a substitute for provisioning.
+- qdrant-rotation (REASONED; qd): alt_api_key accepts an additional client key from v1.17.0; rotate peer-by-peer, with internal use only under enforce_internal_auth from v1.18.0.
+- weaviate-precedence (REASONED; w): File, environment then flags override settings; environment reapplies gRPC/Raft port defaults when unset/empty and gossip/API defaults when unset; empty cluster port variables fail startup.
+- weaviate-rest (REASONED; w, goflags): Default scheme is HTTPS requiring certificates or startup fails; TLS host falls back to host and TLS port is random. HTTP host defaults localhost unless HOST is exported empty; port defaults random; unix uses socket-path.
+- weaviate-image (REASONED; w, wd): Official image selects HTTP on 0.0.0.0:8080; documented proxy forwards both 8080 and gRPC 50051 with TLS at the proxy.
+- weaviate-grpc (REASONED; w): gRPC always starts on a wildcard address with default port 50051 (configurable via GRPC_PORT) and ignores REST host; keep it unpublished except through the intended proxy.
+- weaviate-debug (REASONED; w): Debug HTTP defaults wildcard 6060 unless GO_PROFILING_DISABLE is true; debug endpoints return 404 until enabled.
+- weaviate-metrics (REASONED; w): Enabled Prometheus listener exposes metrics and tenant-activity on wildcard, default 2112 when enabled through environment; admit only scraper traffic.
+- weaviate-gossip (REASONED; w, ml): Even one node opens TCP/UDP gossip 7946 at CLUSTER_BIND_ADDR, defaulting to wildcard when unset/empty; admit only peers.
+- weaviate-cluster-api (REASONED; w): Internal cluster API binds wildcard 7947, default gossip port plus one, independently of REST host.
+- weaviate-raft (REASONED; w, ml): Raft 8300 and RPC 8301 bind nonempty CLUSTER_BIND_ADDR, then CLUSTER_ADVERTISE_ADDR, then memberlist private advertise address; keep peer-only.
+- weaviate-auth (REASONED; wd): Anonymous access defaults true; disable it and enable API keys with positional key-to-user mapping.
+- weaviate-rbac (REASONED; wd): Enable RBAC, root only the admin, and scope app roles to collections; RBAC is stated generally available from v1.29 and cannot combine with admin-list authorization.
+- weaviate-oidc (REASONED; wd): OIDC issuer/client settings delegate human authentication to the IdP, where MFA can be enforced; authentication alone is not authorization.
+- milvus-config (REASONED; m2, m3): Compose mounts only data; mount user.yaml and TLS files read-only under /milvus, accounting for MILVUSCONF and milvus.yaml/_test.yaml/default.yaml/user.yaml precedence.
+- milvus-env (REASONED; m2, m3): Environment formatter lowercases, strips leading milvus. and removes slash/underscore/dot; use COMMON_SECURITY_* and TLS_* names, remove conflicting sources and recreate changed mounts/environment.
+- milvus-user (REASONED; m3): v3.0.2 Ubuntu image runs as milvus; make config/certificates readable and restrict the private key to the service and trusted administrators.
+- milvus-auth (REASONED; m2, m3): Enable common.security.authorizationEnabled, replace built-in root/Milvus and create a per-app user; proxy auth does not protect internal services.
+- milvus-tls (REASONED; m2, m3): tls server/key/CA paths and common.security.tlsMode 1 enable server TLS; mode 2 requires client certificates; enable authentication independently.
+- milvus-client (REASONED; m2, m3): External client gRPC uses 19530; publish only that port privately, apart from the optional loopback management mapping.
+- milvus-internal (REASONED; m2, m3): Internal proxy 19529, query 21123, data 21124, mix coordinator 22125 and streaming 22222 bind wildcard; node ports can fall back randomly and advertised ip is not a bind.
+- milvus-internal-auth (REASONED; m2, m3): Internal routing interceptors pass calls without metadata and do not authenticate Search/Query; standalone runs all five components.
+- milvus-internal-tls (REASONED; m2, m3, grpc2, grpc3, gostd2, gostd3): internaltlsEnabled defaults off; internal TLS is one-way and failed certificate/key loading logs a warning then serves plaintext.
+- milvus-isolation (REASONED; docker, k8s): Use a dedicated network, no host/shared namespace, and default-deny rules admitting peers by source including random fallback ports; exclude untrusted workloads/users from component hosts.
+- milvus-minio-ports (REASONED; m2, m3): Bundled MinIO publishes wildcard 9000 API and 9001 console while etcd remains internal; restrict both and replace default credentials.
+- milvus-storage-credentials (REASONED; m2, m3): Pinned Compose selects MinIO RELEASE.2024-05-28T17-19-04Z with MINIO_ACCESS_KEY/SECRET_KEY=minioadmin; Milvus uses MINIO_ACCESS_KEY_ID/SECRET_ACCESS_KEY; rotate matching pairs together.
+- milvus-env-files (REASONED; docker): Use protected untracked env-files, delete overriding Compose environment credential entries, retain ETCD_ENDPOINTS/MINIO_ADDRESS/MINIO_REGION and recreate both services; container environment remains inspectable.
+- milvus-compose-images (REASONED; m2, m3): Compose at v2.6.24 and v3.0.2 selects older Milvus images v2.6.23 and v3.0.1; explicitly choose and recheck the intended image.
+- milvus-management (REASONED; m2, m3): Management HTTP defaults wildcard 9091 with no bind-address control; METRICS_PORT parse failures fall back, 0 chooses random and other out-of-range values fail listen without stopping Milvus.
+- milvus-control (REASONED; m2, m3): Management routes bypass proxy authorization: log-level changes, process-role stop, GC/balancing/node controls and transfers remain exposed even with WebUI disabled.
+- milvus-key-backup (REASONED; m2, m3): Management encryption-zone backup returns the plugin backup for eligible databases; v3.0.2 also adds queued-read clearing and path-supplied backfill commit.
+- milvus-coordinator (REASONED; m2, m3): Activated mix coordinator adds mutable configuration and WAL changes alongside GC, balancing, suspension and transfer controls.
+- milvus-profiling (REASONED; m2, m3): proxy.http.enablePprof defaults true; disabling profiling omits pprof but leaves control routes registered.
+- milvus-eventlog (REASONED; m2, m3): First successful eventlog request opens an unauthenticated, non-TLS wildcard gRPC listener on a random port; repeat inventory after requests.
+- milvus-health (REASONED; m2, m3): Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings.
+- chroma-bind (REASONED; chroma): Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000.
+- chroma-auth (REASONED; cd, chroma): Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting.
+- pgvector (REASONED; pgvector-source): pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.
+- pgvector-rls (REASONED; pg): Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k.
+- hosted-mfa (REASONED; qc, pc, wd): Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity management solution on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it.
+- verify-inventory (REASONED; qd, docker): Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure.
+- verify-peer (REASONED; qd, curl-docs): Probe real backend 6333/6334/6335 from non-peers; require connection failure with filtering evidence and a positive peer control for 6335; auth/TLS rejection is still reachability.
+- verify-curl (REASONED; curl-docs): exit 3/6 is invalid input; 7 or a five-second 28 needs corroboration; nonzero HTTP, 52/56 or a twenty-second 28 indicates reachability, including HTTP 000 cases.
+- verify-qdrant-auth (REASONED; qd): Frontend collections check expects anonymous 401/403 and keyed 200 over verified TLS; both can pass while peer port 6335 is exposed.
+- verify-fronting (REASONED; wd, cd): Weaviate schema rejects anonymous access and allows a valid key; Chroma requires fronting denial and authorized success because it has no native auth.
+- verify-milvus-auth (REASONED; m2, m3): MilvusClient without a token must fail after authorization is enabled, while the same operation with the application identity succeeds.
+- verify-milvus-management (REASONED; m2, m3, docker): Outside-admin reachability fails; private control needs healthy Compose status and the milvus-owned listener, since healthz can pass before registration and bind failure is nonfatal.
+- milvus-kubernetes-service (REASONED; milvus-helm, milvus-operator): Helm chart 5.0.30 and Operator v1.3.11 place metrics 9091 on the client Service, with a declared ClusterIP default; the port list includes both ports whatever the Service type unless Helm metrics.enabled is false. Helm removes only the Service metrics port; Operator disableMetric skips PodMonitor reconciliation, not the Service port. Chart appVersion 3.0.1 is separate from the audited Milvus versions.
 <!-- version-basis:end -->
 
 A RAG store holds every document the application was given, often including private data, and it answers similarity queries that reconstruct that text. Several of these servers ship with no authentication enabled and none of them serves TLS out of the box, so an exposed default install is a searchable copy of your corpus. Keep the store on a private interface, turn on the native key or account control where one exists, and put TLS in front or on the server before any client crosses a network.

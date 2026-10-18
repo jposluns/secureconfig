@@ -131,59 +131,67 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| master-file: Keep operator-only master_key in protected config.yaml, not argv/exported environment; YAML wins over environment and remains plaintext at rest. | LiteLLM documentation unknown | REASONED |
-| startup: Current startup refuses missing, empty, whitespace-only or sk-1234 master keys; no first release is asserted. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| env-override: LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true independently allows weak/keyless startup; retain refusal in production. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| yaml-override: general_settings.dangerously_permit_weak_or_unset_master_key=true independently allows weak/keyless startup. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| database: Virtual-key generation requires PostgreSQL via DATABASE_URL or general_settings.database_url, even with model storage disabled. | LiteLLM documentation unknown | REASONED |
-| virtual-keys: Issue separate revocable application keys; default Authorization header is configurable via litellm_key_header_name. | LiteLLM documentation unknown | REASONED |
-| salt: Stored virtual keys are hashed; database provider credentials are encrypted with LITELLM_SALT_KEY, falling back to master key; preserve the salt. | LiteLLM documentation unknown | REASONED |
-| model-storage: Leave store_model_in_db false unless required; protect database credentials, backups and plaintext configuration. | LiteLLM documentation unknown | REASONED |
-| ownership: Use non-admin owners with team membership; keys inherit owner authority and master keys bypass application restrictions. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| key-models: Explicit key and team model lists intersect; models: [] means all models, not none. | LiteLLM documentation unknown | REASONED |
-| key-budget: max_budget is USD and defaults null, with no key-level cap; budget_duration resets spend and does not expire the key. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| expiry: duration controls lifetime separately; compare finite-key success before expiry/refusal afterward against an unexpired control. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| rpm: rpm_limit limits requests per minute; test its own window and successful under-limit control across workers. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| tpm: tpm_limit limits tokens per minute; RPM results do not demonstrate this limit. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| parallel: max_parallel_requests limits concurrent requests; overlap a bounded workload to distinguish it from rate limits. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| soft-budget: soft_budget triggers configured alerts without blocking spending. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| teams: POST team/new and team/update set shared model/spend/throughput limits; attach every relevant key and add the intended owner with team/member_add. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| shared-state: Multiple workers, even in one container, require shared Redis for limits/revocation; configure router Redis and proxy caching, not variables alone. | LiteLLM documentation unknown | REASONED |
-| cache: The shown Redis cache configuration also caches responses; absent content logs do not imply absent cached content. | LiteLLM documentation unknown | REASONED |
-| fail-closed: fail_closed_budget_enforcement=true returns 503 when spend cannot be verified; restore dependencies and confirm permitted work. | LiteLLM documentation unknown | REASONED |
-| reservation: Keep reservation enabled; batch/unestimable costs and delayed or concurrent charges mean budgets are not absolute provider-spend caps. | LiteLLM documentation unknown | REASONED |
-| delete: POST /key/delete permanently revokes the listed keys; removing application configuration is not revocation. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| block: POST /key/block suspends and /key/unblock restores; compare each operation on every worker with replacement-key positive controls. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| rotation: In-place /key/regenerate is Enterprise-gated; otherwise generate restricted replacement, deploy/test it, then delete old key while retaining team budget. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| bind: CLI defaults 0.0.0.0:4000; use --host 127.0.0.1 --port 4000 --config config.yaml behind TLS. | LiteLLM documentation unknown; LiteLLM CLI v1.102.1 | REASONED |
-| ip-filter: allowed_ips is Enterprise; otherwise ingress filtering must be enforced independently. | LiteLLM documentation unknown | REASONED |
-| ui-login: UI_USERNAME defaults admin; without UI_PASSWORD the UI accepts the master key; remove fallback with disable_env_credential_login after personal login works. | LiteLLM documentation unknown | REASONED |
-| ui-cookie: Set PROXY_BASE_URL to the actual HTTPS origin for Secure UI cookies and test in a fresh browser. | LiteLLM documentation unknown | REASONED |
-| ui-disable: DISABLE_ADMIN_UI=true removes an unused UI; authorized inference must still work. | LiteLLM documentation unknown | REASONED |
-| sso: SSO is free for up to five users from v1.76.0; more require Enterprise and bootstrap credentials still need removal. | LiteLLM SSO allowance v1.76.0 | REASONED |
-| mfa: Human UI MFA belongs at the fronting identity layer. | LiteLLM documentation unknown; LiteLLM SSO allowance v1.76.0 | REASONED |
-| routes: allowed_routes admits named paths and slash descendants, not exact path/method pairs; narrow at ingress where required. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| admin-routes: admin_only_routes uses exact matches, not /key/*; without Enterprise source logs an error and skips this additional check. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| health-live: Liveliness/liveness and readiness are unauthenticated; their success proves no inference authentication. | LiteLLM documentation unknown | REASONED |
-| health-paid: /health is authenticated with key auth and runs potentially paid model probes; keep it private. | LiteLLM documentation unknown | REASONED |
-| docs: Docs are public by default; clear DOCS_URL/REDOC_URL/OPENAPI_URL and set NO_DOCS/NO_REDOC/NO_OPENAPI in actual startup environment; explicit URLs win. | LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec; LiteLLM documentation unknown | REASONED |
-| metrics-proxy: Proxy-port /metrics defaults authenticated, confirmed in v1.85.0; require_auth_for_metrics_endpoint=false reopens it. | LiteLLM metrics default v1.85.0; LiteLLM documentation unknown | REASONED |
-| metrics-port: PROMETHEUS_METRICS_PORT can create a separate unauthenticated listener; proxy-port auth does not cover it, so isolate collectors. | LiteLLM documentation unknown | REASONED |
-| passthrough-auth: Docs call pass-through auth Enterprise, but pinned main attaches auth without a licence gate; verify the installed release. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| passthrough-authorization: Non-admin callers also need allowed_passthrough_routes metadata; allowed_routes alone is insufficient and normal metadata provisioning is Enterprise-gated. | LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| passthrough-policy: Optional forwarder pins target, auth, GET-only, no subpaths and no wholesale incoming-header forwarding; omit unused forwarders. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| destinations: Pin api_base/target and control who changes them; caller api_base/base_url overrides still need trusted validation and independent egress controls. | LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| message-logging: turn_off_message_logging suppresses content in supported integrations while retaining operational metadata; arbitrary callbacks need separate review. | LiteLLM documentation unknown | REASONED |
-| spend-logging: Either store_prompts_in_spend_logs or STORE_PROMPTS_IN_SPEND_LOGS enables payload storage; YAML false does not override environment true. | LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| debug-logging: Avoid detailed_debug and LITELLM_LOG=DEBUG; inspect process, error, callback and proxy logs with canaries and positive log controls. | LiteLLM documentation unknown | REASONED |
-| verify-auth: Probe backend directly: absent/wrong keys must get 401 and valid key a model list; public proxy responses alone cannot prove backend auth. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| verify-network: Inspect every listener and actual external backend reachability; refusal must be attributable to the intended remote path, not DNS/local errors. | LiteLLM documentation unknown; LiteLLM CLI v1.102.1 | REASONED |
-| verify-spend: Use bounded uncached provider calls; exhaust key and aggregate team budgets separately with successful controls and record overshoot. | LiteLLM documentation unknown | REASONED |
-| verify-admin: Application key must fail a valid management request that operator credentials complete; licensed/unlicensed admin-route cases are separate. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| verify-forwarding: Require anonymous refusal and permitted authenticated GET; wrong method/subpath must not reach the controlled upstream. | LiteLLM documentation unknown; LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
-| verify-egress: Compare api_base and base_url overrides separately against a controlled sink; no contact plus working pinned destination establishes the intended boundary. | LiteLLM source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+Components (recorded basis):
+
+- docs: LiteLLM documentation, unknown
+- source: LiteLLM source, 6ef7b86748118ceecd95271727c2fa167ce55fec
+- sso: LiteLLM SSO allowance, v1.76.0
+- metrics: LiteLLM metrics default, v1.85.0
+- cli: LiteLLM CLI, v1.102.1
+
+Claims (full source mapping in the front matter):
+
+- master-file (REASONED; docs): Keep operator-only master_key in protected config.yaml, not argv/exported environment; YAML wins over environment and remains plaintext at rest.
+- startup (REASONED; docs, source): Current startup refuses missing, empty, whitespace-only or sk-1234 master keys; no first release is asserted.
+- env-override (REASONED; docs, source): LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true independently allows weak/keyless startup; retain refusal in production.
+- yaml-override (REASONED; docs, source): general_settings.dangerously_permit_weak_or_unset_master_key=true independently allows weak/keyless startup.
+- database (REASONED; docs): Virtual-key generation requires PostgreSQL via DATABASE_URL or general_settings.database_url, even with model storage disabled.
+- virtual-keys (REASONED; docs): Issue separate revocable application keys; default Authorization header is configurable via litellm_key_header_name.
+- salt (REASONED; docs): Stored virtual keys are hashed; database provider credentials are encrypted with LITELLM_SALT_KEY, falling back to master key; preserve the salt.
+- model-storage (REASONED; docs): Leave store_model_in_db false unless required; protect database credentials, backups and plaintext configuration.
+- ownership (REASONED; docs, source): Use non-admin owners with team membership; keys inherit owner authority and master keys bypass application restrictions.
+- key-models (REASONED; docs): Explicit key and team model lists intersect; models: [] means all models, not none.
+- key-budget (REASONED; docs, source): max_budget is USD and defaults null, with no key-level cap; budget_duration resets spend and does not expire the key.
+- expiry (REASONED; docs, source): duration controls lifetime separately; compare finite-key success before expiry/refusal afterward against an unexpired control.
+- rpm (REASONED; docs, source): rpm_limit limits requests per minute; test its own window and successful under-limit control across workers.
+- tpm (REASONED; docs, source): tpm_limit limits tokens per minute; RPM results do not demonstrate this limit.
+- parallel (REASONED; docs, source): max_parallel_requests limits concurrent requests; overlap a bounded workload to distinguish it from rate limits.
+- soft-budget (REASONED; docs, source): soft_budget triggers configured alerts without blocking spending.
+- teams (REASONED; docs, source): POST team/new and team/update set shared model/spend/throughput limits; attach every relevant key and add the intended owner with team/member_add.
+- shared-state (REASONED; docs): Multiple workers, even in one container, require shared Redis for limits/revocation; configure router Redis and proxy caching, not variables alone.
+- cache (REASONED; docs): The shown Redis cache configuration also caches responses; absent content logs do not imply absent cached content.
+- fail-closed (REASONED; docs): fail_closed_budget_enforcement=true returns 503 when spend cannot be verified; restore dependencies and confirm permitted work.
+- reservation (REASONED; docs): Keep reservation enabled; batch/unestimable costs and delayed or concurrent charges mean budgets are not absolute provider-spend caps.
+- delete (REASONED; docs, source): POST /key/delete permanently revokes the listed keys; removing application configuration is not revocation.
+- block (REASONED; docs, source): POST /key/block suspends and /key/unblock restores; compare each operation on every worker with replacement-key positive controls.
+- rotation (REASONED; docs, source): In-place /key/regenerate is Enterprise-gated; otherwise generate restricted replacement, deploy/test it, then delete old key while retaining team budget.
+- bind (REASONED; docs, cli): CLI defaults 0.0.0.0:4000; use --host 127.0.0.1 --port 4000 --config config.yaml behind TLS.
+- ip-filter (REASONED; docs): allowed_ips is Enterprise; otherwise ingress filtering must be enforced independently.
+- ui-login (REASONED; docs): UI_USERNAME defaults admin; without UI_PASSWORD the UI accepts the master key; remove fallback with disable_env_credential_login after personal login works.
+- ui-cookie (REASONED; docs): Set PROXY_BASE_URL to the actual HTTPS origin for Secure UI cookies and test in a fresh browser.
+- ui-disable (REASONED; docs): DISABLE_ADMIN_UI=true removes an unused UI; authorized inference must still work.
+- sso (REASONED; sso): SSO is free for up to five users from v1.76.0; more require Enterprise and bootstrap credentials still need removal.
+- mfa (REASONED; docs, sso): Human UI MFA belongs at the fronting identity layer.
+- routes (REASONED; docs, source): allowed_routes admits named paths and slash descendants, not exact path/method pairs; narrow at ingress where required.
+- admin-routes (REASONED; docs, source): admin_only_routes uses exact matches, not /key/*; without Enterprise source logs an error and skips this additional check.
+- health-live (REASONED; docs): Liveliness/liveness and readiness are unauthenticated; their success proves no inference authentication.
+- health-paid (REASONED; docs): /health is authenticated with key auth and runs potentially paid model probes; keep it private.
+- docs (REASONED; source, docs): Docs are public by default; clear DOCS_URL/REDOC_URL/OPENAPI_URL and set NO_DOCS/NO_REDOC/NO_OPENAPI in actual startup environment; explicit URLs win.
+- metrics-proxy (REASONED; metrics, docs): Proxy-port /metrics defaults authenticated, confirmed in v1.85.0; require_auth_for_metrics_endpoint=false reopens it.
+- metrics-port (REASONED; docs): PROMETHEUS_METRICS_PORT can create a separate unauthenticated listener; proxy-port auth does not cover it, so isolate collectors.
+- passthrough-auth (REASONED; docs, source): Docs call pass-through auth Enterprise, but pinned main attaches auth without a licence gate; verify the installed release.
+- passthrough-authorization (REASONED; source): Non-admin callers also need allowed_passthrough_routes metadata; allowed_routes alone is insufficient and normal metadata provisioning is Enterprise-gated.
+- passthrough-policy (REASONED; docs, source): Optional forwarder pins target, auth, GET-only, no subpaths and no wholesale incoming-header forwarding; omit unused forwarders.
+- destinations (REASONED; source): Pin api_base/target and control who changes them; caller api_base/base_url overrides still need trusted validation and independent egress controls.
+- message-logging (REASONED; docs): turn_off_message_logging suppresses content in supported integrations while retaining operational metadata; arbitrary callbacks need separate review.
+- spend-logging (REASONED; source): Either store_prompts_in_spend_logs or STORE_PROMPTS_IN_SPEND_LOGS enables payload storage; YAML false does not override environment true.
+- debug-logging (REASONED; docs): Avoid detailed_debug and LITELLM_LOG=DEBUG; inspect process, error, callback and proxy logs with canaries and positive log controls.
+- verify-auth (REASONED; docs, source): Probe backend directly: absent/wrong keys must get 401 and valid key a model list; public proxy responses alone cannot prove backend auth.
+- verify-network (REASONED; docs, cli): Inspect every listener and actual external backend reachability; refusal must be attributable to the intended remote path, not DNS/local errors.
+- verify-spend (REASONED; docs): Use bounded uncached provider calls; exhaust key and aggregate team budgets separately with successful controls and record overshoot.
+- verify-admin (REASONED; docs, source): Application key must fail a valid management request that operator credentials complete; licensed/unlicensed admin-route cases are separate.
+- verify-forwarding (REASONED; docs, source): Require anonymous refusal and permitted authenticated GET; wrong method/subpath must not reach the controlled upstream.
+- verify-egress (REASONED; source): Compare api_base and base_url overrides separately against a controlled sink; no contact plus working pinned destination establishes the intended boundary.
 <!-- version-basis:end -->
 
 A LiteLLM proxy fronts paid model APIs, so an exposed, keyless instance spends your provider credits for whoever finds it. Authentication is built in and must be switched on before anything else.

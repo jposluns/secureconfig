@@ -190,44 +190,63 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| private: Restrict application origins to intended proxies; separately inventory containers, IPv6 and management endpoints. | OWASP guidance unknown | REASONED |
-| tls: Use WSS and HTTPS with certificate verification; protect untrusted proxy-to-app hops with authenticated TLS. | WebSocket protocol RFC 6455; OWASP guidance unknown; GitHub webhooks documentation unknown | REASONED |
-| credentials: Disable anonymous/default credentials and separate minimally scoped publisher, subscriber, sender and admin identities. | OWASP guidance unknown | REASONED |
-| mfa: Keep admin UIs private with IdP or fronting MFA; machine webhook deliveries use signatures. | OWASP guidance unknown; GitHub webhooks documentation unknown | REASONED |
-| ws-headers: Browser WebSocket accepts a URL and protocols, with no custom Authorization-header argument. | Browser API and living standards unknown | REASONED |
-| ws-origin: Eligible cookies may accompany handshakes; reject missing or non-allowlisted Origin before protected logic to prevent CSWSH. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
-| ws-token: Authenticate a short-lived first-message token before protected use; rotate it and keep credentials out of URLs and subprotocols. | OWASP guidance unknown; Browser API and living standards unknown | REASONED |
-| ws-identity: Origin is forgeable outside browsers; independently authenticate, and do not let a stolen cookie alone obtain the first-message token. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
-| ws-deadline: Allow no protected operation before authentication and impose a bounded authentication deadline. | OWASP guidance unknown | REASONED |
-| authorization: Authorize each channel, tenant and operation, including SSE subscriptions; revalidate and terminate expired or revoked long-lived access. | OWASP guidance unknown | REASONED |
-| sse: EventSource uses GET without custom Authorization headers; eligible cookies and cross-origin withCredentials remain browser-policy dependent. | Browser API and living standards unknown | REASONED |
-| sse-origin: Authenticate subscriptions and allow only trusted credentialed CORS origins; legitimate same-origin GET may omit Origin. | Browser API and living standards unknown; OWASP guidance unknown | REASONED |
-| sse-fetch: Keep SSE GET side-effect free; use fetch with a ReadableStream when header tokens are needed. | Browser API and living standards unknown | REASONED |
-| github-signature: Verify raw-body HMAC-SHA256 using X-Hub-Signature-256 and constant-time comparison. | GitHub webhooks documentation unknown | REASONED |
-| signature-shape: Reject missing/malformed sha256= plus 64-hex signatures; timingSafeEqual needs equal buffer lengths and exceptions must fail closed. | GitHub webhooks documentation unknown; Node.js crypto documentation unknown | REASONED |
-| stripe-signature: Stripe signs timestamp, dot and raw body with the endpoint secret; use official verification libraries. | Stripe webhooks documentation unknown | REASONED |
-| stripe-tolerance: stripe-node v18.5.0 and stripe-python v12.5.0 default to 300 seconds; set a positive tolerance and test stale requests because zero handling differs. | stripe-node v18.5.0; stripe-python v12.5.0 | REASONED |
-| github-replay: GitHub signs neither a timestamp nor X-GitHub-Delivery; changed delivery IDs retain valid signatures, so ID deduplication cannot establish freshness. | GitHub webhooks documentation unknown | REASONED |
-| idempotency: Use atomic durable idempotency from authenticated payload data; body-digest caches only suppress identical bodies during retention and can suppress legitimate repeats. | GitHub webhooks documentation unknown | REASONED |
-| stripe-replay: A signed timestamp limits age, not replay inside the window; deduplicate authenticated event IDs after signature and timestamp validation. | Stripe webhooks documentation unknown | REASONED |
-| raw-body: Verify exact received bytes before JSON reserialization or handler effects. | GitHub webhooks documentation unknown; Stripe webhooks documentation unknown | REASONED |
-| csrf: Scope any webhook CSRF exemption to the one route and method. | Stripe webhooks documentation unknown | REASONED |
-| webhook-secret: Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs. | GitHub webhooks documentation unknown; OWASP guidance unknown | REASONED |
-| stripe-secrets: Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ. | Stripe webhooks documentation unknown | REASONED |
-| sender-ip: Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain. | GitHub webhooks documentation unknown | REASONED |
-| proxy-limits: Bound HTTP body size, concurrency and timeouts separately; nginx release-1.26.3 defines proxy_read_timeout, and HAProxy v3.0.0 documents timeout client, timeout server, timeout http-request and a per-process maxconn cap; at Caddy v2.11.4 request_body max_size returns 413 on excess and the standard HTTP module list imports no rate-limit handler; confirm other proxy capabilities in their guides and current vendor sources. | Traefik timeout reference v3.5; Caddy and nginx timeout documentation unknown; nginx source release-1.26.3; HAProxy 3.0; Caddy source v2.11.4; HAProxy source v3.0.0 | REASONED |
-| message-limits: After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs. | OWASP guidance unknown | REASONED |
-| ssrf: Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials. | OWASP guidance unknown | REASONED |
-| verify-handshake: Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive. | OWASP guidance unknown; WebSocket protocol RFC 6455 | REASONED |
-| verify-sse: With a cookie require 200, text/event-stream and the protected event; without it require rejection. A timeout alone proves nothing. | Browser API and living standards unknown; OWASP guidance unknown | REASONED |
-| verify-messages: Using the real client, compare valid, missing, invalid and expired tokens, pre-auth operations, cross-channel denial and revocation on an open connection. | OWASP guidance unknown | REASONED |
-| verify-defaults: Pair a legitimate login with the deployed component default credentials; a no-credential request does not test defaults. | OWASP guidance unknown | REASONED |
-| verify-webhook: Wrong/unsigned signatures must have no effect; valid events must act once and replay must not act twice, even with changed GitHub delivery IDs. | GitHub webhooks documentation unknown; Stripe webhooks documentation unknown | REASONED |
-| verify-stale: On a synchronized Stripe fixture with 300-second tolerance, a request backdated 600 seconds must fail timestamp validation. | stripe-node v18.5.0; stripe-python v12.5.0 | REASONED |
-| verify-secrets: Hidden prompts and stdin headers avoid new secret argv/history/environment exposure and set +x avoids tracing; Python reads and closes secret pipe fd 3. Process memory remains readable. | curl minimum write-out version 7.75.0; Python os documentation unknown | REASONED |
-| verify-origin: Compare allowed and external vantage points using connect-to and correct Host/TLS name; HTTP or TLS responses prove reachability, errors alone do not prove isolation. | curl minimum write-out version 7.75.0 | REASONED |
+Components (recorded basis):
+
+- browser: Browser API and living standards, unknown
+- websocket: WebSocket protocol, RFC 6455
+- owasp: OWASP guidance, unknown
+- github: GitHub webhooks documentation, unknown
+- stripe: Stripe webhooks documentation, unknown
+- stripe-node: stripe-node, v18.5.0
+- stripe-python: stripe-python, v12.5.0
+- node: Node.js crypto documentation, unknown
+- traefik: Traefik timeout reference, v3.5
+- proxy: Caddy and nginx timeout documentation, unknown
+- caddy-source: Caddy source, v2.11.4
+- curl: curl minimum write-out version, 7.75.0
+- python: Python os documentation, unknown
+- nginx-source: nginx source, release-1.26.3
+- haproxy: HAProxy, 3.0
+- haproxy-source: HAProxy source, v3.0.0
+
+Claims (full source mapping in the front matter):
+
+- private (REASONED; owasp): Restrict application origins to intended proxies; separately inventory containers, IPv6 and management endpoints.
+- tls (REASONED; websocket, owasp, github): Use WSS and HTTPS with certificate verification; protect untrusted proxy-to-app hops with authenticated TLS.
+- credentials (REASONED; owasp): Disable anonymous/default credentials and separate minimally scoped publisher, subscriber, sender and admin identities.
+- mfa (REASONED; owasp, github): Keep admin UIs private with IdP or fronting MFA; machine webhook deliveries use signatures.
+- ws-headers (REASONED; browser): Browser WebSocket accepts a URL and protocols, with no custom Authorization-header argument.
+- ws-origin (REASONED; owasp, websocket): Eligible cookies may accompany handshakes; reject missing or non-allowlisted Origin before protected logic to prevent CSWSH.
+- ws-token (REASONED; owasp, browser): Authenticate a short-lived first-message token before protected use; rotate it and keep credentials out of URLs and subprotocols.
+- ws-identity (REASONED; owasp, websocket): Origin is forgeable outside browsers; independently authenticate, and do not let a stolen cookie alone obtain the first-message token.
+- ws-deadline (REASONED; owasp): Allow no protected operation before authentication and impose a bounded authentication deadline.
+- authorization (REASONED; owasp): Authorize each channel, tenant and operation, including SSE subscriptions; revalidate and terminate expired or revoked long-lived access.
+- sse (REASONED; browser): EventSource uses GET without custom Authorization headers; eligible cookies and cross-origin withCredentials remain browser-policy dependent.
+- sse-origin (REASONED; browser, owasp): Authenticate subscriptions and allow only trusted credentialed CORS origins; legitimate same-origin GET may omit Origin.
+- sse-fetch (REASONED; browser): Keep SSE GET side-effect free; use fetch with a ReadableStream when header tokens are needed.
+- github-signature (REASONED; github): Verify raw-body HMAC-SHA256 using X-Hub-Signature-256 and constant-time comparison.
+- signature-shape (REASONED; github, node): Reject missing/malformed sha256= plus 64-hex signatures; timingSafeEqual needs equal buffer lengths and exceptions must fail closed.
+- stripe-signature (REASONED; stripe): Stripe signs timestamp, dot and raw body with the endpoint secret; use official verification libraries.
+- stripe-tolerance (REASONED; stripe-node, stripe-python): stripe-node v18.5.0 and stripe-python v12.5.0 default to 300 seconds; set a positive tolerance and test stale requests because zero handling differs.
+- github-replay (REASONED; github): GitHub signs neither a timestamp nor X-GitHub-Delivery; changed delivery IDs retain valid signatures, so ID deduplication cannot establish freshness.
+- idempotency (REASONED; github): Use atomic durable idempotency from authenticated payload data; body-digest caches only suppress identical bodies during retention and can suppress legitimate repeats.
+- stripe-replay (REASONED; stripe): A signed timestamp limits age, not replay inside the window; deduplicate authenticated event IDs after signature and timestamp validation.
+- raw-body (REASONED; github, stripe): Verify exact received bytes before JSON reserialization or handler effects.
+- csrf (REASONED; stripe): Scope any webhook CSRF exemption to the one route and method.
+- webhook-secret (REASONED; github, owasp): Require a configured strong GitHub secret, reject unsigned delivery, and use distinct protected, rotated endpoint secrets kept out of URLs and logs.
+- stripe-secrets (REASONED; stripe): Stripe test/live and Dashboard/CLI-forwarding endpoint secrets differ.
+- sender-ip (REASONED; github): Provider IP allowlists supplement signatures; trust forwarded client addresses only through a configured proxy chain.
+- proxy-limits (REASONED; traefik, proxy, nginx-source, haproxy, caddy-source, haproxy-source): Bound HTTP body size, concurrency and timeouts separately; nginx release-1.26.3 defines proxy_read_timeout, and HAProxy v3.0.0 documents timeout client, timeout server, timeout http-request and a per-process maxconn cap; at Caddy v2.11.4 request_body max_size returns 413 on excess and the standard HTTP module list imports no rate-limit handler; confirm other proxy capabilities in their guides and current vendor sources.
+- message-limits (REASONED; owasp): After WebSocket upgrade, enforce per-message authorization and rate limits; connection limits do not bound messages or jobs.
+- ssrf (REASONED; owasp): Allowlist relay destinations and enforce worker egress for schemes, ports and resolved addresses; revalidate redirects and never forward inbound credentials.
+- verify-handshake (REASONED; owasp, websocket): Cookie handshake positive is 101; missing cookie and disallowed/missing Origin must reject, never 101. Failed controls and unrelated errors are inconclusive.
+- verify-sse (REASONED; browser, owasp): With a cookie require 200, text/event-stream and the protected event; without it require rejection. A timeout alone proves nothing.
+- verify-messages (REASONED; owasp): Using the real client, compare valid, missing, invalid and expired tokens, pre-auth operations, cross-channel denial and revocation on an open connection.
+- verify-defaults (REASONED; owasp): Pair a legitimate login with the deployed component default credentials; a no-credential request does not test defaults.
+- verify-webhook (REASONED; github, stripe): Wrong/unsigned signatures must have no effect; valid events must act once and replay must not act twice, even with changed GitHub delivery IDs.
+- verify-stale (REASONED; stripe-node, stripe-python): On a synchronized Stripe fixture with 300-second tolerance, a request backdated 600 seconds must fail timestamp validation.
+- verify-secrets (REASONED; curl, python): Hidden prompts and stdin headers avoid new secret argv/history/environment exposure and set +x avoids tracing; Python reads and closes secret pipe fd 3. Process memory remains readable.
+- verify-origin (REASONED; curl): Compare allowed and external vantage points using connect-to and correct Host/TLS name; HTTP or TLS responses prove reachability, errors alone do not prove isolation.
 <!-- version-basis:end -->
 
 Streaming an LLM response commonly rides a WebSocket or an SSE stream, and integrations commonly call back through a webhook. All three are transports, not authentication mechanisms, and each is routinely shipped wide open. [authentication.md](authentication.md) rule 15 already says each transport needs its own check; this guide is that check for these three.

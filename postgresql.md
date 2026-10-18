@@ -168,54 +168,66 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| bind: Keep listen_addresses local; widening requires a restart and listener inspection. | PostgreSQL documentation unknown | REASONED |
-| server-tls: Enable TLS with certificate/key files and a postgres-owned key at mode 600. | PostgreSQL documentation unknown | REASONED |
-| tls-minimum: ssl_min_protocol_version sets TLSv1.2; this setting requires PostgreSQL 12+. | PostgreSQL TLS minimum 12; PostgreSQL documentation unknown | REASONED |
-| scram-default: password_encryption is scram-sha-256 by default from PostgreSQL 14. | PostgreSQL SCRAM default 14; PostgreSQL documentation unknown | REASONED |
-| reload: pg_reload_conf signals reload, not certificate acceptance; invalid TLS replacements can retain old settings; passphrase reload has extra requirements. | PostgreSQL documentation unknown | REASONED |
-| image-bind: Pinned Debian/Alpine images for 14 through 19 initialize from listen_addresses='*'; restrict published ports. | PostgreSQL image source d588a44673ea9d123c1acb1a6924de10a27fc315 | REASONED |
-| image-init-auth: Pinned initdb defaults to trust for sockets and loopback unless auth arguments override it; recorded tags cover 14.24 through 19 beta 4. | PostgreSQL initdb source REL_17_11; PostgreSQL image source d588a44673ea9d123c1acb1a6924de10a27fc315 | REASONED |
-| image-host-auth: The entrypoint appends host all all all using POSTGRES_HOST_AUTH_METHOD, defaulting to password_encryption; earlier matching rules win. | PostgreSQL image source d588a44673ea9d123c1acb1a6924de10a27fc315; PostgreSQL documentation unknown | REASONED |
-| image-password: New-directory initialization requires POSTGRES_PASSWORD or its file unless host auth is trust; never select trust for reachable clients. | PostgreSQL image source d588a44673ea9d123c1acb1a6924de10a27fc315 | REASONED |
-| hba: host permits plaintext and TLS; hostssl plus SCRAM restricts remote access. Local peer is separate; first-match HBA has no fallback after authentication failure. | PostgreSQL documentation unknown | REASONED |
-| hba-reload: Unix HBA edits require reload; Windows applies edits to subsequent connections without that same requirement. | PostgreSQL documentation unknown | REASONED |
-| password-migration: Changing encryption does not convert stored verifiers; use prompted psql password reset. An md5 rule can negotiate SCRAM. | PostgreSQL documentation unknown | REASONED |
-| md5-deprecation: PostgreSQL 18 deprecates MD5 password support. | PostgreSQL MD5 and logging changes 18 | REASONED |
-| clientcert: PostgreSQL 12+ clientcert=verify-full adds CA-validated client identity to SCRAM, matching username/mapping, normally by Common Name. | PostgreSQL TLS minimum 12; PostgreSQL documentation unknown | REASONED |
-| mfa: Machine certificates do not establish human MFA; RADIUS is an alternative HBA method, not an added SCRAM factor or general interactive MFA flow. | PostgreSQL documentation unknown | REASONED |
-| runtime: Separate NOLOGIN owner/runtime roles; remove superuser, database/role creation, replication and RLS bypass from app; review inherited grants. | PostgreSQL documentation unknown | REASONED |
-| ownership: NOLOGIN does not prevent membership access; keep app outside owner roles and transfer existing objects separately from database ownership. | PostgreSQL documentation unknown | REASONED |
-| grants: Grant runtime schema, table and sequence access only inside its boundary; owner-specific default grants affect future objects, not existing ones. | PostgreSQL documentation unknown | REASONED |
-| membership: PostgreSQL 16+ membership INHERIT/SET options are distinct; role INHERIT defaults new memberships, and NOINHERIT does not prohibit SET ROLE. | PostgreSQL membership and require_auth 16 | REASONED |
-| admission: PUBLIC receives CONNECT and TEMPORARY by default; restrict each database, preserving required operators. CONNECT revocation affects new sessions only. | PostgreSQL documentation unknown | REASONED |
-| schema-create: Revoke unwanted PUBLIC CREATE and optional TEMPORARY; direct grants, ownership and memberships can still confer access; preserve required USAGE. | PostgreSQL documentation unknown | REASONED |
-| schema-default: PostgreSQL 15 new databases remove PUBLIC CREATE on public and use pg_database_owner; upgrades/restores can preserve old rights; CONNECT is unchanged. | PostgreSQL schema defaults 15 | REASONED |
-| search-path: Trust only owner-writable schemas; set app's login path with pg_temp last. Reconnect; SET ROLE does not apply login defaults and app can change its path. | PostgreSQL documentation unknown | REASONED |
-| definer: SECURITY DEFINER functions need their own safe path and restricted EXECUTE; revoke global default PUBLIC EXECUTE for future owner-created functions. | PostgreSQL documentation unknown | REASONED |
-| client-tls: libpq verify-full checks hostname and CA; require does not check hostname, even when a root CA makes it validate the chain. | PostgreSQL documentation unknown | REASONED |
-| gss: Set gssencmode=disable when requiring TLS verification; working GSSAPI encryption otherwise can take precedence; other drivers need equivalent settings. | PostgreSQL documentation unknown | REASONED |
-| logging: Collect connection/disconnection and DDL logs; logging_collector requires restart, log_file_mode is Unix-only, and broader statement logging risks sensitive values. | PostgreSQL documentation unknown | REASONED |
-| logging-version: PostgreSQL 18 log_connections accepts a list; on retains receipt, authentication and authorization logging, not every new option. | PostgreSQL MD5 and logging changes 18; PostgreSQL documentation unknown | REASONED |
-| pgaudit: pgAudit 18.x targets PostgreSQL 18; match server major, preserve preloads, restart, create extension before pgaudit.log and reconnect; installation is not audit delivery. | pgAudit source dedd42ec3fe880bf581dd578c0df87ed4ad246cd; PostgreSQL documentation unknown | REASONED |
-| verify-password: Wrong prompted password succeeds under trust but must fail under password authentication while the correct-password TLS control succeeds. | PostgreSQL documentation unknown | REASONED |
-| verify-scram: libpq 16+ require_auth=scram-sha-256 rejects a non-SCRAM exchange; success proves negotiation, not removal of all md5 rules. | PostgreSQL membership and require_auth 16; PostgreSQL documentation unknown | REASONED |
-| verify-plaintext: Plaintext succeeds under a permitting host rule; fixed HBA refuses no-encryption access while the same TLS login succeeds. | PostgreSQL documentation unknown | REASONED |
-| verify-identity: A trusted wrong-host certificate can pass require but must fail verify-full; restore the matching certificate as the positive control. | PostgreSQL documentation unknown | REASONED |
-| verify-clientcert: Compare matching and mismatched trusted client identities: verify-ca accepts both, verify-full rejects the mismatch while correct identity/password succeeds. | PostgreSQL documentation unknown | REASONED |
-| verify-listeners: Inventory all 5432 listeners including IPv6; wildcard becomes intended addresses after restart, with a successful intended-interface TLS control. | PostgreSQL documentation unknown | REASONED |
-| verify-ownership: Real app login reads existing fixtures but cannot ALTER or SET ROLE owner; owner alteration succeeds as the matched control. | PostgreSQL documentation unknown | REASONED |
-| verify-admission: PUBLIC CONNECT permits a nonmember; revocation must produce database permission denial while app connects, not an HBA/password error. | PostgreSQL documentation unknown | REASONED |
-| verify-creation: PUBLIC CREATE and TEMPORARY probes must change from success to privilege denial, retaining administrator and application positive controls. | PostgreSQL documentation unknown | REASONED |
-| verify-path: Trusted/shadow fixtures independently test login and function-local paths; omitted pg_temp permits shadow relations and restoring it returns trusted. | PostgreSQL documentation unknown | REASONED |
-| verify-execute: With admission and schema lookup held constant, PUBLIC EXECUTE removal denies the nonmember while the application function call succeeds. | PostgreSQL documentation unknown | REASONED |
-| verify-logs: Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery. | PostgreSQL documentation unknown | REASONED |
-| verify-audit: Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event. | pgAudit source dedd42ec3fe880bf581dd578c0df87ed4ad246cd | REASONED |
-| diagnostics: pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload. | PostgreSQL documentation unknown | REASONED |
-| local-guards: Historical shell and argument checks exercised local guards only, without service contact. | PostgreSQL documentation unknown | DEMONSTRATED |
-| local-parsing: Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised. | PostgreSQL documentation unknown | DEMONSTRATED |
-| verify-default-grants: Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state. | PostgreSQL documentation unknown | REASONED |
+Components (recorded basis):
+
+- docs: PostgreSQL documentation, unknown
+- docker: PostgreSQL image source, d588a44673ea9d123c1acb1a6924de10a27fc315
+- init: PostgreSQL initdb source, REL_17_11
+- pg12: PostgreSQL TLS minimum, 12
+- pg14: PostgreSQL SCRAM default, 14
+- pg15: PostgreSQL schema defaults, 15
+- pg16: PostgreSQL membership and require_auth, 16
+- pg18: PostgreSQL MD5 and logging changes, 18
+- audit: pgAudit source, dedd42ec3fe880bf581dd578c0df87ed4ad246cd
+
+Claims (full source mapping in the front matter):
+
+- bind (REASONED; docs): Keep listen_addresses local; widening requires a restart and listener inspection.
+- server-tls (REASONED; docs): Enable TLS with certificate/key files and a postgres-owned key at mode 600.
+- tls-minimum (REASONED; pg12, docs): ssl_min_protocol_version sets TLSv1.2; this setting requires PostgreSQL 12+.
+- scram-default (REASONED; pg14, docs): password_encryption is scram-sha-256 by default from PostgreSQL 14.
+- reload (REASONED; docs): pg_reload_conf signals reload, not certificate acceptance; invalid TLS replacements can retain old settings; passphrase reload has extra requirements.
+- image-bind (REASONED; docker): Pinned Debian/Alpine images for 14 through 19 initialize from listen_addresses='*'; restrict published ports.
+- image-init-auth (REASONED; init, docker): Pinned initdb defaults to trust for sockets and loopback unless auth arguments override it; recorded tags cover 14.24 through 19 beta 4.
+- image-host-auth (REASONED; docker, docs): The entrypoint appends host all all all using POSTGRES_HOST_AUTH_METHOD, defaulting to password_encryption; earlier matching rules win.
+- image-password (REASONED; docker): New-directory initialization requires POSTGRES_PASSWORD or its file unless host auth is trust; never select trust for reachable clients.
+- hba (REASONED; docs): host permits plaintext and TLS; hostssl plus SCRAM restricts remote access. Local peer is separate; first-match HBA has no fallback after authentication failure.
+- hba-reload (REASONED; docs): Unix HBA edits require reload; Windows applies edits to subsequent connections without that same requirement.
+- password-migration (REASONED; docs): Changing encryption does not convert stored verifiers; use prompted psql password reset. An md5 rule can negotiate SCRAM.
+- md5-deprecation (REASONED; pg18): PostgreSQL 18 deprecates MD5 password support.
+- clientcert (REASONED; pg12, docs): PostgreSQL 12+ clientcert=verify-full adds CA-validated client identity to SCRAM, matching username/mapping, normally by Common Name.
+- mfa (REASONED; docs): Machine certificates do not establish human MFA; RADIUS is an alternative HBA method, not an added SCRAM factor or general interactive MFA flow.
+- runtime (REASONED; docs): Separate NOLOGIN owner/runtime roles; remove superuser, database/role creation, replication and RLS bypass from app; review inherited grants.
+- ownership (REASONED; docs): NOLOGIN does not prevent membership access; keep app outside owner roles and transfer existing objects separately from database ownership.
+- grants (REASONED; docs): Grant runtime schema, table and sequence access only inside its boundary; owner-specific default grants affect future objects, not existing ones.
+- membership (REASONED; pg16): PostgreSQL 16+ membership INHERIT/SET options are distinct; role INHERIT defaults new memberships, and NOINHERIT does not prohibit SET ROLE.
+- admission (REASONED; docs): PUBLIC receives CONNECT and TEMPORARY by default; restrict each database, preserving required operators. CONNECT revocation affects new sessions only.
+- schema-create (REASONED; docs): Revoke unwanted PUBLIC CREATE and optional TEMPORARY; direct grants, ownership and memberships can still confer access; preserve required USAGE.
+- schema-default (REASONED; pg15): PostgreSQL 15 new databases remove PUBLIC CREATE on public and use pg_database_owner; upgrades/restores can preserve old rights; CONNECT is unchanged.
+- search-path (REASONED; docs): Trust only owner-writable schemas; set app's login path with pg_temp last. Reconnect; SET ROLE does not apply login defaults and app can change its path.
+- definer (REASONED; docs): SECURITY DEFINER functions need their own safe path and restricted EXECUTE; revoke global default PUBLIC EXECUTE for future owner-created functions.
+- client-tls (REASONED; docs): libpq verify-full checks hostname and CA; require does not check hostname, even when a root CA makes it validate the chain.
+- gss (REASONED; docs): Set gssencmode=disable when requiring TLS verification; working GSSAPI encryption otherwise can take precedence; other drivers need equivalent settings.
+- logging (REASONED; docs): Collect connection/disconnection and DDL logs; logging_collector requires restart, log_file_mode is Unix-only, and broader statement logging risks sensitive values.
+- logging-version (REASONED; pg18, docs): PostgreSQL 18 log_connections accepts a list; on retains receipt, authentication and authorization logging, not every new option.
+- pgaudit (REASONED; audit, docs): pgAudit 18.x targets PostgreSQL 18; match server major, preserve preloads, restart, create extension before pgaudit.log and reconnect; installation is not audit delivery.
+- verify-password (REASONED; docs): Wrong prompted password succeeds under trust but must fail under password authentication while the correct-password TLS control succeeds.
+- verify-scram (REASONED; pg16, docs): libpq 16+ require_auth=scram-sha-256 rejects a non-SCRAM exchange; success proves negotiation, not removal of all md5 rules.
+- verify-plaintext (REASONED; docs): Plaintext succeeds under a permitting host rule; fixed HBA refuses no-encryption access while the same TLS login succeeds.
+- verify-identity (REASONED; docs): A trusted wrong-host certificate can pass require but must fail verify-full; restore the matching certificate as the positive control.
+- verify-clientcert (REASONED; docs): Compare matching and mismatched trusted client identities: verify-ca accepts both, verify-full rejects the mismatch while correct identity/password succeeds.
+- verify-listeners (REASONED; docs): Inventory all 5432 listeners including IPv6; wildcard becomes intended addresses after restart, with a successful intended-interface TLS control.
+- verify-ownership (REASONED; docs): Real app login reads existing fixtures but cannot ALTER or SET ROLE owner; owner alteration succeeds as the matched control.
+- verify-admission (REASONED; docs): PUBLIC CONNECT permits a nonmember; revocation must produce database permission denial while app connects, not an HBA/password error.
+- verify-creation (REASONED; docs): PUBLIC CREATE and TEMPORARY probes must change from success to privilege denial, retaining administrator and application positive controls.
+- verify-path (REASONED; docs): Trusted/shadow fixtures independently test login and function-local paths; omitted pg_temp permits shadow relations and restoring it returns trusted.
+- verify-execute (REASONED; docs): With admission and schema lookup held constant, PUBLIC EXECUTE removal denies the nonmember while the application function call succeeds.
+- verify-logs (REASONED; docs): Successful connection, disconnection and DDL produce correlated records only when enabled; SHOW and extension installation do not prove delivery.
+- verify-audit (REASONED; audit): Compare none versus enabled audit classes in fresh app sessions; the same seeded read succeeds and only the enabled state produces its READ event.
+- diagnostics (REASONED; docs): pg_stat_ssl describes live sessions; verifier format, HBA/current-file views and superseded settings do not prove negotiated auth or accepted TLS reload.
+- local-guards (DEMONSTRATED; docs): Historical shell and argument checks exercised local guards only, without service contact.
+- local-parsing (DEMONSTRATED; docs): Historical PostgreSQL 18.6 parsed 14 configuration values and rejected an invalid Boolean; no certificates, pgAudit, running HBA or SQL were exercised.
+- verify-default-grants (REASONED; docs): Owner-created future tables must be readable with default grants and denied without them while the existing-table control succeeds; recreate fixtures per state.
 <!-- version-basis:end -->
 
 Default posture: PostgreSQL should not listen on public interfaces at all. Widen `listen_addresses` only for genuine remote clients, and then require both TLS and SCRAM authentication as below.

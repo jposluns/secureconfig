@@ -150,61 +150,72 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| packet-fix: 1.25.2 fixes CVE-2026-6664: an unauthenticated malformed SCRAM packet can crash older releases. | PgBouncer source and fixes 1.25.2 | REASONED |
-| backend-fixes: 1.25.2 fixes CVE-2026-6665 from a malicious backend and CVE-2026-6666 from a backend error lacking SQLSTATE. | PgBouncer source and fixes 1.25.2 | REASONED |
-| console-fix: 1.25.2 fixes CVE-2026-6667, which allowed any authorized console user to run KILL_CLIENT. | PgBouncer source and fixes 1.25.2 | REASONED |
-| ini-comments: PgBouncer ini comments must start their own line; trailing # or ; becomes part of the value. | PgBouncer documentation unknown | REASONED |
-| pgb-listener: Use private listen_addr and port 6432; the 1.26.0 unset default is Unix sockets only except systemd socket activation, whose ListenStream settings override listen_addr. | PgBouncer documentation unknown; PgBouncer listener source pgbouncer_1_26_0 | REASONED |
-| pgpool-listener: Pgpool-II defaults to localhost:9999; listen_addresses is startup-only. | Pgpool-II documentation unknown | REASONED |
-| pcp-listener: PCP independently defaults to localhost:9898 through startup-only pcp_listen_addresses and pcp_port. | Pgpool-II documentation unknown | REASONED |
-| pcp-credentials: PCP uses separate username:MD5-digest entries in protected pcp.conf; pg_md5 -p prompts, and pool_passwd is not interchangeable. | Pgpool-II documentation unknown | REASONED |
-| client-tls: PgBouncer client TLS defaults disabled; require with a key and certificate rejects non-TLS TCP clients while Unix sockets are exempt. | PgBouncer documentation unknown | REASONED |
-| client-protocols: PgBouncer client_tls_protocols defaults to secure, meaning TLSv1.2 and TLSv1.3. | PgBouncer documentation unknown | REASONED |
-| client-cert: client_tls_sslmode=verify-full and client_tls_ca_file require client certificates; protect the private key at mode 600. | PgBouncer documentation unknown | REASONED |
-| pgpool-tls: Pgpool-II ssl defaults off; enabling it covers both hops but frontend TLS also needs ssl_key and ssl_cert. | Pgpool-II documentation unknown | REASONED |
-| pgpool-hostssl: Pgpool-II host matches TLS and plaintext; hostssl requires ssl=on or is ignored, and unmatched connections are denied. | Pgpool-II documentation unknown | REASONED |
-| backend-tls: PgBouncer server_tls_sslmode defaults prefer, permitting plaintext fallback without certificate checks; require omits certificate validation and verify-ca omits hostname checks. | PgBouncer documentation unknown | REASONED |
-| backend-verify-full: Set PgBouncer server_tls_sslmode=verify-full with server_tls_ca_file to require TLS, a trusted certificate and matching hostname. | PgBouncer documentation unknown | REASONED |
-| pgpool-ca: Pgpool-II ssl_ca_cert or ssl_ca_cert_dir enables backend CA verification; the documentation establishes no hostname check. | Pgpool-II documentation unknown | REASONED |
-| pgpool-downgrade: Pgpool-II 4.7.2 continues plaintext if the backend declines TLS even with ssl_ca_cert; use a separately authenticated enforcing transport or PgBouncer verify-full. | Pgpool-II documentation unknown; Pgpool-II backend handshake 4.7.2 | REASONED |
-| forced-user: A databases user= forces every client into one backend role; omitting it preserves client usernames and separate pools, with force_user visible in SHOW DATABASES. | PgBouncer documentation unknown | REASONED |
-| backend-source: PostgreSQL HBA sees the pooler backend source after NAT; inet_client_addr returns that source or NULL on Unix sockets. A narrow address rule is not a process identity. | PgBouncer documentation unknown; PostgreSQL documentation unknown | REASONED |
-| client-hba: PgBouncer auth_type=hba activates auth_hba_file for per-path peer/SCRAM/TLS rules; choosing a global method instead disables that policy. | PgBouncer documentation unknown | REASONED |
-| pgpool-hba: Pgpool-II enable_pool_hba defaults false, leaving authentication to PostgreSQL; enabling it adds client policy without changing per-user/database pooling. | Pgpool-II documentation unknown | REASONED |
-| pgpool-passwords: SCRAM needs matching plaintext or AES pool_passwd credentials, not MD5; pg_enc prompts, and AES requires OpenSSL plus service-owned mode-600 .pgpoolkey. | Pgpool-II documentation unknown | REASONED |
-| pgpool-local: Local trust accepts any claimed database identity; unix_socket_directories defaults /tmp and every listed socket directory needs protection. | Pgpool-II documentation unknown | REASONED |
-| hba-order: HBA first-match order governs access; explicit IPv4/IPv6 plaintext rejections stop later permissive rules, not earlier ones. | Pgpool-II documentation unknown; PostgreSQL documentation unknown | REASONED |
-| client-metadata: application_name_add_host defaults 0; enabling it adds client address only at connection start and clients can later overwrite application_name. | PgBouncer documentation unknown | REASONED |
-| log-prefix: PostgreSQL log_line_prefix defaults to %m [%p] without application name; include %a to log the diagnostic metadata. | PostgreSQL documentation unknown | REASONED |
-| console-lists: The reserved pgbouncer database uses admin_users for full commands and stats_users for read-only SHOW; both default empty. | PgBouncer documentation unknown | REASONED |
-| console-any: Configuration and usage docs disagree on any; 1.25.2 grants unlisted users console read access and lets clients claim an administrator name without authentication. | PgBouncer documentation unknown; PgBouncer source and fixes 1.25.2 | REASONED |
-| weak-auth: trust and any do not authenticate, plain transmits a cleartext password and is deprecated, and auth_type defaults md5. | PgBouncer documentation unknown | REASONED |
-| console-scram: Keep hba with SCRAM rules for pgbadmin and pgbmetrics; metrics credentials must satisfy both HBA and the console allowlist. | PgBouncer documentation unknown | REASONED |
-| socket-bypass: The pgbouncer username can access the console passwordlessly over a Unix socket when the client UID equals the pooler process UID. | PgBouncer documentation unknown | REASONED |
-| peer: Peer authentication uses the OS identity; a connection-string user name or password cannot supply that identity. | PgBouncer documentation unknown; PostgreSQL documentation unknown | REASONED |
-| auth-file: Protect auth_file at mode 600; it can contain plaintext, MD5 or SCRAM secrets, and MD5 cannot satisfy client SCRAM. | PgBouncer documentation unknown | REASONED |
-| scram-forward: Stored-SCRAM backend login needs client SCRAM, no forced user and identical secrets including salt and iteration count; peer does not provide the required exchange. | PgBouncer documentation unknown | REASONED |
-| auth-query: auth_user enables lookup for users absent from auth_file; use a restricted SECURITY DEFINER function with trusted search_path, limited EXECUTE and database placement or auth_dbname. | PgBouncer documentation unknown | REASONED |
-| password-expiry: CVE-2025-2291 was fixed in 1.24.1; custom auth_query must still check rolvaliduntil. | PgBouncer documentation unknown; PgBouncer password-expiry fix 1.24.1 | REASONED |
-| verify-listeners: Inventory 6432/9999 on private addresses and PCP 9898 on loopback including IPv6; unexpected listeners are findings. | PgBouncer documentation unknown; Pgpool-II documentation unknown | REASONED |
-| verify-client: Plaintext must fail for TLS, verified TLS with the correct password must succeed, and a wrong password must fail authentication; repeat for pgpool-II 9999. | PgBouncer documentation unknown; Pgpool-II documentation unknown; PostgreSQL documentation unknown | REASONED |
-| password-delivery: Use mode-600 .pgpass for real passwords; PGPASSWORD can expose credentials through process environments. | PostgreSQL documentation unknown | REASONED |
-| verify-pgpool: PGPOOL SHOW enable_pool_hba and ssl must both report on; inspect ordered HBA, reload errors and Unix-socket positive/negative credentials. | Pgpool-II documentation unknown | REASONED |
-| verify-pcp: PCP read with correct prompted credentials must succeed and a wrong password must fail authentication; remote 9898 must be unreachable. | Pgpool-II documentation unknown | REASONED |
-| verify-pgb-policy: RELOAD must succeed before SHOW CONFIG and disk-HBA inspection; confirm hba, TLS modes and pathname, then rerun connection tests. | PgBouncer documentation unknown; PostgreSQL documentation unknown | REASONED |
-| hba-parser: PgBouncer 1.25.2 logs and skips malformed HBA lines without failing RELOAD; parser or access warnings leave verification incomplete. | PgBouncer source and fixes 1.25.2 | REASONED |
-| verify-backend-observation: pg_stat_ssl reports negotiated encryption, not certificate enforcement; current_user and inet_client_addr identify backend role and source. | PostgreSQL documentation unknown | REASONED |
-| verify-direct: Direct application-to-database access must fail HBA while permitted pooler egress and application-through-pooler controls succeed; disable GSS precedence and guard host/hostaddr. | PostgreSQL documentation unknown | REASONED |
-| verify-backend-enforcement: Use fresh backend connections and restored positive controls: PgBouncer verify-full rejects untrusted CA, wrong hostname and TLS refusal; Pgpool-II only establishes CA rejection. | PgBouncer documentation unknown; Pgpool-II documentation unknown; Pgpool-II backend handshake 4.7.2 | REASONED |
-| verify-server-tls: SHOW SERVERS tls reports existing TLS or an empty plaintext connection, not whether plaintext would have been refused. | PgBouncer documentation unknown | REASONED |
-| verify-force-user: SHOW DATABASES force_user reveals forced identity; pool counts do not establish role preservation. | PgBouncer documentation unknown | REASONED |
-| verify-console-unlisted: An unlisted console user must fail at login with not allowed; SHOW VERSION success is exposure and transport/DNS/TLS failures are inconclusive. | PgBouncer documentation unknown; PgBouncer source and fixes 1.25.2 | REASONED |
-| verify-console-password: The pgbadmin SHOW VERSION pair must succeed with the correct password and fail at login with the wrong one, both against dbname=pgbouncer. | PgBouncer documentation unknown | REASONED |
-| mfa: Neither pooler provides native MFA or a PostgreSQL-wire TOTP dialogue; protect human host access separately. | PgBouncer documentation unknown; Pgpool-II documentation unknown | REASONED |
-| ldap-pam: LDAP arrived in 1.25.0 and can appear in HBA; PAM is global and disables HBA selection, forwarding the supplied password instead of conducting an OTP challenge. | PgBouncer documentation unknown; PgBouncer LDAP minimum 1.25.0; PgBouncer source and fixes 1.25.2 | REASONED |
-| mtls-hba: Client verify-full and verify-ca are equivalent for certificates and can retain HBA/SCRAM; auth_type=cert takes the certificate username and replaces HBA selection. | PgBouncer documentation unknown | REASONED |
+Components (recorded basis):
+
+- pgb: PgBouncer documentation, unknown
+- pgb-bind: PgBouncer listener source, pgbouncer_1_26_0
+- pgb-source: PgBouncer source and fixes, 1.25.2
+- pgpool: Pgpool-II documentation, unknown
+- pgpool-source: Pgpool-II backend handshake, 4.7.2
+- postgres: PostgreSQL documentation, unknown
+- ldap-min: PgBouncer LDAP minimum, 1.25.0
+- expiry-fix: PgBouncer password-expiry fix, 1.24.1
+
+Claims (full source mapping in the front matter):
+
+- packet-fix (REASONED; pgb-source): 1.25.2 fixes CVE-2026-6664: an unauthenticated malformed SCRAM packet can crash older releases.
+- backend-fixes (REASONED; pgb-source): 1.25.2 fixes CVE-2026-6665 from a malicious backend and CVE-2026-6666 from a backend error lacking SQLSTATE.
+- console-fix (REASONED; pgb-source): 1.25.2 fixes CVE-2026-6667, which allowed any authorized console user to run KILL_CLIENT.
+- ini-comments (REASONED; pgb): PgBouncer ini comments must start their own line; trailing # or ; becomes part of the value.
+- pgb-listener (REASONED; pgb, pgb-bind): Use private listen_addr and port 6432; the 1.26.0 unset default is Unix sockets only except systemd socket activation, whose ListenStream settings override listen_addr.
+- pgpool-listener (REASONED; pgpool): Pgpool-II defaults to localhost:9999; listen_addresses is startup-only.
+- pcp-listener (REASONED; pgpool): PCP independently defaults to localhost:9898 through startup-only pcp_listen_addresses and pcp_port.
+- pcp-credentials (REASONED; pgpool): PCP uses separate username:MD5-digest entries in protected pcp.conf; pg_md5 -p prompts, and pool_passwd is not interchangeable.
+- client-tls (REASONED; pgb): PgBouncer client TLS defaults disabled; require with a key and certificate rejects non-TLS TCP clients while Unix sockets are exempt.
+- client-protocols (REASONED; pgb): PgBouncer client_tls_protocols defaults to secure, meaning TLSv1.2 and TLSv1.3.
+- client-cert (REASONED; pgb): client_tls_sslmode=verify-full and client_tls_ca_file require client certificates; protect the private key at mode 600.
+- pgpool-tls (REASONED; pgpool): Pgpool-II ssl defaults off; enabling it covers both hops but frontend TLS also needs ssl_key and ssl_cert.
+- pgpool-hostssl (REASONED; pgpool): Pgpool-II host matches TLS and plaintext; hostssl requires ssl=on or is ignored, and unmatched connections are denied.
+- backend-tls (REASONED; pgb): PgBouncer server_tls_sslmode defaults prefer, permitting plaintext fallback without certificate checks; require omits certificate validation and verify-ca omits hostname checks.
+- backend-verify-full (REASONED; pgb): Set PgBouncer server_tls_sslmode=verify-full with server_tls_ca_file to require TLS, a trusted certificate and matching hostname.
+- pgpool-ca (REASONED; pgpool): Pgpool-II ssl_ca_cert or ssl_ca_cert_dir enables backend CA verification; the documentation establishes no hostname check.
+- pgpool-downgrade (REASONED; pgpool, pgpool-source): Pgpool-II 4.7.2 continues plaintext if the backend declines TLS even with ssl_ca_cert; use a separately authenticated enforcing transport or PgBouncer verify-full.
+- forced-user (REASONED; pgb): A databases user= forces every client into one backend role; omitting it preserves client usernames and separate pools, with force_user visible in SHOW DATABASES.
+- backend-source (REASONED; pgb, postgres): PostgreSQL HBA sees the pooler backend source after NAT; inet_client_addr returns that source or NULL on Unix sockets. A narrow address rule is not a process identity.
+- client-hba (REASONED; pgb): PgBouncer auth_type=hba activates auth_hba_file for per-path peer/SCRAM/TLS rules; choosing a global method instead disables that policy.
+- pgpool-hba (REASONED; pgpool): Pgpool-II enable_pool_hba defaults false, leaving authentication to PostgreSQL; enabling it adds client policy without changing per-user/database pooling.
+- pgpool-passwords (REASONED; pgpool): SCRAM needs matching plaintext or AES pool_passwd credentials, not MD5; pg_enc prompts, and AES requires OpenSSL plus service-owned mode-600 .pgpoolkey.
+- pgpool-local (REASONED; pgpool): Local trust accepts any claimed database identity; unix_socket_directories defaults /tmp and every listed socket directory needs protection.
+- hba-order (REASONED; pgpool, postgres): HBA first-match order governs access; explicit IPv4/IPv6 plaintext rejections stop later permissive rules, not earlier ones.
+- client-metadata (REASONED; pgb): application_name_add_host defaults 0; enabling it adds client address only at connection start and clients can later overwrite application_name.
+- log-prefix (REASONED; postgres): PostgreSQL log_line_prefix defaults to %m [%p] without application name; include %a to log the diagnostic metadata.
+- console-lists (REASONED; pgb): The reserved pgbouncer database uses admin_users for full commands and stats_users for read-only SHOW; both default empty.
+- console-any (REASONED; pgb, pgb-source): Configuration and usage docs disagree on any; 1.25.2 grants unlisted users console read access and lets clients claim an administrator name without authentication.
+- weak-auth (REASONED; pgb): trust and any do not authenticate, plain transmits a cleartext password and is deprecated, and auth_type defaults md5.
+- console-scram (REASONED; pgb): Keep hba with SCRAM rules for pgbadmin and pgbmetrics; metrics credentials must satisfy both HBA and the console allowlist.
+- socket-bypass (REASONED; pgb): The pgbouncer username can access the console passwordlessly over a Unix socket when the client UID equals the pooler process UID.
+- peer (REASONED; pgb, postgres): Peer authentication uses the OS identity; a connection-string user name or password cannot supply that identity.
+- auth-file (REASONED; pgb): Protect auth_file at mode 600; it can contain plaintext, MD5 or SCRAM secrets, and MD5 cannot satisfy client SCRAM.
+- scram-forward (REASONED; pgb): Stored-SCRAM backend login needs client SCRAM, no forced user and identical secrets including salt and iteration count; peer does not provide the required exchange.
+- auth-query (REASONED; pgb): auth_user enables lookup for users absent from auth_file; use a restricted SECURITY DEFINER function with trusted search_path, limited EXECUTE and database placement or auth_dbname.
+- password-expiry (REASONED; pgb, expiry-fix): CVE-2025-2291 was fixed in 1.24.1; custom auth_query must still check rolvaliduntil.
+- verify-listeners (REASONED; pgb, pgpool): Inventory 6432/9999 on private addresses and PCP 9898 on loopback including IPv6; unexpected listeners are findings.
+- verify-client (REASONED; pgb, pgpool, postgres): Plaintext must fail for TLS, verified TLS with the correct password must succeed, and a wrong password must fail authentication; repeat for pgpool-II 9999.
+- password-delivery (REASONED; postgres): Use mode-600 .pgpass for real passwords; PGPASSWORD can expose credentials through process environments.
+- verify-pgpool (REASONED; pgpool): PGPOOL SHOW enable_pool_hba and ssl must both report on; inspect ordered HBA, reload errors and Unix-socket positive/negative credentials.
+- verify-pcp (REASONED; pgpool): PCP read with correct prompted credentials must succeed and a wrong password must fail authentication; remote 9898 must be unreachable.
+- verify-pgb-policy (REASONED; pgb, postgres): RELOAD must succeed before SHOW CONFIG and disk-HBA inspection; confirm hba, TLS modes and pathname, then rerun connection tests.
+- hba-parser (REASONED; pgb-source): PgBouncer 1.25.2 logs and skips malformed HBA lines without failing RELOAD; parser or access warnings leave verification incomplete.
+- verify-backend-observation (REASONED; postgres): pg_stat_ssl reports negotiated encryption, not certificate enforcement; current_user and inet_client_addr identify backend role and source.
+- verify-direct (REASONED; postgres): Direct application-to-database access must fail HBA while permitted pooler egress and application-through-pooler controls succeed; disable GSS precedence and guard host/hostaddr.
+- verify-backend-enforcement (REASONED; pgb, pgpool, pgpool-source): Use fresh backend connections and restored positive controls: PgBouncer verify-full rejects untrusted CA, wrong hostname and TLS refusal; Pgpool-II only establishes CA rejection.
+- verify-server-tls (REASONED; pgb): SHOW SERVERS tls reports existing TLS or an empty plaintext connection, not whether plaintext would have been refused.
+- verify-force-user (REASONED; pgb): SHOW DATABASES force_user reveals forced identity; pool counts do not establish role preservation.
+- verify-console-unlisted (REASONED; pgb, pgb-source): An unlisted console user must fail at login with not allowed; SHOW VERSION success is exposure and transport/DNS/TLS failures are inconclusive.
+- verify-console-password (REASONED; pgb): The pgbadmin SHOW VERSION pair must succeed with the correct password and fail at login with the wrong one, both against dbname=pgbouncer.
+- mfa (REASONED; pgb, pgpool): Neither pooler provides native MFA or a PostgreSQL-wire TOTP dialogue; protect human host access separately.
+- ldap-pam (REASONED; pgb, ldap-min, pgb-source): LDAP arrived in 1.25.0 and can appear in HBA; PAM is global and disables HBA selection, forwarding the supplied password instead of conducting an OTP challenge.
+- mtls-hba (REASONED; pgb): Client verify-full and verify-ca are equivalent for certificates and can retain HBA/SCRAM; auth_type=cert takes the certificate username and replaces HBA selection.
 <!-- version-basis:end -->
 
 A connection pooler sits in front of PostgreSQL and becomes the thing clients actually connect to. The pooler opens its own connections to the database and reuses them, so every control you configured on the database server ([postgresql.md](postgresql.md)) now governs the pooler's connection rather than the client's, and the pooler's own defaults decide what happens on both hops. Two of those defaults fail open: PgBouncer disables client TLS entirely, and its server-side `prefer` mode drops to plain TCP without an error when TLS is refused.

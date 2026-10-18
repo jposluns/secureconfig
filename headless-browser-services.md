@@ -166,40 +166,56 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| cdp-bind: Command-line DevTools binds 127.0.0.1, falling back to ::1; stock browser and headless shell have no remote-debugging-address switch. | Chromium 154.0.8037.57 | REASONED |
-| cdp-port: Explicit nonzero DevTools ports do not fall back to another port; port 0 requests an ephemeral port. | Chromium 154.0.8037.57 | REASONED |
-| cdp-approval: Feature-gated approval mode uses DevToolsActivePort or 9222, with requested/ephemeral IPv4 then IPv6 fallback; command-line modes take precedence. | Chromium 154.0.8037.57 | REASONED |
-| cdp-discovery: Command-line /json and /json/version disclose debugger URLs; approval-mode 404 does not establish isolation. | Chromium 154.0.8037.57 | REASONED |
-| cdp-auth: Command-line CDP has no client authentication or password flag; Host and Origin checks do not authenticate clients. | Chromium 154.0.8037.57 | REASONED |
-| cdp-capabilities: CDP grants page JavaScript, cookie/credential and tab control; restrict ingress, browser egress and local-file reach. | Chrome DevTools Protocol unknown | REASONED |
-| cdp-private: Keep DevTools loopback/private behind authenticated access; inspect forwarders and container namespaces, since publishing cannot reach container loopback. | Chromium 154.0.8037.57 | REASONED |
-| cdp-profile: Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement. | Chrome remote-debugging announcement unknown; Chromium 154.0.8037.57 | REASONED |
-| cdp-policy: RemoteDebuggingAllowed gates browser command-line and approval modes; headless-shell startup lacks the corresponding profile/policy check. | Chromium 154.0.8037.57 | REASONED |
-| cdp-pipe: Pipe mode alone opens no TCP port; supplying a port too can start an independent listener, and pipe access still grants browser control. | Chromium 154.0.8037.57 | REASONED |
-| grid-auth: Router username/password are unset by default, including Docker SE_ROUTER_USERNAME and SE_ROUTER_PASSWORD. | Selenium Grid unknown; Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b | REASONED |
-| grid-bind: Grid host is usually autodetected; Docker SE_BIND_HOST is unset and historical Grid 3 binds 0.0.0.0. Set and observe a private host with bind-host. | Selenium Grid unknown; Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b | REASONED |
-| grid-ports: Router, Hub, Standalone and UI use 4444; Nodes use 5555. Keep all private. | Selenium Grid unknown | REASONED |
-| grid-distributed: Distributed event bus uses 4442/4443; Distributor, Session Map, bus HTTP and New Session Queue add 5553/5556/5557/5559. | Selenium Grid unknown | REASONED |
-| grid-bus: Router Basic auth does not protect the bus; registration-secret validates event messages without encrypting transport, so isolate every participant. | Selenium Grid unknown | REASONED |
-| grid-vnc: Docker enables VNC by default on 5900 and noVNC on 7900; replace the example secret password or disable VNC, and avoid passwordless mode. | Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b | REASONED |
-| grid-tls: Native https-certificate/https-private-key or a TLS proxy protects Router Basic credentials; TLS is not on by default. | Selenium Grid unknown | REASONED |
-| browserless-auth: Open-source 2.56.7 reads an unset or empty TOKEN as null; no token is generated and endpoints are unauthenticated by default. | browserless (open source) 2.56.7; browserless documentation (rolling) unknown | REASONED |
-| browserless-bind: browserless uses 3000; publish 127.0.0.1:3000:3000 or keep an internal network with no host mapping. | browserless unknown | REASONED |
-| browserless-token: Use a randomized TOKEN, protect token-bearing connection URLs and logs, and terminate TLS at the fronting layer. | browserless unknown | REASONED |
-| browserless-file: Require browserless 2.51.0 or later containing the pinned Playwright fix, keep ALLOW_FILE_PROTOCOL=false, and run the file-protocol check. | browserless unknown; browserless Playwright file-protocol fix 2.51.0 | REASONED |
-| playwright-auth: Playwright server has no password/user model; reachable endpoints grant OS-user control, so bind 127.0.0.1 and protect endpoint URLs. | Playwright unknown | REASONED |
-| playwright-discovery: Guide records run-server path / and launchServer random paths discoverable through GET /json; a secret path is not an access boundary. | Playwright unknown; Playwright source v1.58.2 | REASONED |
-| playwright-tls: Authenticate WebSocket upgrades and discovery at a wss proxy; connect accepts custom headers and the server supplies no native TLS. | Playwright unknown | REASONED |
-| debug-bypass: A separately forwarded Chromium debug endpoint bypasses front-tool authentication; keep 9222 unpublished and restrict browser egress. | Chrome DevTools Protocol unknown; Selenium Grid unknown; browserless unknown; Playwright unknown | REASONED |
-| verify-listeners: Inventory every listener, including distributed Grid and configured Playwright ports, and require intended loopback/private addresses. | Chromium 154.0.8037.57; Selenium Grid unknown; Selenium Docker images aafe4d6136f3bb5afcd9b7cb691c624516d06e1b; browserless unknown; Playwright unknown | REASONED |
-| verify-cdp: External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive. | Chromium 154.0.8037.57; curl documentation curl-8_14_1 | REASONED |
-| verify-grid: Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately. | Selenium Grid unknown; curl documentation curl-8_14_1 | REASONED |
-| verify-browserless: For open-source 2.56.7, expect /pressure load JSON without a configured TOKEN; with a nonempty TOKEN, expect 401 for missing/wrong tokens and JSON for a correct-token control. | browserless (open source) 2.56.7; browserless documentation (rolling) unknown; curl documentation curl-8_14_1 | REASONED |
-| verify-playwright: Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port. | Playwright unknown; Playwright source v1.58.2 | REASONED |
-| browserless-file-cve: CVE-2026-92811 describes authenticated Playwright file reads despite ALLOW_FILE_PROTOCOL=false; its affected range 1.44.0 through 2.56.7 conflicts with the vendor 2.51.0 fix. | browserless Playwright file-protocol fix 2.51.0; CVE-2026-92811 record snapshot b0b0976792a7c9d6d66ee553050c21cb088a0659 | REASONED |
-| verify-browserless-file: With a valid token on every enabled Playwright WebSocket route, confirm HTTP navigation first, then attempt a readable container canary: exposed returns contents; fixed refuses with a blocked-URL policy reason. | browserless Playwright file-protocol fix 2.51.0; CVE-2026-92811 record snapshot b0b0976792a7c9d6d66ee553050c21cb088a0659 | REASONED |
+Components (recorded basis):
+
+- chromium: Chromium, 154.0.8037.57
+- cdp: Chrome DevTools Protocol, unknown
+- chrome-change: Chrome remote-debugging announcement, unknown
+- selenium: Selenium Grid, unknown
+- selenium-docker: Selenium Docker images, aafe4d6136f3bb5afcd9b7cb691c624516d06e1b
+- browserless: browserless, unknown
+- playwright: Playwright, unknown
+- browserless-token-default: browserless (open source), 2.56.7
+- browserless-file-fix: browserless Playwright file-protocol fix, 2.51.0
+- browserless-docs: browserless documentation (rolling), unknown
+- playwright-source: Playwright source, v1.58.2
+- curl-docs: curl documentation, curl-8_14_1
+- cve-record-source: CVE-2026-92811 record snapshot, b0b0976792a7c9d6d66ee553050c21cb088a0659
+
+Claims (full source mapping in the front matter):
+
+- cdp-bind (REASONED; chromium): Command-line DevTools binds 127.0.0.1, falling back to ::1; stock browser and headless shell have no remote-debugging-address switch.
+- cdp-port (REASONED; chromium): Explicit nonzero DevTools ports do not fall back to another port; port 0 requests an ephemeral port.
+- cdp-approval (REASONED; chromium): Feature-gated approval mode uses DevToolsActivePort or 9222, with requested/ephemeral IPv4 then IPv6 fallback; command-line modes take precedence.
+- cdp-discovery (REASONED; chromium): Command-line /json and /json/version disclose debugger URLs; approval-mode 404 does not establish isolation.
+- cdp-auth (REASONED; chromium): Command-line CDP has no client authentication or password flag; Host and Origin checks do not authenticate clients.
+- cdp-capabilities (REASONED; cdp): CDP grants page JavaScript, cookie/credential and tab control; restrict ingress, browser egress and local-file reach.
+- cdp-private (REASONED; chromium): Keep DevTools loopback/private behind authenticated access; inspect forwarders and container namespaces, since publishing cannot reach container loopback.
+- cdp-profile (REASONED; chrome-change, chromium): Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement.
+- cdp-policy (REASONED; chromium): RemoteDebuggingAllowed gates browser command-line and approval modes; headless-shell startup lacks the corresponding profile/policy check.
+- cdp-pipe (REASONED; chromium): Pipe mode alone opens no TCP port; supplying a port too can start an independent listener, and pipe access still grants browser control.
+- grid-auth (REASONED; selenium, selenium-docker): Router username/password are unset by default, including Docker SE_ROUTER_USERNAME and SE_ROUTER_PASSWORD.
+- grid-bind (REASONED; selenium, selenium-docker): Grid host is usually autodetected; Docker SE_BIND_HOST is unset and historical Grid 3 binds 0.0.0.0. Set and observe a private host with bind-host.
+- grid-ports (REASONED; selenium): Router, Hub, Standalone and UI use 4444; Nodes use 5555. Keep all private.
+- grid-distributed (REASONED; selenium): Distributed event bus uses 4442/4443; Distributor, Session Map, bus HTTP and New Session Queue add 5553/5556/5557/5559.
+- grid-bus (REASONED; selenium): Router Basic auth does not protect the bus; registration-secret validates event messages without encrypting transport, so isolate every participant.
+- grid-vnc (REASONED; selenium-docker): Docker enables VNC by default on 5900 and noVNC on 7900; replace the example secret password or disable VNC, and avoid passwordless mode.
+- grid-tls (REASONED; selenium): Native https-certificate/https-private-key or a TLS proxy protects Router Basic credentials; TLS is not on by default.
+- browserless-auth (REASONED; browserless-token-default, browserless-docs): Open-source 2.56.7 reads an unset or empty TOKEN as null; no token is generated and endpoints are unauthenticated by default.
+- browserless-bind (REASONED; browserless): browserless uses 3000; publish 127.0.0.1:3000:3000 or keep an internal network with no host mapping.
+- browserless-token (REASONED; browserless): Use a randomized TOKEN, protect token-bearing connection URLs and logs, and terminate TLS at the fronting layer.
+- browserless-file (REASONED; browserless, browserless-file-fix): Require browserless 2.51.0 or later containing the pinned Playwright fix, keep ALLOW_FILE_PROTOCOL=false, and run the file-protocol check.
+- playwright-auth (REASONED; playwright): Playwright server has no password/user model; reachable endpoints grant OS-user control, so bind 127.0.0.1 and protect endpoint URLs.
+- playwright-discovery (REASONED; playwright, playwright-source): Guide records run-server path / and launchServer random paths discoverable through GET /json; a secret path is not an access boundary.
+- playwright-tls (REASONED; playwright): Authenticate WebSocket upgrades and discovery at a wss proxy; connect accepts custom headers and the server supplies no native TLS.
+- debug-bypass (REASONED; cdp, selenium, browserless, playwright): A separately forwarded Chromium debug endpoint bypasses front-tool authentication; keep 9222 unpublished and restrict browser egress.
+- verify-listeners (REASONED; chromium, selenium, selenium-docker, browserless, playwright): Inventory every listener, including distributed Grid and configured Playwright ports, and require intended loopback/private addresses.
+- verify-cdp (REASONED; chromium, curl-docs): External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive.
+- verify-grid (REASONED; selenium, curl-docs): Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately.
+- verify-browserless (REASONED; browserless-token-default, browserless-docs, curl-docs): For open-source 2.56.7, expect /pressure load JSON without a configured TOKEN; with a nonempty TOKEN, expect 401 for missing/wrong tokens and JSON for a correct-token control.
+- verify-playwright (REASONED; playwright, playwright-source): Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port.
+- browserless-file-cve (REASONED; browserless-file-fix, cve-record-source): CVE-2026-92811 describes authenticated Playwright file reads despite ALLOW_FILE_PROTOCOL=false; its affected range 1.44.0 through 2.56.7 conflicts with the vendor 2.51.0 fix.
+- verify-browserless-file (REASONED; browserless-file-fix, cve-record-source): With a valid token on every enabled Playwright WebSocket route, confirm HTTP navigation first, then attempt a readable container canary: exposed returns contents; fixed refuses with a blocked-URL policy reason.
 <!-- version-basis:end -->
 
 Agent and scraping stacks run these to drive a real browser, and that is exactly the exposure: whoever

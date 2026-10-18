@@ -113,45 +113,54 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| job-transport: Both runners poll over HTTPS without an inbound job-polling port; verify GitLab TLS and restrict separate autoscaler management or webhook listeners. | GitHub Actions documentation unknown; GitLab rolling documentation unknown | REASONED |
-| worker-account: Use a dedicated least-privileged account, keep provisioning credentials off workers and confine rootful Docker access to disposable VMs. | GitHub Actions documentation unknown; GitLab rolling documentation unknown; Docker Engine documentation unknown | REASONED |
-| worker-egress: Enforce job egress outside job control, isolate production and other workers, and deny unused metadata over both families; IMDSv2 does not stop arbitrary authorized job code. | GitHub Actions documentation unknown; GitLab rolling documentation unknown; AWS EC2 documentation unknown | REASONED |
-| github-eligibility: Keep self-hosted runners off public repositories; runner groups admit only private repositories by default and the public override should stay off. | GitHub Actions documentation unknown | REASONED |
-| fork-token: Ordinary fork pull_request jobs normally receive a read-only GITHUB_TOKEN and no other secrets, but can still read host credentials and reachable services. | GitHub Actions documentation unknown | REASONED |
-| privileged-triggers: pull_request_target and workflow_run can access secrets and write tokens; never execute untrusted PR code, artifacts or caches in these jobs. | GitHub Actions documentation unknown | REASONED |
-| private-forks: Review private-repository fork settings, which can grant write tokens and secrets; separate trusted privileged workers from untrusted CI. | GitHub Actions documentation unknown | REASONED |
-| registration-token: Registration tokens last one hour; generate on demand, never bake into images, and do not confuse expiry with runner deregistration. | GitHub REST API 2026-03-10 | REASONED |
-| registration-manager: Keep the App/PAT generating registration or JIT credentials off workers; organization endpoints need Self-hosted runners: write, repository endpoints Administration: write. | GitHub REST API 2026-03-10 | REASONED |
-| jit: Protect encoded_jit_config and the whole response; JIT runners execute at most one job. | GitHub REST API 2026-03-10 | REASONED |
-| runner-credential: Protect the installed runner authentication credential, directory and backups. | GitHub Actions documentation unknown | REASONED |
-| github-job-token: GITHUB_TOKEN is repository-scoped and per-job; set read-only defaults and grant only trusted jobs additional permissions. | GitHub Actions documentation unknown | REASONED |
-| oidc: Grant id-token: write only where needed; the cloud trust must restrict issuer, audience and repository/branch or protected-environment subject. | GitHub Actions documentation unknown | REASONED |
-| github-lifecycle: Prefer ephemeral/JIT workers and destroy their machines and storage; deregistration does not destroy disks, and labels route rather than authorize jobs. | GitHub Actions documentation unknown; GitHub REST API 2026-03-10 | REASONED |
-| shell-executor: The GitLab shell executor runs as the runner user without isolation; avoid it for untrusted jobs on shared hosts. | GitLab rolling documentation unknown | REASONED |
-| docker-executor: Use unprivileged Docker; privileged=true or services_privileged and host Docker socket/TCP access can expose the host despite privileged=false. | GitLab rolling documentation unknown; Docker Engine documentation unknown | REASONED |
-| executor-host-access: Deny sensitive host mounts, host PID/network namespaces, unnecessary devices and capabilities; build without the host daemon. | GitLab rolling documentation unknown | REASONED |
-| kubernetes-executor: Enforce nonprivileged containers, no privilege escalation, scoped ServiceAccounts and no unnecessary token mounting; prevent job overrides. | GitLab rolling documentation unknown | REASONED |
-| gitlab-disposal: Containers share the kernel; use disposable separate VMs/nodes as needed and one-job autoscaling workers. Instance and Docker Autoscaler GA is recorded as Runner 17.1. | GitLab rolling documentation unknown | REASONED |
-| gitlab-registration: Legacy registration tokens were disabled by default in GitLab 17.0, with removal scheduled for 20.0; use runner authentication tokens. | GitLab rolling documentation unknown | REASONED |
-| gitlab-runner-token: Protect and rotate the runner authentication token in config.toml and backups; a cloned runner can steal assigned jobs. | GitLab rolling documentation unknown | REASONED |
-| gitlab-creation: POST /user/runners needs create_runner scope; keep that access token off workers and set scope/protection at creation. | GitLab rolling documentation unknown | REASONED |
-| gitlab-job-token: CI_JOB_TOKEN carries supported triggering-user access during the job and appears as CI_REGISTRY_PASSWORD and inside CI_REPOSITORY_URL. | GitLab rolling documentation unknown | REASONED |
-| gitlab-allowlist: Target-project inbound job-token allowlists limit who may access that target, not job egress; also restrict resource feature visibility. | GitLab rolling documentation unknown | REASONED |
-| gitlab-forks: Instance runners on public installations accept strangers; project scope does not establish code trust. Review parent-launched fork pipelines or disable ci_allow_fork_pipelines_to_run_in_parent_project. | GitLab rolling documentation unknown | REASONED |
-| gitlab-protected: Developer access can compromise persistent runners; release runners need ref_protected and a pool separate from fork-merge-request testing. | GitLab rolling documentation unknown | REASONED |
-| gitlab-metrics: Optional listen_address metrics and profiling have no built-in authorization; 9252 is allocated, not proof of the configured port. | GitLab rolling documentation unknown | REASONED |
-| gitlab-session: Optional session_server uses TLS and must admit required GitLab traffic at its configured address; 8093 is an example, not an established default. | GitLab rolling documentation unknown | REASONED |
-| verify-eligibility: Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review. | GitHub REST API 2026-03-10 | REASONED |
-| verify-permissions: Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate. | GitHub Actions documentation unknown | REASONED |
-| verify-assignment: A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive. | GitHub REST API 2026-03-10; GitHub Actions documentation unknown | REASONED |
-| verify-config: Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status. | Python tomllib minimum 3.11; GitLab rolling documentation unknown | DEMONSTRATED |
-| verify-daemon: Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone. | GitLab rolling documentation unknown; Docker Engine documentation unknown | REASONED |
-| verify-autoscaler: For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly as integers; absent or other values are findings. | GitLab rolling documentation unknown | REASONED |
-| verify-gitlab-api: Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only. | GitLab rolling documentation unknown | REASONED |
-| verify-lifecycle: Check complete deregistration listings and infrastructure disposal; persistent-worker canary must survive in the control, but absence alone does not prove destruction or clean shared caches. | GitHub REST API 2026-03-10; GitLab rolling documentation unknown; GitHub Actions documentation unknown | REASONED |
-| verify-listeners: Inventory namespaces and publications, require the permitted-client response, then test disallowed access; any HTTP response proves reachability, failure needs corroborating firewall denial. | GitLab rolling documentation unknown | REASONED |
+Components (recorded basis):
+
+- github: GitHub Actions documentation, unknown
+- github-api: GitHub REST API, 2026-03-10
+- gitlab: GitLab rolling documentation, unknown
+- python: Python tomllib minimum, 3.11
+- docker: Docker Engine documentation, unknown
+- aws: AWS EC2 documentation, unknown
+
+Claims (full source mapping in the front matter):
+
+- job-transport (REASONED; github, gitlab): Both runners poll over HTTPS without an inbound job-polling port; verify GitLab TLS and restrict separate autoscaler management or webhook listeners.
+- worker-account (REASONED; github, gitlab, docker): Use a dedicated least-privileged account, keep provisioning credentials off workers and confine rootful Docker access to disposable VMs.
+- worker-egress (REASONED; github, gitlab, aws): Enforce job egress outside job control, isolate production and other workers, and deny unused metadata over both families; IMDSv2 does not stop arbitrary authorized job code.
+- github-eligibility (REASONED; github): Keep self-hosted runners off public repositories; runner groups admit only private repositories by default and the public override should stay off.
+- fork-token (REASONED; github): Ordinary fork pull_request jobs normally receive a read-only GITHUB_TOKEN and no other secrets, but can still read host credentials and reachable services.
+- privileged-triggers (REASONED; github): pull_request_target and workflow_run can access secrets and write tokens; never execute untrusted PR code, artifacts or caches in these jobs.
+- private-forks (REASONED; github): Review private-repository fork settings, which can grant write tokens and secrets; separate trusted privileged workers from untrusted CI.
+- registration-token (REASONED; github-api): Registration tokens last one hour; generate on demand, never bake into images, and do not confuse expiry with runner deregistration.
+- registration-manager (REASONED; github-api): Keep the App/PAT generating registration or JIT credentials off workers; organization endpoints need Self-hosted runners: write, repository endpoints Administration: write.
+- jit (REASONED; github-api): Protect encoded_jit_config and the whole response; JIT runners execute at most one job.
+- runner-credential (REASONED; github): Protect the installed runner authentication credential, directory and backups.
+- github-job-token (REASONED; github): GITHUB_TOKEN is repository-scoped and per-job; set read-only defaults and grant only trusted jobs additional permissions.
+- oidc (REASONED; github): Grant id-token: write only where needed; the cloud trust must restrict issuer, audience and repository/branch or protected-environment subject.
+- github-lifecycle (REASONED; github, github-api): Prefer ephemeral/JIT workers and destroy their machines and storage; deregistration does not destroy disks, and labels route rather than authorize jobs.
+- shell-executor (REASONED; gitlab): The GitLab shell executor runs as the runner user without isolation; avoid it for untrusted jobs on shared hosts.
+- docker-executor (REASONED; gitlab, docker): Use unprivileged Docker; privileged=true or services_privileged and host Docker socket/TCP access can expose the host despite privileged=false.
+- executor-host-access (REASONED; gitlab): Deny sensitive host mounts, host PID/network namespaces, unnecessary devices and capabilities; build without the host daemon.
+- kubernetes-executor (REASONED; gitlab): Enforce nonprivileged containers, no privilege escalation, scoped ServiceAccounts and no unnecessary token mounting; prevent job overrides.
+- gitlab-disposal (REASONED; gitlab): Containers share the kernel; use disposable separate VMs/nodes as needed and one-job autoscaling workers. Instance and Docker Autoscaler GA is recorded as Runner 17.1.
+- gitlab-registration (REASONED; gitlab): Legacy registration tokens were disabled by default in GitLab 17.0, with removal scheduled for 20.0; use runner authentication tokens.
+- gitlab-runner-token (REASONED; gitlab): Protect and rotate the runner authentication token in config.toml and backups; a cloned runner can steal assigned jobs.
+- gitlab-creation (REASONED; gitlab): POST /user/runners needs create_runner scope; keep that access token off workers and set scope/protection at creation.
+- gitlab-job-token (REASONED; gitlab): CI_JOB_TOKEN carries supported triggering-user access during the job and appears as CI_REGISTRY_PASSWORD and inside CI_REPOSITORY_URL.
+- gitlab-allowlist (REASONED; gitlab): Target-project inbound job-token allowlists limit who may access that target, not job egress; also restrict resource feature visibility.
+- gitlab-forks (REASONED; gitlab): Instance runners on public installations accept strangers; project scope does not establish code trust. Review parent-launched fork pipelines or disable ci_allow_fork_pipelines_to_run_in_parent_project.
+- gitlab-protected (REASONED; gitlab): Developer access can compromise persistent runners; release runners need ref_protected and a pool separate from fork-merge-request testing.
+- gitlab-metrics (REASONED; gitlab): Optional listen_address metrics and profiling have no built-in authorization; 9252 is allocated, not proof of the configured port.
+- gitlab-session (REASONED; gitlab): Optional session_server uses TLS and must admit required GitLab traffic at its configured address; 8093 is an example, not an established default.
+- verify-eligibility (REASONED; github-api): Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review.
+- verify-permissions (REASONED; github): Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate.
+- verify-assignment (REASONED; github-api, github): A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive.
+- verify-config (DEMONSTRATED; python, gitlab): Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status.
+- verify-daemon (REASONED; gitlab, docker): Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone.
+- verify-autoscaler (REASONED; gitlab): For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly as integers; absent or other values are findings.
+- verify-gitlab-api (REASONED; gitlab): Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only.
+- verify-lifecycle (REASONED; github-api, gitlab, github): Check complete deregistration listings and infrastructure disposal; persistent-worker canary must survive in the control, but absence alone does not prove destruction or clean shared caches.
+- verify-listeners (REASONED; gitlab): Inventory namespaces and publications, require the permitted-client response, then test disallowed access; any HTTP response proves reachability, failure needs corroborating firewall denial.
 <!-- version-basis:end -->
 
 A self-hosted runner exists to execute CI job commands on your own machine, so the trust question is

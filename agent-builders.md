@@ -291,66 +291,90 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| flowise-port: Flowise PORT defaults 3000; Compose publishes ${PORT}:${PORT}; replace with host-loopback mapping. | Flowise documentation unknown; Flowise Compose 4ea391204a499fb6d19747104502362295b4dde3 | REASONED |
-| langflow-port: Langflow 1.12.6 settings default port 7860; example Compose publishes 7860:7860 and Postgres 5432:5432; keep database unpublished or private. | Langflow documentation unknown; Langflow Compose c6dbca308dc85526d5cecb31211821ec4f5e1d05; Langflow settings source v1.12.6 | REASONED |
-| librechat-port: LibreChat defaults 3080; Compose publishes ${PORT}:${PORT} and admin-panel ${ADMIN_PANEL_PORT:-3000}:3000; restrict both. | LibreChat documentation unknown; LibreChat Compose 1596df724a840f894831fc74f21de8d8df72fcb1 | REASONED |
-| compose-merge: Override ports lists merge; !override replaces and !reset clears. Guide assessment: require Docker Compose 2.24.4+ for both; pinned v2.24.3 uses compose-go rc.2, whose loader handles !reset, while pinned v2.24.4 uses rc.3 with both tags. Later-release behaviour is not established by these pins. | Docker unknown; Docker Compose merge source 31d174d090fd7111ca2199ed54a3978e0d4ac74d; Docker Compose go.mod v2.24.3; Docker Compose release source v2.24.4; compose-go loader v2.0.0-rc.2; compose-go reset loader v2.0.0-rc.3 | REASONED |
-| docker-firewall: Docker published traffic can bypass UFW; removing or narrowing publications is required. | Docker unknown | REASONED |
-| dify-ports: Dify publishes nginx 80/443 and plugin debugging 5003, with more vector-profile ports; EXPOSE_NGINX_SSL_PORT remains published when HTTPS serving is off. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675; Dify Compose source 8387590ace4a094de812b7847fc6a4c3a27cd52b | REASONED |
-| dify-debug-bind: Compose pins daemon 0.6.10-local, publishes 5003 on all host interfaces; EXPOSE_PLUGIN_DEBUGGING_HOST is client destination, not bind control. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| daemon-listener: Daemon 0.6.10 uses plaintext newline-delimited JSON TCP; PLUGIN_DEBUGGING_HOST/PORT map to remote-installing listener, default 0.0.0.0:5003. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675; Dify plugin daemon 0.6.10 | REASONED |
-| daemon-key: Per-tenant UUID debugging key has Redis bidirectional mappings with two-hour expiry; retrieval refreshes expiry, not key, and expiry leaves authenticated runtime connected. | Dify plugin daemon 0.6.10 | REASONED |
-| daemon-rejection: Wrong key yields handshake failed, invalid key and closes; lookup is Redis-based and TCP key guessing has no rate limiter. | Dify plugin daemon 0.6.10 | REASONED |
-| daemon-preauth: Non-handshake messages can parse/store declarations and buffer assets before authentication. | Dify plugin daemon source 1310a18b2f6bc6f18768a0a6265484830891433c | REASONED |
-| daemon-assets: Asset limit compares decoded buffered bytes plus incoming base64 string length against 50 MiB; accepted chunks increment decoded length. | Dify plugin daemon source 1310a18b2f6bc6f18768a0a6265484830891433c | REASONED |
-| daemon-authority: Key holder registers tenant runtime receiving invocation parameters/prompts/credentials and returning results; this alone does not demonstrate host shell execution. | Dify plugin daemon 0.6.10 | REASONED |
-| debug-key-access: Initialized authenticated member with active workspace after setup can GET current workspace debugging-key under documented default permissions. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| rbac-default: RBAC_ENABLED defaults false and skips enterprise RBAC checks. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| plugin-permission: No plugin-permission row allows every member; existing row default noone differs, and admins permits only admin/owner. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| debug-remedy: Admin/owner may POST permission/change with debug_permission admins; preserve install_permission, whose omitted value defaults everyone; UI availability unestablished. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| debug-disable: PLUGIN_REMOTE_INSTALLING_ENABLED defaults true; false prevents TCP startup and removes debugging-key route, while ports: !reset [] separately removes publication. | Dify plugin daemon 0.6.10; Docker unknown | REASONED |
-| verify-debug-config: Merged Compose should change from published 5003/default-enabled to no publication and explicit false after override and recreation; no Docker/listener demonstration. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675; Dify plugin daemon 0.6.10; Docker unknown | REASONED |
-| flowise-tls: Flowise documented TLS uses nginx/certbot upstream localhost:3000; configure NUMBER_OF_PROXIES for real client addresses. | Flowise documentation unknown | REASONED |
-| librechat-tls: LibreChat documented TLS uses nginx upstream localhost:3080; TRUST_PROXY defaults 1 and must match proxy hops. | LibreChat documentation unknown | REASONED |
-| langflow-tls: Langflow 1.12.6 LANGFLOW_SSL_CERT_FILE/KEY_FILE settings feed native TLS; guide assessment: a proxy remains a place for login/MFA. | Langflow documentation unknown; Langflow settings source v1.12.6 | REASONED |
-| langflow-cookies: Langflow 1.12.6 LANGFLOW_ACCESS_SECURE and LANGFLOW_REFRESH_SECURE default false; set both true behind HTTPS. | Langflow documentation unknown; Langflow settings source v1.12.6 | REASONED |
-| dify-tls: Certbot challenge/domain/email and fullchain.pem/privkey.pem precede certificate update; enable HTTPS and recreate nginx; default HTTPS false, protocols TLSv1.2 TLSv1.3. | Dify certbot source 4c1ad40f8e8a6ee58a958330558f2178b7e47fa7; Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| dify-urls: Set CONSOLE_API_URL, CONSOLE_WEB_URL and APP_WEB_URL to public HTTPS; CONSOLE_API_URL controls HTTPS-only cookies. | Dify documentation unknown | REASONED |
-| dify-bootstrap: INIT_PASSWORD defaults empty; set it before first up to gate /install and claim admin privately. | Dify documentation unknown; Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| dify-secret: SECRET_KEY signs session/JWT and encrypts stored OAuth credentials; generate random value, or empty auto-generates in storage. | Dify documentation unknown; Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| dify-registration: ALLOW_REGISTER=false default closes ordinary self-registration, but not invitations or /install bootstrap. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| dify-db-redis: Replace DB_PASSWORD and REDIS_PASSWORD defaults difyai123456 and update embedded CELERY_BROKER_URL password. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| dify-sandbox: Replace CODE_EXECUTION_API_KEY/SANDBOX_API_KEY default dify-sandbox together. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| dify-plugin-keys: Replace PLUGIN_DAEMON_KEY and PLUGIN_DIFY_INNER_API_KEY example service credentials. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| dify-agent-keys: Replace DIFY_AGENT_API_TOKEN and DIFY_AGENT_SERVER_SECRET_KEY; signing key needs unpadded base64url of 32 random bytes. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| dify-weaviate: If enabled, rotate WEAVIATE_API_KEY and matching allowed keys; disable anonymous access. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| dify-api: App Bearer keys are separate from console accounts; create per app and keep calls/keys on the backend. | Dify documentation unknown | REASONED |
-| flowise-accounts: From v3.0.1, email/password accounts use JWT HTTP-only cookies; old FLOWISE_USERNAME/PASSWORD are deprecated migration settings; claim admin privately. | Flowise account minimum v3.0.1 | REASONED |
-| flowise-secrets: Randomize JWT_AUTH_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET, EXPRESS_SESSION_SECRET default flowise, and TOKEN_HASH_SECRET; APP_URL defaults localhost:3000. | Flowise account minimum v3.0.1; Flowise documentation unknown | REASONED |
-| flowise-encryption: FLOWISE_SECRETKEY_OVERWRITE supplies stored-credential encryption key; otherwise it lives under SECRETKEY_PATH. | Flowise documentation unknown | REASONED |
-| flowise-prediction: Chatflow without assigned key is public by ID; assign per-chatflow API key (DefaultKey is precreated), Bearer requests reject missing key with 401. | Flowise documentation unknown | REASONED |
-| langflow-auto: Langflow 1.12.6 application AUTO_LOGIN defaults True; pinned official image Dockerfiles set false; explicitly disable it and set a superuser password other than legacy langflow; username defaults langflow and password defaults empty. | Langflow documentation unknown; Langflow settings source v1.12.6 | REASONED |
-| langflow-secret: Set permanent random LANGFLOW_SECRET_KEY; documented auto-generated key is unsuitable for production. | Langflow documentation unknown | REASONED |
-| langflow-signup: NEW_USER_IS_ACTIVE defaults False but ENABLE_SIGNUP True; disable signup and keep activation requirement. | Langflow documentation unknown | REASONED |
-| langflow-api: With auto-login off, POST /api/v1/run/&lt;flow-id&gt; needs x-api-key; create via settings or CLI. SKIP_AUTH_AUTO_LOGIN defaults false, applies only with auto-login and is slated for removal. | Langflow documentation unknown | REASONED |
-| langflow-host: Langflow 1.12.6 settings default HOST localhost; guide assessment: bridged containers need 0.0.0.0 plus host-loopback publication and injected env_file/environment; rolling docs remain unversioned. | Langflow documentation unknown; Langflow Compose c6dbca308dc85526d5cecb31211821ec4f5e1d05; Langflow settings source v1.12.6 | REASONED |
-| librechat-bootstrap: First registered user becomes admin; close ALLOW_REGISTRATION after claiming it. | LibreChat documentation unknown | REASONED |
-| librechat-sso: For SSO-only, disable email login and deliberately enable social registration/login; configure OPENID_* and optional required role with provider allowlist and MFA. | LibreChat documentation unknown | REASONED |
-| librechat-secrets: CREDS_KEY is 32 bytes, CREDS_IV 16; JWT secrets at least 32 bytes. Blank values bootstrap keys with persistence caveats; retired JWT defaults are refused. | LibreChat documentation unknown | REASONED |
-| librechat-urls: DOMAIN_CLIENT and DOMAIN_SERVER must use public HTTPS URL. | LibreChat documentation unknown | REASONED |
-| mfa: Instance-wide native MFA enforcement is not documented; use provider/fronting MFA. Flowise SSO is Enterprise; Langflow offers external JWT/JWKS. | Flowise documentation unknown; Langflow documentation unknown; LibreChat documentation unknown | REASONED |
-| librechat-mfa: v0.7.7 changelog lists two-factor enrolment/backup codes, but checked authentication docs do not establish enforced MFA. | LibreChat changelog v0.7.7; LibreChat documentation unknown | REASONED |
-| containment: Treat editor as code/SSRF authority; isolate runtime, limit mounts/privileges and default-deny egress including metadata; rotate exposed provider keys. | Langflow documentation unknown; Flowise documentation unknown; LibreChat documentation unknown; Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675 | REASONED |
-| flowise-guards: Keep HTTP_SECURITY_CHECK and CUSTOM_MCP_SECURITY_CHECK enabled; disabling MCP check permits arbitrary command execution. | Flowise documentation unknown | REASONED |
-| librechat-actions: Unset actions.allowedDomains allows public domains with private-target SSRF checks; configured allowlist denies others, and listed private destination grants exception. | LibreChat documentation unknown | REASONED |
-| dify-ssrf: Keep Dify SSRF proxy for sandbox and HTTP-request nodes; HTTP allowlists do not contain arbitrary local tools. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675; Dify Compose source 8387590ace4a094de812b7847fc6a4c3a27cd52b | REASONED |
-| verify-network: Inventory all listeners and actual Publishers; direct TCP 5003 success proves exposure, refusal/timeout needs same-host reachable control and merged-model evidence. | Dify console/config source d39d9ddb7430522e0c828c6953afdf773ba6e675; Dify plugin daemon 0.6.10; Docker unknown | REASONED |
-| verify-editor: Curl checks transport only; fresh unauthenticated browser must show login, and /install must be already claimed rather than open admin setup. | Dify documentation unknown; Flowise account minimum v3.0.1; Langflow documentation unknown; LibreChat documentation unknown | REASONED |
-| verify-dify: Direct /v1/parameters matched pair expects missing-Bearer 401 and valid-key parameters 200; app_unavailable 400 is inconclusive; bundled nginx is not strict api-service attribution. | Dify documentation unknown | REASONED |
-| verify-flowise: Assigned-key chatflow prediction must reject missing key and return real output with valid Bearer key; keyless flow is public. | Flowise documentation unknown | REASONED |
-| verify-langflow: Run API must reject absent x-api-key and return real output with valid key; routing, transport or validation errors are inconclusive. | Langflow documentation unknown | REASONED |
+Components (recorded basis):
+
+- dify: Dify documentation, unknown
+- dify-console: Dify console/config source, d39d9ddb7430522e0c828c6953afdf773ba6e675
+- dify-compose: Dify Compose source, 8387590ace4a094de812b7847fc6a4c3a27cd52b
+- docker: Docker, unknown
+- docker-merge: Docker Compose merge source, 31d174d090fd7111ca2199ed54a3978e0d4ac74d
+- compose-243: Docker Compose go.mod, v2.24.3
+- compose-244: Docker Compose release source, v2.24.4
+- compose-go-rc2: compose-go loader, v2.0.0-rc.2
+- compose-go-rc3: compose-go reset loader, v2.0.0-rc.3
+- certbot: Dify certbot source, 4c1ad40f8e8a6ee58a958330558f2178b7e47fa7
+- flowise: Flowise documentation, unknown
+- flowise-auth: Flowise account minimum, v3.0.1
+- flowise-compose: Flowise Compose, 4ea391204a499fb6d19747104502362295b4dde3
+- langflow-1126: Langflow settings source, v1.12.6
+- langflow-compose: Langflow Compose, c6dbca308dc85526d5cecb31211821ec4f5e1d05
+- librechat-compose: LibreChat Compose, 1596df724a840f894831fc74f21de8d8df72fcb1
+- langflow: Langflow documentation, unknown
+- librechat: LibreChat documentation, unknown
+- librechat-mfa: LibreChat changelog, v0.7.7
+- daemon: Dify plugin daemon, 0.6.10
+- daemon-source: Dify plugin daemon source, 1310a18b2f6bc6f18768a0a6265484830891433c
+
+Claims (full source mapping in the front matter):
+
+- flowise-port (REASONED; flowise, flowise-compose): Flowise PORT defaults 3000; Compose publishes ${PORT}:${PORT}; replace with host-loopback mapping.
+- langflow-port (REASONED; langflow, langflow-compose, langflow-1126): Langflow 1.12.6 settings default port 7860; example Compose publishes 7860:7860 and Postgres 5432:5432; keep database unpublished or private.
+- librechat-port (REASONED; librechat, librechat-compose): LibreChat defaults 3080; Compose publishes ${PORT}:${PORT} and admin-panel ${ADMIN_PANEL_PORT:-3000}:3000; restrict both.
+- compose-merge (REASONED; docker, docker-merge, compose-243, compose-244, compose-go-rc2, compose-go-rc3): Override ports lists merge; !override replaces and !reset clears. Guide assessment: require Docker Compose 2.24.4+ for both; pinned v2.24.3 uses compose-go rc.2, whose loader handles !reset, while pinned v2.24.4 uses rc.3 with both tags. Later-release behaviour is not established by these pins.
+- docker-firewall (REASONED; docker): Docker published traffic can bypass UFW; removing or narrowing publications is required.
+- dify-ports (REASONED; dify-console, dify-compose): Dify publishes nginx 80/443 and plugin debugging 5003, with more vector-profile ports; EXPOSE_NGINX_SSL_PORT remains published when HTTPS serving is off.
+- dify-debug-bind (REASONED; dify-console): Compose pins daemon 0.6.10-local, publishes 5003 on all host interfaces; EXPOSE_PLUGIN_DEBUGGING_HOST is client destination, not bind control.
+- daemon-listener (REASONED; dify-console, daemon): Daemon 0.6.10 uses plaintext newline-delimited JSON TCP; PLUGIN_DEBUGGING_HOST/PORT map to remote-installing listener, default 0.0.0.0:5003.
+- daemon-key (REASONED; daemon): Per-tenant UUID debugging key has Redis bidirectional mappings with two-hour expiry; retrieval refreshes expiry, not key, and expiry leaves authenticated runtime connected.
+- daemon-rejection (REASONED; daemon): Wrong key yields handshake failed, invalid key and closes; lookup is Redis-based and TCP key guessing has no rate limiter.
+- daemon-preauth (REASONED; daemon-source): Non-handshake messages can parse/store declarations and buffer assets before authentication.
+- daemon-assets (REASONED; daemon-source): Asset limit compares decoded buffered bytes plus incoming base64 string length against 50 MiB; accepted chunks increment decoded length.
+- daemon-authority (REASONED; daemon): Key holder registers tenant runtime receiving invocation parameters/prompts/credentials and returning results; this alone does not demonstrate host shell execution.
+- debug-key-access (REASONED; dify-console): Initialized authenticated member with active workspace after setup can GET current workspace debugging-key under documented default permissions.
+- rbac-default (REASONED; dify-console): RBAC_ENABLED defaults false and skips enterprise RBAC checks.
+- plugin-permission (REASONED; dify-console): No plugin-permission row allows every member; existing row default noone differs, and admins permits only admin/owner.
+- debug-remedy (REASONED; dify-console): Admin/owner may POST permission/change with debug_permission admins; preserve install_permission, whose omitted value defaults everyone; UI availability unestablished.
+- debug-disable (REASONED; daemon, docker): PLUGIN_REMOTE_INSTALLING_ENABLED defaults true; false prevents TCP startup and removes debugging-key route, while ports: !reset [] separately removes publication.
+- verify-debug-config (REASONED; dify-console, daemon, docker): Merged Compose should change from published 5003/default-enabled to no publication and explicit false after override and recreation; no Docker/listener demonstration.
+- flowise-tls (REASONED; flowise): Flowise documented TLS uses nginx/certbot upstream localhost:3000; configure NUMBER_OF_PROXIES for real client addresses.
+- librechat-tls (REASONED; librechat): LibreChat documented TLS uses nginx upstream localhost:3080; TRUST_PROXY defaults 1 and must match proxy hops.
+- langflow-tls (REASONED; langflow, langflow-1126): Langflow 1.12.6 LANGFLOW_SSL_CERT_FILE/KEY_FILE settings feed native TLS; guide assessment: a proxy remains a place for login/MFA.
+- langflow-cookies (REASONED; langflow, langflow-1126): Langflow 1.12.6 LANGFLOW_ACCESS_SECURE and LANGFLOW_REFRESH_SECURE default false; set both true behind HTTPS.
+- dify-tls (REASONED; certbot, dify-console): Certbot challenge/domain/email and fullchain.pem/privkey.pem precede certificate update; enable HTTPS and recreate nginx; default HTTPS false, protocols TLSv1.2 TLSv1.3.
+- dify-urls (REASONED; dify): Set CONSOLE_API_URL, CONSOLE_WEB_URL and APP_WEB_URL to public HTTPS; CONSOLE_API_URL controls HTTPS-only cookies.
+- dify-bootstrap (REASONED; dify, dify-console): INIT_PASSWORD defaults empty; set it before first up to gate /install and claim admin privately.
+- dify-secret (REASONED; dify, dify-console): SECRET_KEY signs session/JWT and encrypts stored OAuth credentials; generate random value, or empty auto-generates in storage.
+- dify-registration (REASONED; dify-console): ALLOW_REGISTER=false default closes ordinary self-registration, but not invitations or /install bootstrap.
+- dify-db-redis (REASONED; dify-console): Replace DB_PASSWORD and REDIS_PASSWORD defaults difyai123456 and update embedded CELERY_BROKER_URL password.
+- dify-sandbox (REASONED; dify-console): Replace CODE_EXECUTION_API_KEY/SANDBOX_API_KEY default dify-sandbox together.
+- dify-plugin-keys (REASONED; dify-console): Replace PLUGIN_DAEMON_KEY and PLUGIN_DIFY_INNER_API_KEY example service credentials.
+- dify-agent-keys (REASONED; dify-console): Replace DIFY_AGENT_API_TOKEN and DIFY_AGENT_SERVER_SECRET_KEY; signing key needs unpadded base64url of 32 random bytes.
+- dify-weaviate (REASONED; dify-console): If enabled, rotate WEAVIATE_API_KEY and matching allowed keys; disable anonymous access.
+- dify-api (REASONED; dify): App Bearer keys are separate from console accounts; create per app and keep calls/keys on the backend.
+- flowise-accounts (REASONED; flowise-auth): From v3.0.1, email/password accounts use JWT HTTP-only cookies; old FLOWISE_USERNAME/PASSWORD are deprecated migration settings; claim admin privately.
+- flowise-secrets (REASONED; flowise-auth, flowise): Randomize JWT_AUTH_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET, EXPRESS_SESSION_SECRET default flowise, and TOKEN_HASH_SECRET; APP_URL defaults localhost:3000.
+- flowise-encryption (REASONED; flowise): FLOWISE_SECRETKEY_OVERWRITE supplies stored-credential encryption key; otherwise it lives under SECRETKEY_PATH.
+- flowise-prediction (REASONED; flowise): Chatflow without assigned key is public by ID; assign per-chatflow API key (DefaultKey is precreated), Bearer requests reject missing key with 401.
+- langflow-auto (REASONED; langflow, langflow-1126): Langflow 1.12.6 application AUTO_LOGIN defaults True; pinned official image Dockerfiles set false; explicitly disable it and set a superuser password other than legacy langflow; username defaults langflow and password defaults empty.
+- langflow-secret (REASONED; langflow): Set permanent random LANGFLOW_SECRET_KEY; documented auto-generated key is unsuitable for production.
+- langflow-signup (REASONED; langflow): NEW_USER_IS_ACTIVE defaults False but ENABLE_SIGNUP True; disable signup and keep activation requirement.
+- langflow-api (REASONED; langflow): With auto-login off, POST /api/v1/run/&lt;flow-id&gt; needs x-api-key; create via settings or CLI. SKIP_AUTH_AUTO_LOGIN defaults false, applies only with auto-login and is slated for removal.
+- langflow-host (REASONED; langflow, langflow-compose, langflow-1126): Langflow 1.12.6 settings default HOST localhost; guide assessment: bridged containers need 0.0.0.0 plus host-loopback publication and injected env_file/environment; rolling docs remain unversioned.
+- librechat-bootstrap (REASONED; librechat): First registered user becomes admin; close ALLOW_REGISTRATION after claiming it.
+- librechat-sso (REASONED; librechat): For SSO-only, disable email login and deliberately enable social registration/login; configure OPENID_* and optional required role with provider allowlist and MFA.
+- librechat-secrets (REASONED; librechat): CREDS_KEY is 32 bytes, CREDS_IV 16; JWT secrets at least 32 bytes. Blank values bootstrap keys with persistence caveats; retired JWT defaults are refused.
+- librechat-urls (REASONED; librechat): DOMAIN_CLIENT and DOMAIN_SERVER must use public HTTPS URL.
+- mfa (REASONED; flowise, langflow, librechat): Instance-wide native MFA enforcement is not documented; use provider/fronting MFA. Flowise SSO is Enterprise; Langflow offers external JWT/JWKS.
+- librechat-mfa (REASONED; librechat-mfa, librechat): v0.7.7 changelog lists two-factor enrolment/backup codes, but checked authentication docs do not establish enforced MFA.
+- containment (REASONED; langflow, flowise, librechat, dify-console): Treat editor as code/SSRF authority; isolate runtime, limit mounts/privileges and default-deny egress including metadata; rotate exposed provider keys.
+- flowise-guards (REASONED; flowise): Keep HTTP_SECURITY_CHECK and CUSTOM_MCP_SECURITY_CHECK enabled; disabling MCP check permits arbitrary command execution.
+- librechat-actions (REASONED; librechat): Unset actions.allowedDomains allows public domains with private-target SSRF checks; configured allowlist denies others, and listed private destination grants exception.
+- dify-ssrf (REASONED; dify-console, dify-compose): Keep Dify SSRF proxy for sandbox and HTTP-request nodes; HTTP allowlists do not contain arbitrary local tools.
+- verify-network (REASONED; dify-console, daemon, docker): Inventory all listeners and actual Publishers; direct TCP 5003 success proves exposure, refusal/timeout needs same-host reachable control and merged-model evidence.
+- verify-editor (REASONED; dify, flowise-auth, langflow, librechat): Curl checks transport only; fresh unauthenticated browser must show login, and /install must be already claimed rather than open admin setup.
+- verify-dify (REASONED; dify): Direct /v1/parameters matched pair expects missing-Bearer 401 and valid-key parameters 200; app_unavailable 400 is inconclusive; bundled nginx is not strict api-service attribution.
+- verify-flowise (REASONED; flowise): Assigned-key chatflow prediction must reject missing key and return real output with valid Bearer key; keyless flow is public.
+- verify-langflow (REASONED; langflow): Run API must reject absent x-api-key and return real output with valid key; routing, transport or validation errors are inconclusive.
 <!-- version-basis:end -->
 
 Each of these tools stores your provider API keys (OpenAI, Anthropic, and the rest) and exposes both an editor UI and callable APIs, so an open instance is a secrets vault plus free compute for whoever finds it. All four ship with login of some kind; the exposure comes from skipping the first-run setup, leaving default secrets in place, and publishing the container port on every interface over plain HTTP. And because each one runs user-authored flows with custom-code and HTTP-request/tool nodes, the editor is effectively code-execution and server-side-request authority on the host, so authentication decides who gets in but does not contain what a flow can then run or reach (section 8, [egress-metadata.md](egress-metadata.md)). None of them offers a native second factor that this guide can rely on, so MFA comes from an OIDC provider (where the tool supports OIDC) or from the fronting layer ([mfa.md](mfa.md)).

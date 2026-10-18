@@ -156,46 +156,63 @@ AI assistants must compare these versions with current releases and treat this g
 
 Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
-| Claim | Basis | Status |
-| --- | --- | --- |
-| tls: Direct TLS listens on :443 using the leaf-plus-intermediates certificate and private key; ReadHeaderTimeout is 10 seconds. | Go net/http documentation unknown; Go crypto/tls documentation unknown | REASONED |
-| redirect: Port :80 sends a 301 to https:// plus the fixed canonicalHost and an origin-form request path; empty or non-path RequestURI values fall back to /. Never build the destination from r.Host. | Go net/http documentation unknown; Go Request.Host source 1.27.0 | REASONED |
-| tls-min: crypto/tls defaults to TLS 1.2 minimum as of September 2026; explicitly set MinVersion=VersionTLS12. | Go crypto/tls documentation unknown | REASONED |
-| privilege: Linux privileged-port threshold defaults to 1024 but is configurable per namespace; root or CAP_NET_BIND_SERVICE is needed below it in the usual configuration. | Linux port-threshold documentation unknown | REASONED |
-| proxy: Bind 127.0.0.1:8080 behind a TLS proxy; net/http has no proxy trust setting, so accept forwarded headers only from the isolated, overwriting proxy. | Go net/http documentation unknown | REASONED |
-| proxy-headers: Set HSTS and other security headers at the proxy per the linked headers guide. | Go net/http documentation unknown | REASONED |
-| bcrypt: Use bcrypt cost 12; DefaultCost is 10, inputs over 72 bytes are rejected and CompareHashAndPassword returns nil on match. | Go bcrypt documentation unknown | REASONED |
-| argon: IDKey returns raw bytes; retain random salt and parameters. RFC 9106 choices are time=1/memory=2 GiB/threads=4 or time=3/memory=64 MiB/threads=4. | Go Argon2 documentation unknown | REASONED |
-| cookies: Set session cookie Path=/, Secure, HttpOnly and SameSite=Lax. | Go net/http documentation unknown | REASONED |
-| login-limit: A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits. | Go rate documentation unknown | REASONED |
-| tokens: Load tokens from the environment and generate them per authentication.md; token generation and environment handling lack a listed source. | go-oidc documentation v3 | REASONED |
-| oidc: NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists. | go-oidc documentation v3 | REASONED |
-| mfa: Use pquerna/otp or a fronting identity layer. The fronting identity layer's MFA option has no listed source. | go-oidc documentation v3; pquerna/otp v1.5.0 | REASONED |
-| client-validation: InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation. | Go crypto/tls documentation unknown | REASONED |
-| client-ca: Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR. | Go crypto/tls documentation unknown; Go certificate-store qualification 1.27 | REASONED |
-| platform-ca: Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set. | Go certificate-store qualification 1.27 | REASONED |
-| pprof: Importing pprof registers /debug/pprof/ on DefaultServeMux; profiles, traces, cmdline and forced GC can disclose data or exhaust resources. | Go pprof documentation unknown | REASONED |
-| expvar: Importing expvar registers /debug/vars with cmdline and memstats on DefaultServeMux. | Go expvar documentation unknown | REASONED |
-| diag-bind: Imports do not start listeners; nil handlers serve DefaultServeMux. Give the app its own mux and diagnostics a separate 127.0.0.1:6060 mux, never public proxy routing. | Go net/http documentation unknown; Go pprof documentation unknown; Go expvar documentation unknown | REASONED |
-| body-limit: Wrap the body with MaxBytesReader before decoding; the example 1 MiB policy requires explicit MaxBytesError handling to return 413. | Go header-count qualification 1.27 | REASONED |
-| header-size: MaxHeaderBytes defaults to 1 MiB for request line and headers, independently of body limits. | Go net/http documentation unknown | REASONED |
-| header-count: Go 1.27 adds MaxHeaderValueCount with default 500; this is separate from body limits. | Go header-count qualification 1.27 | REASONED |
-| read-timeout: ReadTimeout bounds the whole request including body; example 30 seconds, zero or negative disables it. | Go net/http documentation unknown | REASONED |
-| write-timeout: WriteTimeout bounds writing; example 60 seconds, zero or negative disables it. | Go net/http documentation unknown | REASONED |
-| header-timeout: ReadHeaderTimeout bounds headers; example 10 seconds, zero falls back to ReadTimeout and negative disables it. | Go net/http documentation unknown | REASONED |
-| idle-timeout: IdleTimeout bounds keep-alive idle time; example 60 seconds, zero falls back to ReadTimeout and negative disables it. | Go net/http documentation unknown | REASONED |
-| redirect-timeout: Apply deadlines to the redirect server too; ListenAndServe sets none. | Go net/http documentation unknown | REASONED |
-| request-deadlines: For long uploads/streaming, use generous server budgets and Go 1.20+ ResponseController read/write deadlines, handling unsupported operations. | Go per-request deadline minimum 1.20+ | REASONED |
-| headers: Install secure(mux) before response commit for nosniff and TLS-only HSTS max-age=63072000 with includeSubDomains. | Go net/http documentation unknown | REASONED |
-| http2: HTTPS enables HTTP/2 automatically; Server.HTTP2 tunes it on current releases; retain maintained cipher/curve defaults. | Go net/http documentation unknown; Go crypto/tls documentation unknown | REASONED |
-| verify-redirect: HTTP should return 301 with an HTTPS Location. | Go net/http documentation unknown | REASONED |
-| verify-tls: HTTPS must succeed without -k. | Go net/http documentation unknown; Go crypto/tls documentation unknown | REASONED |
-| verify-auth: The guide expects /api to return 401/403 without credentials; it records no valid-credential positive control. | Go net/http documentation unknown | REASONED |
-| verify-bind: Inspect every listener for loopback-only application binding behind the proxy. | Go net/http documentation unknown | REASONED |
-| verify-diag-local: A local 6060/debug/pprof/ response of 200 establishes local availability only. | Go pprof documentation unknown | REASONED |
-| verify-diag-route: The public application /debug/pprof/ route should return 404, never 200. | Go net/http documentation unknown; Go pprof documentation unknown | REASONED |
-| verify-diag-external: From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200. | Go net/http documentation unknown; Go pprof documentation unknown | REASONED |
-| request-host: Go 1.27.0 Request.Host is supplied by the client; a fixed canonical hostname plus an origin-form path prevents forged Host or crafted request targets from selecting the redirect destination. | Go Request.Host source 1.27.0 | REASONED |
+Components (recorded basis):
+
+- http: Go net/http documentation, unknown
+- tls: Go crypto/tls documentation, unknown
+- x509: Go certificate-store qualification, 1.27
+- bcrypt: Go bcrypt documentation, unknown
+- argon: Go Argon2 documentation, unknown
+- rate: Go rate documentation, unknown
+- oidc: go-oidc documentation, v3
+- pprof: Go pprof documentation, unknown
+- headers: Go header-count qualification, 1.27
+- deadlines: Go per-request deadline minimum, 1.20+
+- expvar: Go expvar documentation, unknown
+- linux: Linux port-threshold documentation, unknown
+- request: Go Request.Host source, 1.27.0
+- otp: pquerna/otp, v1.5.0
+
+Claims (full source mapping in the front matter):
+
+- tls (REASONED; http, tls): Direct TLS listens on :443 using the leaf-plus-intermediates certificate and private key; ReadHeaderTimeout is 10 seconds.
+- redirect (REASONED; http, request): Port :80 sends a 301 to https:// plus the fixed canonicalHost and an origin-form request path; empty or non-path RequestURI values fall back to /. Never build the destination from r.Host.
+- tls-min (REASONED; tls): crypto/tls defaults to TLS 1.2 minimum as of September 2026; explicitly set MinVersion=VersionTLS12.
+- privilege (REASONED; linux): Linux privileged-port threshold defaults to 1024 but is configurable per namespace; root or CAP_NET_BIND_SERVICE is needed below it in the usual configuration.
+- proxy (REASONED; http): Bind 127.0.0.1:8080 behind a TLS proxy; net/http has no proxy trust setting, so accept forwarded headers only from the isolated, overwriting proxy.
+- proxy-headers (REASONED; http): Set HSTS and other security headers at the proxy per the linked headers guide.
+- bcrypt (REASONED; bcrypt): Use bcrypt cost 12; DefaultCost is 10, inputs over 72 bytes are rejected and CompareHashAndPassword returns nil on match.
+- argon (REASONED; argon): IDKey returns raw bytes; retain random salt and parameters. RFC 9106 choices are time=1/memory=2 GiB/threads=4 or time=3/memory=64 MiB/threads=4.
+- cookies (REASONED; http): Set session cookie Path=/, Secure, HttpOnly and SameSite=Lax.
+- login-limit (REASONED; rate): A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits.
+- tokens (REASONED; oidc): Load tokens from the environment and generate them per authentication.md; token generation and environment handling lack a listed source.
+- oidc (REASONED; oidc): NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists.
+- mfa (REASONED; oidc, otp): Use pquerna/otp or a fronting identity layer. The fronting identity layer's MFA option has no listed source.
+- client-validation (REASONED; tls): InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation.
+- client-ca (REASONED; tls, x509): Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR.
+- platform-ca (REASONED; x509): Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set.
+- pprof (REASONED; pprof): Importing pprof registers /debug/pprof/ on DefaultServeMux; profiles, traces, cmdline and forced GC can disclose data or exhaust resources.
+- expvar (REASONED; expvar): Importing expvar registers /debug/vars with cmdline and memstats on DefaultServeMux.
+- diag-bind (REASONED; http, pprof, expvar): Imports do not start listeners; nil handlers serve DefaultServeMux. Give the app its own mux and diagnostics a separate 127.0.0.1:6060 mux, never public proxy routing.
+- body-limit (REASONED; headers): Wrap the body with MaxBytesReader before decoding; the example 1 MiB policy requires explicit MaxBytesError handling to return 413.
+- header-size (REASONED; http): MaxHeaderBytes defaults to 1 MiB for request line and headers, independently of body limits.
+- header-count (REASONED; headers): Go 1.27 adds MaxHeaderValueCount with default 500; this is separate from body limits.
+- read-timeout (REASONED; http): ReadTimeout bounds the whole request including body; example 30 seconds, zero or negative disables it.
+- write-timeout (REASONED; http): WriteTimeout bounds writing; example 60 seconds, zero or negative disables it.
+- header-timeout (REASONED; http): ReadHeaderTimeout bounds headers; example 10 seconds, zero falls back to ReadTimeout and negative disables it.
+- idle-timeout (REASONED; http): IdleTimeout bounds keep-alive idle time; example 60 seconds, zero falls back to ReadTimeout and negative disables it.
+- redirect-timeout (REASONED; http): Apply deadlines to the redirect server too; ListenAndServe sets none.
+- request-deadlines (REASONED; deadlines): For long uploads/streaming, use generous server budgets and Go 1.20+ ResponseController read/write deadlines, handling unsupported operations.
+- headers (REASONED; http): Install secure(mux) before response commit for nosniff and TLS-only HSTS max-age=63072000 with includeSubDomains.
+- http2 (REASONED; http, tls): HTTPS enables HTTP/2 automatically; Server.HTTP2 tunes it on current releases; retain maintained cipher/curve defaults.
+- verify-redirect (REASONED; http): HTTP should return 301 with an HTTPS Location.
+- verify-tls (REASONED; http, tls): HTTPS must succeed without -k.
+- verify-auth (REASONED; http): The guide expects /api to return 401/403 without credentials; it records no valid-credential positive control.
+- verify-bind (REASONED; http): Inspect every listener for loopback-only application binding behind the proxy.
+- verify-diag-local (REASONED; pprof): A local 6060/debug/pprof/ response of 200 establishes local availability only.
+- verify-diag-route (REASONED; http, pprof): The public application /debug/pprof/ route should return 404, never 200.
+- verify-diag-external (REASONED; http, pprof): From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200.
+- request-host (REASONED; request): Go 1.27.0 Request.Host is supplied by the client; a fixed canonical hostname plus an origin-form path prevents forged Host or crafted request targets from selecting the redirect destination.
 <!-- version-basis:end -->
 
 Preferred production layout: bind the Go server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). `net/http` can also terminate TLS itself, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
