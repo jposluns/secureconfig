@@ -10452,7 +10452,6 @@ REASONED: preceding block; listener and firewall inventory, disallowed-source SS
 - CrowdSec: https://www.crowdsec.net/
 - google-authenticator-libpam: https://github.com/google/google-authenticator-libpam
 - Duo Unix (`UsePAM`, `KbdInteractiveAuthentication`, `AuthenticationMethods publickey,keyboard-interactive`): https://duo.com/docs/duounix
-
 - Ubuntu noble conditional automatic-update configuration, lines 47 to 58, at 0570be65234e2392d420308470d26920fa4cd21a (checked October 2026): https://git.launchpad.net/ubuntu/+source/unattended-upgrades/tree/debian/postinst?id=0570be65234e2392d420308470d26920fa4cd21a#n47
 - Ubuntu noble allowed origins, lines 6 to 18, at 0570be65234e2392d420308470d26920fa4cd21a (checked October 2026): https://git.launchpad.net/ubuntu/+source/unattended-upgrades/tree/data/50unattended-upgrades.Ubuntu?id=0570be65234e2392d420308470d26920fa4cd21a#n6
 - Ubuntu noble apt upgrade timer, lines 5 to 11, at 835f914ef5657b923fbb8b357f134b00de24c6fd (checked October 2026): https://git.launchpad.net/ubuntu/+source/apt/tree/debian/apt-daily-upgrade.timer?id=835f914ef5657b923fbb8b357f134b00de24c6fd#n5
@@ -10461,6 +10460,7 @@ REASONED: preceding block; listener and firewall inventory, disallowed-source SS
 - CentOS Stream 9 dnf-automatic subpackage, at 3d5ca2af8635e0ef77219625f734d503b9900208 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L260-L267
 - CentOS Stream 9 DNF package version, line 75, at 3d5ca2af8635e0ef77219625f734d503b9900208 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L75-L75
 - CentOS Stream 9 downstream DNF patch list, lines 82 to 158, at 3d5ca2af8635e0ef77219625f734d503b9900208 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L82-L158
+- CentOS Stream 9 downstream DNF patch application, lines 281 to 282, at 3d5ca2af8635e0ef77219625f734d503b9900208 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L281-L282
 - DNF 4.14.0 automatic configuration defaults, at 4.14.0 (checked October 2026): https://github.com/rpm-software-management/dnf/blob/4.14.0/etc/dnf/automatic.conf#L1-L22
 - DNF 4.14.0 automatic timer behaviour, at 4.14.0 (checked October 2026): https://github.com/rpm-software-management/dnf/blob/4.14.0/doc/automatic.rst#L38-L50
 - DNF 4.14.0 security upgrade type, at 4.14.0 (checked October 2026): https://github.com/rpm-software-management/dnf/blob/4.14.0/doc/automatic.rst#L86-L91
