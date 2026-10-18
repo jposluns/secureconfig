@@ -11,6 +11,7 @@ because an item that simply vanishes gets proposed again six months later.
 | ID | Item | Ended |
 | --- | --- | --- |
 | 1.276 | `python.md`: bind: cite platform bind mappings and their deployment scope, partial. (M, M) | Done, #670. Cited Render, Heroku and Fly listener scopes and TLS conditions plus Railway target ports, preserving advice and leaving Railway and Cedar source gaps in TODO.md under 1.276. |
+| 1.268 | `paas.md`: https-redirect and verify-redirect, partial. (M, M) | Done, #669. Cited platform redirect settings, statuses and header limits, retained the HEAD command and guide acceptance criterion, and kept unresolved evidence in TODO.md under 1.268. |
 | 1.273 | `nodejs.md`: bind: cite platform bind mappings and their deployment scope, partial. (M, M) | Done, #668. Cited Render, Heroku and Fly listener scopes and TLS conditions plus Railway target ports, preserving advice and leaving Railway and Cedar source gaps in TODO.md under 1.273. |
 | 1.266 | `paas.md`: managed-tls and listener-port, partial. (M, M) | Done, #665. Cited platform TLS and listener contracts, retained custom-domain conditions and source gaps, and labelled ingress/listener advice; unresolved evidence remains in TODO.md under 1.266. |
 | 1.270 | `sqlite.md`: Bash builtins/guards and curl: cite the shell and curl behaviour behind the checks. (M, M) | Done, #666. Pinned Bash and curl primitives for the four SQLite checks, preserved commands and expectations, and bounded version and token-handling assessments. |
