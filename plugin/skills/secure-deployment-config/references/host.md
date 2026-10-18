@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "d8da8c4253794320de2a006c4a260f3b3e2f0bf063b6c67d1803257b8fdb98d0",
+  "body_sha256": "69f0526c898b0ca306b1db8320a26096f1014705ad56d76b2c8534258926c517",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",
@@ -17,6 +17,36 @@ version_basis: {
       "basis": "unknown",
       "sources": {
         "scff3a017f30b": "https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html"
+      }
+    },
+    "aws-ssm": {
+      "name": "AWS Session Manager",
+      "basis": "unknown",
+      "sources": {
+        "s06a2a8e07062": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-enable-ssh-connections.html#session-manager-getting-started-enable-ssh-connections",
+        "s0f77b30546ee": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-prerequisites.html#session-manager-prerequisites"
+      }
+    },
+    "gcp-iap": {
+      "name": "Google Cloud IAP",
+      "basis": "unknown",
+      "sources": {
+        "s7e6eda97f950": "https://docs.cloud.google.com/iap/docs/using-tcp-forwarding#create-firewall-rule"
+      }
+    },
+    "azure-docs": {
+      "name": "Azure documentation snapshot",
+      "basis": "8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f",
+      "sources": {
+        "s6d46120d991b": "https://github.com/MicrosoftDocs/azure-docs/blob/8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f/articles/bastion/bastion-nsg.md#L77-L84"
+      }
+    },
+    "tailscale-docs": {
+      "name": "Tailscale documentation",
+      "basis": "unknown",
+      "sources": {
+        "scf48029376f6": "https://tailscale.com/docs/reference/faq/firewall-ports",
+        "s44f0b2a0a8ba": "https://tailscale.com/docs/features/tailscale-ssh#why-it-matters"
       }
     },
     "firewalld": {
@@ -214,7 +244,7 @@ version_basis: {
     "legacy-name": {"text": "Older configurations use ChallengeResponseAuthentication for KbdInteractiveAuthentication; enable the spelling present when configuring PAM MFA.", "components": ["ssh", "duo"], "sources": ["ssh:s44f73ffcb41e", "duo:s18b76ce18df1"], "status": "REASONED"},
     "ufw-default": {"text": "Set deny incoming and allow outgoing, then enable UFW; permit TCP 80 and 443 for the TLS layer.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED"},
     "ufw-ssh": {"text": "Remove any broad OpenSSH allow before adding an admin-source TCP 22 rule; adding a narrower rule does not replace the old allowance.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED"},
-    "brokered-ssh": {"text": "SSM/tailnet avoid public inbound SSH; IAP uses 35.235.240.0/20 and Bastion its subnet on 22 in both layers. Broker details have no direct source here.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED"},
+    "brokered-ssh": {"text": "SSM SSH uses the agent's outbound TLS connection and needs no inbound port on the managed node; allow outbound HTTPS 443 to the documented Systems Manager endpoints. A tailnet ordinarily needs no inbound internet firewall port, and Tailscale SSH accepts tailnet traffic on port 22. IAP requires cloud ingress from 35.235.240.0/20, or 2600:2d00:1:7::/64 for IPv6 VMs, to SSH's default port 22 or its configured port; where an NSG is applied to the target VM subnet, Bastion requires an inbound SSH rule on default port 22 or a custom port with Standard or Premium SKU. Microsoft's best practice scopes that rule's source to the AzureBastionSubnet IP range. As this guide's advice, check the host firewall for these broker paths; the fetched IAP, Bastion and Tailscale pages do not specify which UFW or firewalld rules, if any, are needed.", "components": ["ufw", "aws-ssm", "gcp-iap", "azure-docs", "tailscale-docs"], "sources": ["ufw:scff3a017f30b", "aws-ssm:s06a2a8e07062", "aws-ssm:s0f77b30546ee", "gcp-iap:s7e6eda97f950", "azure-docs:s6d46120d991b", "tailscale-docs:scf48029376f6", "tailscale-docs:s44f0b2a0a8ba"], "status": "REASONED"},
     "firewalld-zone": {"text": "Find the public interface zone explicitly; remove its broad ssh service, add the IPv4 admin rich rule permanently, then reload to activate it.", "components": ["firewalld"], "sources": ["firewalld:sa1a1385129f1", "firewalld:sc1cb4d135f3b"], "status": "REASONED"},
     "firewalld-audit": {"text": "Inspect applicable zones for other services, port ranges, protocol/source allowances or ACCEPT targets that reopen 22; the narrow rich rule does not supersede them.", "components": ["firewalld"], "sources": ["firewalld:sa1a1385129f1", "firewalld:sc1cb4d135f3b"], "status": "REASONED"},
     "docker-bypass": {"text": "With Docker Engine default Linux bridge firewall rules, published container traffic is diverted before UFW settings; consult docker.md before relying on the host firewall. As this guide's assessment, other modes and paths, including the userland proxy, need separate review in that guide.", "components": ["ufw", "docker"], "sources": ["ufw:scff3a017f30b", "docker:sc920c6946fcf", "docker:sb5ca9f87b1f3"], "status": "REASONED"},
@@ -250,7 +280,7 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | legacy-name: Older configurations use ChallengeResponseAuthentication for KbdInteractiveAuthentication; enable the spelling present when configuring PAM MFA. | OpenSSH documentation unknown; Duo Unix unknown | REASONED |
 | ufw-default: Set deny incoming and allow outgoing, then enable UFW; permit TCP 80 and 443 for the TLS layer. | UFW documentation unknown | REASONED |
 | ufw-ssh: Remove any broad OpenSSH allow before adding an admin-source TCP 22 rule; adding a narrower rule does not replace the old allowance. | UFW documentation unknown | REASONED |
-| brokered-ssh: SSM/tailnet avoid public inbound SSH; IAP uses 35.235.240.0/20 and Bastion its subnet on 22 in both layers. Broker details have no direct source here. | UFW documentation unknown | REASONED |
+| brokered-ssh: SSM SSH uses the agent's outbound TLS connection and needs no inbound port on the managed node; allow outbound HTTPS 443 to the documented Systems Manager endpoints. A tailnet ordinarily needs no inbound internet firewall port, and Tailscale SSH accepts tailnet traffic on port 22. IAP requires cloud ingress from 35.235.240.0/20, or 2600:2d00:1:7::/64 for IPv6 VMs, to SSH's default port 22 or its configured port; where an NSG is applied to the target VM subnet, Bastion requires an inbound SSH rule on default port 22 or a custom port with Standard or Premium SKU. Microsoft's best practice scopes that rule's source to the AzureBastionSubnet IP range. As this guide's advice, check the host firewall for these broker paths; the fetched IAP, Bastion and Tailscale pages do not specify which UFW or firewalld rules, if any, are needed. | UFW documentation unknown; AWS Session Manager unknown; Google Cloud IAP unknown; Azure documentation snapshot 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f; Tailscale documentation unknown | REASONED |
 | firewalld-zone: Find the public interface zone explicitly; remove its broad ssh service, add the IPv4 admin rich rule permanently, then reload to activate it. | firewalld documentation unknown | REASONED |
 | firewalld-audit: Inspect applicable zones for other services, port ranges, protocol/source allowances or ACCEPT targets that reopen 22; the narrow rich rule does not supersede them. | firewalld documentation unknown | REASONED |
 | docker-bypass: With Docker Engine default Linux bridge firewall rules, published container traffic is diverted before UFW settings; consult docker.md before relying on the host firewall. As this guide's assessment, other modes and paths, including the userland proxy, need separate review in that guide. | UFW documentation unknown; Docker Engine networking 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
@@ -318,7 +348,7 @@ sudo ufw allow 443/tcp
 sudo ufw enable
 ```
 
-SSH stays closed to the world here for the same reason rule 3 in [cloud-firewalls.md](cloud-firewalls.md) keeps it off the cloud firewall: `ufw allow OpenSSH` opens port 22 to every address on the internet. Restrict it to the range you administer from. AWS SSM Session Manager (its agent dials out to the SSM service) or a tailnet ([tailscale.md](tailscale.md)) needs no inbound SSH rule at all; GCP IAP and Azure Bastion instead connect to port 22 and need an allow for their documented source range (IAP `35.235.240.0/20`, the Azure `AzureBastionSubnet`) in both firewall layers, per [cloud-firewalls.md](cloud-firewalls.md).
+SSH stays closed to the world here for the same reason rule 3 in [cloud-firewalls.md](cloud-firewalls.md) keeps it off the cloud firewall: `ufw allow OpenSSH` opens port 22 to every address on the internet. Restrict it to the range you administer from. AWS SSM Session Manager SSH uses the SSM Agent's outbound TLS connection to Session Manager endpoints and needs no inbound port on the managed node; allow outbound HTTPS 443 to the documented endpoints. A tailnet ordinarily needs no inbound internet firewall port for Tailscale, and Tailscale SSH accepts traffic from the tailnet on port 22 ([tailscale.md](tailscale.md)). GCP IAP TCP forwarding requires a cloud ingress allow from `35.235.240.0/20` (`2600:2d00:1:7::/64` for IPv6 VMs) to SSH's default port 22 or its configured port; where an NSG is applied to the target VM subnet, Azure Bastion requires an inbound SSH rule on default port 22 or a custom port with Standard or Premium SKU. Microsoft's best practice scopes that rule's source to the `AzureBastionSubnet` IP address range. As this guide's advice, check the effective host firewall rules for the broker paths; the fetched IAP, Bastion and Tailscale pages do not specify which UFW or firewalld rules, if any, are needed. See [cloud-firewalls.md](cloud-firewalls.md).
 
 RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https` and so on) with the same posture, and that includes SSH: `--add-service=ssh` opens port 22 to every address exactly as `ufw allow OpenSSH` does. Open only the ports the TLS-terminating layer needs; databases and app servers stay unreachable from outside per their guides. With Docker Engine's default Linux bridge firewall rules, published container traffic is diverted before ufw's rules; see [docker.md](docker.md) before relying on the firewall. As this guide's assessment, other modes and paths, including the userland proxy, need separate review in that guide.
 
@@ -390,6 +420,12 @@ REASONED: preceding block; listener and firewall inventory, disallowed-source SS
 - cloud-init 20.1 ssh_pwauth call site, at 20.1 (checked October 2026): https://github.com/canonical/cloud-init/blob/20.1/cloudinit/config/cc_set_passwords.py#L230-L232
 - Docker default Linux firewall integration, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L11-L32
 - Docker and ufw published-port behaviour, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L90-L102
+- AWS Session Manager SSH tunnel (rolling) (checked October 2026): https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-enable-ssh-connections.html#session-manager-getting-started-enable-ssh-connections
+- AWS Session Manager managed-node outbound HTTPS prerequisites (rolling) (checked October 2026): https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-prerequisites.html#session-manager-prerequisites
+- Google Cloud IAP TCP forwarding firewall source and SSH port (rolling) (checked October 2026): https://docs.cloud.google.com/iap/docs/using-tcp-forwarding#create-firewall-rule
+- Azure Bastion target VM subnet NSG rule, at 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f (checked October 2026): https://github.com/MicrosoftDocs/azure-docs/blob/8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f/articles/bastion/bastion-nsg.md#L77-L84
+- Tailscale firewall ports (rolling) (checked October 2026): https://tailscale.com/docs/reference/faq/firewall-ports
+- Tailscale SSH tailnet port 22 (rolling) (checked October 2026): https://tailscale.com/docs/features/tailscale-ssh#why-it-matters
 - ufw(8), for `default deny incoming`, `allow` and `status verbose`: https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html
 - firewall-cmd(1), for `--permanent --add-service` and `--add-rich-rule`: https://firewalld.org/documentation/man-pages/firewall-cmd.html
 - firewalld.richlanguage(5), for the `source address` / `service name` / `accept` rule form: https://firewalld.org/documentation/man-pages/firewalld.richlanguage.html
