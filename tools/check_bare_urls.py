@@ -25,7 +25,6 @@ from version_basis import split as split_front_matter
 
 ROOT = Path(__file__).resolve().parents[1]
 URL = re.compile(r"https?://[^\s<>\"'`\[\]]+", re.I)
-ENCODED_END = re.compile(r"%(?:22|5[BbDd]|3[CcEe]|60|20)")
 INLINE_DESTINATION = re.compile(r"\]\([ \t\n]*(<?)")
 REFERENCE = re.compile(r"^ {0,3}\[[^\]]+\]:[ \t]*", re.I)
 INLINE = re.compile(r"\]\([ \t]*(?:<)?$")
@@ -165,15 +164,33 @@ def parsed_findings(path, parser):
         escaped_closers = len(re.findall(r"(?<!\\)(?:\\\\)*\\\)", raw))
         return url_token(unescapeAll(raw), escaped_closers)
 
-    def raw_destinations(content):
+    def parsed_position(content, start, end, autolink, original):
+        """Check that this source span belongs to a parsed destination."""
+        sentinel = f"https://bare-url-probe.invalid/path{start}x{end}"
+        if sentinel in content:
+            return False
+        probe = content[:start] + sentinel + content[end:]
+        before = [(child.type, child.info == "auto") for child in original
+                  if child.type in ("link_open", "image")]
+        after_children = parser.parseInline(
+            probe, {"references": env.get("references", {})})[0].children or ()
+        after = [(child.type, child.info == "auto") for child in after_children
+                 if child.type in ("link_open", "image")]
+        if before != after:
+            return False
+        return any(url_token(child.attrGet("href" if child.type == "link_open" else "src") or "") == sentinel
+                   and (not autolink or child.info == "auto")
+                   for child in after_children if child.type in ("link_open", "image"))
+
+    def raw_destinations(content, children):
         """Count whole raw URLs at inline destination and autolink positions."""
         destinations = Counter()
         spans = [(first, last) for first, last, _ in code_spans(content)]
-        starts = {(match.end(), bool(match.group(1)))
+        starts = {(match.end(), bool(match.group(1)), False)
                   for match in INLINE_DESTINATION.finditer(content)}
-        starts.update((match.start() + 1, True)
+        starts.update((match.start() + 1, True, True)
                       for match in re.finditer(r"<(?=https?://)", content, re.I))
-        for start, angle in starts:
+        for start, angle, autolink in starts:
             if any(first <= start < last for first, last in spans):
                 continue
             match = URL.match(content, start)
@@ -183,12 +200,14 @@ def parsed_findings(path, parser):
             if angle:
                 if content[match.end():match.end() + 1] != ">":
                     continue
+                protected = max(0, raw.count(")") - raw.count("("))
             else:
-                raw = url_token(raw)
-                if content[start + len(raw):start + len(raw) + 1] not in (")", " ", "\t", "\n"):
-                    continue
-            decoded = unescapeAll(raw)
-            if URL.fullmatch(decoded) and url_token(decoded) == decoded:
+                escaped_closers = len(re.findall(r"(?<!\\)(?:\\\\)*\\\)", raw))
+                raw = url_token(raw, escaped_closers)
+                protected = escaped_closers
+            decoded = raw if angle else unescapeAll(raw)
+            if (URL.fullmatch(decoded) and url_token(decoded, protected) == decoded
+                    and parsed_position(content, start, start + len(raw), autolink, children)):
                 destinations[parser.normalizeLink(decoded)] += 1
         return destinations
 
@@ -207,6 +226,7 @@ def parsed_findings(path, parser):
             continue
         line = token.map[0] + 1
         candidates = []
+        children = token.children or ()
         for match in URL.finditer(token.content):
             angle = (match.start() > 0 and token.content[match.start() - 1] == "<"
                      and token.content[match.end():match.end() + 1] == ">")
@@ -215,30 +235,32 @@ def parsed_findings(path, parser):
             decoded = (url_token(unescapeAll(match.group()), closers) if angle
                        else decoded_url(match.group()))
             if "__" in decoded:
+                if (angle and parser.normalizeLink(decoded) not in reference_hrefs
+                        and parsed_position(token.content, match.start(), match.end(),
+                                            True, children)):
+                    continue
                 candidates.append((candidate, parser.normalizeLink(decoded)))
         accounted = Counter()
-        whole_destinations = raw_destinations(token.content)
-        for child in token.children or ():
+        whole_destinations = raw_destinations(token.content, children)
+        for child in children:
             if child.type == "link_open":
                 href = child.attrGet("href")
                 match = URL.match(href or "")
                 if match and parser.normalizeLink(href) not in reference_hrefs:
                     closers = max(0, match.group().count(")") - match.group().count("("))
                     normalized = parser.normalizeLink(url_token(match, closers))
-                    if not ENCODED_END.search(href) or whole_destinations[normalized]:
+                    if whole_destinations[normalized]:
                         accounted[normalized] += 1
-                        if ENCODED_END.search(href):
-                            whole_destinations[normalized] -= 1
+                        whole_destinations[normalized] -= 1
             elif child.type == "image":
                 src = child.attrGet("src")
                 match = URL.match(src or "")
                 if match and parser.normalizeLink(src) not in reference_hrefs:
                     closers = max(0, match.group().count(")") - match.group().count("("))
                     normalized = parser.normalizeLink(url_token(match, closers))
-                    if not ENCODED_END.search(src) or whole_destinations[normalized]:
+                    if whole_destinations[normalized]:
                         accounted[normalized] += 1
-                        if ENCODED_END.search(src):
-                            whole_destinations[normalized] -= 1
+                        whole_destinations[normalized] -= 1
             elif child.type == "code_inline":
                 for match in URL.finditer(child.content):
                     accounted[parser.normalizeLink(decoded_url(match.group()))] += 1

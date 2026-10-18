@@ -106,11 +106,15 @@ autolink or a link destination, or put it in a code span. Escaped `\_\_` and
 character references for underscores count. `tools/check_bare_urls.py` uses the
 pinned markdown-it-py CommonMark parser with tables enabled. For each inline
 token, including those in paragraphs, headings, table cells, lists and quotes,
-it counts URL occurrences in raw content and subtracts parsed link destinations,
-image sources and code spans. A destination with a parser-encoded URL-ending
-character (`"`, `[`, `]`, `<`, `>`, a backtick or space) does not cancel a
-separate bare URL written with that encoding. An author-written encoded
-destination such as `%22` remains exempt. Reference-style link and image destinations come
+it counts URL occurrences in raw content and subtracts code spans and parsed
+inline link, image and autolink destinations only when a whole raw URL sits at
+a position confirmed by the inline parse and normalizes to the destination.
+A destination whose scheme is written with an entity or escape has no counted
+raw URL there and cannot cancel a separate bare occurrence. A destination with
+a parser-encoded URL-ending character (`"`, `[`, `]`, `<`, `>`, a backtick or
+space) cannot cancel a separate bare URL written with that encoding. An
+author-written encoded destination such as `%22` remains exempt. Autolinks
+with entity or escaped underscores are exempt too. Reference-style link and image destinations come
 from definitions outside the inline block, so they are not subtracted; an inline
 link, image or autolink sharing a normalized URL with a definition can therefore
 produce one extra finding. Every
@@ -124,8 +128,10 @@ the finding report line 5. Block code, HTML blocks and reference definitions hav
 inline tokens to scan. Parsed front matter is excluded. Without the pinned
 parser, a local run prints one advisory SKIP and runs the existing lexical
 fallback, which is less exact. CI and `--require-parser` fail if the parser is
-absent or mismatched. The gate recognizes HTTP(S) schemes, not GFM `www.`
-autolinks or single-underscore pairs. A root file that starts with `---` but
+absent or mismatched. The URL rule requires a literal HTTP(S) scheme: a bare
+URL written as `https&#58;//` or `https\://` exits zero even if it contains `__`.
+The gate does not recognize GFM `www.` autolinks or single-underscore pairs.
+A root file that starts with `---` but
 has invalid `version_basis` front matter fails closed before its body is scanned.
 For this gate, `'`, `"`, `[`, `]` and backticks end a URL. Link titles, inline HTML
 comments and a `__…__` emphasis wrapper around a URL can report findings. An
