@@ -172,8 +172,9 @@ Schema 1 requires exactly these top-level fields:
   cgit view segment (`/tree/`, `/plain/`, `/commit/`, `/log/` or `/blob/`); and a 7-to-40-character
   hexadecimal GitHub wiki revision on `github.com` or `www.github.com`. GitLab `/-/blob/`,
   `/-/tree/`, `/-/raw/`, `/-/blame/` and `/-/commit/` use the generic ref rule. The moving refs
-  `main`, `master`, `HEAD`, `trunk` and `develop` are excluded. Classification is lexical and
-  fails closed: a pin-shaped branch counts as a pin. It cannot identify a digit-free tag in a
+  `main`, `master`, `HEAD`, `trunk` and `develop` are excluded case-sensitively. Classification is
+  lexical and fails closed: a pin-shaped branch counts as a pin; a digit in the next path segment,
+  even a file name, also makes the ref a pin. It cannot identify a digit-free tag in a
   generic path, a SHA shorter than seven characters as a SHA (a digit-bearing value can still
   match the tag shape), or forms outside this list, including
   Gitea `/src/tag/`, `/releases/download/`, Bitbucket and googlesource paths. A known basis is

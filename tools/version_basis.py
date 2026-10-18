@@ -111,10 +111,11 @@ def pinned_source_ref(url):
 
     # cgit query refs take precedence over the view's path on any host.
     if any(part in ('tree', 'plain', 'commit', 'log', 'blob') for part in parts):
-        for key in ('h', 'id'):
-            values = parse_qs(parsed.query).get(key, [])
-            if values:
-                return values[0] if values[0] not in _MOVING_REFS else None
+        query = parse_qs(parsed.query)
+        for key in ('id', 'h'):
+            for ref in query.get(key, []):
+                if ref not in _MOVING_REFS:
+                    return ref
     if host == 'raw.githubusercontent.com' and len(parts) >= 4:
         if parts[2:4] == ['refs', 'tags'] and len(parts) >= 6:
             return (pin(parts[4], parts[5]) or parts[4]) if parts[4] not in _MOVING_REFS else None

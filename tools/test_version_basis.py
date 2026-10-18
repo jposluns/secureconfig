@@ -324,6 +324,12 @@ class SourcesBasisTests(unittest.TestCase):
             ('https://git.kernel.org/pub/scm/acme/repo.git/tree/file?h=v2.4', 'v2.4'),
             ('https://git.zx2c4.com/acme/repo/tree/file?h=stable', 'stable'),
             ('https://git.zx2c4.com/acme/repo/plain/file?id=stable', 'stable'),
+            (f'https://git.zx2c4.com/acme/repo/commit/?h=master&id={sha}', sha),
+            (f'https://git.zx2c4.com/acme/repo/commit/?id={sha}&h=master', sha),
+            (f'https://git.zx2c4.com/acme/repo/tree/file?h=main&id={sha}', sha),
+            (f'https://git.zx2c4.com/acme/repo/tree/file?id={sha}&h=main', sha),
+            (f'https://git.zx2c4.com/acme/repo/tree/file?h=v2.4&id={sha}', sha),
+            ('https://github.com/acme/repo/blob/v2.4/file?h=main', 'v2.4'),
             (f'https://github.com/acme/repo/wiki/History/{sha}', sha),
             (f'https://www.github.com/acme/repo/wiki/History/{sha}', sha),
         )
