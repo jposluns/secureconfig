@@ -788,12 +788,12 @@ Self-signed certificates have no revocation and no third-party accountability, a
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
 | outbound: cloudflared opens an outbound-only encrypted tunnel; edge HTTPS needs no inbound firewall ports. | Cloudflare Zero Trust unknown | REASONED |
-| prerequisites: Cloudflare DNS domain and Zero Trust organization required; the guide records a free tier of 50 users, subject to current limits. | Cloudflare Zero Trust unknown | REASONED |
+| prerequisites: Cloudflare DNS domain and Zero Trust organization required; check current free-plan limits. | Cloudflare Zero Trust unknown | REASONED |
 | remote: Copy the dashboard tunnel token to a protected file and configure the OS service to use it; publish the hostname route to http://localhost:3000 only after Access is in place. | Cloudflare Zero Trust unknown; cloudflared token-file minimum 2025.4.0 | REASONED |
 | publish-order: Create Access before publishing the route, or keep the app stopped; routing alone exposes it without login and a stopped origin still has public DNS. | Cloudflare Zero Trust unknown | REASONED |
 | tls-hops: Edge terminates TLS, the tunnel is encrypted, and HTTP to localhost:3000 stays on the host. | Cloudflare Zero Trust unknown | REASONED |
@@ -807,7 +807,7 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 | loopback: Bind the same-host app to 127.0.0.1 so direct public requests cannot bypass Access. | Cloudflare Zero Trust unknown | REASONED |
 | jwt: Validate Cf-Access-Jwt-Assertion signature, issuer and application audience; origin reachability, SSRF and another route can bypass the front door. | Cloudflare Zero Trust unknown; Cloudflare documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | route-coverage: Every added tunnel hostname/path needs an Access application and policy, including coverage by a wildcard application. | Cloudflare Zero Trust unknown | REASONED |
-| quick: Quick trycloudflare.com tunnels are unauthenticated and intended only for short-lived tests. | Cloudflare Zero Trust unknown | REASONED |
+| quick: Quick trycloudflare.com tunnels without --allowed-mail let anyone with the URL access the service; Cloudflare describes them as temporary and for testing and development, not production. | Cloudflare Zero Trust unknown; Cloudflare documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104; cloudflared README 2026.9.3 | REASONED |
 | remote-origin: A remote origin needs HTTPS and a firewall allowing only the cloudflared host; TLS alone does not restrict callers. | Cloudflare Zero Trust unknown | REASONED |
 | origin-ca: Use originRequest.caPool for a self-signed origin; noTLSVerify discards server authentication. | Cloudflare Zero Trust unknown; Cloudflare documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | full-strict: Full (strict) with an Origin CA certificate authenticates the origin to Cloudflare, not callers; browsers do not trust that certificate directly. | Cloudflare Zero Trust unknown; Cloudflare documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
@@ -829,7 +829,7 @@ This is the recommended path when the host cannot or should not accept inbound c
 ## 1. Prerequisites
 
 - A domain added to Cloudflare (the free plan is sufficient), with Cloudflare as its DNS.
-- A Zero Trust organization on the account. At the time of writing the free tier covers up to 50 users; verify current limits at https://www.cloudflare.com/plans/zero-trust-services/
+- A Zero Trust organization on the account. Check current free-plan limits at https://www.cloudflare.com/plans/zero-trust-services/; this guide does not establish a user limit.
 - `cloudflared` installed on the host that can reach the service (packages for Linux, macOS, and Windows: https://github.com/cloudflare/cloudflared).
 
 ## 2. Create the tunnel (dashboard-managed, recommended)
@@ -923,7 +923,7 @@ For APIs and machine clients, create a **service token** in the Zero Trust dashb
 
 - Bind the application to `127.0.0.1` so the tunnel is the only path to it. If the app also listens publicly, Access is decorative.
 - Defense in depth: where the app can read a header, validate the `Cf-Access-Jwt-Assertion` that Access sends against your team's certificates (checking the `aud` tag and the issuer), per [cloud-identity-proxies.md](cloud-identity-proxies.md) section 5. It is the control that still holds when an origin is left reachable, an SSRF reaches `localhost`, or a second route is added to the same tunnel, which is unprotected unless an Access application and policy already cover its hostname and path (a per-hostname application, or a wildcard one).
-- Do not use quick tunnels (`cloudflared tunnel --url http://localhost:3000`, the random `trycloudflare.com` URLs) for anything real: they are unauthenticated and intended for short-lived testing.
+- Do not use quick tunnels (`cloudflared tunnel --url http://localhost:3000`, the random `trycloudflare.com` URLs) for anything real: without `--allowed-mail`, anyone with the URL can access the service. Cloudflare describes these URLs as temporary and for testing and development, not production; the URL stops working when `cloudflared` stops.
 - If the origin must sit on a different machine from `cloudflared`, TLS on that hop (`service: https://...`; see [self-signed.md](self-signed.md)) only encrypts it, it does not restrict who may connect, so the origin machine must also accept connections *only* from the `cloudflared` host (a host or cloud firewall source-restriction), or the app is reachable directly with no Access, just as in the next bullet. Better, run `cloudflared` on the origin machine itself and bind the app to loopback there. For a self-signed origin certificate, configure its issuing CA with `originRequest.caPool`, keeping certificate and hostname verification, rather than `originRequest.noTLSVerify: true`, which discards the server authentication the TLS hop was meant to add.
 - Related but distinct: for a directly-exposed origin behind Cloudflare's proxy (no tunnel), Full (strict) with a Cloudflare **origin certificate** encrypts and authenticates the origin *to* Cloudflare, but it does not stop a client that discovers the origin IP (through DNS history, certificate-transparency scans, or a grey-clouded or MX record on the same host) from connecting straight to it and bypassing Access. Lock the origin down with **Authenticated Origin Pulls** and a firewall: enabling AOP in the dashboard alone enforces nothing at the origin, so the origin must require the client certificate (for nginx, `ssl_verify_client on` with `ssl_client_certificate` set to the CA the presented client certificate chains to). With **global** AOP that CA is Cloudflare's shared origin-pull CA, which only proves the request came from Cloudflare's network (any account); prefer a **zone-level** certificate you upload, trust that certificate's issuing CA at the origin and remove the shared-CA trust, so only your zone is accepted. Because AOP is mutual TLS it cannot authenticate plaintext HTTP, so close origin port 80 (or make it redirect only to the canonical HTTPS host, never serve the app) and restrict inbound 443 to Cloudflare's published IP ranges (https://www.cloudflare.com/ips/), per [cloud-firewalls.md](cloud-firewalls.md). Origin certificates are trusted only by Cloudflare's edge, never by browsers directly.
 
@@ -1051,6 +1051,9 @@ REASONED: following block; port-80 HTTP virtual-host route probe; local marking 
 - Cloudflare Zero Trust documentation: https://developers.cloudflare.com/cloudflare-one/
 - Create a remotely-managed tunnel: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/
 - cloudflared releases: https://github.com/cloudflare/cloudflared
+- Cloudflare Zero Trust plans (rolling; check current free-plan limits, checked October 2026): https://www.cloudflare.com/plans/zero-trust-services/
+- Cloudflare Quick Tunnels (temporary URL, access by URL without allowed-mail, email PIN option and testing/development use; pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, lines 13-42, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/tunnel/get-started/quick-tunnels/index.mdx#L13-L42
+- cloudflared TryCloudflare testing note (pinned tag 2026.9.3, lines 50-52, checked October 2026): https://github.com/cloudflare/cloudflared/blob/2026.9.3/README.md#L50-L52
 - Authenticated Origin Pulls (the origin must validate the client certificate; shared vs zone-level cert): https://developers.cloudflare.com/ssl/origin-configuration/authenticated-origin-pull/
 - Cloudflare IP ranges (origin firewall allowlist): https://www.cloudflare.com/ips/
 - cloudflared as a Linux service (pass --config under sudo): https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/local-management/as-a-service/linux/
@@ -1205,7 +1208,7 @@ REASONED: preceding block; Serve status, allowed access, policy assertions and p
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -1240,7 +1243,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | ssh-persist: Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding. | OpenSSH unknown; autossh source 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476 | REASONED |
 | verify-token: Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client. | frp documentation unknown; frps source v0.71.0 | REASONED |
 | verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
-| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
+| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw status verbose shows ufw-managed rules and defaults, while ufw show raw includes live iptables/ip6tables tables. This guide's reasoning is that ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual unknown; iproute2 manuals v6.12.0; Linux source v6.8; Ubuntu Noble ufw source 4992be7722389108d5f2ebb5ca221b228f0c68b1 | REASONED |
 | verify-route: An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause. | WireGuard unknown; nftables unknown | REASONED |
 | verify-counter: Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer. | WireGuard unknown; nftables unknown | REASONED |
 | verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown; iproute2 manuals v6.12.0 | REASONED |
@@ -1308,7 +1311,7 @@ To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forwar
 
 ## Verify
 
-REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, nftables and OpenSSH documentation defines the checks below. This read-only review cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run.
+REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, Ubuntu Noble ufw source, nftables and OpenSSH documentation defines the checks below. This read-only review cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run.
 
 ```bash
 # frp positive control: with the correct auth.token, frpc logs 'login to server success' (proving
@@ -1329,12 +1332,17 @@ sudo wg show wg0          # needs privilege; shows the listen-port (51820) + per
 ip link show wg0          # expect the UP flag in the <...> flags; a WireGuard interface usually shows operational 'state UNKNOWN', which is fine. wg show reporting a port while the interface is administratively down is why this check exists
 ss -ulnp                  # read every UDP listener to spot any OTHER, unexpected service; do not rely on it to confirm WireGuard (the in-kernel socket has no owning process to show under -p, and a real host also lists resolved/mDNS)
 # ufw must be active with a default-deny (or default-reject) incoming policy, or this proves nothing
-# ('inactive' or a default-allow policy would pass it while the port is open):
+# ('inactive' or a default-allow policy would pass it while the port is open). Its status shows
+# ufw-managed rules and defaults, not rules from ufw's rules files:
 sudo ufw status verbose
-# confirm nothing admits UNAUTHORIZED external traffic to the tunneled service beyond the intended
-# tunnel/proxy path, for BOTH IPv4 and IPv6; ufw shows only its own iptables/ip6tables view, so read
-# native nftables rules (the forward rule above) separately with 'nft list ruleset':
+# Check IPV6 in /etc/default/ufw: yes applies IPv6 rules; no accepts IPv6 only on loopback.
+# Confirm nothing admits UNAUTHORIZED external traffic to the tunneled service beyond the intended
+# tunnel/proxy path, for BOTH IPv4 and IPv6. This raw report includes live iptables/ip6tables
+# filter, nat, mangle and raw tables, beyond the status view:
 sudo ufw show raw
+# This guide's reasoning: the iptables/ip6tables report does not replace native nftables inspection.
+# Read the native ruleset, including the forward rule above, separately:
+sudo nft list ruleset
 
 # positive control: from the peer, ping a host reachable ONLY through the tunnel (another peer, or a
 # server-side address in 192.168.88.0/24 that the peer cannot reach on its own LAN), so a success proves
@@ -1382,6 +1390,11 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 - frps stcp and sudp proxies register an in-process visitor listener (`server/visitor/visitor.go` L49-L57, `NewInternalListener`), and xtcp registers with the NAT-hole controller (`server/proxy/xtcp.go` L63); none opens a socket (pinned tag v0.71.0): https://github.com/fatedier/frp/blob/v0.71.0/server/visitor/visitor.go#L49-L57, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/stcp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/sudp.go#L43-L46, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/proxy.go#L202-L215, https://github.com/fatedier/frp/blob/v0.71.0/pkg/util/net/listener.go#L25-L37, https://github.com/fatedier/frp/blob/v0.71.0/server/proxy/xtcp.go#L63 and https://github.com/fatedier/frp/blob/v0.71.0/pkg/nathole/controller.go#L125-L139
 - autossh SSH monitoring and restart (pinned commit 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476, checked October 2026): https://github.com/Autossh/autossh/blob/90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476/README#L25-L26
 - Ubuntu Noble ufw manual, status verbose, show raw and IPv4/IPv6 rule visibility (rolling documentation, checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html
+- Ubuntu Noble ufw manual, status and status verbose (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 70-93, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n70
+- Ubuntu Noble ufw manual, status limitations and show raw tables (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 532-541, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n532
+- Ubuntu Noble ufw manual, IPv6 configuration and rule display (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 546-549, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n546
+- Ubuntu Noble ufw default IPv6 setting (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 4-7, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/conf/ufw.defaults?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n4
+- Ubuntu Noble ufw iptables backend, raw report IPv4/IPv6 table enumeration (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 169-260, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/src/backend_iptables.py?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n169
 - iproute2 ip-link manual, "ip link show - display device attributes"; the device name "specifies the network device to show." (pinned tag v6.12.0, checked October 2026): https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ip-link.8.in
 - Linux administrative IFF_UP flag (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L39-L40
 - Linux operational UNKNOWN state (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L58-L61
