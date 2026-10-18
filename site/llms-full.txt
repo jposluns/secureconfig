@@ -1656,7 +1656,7 @@ Each generates and verifies RFC 6238 codes and pairs with a QR library so users 
 ## SSH and host logins
 
 - [google-authenticator-libpam](https://github.com/google/google-authenticator-libpam): PAM module supporting per-account TOTP. Guide assessment: it protects only the logins whose PAM services include it. Its `google-authenticator` setup command displays a QR code when libqrencode is available. Debian trixie and Ubuntu noble list the `libpam-google-authenticator` package as 20191231-based builds; the behaviour above is cited at tag `1.11`.
-- Duo Unix (`pam_duo`) adds push-approval MFA to SSH: https://duo.com/docs/duounix
+- Duo Unix (`pam_duo`) adds push-approval MFA to SSH: https://duo.com/docs/duounix.
   The pinned `pam_duo.8` documents `verified_push` (default `no`), which cannot be combined with `autopush` (see Sources).
 - Make the PAM factor mandatory, or it is not enforced: with `UsePAM yes` and `KbdInteractiveAuthentication yes`, set `AuthenticationMethods publickey,keyboard-interactive:pam` in sshd (the `:pam` device pins the second step to the PAM stack, since a bare `keyboard-interactive` can route to another backend, and requiring the public key first means a key-based login still runs it). Guide advice: drop `nullok` once rollout is done so this module rejects accounts without a secret file. Set Duo's `failmode=secure` (its default `safe` grants access when Duo is unreachable) with a separately controlled emergency path.
 
