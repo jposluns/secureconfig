@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2e6955fea4d5501a2264d41abcb84bc91aed0e3fc1a0bd21e950a753762740b2",
+  "body_sha256": "863b1b9bc35d31d5c6f4908e80cf9c34b54f2263a1cb6258e8b0d0bb915f2a18",
   "components": {
     "python": {
       "name": "Python http.server documentation",
@@ -145,10 +145,43 @@ version_basis: {
       "sources": {
         "s592eb65718de": "https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man3/SSL_CTX_load_verify_locations.pod#L39-L49"
       }
+    },
+    "render": {
+      "name": "Render documentation",
+      "basis": "unknown",
+      "sources": {
+        "s1820ac471b6c": "https://render.com/docs/web-services"
+      }
+    },
+    "heroku": {
+      "name": "Heroku documentation",
+      "basis": "unknown",
+      "sources": {
+        "s370d4beec29a": "https://devcenter.heroku.com/articles/runtime-principles",
+        "s211f5fe76042": "https://devcenter.heroku.com/articles/generations",
+        "s0c5bf300cef4": "https://devcenter.heroku.com/articles/http-routing"
+      }
+    },
+    "fly-pinned": {
+      "name": "Fly.io pinned documentation",
+      "basis": "2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9",
+      "sources": {
+        "s62fec91543a1": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42",
+        "s61c1e50d2c11": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92",
+        "s254c8c8a5edd": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97",
+        "s32999aa4c58c": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176"
+      }
+    },
+    "railway": {
+      "name": "Railway documentation",
+      "basis": "72354493198302677fb6be6c692dd75c64cae2c6",
+      "sources": {
+        "sac1383056b65": "https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146"
+      }
     }
   },
   "claims": {
-    "bind": {"text": "Use loopback behind a same-host TLS proxy; wildcard is for authenticated direct TLS or private managed ingress. Platform-specific address/port mappings are cross-guide guidance without a listed platform source.", "components": ["gunicorn", "uvicorn"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9"], "status": "REASONED"},
+    "bind": {"text": "This guide advises loopback for same-host TLS proxies, no extra managed listeners, and wildcard only for authenticated direct TLS or private TLS ingress; app auth remains required. Rules vary (Fir Private Spaces: IPv6/dual-stack recommended; Fly without handlers: TCP passthrough); Railway address/injected port/TLS location and Cedar address remain uncited.", "components": ["gunicorn", "uvicorn", "render", "heroku", "fly-pinned", "railway"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9", "render:s1820ac471b6c", "heroku:s370d4beec29a", "heroku:s211f5fe76042", "heroku:s0c5bf300cef4", "fly-pinned:s62fec91543a1", "fly-pinned:s61c1e50d2c11", "fly-pinned:s254c8c8a5edd", "fly-pinned:s32999aa4c58c", "railway:sac1383056b65"], "status": "REASONED"},
     "flask-tls": {"text": "Flask development server binds 127.0.0.1:8443 with cert/key ssl_context; adhoc requires cryptography and remains development-only.", "components": ["werkzeug"], "sources": ["werkzeug:sd5066c63a3ca"], "status": "REASONED"},
     "gunicorn-tls": {"text": "Gunicorn binds 0.0.0.0:8443 with --certfile and --keyfile for direct TLS.", "components": ["gunicorn"], "sources": ["gunicorn:s72daf362300c"], "status": "REASONED"},
     "uvicorn-tls": {"text": "Uvicorn binds 0.0.0.0:8443 with --ssl-certfile and --ssl-keyfile for direct TLS.", "components": ["uvicorn"], "sources": ["uvicorn:s02429a4a09d9"], "status": "REASONED"},
@@ -202,10 +235,14 @@ Components (recorded basis):
 - httpx: HTTPX source and documentation, 0.28.1
 - cpython-ssl: CPython ssl source and documentation, v3.14.8
 - openssl: OpenSSL documentation, openssl-4.0.3
+- render: Render documentation, unknown
+- heroku: Heroku documentation, unknown
+- fly-pinned: Fly.io pinned documentation, 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9
+- railway: Railway documentation, 72354493198302677fb6be6c692dd75c64cae2c6
 
 Claims (full source mapping in the front matter):
 
-- bind (REASONED; gunicorn, uvicorn): Use loopback behind a same-host TLS proxy; wildcard is for authenticated direct TLS or private managed ingress. Platform-specific address/port mappings are cross-guide guidance without a listed platform source.
+- bind (REASONED; gunicorn, uvicorn, render, heroku, fly-pinned, railway): This guide advises loopback for same-host TLS proxies, no extra managed listeners, and wildcard only for authenticated direct TLS or private TLS ingress; app auth remains required. Rules vary (Fir Private Spaces: IPv6/dual-stack recommended; Fly without handlers: TCP passthrough); Railway address/injected port/TLS location and Cedar address remain uncited.
 - flask-tls (REASONED; werkzeug): Flask development server binds 127.0.0.1:8443 with cert/key ssl_context; adhoc requires cryptography and remains development-only.
 - gunicorn-tls (REASONED; gunicorn): Gunicorn binds 0.0.0.0:8443 with --certfile and --keyfile for direct TLS.
 - uvicorn-tls (REASONED; uvicorn): Uvicorn binds 0.0.0.0:8443 with --ssl-certfile and --ssl-keyfile for direct TLS.
@@ -229,7 +266,7 @@ Claims (full source mapping in the front matter):
 - verify-bind (REASONED; gunicorn, uvicorn): Inspect every listener for loopback behind a same-host proxy or the required managed-ingress address and port.
 <!-- version-basis:end -->
 
-Covers Flask, FastAPI/Uvicorn, Gunicorn, and Django. Preferred production layout: bind the app server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). On a managed platform the platform terminates TLS at its edge and you bind the address it requires ([paas.md](paas.md)). The app servers can also terminate TLS themselves, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
+Covers Flask, FastAPI/Uvicorn, Gunicorn, and Django. This guide's preferred production layout: bind the app server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). For managed HTTP ingress, bind the listener required by your deployment; TLS termination depends on the platform and configuration described below ([paas.md](paas.md)). The app servers can also terminate TLS themselves, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
 ## 1. TLS per server
 
@@ -257,7 +294,16 @@ uvicorn main:app --host 0.0.0.0 --port 8443 \
   --ssl-keyfile  /etc/ssl/private/server.key
 ```
 
-Bind to `0.0.0.0` only when either (a) the process itself terminates TLS with authentication in place, or (b) a platform terminates TLS at its ingress and reaches your app over a private or container network. On a managed platform you bind the address and port it requires (`0.0.0.0` on `$PORT` for Render, Railway, and Heroku Cedar; `::` on `$PORT` for Heroku Fir; `0.0.0.0` matching `internal_port` for Fly) and the platform handles TLS, so plain HTTP behind that protected ingress is fine and application authentication is still required ([paas.md](paas.md)). Otherwise, on a host you expose directly, keep `127.0.0.1` and terminate TLS in a reverse proxy.
+This guide's advice: Bind to `0.0.0.0` only when either (a) the process itself terminates TLS with authentication in place, or (b) a platform terminates TLS at its ingress and reaches your app over a private or container network. Otherwise, on a host you expose directly, keep `127.0.0.1` and terminate TLS in a reverse proxy.
+
+This guide's advice for managed platforms: do not add extra listeners; bind only the listener required by your deployment. The documented HTTP ingress mappings are:
+
+- Render web services must bind `0.0.0.0`. Render recommends the `PORT` environment variable (at the time of writing, default port 10000, configurable), can usually detect another bound port, and requires the public HTTP server to use `PORT` when multiple ports are bound ([web services](https://render.com/docs/web-services)).
+- Heroku assigns each web process its port through `PORT` ([runtime principles](https://devcenter.heroku.com/articles/runtime-principles)). Fir Private Spaces networking uses IPv6 by default; Heroku warns that IPv4-only assumptions do not bind properly and recommends an IPv6 or dual-stack listener, typically `::` ([generations](https://devcenter.heroku.com/articles/generations)). These pages do not establish Cedar's listener address.
+- Fly Proxy HTTP services must be reachable over IPv4: use `0.0.0.0` and match the configured `internal_port` to the app listener ([service binding](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42)). IPv4-mapped IPv6 wildcard behaviour depends on the VM and runtime ([wildcard qualification](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92)).
+- Railway domains route to a detected or selected internal target port; the cited passage does not establish a required listener address, an injected `PORT` or the TLS termination location ([target ports](https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146)).
+
+Render's load balancer terminates inbound HTTPS and forwards HTTP to the web service ([web services](https://render.com/docs/web-services)). Heroku's HTTP routing page describes a load balancer offering SSL termination and routers forwarding HTTP to web dynos; it notes that both Private Spaces generations have different routers, so this is not a complete account of Private Spaces routing ([HTTP routing](https://devcenter.heroku.com/articles/http-routing)). Fly Proxy's `tls` handler terminates TLS and forwards plaintext ([TLS handler](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176)); without handlers it passes TCP through, allowing the app to terminate TLS itself ([TCP passthrough](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97)). This guide's advice: plain HTTP is acceptable only behind protected ingress that terminates TLS; application authentication is still required ([paas.md](paas.md)).
 
 ## 2. Django settings for HTTPS
 
@@ -365,3 +411,12 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 - CPython ssl documentation for default CAs and silent failure (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L1642-L1649
 - OpenSSL default CA file environment override (openssl-4.0.3, checked October 2026): https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man3/SSL_CTX_load_verify_locations.pod#L39-L49
 - Requests verify=False disables certificate verification (v2.32.3, checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L241-L243
+- Render web-service listener and TLS termination (checked October 2026): https://render.com/docs/web-services
+- Heroku HTTP routing (checked October 2026): https://devcenter.heroku.com/articles/http-routing
+- Heroku web-process port assignment (checked October 2026): https://devcenter.heroku.com/articles/runtime-principles
+- Heroku Fir Private Spaces networking and listener recommendation (checked October 2026): https://devcenter.heroku.com/articles/generations
+- Fly TCP passthrough (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97
+- Fly TLS termination (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176
+- Fly public service binding (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42
+- Fly IPv4 and IPv6 wildcard qualification (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92
+- Railway target ports (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146
