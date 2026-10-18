@@ -99,6 +99,49 @@ This repository covers deployment exposure: TLS, authentication, MFA, secret han
 
 8. **A validator's character set is spelled out, never written as a range.** Outside the C locale, GNU grep, GNU sed and bash `[[ =~ ]]` let a bracket range such as `[A-Za-z]` or `[0-9a-f]` match non-ASCII letters and digits (`é` matched both in the #356 review), and bash `case` is ASCII only while its `globasciiranges` option is on, which a build or a `shopt -u` can change; a reader pastes a block into whatever locale their terminal has. A guard that accepts or refuses input writes its set out, as in `*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-]*` for a host name or `[0123456789abcdef]` for a generated hex value, which means the same thing in every locale, tool and shell. A POSIX class in an accept list is not a fix on its own: `[[:alnum:]]` matches non-ASCII letters under C.UTF-8 too, so a class that decides what to accept is sound only inside a check that runs entirely under an explicit `LC_ALL=C`, as the token search in `mcp-clients.md` does. A class in a reject list is sound in any locale, because a locale that widens the class only refuses more: refusing the locale's whitespace and control characters with `*[[:space:][:cntrl:]]*`, as `chat-uis.md` does and documents, needs neither a spelled-out set nor `LC_ALL=C`. A false positive is waived in `tools/bracket_ranges_allow.txt`, never in the guide. Each entry has four TAB-separated fields: `<guide-file> TAB sha256:<span digest> TAB sha256:<block digest> TAB <reason>`, with each digest 64 lowercase hex digits. Hash SHA-256 of UTF-8 of the extracted, newline-normalized text: `blocks_of` converts CRLF and bare CR to LF and removes fence indentation. The span is the opener line or, when any scanned opener on it retains a spanning reading, all lines from it through Bash block end, joined with LF and no added trailing LF. The block digest hashes the whole extracted body, excluding fence lines. Preserve backslashes and remaining whitespace; do not hash joined or quote-stripped readings. These are not raw-file byte digests: changing only LF to CRLF or bare CR keeps the waiver. One entry covers the findings attributed to one opener-line occurrence; later independent openers need their own entries, and duplicate occurrences consume duplicate entries. Moving a span to a different block body or editing any extracted line of its enclosing block makes the entry stale, including lines before or after the span. Absolute line numbers are not bound: edits elsewhere in the guide and movement of a whole unchanged block within it keep the waiver. A range-free validator false positive needs a reason distinguishing it from a real range. Malformed digests, empty reasons, stale entries and retired in-guide waiver markers fail the gate. The gate `tools/check_bracket_ranges.py` scans every fenced bash block in the guides, README.md, controls-reference.md and this file, including comments and heredocs, without shell lexing. Quote-free closed prefixes settle the lexical reading; ambiguous alternatives retain the span through block end. The test-word exemption requires a same-line standalone close and excludes bare one-word literal tests. Under threat model (B), the target is accidental locale-dependent ranges in accept-list validators, and structural defects must be fixed. Runtime expansion that changes the list, test-word-shaped data and constructed multiline quoting are disclosed residual classes, not hardening targets. In particular, empty-variable expansion in `[!$a]` across a quoted newline (codex round-8 P1-1) and `re='^ [ a-z x ] +$'` (P1-2) remain disclosed misses. Other residuals include bracket-free tr ranges, POSIX classes, \w, runtime assembly, non-bash fences and fence-extraction limits. The ship criterion is that neither review family finds a realistic, accidental fail-open. The gate reports the current bash-block, guide and waived-expression counts; every finding must be covered by a valid allowlist entry. At #360, after merging main, the delta against qa/360-r9 was 1 added and 0 removed findings: Python sys.argv[1] indexing in the vLLM TCP probe. Four entries were rebound after main's rule-7 guard sweep; their spans and reasons are unchanged. All span and block bindings match, and individual block-line edits each invalidate their waiver and leave a stale entry; `tools/test_bracket_ranges.py` edits each line of every waived block and prints the current binding and edit counts. The deterministic suite has 2892 cases (2830 ordinary, 41 allowlist, 4 quote-removal and 17 joining), 2884 checked behaviours, 8 disclosed blind spots and 17 entry-point runs. Mutations removing block binding, using a partial block, accepting legacy entries or malformed block digests, preserving raw line endings, binding only the opener or skipping stale detection fail the suite. The fuzzer has 17 regression tests. Its length-5 run with `--multiline-length 4` generates 2,129,785 candidates per engine under C and en_US.utf8. Glob: 645,833 parsed, 157,068 live and flagged, 0 missed; grep -E: 1,250,035 parsed, 18,010 live and flagged, 0 missed; Bash regex: 1,895,043 parsed, 250,686 live and flagged, 0 missed. These bounded counts match round 8. The gate's docstring details the settlement argument, false positives and residuals.
 
+## Root Markdown URLs
+
+In every tracked root Markdown body, write an HTTP(S) URL containing `__` as an
+autolink or a link destination, or put it in a code span. Escaped `\_\_` and
+character references for underscores count. `tools/check_bare_urls.py` uses the
+pinned markdown-it-py CommonMark parser with tables enabled. For each inline
+token, including those in paragraphs, headings, table cells, lists and quotes,
+it counts URL occurrences in raw content and subtracts code spans and parsed
+inline link and image destinations only when a whole raw URL sits at a position
+confirmed by the inline parse and normalizes to the destination. A confirmed
+autolink removes its own raw occurrence once and cannot cancel another URL.
+A destination whose scheme is written with an entity or escape has no counted
+raw URL there and cannot cancel a separate bare occurrence. A destination with
+a parser-encoded URL-ending character (`"`, `[`, `]`, `<`, `>`, a backtick or
+space) cannot cancel a separate bare URL written with that encoding. An
+author-written encoded destination such as `%22` remains exempt. Autolinks
+with entity or escaped underscores are exempt too. Reference-style link and image destinations come
+from definitions outside the inline block, so they are not subtracted; an inline
+link, image or autolink sharing a normalized URL with a definition can therefore
+produce one extra finding. Every
+remaining occurrence is bare, including link text, image alt text and URLs in
+inline HTML content. A link whose text and
+destination are the same URL has one finding.
+The reported line is the first line of the inline block, even if the URL appears
+later in that block. A bare CR counts as a line break to the parser but not to
+the gate's LF-based line map: two bare CRs before a URL on LF line 3 can make
+the finding report line 5. Block code, HTML blocks and reference definitions have no
+inline tokens to scan. Parsed front matter is excluded. Without the pinned
+parser, a local run prints one advisory SKIP and runs the existing lexical
+fallback, which is less exact. CI and `--require-parser` fail if the parser is
+absent or mismatched. The URL rule requires a literal HTTP(S) scheme: a bare
+URL written as `https&#58;//` or `https\://` exits zero even if it contains `__`.
+The gate does not recognize GFM `www.` autolinks or single-underscore pairs.
+A root file that starts with `---` but
+has invalid `version_basis` front matter fails closed before its body is scanned.
+For this gate, `'`, `"`, `[`, `]` and backticks end a URL. An autolink or inline
+link destination with one of these characters after `__` can therefore report a
+finding, even when it renders as a link. Link titles, inline HTML comments and a `__…__` emphasis wrapper around a URL can report findings. An
+escaped `(` in a destination or an escaped `)` after an inline link can produce
+one extra finding, as can a code span inside image alt text. Write an accepted
+citation as an autolink, an inline
+link destination or a code span outside image alt text.
+
 ## Version basis
 
 The enrolled guides are listed in `tools/version_basis_guides.txt`. Their front matter uses a
