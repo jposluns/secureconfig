@@ -73,9 +73,9 @@ version_basis: {
         "se456e52d21c6": "https://github.com/memcached/memcached/wiki/ReleaseNotes1642"
       }
     },
-    "release-notes": {
-      "name": "memcached release notes",
-      "basis": "unknown",
+    "release-notes-source": {
+      "name": "memcached release notes revision",
+      "basis": "780e280d1a7f98f2981ffeb357ef0c9b182a9844",
       "sources": {
         "s0a46fce08585": "https://github.com/memcached/memcached/wiki/ReleaseNotes1645/780e280d1a7f98f2981ffeb357ef0c9b182a9844"
       }
@@ -83,7 +83,7 @@ version_basis: {
   },
   "claims": {
     "default": {"text": "Stock memcached has no authentication and binds INADDR_ANY on TCP11211; isolate it from the internet and untrusted users.", "components": ["docs", "stable"], "sources": ["docs:sb2bb8731440a", "stable:s05c72b35637d"], "status": "REASONED"},
-    "releases": {"text": "Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases.", "components": ["security", "docs", "release-notes"], "sources": ["release-notes:s0a46fce08585", "security:se456e52d21c6", "docs:s75df2663dea3"], "status": "REASONED"},
+    "releases": {"text": "Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases.", "components": ["security", "docs", "release-notes-source"], "sources": ["release-notes-source:s0a46fce08585", "security:se456e52d21c6", "docs:s75df2663dea3"], "status": "REASONED"},
     "bind": {"text": "Use loopback or an intended private address with firewall restrictions; repeated -l/address-specific ports can add listeners that require inspection.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:sf2153ed1541e"], "status": "REASONED"},
     "ports": {"text": "Set -p 11211 -U 0 explicitly; zero disables the corresponding transport and changing TCP port provides no access control.", "components": ["stable"], "sources": ["stable:s05c72b35637d"], "status": "REASONED"},
     "udp-default": {"text": "UDP defaults disabled since 1.5.6; keep -U 0 against inherited settings and reflection/amplification exposure.", "components": ["docs"], "sources": ["docs:s9b5a9f424414"], "status": "REASONED"},
@@ -134,7 +134,7 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | default: Stock memcached has no authentication and binds INADDR_ANY on TCP11211; isolate it from the internet and untrusted users. | memcached documentation unknown; memcached source 1.6.45 | REASONED |
-| releases: Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases. | memcached security release notes unknown; memcached documentation unknown; memcached release notes unknown | REASONED |
+| releases: Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases. | memcached security release notes unknown; memcached documentation unknown; memcached release notes revision 780e280d1a7f98f2981ffeb357ef0c9b182a9844 | REASONED |
 | bind: Use loopback or an intended private address with firewall restrictions; repeated -l/address-specific ports can add listeners that require inspection. | memcached source 1.6.45; memcached documentation unknown | REASONED |
 | ports: Set -p 11211 -U 0 explicitly; zero disables the corresponding transport and changing TCP port provides no access control. | memcached source 1.6.45 | REASONED |
 | udp-default: UDP defaults disabled since 1.5.6; keep -U 0 against inherited settings and reflection/amplification exposure. | memcached documentation unknown | REASONED |

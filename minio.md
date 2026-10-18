@@ -10,7 +10,6 @@ version_basis: {
       "basis": "unknown",
       "sources": {
         "s9719f7f2368e": "https://github.com/minio/minio",
-        "s676cd1d021a2": "https://github.com/minio/minio/blob/f0b91e5504663c4672da451877857b57c3345295/cmd/common-main.go",
         "s010df9b91c3e": "https://docs.min.io/aistor/reference/aistor-server/settings/root-credentials/",
         "s832ebbd6b12d": "https://docs.min.io/aistor/reference/aistor-server/settings/#file-based-environment-variables",
         "s77cdb5121ee1": "https://docs.min.io/aistor/administration/iam/",
@@ -74,7 +73,7 @@ version_basis: {
     }
   },
   "claims": {
-    "lifecycle": {"text": "Community repository was archived 2026-04-25 and receives no fixes; guide settings target AIStor Free/Enterprise and call for migration.", "components": ["aistor"], "sources": ["aistor:s9719f7f2368e", "aistor:s676cd1d021a2"], "status": "REASONED"},
+    "lifecycle": {"text": "Community repository was archived 2026-04-25 and receives no fixes; guide settings target AIStor Free/Enterprise and call for migration.", "components": ["aistor", "console"], "sources": ["aistor:s9719f7f2368e", "console:s676cd1d021a2"], "status": "REASONED"},
     "root-files": {"text": "Root credentials come from protected regular 0600 files without whitespace/newlines; set only *_FILE paths, remove overriding direct values and start a fresh process.", "components": ["aistor"], "sources": ["aistor:s010df9b91c3e", "aistor:s832ebbd6b12d"], "status": "REASONED"},
     "root-default": {"text": "Without direct credentials or files, root defaults minioadmin/minioadmin; root is administrative and applications need scoped keys.", "components": ["aistor"], "sources": ["aistor:s77cdb5121ee1", "aistor:s3be1eade5af1", "aistor:s72c067e99d16", "aistor:s2a0ce722d930"], "status": "REASONED"},
     "tls": {"text": "public.crt/private.key under HOME/.minio/certs or certs-dir enable HTTPS; clients trust the CA without disabling verification.", "components": ["aistor"], "sources": ["aistor:sa62a16f9bfe7"], "status": "REASONED"},
@@ -132,7 +131,7 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| lifecycle: Community repository was archived 2026-04-25 and receives no fixes; guide settings target AIStor Free/Enterprise and call for migration. | AIStor documentation unknown | REASONED |
+| lifecycle: Community repository was archived 2026-04-25 and receives no fixes; guide settings target AIStor Free/Enterprise and call for migration. | AIStor documentation unknown; MinIO console source f0b91e5504663c4672da451877857b57c3345295 | REASONED |
 | root-files: Root credentials come from protected regular 0600 files without whitespace/newlines; set only *_FILE paths, remove overriding direct values and start a fresh process. | AIStor documentation unknown | REASONED |
 | root-default: Without direct credentials or files, root defaults minioadmin/minioadmin; root is administrative and applications need scoped keys. | AIStor documentation unknown | REASONED |
 | tls: public.crt/private.key under HOME/.minio/certs or certs-dir enable HTTPS; clients trust the CA without disabling verification. | AIStor documentation unknown | REASONED |

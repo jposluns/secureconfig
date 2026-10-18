@@ -101,9 +101,7 @@ version_basis: {
       "name": "OpenSearch documentation",
       "basis": "unknown",
       "sources": {
-        "s6e10cf9ec35a": "https://github.com/opensearch-project/security/blob/4ba3cc0e2ebec61b726b227fdf51e55f4a502182/LICENSE.txt",
         "s73e416ebf765": "https://docs.opensearch.org/latest/security/configuration/demo-configuration/",
-        "se8c473c01153": "https://github.com/opensearch-project/security/blob/03a224d16045a8f561e2d7d84b8765c95309524c/config/internal_users.yml",
         "s4e3281cb3d23": "https://docs.opensearch.org/latest/security/configuration/tls/",
         "s07ddf2781a70": "https://docs.opensearch.org/latest/security/access-control/users-roles/",
         "s204396515260": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/anonymous-access",
@@ -256,6 +254,20 @@ version_basis: {
         "s252144371961": "https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html",
         "s9823c4e9efa4": "https://man7.org/linux/man-pages/man1/systemctl.1.html"
       }
+    },
+    "os-license-source": {
+      "name": "OpenSearch Security licence source",
+      "basis": "4ba3cc0e2ebec61b726b227fdf51e55f4a502182",
+      "sources": {
+        "s6e10cf9ec35a": "https://github.com/opensearch-project/security/blob/4ba3cc0e2ebec61b726b227fdf51e55f4a502182/LICENSE.txt"
+      }
+    },
+    "os-users-source": {
+      "name": "OpenSearch demo users source",
+      "basis": "03a224d16045a8f561e2d7d84b8765c95309524c",
+      "sources": {
+        "se8c473c01153": "https://github.com/opensearch-project/security/blob/03a224d16045a8f561e2d7d84b8765c95309524c/config/internal_users.yml"
+      }
     }
   },
   "claims": {
@@ -281,8 +293,8 @@ version_basis: {
     "es-cors": {"text": "CORS defaults disabled; if needed configure exact origin, methods and headers, restart nodes and retain authorization.", "components": ["es"], "sources": ["es:s0f65658e7273"], "status": "REASONED"},
     "es-audit": {"text": "Audit defaults disabled; enable on each 8.x node with restart and collect CLUSTERNAME_audit.json independently. Dynamic enablement documented for 9.5+ does not apply to 8.x.", "components": ["es"], "sources": ["es:s2882d7d6f2fc"], "status": "REASONED"},
     "es-audit-body": {"text": "Request-body emission defaults false; keep it off and avoid event exclusions/ignore policies suppressing authentication_failed.", "components": ["es"], "sources": ["es:s5603a653318d"], "status": "REASONED"},
-    "os-tier": {"text": "OpenSearch Security is free Apache-2.0 with no paid security tier; keep authentication and TLS enabled.", "components": ["os"], "sources": ["os:s6e10cf9ec35a"], "status": "REASONED"},
-    "os-demo-users": {"text": "From 2.12 demo setup requires initial admin password but only changes admin; six other seeded users retain demo credentials until removed/replaced and applied to the live security index.", "components": ["os"], "sources": ["os:s73e416ebf765", "os:se8c473c01153"], "status": "REASONED"},
+    "os-tier": {"text": "OpenSearch Security is free Apache-2.0 with no paid security tier; keep authentication and TLS enabled.", "components": ["os-license-source"], "sources": ["os-license-source:s6e10cf9ec35a"], "status": "REASONED"},
+    "os-demo-users": {"text": "From 2.12 demo setup requires initial admin password but only changes admin; six other seeded users retain demo credentials until removed/replaced and applied to the live security index.", "components": ["os", "os-users-source"], "sources": ["os:s73e416ebf765", "os-users-source:se8c473c01153"], "status": "REASONED"},
     "os-tls": {"text": "Replace demo certificates; REST TLS defaults false underneath demo setup and requires plugins.security.ssl.http.enabled=true with production certificates.", "components": ["os"], "sources": ["os:s4e3281cb3d23"], "status": "REASONED"},
     "os-rbac": {"text": "Create a custom index-read role and internal user with explicit mapping; Security REST administration requires its own authorization and other mappings may add grants.", "components": ["os"], "sources": ["os:s07ddf2781a70", "os:s204396515260", "os:sc3d6362bc8f4", "os:s0e349fff0934", "os:s4f63d2563816", "os:s1a9aa4907daf"], "status": "REASONED"},
     "os-api-key": {"text": "Native scoped keys require 3.7+ and security administrators; enable api_tokens and explicit lifetime/count limits, using index_pattern and duration_seconds rather than Elasticsearch fields.", "components": ["os"], "sources": ["os:sfbdd4a41adf5", "os:sa596b3a14984"], "status": "REASONED"},
@@ -360,8 +372,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 | es-cors: CORS defaults disabled; if needed configure exact origin, methods and headers, restart nodes and retain authorization. | Elasticsearch documentation unknown | REASONED |
 | es-audit: Audit defaults disabled; enable on each 8.x node with restart and collect CLUSTERNAME_audit.json independently. Dynamic enablement documented for 9.5+ does not apply to 8.x. | Elasticsearch documentation unknown | REASONED |
 | es-audit-body: Request-body emission defaults false; keep it off and avoid event exclusions/ignore policies suppressing authentication_failed. | Elasticsearch documentation unknown | REASONED |
-| os-tier: OpenSearch Security is free Apache-2.0 with no paid security tier; keep authentication and TLS enabled. | OpenSearch documentation unknown | REASONED |
-| os-demo-users: From 2.12 demo setup requires initial admin password but only changes admin; six other seeded users retain demo credentials until removed/replaced and applied to the live security index. | OpenSearch documentation unknown | REASONED |
+| os-tier: OpenSearch Security is free Apache-2.0 with no paid security tier; keep authentication and TLS enabled. | OpenSearch Security licence source 4ba3cc0e2ebec61b726b227fdf51e55f4a502182 | REASONED |
+| os-demo-users: From 2.12 demo setup requires initial admin password but only changes admin; six other seeded users retain demo credentials until removed/replaced and applied to the live security index. | OpenSearch documentation unknown; OpenSearch demo users source 03a224d16045a8f561e2d7d84b8765c95309524c | REASONED |
 | os-tls: Replace demo certificates; REST TLS defaults false underneath demo setup and requires plugins.security.ssl.http.enabled=true with production certificates. | OpenSearch documentation unknown | REASONED |
 | os-rbac: Create a custom index-read role and internal user with explicit mapping; Security REST administration requires its own authorization and other mappings may add grants. | OpenSearch documentation unknown | REASONED |
 | os-api-key: Native scoped keys require 3.7+ and security administrators; enable api_tokens and explicit lifetime/count limits, using index_pattern and duration_seconds rather than Elasticsearch fields. | OpenSearch documentation unknown | REASONED |

@@ -15,7 +15,7 @@ import re
 import shlex
 import sys
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 START = '<!-- version-basis:start -->'
@@ -86,6 +86,62 @@ def digest(body):
 
 def source_id(url):
     return 's' + digest(url)[:12]
+
+
+_MOVING_REFS = {'main', 'master', 'HEAD', 'trunk', 'develop'}
+_SHA_REF = re.compile(r'[0-9a-fA-F]{7,40}\Z')
+
+
+def pinned_source_ref(url):
+    """Recognize lexical forge pins; a pin-shaped branch is deliberately a pin."""
+    parsed = urlsplit(url)
+    parts = unquote(parsed.path).strip('/').split('/')
+    host = (parsed.hostname or '').lower()
+
+    def pin(ref, following=''):
+        if ref in _MOVING_REFS:
+            return None
+        if _SHA_REF.fullmatch(ref):
+            return ref
+        if any(c.isdigit() for c in ref):
+            return ref
+        if following and any(c.isdigit() for c in following):
+            return ref + '/' + following
+        return None
+
+    # cgit query refs take precedence over the view's path on any host.
+    if any(part in ('tree', 'plain', 'commit', 'log', 'blob', 'diff', 'patch') for part in parts):
+        query = parse_qs(parsed.query)
+        for key in ('id', 'h'):
+            for ref in query.get(key, []):
+                if ref not in _MOVING_REFS:
+                    return ref
+    if host == 'raw.githubusercontent.com' and len(parts) >= 4:
+        if parts[2:4] == ['refs', 'tags'] and len(parts) >= 6:
+            return (pin(parts[4], parts[5]) or parts[4]) if parts[4] not in _MOVING_REFS else None
+        if parts[2:4] == ['refs', 'heads'] and len(parts) >= 6:
+            return pin(parts[4], parts[5] if len(parts) >= 7 else '')
+        return pin(parts[2], parts[3] if len(parts) >= 5 else '')
+    if host in ('github.com', 'www.github.com') and len(parts) >= 5 and parts[2] == 'wiki':
+        return parts[-1] if _SHA_REF.fullmatch(parts[-1]) else None
+
+    # Prefer GitLab's explicit /-/ view over subgroup names such as "tree".
+    for index, part in enumerate(parts[:-2]):
+        if part == '-' and index >= 2:
+            view, ref = parts[index + 1:index + 3]
+            if view in ('tags', 'releases'):
+                return ref if ref not in _MOVING_REFS else None
+            if view in ('blob', 'tree', 'raw', 'blame', 'commit'):
+                following = parts[index + 3] if index + 3 < len(parts) else ''
+                return pin(ref, following)
+    for index, part in enumerate(parts[:-1]):
+        if part in ('blob', 'tree', 'raw', 'blame', 'commit') and index >= 2:
+            following = parts[index + 2] if index + 2 < len(parts) else ''
+            return pin(parts[index + 1], following)
+        if part == 'releases' and parts[index + 1] == 'tag' and index + 2 < len(parts):
+            ref = parts[index + 2]
+            return ref if ref not in _MOVING_REFS else None
+    return None
 
 
 def verify_blocks(body, with_status=False):
@@ -615,7 +671,7 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0, parser=
     definitions(body, line_offset)
     sources_grammar(body, heads, line_offset)
     identifiers(data['components'])
-    for component in data['components'].values():
+    for cid, component in data['components'].items():
         keys(component, ('name', 'basis', 'sources'))
         string(component['name'])
         string(component['basis'])
@@ -629,6 +685,9 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0, parser=
             require(not _ESCAPE.search(url), 'source URL contains an escape or entity: ' + url)
             require(not _UNRESERVED.search(url),
                     'source URL percent-encodes an unreserved character: ' + url)
+            ref = pinned_source_ref(url)
+            require(component['basis'] != 'unknown' or ref is None,
+                    f'pinned source URL requires a known basis (component {cid}, ref {ref}): {url}')
             require(cites(sources, url), 'source URL absent from Sources: ' + url)
     # The container count uses ATX-bounded text; see raw_sources().
     raw_current = check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
