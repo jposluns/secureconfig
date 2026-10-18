@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.203 | `headers.md`: placement: cite proxy header directives and generic static-host `_headers` handling for the stated controls. (M, M) | Done, #626. Pinned proxy directive and Cloudflare Pages sources and scoped `_headers` to static asset responses. |
+| 1.204 | `headers.md`: all-responses: cite in `headers.md` Sources the nginx `add_header` inheritance source pinned in `nginx.md` for this response-header claim. (M, M) | Done, #626. Cited pinned nginx inheritance and `always` handling for the every-response requirement. |
 | 1.199 | `realtime-webhooks.md`: proxy-limits: pin vendor sources for the proxy capability summaries beyond the cited Caddy timeouts, nginx, Traefik and HAProxy. (M, M) | Done, #625. Pinned nginx `proxy_read_timeout` and HAProxy timeout and aggregate `maxconn` controls in the guide and claim inventory. |
 | 1.200 | `apache.md`: mfa: cite Cloudflare Access application and policy controls for the suggested fronting option. (M, M) | Done, #624. Added pinned Access application and MFA-policy citations while retaining the Apache-origin suggestion as this guide's assessment. |
 | 1.201 | `lighttpd.md`: mfa: cite Authelia supported-proxy list and Cloudflare Access for the stated exclusion and MFA fronting option. (M, M) | Done, #624. Cited Authelia's complete support table and pinned Access application and MFA-policy controls while keeping fronting as a requirement. |

@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-18
 
+- `headers.md` cites the nginx `add_header`, Apache `Header` and Caddy `header` directives at pinned releases and Cloudflare Pages `_headers` handling (static asset responses only, not Pages Functions responses) for where to set response headers, narrowing the generic static-host statement to that named host, and cites nginx `add_header` inheritance and `always` handling for the every-response requirement; the six-header sufficiency and the misconfiguration judgement are labelled as this guide's inference and assessment (rows 1.203 and 1.204) (#626)
 - `realtime-webhooks.md` cites nginx release-1.26.3 `proxy_read_timeout` and HAProxy v3.0.0 `timeout client`, `timeout server`, `timeout http-request` and per-process `maxconn` for its proxy-limits summary, and labels the cross-guide coverage comparison as this guide's assessment (row 1.199) (#625)
 
 ## 2026-10-17
