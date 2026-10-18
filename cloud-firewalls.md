@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "00f0cc18217024d7fb38bd260166508251e0f41871f7e74ae54ff2dbc84802cb",
+  "body_sha256": "7e86cfaf0a3e405fe53b15996a73db9b6e5ea642dc69d5e62f8f85aa487ee3e5",
   "components": {
     "aws": {
       "name": "AWS security groups and CLI",
@@ -26,7 +26,8 @@ version_basis: {
         "s12d2856bf552": "https://docs.cloud.google.com/sdk/gcloud/reference/compute/firewall-policies/describe",
         "sef4965908f7b": "https://docs.cloud.google.com/sdk/gcloud/reference/compute/network-firewall-policies/list",
         "s652edf39de2a": "https://docs.cloud.google.com/sdk/gcloud/reference/compute/network-firewall-policies/describe",
-        "s57189bff8b8f": "https://docs.cloud.google.com/sdk/gcloud/reference/compute/firewall-rules/list"
+        "s57189bff8b8f": "https://docs.cloud.google.com/sdk/gcloud/reference/compute/firewall-rules/list",
+        "sd9ee642a0bff": "https://docs.cloud.google.com/firewall/docs/firewall-policies-rule-eval-order"
       }
     },
     "docker-docs": {
@@ -55,7 +56,7 @@ version_basis: {
     "docker": {"text": "On VMs running Docker, use both cloud and host firewall layers as this guide's advice; Docker documents that published container traffic bypasses UFW settings, as the linked Docker guide explains.", "components": ["docker-docs"], "sources": ["docker-docs:sb5ca9f87b1f3"], "status": "REASONED"},
     "verify-aws": {"text": "Per region inspect all inbound rules, protocol/port ranges, IPv4/IPv6 CIDRs, resolved prefix lists and group references; combinations of narrower ranges can still expose the internet.", "components": ["aws"], "sources": ["aws:s0c459e0aa7a1", "aws:s5594f61a25d6", "aws:sf8813f7c4057"], "status": "REASONED", "verify": [1]},
     "verify-gcp": {"text": "Per project read JSON classic VPC rules, including direction, disabled state, allowed/denied and source ranges; a table can hide whether enforcement is disabled.", "components": ["gcp"], "sources": ["gcp:s1c06c98a99c9", "gcp:s3a90bf10d4eb"], "status": "REASONED", "verify": [1]},
-    "gcp-policies": {"text": "Also list/describe hierarchical and global/regional network policies and read their effective order. Hierarchical policy rules can override or delegate to global network and VPC rules; the fetched sources do not establish the network/VPC order or an enforcement-order setting.", "components": ["gcp"], "sources": ["gcp:s68e82eab648c", "gcp:s633352524069", "gcp:sbfb2e25c9059", "gcp:s12d2856bf552", "gcp:sef4965908f7b", "gcp:s652edf39de2a", "gcp:s57189bff8b8f"], "status": "REASONED", "verify": [1]},
+    "gcp-policies": {"text": "Also list/describe hierarchical and global/regional network policies and read their effective order. Hierarchical policy rules can override or delegate to global network and VPC rules. The VPC network's networkFirewallPolicyEnforcementOrder defaults to AFTER_CLASSIC_FIREWALL: hierarchical and regional system policies, VPC rules, then global and regional network policies; BEFORE_CLASSIC_FIREWALL puts global and regional network policies after hierarchical and regional system policies but before VPC rules. A matching allow or deny stops evaluation; goto_next continues it. As this guide's reasoning, a policy allow with an internet source can expose a port even when the VPC list is clean, unless an earlier rule denies it.", "components": ["gcp"], "sources": ["gcp:s68e82eab648c", "gcp:s633352524069", "gcp:sbfb2e25c9059", "gcp:s12d2856bf552", "gcp:sef4965908f7b", "gcp:s652edf39de2a", "gcp:s57189bff8b8f", "gcp:sd9ee642a0bff"], "status": "REASONED", "verify": [1]},
     "verify-azure": {"text": "Per NSG include default rules and read JSON direction/access plus singular/plural source prefixes; tables omit arrays and can conceal exposure.", "components": ["azure"], "sources": ["azure:se217f16ce4c1", "azure:scde5b083d938"], "status": "REASONED", "verify": [1]},
     "azure-admin": {"text": "Review Virtual Network Manager security admin rules; the guide says Always allow bypasses NSGs. No security-admin-rule source is listed.", "components": ["azure"], "sources": ["azure:scde5b083d938"], "status": "REASONED", "verify": [1]},
     "verify-ports": {"text": "Outside the admin range, spot-check 22, 3306, 5432, 6379 and 27017; refusal/timeout is expected, while netcat usage errors or silent local failure are inconclusive.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:scde5b083d938"], "status": "REASONED", "verify": [2]},
@@ -83,7 +84,7 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | docker: On VMs running Docker, use both cloud and host firewall layers as this guide's advice; Docker documents that published container traffic bypasses UFW settings, as the linked Docker guide explains. | Docker Engine networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | verify-aws: Per region inspect all inbound rules, protocol/port ranges, IPv4/IPv6 CIDRs, resolved prefix lists and group references; combinations of narrower ranges can still expose the internet. | AWS security groups and CLI unknown | REASONED |
 | verify-gcp: Per project read JSON classic VPC rules, including direction, disabled state, allowed/denied and source ranges; a table can hide whether enforcement is disabled. | Google Cloud firewall and CLI unknown | REASONED |
-| gcp-policies: Also list/describe hierarchical and global/regional network policies and read their effective order. Hierarchical policy rules can override or delegate to global network and VPC rules; the fetched sources do not establish the network/VPC order or an enforcement-order setting. | Google Cloud firewall and CLI unknown | REASONED |
+| gcp-policies: Also list/describe hierarchical and global/regional network policies and read their effective order. Hierarchical policy rules can override or delegate to global network and VPC rules. The VPC network's networkFirewallPolicyEnforcementOrder defaults to AFTER_CLASSIC_FIREWALL: hierarchical and regional system policies, VPC rules, then global and regional network policies; BEFORE_CLASSIC_FIREWALL puts global and regional network policies after hierarchical and regional system policies but before VPC rules. A matching allow or deny stops evaluation; goto_next continues it. As this guide's reasoning, a policy allow with an internet source can expose a port even when the VPC list is clean, unless an earlier rule denies it. | Google Cloud firewall and CLI unknown | REASONED |
 | verify-azure: Per NSG include default rules and read JSON direction/access plus singular/plural source prefixes; tables omit arrays and can conceal exposure. | Azure NSG and CLI unknown | REASONED |
 | azure-admin: Review Virtual Network Manager security admin rules; the guide says Always allow bypasses NSGs. No security-admin-rule source is listed. | Azure NSG and CLI unknown | REASONED |
 | verify-ports: Outside the admin range, spot-check 22, 3306, 5432, 6379 and 27017; refusal/timeout is expected, while netcat usage errors or silent local failure are inconclusive. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
@@ -102,9 +103,9 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 ## Verify
 
-REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules, Google firewall policy and gcloud references, and Azure network security group rule properties; no authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker range (an IAP `35.235.240.0/20` rule, or an Azure Bastion subnet rule, is expected), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
+REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules, Google firewall policy, evaluation-order and gcloud references, and Azure network security group rule properties; no authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker range (an IAP `35.235.240.0/20` rule, or an Azure Bastion subnet rule, is expected), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
 
-REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation and Google firewall policy references; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
+REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation and Google firewall policy and evaluation-order references; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
 
 ```bash
 # AWS, once per region. Every rule, not a selection: no filter catches the exposure class, because
@@ -134,7 +135,13 @@ gcloud compute network-firewall-policies list                              # no 
 # for each regional policy, use `gcloud compute network-firewall-policies describe POLICY_NAME --region=REGION --format=json`.
 # Hierarchical policy rules can override or delegate to global network and VPC rules. Read the effective order and matching
 # rule: as this guide's reasoning, a policy allow with an internet source can expose the port even when the VPC list
-# above is clean, unless an earlier rule denies it. The fetched sources do not establish the network/VPC order or an enforcement-order setting.
+# above is clean, unless an earlier rule denies it. Google documents the VPC network's networkFirewallPolicyEnforcementOrder:
+# AFTER_CLASSIC_FIREWALL (default) evaluates hierarchical and regional system policies, VPC rules, then global and
+# regional network policies; BEFORE_CLASSIC_FIREWALL puts global and regional network policies after hierarchical and
+# regional system policies but before VPC rules.
+# A matching allow or deny stops evaluation; goto_next continues it. See
+# https://docs.cloud.google.com/firewall/docs/firewall-policies-rule-eval-order#determine-rule-evaluation
+# and https://docs.cloud.google.com/firewall/docs/firewall-policies-rule-eval-order#default-rule-evaluation
 
 # Azure, once per network security group. JSON, not a table: the table formatter omits array-valued
 # columns, so a rule carrying sourceAddressPrefixes rather than sourceAddressPrefix would print an
@@ -154,7 +161,7 @@ az network nsg rule list \
 
 - REASONED: disallowed-source port probes and their failure interpretation, per the guide's cited AWS security group rules and Azure network security group rule properties. No authorized cloud endpoints or allowed/disallowed probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching nc, while a substituted address reached five nc stubs. Live exposed connections and fixed refusals/timeouts remain unobserved; local errors are inconclusive. From an address outside the range you administer from:
 
-  REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation and Google firewall policy references; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
+  REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation and Google firewall policy and evaluation-order references; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
 
   ```bash
   (                                       # a subshell, so your own script arguments are untouched
@@ -189,3 +196,4 @@ az network nsg rule list \
 - gcloud network policy list scope, including unflagged global and regional enumeration (rolling) (checked October 2026): https://docs.cloud.google.com/sdk/gcloud/reference/compute/network-firewall-policies/list
 - gcloud network policy describe global/region syntax (rolling) (checked October 2026): https://docs.cloud.google.com/sdk/gcloud/reference/compute/network-firewall-policies/describe
 - gcloud Compute Engine firewall-rule list project scope (rolling) (checked October 2026): https://docs.cloud.google.com/sdk/gcloud/reference/compute/firewall-rules/list
+- Google Cloud firewall policy evaluation order and enforcement setting (rolling) (checked October 2026): https://docs.cloud.google.com/firewall/docs/firewall-policies-rule-eval-order
