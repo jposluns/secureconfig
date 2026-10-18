@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.249 | `web-exposure.md`: apache-listing: cite Debian/Ubuntu Apache defaults and index-list behaviour. (M, M) | Done, #652. Cited Debian 2.4.69-1 listing defaults and the exact index list, retaining Ubuntu packaging as unchecked. |
+| 1.250 | `web-exposure.md`: source-maps: cite the source-map exposure claim and its scope. (M, M) | Done, #652. Cited ECMA-426 and pinned Next.js/Vite production defaults, qualifying source recovery and labelling guide reasoning and advice. |
 | 1.241 | `oidc-integration.md`: client-secret-storage: pin a secret-storage reference for the client-secret handling claim. (M, M) | Done, #647. Cited RFC 6749 and pinned OWASP and Docker sources and aligned the client-secret guidance with container secret-delivery priorities. |
 | 1.233 | `mfa.md`: admin-factors and authelia-factors: cite administrator policy and Authelia passkey behaviour. (M, M) | Done, #646. Cited administrator MFA policy and Authelia passkey factor behaviour, retaining guide advice where the cited policy is narrower. |
 | 1.234 | `mfa.md`: webauthn-library and unattended-mtls: cite library and mTLS deployment behaviour or label guidance as assessment. (M, M) | Done, #646. Pinned WebAuthn implementation examples and mTLS client authentication, with the remaining deployment advice labelled. |

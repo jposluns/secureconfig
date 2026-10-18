@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-17",
+  "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "af4d8d2670ad3465732e814cd89ece4d15816a1c5137c3d47e9c958a2b017905",
+  "body_sha256": "d04f9d877201565cfdd6fe952b50f26d3d85bd16e74efce72a6ef79cebdee43b",
   "components": {
     "nginx": {
       "name": "nginx documentation",
@@ -87,6 +87,41 @@ version_basis: {
       "sources": {
         "se60bdd68e41d": "https://www.rfc-editor.org/rfc/rfc8555.html#section-8.3"
       }
+    },
+    "debian-packaging": {
+      "name": "Debian apache2 packaging",
+      "basis": "2.4.69-1",
+      "sources": {
+        "s62f6ed2866ab": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1",
+        "s90898e0f03b6": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/config-dir/apache2.conf.in#L170-L174",
+        "s6f77b580cc87": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/config-dir/mods-available/dir.conf#L1",
+        "s7ea1fcaca182": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.postinst#L38-L52",
+        "sd7d93d2a9705": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.postinst#L257-L266"
+      }
+    },
+    "ecma426": {
+      "name": "ECMA-426",
+      "basis": "c724f0f494b44b21b651fdbd6412d3437eef0e72",
+      "sources": {
+        "s5de29cfb3e99": "https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L584-L585",
+        "s2af3a1c52b4a": "https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L1294",
+        "sfeb03b2200f4": "https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L1323",
+        "s94b6d647e4bc": "https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L1415"
+      }
+    },
+    "next-maps": {
+      "name": "Next.js browser source maps",
+      "basis": "v16.3.6",
+      "sources": {
+        "s6964da09fc21": "https://github.com/vercel/next.js/blob/v16.3.6/docs/01-app/03-api-reference/05-config/01-next-config-js/productionBrowserSourceMaps.mdx#L8-L18"
+      }
+    },
+    "vite-maps": {
+      "name": "Vite production source maps",
+      "basis": "v8.3.1",
+      "sources": {
+        "sf12c9114bd79": "https://github.com/vitejs/vite/blob/v8.3.1/docs/config/build-options.md#L145-L150"
+      }
     }
   },
   "claims": {
@@ -96,7 +131,7 @@ version_basis: {
     "nginx-security-txt": {"text": "The ACME-only exemption leaves /.well-known/security.txt denied; add location = /.well-known/security.txt {} to serve it, because exact matches precede regex locations.", "components": ["nginx"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596"], "status": "REASONED"},
     "apache-directories": {"text": "DirectoryMatch denies dot-prefixed filesystem segments except an exact .well-known segment; .well-known-backup is not exempt. FilesMatch suffix denial still applies inside .well-known/.", "components": ["apache"], "sources": ["apache:s24f06763d14a", "apache:s7313b1b624d5", "apache:se24e9bbc0443"], "status": "REASONED"},
     "apache-files": {"text": "Case-insensitive FilesMatch denies dotfile basenames and .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz suffixes; DirectoryMatch is still needed for .git/config.", "components": ["apache"], "sources": ["apache:se24e9bbc0443", "apache:s7313b1b624d5"], "status": "REASONED"},
-    "apache-listing": {"text": "Guide records Debian/Ubuntu Indexes FollowSymLinks and DirectoryIndex defaults without a packaging citation; index-less directories can expose other filenames.", "components": ["apache"], "sources": ["apache:s97468bf1f299", "apache:sef5ff46eddf7"], "status": "REASONED"},
+    "apache-listing": {"text": "Debian apache2 2.4.69-1 sets Indexes FollowSymLinks on /var/www/; DirectoryIndex lists index.html index.cgi index.pl index.php index.xhtml index.htm; dir and autoindex are enabled on fresh installs. With these defaults, index-less directories can expose other filenames. Ubuntu packaging was not checked by this guide.", "components": ["apache", "debian-packaging"], "sources": ["apache:s97468bf1f299", "apache:sef5ff46eddf7", "debian-packaging:s62f6ed2866ab", "debian-packaging:s90898e0f03b6", "debian-packaging:s6f77b580cc87", "debian-packaging:s7ea1fcaca182", "debian-packaging:sd7d93d2a9705"], "status": "REASONED"},
     "apache-forbidden": {"text": "mod_autoindex hides entries whose subrequests return 403 unless ShowForbidden is enabled; unmatched exports such as archive.zip and customers.csv can still be listed.", "components": ["apache"], "sources": ["apache:sef5ff46eddf7"], "status": "REASONED"},
     "apache-options": {"text": "Options -Indexes removes listing, preserving inherited options; Apache 2.4 rejects mixing relative +/- and bare options.", "components": ["apache"], "sources": ["apache:s97468bf1f299"], "status": "REASONED"},
     "nginx-listing": {"text": "nginx autoindex defaults off.", "components": ["nginx"], "sources": ["nginx:sbd17bad53c9d"], "status": "REASONED"},
@@ -108,7 +143,7 @@ version_basis: {
     "next-public": {"text": "NEXT_PUBLIC_ embeds values in browser JavaScript; keep provider keys server-side behind backend routes.", "components": ["next"], "sources": ["next:sb98bee5b61c8"], "status": "REASONED"},
     "vite-public": {"text": "VITE_ embeds values in browser JavaScript; reserve for public values.", "components": ["vite"], "sources": ["vite:s3fc0892e0f58"], "status": "REASONED"},
     "cra-public": {"text": "Deprecated Create React App embeds REACT_APP_ values in browser builds.", "components": ["cra"], "sources": ["cra:scfb24624addd"], "status": "REASONED"},
-    "source-maps": {"text": "Guide warns against external/inline maps for private code; removing sourceMappingURL does not unpublish deployed maps. Sources omit a direct map reference.", "components": ["next", "vite"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58"], "status": "REASONED"},
+    "source-maps": {"text": "ECMA-426 sources are URLs or null; sourcesContent is optional. Guide assessment: maps can expose original source when embedded or retrievable, through separate files or sourceMappingURL data: URLs. Next.js v16.3.6 production browser maps default disabled; Vite v8.3.1 build.sourcemap defaults false. Create React App map defaults were not checked. Guide reasoning: removing the comment does not unpublish deployed maps. Guide advice: do not ship or leave served maps for code not meant to be public.", "components": ["next", "vite", "ecma426", "next-maps", "vite-maps"], "sources": ["next:sb98bee5b61c8", "vite:s3fc0892e0f58", "ecma426:s5de29cfb3e99", "ecma426:s2af3a1c52b4a", "ecma426:sfeb03b2200f4", "ecma426:s94b6d647e4bc", "next-maps:s6964da09fc21", "vite-maps:sf12c9114bd79"], "status": "REASONED"},
     "verify-dotfiles": {"text": "Plant an exclusive, readable .env.probe file; expect 403 or 404 without PLANTED-SECRET. Also probe .git/config, config.php.bak and db.sql; absent files are inconclusive, so plant real files to test each rule and remove only created probes.", "components": ["nginx", "apache", "caddy", "caddy-rolling"], "sources": ["nginx:s0e5162d1ce2b", "nginx:s40bdf1af1596", "apache:s24f06763d14a", "apache:s7313b1b624d5", "apache:se24e9bbc0443", "caddy-rolling:se9ab71afc4ba", "caddy-rolling:s38b1b78ce980", "caddy:s450aa9ed710b"], "status": "REASONED", "verify": [1]},
     "verify-listing": {"text": "Plant a throwaway file in an existing index-less uploads directory; Options -Indexes should yield 403 or 404, never a 200 listing. An absent or unwritable directory is inconclusive; remove the probe afterward.", "components": ["apache"], "sources": ["apache:s97468bf1f299", "apache:sef5ff46eddf7"], "status": "REASONED", "verify": [1]},
     "verify-acme": {"text": "Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive.", "components": ["nginx", "apache", "acme-http01"], "sources": ["nginx:s40bdf1af1596", "nginx:s0e5162d1ce2b", "apache:s24f06763d14a", "acme-http01:se60bdd68e41d"], "status": "REASONED", "verify": [1]},
@@ -126,7 +161,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -136,7 +171,7 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 | nginx-security-txt: The ACME-only exemption leaves /.well-known/security.txt denied; add location = /.well-known/security.txt {} to serve it, because exact matches precede regex locations. | nginx documentation unknown | REASONED |
 | apache-directories: DirectoryMatch denies dot-prefixed filesystem segments except an exact .well-known segment; .well-known-backup is not exempt. FilesMatch suffix denial still applies inside .well-known/. | Apache documentation 2.4 | REASONED |
 | apache-files: Case-insensitive FilesMatch denies dotfile basenames and .bak, .old, .orig, ~, .sql, .sql.gz, .dump and .tar.gz suffixes; DirectoryMatch is still needed for .git/config. | Apache documentation 2.4 | REASONED |
-| apache-listing: Guide records Debian/Ubuntu Indexes FollowSymLinks and DirectoryIndex defaults without a packaging citation; index-less directories can expose other filenames. | Apache documentation 2.4 | REASONED |
+| apache-listing: Debian apache2 2.4.69-1 sets Indexes FollowSymLinks on /var/www/; DirectoryIndex lists index.html index.cgi index.pl index.php index.xhtml index.htm; dir and autoindex are enabled on fresh installs. With these defaults, index-less directories can expose other filenames. Ubuntu packaging was not checked by this guide. | Apache documentation 2.4; Debian apache2 packaging 2.4.69-1 | REASONED |
 | apache-forbidden: mod_autoindex hides entries whose subrequests return 403 unless ShowForbidden is enabled; unmatched exports such as archive.zip and customers.csv can still be listed. | Apache documentation 2.4 | REASONED |
 | apache-options: Options -Indexes removes listing, preserving inherited options; Apache 2.4 rejects mixing relative +/- and bare options. | Apache documentation 2.4 | REASONED |
 | nginx-listing: nginx autoindex defaults off. | nginx documentation unknown | REASONED |
@@ -148,7 +183,7 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 | next-public: NEXT_PUBLIC_ embeds values in browser JavaScript; keep provider keys server-side behind backend routes. | Next.js documentation unknown | REASONED |
 | vite-public: VITE_ embeds values in browser JavaScript; reserve for public values. | Vite documentation unknown | REASONED |
 | cra-public: Deprecated Create React App embeds REACT_APP_ values in browser builds. | Create React App documentation unknown | REASONED |
-| source-maps: Guide warns against external/inline maps for private code; removing sourceMappingURL does not unpublish deployed maps. Sources omit a direct map reference. | Next.js documentation unknown; Vite documentation unknown | REASONED |
+| source-maps: ECMA-426 sources are URLs or null; sourcesContent is optional. Guide assessment: maps can expose original source when embedded or retrievable, through separate files or sourceMappingURL data: URLs. Next.js v16.3.6 production browser maps default disabled; Vite v8.3.1 build.sourcemap defaults false. Create React App map defaults were not checked. Guide reasoning: removing the comment does not unpublish deployed maps. Guide advice: do not ship or leave served maps for code not meant to be public. | Next.js documentation unknown; Vite documentation unknown; ECMA-426 c724f0f494b44b21b651fdbd6412d3437eef0e72; Next.js browser source maps v16.3.6; Vite production source maps v8.3.1 | REASONED |
 | verify-dotfiles: Plant an exclusive, readable .env.probe file; expect 403 or 404 without PLANTED-SECRET. Also probe .git/config, config.php.bak and db.sql; absent files are inconclusive, so plant real files to test each rule and remove only created probes. | nginx documentation unknown; Apache documentation 2.4; Caddy documentation v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | verify-listing: Plant a throwaway file in an existing index-less uploads directory; Options -Indexes should yield 403 or 404, never a 200 listing. An absent or unwritable directory is inconclusive; remove the probe afterward. | Apache documentation 2.4 | REASONED |
 | verify-acme: Plant a readable challenge token; webroot requests over HTTPS and HTTP:80 should return probe, not 403. nginx exempts only the challenge prefix; Apache exempts .well-known segments. Failed preparation is inconclusive. | nginx documentation unknown; Apache documentation 2.4; ACME HTTP-01 RFC 8555 | REASONED |
@@ -219,7 +254,7 @@ path is exempt: the whole directory (acme-challenge, and anything else legitimat
 `security.txt`), while a lookalike segment like `.well-known-backup` is not. Keep the `<FilesMatch>` rule as a case-insensitive backstop for the same backup and dump suffixes as
 nginx, and for dotfile basenames like `/.env`. The suffix rule still applies inside `.well-known/`.
 
-One default weakens this. Debian and Ubuntu ship `apache2.conf` with `Options Indexes FollowSymLinks` on `<Directory /var/www/>`, so when a directory below the document root has no `DirectoryIndex` file (`dir.conf` lists `index.html`, `index.php`, and several others), `mod_autoindex` returns a browsable listing of its contents. The deny rules above still hold, and the listing even omits the files they forbid, because `mod_autoindex` hides an entry whose subrequest returns 403 unless `IndexOptions ShowForbidden` is set. The exposure is everything else in the directory: a backup or export the deny rules do not match by name, an `archive.zip`, a `customers.csv`, or a datestamped dump, is listed for anyone who requests the directory, and the listing itself confirms the directory and reveals filenames you were relying on nobody guessing. Turn listing off with `Options -Indexes`, shown above; write it in the relative `-` form so it removes only `Indexes` and keeps the inherited `FollowSymLinks`, and never mix `+`/`-` options with bare ones in a single `Options` line, which Apache 2.4 rejects at startup. nginx (`autoindex` is `off` by default) and Caddy (`file_server` lists only with `browse`) do not need this; Apache on these distributions does.
+One default weakens this. Debian apache2 2.4.69-1's `apache2.conf` template sets `Options Indexes FollowSymLinks` on `<Directory /var/www/>`; `dir.conf` contains `DirectoryIndex index.html index.cgi index.pl index.php index.xhtml index.htm`, and `postinst` enables `dir` and `autoindex` on fresh installs (pinned Debian packaging in Sources). With these defaults, when a directory below the document root has no `DirectoryIndex` file, `mod_autoindex` returns a browsable listing of its contents, per the Apache core `Options` and mod_autoindex references. The earlier assertion of the same defaults on Ubuntu remains unchecked: this guide did not check Ubuntu's packaging. The deny rules above still hold, and the listing even omits the files they forbid, because `mod_autoindex` hides an entry whose subrequest returns 403 unless `IndexOptions ShowForbidden` is set. This guide's assessment of the exposure is everything else in the directory: a backup or export the deny rules do not match by name, an `archive.zip`, a `customers.csv`, or a datestamped dump, is listed for anyone who requests the directory, and the listing itself confirms the directory and reveals filenames you were relying on nobody guessing. Turn listing off with `Options -Indexes`, shown above; write it in the relative `-` form so it removes only `Indexes` and keeps the inherited `FollowSymLinks`, and never mix `+`/`-` options with bare ones in a single `Options` line, which Apache 2.4 rejects at startup. nginx (`autoindex` is `off` by default) and Caddy (`file_server` lists only with `browse`) do not need this; Apache with these Debian defaults does; this guide advises checking Ubuntu's effective configuration because its packaging was not checked here.
 
 ## Caddy
 
@@ -257,11 +292,20 @@ browser JavaScript at build time; Create React App's `REACT_APP_` prefix does th
 deprecated as of this writing, but the convention persists in older projects). An LLM provider key pasted
 into frontend code under one of these prefixes ships to every visitor's browser, not just your server. Only
 genuinely public values belong behind these prefixes; call the provider from a backend route and keep the
-key server-side. See [secrets.md](secrets.md) and [paas.md](paas.md) for the platform version of this. A
-production source map recovers the original source: it may be a separate `.map` file, an inline `data:` URI
-in a `//# sourceMappingURL` comment, or a `.map` that comment points to, and removing the comment does not
-unpublish a `.map` you already deployed. Do not ship a source map, or leave one served, for code not already
-meant to be public.
+key server-side. See [secrets.md](secrets.md) and [paas.md](paas.md) for the platform version of this.
+ECMA-426 defines `sources` as original-source URLs (or null) and `sourcesContent` as optional original
+source strings, with null entries allowed for sources retrieved by name. This guide's assessment is that
+a production source map can expose original source when it embeds that content or its sources are
+retrievable. A map may be a separate `.map` file; a `//# sourceMappingURL` comment links to a map URL,
+including a `data:` URL for an inline map (pinned ECMA-426 fields and linking passages in Sources).
+Next.js v16.3.6 disables production browser source maps unless `productionBrowserSourceMaps` is enabled;
+when enabled, maps are output beside the JavaScript files and automatically served on request. Vite
+v8.3.1 `build.sourcemap` defaults to `false` for production; `true` creates a separate map, `'inline'`
+appends a data URI, and `'hidden'` creates a separate map while suppressing the bundle's map comment.
+These defaults cover Next.js browser maps and Vite production maps only; this guide did not check
+Create React App's source-map defaults. This guide's reasoning: removing the comment does not unpublish
+a `.map` you already deployed, because removing a reference does not remove the served file. This guide's
+advice: do not ship a source map, or leave one served, for code not already meant to be public.
 
 ## Verify
 
@@ -386,3 +430,11 @@ done
 - GNU grep 3.12 manual, `-s`/`--no-messages`, lines 425-431 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n425
 - GNU grep 3.12 source, failed input open, lines 1756-1772 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/src/grep.c?h=v3.12#n1756
 - GNU grep 3.12 source, input error diagnosis, lines 661-668 (checked October 2026): https://git.savannah.gnu.org/cgit/grep.git/tree/src/grep.c?h=v3.12#n661
+- Debian apache2 packaging version 2.4.69-1 (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1
+- Debian apache2 2.4.69-1 document-root Options template (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/config-dir/apache2.conf.in#L170-L174
+- Debian apache2 2.4.69-1 DirectoryIndex list (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/config-dir/mods-available/dir.conf#L1
+- Debian apache2 2.4.69-1 default modules on fresh installs and configure invocation (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.postinst#L38-L52 ; https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.postinst#L257-L266
+- ECMA-426 c724f0f494b44b21b651fdbd6412d3437eef0e72 sources and optional sourcesContent (checked October 2026): https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L584-L585
+- ECMA-426 c724f0f494b44b21b651fdbd6412d3437eef0e72 data URI linking and sourceMappingURL comments (checked October 2026): https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L1294 ; https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L1323 ; https://github.com/tc39/ecma426/blob/c724f0f494b44b21b651fdbd6412d3437eef0e72/spec.emu#L1415
+- Next.js v16.3.6 production browser source maps default and opt-in serving (checked October 2026): https://github.com/vercel/next.js/blob/v16.3.6/docs/01-app/03-api-reference/05-config/01-next-config-js/productionBrowserSourceMaps.mdx#L8-L18
+- Vite v8.3.1 build.sourcemap default and output modes (checked October 2026): https://github.com/vitejs/vite/blob/v8.3.1/docs/config/build-options.md#L145-L150
