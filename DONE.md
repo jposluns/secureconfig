@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.202 | `lighttpd.md`: verify-config and verify-host: cite lighttpd command/service-manager behaviour and Apache SNI selection for the comparison. (M, M) | Done, #629. Pinned command, unit, host-condition and Apache SNI sources and clarified the request Host versus TLS SNI selection. |
 | 3.42 | Add an offline gate for bare double-underscore URLs in tracked root Markdown bodies, with fixtures and the Kafka citation converted to an autolink. (L, S) | Done, #623. The gate catches bare and escaped double underscores while exempting link destinations and code. |
 | 1.207 | `docker.md`: persistence: cite Docker firewall/INPUT-path behaviour and the startup-unit mechanism behind persistence advice. (M, M) | Done, #628. Pinned Docker, Moby and systemd sources now support the proxy mapping, chain placement and unit ordering, with the residual INPUT and persistence conclusions labelled as guide reasoning or assessment. |
 | 3.39 | Count version-basis Sources citations with the pinned CommonMark parser in `tools/version_basis.py`, checking rendered link targets and decoded text while preserving the Sources bans, bare URL citations and an advisory local fallback. (M, M) | Done, #622. The parser path counts rendered link targets and decoded text; raw URL presence, unsupported Sources containers, reference definitions, Sources grammar, component URL encoding, and guide-wide HTML, heading and angle-destination checks run in both paths. |
