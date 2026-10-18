@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.266 | `paas.md`: managed-tls and listener-port, partial. (M, M) | Done, #665. Cited platform TLS and listener contracts, retained custom-domain conditions and source gaps, and labelled ingress/listener advice; unresolved evidence remains in TODO.md under 1.266. |
 | 1.267 | `paas.md`: spaces-creation and spaces-dev: cite organization private visibility and Dev Mode endpoint behaviour. (M, M) | Done, #663. Pinned Space visibility controls and Dev Mode connection behaviour, distinguished defaults from enforcement, and labelled guide advice and assessment while retaining endpoint authorization limits. |
 | 1.263 | `gpu-clouds.md`: listener-auth and remote-desktop: cite Ollama authentication defaults and VNC/noVNC ports and password behaviour. (M, M) | Done, #662. Cited Ollama v0.34.2 local route setup and the pinned Vast linux-desktop port, password fallback and browser choices, retaining other-template and password-strength limits and the listener protection requirements. Exposure index: the 5900 row adds this template; the 5901 and 6080 example rows are removed. |
 | 1.265 | `mlflow.md`: mfa and proxy-token: cite oauth2-proxy/Cloudflare fronting MFA and Cloudflare service-token header syntax. (M, M) | Done, #661. Cited fronting MFA requirements and service-token headers, scoped MLflow credential precedence to v3.16.1 code, and labelled integration advice and evidence limits. |
