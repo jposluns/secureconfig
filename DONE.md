@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.267 | `paas.md`: spaces-creation and spaces-dev: cite organization private visibility and Dev Mode endpoint behaviour. (M, M) | Done, #663. Pinned Space visibility controls and Dev Mode connection behaviour, distinguished defaults from enforcement, and labelled guide advice and assessment while retaining endpoint authorization limits. |
 | 1.257 | `deployment-lifecycle.md`: retire-credentials and offboarding: source per-layer revocation and delayed invalidation checks. (M, M) | Done, #660. Cited per-layer revocation and delayed replay expectations while retaining the application, membership, database and deployment-timing gaps. |
 | 1.260 | `deployment-lifecycle.md`: dns-retirement: cite DNS TTL, resource retention and takeover behaviour for the retirement procedure. (M, M) | Done, #660. Cited takeover and DNS retirement order, corrected the TTL bound for serve-stale, and labelled authoritative-retention advice and platform limits. |
 | 1.264 | `gpu-clouds.md`: mfa, verify-inventory and vast-auth-controls, partial. (M, M) | Done, #659. Cited namespace scope and Vast documentation/test expectations, narrowed the workload-MFA assertion and labelled account-MFA advice; the Vast implementation and account-source gaps remain in TODO.md under 1.264. |
