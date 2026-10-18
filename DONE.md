@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.249 | `web-exposure.md`: apache-listing: cite Debian/Ubuntu Apache defaults and index-list behaviour. (M, M) | Done, #652. Cited Debian 2.4.69-1 listing defaults and the exact index list, retaining Ubuntu packaging as unchecked. |
+| 1.250 | `web-exposure.md`: source-maps: cite the source-map exposure claim and its scope. (M, M) | Done, #652. Cited ECMA-426 and pinned Next.js/Vite production defaults, qualifying source recovery and labelling guide reasoning and advice. |
 | 1.247 | `frontend-frameworks.md`: svelte-handle: establish layout coverage, every-request hook and calling-page metadata qualifications from SvelteKit source. (M, M) | Done, #650. Traced layout, action, hook and remote request paths and corrected the every-request scope. |
 | 1.248 | `frontend-frameworks.md`: verify-host: source non-Vite Host allowlists and platform behaviour not established by the pinned SvelteKit/Nuxt paths. (M, M) | Done, #650. Traced the pinned Host paths and stated exposed and fixed probe outcomes and the residual hosting-platform gap. |
 | 1.239 | `identity-providers.md`: google-org-mfa: pin the remaining OIDC pricing claim while preserving the cited 2SV enforcement scope. (M, M) | Done, #649. Replaced unsupported Google OIDC pricing with a dated source gap while preserving the 2SV scope. |
