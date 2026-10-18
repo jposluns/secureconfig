@@ -54,7 +54,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
 | 1.257 | `deployment-lifecycle.md`: retire-credentials and offboarding: source per-layer revocation and delayed invalidation checks. (M, M) | `[gap]` |
 | 1.260 | `deployment-lifecycle.md`: dns-retirement: cite DNS TTL, resource retention and takeover behaviour for the retirement procedure. (M, M) | `[gap]` |
-| 1.261 | `gpu-clouds.md`: verify-jupyter: cite Jupyter `/api/contents` and the 403/200 expectation with and without a token. (M, M) | `[gap]` |
 | 1.262 | `gpu-clouds.md`: modal-shared: cite the Shared Endpoints exception. (M, M) | `[gap]` |
 | 1.263 | `gpu-clouds.md`: listener-auth and remote-desktop: cite Ollama authentication defaults and VNC/noVNC ports and password behaviour. (M, M) | `[gap]` |
 | 1.264 | `gpu-clouds.md`: mfa and verify-inventory: cite platform-account MFA, Vast variables and `ss` namespace scope. (M, M) | `[gap]` |
