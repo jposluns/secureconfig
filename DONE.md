@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.247 | `frontend-frameworks.md`: svelte-handle: establish layout coverage, every-request hook and calling-page metadata qualifications from SvelteKit source. (M, M) | Done, #650. Traced layout, action, hook and remote request paths and corrected the every-request scope. |
+| 1.248 | `frontend-frameworks.md`: verify-host: source non-Vite Host allowlists and platform behaviour not established by the pinned SvelteKit/Nuxt paths. (M, M) | Done, #650. Traced the pinned Host paths and stated exposed and fixed probe outcomes and the residual hosting-platform gap. |
 | 1.239 | `identity-providers.md`: google-org-mfa: pin the remaining OIDC pricing claim while preserving the cited 2SV enforcement scope. (M, M) | Done, #649. Replaced unsupported Google OIDC pricing with a dated source gap while preserving the 2SV scope. |
 | 1.240 | `identity-providers.md`: self-hosted-mfa: cite maintenance expectations for Keycloak, authentik and Ory beyond their already pinned factor behaviour. (M, M) | Done, #649. Pinned maintenance facts for Keycloak, authentik and Ory and labelled the remaining operational advice. |
 | 1.244 | `self-hosted-idp.md`: authentik-mfa and outpost-boundaries: cite authentik factor/flow binding and outpost listeners. (M, M) | Done, #648. Pinned factor and outpost sources and corrected the embedded outpost to shared server ports. |
