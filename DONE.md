@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.242 | `self-hosted-idp.md`: keycloak-bootstrap, keycloak-mfa, verify-mfa-password and admin-factor-order: cite Keycloak factor/flow enforcement and authentik factor ordering. (M, M) | Done, #645. Pinned flow, WebAuthn, required-action and authentik validation-stage sources while retaining a fresh-session password-only check. |
+| 1.243 | `self-hosted-idp.md`: http-listener, keycloak-http-opt-in, verify-direct-ports and verify-proxy-neutralization: cite Keycloak 8080/8443 listener behaviour and curl exit 0 and 28, timeout, proxy-setting and curlrc behaviour; retain curl outcomes as expectations without a live run. (M, M) | Done, #645. Pinned listener, curl exit, timeout and proxy-control sources while retaining direct-port outcomes as reasoned expectations. |
 | 1.230 | `authentication.md`: offboarding: source membership, proxy and token revocation delays and time-to-revoke checks. (M, M) | Done, #642. Sourced Entra, Cloudflare and OAuth revocation behaviour while retaining deployment timing as a test expectation. |
 | 1.231 | `authentication.md`: verify-origin-isolation: source the proxy isolation expectation beyond the current Cloudflare citations, retaining the deployed-origin result as a test expectation. (M, M) | Done, #642. Sourced proxy and signed-header origin checks while retaining deployed reachability as a test expectation. |
 | 1.214 | `host.md`: brokered-ssh: cite SSM, IAP, Bastion and tailnet broker behaviour for the stated alternatives. (M, M) | Done, #641. The host guide now cites the broker paths and states the remaining host-firewall rule gap. |
