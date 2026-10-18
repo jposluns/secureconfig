@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "3bc9b5ec276d0cb3d842f466ab28ae6c4b3e1dc1a985a979c28d4be1b5dd0066",
+  "body_sha256": "303f7ff51db76a6872223746efe3db4bef170bd7f788a4662514f24971d68694",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
@@ -27,7 +27,7 @@ version_basis: {
         "sdb98c49a5970": "https://docs.cloud.google.com/compute/docs/metadata/querying-metadata",
         "se75aedd46ef0": "https://docs.cloud.google.com/compute/docs/metadata/overview",
         "see9b515c5ffd": "https://docs.cloud.google.com/firewall/docs/firewalls#metadata-server",
-        "s418b41b83df9": "https://docs.cloud.google.com/firewall/docs/firewalls#default_firewall_rules"
+        "s0d0c82f83f1d": "https://docs.cloud.google.com/firewall/docs/firewalls#egress_cases"
       }
     },
     "azure": {
@@ -84,6 +84,7 @@ version_basis: {
       "name": "nftables packet filtering",
       "basis": "v1.1.7",
       "sources": {
+        "se1acebec90fb": "https://git.netfilter.org/nftables/tree/doc/nft.txt?h=v1.1.7#n230",
         "s85ee6e57ed0c": "https://git.netfilter.org/nftables/tree/doc/nft.txt?h=v1.1.7#n387",
         "s60417f1df3e4": "https://git.netfilter.org/nftables/tree/doc/primary-expression.txt?h=v1.1.7#n92"
       }
@@ -100,7 +101,7 @@ version_basis: {
     "azure-header": {"text": "Azure IMDS is VM-local at 169.254.169.254, requires Metadata: true and rejects X-Forwarded-For; the example instance API uses 2025-04-07.", "components": ["azure"], "sources": ["azure:s5301638a3c81"], "status": "REASONED"},
     "guest-block": {"text": "Headers do not stop a fetcher that can add them; use guest/workload metadata restrictions, accounting for DNS use of the address and all enabled IPv6 endpoints.", "components": ["gcp", "azure", "aws"], "sources": ["gcp:sdb98c49a5970", "gcp:see9b515c5ffd", "azure:s5301638a3c81", "aws:s82aca706445c"], "status": "REASONED"},
     "gcp-firewall": {"text": "GCP VPC and hierarchical firewall rules do not block metadata-server traffic; use a host firewall, CNI or enforced egress proxy path.", "components": ["gcp"], "sources": ["gcp:see9b515c5ffd"], "status": "REASONED"},
-    "cloud-egress": {"text": "AWS security groups and Google Cloud VPC firewalls start with broad outbound allowances; Azure NSGs include outbound allow rules, but new private subnets need explicit internet egress. This guide recommends permitting only DNS and required provider APIs.", "components": ["aws", "gcp", "azure-nsg", "azure-outbound"], "sources": ["aws:s6761ddae28b8", "aws:sba085af3d477", "gcp:s418b41b83df9", "azure-nsg:scd8e9e55f3b7", "azure-outbound:sdf1b3f364763"], "status": "REASONED"},
+    "cloud-egress": {"text": "AWS security groups and Google Cloud VPC firewalls start with broad outbound allowances; Azure NSGs include outbound allow rules. At the time of writing, the fetched Azure page says subnets in new virtual networks created with API versions released after March 31, 2026, and through the portal default to private; existing virtual networks are unchanged. Those private subnets need explicit outbound connectivity to public endpoints on the internet and within Microsoft. This guide recommends permitting only DNS and required provider APIs.", "components": ["aws", "gcp", "azure-nsg", "azure-outbound"], "sources": ["aws:s6761ddae28b8", "aws:sba085af3d477", "gcp:s0d0c82f83f1d", "azure-nsg:scd8e9e55f3b7", "azure-outbound:sdf1b3f364763"], "status": "REASONED"},
     "aws-groups": {"text": "Security groups are allow-only and additive across attached groups; remove default allow-all egress and add narrow rules. A subnet network ACL supplies deny rules but is stateless.", "components": ["aws"], "sources": ["aws:s6761ddae28b8", "aws:sba085af3d477", "aws:s0604de50506f"], "status": "REASONED"},
     "aws-metadata-bypass": {"text": "AWS security groups do not filter 169.254.169.254; use IMDSv2/hop limit or disable unused metadata, keeping egress rules for other destinations.", "components": ["aws"], "sources": ["aws:s6761ddae28b8", "aws:s8e0b69b2747a"], "status": "REASONED"},
     "policy-default": {"text": "Pod egress is unrestricted until a selecting policy includes Egress; policies add allowances, so audit every selecting policy.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
@@ -108,13 +109,13 @@ version_basis: {
     "policy-dns": {"text": "agent-egress selects app: agent and allows UDP/TCP 53 to kube-system pods labeled k8s-app: kube-dns.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
     "policy-api": {"text": "The API allowance permits TCP 443 to 203.0.113.0/24 as a replaceable destination placeholder.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
     "docker-internal": {"text": "An internal Docker network has no default route out and firewall rules drop external traffic while peer containers communicate.", "components": ["docker"], "sources": ["docker:sc308b8f1039c"], "status": "REASONED"},
-    "host-owner": {"text": "Hop limit 1 still permits host processes; this guide recommends OUTPUT owner filtering and matching IPv6 rules. The owner match applies to locally generated packets, not forwarded containers; an nftables equivalent must run in a hooked chain.", "components": ["aws", "iptables", "nftables"], "sources": ["aws:s82aca706445c", "iptables:s35430e42cc22", "iptables:s8033be9cc6c1", "nftables:s85ee6e57ed0c", "nftables:s60417f1df3e4"], "status": "REASONED"},
+    "host-owner": {"text": "Hop limit 1 still permits host processes; this guide recommends OUTPUT owner filtering and matching IPv6 rules. The owner match applies to locally generated packets, not forwarded containers; an nftables equivalent must be in a base chain hooked at the output path, or in a regular chain reached from that base chain by a jump.", "components": ["aws", "iptables", "nftables"], "sources": ["aws:s82aca706445c", "iptables:s35430e42cc22", "iptables:s8033be9cc6c1", "nftables:se1acebec90fb", "nftables:s85ee6e57ed0c", "nftables:s60417f1df3e4"], "status": "REASONED"},
     "proxy-bypass": {"text": "A destination-allowlist proxy controls only traversing traffic; pair it with a direct metadata block and test its path separately.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED"},
     "verify-headers": {"text": "Tokenless AWS must return 401; headerless GCP/Azure must not return metadata. These header checks alone do not demonstrate network isolation.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s82aca706445c", "gcp:sdb98c49a5970", "azure:s5301638a3c81"], "status": "REASONED", "verify": [1]},
     "verify-token": {"text": "AWS network checks acquire a token then GET with it, separately over IPv4/IPv6; failed PUT needs enforcement evidence. Token/session reachability is not IAM credential issuance.", "components": ["aws", "curl"], "sources": ["aws:s82aca706445c", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-provider-paths": {"text": "Required-header GCP token and Azure instance requests test reachability; any HTTP response means reachable. GCP returns credentials; Azure instance data is separate from managed-identity tokens.", "components": ["gcp", "azure"], "sources": ["gcp:sdb98c49a5970", "azure:s5301638a3c81"], "status": "REASONED", "verify": [1]},
     "verify-deny": {"text": "Run positive metadata controls before blocking; http=000 alone is inconclusive. Require no completed connection plus a matching enforcement deny record; metadata is excluded from AWS VPC Flow Logs.", "components": ["curl", "aws"], "sources": ["curl:s2b2686afaf41", "aws:s5de42a587ed0"], "status": "REASONED", "verify": [1]},
-    "verify-allow": {"text": "When the AWS STS global endpoint is on this workload's egress allow list, its unauthenticated GET must return an HTTP response; the exact status and body are a reasoned expectation. --noproxy tests direct egress, so proxy allowlists require separate probes.", "components": ["curl", "aws"], "sources": ["curl:s2b2686afaf41", "aws:s9e5244cd7271", "aws:sb525b61fd496"], "status": "REASONED", "verify": [1]},
+    "verify-allow": {"text": "A positive-control bare unauthenticated GET can target any host on this workload's egress allow list; the fetched STS pages document the global endpoint and authentication errors, and that endpoint is one example when allowed. Receiving an HTTP response is this guide's REASONED expectation; the exact status and body of the bare unauthenticated GET are unknown. --noproxy tests direct egress, so proxy allowlists require separate probes.", "components": ["curl", "aws"], "sources": ["curl:s2b2686afaf41", "aws:s9e5244cd7271", "aws:sb525b61fd496"], "status": "REASONED", "verify": [1]},
     "verify-negative": {"text": "Known-live disallowed egress must fail: curl success is failure, exit 6 is DNS-inconclusive, and 7/28 need zero time_connect plus correlated deny evidence.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
     "verify-options": {"text": "Read MetadataOptions for required tokens, hop limit 1, intended IPv6 state and State applied rather than pending, then repeat workload probes.", "components": ["aws"], "sources": ["aws:s8e0b69b2747a", "aws:sb843930c4944"], "status": "REASONED", "verify": [1]}
   }
@@ -141,7 +142,7 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | azure-header: Azure IMDS is VM-local at 169.254.169.254, requires Metadata: true and rejects X-Forwarded-For; the example instance API uses 2025-04-07. | Azure IMDS API 2025-04-07 | REASONED |
 | guest-block: Headers do not stop a fetcher that can add them; use guest/workload metadata restrictions, accounting for DNS use of the address and all enabled IPv6 endpoints. | Google Cloud metadata and firewall unknown; Azure IMDS API 2025-04-07; AWS metadata and networking unknown | REASONED |
 | gcp-firewall: GCP VPC and hierarchical firewall rules do not block metadata-server traffic; use a host firewall, CNI or enforced egress proxy path. | Google Cloud metadata and firewall unknown | REASONED |
-| cloud-egress: AWS security groups and Google Cloud VPC firewalls start with broad outbound allowances; Azure NSGs include outbound allow rules, but new private subnets need explicit internet egress. This guide recommends permitting only DNS and required provider APIs. | AWS metadata and networking unknown; Google Cloud metadata and firewall unknown; Azure network security groups 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f; Azure outbound access unknown | REASONED |
+| cloud-egress: AWS security groups and Google Cloud VPC firewalls start with broad outbound allowances; Azure NSGs include outbound allow rules. At the time of writing, the fetched Azure page says subnets in new virtual networks created with API versions released after March 31, 2026, and through the portal default to private; existing virtual networks are unchanged. Those private subnets need explicit outbound connectivity to public endpoints on the internet and within Microsoft. This guide recommends permitting only DNS and required provider APIs. | AWS metadata and networking unknown; Google Cloud metadata and firewall unknown; Azure network security groups 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f; Azure outbound access unknown | REASONED |
 | aws-groups: Security groups are allow-only and additive across attached groups; remove default allow-all egress and add narrow rules. A subnet network ACL supplies deny rules but is stateless. | AWS metadata and networking unknown | REASONED |
 | aws-metadata-bypass: AWS security groups do not filter 169.254.169.254; use IMDSv2/hop limit or disable unused metadata, keeping egress rules for other destinations. | AWS metadata and networking unknown | REASONED |
 | policy-default: Pod egress is unrestricted until a selecting policy includes Egress; policies add allowances, so audit every selecting policy. | Kubernetes NetworkPolicy unknown | REASONED |
@@ -149,13 +150,13 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | policy-dns: agent-egress selects app: agent and allows UDP/TCP 53 to kube-system pods labeled k8s-app: kube-dns. | Kubernetes NetworkPolicy unknown | REASONED |
 | policy-api: The API allowance permits TCP 443 to 203.0.113.0/24 as a replaceable destination placeholder. | Kubernetes NetworkPolicy unknown | REASONED |
 | docker-internal: An internal Docker network has no default route out and firewall rules drop external traffic while peer containers communicate. | Docker network create unknown | REASONED |
-| host-owner: Hop limit 1 still permits host processes; this guide recommends OUTPUT owner filtering and matching IPv6 rules. The owner match applies to locally generated packets, not forwarded containers; an nftables equivalent must run in a hooked chain. | AWS metadata and networking unknown; iptables owner match v1.8.13; nftables packet filtering v1.1.7 | REASONED |
+| host-owner: Hop limit 1 still permits host processes; this guide recommends OUTPUT owner filtering and matching IPv6 rules. The owner match applies to locally generated packets, not forwarded containers; an nftables equivalent must be in a base chain hooked at the output path, or in a regular chain reached from that base chain by a jump. | AWS metadata and networking unknown; iptables owner match v1.8.13; nftables packet filtering v1.1.7 | REASONED |
 | proxy-bypass: A destination-allowlist proxy controls only traversing traffic; pair it with a direct metadata block and test its path separately. | curl documentation unknown | REASONED |
 | verify-headers: Tokenless AWS must return 401; headerless GCP/Azure must not return metadata. These header checks alone do not demonstrate network isolation. | AWS metadata and networking unknown; Google Cloud metadata and firewall unknown; Azure IMDS API 2025-04-07 | REASONED |
 | verify-token: AWS network checks acquire a token then GET with it, separately over IPv4/IPv6; failed PUT needs enforcement evidence. Token/session reachability is not IAM credential issuance. | AWS metadata and networking unknown; curl documentation unknown | REASONED |
 | verify-provider-paths: Required-header GCP token and Azure instance requests test reachability; any HTTP response means reachable. GCP returns credentials; Azure instance data is separate from managed-identity tokens. | Google Cloud metadata and firewall unknown; Azure IMDS API 2025-04-07 | REASONED |
 | verify-deny: Run positive metadata controls before blocking; http=000 alone is inconclusive. Require no completed connection plus a matching enforcement deny record; metadata is excluded from AWS VPC Flow Logs. | curl documentation unknown; AWS metadata and networking unknown | REASONED |
-| verify-allow: When the AWS STS global endpoint is on this workload's egress allow list, its unauthenticated GET must return an HTTP response; the exact status and body are a reasoned expectation. --noproxy tests direct egress, so proxy allowlists require separate probes. | curl documentation unknown; AWS metadata and networking unknown | REASONED |
+| verify-allow: A positive-control bare unauthenticated GET can target any host on this workload's egress allow list; the fetched STS pages document the global endpoint and authentication errors, and that endpoint is one example when allowed. Receiving an HTTP response is this guide's REASONED expectation; the exact status and body of the bare unauthenticated GET are unknown. --noproxy tests direct egress, so proxy allowlists require separate probes. | curl documentation unknown; AWS metadata and networking unknown | REASONED |
 | verify-negative: Known-live disallowed egress must fail: curl success is failure, exit 6 is DNS-inconclusive, and 7/28 need zero time_connect plus correlated deny evidence. | curl documentation unknown | REASONED |
 | verify-options: Read MetadataOptions for required tokens, hop limit 1, intended IPv6 state and State applied rather than pending, then repeat workload probes. | AWS metadata and networking unknown | REASONED |
 <!-- version-basis:end -->
@@ -194,8 +195,11 @@ GCP's metadata server answers at `metadata.google.internal` or `169.254.169.254`
 
 - **Cloud firewall / security group egress rules** (the inbound side of the same tools is in
   [cloud-firewalls.md](cloud-firewalls.md)): AWS security groups and Google Cloud VPC firewalls
-  start with broad outbound allowances; Azure NSGs include outbound allow rules, but new private
-  subnets need explicit internet egress. As this guide recommends, permit only DNS and the specific
+  start with broad outbound allowances; Azure NSGs include outbound allow rules. At the time of
+  writing, the fetched Azure page says subnets in new virtual networks created with API versions
+  released after March 31, 2026, and through the portal default to private; existing virtual networks
+  are unchanged. Those private subnets need explicit outbound connectivity to public endpoints on the
+  internet and within Microsoft. As this guide recommends, permit only DNS and the specific
   provider APIs the application calls. On AWS a security group is
   allow-only (it has no deny rules), so you must REMOVE its default allow-all egress rule and add narrow
   allows, and account for every other security group attached to the instance; a network ACL, which does
@@ -233,7 +237,7 @@ GCP's metadata server answers at `metadata.google.internal` or `169.254.169.254`
   `docker network create --internal agent-net`.
 - **Host-process restriction**: IMDSv2 with hop limit 1 still lets a process ON the host obtain its own
   token, so on a host that runs the agent directly (not in a container one hop away) restrict the metadata
-  address by user, as this guide recommends, with an `iptables` `OUTPUT` owner match, e.g. `iptables -A OUTPUT -d 169.254.169.254 -m owner ! --uid-owner aws -j DROP` (adapt the allowed uid); this does not cover traffic forwarded from a container, an nftables equivalent must attach to a hooked chain, and you need the matching `ip6tables` rule for `[fd00:ec2::254]` where IPv6 IMDS is enabled. A forward proxy with a destination allowlist only enforces on traffic that actually passes through it, so it is not a substitute for a network block: pair it with a rule that stops the workload reaching metadata directly, or the workload just bypasses the proxy, and test the proxy path separately.
+  address by user, as this guide recommends, with an `iptables` `OUTPUT` owner match, e.g. `iptables -A OUTPUT -d 169.254.169.254 -m owner ! --uid-owner aws -j DROP` (adapt the allowed uid); this does not cover traffic forwarded from a container, an nftables equivalent must be in a base chain hooked at the output path, or in a regular chain reached from that base chain by a jump, and you need the matching `ip6tables` rule for `[fd00:ec2::254]` where IPv6 IMDS is enabled. A forward proxy with a destination allowlist only enforces on traffic that actually passes through it, so it is not a substitute for a network block: pair it with a rule that stops the workload reaching metadata directly, or the workload just bypasses the proxy, and test the proxy path separately.
 
 ## Scope boundary
 
@@ -314,12 +318,15 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
 # NetworkPolicy drop counter/log, a host iptables/nftables DROP counter, or a packet capture. Note AWS
 # VPC Flow Logs EXCLUDE traffic to and from 169.254.169.254, so they cannot corroborate a metadata block
 # (they are fine for the other egress destinations in the negative control below).
-# positive control: the AWS STS global endpoint, when on this workload's egress allow list,
-# must return an HTTP response to this unauthenticated GET (not necessarily 200). AWS documents
-# MissingAuthenticationToken as a 403 error, but not the exact status or body for this bare GET;
-# that response is a REASONED expectation. A 000 response fails this control. --noproxy '*' on these two controls tests DIRECT egress (a network rule),
-# not a forward proxy's allow list; where a proxy is the egress control, test through it separately.
-curl -q -s -o /dev/null --noproxy '*' -w '%{http_code}\n' --max-time 5 https://sts.amazonaws.com/
+# positive control: use any host on this workload's egress allow list; the AWS STS global endpoint
+# is one example when allowed. Substitute an allowed URL, such as a Regional STS endpoint, otherwise.
+# The fetched STS pages document the global endpoint and authentication errors, but do not state
+# the response to this bare unauthenticated GET. Receiving an HTTP response is this guide's REASONED
+# expectation; the exact status and body of the bare unauthenticated GET are unknown. A 000 response
+# fails this control. --noproxy '*' tests DIRECT egress (a network rule), not a forward proxy's allow
+# list; where a proxy is the egress control, test through it separately.
+allowed_url=https://sts.amazonaws.com/ # replace with a URL on this workload's egress allow list
+curl -q -s -o /dev/null --noproxy '*' -w '%{http_code}\n' --max-time 5 "$allowed_url"
 
 # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
 # not by matching text in its output, since a successful connection also lacks the string
@@ -363,11 +370,12 @@ aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
 - curl manual (exit 7 "Failed to connect to host", exit 28 "Operation timeout", `--connect-timeout`, and the `time_connect` write-out variable): https://curl.se/docs/manpage.html
 - AWS security-group rules (allow-only, default egress, combined groups; checked October 2026): https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html#security-group-rule-characteristics
 - AWS network ACL basics (subnet deny, stateless; checked October 2026): https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html#nacl-basics
-- GCP implied firewall actions (checked October 2026): https://docs.cloud.google.com/firewall/docs/firewalls#default_firewall_rules
+- GCP egress cases (implied allow egress to any destination; checked October 2026): https://docs.cloud.google.com/firewall/docs/firewalls#egress_cases
 - Azure NSG default outbound rules (8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f, lines 67-85; checked October 2026): https://github.com/MicrosoftDocs/azure-docs/blob/8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f/articles/virtual-network/network-security-groups-overview.md#L67-L85
 - Azure private subnet outbound access (checked October 2026): https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/default-outbound-access#retirement-of-default-outbound-access-scope-and-impact
 - iptables owner match (v1.8.13, lines 1-10; checked October 2026): https://git.netfilter.org/iptables/tree/extensions/libxt_owner.man?h=v1.8.13#n1
 - iptables and ip6tables commands (v1.8.13, lines 28-32, 76-77, 99-102, 152-155, 293-304, 306-315; checked October 2026): https://git.netfilter.org/iptables/tree/iptables/iptables.8.in?h=v1.8.13#n28
+- nftables output hook (v1.1.7, lines 230-234; checked October 2026): https://git.netfilter.org/nftables/tree/doc/nft.txt?h=v1.1.7#n230
 - nftables chains and hooks (v1.1.7, lines 387-419; checked October 2026): https://git.netfilter.org/nftables/tree/doc/nft.txt?h=v1.1.7#n387
 - nftables socket UID (v1.1.7, lines 92-94; checked October 2026): https://git.netfilter.org/nftables/tree/doc/primary-expression.txt?h=v1.1.7#n92
 - AWS STS MissingAuthenticationToken (checked October 2026): https://docs.aws.amazon.com/STS/latest/APIReference/CommonErrors.html#CommonErrors-MissingAuthenticationToken
