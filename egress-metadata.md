@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "303f7ff51db76a6872223746efe3db4bef170bd7f788a4662514f24971d68694",
+  "body_sha256": "e4e7134ae9c9740d494a8d05d746b55c01ff602053468b8a2990d245769f801c",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
@@ -101,7 +101,7 @@ version_basis: {
     "azure-header": {"text": "Azure IMDS is VM-local at 169.254.169.254, requires Metadata: true and rejects X-Forwarded-For; the example instance API uses 2025-04-07.", "components": ["azure"], "sources": ["azure:s5301638a3c81"], "status": "REASONED"},
     "guest-block": {"text": "Headers do not stop a fetcher that can add them; use guest/workload metadata restrictions, accounting for DNS use of the address and all enabled IPv6 endpoints.", "components": ["gcp", "azure", "aws"], "sources": ["gcp:sdb98c49a5970", "gcp:see9b515c5ffd", "azure:s5301638a3c81", "aws:s82aca706445c"], "status": "REASONED"},
     "gcp-firewall": {"text": "GCP VPC and hierarchical firewall rules do not block metadata-server traffic; use a host firewall, CNI or enforced egress proxy path.", "components": ["gcp"], "sources": ["gcp:see9b515c5ffd"], "status": "REASONED"},
-    "cloud-egress": {"text": "AWS security groups and Google Cloud VPC firewalls start with broad outbound allowances; Azure NSGs include outbound allow rules. At the time of writing, the fetched Azure page says subnets in new virtual networks created with API versions released after March 31, 2026, and through the portal default to private; existing virtual networks are unchanged. Those private subnets need explicit outbound connectivity to public endpoints on the internet and within Microsoft. This guide recommends permitting only DNS and required provider APIs.", "components": ["aws", "gcp", "azure-nsg", "azure-outbound"], "sources": ["aws:s6761ddae28b8", "aws:sba085af3d477", "gcp:s0d0c82f83f1d", "azure-nsg:scd8e9e55f3b7", "azure-outbound:sdf1b3f364763"], "status": "REASONED"},
+    "cloud-egress": {"text": "AWS security groups and Google Cloud VPC firewalls start with broad outbound allowances; Azure NSGs include outbound allow rules. At the time of writing, the fetched Azure page says subnets in new virtual networks created with API versions released after March 31, 2026, and through the portal default to private; existing virtual networks are unchanged. Those private subnets need explicit outbound connectivity to public endpoints. This guide recommends permitting only DNS and required provider APIs.", "components": ["aws", "gcp", "azure-nsg", "azure-outbound"], "sources": ["aws:s6761ddae28b8", "aws:sba085af3d477", "gcp:s0d0c82f83f1d", "azure-nsg:scd8e9e55f3b7", "azure-outbound:sdf1b3f364763"], "status": "REASONED"},
     "aws-groups": {"text": "Security groups are allow-only and additive across attached groups; remove default allow-all egress and add narrow rules. A subnet network ACL supplies deny rules but is stateless.", "components": ["aws"], "sources": ["aws:s6761ddae28b8", "aws:sba085af3d477", "aws:s0604de50506f"], "status": "REASONED"},
     "aws-metadata-bypass": {"text": "AWS security groups do not filter 169.254.169.254; use IMDSv2/hop limit or disable unused metadata, keeping egress rules for other destinations.", "components": ["aws"], "sources": ["aws:s6761ddae28b8", "aws:s8e0b69b2747a"], "status": "REASONED"},
     "policy-default": {"text": "Pod egress is unrestricted until a selecting policy includes Egress; policies add allowances, so audit every selecting policy.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
@@ -142,7 +142,7 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | azure-header: Azure IMDS is VM-local at 169.254.169.254, requires Metadata: true and rejects X-Forwarded-For; the example instance API uses 2025-04-07. | Azure IMDS API 2025-04-07 | REASONED |
 | guest-block: Headers do not stop a fetcher that can add them; use guest/workload metadata restrictions, accounting for DNS use of the address and all enabled IPv6 endpoints. | Google Cloud metadata and firewall unknown; Azure IMDS API 2025-04-07; AWS metadata and networking unknown | REASONED |
 | gcp-firewall: GCP VPC and hierarchical firewall rules do not block metadata-server traffic; use a host firewall, CNI or enforced egress proxy path. | Google Cloud metadata and firewall unknown | REASONED |
-| cloud-egress: AWS security groups and Google Cloud VPC firewalls start with broad outbound allowances; Azure NSGs include outbound allow rules. At the time of writing, the fetched Azure page says subnets in new virtual networks created with API versions released after March 31, 2026, and through the portal default to private; existing virtual networks are unchanged. Those private subnets need explicit outbound connectivity to public endpoints on the internet and within Microsoft. This guide recommends permitting only DNS and required provider APIs. | AWS metadata and networking unknown; Google Cloud metadata and firewall unknown; Azure network security groups 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f; Azure outbound access unknown | REASONED |
+| cloud-egress: AWS security groups and Google Cloud VPC firewalls start with broad outbound allowances; Azure NSGs include outbound allow rules. At the time of writing, the fetched Azure page says subnets in new virtual networks created with API versions released after March 31, 2026, and through the portal default to private; existing virtual networks are unchanged. Those private subnets need explicit outbound connectivity to public endpoints. This guide recommends permitting only DNS and required provider APIs. | AWS metadata and networking unknown; Google Cloud metadata and firewall unknown; Azure network security groups 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f; Azure outbound access unknown | REASONED |
 | aws-groups: Security groups are allow-only and additive across attached groups; remove default allow-all egress and add narrow rules. A subnet network ACL supplies deny rules but is stateless. | AWS metadata and networking unknown | REASONED |
 | aws-metadata-bypass: AWS security groups do not filter 169.254.169.254; use IMDSv2/hop limit or disable unused metadata, keeping egress rules for other destinations. | AWS metadata and networking unknown | REASONED |
 | policy-default: Pod egress is unrestricted until a selecting policy includes Egress; policies add allowances, so audit every selecting policy. | Kubernetes NetworkPolicy unknown | REASONED |
@@ -198,8 +198,8 @@ GCP's metadata server answers at `metadata.google.internal` or `169.254.169.254`
   start with broad outbound allowances; Azure NSGs include outbound allow rules. At the time of
   writing, the fetched Azure page says subnets in new virtual networks created with API versions
   released after March 31, 2026, and through the portal default to private; existing virtual networks
-  are unchanged. Those private subnets need explicit outbound connectivity to public endpoints on the
-  internet and within Microsoft. As this guide recommends, permit only DNS and the specific
+  are unchanged. Those private subnets need explicit outbound connectivity to public endpoints.
+  As this guide recommends, permit only DNS and the specific
   provider APIs the application calls. On AWS a security group is
   allow-only (it has no deny rules), so you must REMOVE its default allow-all egress rule and add narrow
   allows, and account for every other security group attached to the instance; a network ACL, which does
@@ -319,14 +319,21 @@ curl -q -s -o /dev/null --noproxy '*' --connect-timeout 5 --max-time 10 \
 # VPC Flow Logs EXCLUDE traffic to and from 169.254.169.254, so they cannot corroborate a metadata block
 # (they are fine for the other egress destinations in the negative control below).
 # positive control: use any host on this workload's egress allow list; the AWS STS global endpoint
-# is one example when allowed. Substitute an allowed URL, such as a Regional STS endpoint, otherwise.
+# is one example when allowed. If it is not allowed, substitute an allowed URL, such as a Regional
+# STS endpoint, inside the single quotes on the set -- line.
 # The fetched STS pages document the global endpoint and authentication errors, but do not state
 # the response to this bare unauthenticated GET. Receiving an HTTP response is this guide's REASONED
 # expectation; the exact status and body of the bare unauthenticated GET are unknown. A 000 response
-# fails this control. --noproxy '*' tests DIRECT egress (a network rule), not a forward proxy's allow
-# list; where a proxy is the egress control, test through it separately.
-allowed_url=https://sts.amazonaws.com/ # replace with a URL on this workload's egress allow list
-curl -q -s -o /dev/null --noproxy '*' -w '%{http_code}\n' --max-time 5 "$allowed_url"
+# fails this control. --noproxy '*' on these two controls tests DIRECT egress (a network rule),
+# not a forward proxy's allow list; where a proxy is the egress control, test through it separately.
+(
+  set -- SECURECONFIG_EGRESS_ALLOW_URL 'https://sts.amazonaws.com/'
+  [ "${1-}" = SECURECONFIG_EGRESS_ALLOW_URL ] || { echo "paste the whole block, including its set -- line; not probing"; exit; }
+  shift
+  [ "$#" -eq 1 ] || { echo "the set -- line needs exactly 1 URL; not probing"; exit; }
+  [ -n "${1-}" ] || { echo "substitute a URL on this workload's egress allow list; not probing"; exit; }
+  curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' --max-time 5 "$1"
+)
 
 # negative control: a known-live host outside the egress allow list, judged by curl's exit status,
 # not by matching text in its output, since a successful connection also lacks the string
