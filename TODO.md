@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.314**, **2.48**, **3.41**, **4.12**.
+Next ids: **1.314**, **2.48**, **3.43**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -51,7 +51,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.202 | `lighttpd.md`: verify-config and verify-host: cite lighttpd command/service-manager behaviour and Apache SNI selection for the comparison. (M, M) | `[gap]` |
 | 1.208 | `docker.md`: alternate-entry: cite cloudflared, tailnet and self-signed TLS alternatives for the stated entry paths. (M, M) | `[gap]` |
 | 1.210 | `container-hardening.md`: docker-socket: cite the Docker privilege model for socket root equivalence. (M, M) | `[gap]` |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
@@ -154,7 +153,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.310 | `oidc-integration.md`: github-org-mfa: establish whether a member without 2FA fails the application membership check before treating GitHub organization membership as proof of MFA. (M, M) | `[gap]` |
 | 1.311 | `ai-infra-services.md`: onyx-auth-type: establish the stated v4.5 removal boundary beyond the pinned v4.3.13 and v4.4.0 snapshots and tag-name identity. (M, M) | `[gap]` |
 | 1.312 | `vector-databases.md`: source or narrow the hosted-console MFA arrangements for Pinecone, Qdrant Cloud, Weaviate Cloud and Zilliz that the cited pages do not establish. (M, M) | `[gap]` |
-| 1.313 | `apache.md` and `lighttpd.md`: mfa: state that an origin reachable without passing through Access is not protected by it, citing the Cloudflare self-hosted application page's note that a published application without an Access application is available to anyone on the Internet, and its following paragraph that an already publicly routable origin's IP must be protected by other methods (from #624 QA). (M, S) | `[gap]` |
 | 2.28 | `gitops-controllers.md`: Complete the remaining source audit of image tag-to-build mapping (Redis, Dex), the application-controller bind address, repo-server service method authorization, Dex API method authorization, whether Redis overwrites its password in argv, and RBAC server-side wiring. (M, M) | `[gap]` |
 | 2.29 | `self-hosted-ci-runners.md`: offline inspection outcomes are recorded in the guide. Remaining: verify and cite a pinned vendor source for the `[runners.docker]` `pid_mode` TOML key, corroborated only in rolling GitLab Runner source. (M, M) | `[gap]` |
 | 1.117 | `search-engines.md` Verify (#285): the reviewed tools/scan_credential.sh searches client output and local refs/HEAD/reflog commit trees, with tools/test_scan_credential.py retaining dummy positive/negative controls and documented limits. Still open: run a real client pipeline in a disposable copy with a known dummy admin, master or bootstrap key, require detection, then remove it and rebuild cleanly and require scoped absence; retain a separate old-commit positive control and record the stated coverage limits. No real application build was available for the hand-built fixtures. (M, M) | `[gap]` |
@@ -166,6 +164,7 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 3.41 | `tools/version_basis.py`: fail, never baselined, a component source URL that pins a ref while that component's basis is `unknown`, so a pinned source lands in a component whose basis is that pin. A pin is a commit SHA or tag in a forge `/blob/`, `/tree/`, `/raw/`, `/blame/`, `/commit/` or `/releases/tag/` path (GitLab-style `/-/` paths included), the ref segment of a `raw.githubusercontent.com` URL, a cgit `h=` or `id=` query, or a GitHub wiki revision; `main`, `master`, `HEAD`, `trunk` and `develop` refs and release-line documentation paths such as `/docs/2.4/` are not pins. At commit 0310e00d it fails eight URLs in seven guides: `caddy.md`, `elasticsearch.md` (two), `headless-browser-services.md`, `memcached.md`, `minio.md`, `rabbitmq.md` and `vector-databases.md`; move each, with its claim references, in the same change. Regression cases in `tools/test_version_basis.py` must fail with the check removed. Follows row 3.39. (M, S) | `[gap]` |
 | 3.40 | F-LYCHEE-2026-09-28 remainder after #448: the six bare body citations in `agent-builders.md` (two), `jupyter.md`, `mlflow.md`, `sqlite-http-frontends.md` and `workflow-orchestrators.md` were written as autolinks (#447), and seven later bare `__main__.py` and `__init__.py` citations in `agent-builders.md` and `free-certificates.md` were written as autolinks (#620). Remaining: confirm with lychee `--dump` that no cited URL is extracted in truncated form, and confirm the first live weekly sweep after these changes (scheduled 2026-10-19). (S, S) | `[gap]` |
 
 ## Priority 4: Tooling and process
