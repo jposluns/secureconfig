@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.202 | `lighttpd.md`: verify-config and verify-host: cite lighttpd command/service-manager behaviour and Apache SNI selection for the comparison. (M, M) | Done, #629. Pinned command, unit, host-condition and Apache SNI sources and clarified the request Host versus TLS SNI selection. |
 | 3.39 | Count version-basis Sources citations with the pinned CommonMark parser in `tools/version_basis.py`, checking rendered link targets and decoded text while preserving the Sources bans, bare URL citations and an advisory local fallback. (M, M) | Done, #622. The parser path counts rendered link targets and decoded text; raw URL presence, unsupported Sources containers, reference definitions, Sources grammar, component URL encoding, and guide-wide HTML, heading and angle-destination checks run in both paths. |
 | 1.206 | `docker.md`: workload: cite Git, USER, capabilities, no-new-privileges, read-only filesystem and socket controls from Docker and Git sources. (M, M) | Done, #627. Pinned Git and Docker citations now support the ignore behaviour, USER, option names and daemon access while the linked guide retains the hardening assessments. |
 | 1.203 | `headers.md`: placement: cite proxy header directives and generic static-host `_headers` handling for the stated controls. (M, M) | Done, #626. Pinned proxy directive and Cloudflare Pages sources and scoped `_headers` to static asset responses. |

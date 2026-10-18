@@ -51,7 +51,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.202 | `lighttpd.md`: verify-config and verify-host: cite lighttpd command/service-manager behaviour and Apache SNI selection for the comparison. (M, M) | `[gap]` |
 | 1.205 | `docker.md`: auth and verify-auth: pin the authentication-provider and proxy sources for MFA rejection and the 401/403 discriminator. (M, M) | `[gap]` |
 | 1.207 | `docker.md`: persistence: cite Docker firewall/INPUT-path behaviour and the startup-unit mechanism behind persistence advice. (M, M) | `[gap]` |
 | 1.208 | `docker.md`: alternate-entry: cite cloudflared, tailnet and self-signed TLS alternatives for the stated entry paths. (M, M) | `[gap]` |

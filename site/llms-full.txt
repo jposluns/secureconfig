@@ -4839,7 +4839,7 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -4854,11 +4854,11 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 | basic-auth: Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable. | lighttpd documentation unknown | REASONED |
 | password-file: Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally, with other hashes of at least 13 characters checked through crypt() when built with crypt support; under USE_LIB_CRYPTO_MD4, the $1+ntlm$ path derives an NTLM hash and calls crypt() with that derived value and a $1$ salt. Check the build and platform's accepted hashes before choosing a flag; this check is this guide's compatibility advice. | lighttpd documentation unknown; lighttpd file authentication source 1.4.75; Apache htpasswd manual 2.4; Debian apache2-utils package trixie; Fedora httpd-tools package unknown | REASONED |
 | mfa: Basic authentication is single-factor; add MFA by fronting this service with Cloudflare Access or an MFA-capable proxy (this guide's requirement). Authelia v4.39.28's complete supported-proxy list has no lighttpd entry (this guide's inference from the table); Cloudflare Access documents self-hosted application and MFA policy controls; applying them to lighttpd is this guide's assessment. | lighttpd documentation unknown; Authelia proxy support v4.39.28; Cloudflare Access documentation commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
-| verify-config: lighttpd -tt checks /etc/lighttpd/lighttpd.conf before systemctl reload; command-specific and service-manager sources are not recorded. | lighttpd documentation unknown | REASONED |
+| verify-config: lighttpd 1.4.75 -tt -f /etc/lighttpd/lighttpd.conf tests the named file for syntax errors and initializes modules; configuration failures prevent the &amp;&amp; reload (this guide's inference from the nonzero process result and shell chaining). The cited upstream unit starts from that file and defines a USR1 reload through ExecReload; systemctl reload triggers the service action, whose signal does not establish completion. Confirm the installed unit uses that file and defines reload (this guide's advice). | lighttpd documentation unknown; lighttpd verify source 1.4.75; systemd reload manual v262 | REASONED |
 | verify-redirect: The HTTP header request should show a redirect to HTTPS; these are read-and-judge status checks. | lighttpd documentation unknown | REASONED |
 | verify-auth: An HTTPS request without credentials should return 401 once authentication is enabled. | lighttpd documentation unknown | REASONED |
 | verify-listeners: Read every listener with ss -tlnp: front-door authentication does not establish that no other listener serves content. The ss version is unrecorded. | lighttpd TLS minimum 1.4.56 | REASONED |
-| verify-host: A Host header outside a conditional auth.require falls back to global configuration; on a protected path, 401 passes and 200 exposes an authentication bypass. The Apache SNI comparison lacks a Sources entry. | lighttpd documentation unknown | REASONED |
+| verify-host: In lighttpd 1.4.75, request-time $HTTP["host"] matching uses the HTTP Host value, while TLS SNI can select mod_openssl settings before request headers; a Host outside a conditional auth.require falls back to global configuration for that rule (this guide's inference from conditional merging and mod_auth documentation). On a protected path, this guide expects 401 to pass and interprets 200 as an authentication bypass for the tested TLS connection. Apache 2.4.69 uses SNI for TLS virtual-host selection when supplied; varying Host while keeping URL and SNI fixed is this guide's auth-check advice. | lighttpd documentation unknown; lighttpd verify source 1.4.75; Apache virtual-host source 2.4.69 | REASONED |
 <!-- version-basis:end -->
 
 Applies to lighttpd 1.4.56 and later, which disables SSLv2/SSLv3/TLS 1.0/TLS 1.1 by default. Get a certificate first: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
@@ -4930,8 +4930,7 @@ Basic authentication is single-factor, and this guide finds no lighttpd entry in
 
 REASONED: interpretation procedure from the status-output commands and expected outcomes below; no deployment or protected path was supplied. These are read-and-judge checks: the status code is printed and you compare it.
 
-REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block.
-
+REASONED: configuration, redirect, authentication, listener inventory and alternate-Host checks follow the cited lighttpd TLS, mod_auth, redirect and configuration documentation and the pinned command, unit, systemd, host-condition and Apache virtual-host sources below. No deployment or protected path was supplied for live checks, and this guide records no run; expected outcomes are stated in the following block. The reload line is this guide's advice for an installed unit that reads `/etc/lighttpd/lighttpd.conf` and defines reload; confirm both before using it. The cited upstream 1.4.75 unit does so, but its signal-based reload is asynchronous.
 ```bash
 sudo lighttpd -tt -f /etc/lighttpd/lighttpd.conf && sudo systemctl reload lighttpd
 curl -q -sI http://example.com/        # expect a redirect to https://
@@ -4946,8 +4945,10 @@ ss -tlnp
 # `auth.require` can sit at the top level or inside a `$HTTP["host"]` conditional, and a
 # conditional one applies only to the hosts it names. If yours is conditional, a request
 # carrying a host it does not name is served by the global configuration instead. That
-# conditional reads the Host HEADER, so setting the header is the right test here, unlike
-# Apache, which selects its virtual host by the SNI name when the connection is TLS:
+# conditional uses the request Host for auth after headers are read. In lighttpd 1.4.75,
+# TLS SNI first selects mod_openssl settings; Apache 2.4.69 uses SNI for TLS virtual-host
+# selection when supplied. This guide's advice is to vary Host while keeping the URL and
+# SNI fixed for this auth check:
 curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
   https://example.com/REPLACE_WITH_A_PROTECTED_PATH
                                     # 401 is the pass. 200 means the protected path is served
@@ -4962,6 +4963,24 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
 
 ## Sources (checked September 2026)
 
+- lighttpd 1.4.75 -f option (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/doc/lighttpd.8#L22-L23
+- lighttpd 1.4.75 -tt option (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/doc/lighttpd.8#L33-L37
+- lighttpd 1.4.75 configuration-read error exit (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/server.c#L1439-L1451
+- lighttpd 1.4.75 -tt option parsing (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/server.c#L1466-L1467
+- lighttpd 1.4.75 preflight test path (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/server.c#L1510-L1523
+- lighttpd 1.4.75 module and configuration-finalization error exits (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/server.c#L1942-L1953
+- lighttpd 1.4.75 process exit result (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/server.c#L2320-L2384
+- lighttpd 1.4.75 USR1 graceful restart handler (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/server.c#L229-L235
+- lighttpd 1.4.75 upstream systemd unit (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/doc/systemd/lighttpd.service#L5-L11
+- lighttpd 1.4.75 Host header parsing (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/request.c#L423-L430
+- lighttpd 1.4.75 request authority from Host (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/request.c#L1235-L1247
+- lighttpd 1.4.75 host-condition value (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile-glue.c#L504-L508
+- lighttpd 1.4.75 conditional configuration merge (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/configfile.c#L213-L223
+- lighttpd 1.4.75 OpenSSL conditional settings (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_openssl.c#L1025-L1034
+- lighttpd 1.4.75 SNI callback and Host-condition reset (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/src/mod_openssl.c#L1295-L1330
+- systemd v262 systemctl reload semantics (checked October 2026): https://github.com/systemd/systemd/blob/v262/man/systemctl.xml#L462-L474
+- systemd v262 ExecReload and asynchronous signal semantics (checked October 2026): https://github.com/systemd/systemd/blob/v262/man/systemd.service.xml#L498-L519
+- Apache 2.4.69 TLS virtual-host SNI selection (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/docs/manual/vhosts/details.xml#L217-L231
 - lighttpd TLS documentation (1.4.56 and later; ssl.privkey from 1.4.53): https://redmine.lighttpd.net/projects/lighttpd/wiki/Docs_SSL
 - lighttpd mod_auth documentation, including `auth.require` inside a `$HTTP["host"]` conditional: https://redmine.lighttpd.net/projects/lighttpd/wiki/Mod_auth
 - lighttpd HTTP-to-HTTPS redirect how-to (308 explicit before 1.4.75): https://redmine.lighttpd.net/projects/lighttpd/wiki/HowToRedirectHttpToHttps
