@@ -298,6 +298,7 @@ class SourcesBasisTests(unittest.TestCase):
         cases = (
             (f'https://github.com/acme/repo/blob/{sha}/README.md', sha),
             ('https://github.com/acme/repo/tree/v2.4/src', 'v2.4'),
+            ('https://github.com/acme/repo/tree/release/1.2', 'release/1.2'),
             ('https://github.com/acme/repo/blob/version/2026.8.3/README.md',
              'version/2026.8.3'),
             ('https://github.com/acme/repo/raw/v2.4/file', 'v2.4'),
@@ -310,17 +311,29 @@ class SourcesBasisTests(unittest.TestCase):
             ('https://gitlab.com/acme/repo/-/raw/v2.4/file', 'v2.4'),
             (f'https://gitlab.com/acme/repo/-/commit/{sha}', sha),
             ('https://gitlab.com/acme/repo/-/tags/stable', 'stable'),
+            ('https://gitlab.com/acme/repo/-/releases/stable', 'stable'),
+            ('https://gitlab.com/acme/tree/repo/-/blob/v2.4/file', 'v2.4'),
             (f'https://raw.githubusercontent.com/acme/repo/{sha}/README.md', sha),
+            ('https://raw.githubusercontent.com/acme/repo/refs/tags/stable/README.md', 'stable'),
+            ('https://raw.githubusercontent.com/acme/repo/refs/tags/release/1.2/README.md',
+             'release/1.2'),
+            ('https://raw.githubusercontent.com/acme/repo/refs/heads/release-1.2/README.md',
+             'release-1.2'),
             ('https://git.example.org/cgit/repo/tree/file?h=v2.4', 'v2.4'),
             (f'https://git.example.org/cgit/repo/tree/file?id={sha}', sha),
             ('https://git.kernel.org/pub/scm/acme/repo.git/tree/file?h=v2.4', 'v2.4'),
+            ('https://git.zx2c4.com/acme/repo/tree/file?h=stable', 'stable'),
+            ('https://git.zx2c4.com/acme/repo/plain/file?id=stable', 'stable'),
             (f'https://github.com/acme/repo/wiki/History/{sha}', sha),
+            (f'https://www.github.com/acme/repo/wiki/History/{sha}', sha),
         )
         parser = gate_parser(required=bool(os.environ.get('CI')))
         for url, pin in cases:
             for selected in ((None, parser) if parser is not None else (None,)):
                 with self.subTest(url=url, parser=selected is not None):
-                    with self.assertRaisesRegex(ValueError, 'pinned source URL requires a known basis'):
+                    with self.assertRaisesRegex(
+                            ValueError, f'pinned source URL requires a known basis '
+                            f'\\(component product, ref {re.escape(pin)}\\)'):
                         self.check(f'- Product: [doc]({url})', basis='unknown',
                                    urls=[url], parser=selected)
                     self.check(f'- Product {pin}: [doc]({url})', basis=pin,
@@ -333,7 +346,11 @@ class SourcesBasisTests(unittest.TestCase):
                     'https://github.com/acme/repo/raw/HEAD/file',
                     'https://github.com/acme/repo/blame/trunk/file',
                     'https://raw.githubusercontent.com/acme/repo/develop/README.md',
+                    'https://raw.githubusercontent.com/acme/repo/refs/heads/master/README.md',
                     'https://github.com/acme/repo/blob/feature/README.md',
+                    'https://gitlab.com/acme/repo/-/blob/main/README.md',
+                    'https://git.zx2c4.com/acme/repo/tree/file?h=master',
+                    'https://github.com/acme/repo/releases/tag/main',
                     'https://docs.example.org/docs/2.4/guide'):
             for selected in ((None, parser) if parser is not None else (None,)):
                 with self.subTest(url=url, parser=selected is not None):
@@ -1151,6 +1168,9 @@ class RenderedSourcesTests(unittest.TestCase):
         for use_parser in (False, True):
             with self.subTest(case='two URLs in one item', use_parser=use_parser):
                 data['body_sha256'] = vb.digest(body)
+                with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                    vb.updated(document(data, body), 'fixture.md', parser=(
+                        self.parser if use_parser else None))
                 vb.updated(document(data, body), 'fixture.md', baseline,
                            self.parser if use_parser else None)
 
@@ -1165,6 +1185,8 @@ class RenderedSourcesTests(unittest.TestCase):
         baseline = {('fixture.md', fp): count for fp, count in counts.items()}
         for use_parser in (False, True):
             with self.subTest(case='violating and satisfying items', use_parser=use_parser):
+                with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                    self.check(sources, use_parser=use_parser)
                 self.check(sources, baseline=baseline, use_parser=use_parser)
 
         same_item = f'- Product: [doc]({url}) and v1.0 {url}'
