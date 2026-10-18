@@ -10,6 +10,9 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.227 | `tunnels.md`: pin `ufw status verbose` and `ufw show raw` behaviour, the incomplete status view and IPv6; the rolling citation landed but its planned pin did not. (M, M) | Done, #640. Pinned Ubuntu Noble ufw status, raw-table and IPv6 behaviour and added native nftables inspection to Verify. |
+| 1.226 | `cloudflare.md`: quick: cite Cloudflare Quick Tunnel documentation for the unauthenticated short-lived-test claim. (M, M) | Done, #640. Pinned Quick Tunnel documentation and scoped open access to the default URL without allowed-mail. |
+| 1.225 | `cloudflare.md`: prerequisites: pin the free-tier up-to-50-users limit or keep the current-limit qualification explicit. (M, M) | Done, #640. Cited the rolling plans page and replaced the unsupported 50-user figure with an instruction to check current plan limits and a stated unknown. |
 | 1.222 | `egress-metadata.md`: cloud-egress: source or narrow the universal/most-providers outbound-default claim and AWS security-group union, NACL and default-egress conjunction. (M, M) | Done, #639. Cited provider outbound defaults and AWS group and ACL behaviour, with Azure private-subnet qualification. |
 | 1.223 | `egress-metadata.md`: host-owner: cite owner-match and nftables paths for the host egress controls. (M, M) | Done, #639. Pinned owner-match and nftables semantics for the host restriction. |
 | 1.224 | `egress-metadata.md`: verify-allow: cite unauthenticated STS GET behaviour for the stated allow test. (M, M) | Done, #639. Cited STS endpoint and authentication-error documentation while marking the bare-GET response as reasoned. |
