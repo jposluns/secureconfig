@@ -6384,12 +6384,16 @@ Components (recorded basis):
 - otplib: otplib, v12.0.1
 - qrcode: qrcode, v1.5.4
 - node-v24: Node.js API documentation, v24.22.0
+- render: Render documentation, unknown
+- heroku: Heroku documentation, unknown
+- fly-pinned: Fly.io pinned documentation, 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9
+- railway: Railway documentation, 72354493198302677fb6be6c692dd75c64cae2c6
 
 Claims (full source mapping in the front matter):
 
 - tls (REASONED; node): Direct HTTPS uses a certificate plus chain and private key on all-interface 443.
 - redirect (REASONED; node): All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.
-- bind (REASONED; node, express): Same-host proxy uses 127.0.0.1; managed ingress uses platform-required addresses and ports with edge TLS and application auth. Platform mappings are cross-guide guidance, not covered by listed Sources.
+- bind (REASONED; node, express, render, heroku, fly-pinned, railway): This guide advises 127.0.0.1 for a same-host proxy, no extra managed listeners and app auth; plain HTTP needs protected TLS ingress, absent on Fly without handlers. Listener rules vary by deployment (Heroku recommends IPv6/dual-stack for Fir Private Spaces); Railway address/injected port, Cedar address and Railway TLS termination location remain uncited.
 - privilege (REASONED; node, linux-ip, linux-capabilities): On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout.
 - proxy (REASONED; express): Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.
 - headers (REASONED; helmet): Install helmet() for security headers including HSTS.
@@ -6411,7 +6415,7 @@ Claims (full source mapping in the front matter):
 - verify-proxy (REASONED; express): Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust.
 <!-- version-basis:end -->
 
-Preferred production layout: bind the Node app to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). On a managed platform the platform terminates TLS at its edge and you bind the address it requires, not `127.0.0.1` ([paas.md](paas.md)). Node can also terminate TLS itself, shown below. Get a certificate per [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
+This guide's preferred production layout: bind the Node app to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). For managed HTTP ingress, this guide advises using the deployment's required listener rather than `127.0.0.1`; TLS termination depends on the platform and configuration, as detailed in section 1 ([paas.md](paas.md)). Node can also terminate TLS itself, shown below. Get a certificate per [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
 ## 1. HTTPS directly in Node
 
@@ -6444,7 +6448,16 @@ require('node:http').createServer((req, res) => {
 }).listen(80);
 ```
 
-On Linux, binding ports below 1024 requires a process, root or not, that has `CAP_NET_BIND_SERVICE` in the user namespace governing its network namespace ([ip(7)](https://man7.org/linux/man-pages/man7/ip.7.html), [capabilities(7)](https://man7.org/linux/man-pages/man7/capabilities.7.html); stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout. The `listen(443)`/`listen(80)` above bind every interface, which is intended only for this Node-terminates-TLS layout. On a managed platform, do not add these listeners: bind the address and port the platform injects (`0.0.0.0` on `$PORT` for Render, Railway, and Heroku Cedar; `::` on `$PORT` for Heroku Fir; `0.0.0.0` matching `internal_port` for Fly) and let the platform terminate TLS at its ingress, so plain HTTP behind that protected ingress is fine and application authentication is still required ([paas.md](paas.md)).
+On Linux, binding ports below 1024 requires a process, root or not, that has `CAP_NET_BIND_SERVICE` in the user namespace governing its network namespace ([ip(7)](https://man7.org/linux/man-pages/man7/ip.7.html), [capabilities(7)](https://man7.org/linux/man-pages/man7/capabilities.7.html); stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout. The `listen(443)`/`listen(80)` above bind every interface, which is intended only for this Node-terminates-TLS layout.
+
+This guide's advice for managed platforms: do not add the `listen(443)`/`listen(80)` listeners above; bind only the listener required by your deployment. The documented HTTP ingress mappings are:
+
+- Render web services must bind `0.0.0.0`. Render recommends the `PORT` environment variable (at the time of writing, default port 10000, configurable), can usually detect another bound port, and requires the public HTTP server to use `PORT` when multiple ports are bound ([web services](https://render.com/docs/web-services)).
+- Heroku assigns each web process its port through `PORT` ([runtime principles](https://devcenter.heroku.com/articles/runtime-principles)). Fir Private Spaces networking uses IPv6 by default; Heroku warns that IPv4-only assumptions do not bind properly and recommends an IPv6 or dual-stack listener, typically `::` ([generations](https://devcenter.heroku.com/articles/generations)). These pages do not establish Cedar's listener address.
+- Fly Proxy HTTP services must be reachable over IPv4: use `0.0.0.0` and match the configured `internal_port` to the app listener ([service binding](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42)). IPv4-mapped IPv6 wildcard behaviour depends on the VM and runtime ([wildcard qualification](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92)).
+- Railway domains route to a detected or selected internal target port; the cited passage does not establish a required listener address, an injected `PORT` or the TLS termination location ([target ports](https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146)).
+
+Render's load balancer terminates inbound HTTPS and forwards HTTP to the web service ([web services](https://render.com/docs/web-services)). Heroku's HTTP routing page describes a load balancer offering SSL termination and routers forwarding HTTP to web dynos; it notes that both Private Spaces generations have different routers, so this is not a complete account of Private Spaces routing ([HTTP routing](https://devcenter.heroku.com/articles/http-routing)). Fly Proxy's `tls` handler terminates TLS and forwards plaintext ([TLS handler](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176)); without handlers it passes TCP through, allowing the app to terminate TLS itself ([TCP passthrough](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97)). This guide's advice: plain HTTP is acceptable only behind protected ingress that terminates TLS; application authentication is still required ([paas.md](paas.md)).
 
 ## 2. Behind a proxy: tell Express about it
 
@@ -6560,6 +6573,15 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 - Node.js HTTPS agent example (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L533-L549
 - Linux ip(7) privileged-port rule (Linux man-pages 6.19, checked October 2026): https://man7.org/linux/man-pages/man7/ip.7.html
 - Linux capabilities(7) CAP_NET_BIND_SERVICE definition (Linux man-pages 6.19, checked October 2026): https://man7.org/linux/man-pages/man7/capabilities.7.html
+- Render web-service listener and TLS termination (checked October 2026): https://render.com/docs/web-services
+- Heroku HTTP routing (checked October 2026): https://devcenter.heroku.com/articles/http-routing
+- Heroku web-process port assignment (checked October 2026): https://devcenter.heroku.com/articles/runtime-principles
+- Heroku Fir Private Spaces networking and listener recommendation (checked October 2026): https://devcenter.heroku.com/articles/generations
+- Fly TCP passthrough (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97
+- Fly TLS termination (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176
+- Fly public service binding (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42
+- Fly IPv4 and IPv6 wildcard qualification (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92
+- Railway target ports (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146
 
 ======================================================================
 ==> python.md
@@ -40986,7 +41008,7 @@ Open the guide before relying on either, because defaults change between release
 | 9883 | Mosquitto 2.1's HTTP API and web dashboard (`protocol http_api`), which the official 2.1 images enable on every address (it is not in the image's `EXPOSE`, so `-P` does not publish it) | The official 2.1 images allow it without credentials (`allow_anonymous true`, no password file or ACL); the 2.1.2 manual recommends binding it to loopback behind an authenticating reverse proxy | [mosquitto.md](mosquitto.md) |
 | 9898 | Pgpool-II's PCP administration channel, which has its own credential file | Its own credential file, `pcp.conf`, separate from database credentials | [connection-poolers.md](connection-poolers.md) |
 | 9999 | Pgpool-II | `enable_pool_hba` off by default: Pgpool authenticates nobody itself | [connection-poolers.md](connection-poolers.md), [postgresql.md](postgresql.md) |
-| 10000 | Budibase's nginx proxy (`MAIN_PORT` in the sample `.env`), which forwards `/db/` to CouchDB; and Webmin's miniserv (HTTPS), on every address by default; and a Render web service's default HTTP listener port, configurable through `PORT`, which must bind `0.0.0.0` and is reached through Render's load balancer rather than directly from the public internet | Sample `.env` sets `JWT_SECRET` to `testsecret` and CouchDB `budibase`/`budibase`; admin init is open until the first user exists. Webmin: the host's root password logs in with every module. Render: not stated | [low-code-builders.md](low-code-builders.md), [server-admin-panels.md](server-admin-panels.md), [paas.md](paas.md) |
+| 10000 | Budibase's nginx proxy (`MAIN_PORT` in the sample `.env`), which forwards `/db/` to CouchDB; and Webmin's miniserv (HTTPS), on every address by default; and a Render web service's default HTTP listener port, configurable through `PORT`, which must bind `0.0.0.0` and is reached through Render's load balancer rather than directly from the public internet | Sample `.env` sets `JWT_SECRET` to `testsecret` and CouchDB `budibase`/`budibase`; admin init is open until the first user exists. Webmin: the host's root password logs in with every module. Render: not stated | [low-code-builders.md](low-code-builders.md), [server-admin-panels.md](server-admin-panels.md), [paas.md](paas.md), [nodejs.md](nodejs.md) |
 | 10000/UDP | Webmin's server discovery socket (`listen=10000`), on every IPv4 address | not stated; the guide says it lets other Webmin servers find this one | [server-admin-panels.md](server-admin-panels.md) |
 | 10001 | Ray Client server, which executes code | Unauthenticated code execution unless token auth enabled (off by default) | [ray.md](ray.md) |
 | 10002 to 19999 | Ray worker ports, allocated across this whole range by default, plus several randomized ports. Anything in this range on a Ray node may be a worker rather than the service the row below suggests | Ray token authentication (2.52.0 and later) is disabled by default as of 2.58.0 | [ray.md](ray.md) |
