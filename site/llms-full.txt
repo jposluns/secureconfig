@@ -18646,7 +18646,7 @@ The checks below remain REASONED from the cited Kafka documentation and pinned s
 - Redpanda Console authentication (built-in login requires an enterprise licence): https://docs.redpanda.com/streaming/current/console/config/security/authentication/
 - Apache Kafka controller SCRAM bootstrap issue (KAFKA-15513): https://issues.apache.org/jira/browse/KAFKA-15513
 - Kafka 3.9 authorization and ZooKeeper AclAuthorizer: https://kafka.apache.org/39/security/authorization-and-acls/
-- KIP-801 authorizer bootstrapping and early-start listeners: https://cwiki.apache.org/confluence/spaces/KAFKA/pages/195728007/KIP-801+Implement+an+Authorizer+that+stores+metadata+in+__cluster_metadata
+- KIP-801 authorizer bootstrapping and early-start listeners: <https://cwiki.apache.org/confluence/spaces/KAFKA/pages/195728007/KIP-801+Implement+an+Authorizer+that+stores+metadata+in+__cluster_metadata>
 - Basic Kafka operations, topic administration, and quota commands (Kafka 4.3 documentation): https://kafka.apache.org/43/operations/basic-kafka-operations/
 - Multi-tenancy, topic-creation controls, and partition-mutation quotas (Kafka 4.3 documentation): https://kafka.apache.org/43/operations/multi-tenancy/
 - Quota grouping, precedence, request-time accounting, and enforcement (Kafka 4.3 documentation): https://kafka.apache.org/43/design/design/
