@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.266 | `paas.md`: managed-tls and listener-port, partial. (M, M) | Done, #665. Cited platform TLS and listener contracts, retained custom-domain conditions and source gaps, and labelled ingress/listener advice; unresolved evidence remains in TODO.md under 1.266. |
 | 1.270 | `sqlite.md`: Bash builtins/guards and curl: cite the shell and curl behaviour behind the checks. (M, M) | Done, #666. Pinned Bash and curl primitives for the four SQLite checks, preserved commands and expectations, and bounded version and token-handling assessments. |
 | 1.271 | `sqlite.md`: grep: cite GNU grep behaviour for the SQLite scan. (M, M) | Done, #666. Pinned GNU grep recursion, output, pattern, binary-input and exit-status behaviour while retaining the JWT-format and scan-coverage limits. |
 | 1.272 | `sqlite-http-frontends.md`: container-generator: cite Datasette container generator behaviour at its pinned version. (M, M) | Done, #664. Cited the pinned generator arguments, defaults, branches and callers, distinguished the Heroku path and labelled command-review advice and runtime limits. |

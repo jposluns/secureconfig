@@ -54,7 +54,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
 | 1.262 | `gpu-clouds.md`: modal-shared: cite the Shared Endpoints exception. (M, M) | `[gap]` |
 | 1.264 | `gpu-clouds.md`: remaining Vast auth implementation: trace the delegated portal-aio configurator and runtime consumers of OPEN_BUTTON_TOKEN, WEB_PASSWORD, ENABLE_AUTH, AUTH_EXCLUDE and PORTAL_CONFIG, including precedence and route enforcement; account-security sources for RunPod, Vast.ai, Lambda and Modal remain uncited. (M, M) | `[gap]` |
-| 1.266 | `paas.md`: managed-tls and listener-port: cite Railway TLS/ports, Heroku ACM and injected-port/Fly binding behaviour. (M, M) | `[gap]` |
+| 1.266 | `paas.md`: remaining managed-tls/listener-port evidence: establish Fly automatic certificate renewal, Railway TLS termination component and listener address/injected-port contract, Heroku Cedar listener address, Vercel Functions listener/port contract, and resolve the ACM Private Spaces wildcard contradiction. (M, M) | `[gap]` |
 | 1.268 | `paas.md`: https-redirect and verify-redirect: cite exact redirect toggles and expected statuses for each named platform. (M, M) | `[gap]` |
 | 1.269 | `paas.md`: verify-app-auth and verify-secrets: source or label the exact bypass and auth procedures and the bundle scan procedure, and their limits. (M, M) | `[gap]` |
 | 1.273 | `nodejs.md`: bind: cite platform bind mappings and their deployment scope. (M, M) | `[gap]` |
