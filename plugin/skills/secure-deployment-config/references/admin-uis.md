@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-17",
+  "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "8cc03871084681c33365ab91aeec1b663beb07b64b3f9d716354c1563ef4912e",
+  "body_sha256": "92d3d0f412f545709088bb0ce3d9b82c95988187a6fd4fcf75747d818f8d5c8b",
   "components": {
     "mongo": {
       "name": "mongo-express",
@@ -96,10 +96,36 @@ version_basis: {
       "sources": {
         "s4531e65b6502": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13"
       }
+    },
+    "redisinsight": {
+      "name": "RedisInsight",
+      "basis": "3.8.0",
+      "sources": {
+        "s6b8fb1c9bbbc": "https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/config/default.ts#L99-L100",
+        "s7ba57be16bb3": "https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/config/default.ts#L133",
+        "sddf9b5ee80b9": "https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/src/common/middlewares/single-user-auth.middleware.ts#L20-L49",
+        "s5e6e219b4b65": "https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/src/modules/auth/window-auth/middleware/window.auth.middleware.ts#L14-L35"
+      }
+    },
+    "engine-pinned": {
+      "name": "Docker Engine networking documentation",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "sb3dacfbaf7e1": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L33-L38",
+        "s1c82ff316a7e": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L60-L62",
+        "sc244607b20e4": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L11-L15"
+      }
+    },
+    "moby-pinned": {
+      "name": "Moby port mapping source",
+      "basis": "v28.3.3",
+      "sources": {
+        "seaf4197aafaa": "https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go"
+      }
     }
   },
   "claims": {
-    "private": {"text": "Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight has no dedicated source here.", "components": ["grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer"], "sources": ["grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18"], "status": "REASONED"},
+    "private": {"text": "Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight 3.8.0 config defaults to 0.0.0.0:5540 via RI_APP_HOST/RI_APP_PORT, with empty excludeAuthRoutes; fetched session/window middleware does not establish complete inbound authentication or login/dashboard 200 responses. Keeping RedisInsight and similar tools on loopback or a private network is this guide's advice.", "components": ["grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer", "redisinsight"], "sources": ["grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18", "redisinsight:s6b8fb1c9bbbc", "redisinsight:s7ba57be16bb3", "redisinsight:sddf9b5ee80b9", "redisinsight:s5e6e219b4b65"], "status": "REASONED"},
     "mongo-enable": {"text": "Recent login defaults off; current ENABLED and deprecated BASICAUTH fallback differ from some 1.0.x username-triggered builds. Set both flags and verify.", "components": ["mongo"], "sources": ["mongo:s69ec4eee2c85"], "status": "REASONED"},
     "mongo-credentials": {"text": "Set nonempty BASICAUTH_USERNAME/PASSWORD instead of admin/pass defaults.", "components": ["mongo"], "sources": ["mongo:s69ec4eee2c85"], "status": "REASONED"},
     "mongo-database": {"text": "Web Basic auth is separate from MongoDB credentials in ME_CONFIG_MONGODB_URL.", "components": ["mongo"], "sources": ["mongo:s69ec4eee2c85"], "status": "REASONED"},
@@ -116,7 +142,7 @@ version_basis: {
     "pgadmin-login": {"text": "pgAdmin server mode has its own accounts/login.", "components": ["pgadmin"], "sources": ["pgadmin:s2f7e33714435"], "status": "REASONED"},
     "adminer-login": {"text": "Adminer uses database credentials, not a separate account store; server-side connections expose even private databases to login attempts.", "components": ["adminer"], "sources": ["adminer:sb5eda9397b18"], "status": "REASONED"},
     "adminer-file": {"text": "Renaming Adminer is no access control; require private access or proxy TLS/auth/MFA, updates and removal of unused copies.", "components": ["adminer"], "sources": ["adminer:sb5eda9397b18"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory sockets and Docker publications; a protected frontend or absent socket does not prove backend isolation.", "components": ["grafana-pin", "prometheus-pin"], "sources": ["grafana-pin:s4c6ff3174e7e", "prometheus-pin:s6d5f308b02a2"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Inventory sockets and Docker publications; as this guide's assessment, a protected frontend or absent socket does not prove backend isolation or reachability. Docker documents explicit publish addresses and IPv6-to-IPv4 proxying when no host IP is given, the bridge is IPv4-only and --userland-proxy=true (default). Fetched sources do not establish NAT publication without a host listener; the fetched Moby TCP path listens even without a proxy.", "components": ["grafana-pin", "prometheus-pin", "engine-pinned", "moby-pinned"], "sources": ["grafana-pin:s4c6ff3174e7e", "prometheus-pin:s6d5f308b02a2", "engine-pinned:sb3dacfbaf7e1", "engine-pinned:s1c82ff316a7e", "engine-pinned:sc244607b20e4", "moby-pinned:seaf4197aafaa"], "status": "REASONED", "verify": [1]},
     "verify-login": {"text": "Anonymous dashboard data is a finding; require denial or verified login challenge. Arbitrary redirects and DNS/TLS/proxy errors are inconclusive.", "components": ["mongo", "grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer"], "sources": ["mongo:s69ec4eee2c85", "grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18"], "status": "REASONED", "verify": [1]},
     "verify-data": {"text": "A 200 login shell proves nothing; require a known data route to succeed authorized and deny anonymous access; 404/server errors are inconclusive.", "components": ["mongo", "grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer"], "sources": ["mongo:s69ec4eee2c85", "grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18"], "status": "REASONED", "verify": [1]}
   }
@@ -129,11 +155,11 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| private: Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight has no dedicated source here. | Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown | REASONED |
+| private: Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight 3.8.0 config defaults to 0.0.0.0:5540 via RI_APP_HOST/RI_APP_PORT, with empty excludeAuthRoutes; fetched session/window middleware does not establish complete inbound authentication or login/dashboard 200 responses. Keeping RedisInsight and similar tools on loopback or a private network is this guide's advice. | Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown; RedisInsight 3.8.0 | REASONED |
 | mongo-enable: Recent login defaults off; current ENABLED and deprecated BASICAUTH fallback differ from some 1.0.x username-triggered builds. Set both flags and verify. | mongo-express unknown | REASONED |
 | mongo-credentials: Set nonempty BASICAUTH_USERNAME/PASSWORD instead of admin/pass defaults. | mongo-express unknown | REASONED |
 | mongo-database: Web Basic auth is separate from MongoDB credentials in ME_CONFIG_MONGODB_URL. | mongo-express unknown | REASONED |
@@ -150,7 +176,7 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 | pgadmin-login: pgAdmin server mode has its own accounts/login. | pgAdmin unknown | REASONED |
 | adminer-login: Adminer uses database credentials, not a separate account store; server-side connections expose even private databases to login attempts. | Adminer unknown | REASONED |
 | adminer-file: Renaming Adminer is no access control; require private access or proxy TLS/auth/MFA, updates and removal of unused copies. | Adminer unknown | REASONED |
-| verify-listeners: Inventory sockets and Docker publications; a protected frontend or absent socket does not prove backend isolation. | Grafana v13.2.2; Prometheus v3.14.0 | REASONED |
+| verify-listeners: Inventory sockets and Docker publications; as this guide's assessment, a protected frontend or absent socket does not prove backend isolation or reachability. Docker documents explicit publish addresses and IPv6-to-IPv4 proxying when no host IP is given, the bridge is IPv4-only and --userland-proxy=true (default). Fetched sources do not establish NAT publication without a host listener; the fetched Moby TCP path listens even without a proxy. | Grafana v13.2.2; Prometheus v3.14.0; Docker Engine networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f; Moby port mapping source v28.3.3 | REASONED |
 | verify-login: Anonymous dashboard data is a finding; require denial or verified login challenge. Arbitrary redirects and DNS/TLS/proxy errors are inconclusive. | mongo-express unknown; Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown | REASONED |
 | verify-data: A 200 login shell proves nothing; require a known data route to succeed authorized and deny anonymous access; 404/server errors are inconclusive. | mongo-express unknown; Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown | REASONED |
 <!-- version-basis:end -->
@@ -206,16 +232,19 @@ Adminer is database management in a single PHP file, and a filename like `admine
 
 ## RedisInsight and similar tools
 
-Keep them on loopback or a private network and reach them through the tunnels above. When in doubt, apply the generic pattern: loopback bind, TLS proxy, proxy or SSO authentication, MFA.
+As this guide's advice, keep them on loopback or a private network and reach them through the tunnels above. When in doubt, apply the generic pattern: loopback bind, TLS proxy, proxy or SSO authentication, MFA.
+
+RedisInsight 3.8.0's default server configuration uses `RI_APP_HOST` with a fallback of `0.0.0.0` and `RI_APP_PORT` with a fallback of `5540`; its default `excludeAuthRoutes` is an empty list. The fetched `SingleUserAuthMiddleware.use` creates a default session if absent, assigns default session metadata and calls `next()`; `WindowAuthMiddleware.use` checks a window ID through `WindowAuthService` and throws on rejection. These fetched files do not establish the complete inbound authentication policy or which routes use these middleware; they do not establish either the absence of authentication or login and dashboard pages both returning 200. RedisInsight is therefore omitted from the Verify list asserting those two 200 responses.
 
 ## Verify
 
-REASONED: following block; panel sources below support the listener and anonymous front-page/data-route checks. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes.
+REASONED: following block; panel sources below support the listener and anonymous front-page/data-route checks; Docker's pinned documentation supports explicit publish addresses and Linux firewall rules for publication. Docker documents IPv6-to-IPv4 mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default). The fetched Moby port-mapping source starts the userland proxy conditionally and listens on bound TCP sockets even without a proxy; these fetched sources do not establish NAT publication without a host listener. As this guide's assessment, a socket listing alone does not prove reachability. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes.
 
 ```bash
 # On the host: each panel listener should be loopback (127.0.0.1) or a deliberately chosen private address.
-# Docker may publish to loopback OR install a NAT rule with no host listener, so also inspect the actual
-# published addresses and ports (docker ps and the port mappings) and probe any public backend mapping too:
+# Docker documents explicit publish addresses and firewall rules for publication. As this guide's assessment,
+# a socket listing alone does not prove reachability, so also inspect the actual published addresses and
+# ports (docker ps and the port mappings) and probe any public backend mapping too:
 # a protected frontend does not prove a separately published backend port is closed.
 ss -tlnp                                      # panel listeners: loopback or a private address only
 
@@ -225,7 +254,7 @@ curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/'
 #   PASS: a denial from whatever protects this panel - the panel's own 401/403, the reverse proxy's, or a
 #   Cloudflare Access challenge - or a redirect into that layer's login (which may be an external identity
 #   provider). FINDING: a 200 that renders the dashboard or app content. An arbitrary redirect is inconclusive.
-# SPA panels (Grafana, RedisInsight, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login page and
+# SPA panels (Grafana, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login page and
 # the dashboard, so also request a route you know returns real data when authorized, and require it be denied
 # without credentials:
 curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/REPLACE_WITH_PROTECTED_PATH'   # keep the quotes; substitute inside them
@@ -233,7 +262,7 @@ curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/REPLACE_WITH_PROTECTE
 #   unsubstituted placeholder is inconclusive, not a pass.
 ```
 
-REASONED: preceding block; listener inventory, published-backend inspection, anonymous front-page/data-route checks and an authenticated data-route positive control follow the cited panel sources; no panel deployment or second test network is available. Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
+REASONED: preceding block; listener inventory, anonymous front-page/data-route checks and an authenticated data-route positive control follow the cited panel sources; published-backend inspection follows the pinned Docker sources and this guide's assessment that a protected frontend or absent socket does not prove backend isolation. No panel deployment or second test network is available. Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
 
 ## Sources (checked September 2026)
 
@@ -254,3 +283,11 @@ REASONED: preceding block; listener inventory, published-backend inspection, ano
 - Apache httpd 2.4.69 htpasswd usage (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L129
 - OWASP Password Storage Cheat Sheet at 72865b1e3b5754246a101778dc00b37f9c233373, legacy bcrypt work factor (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
 - Apache httpd 2.4.69 htpasswd zero-initialized cost (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L297
+- RedisInsight 3.8.0 default listen host and port (checked October 2026): https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/config/default.ts#L99-L100
+- RedisInsight 3.8.0 default authentication-route exclusions (checked October 2026): https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/config/default.ts#L133
+- RedisInsight 3.8.0 default-session middleware (checked October 2026): https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/src/common/middlewares/single-user-auth.middleware.ts#L20-L49
+- RedisInsight 3.8.0 window-authentication middleware (checked October 2026): https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/src/modules/auth/window-auth/middleware/window.auth.middleware.ts#L14-L35
+- Docker explicit publish addresses, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L33-L38
+- Docker conditional IPv6-to-IPv4 userland-proxy mapping, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L60-L62
+- Docker Linux firewall rules for publication, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L11-L15
+- Moby port mapping at v28.3.3, conditional proxy startup and TCP listening without a proxy (checked October 2026): https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go
