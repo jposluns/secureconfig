@@ -793,7 +793,7 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | outbound: cloudflared opens an outbound-only encrypted tunnel; edge HTTPS needs no inbound firewall ports. | Cloudflare Zero Trust unknown | REASONED |
-| prerequisites: Cloudflare DNS domain and Zero Trust organization required; check current free-plan limits. | Cloudflare Zero Trust unknown | REASONED |
+| prerequisites: Cloudflare DNS domain and Zero Trust organization required; check current plan limits, including the free plan's, with Cloudflare; the fetched plans page did not state a user limit, and this guide does not establish one. | Cloudflare Zero Trust unknown | REASONED |
 | remote: Copy the dashboard tunnel token to a protected file and configure the OS service to use it; publish the hostname route to http://localhost:3000 only after Access is in place. | Cloudflare Zero Trust unknown; cloudflared token-file minimum 2025.4.0 | REASONED |
 | publish-order: Create Access before publishing the route, or keep the app stopped; routing alone exposes it without login and a stopped origin still has public DNS. | Cloudflare Zero Trust unknown | REASONED |
 | tls-hops: Edge terminates TLS, the tunnel is encrypted, and HTTP to localhost:3000 stays on the host. | Cloudflare Zero Trust unknown | REASONED |
@@ -829,7 +829,7 @@ This is the recommended path when the host cannot or should not accept inbound c
 ## 1. Prerequisites
 
 - A domain added to Cloudflare (the free plan is sufficient), with Cloudflare as its DNS.
-- A Zero Trust organization on the account. Check current free-plan limits at https://www.cloudflare.com/plans/zero-trust-services/; this guide does not establish a user limit.
+- A Zero Trust organization on the account. Check current plan limits, including the free plan's, with Cloudflare; the fetched [plans page](https://www.cloudflare.com/plans/zero-trust-services/) did not state a user limit, and this guide does not establish one.
 - `cloudflared` installed on the host that can reach the service (packages for Linux, macOS, and Windows: https://github.com/cloudflare/cloudflared).
 
 ## 2. Create the tunnel (dashboard-managed, recommended)
@@ -1051,7 +1051,7 @@ REASONED: following block; port-80 HTTP virtual-host route probe; local marking 
 - Cloudflare Zero Trust documentation: https://developers.cloudflare.com/cloudflare-one/
 - Create a remotely-managed tunnel: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/
 - cloudflared releases: https://github.com/cloudflare/cloudflared
-- Cloudflare Zero Trust plans (rolling; check current free-plan limits, checked October 2026): https://www.cloudflare.com/plans/zero-trust-services/
+- Cloudflare Zero Trust plans (rolling; fetched page did not state a user limit; check current plan limits, including the free plan's, with Cloudflare, checked October 2026): https://www.cloudflare.com/plans/zero-trust-services/
 - Cloudflare Quick Tunnels (temporary URL, access by URL without allowed-mail, email PIN option and testing/development use; pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, lines 13-42, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/tunnel/get-started/quick-tunnels/index.mdx#L13-L42
 - cloudflared TryCloudflare testing note (pinned tag 2026.9.3, lines 50-52, checked October 2026): https://github.com/cloudflare/cloudflared/blob/2026.9.3/README.md#L50-L52
 - Authenticated Origin Pulls (the origin must validate the client certificate; shared vs zone-level cert): https://developers.cloudflare.com/ssl/origin-configuration/authenticated-origin-pull/
@@ -1243,7 +1243,7 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | ssh-persist: Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding. | OpenSSH unknown; autossh source 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476 | REASONED |
 | verify-token: Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client. | frp documentation unknown; frps source v0.71.0 | REASONED |
 | verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
-| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw status verbose shows ufw-managed rules and defaults, while ufw show raw includes live iptables/ip6tables tables. This guide's reasoning is that ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual unknown; iproute2 manuals v6.12.0; Linux source v6.8; Ubuntu Noble ufw source 4992be7722389108d5f2ebb5ca221b228f0c68b1 | REASONED |
+| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw status verbose shows ufw-managed rules and defaults but omits rules from ufw's rules files. Check IPV6 in /etc/default/ufw. The pinned backend reports IPv4 filter, nat, mangle and raw tables and IPv6 filter, mangle and raw tables with ufw show raw (the manual lists nat for both). Confirm no rule admits unauthorized external traffic beyond the intended tunnel or proxy path for both IPv4 and IPv6. This guide's reasoning is that ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual unknown; iproute2 manuals v6.12.0; Linux source v6.8; Ubuntu Noble ufw source 4992be7722389108d5f2ebb5ca221b228f0c68b1 | REASONED |
 | verify-route: An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause. | WireGuard unknown; nftables unknown | REASONED |
 | verify-counter: Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer. | WireGuard unknown; nftables unknown | REASONED |
 | verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown; iproute2 manuals v6.12.0 | REASONED |
@@ -1337,8 +1337,9 @@ ss -ulnp                  # read every UDP listener to spot any OTHER, unexpecte
 sudo ufw status verbose
 # Check IPV6 in /etc/default/ufw: yes applies IPv6 rules; no accepts IPv6 only on loopback.
 # Confirm nothing admits UNAUTHORIZED external traffic to the tunneled service beyond the intended
-# tunnel/proxy path, for BOTH IPv4 and IPv6. This raw report includes live iptables/ip6tables
-# filter, nat, mangle and raw tables, beyond the status view:
+# tunnel/proxy path, for BOTH IPv4 and IPv6. The pinned backend lists IPv4 filter, nat,
+# mangle and raw tables, and IPv6 filter, mangle and raw tables for `ufw show raw`
+# (the manual lists nat for both), beyond the status view:
 sudo ufw show raw
 # This guide's reasoning: the iptables/ip6tables report does not replace native nftables inspection.
 # Read the native ruleset, including the forward rule above, separately:
@@ -1392,9 +1393,11 @@ ss -tlnp   # read every listener; 8080: only a loopback address unless you delib
 - Ubuntu Noble ufw manual, status verbose, show raw and IPv4/IPv6 rule visibility (rolling documentation, checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html
 - Ubuntu Noble ufw manual, status and status verbose (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 70-93, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n70
 - Ubuntu Noble ufw manual, status limitations and show raw tables (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 532-541, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n532
-- Ubuntu Noble ufw manual, IPv6 configuration and rule display (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 546-549, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n546
+- Ubuntu Noble ufw manual, IPv6 configuration and rule display (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 546-554, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/doc/ufw.8?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n546
 - Ubuntu Noble ufw default IPv6 setting (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 4-7, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/conf/ufw.defaults?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n4
+- Ubuntu Noble ufw defaults path and IPv6 setting (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 1-7, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/conf/ufw.defaults?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n1
 - Ubuntu Noble ufw iptables backend, raw report IPv4/IPv6 table enumeration (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 169-260, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/src/backend_iptables.py?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n169
+- Ubuntu Noble ufw iptables backend, verbose status default policies (pinned commit 4992be7722389108d5f2ebb5ca221b228f0c68b1, lines 475-487, checked October 2026): https://git.launchpad.net/ubuntu/+source/ufw/tree/src/backend_iptables.py?id=4992be7722389108d5f2ebb5ca221b228f0c68b1#n475
 - iproute2 ip-link manual, "ip link show - display device attributes"; the device name "specifies the network device to show." (pinned tag v6.12.0, checked October 2026): https://raw.githubusercontent.com/iproute2/iproute2/v6.12.0/man/man8/ip-link.8.in
 - Linux administrative IFF_UP flag (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L39-L40
 - Linux operational UNKNOWN state (pinned tag v6.8, checked October 2026): https://github.com/torvalds/linux/blob/v6.8/Documentation/networking/operstates.rst#L58-L61

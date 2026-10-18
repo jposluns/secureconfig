@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "1e81c1bf56c73452b9f952b1e2d8e2b6fd56feaa1960404bc6a8667b0de97bc2",
+  "body_sha256": "eca2add64675c85f694803587620b4e632452030396face003b2191c88a687e6",
   "components": {
     "cf": {
       "name": "Cloudflare Zero Trust",
@@ -77,7 +77,7 @@ version_basis: {
   },
   "claims": {
     "outbound": {"text": "cloudflared opens an outbound-only encrypted tunnel; edge HTTPS needs no inbound firewall ports.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s160a7accb558"], "status": "REASONED"},
-    "prerequisites": {"text": "Cloudflare DNS domain and Zero Trust organization required; check current free-plan limits.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s160a7accb558", "cf:s8d2f573a9d81"], "status": "REASONED"},
+    "prerequisites": {"text": "Cloudflare DNS domain and Zero Trust organization required; check current plan limits, including the free plan's, with Cloudflare; the fetched plans page did not state a user limit, and this guide does not establish one.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s160a7accb558", "cf:s8d2f573a9d81"], "status": "REASONED"},
     "remote": {"text": "Copy the dashboard tunnel token to a protected file and configure the OS service to use it; publish the hostname route to http://localhost:3000 only after Access is in place.", "components": ["cf", "token-file"], "sources": ["cf:s160a7accb558", "cf:sd043afad3d8a", "token-file:sde222f01d112"], "status": "REASONED"},
     "publish-order": {"text": "Create Access before publishing the route, or keep the app stopped; routing alone exposes it without login and a stopped origin still has public DNS.", "components": ["cf"], "sources": ["cf:s160a7accb558", "cf:s536e61cfd1d0"], "status": "REASONED"},
     "tls-hops": {"text": "Edge terminates TLS, the tunnel is encrypted, and HTTP to localhost:3000 stays on the host.", "components": ["cf"], "sources": ["cf:s160a7accb558"], "status": "REASONED"},
@@ -121,7 +121,7 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | Claim | Basis | Status |
 | --- | --- | --- |
 | outbound: cloudflared opens an outbound-only encrypted tunnel; edge HTTPS needs no inbound firewall ports. | Cloudflare Zero Trust unknown | REASONED |
-| prerequisites: Cloudflare DNS domain and Zero Trust organization required; check current free-plan limits. | Cloudflare Zero Trust unknown | REASONED |
+| prerequisites: Cloudflare DNS domain and Zero Trust organization required; check current plan limits, including the free plan's, with Cloudflare; the fetched plans page did not state a user limit, and this guide does not establish one. | Cloudflare Zero Trust unknown | REASONED |
 | remote: Copy the dashboard tunnel token to a protected file and configure the OS service to use it; publish the hostname route to http://localhost:3000 only after Access is in place. | Cloudflare Zero Trust unknown; cloudflared token-file minimum 2025.4.0 | REASONED |
 | publish-order: Create Access before publishing the route, or keep the app stopped; routing alone exposes it without login and a stopped origin still has public DNS. | Cloudflare Zero Trust unknown | REASONED |
 | tls-hops: Edge terminates TLS, the tunnel is encrypted, and HTTP to localhost:3000 stays on the host. | Cloudflare Zero Trust unknown | REASONED |
@@ -157,7 +157,7 @@ This is the recommended path when the host cannot or should not accept inbound c
 ## 1. Prerequisites
 
 - A domain added to Cloudflare (the free plan is sufficient), with Cloudflare as its DNS.
-- A Zero Trust organization on the account. Check current free-plan limits at https://www.cloudflare.com/plans/zero-trust-services/; this guide does not establish a user limit.
+- A Zero Trust organization on the account. Check current plan limits, including the free plan's, with Cloudflare; the fetched [plans page](https://www.cloudflare.com/plans/zero-trust-services/) did not state a user limit, and this guide does not establish one.
 - `cloudflared` installed on the host that can reach the service (packages for Linux, macOS, and Windows: https://github.com/cloudflare/cloudflared).
 
 ## 2. Create the tunnel (dashboard-managed, recommended)
@@ -379,7 +379,7 @@ REASONED: following block; port-80 HTTP virtual-host route probe; local marking 
 - Cloudflare Zero Trust documentation: https://developers.cloudflare.com/cloudflare-one/
 - Create a remotely-managed tunnel: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/
 - cloudflared releases: https://github.com/cloudflare/cloudflared
-- Cloudflare Zero Trust plans (rolling; check current free-plan limits, checked October 2026): https://www.cloudflare.com/plans/zero-trust-services/
+- Cloudflare Zero Trust plans (rolling; fetched page did not state a user limit; check current plan limits, including the free plan's, with Cloudflare, checked October 2026): https://www.cloudflare.com/plans/zero-trust-services/
 - Cloudflare Quick Tunnels (temporary URL, access by URL without allowed-mail, email PIN option and testing/development use; pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, lines 13-42, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/tunnel/get-started/quick-tunnels/index.mdx#L13-L42
 - cloudflared TryCloudflare testing note (pinned tag 2026.9.3, lines 50-52, checked October 2026): https://github.com/cloudflare/cloudflared/blob/2026.9.3/README.md#L50-L52
 - Authenticated Origin Pulls (the origin must validate the client certificate; shared vs zone-level cert): https://developers.cloudflare.com/ssl/origin-configuration/authenticated-origin-pull/
