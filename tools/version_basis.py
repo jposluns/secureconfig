@@ -10,6 +10,7 @@ import datetime
 import hashlib
 import html
 import json
+import os
 import re
 import shlex
 import sys
@@ -408,6 +409,130 @@ def raw_sources(body, heads):
     return '\n'.join('\n'.join(content[start:end]) for start, end in ranges)
 
 
+def rendered_sources(body, heads, parser):
+    """Return rendered citation occurrences and each item's raw and decoded text.
+
+    CommonMark does not linkify bare URLs. Keep those existing Sources citations
+    by matching known URLs in rendered text tokens; code and link labels do not
+    supply targets. Link and autolink destinations come from the parser's href.
+    """
+    _, ranges = _sources_ranges(body, heads)
+    lines = body.splitlines()
+    occurrences = []
+    items = []
+    stack = []
+    parents = []
+    for token in parser.parse(body):
+        if token.nesting == -1:
+            parents.pop()
+        if token.type == 'list_item_open':
+            items.append(([], []))
+            stack.append(len(items) - 1)
+        elif token.type == 'list_item_close':
+            stack.pop()
+        elif token.type == 'inline' and token.map and any(
+                token.map[0] < end and token.map[1] > start for start, end in ranges):
+            owner = (stack[-1] if stack and parents[-2:] ==
+                     ['list_item_open', 'paragraph_open'] else None)
+            if owner is not None:
+                items[owner][0].extend(lines[token.map[0]:token.map[1]])
+            in_link = 0
+            visible = []
+            for child in token.children or []:
+                if child.type == 'link_open':
+                    href = child.attrGet('href')
+                    occurrences.append((href, owner, True))
+                    visible.append('\n')  # Keep the label's Markdown boundary for basis matching.
+                    in_link += 1
+                elif child.type == 'link_close':
+                    visible.append('\n')
+                    in_link -= 1
+                elif child.type in ('text', 'code_inline'):
+                    visible.append(('\n' + child.content + '\n') if child.type == 'code_inline'
+                                   else child.content)
+                    if child.type == 'text' and not in_link:
+                        occurrences.append((child.content, owner, False))
+                elif child.type in ('softbreak', 'hardbreak'):
+                    visible.append('\n')
+                elif child.type == 'html_inline':
+                    visible.append('\n')
+            if owner is not None:
+                items[owner][1].append(''.join(visible))
+        if token.nesting == 1:
+            parents.append(token.type)
+    return occurrences, [('\n'.join(raw), '\n'.join(rendered))
+                         for raw, rendered in items]
+
+
+def rendered_cites(candidate, url, link, parser=None):
+    """Count exact hrefs, or legacy bare URLs in decoded rendered text."""
+    if not link:
+        return cites(candidate, url)
+    url = parser.normalizeLink(url) if parser is not None else url
+    match = re.match(r'[A-Za-z][A-Za-z0-9+.-]*://[^/?#]*', url)
+    other = re.match(r'[A-Za-z][A-Za-z0-9+.-]*://[^/?#]*', candidate or '')
+    return int(bool(match and other and match[0].lower() == other[0].lower()
+                    and url[match.end():] == candidate[other.end():]))
+
+
+def cited_target(href, url):
+    """Keep the href's own scheme and authority with the declared URL remainder."""
+    head = re.match(r'[A-Za-z][A-Za-z0-9+.-]*://[^/?#]*', url)
+    other = re.match(r'[A-Za-z][A-Za-z0-9+.-]*://[^/?#]*', href)
+    return other[0] + url[head.end():]
+
+
+def check_rendered_sources(data, body, heads, parser, guide, baseline=None,
+                           raw_current=None, raw_entries=()):
+    occurrences, items = rendered_sources(body, heads, parser)
+    current, details, errors = Counter(), {}, []
+    for name, component in data['components'].items():
+        basis = component['basis']
+        pattern = r'(?<![A-Za-z0-9.])' + re.escape(basis) + r'(?![A-Za-z0-9.])'
+        for url in component['sources'].values():
+            found = [(owner, items[owner] if owner is not None else ('', ''),
+                      cited_target(candidate, url) if link else '')
+                     for candidate, owner, link in occurrences
+                     if rendered_cites(candidate, url, link, parser)]
+            require(found, 'source URL absent from Sources: ' + url)
+            if basis == 'unknown':
+                continue
+            rendered_items = Counter(entry for owner, (entry, _), _ in found
+                                     if owner is not None)
+            for entry in raw_entries:
+                if cites(entry, url):
+                    if rendered_items[entry]:
+                        rendered_items[entry] -= 1
+                    else:
+                        errors.append(f'{name}: {url} absent from rendered Sources item')
+            violating_owners = set()
+            for owner, (entry, decoded_entry), target in found:
+                if owner is None:
+                    # Backstop for rendered-only citations: raw container_violations()
+                    # runs first on every item but cannot see every decoded target.
+                    errors.append(f'{name}: {url} cited in an unsupported Sources container; '
+                                  'put each citation in its own list item')
+                elif (owner not in violating_owners
+                      and not re.search(pattern, decoded_entry + '\n' + target)):
+                    violating_owners.add(owner)
+                    fp = source_fingerprint(name, basis, url, entry)
+                    current[fp] += 1
+                    details[fp] = f'{name}: basis {basis!r} absent from Sources item for {url}'
+    # A raw violation already consumed its baseline allowance. The renderer can
+    # add a violation, but cannot make that same entry stale or count it twice.
+    for fp, count in (raw_current or {}).items():
+        current[fp] = max(current[fp], count)
+    allowed = {fp: count for (filename, fp), count in (baseline or {}).items()
+               if filename == Path(guide).name}
+    for fp in sorted(current.keys() | allowed.keys()):
+        actual, limit = current[fp], allowed.get(fp, 0)
+        if actual > limit:
+            errors.append(f'{details[fp]} (new/changed/excess: {actual} > {limit})')
+        if actual < limit:
+            errors.append(f'stale Sources baseline {fp}: {actual} < {limit}; remove it')
+    require(not errors, '; '.join(errors))
+
+
 def container_violations(data, sources, entries):
     """Fail closed: every citation of a basis-bearing URL must be a parsed item.
 
@@ -444,6 +569,7 @@ def check_source_bases(data, sources, entries, guide, baseline=None):
         if actual < limit:
             errors.append(f'stale Sources baseline {fingerprint}: {actual} < {limit}; remove it')
     require(not errors, '; '.join(errors))
+    return current
 
 
 
@@ -455,7 +581,7 @@ def latest_change():
     return max(datetime.date.fromisoformat(value) for value in dates)
 
 
-def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0):
+def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0, parser=None):
     from check_guide_shape import headings, section_body, SOURCES_RE
     keys(data, ('schema', 'checked', 'documentation_checked', 'body_sha256', 'components', 'claims'))
     require(type(data['schema']) is int and data['schema'] == 1, 'unsupported schema')
@@ -505,11 +631,16 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0):
                     'source URL percent-encodes an unreserved character: ' + url)
             require(cites(sources, url), 'source URL absent from Sources: ' + url)
     # The container count uses ATX-bounded text; see raw_sources().
-    check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
+    raw_current = check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
     identifiers(data['claims'])
     blocks = verify_blocks(body, with_status=True)
     # After verify_blocks(), so Verify-marking diagnostics keep precedence.
     guide_violations(body, heads, line_offset)
+    if parser is not None:
+        require(not re.search('[\x0b\x0c\x1c-\x1e\x85\u2028\u2029]', body),
+                'unsupported line boundary in guide body for rendered Sources checks')
+        check_rendered_sources(data, body, heads, parser, guide, baseline,
+                               raw_current, entries)
     covered, used = set(), set()
     for name, claim in data['claims'].items():
         keys(claim, ('text', 'components', 'sources', 'status'), ('evidence', 'verify'))
@@ -605,7 +736,7 @@ def body_line_offset(text, full_body):
     return text[:len(text) - len(full_body)].count('\n') + removed.count('\n')
 
 
-def rebound(text, guide='GUIDE.md', baseline=None):
+def rebound(text, guide='GUIDE.md', baseline=None, parser=None):
     """Validate the reviewed inventory and replace only the top-level digest token."""
     data, full_body = split(text)
     require(data is not None, 'missing version_basis front matter')
@@ -613,7 +744,7 @@ def rebound(text, guide='GUIDE.md', baseline=None):
     string(data['body_sha256'])
     require(re.fullmatch(r'[0-9a-f]{64}', data['body_sha256']), 'bad body digest')
     data['body_sha256'] = digest(body)
-    validate(data, body, guide, baseline, body_line_offset(text, full_body))
+    validate(data, body, guide, baseline, body_line_offset(text, full_body), parser)
     # split() already strictly parsed the object. Walk only its top-level members,
     # preserving all other bytes, even escaped keys or noncanonical whitespace.
     decoder = json.JSONDecoder()
@@ -630,11 +761,11 @@ def rebound(text, guide='GUIDE.md', baseline=None):
         position = re.compile(r'\s*,\s*').match(text, position).end()
 
 
-def updated(text, guide='GUIDE.md', baseline=None):
+def updated(text, guide='GUIDE.md', baseline=None, parser=None):
     data, full_body = split(text)
     require(data is not None, 'missing version_basis front matter')
     body = without_summary(full_body)
-    validate(data, body, guide, baseline, body_line_offset(text, full_body))
+    validate(data, body, guide, baseline, body_line_offset(text, full_body), parser)
     title, rest = body.split('\n\n', 1)
     prefix = front_matter(data)
     return prefix + title + '\n\n' + render(data) + '\n\n' + rest
@@ -660,8 +791,24 @@ def main():
                        help='assert the claim inventory was reviewed; update only its digest')
     parser.add_argument('guide', nargs='?', type=Path,
                         help='optional enrolled guide for --check or --write')
+    parser.add_argument('--require-parser', action='store_true',
+                        help='fail if the pinned CommonMark parser is unavailable (CI)')
+    parser.add_argument('--no-advisory', action='store_true',
+                        help='suppress the missing-parser advisory when a caller has already printed it')
     args = parser.parse_args()
+    if args.no_advisory and args.bundle is None:
+        parser.error('--no-advisory requires --bundle')
     try:
+        from check_verify_marking import ParserUnavailable, gate_parser
+        try:
+            source_parser = gate_parser(required=True)
+        except ParserUnavailable as exc:
+            if args.require_parser or os.environ.get('CI'):
+                raise ValueError(f'pinned parser unavailable: {exc}') from exc
+            source_parser = None
+            if not args.no_advisory:
+                print(f'  SKIP  version basis rendered Sources checks: {exc} '
+                      '(line grammar still runs)', file=sys.stderr)
         selected = paths()
         baseline = load_source_baseline()
         require({name for name, _ in baseline} <= {path.name for path in selected},
@@ -672,7 +819,7 @@ def main():
             path = args.rebind.resolve()
             require(path in selected, '--rebind requires an enrolled guide')
             text = path.read_bytes().decode('utf-8')
-            expected = rebound(text, path.name, baseline)
+            expected = rebound(text, path.name, baseline, source_parser)
             path.write_bytes(expected.encode('utf-8'))
             print(f'  ok    {path.name}: rebound digest; this asserts the claim inventory '
                   'was reviewed, not that a demonstration was run. '
@@ -682,7 +829,7 @@ def main():
             text = args.bundle.read_text(encoding='utf-8')
             data, body = split(text)
             if data is not None:
-                require(updated(text, args.bundle, baseline) == text, 'stale summary')
+                require(updated(text, args.bundle, baseline, source_parser) == text, 'stale summary')
             sys.stdout.write(body)
             return 0
         pending = []
@@ -693,7 +840,7 @@ def main():
         for path in selected:
             text = path.read_text(encoding='utf-8')
             try:
-                expected = updated(text, path.name, baseline)
+                expected = updated(text, path.name, baseline, source_parser)
                 require(args.write or text == expected, 'stale summary: run tools/version_basis.py --write')
             except (ValueError, TypeError, KeyError) as exc:
                 raise ValueError(f'{path.name}: {exc}') from exc
@@ -704,7 +851,8 @@ def main():
         retained = sum(count for (name, _), count in baseline.items()
                        if name in {path.name for path in selected})
         print(f'  ok    version basis: {len(pending)} opted-in guides; '
-              f'{retained} grandfathered Sources URL/items retained')
+              f'{retained} grandfathered Sources URL/items retained'
+              + ('; rendered Sources checked' if source_parser else '; line grammar only'))
         return 0
     except (OSError, ValueError, TypeError, KeyError) as exc:
         print(f'  FAIL  version basis: {exc}', file=sys.stderr)
