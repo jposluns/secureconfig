@@ -57,9 +57,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.266 | `paas.md`: remaining managed-tls/listener-port evidence: establish Fly automatic certificate renewal, Railway TLS termination component and listener address/injected-port contract, Heroku Cedar listener address, Vercel Functions listener/port contract, and resolve the ACM Private Spaces wildcard contradiction. (M, M) | `[gap]` |
 | 1.268 | `paas.md`: https-redirect and verify-redirect: cite exact redirect toggles and expected statuses for each named platform. (M, M) | `[gap]` |
 | 1.269 | `paas.md`: verify-app-auth and verify-secrets: source or label the exact bypass and auth procedures and the bundle scan procedure, and their limits. (M, M) | `[gap]` |
-| 1.270 | `sqlite.md`: Bash builtins/guards and curl: cite the shell and curl behaviour behind the checks. (M, M) | `[gap]` |
-| 1.271 | `sqlite.md`: grep: cite GNU grep behaviour for the SQLite scan. (M, M) | `[gap]` |
-| 1.272 | `sqlite-http-frontends.md`: container-generator: cite Datasette container generator behaviour at its pinned version. (M, M) | `[gap]` |
 | 1.273 | `nodejs.md`: bind: cite platform bind mappings and their deployment scope. (M, M) | `[gap]` |
 | 1.274 | `nodejs.md`: password: cite Argon2id recommendation and bcrypt library APIs. (M, M) | `[gap]` |
 | 1.275 | `nodejs.md`: mfa: source the fronting identity layer beyond the already pinned otplib/qrcode examples. (M, M) | `[gap]` |
