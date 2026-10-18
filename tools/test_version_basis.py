@@ -264,9 +264,10 @@ class SourcesBasisTests(unittest.TestCase):
 
     def check(self, sources, basis='v1.0', urls=None, baseline=None, parser=None):
         data = fixture()
+        urls = urls or [self.url]
         data['components']['product'].update(
-            basis=basis, sources={vb.source_id(url): url for url in (urls or [self.url])})
-        data['claims']['control']['sources'] = ['product:' + vb.source_id(self.url)]
+            basis=basis, sources={vb.source_id(url): url for url in urls})
+        data['claims']['control']['sources'] = ['product:' + vb.source_id(urls[0])]
         body = BODY[:BODY.index('- Product')] + sources + '\n'
         data['body_sha256'] = vb.digest(body)
         return vb.updated(document(data, body), 'fixture.md', baseline, parser=parser)
@@ -291,6 +292,80 @@ class SourcesBasisTests(unittest.TestCase):
         self.check(f'- Product: {self.url}', basis='unknown')
         with self.assertRaisesRegex(ValueError, 'source URL absent'):
             self.check('- No citation', basis='unknown')
+
+    def test_pinned_source_requires_known_basis_with_and_without_parser(self):
+        sha = '4ba3cc0e2ebec61b726b227fdf51e55f4a502182'
+        cases = (
+            (f'https://github.com/acme/repo/blob/{sha}/README.md', sha),
+            ('https://github.com/acme/repo/tree/v2.4/src', 'v2.4'),
+            ('https://github.com/acme/repo/tree/release/1.2', 'release/1.2'),
+            ('https://github.com/acme/repo/blob/version/2026.8.3/README.md',
+             'version/2026.8.3'),
+            ('https://github.com/acme/repo/raw/v2.4/file', 'v2.4'),
+            ('https://github.com/acme/repo/blame/v2.4/file', 'v2.4'),
+            (f'https://github.com/acme/repo/commit/{sha}', sha),
+            ('https://github.com/acme/repo/releases/tag/v2.4', 'v2.4'),
+            ('https://github.com/acme/repo/releases/tag/stable', 'stable'),
+            (f'https://gitlab.com/acme/repo/-/blob/{sha}/README.md', sha),
+            ('https://gitlab.com/acme/repo/-/tree/v2.4/src', 'v2.4'),
+            ('https://gitlab.com/acme/repo/-/raw/v2.4/file', 'v2.4'),
+            (f'https://gitlab.com/acme/repo/-/commit/{sha}', sha),
+            ('https://gitlab.com/acme/repo/-/tags/stable', 'stable'),
+            ('https://gitlab.com/acme/repo/-/releases/stable', 'stable'),
+            ('https://gitlab.com/acme/tree/repo/-/blob/v2.4/file', 'v2.4'),
+            (f'https://raw.githubusercontent.com/acme/repo/{sha}/README.md', sha),
+            ('https://raw.githubusercontent.com/acme/repo/refs/tags/stable/README.md', 'stable'),
+            ('https://raw.githubusercontent.com/acme/repo/refs/tags/release/1.2/README.md',
+             'release/1.2'),
+            ('https://raw.githubusercontent.com/acme/repo/refs/heads/release-1.2/README.md',
+             'release-1.2'),
+            ('https://git.example.org/cgit/repo/tree/file?h=v2.4', 'v2.4'),
+            (f'https://git.example.org/cgit/repo/tree/file?id={sha}', sha),
+            ('https://git.kernel.org/pub/scm/acme/repo.git/tree/file?h=v2.4', 'v2.4'),
+            ('https://git.zx2c4.com/acme/repo/tree/file?h=stable', 'stable'),
+            ('https://git.zx2c4.com/acme/repo/plain/file?id=stable', 'stable'),
+            (f'https://git.zx2c4.com/acme/repo/commit/?h=master&id={sha}', sha),
+            (f'https://git.zx2c4.com/acme/repo/diff/?id={sha}', sha),
+            (f'https://git.zx2c4.com/acme/repo/patch/?h=master&id={sha}', sha),
+            (f'https://git.zx2c4.com/acme/repo/commit/?id=main&id={sha}', sha),
+            (f'https://git.zx2c4.com/acme/repo/commit/?id={sha}&h=master', sha),
+            (f'https://git.zx2c4.com/acme/repo/tree/file?h=main&id={sha}', sha),
+            (f'https://git.zx2c4.com/acme/repo/tree/file?id={sha}&h=main', sha),
+            (f'https://git.zx2c4.com/acme/repo/tree/file?h=v2.4&id={sha}', sha),
+            ('https://github.com/acme/repo/blob/v2.4/file?h=main', 'v2.4'),
+            ('https://github.com/acme/repo/blob/v2.4/file?id=main&h=master', 'v2.4'),
+            (f'https://github.com/acme/repo/wiki/History/{sha}', sha),
+            (f'https://www.github.com/acme/repo/wiki/History/{sha}', sha),
+        )
+        parser = gate_parser(required=bool(os.environ.get('CI')))
+        for url, pin in cases:
+            for selected in ((None, parser) if parser is not None else (None,)):
+                with self.subTest(url=url, parser=selected is not None):
+                    with self.assertRaisesRegex(
+                            ValueError, f'pinned source URL requires a known basis '
+                            f'\\(component product, ref {re.escape(pin)}\\)'):
+                        self.check(f'- Product: [doc]({url})', basis='unknown',
+                                   urls=[url], parser=selected)
+                    self.check(f'- Product {pin}: [doc]({url})', basis=pin,
+                               urls=[url], parser=selected)
+
+    def test_moving_refs_and_release_line_docs_are_not_pins(self):
+        parser = gate_parser(required=bool(os.environ.get('CI')))
+        for url in ('https://github.com/acme/repo/blob/main/README.md',
+                    'https://github.com/acme/repo/tree/master/src',
+                    'https://github.com/acme/repo/raw/HEAD/file',
+                    'https://github.com/acme/repo/blame/trunk/file',
+                    'https://raw.githubusercontent.com/acme/repo/develop/README.md',
+                    'https://raw.githubusercontent.com/acme/repo/refs/heads/master/README.md',
+                    'https://github.com/acme/repo/blob/feature/README.md',
+                    'https://gitlab.com/acme/repo/-/blob/main/README.md',
+                    'https://git.zx2c4.com/acme/repo/tree/file?h=master',
+                    'https://github.com/acme/repo/releases/tag/main',
+                    'https://docs.example.org/docs/2.4/guide'):
+            for selected in ((None, parser) if parser is not None else (None,)):
+                with self.subTest(url=url, parser=selected is not None):
+                    self.check(f'- Product: [doc]({url})', basis='unknown',
+                               urls=[url], parser=selected)
 
     def test_wrapped_items_and_paragraphs(self):
         for item in (f'- Product v1.0:\n  {self.url}',
@@ -1087,6 +1162,61 @@ class RenderedSourcesTests(unittest.TestCase):
                 for use_parser in (False, True):
                     with self.subTest(use_parser=use_parser):
                         self.check(sources, baseline=baseline, use_parser=use_parser)
+
+        other = 'https://example.com/other'
+        sources = f'- Product: [doc]({url}) and [other]({other}) and {other}'
+        body = BODY[:BODY.index('- Product')] + sources + '\n'
+        entries = vb.source_entries(vb.raw_sources(body, headings(body)))
+        data = fixture()
+        data['components']['product']['sources'] = {
+            vb.source_id(candidate): candidate for candidate in (url, other)}
+        data['claims']['control']['sources'] = ['product:' + vb.source_id(url)]
+        counts = Counter(fp for fp, _ in vb.source_violations(data, entries))
+        self.assertEqual(len(counts), 2)
+        self.assertEqual(sorted(counts.values()), [1, 1])
+        baseline = {('fixture.md', fp): count for fp, count in counts.items()}
+        for use_parser in (False, True):
+            with self.subTest(case='two URLs in one item', use_parser=use_parser):
+                data['body_sha256'] = vb.digest(body)
+                with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                    vb.updated(document(data, body), 'fixture.md', parser=(
+                        self.parser if use_parser else None))
+                vb.updated(document(data, body), 'fixture.md', baseline,
+                           self.parser if use_parser else None)
+
+        sources = (f'- Product: [doc]({url})\n'
+                   f'- Product v1.0: [other]({url})')
+        body = BODY[:BODY.index('- Product')] + sources + '\n'
+        entries = vb.source_entries(vb.raw_sources(body, headings(body)))
+        data = fixture()
+        data['components']['product']['sources'] = {vb.source_id(url): url}
+        counts = Counter(fp for fp, _ in vb.source_violations(data, entries))
+        self.assertEqual(sum(counts.values()), 1)
+        baseline = {('fixture.md', fp): count for fp, count in counts.items()}
+        for use_parser in (False, True):
+            with self.subTest(case='violating and satisfying items', use_parser=use_parser):
+                with self.assertRaisesRegex(ValueError, 'basis.*absent'):
+                    self.check(sources, use_parser=use_parser)
+                self.check(sources, baseline=baseline, use_parser=use_parser)
+
+        same_item = f'- Product: [doc]({url}) and v1.0 {url}'
+        same_body = BODY[:BODY.index('- Product')] + same_item + '\n'
+        same_entries = vb.source_entries(vb.raw_sources(same_body, headings(same_body)))
+        self.assertEqual(list(vb.source_violations(data, same_entries)), [])
+        for use_parser in (False, True):
+            with self.subTest(case='two occurrences in a satisfying item',
+                              use_parser=use_parser):
+                self.check(same_item, use_parser=use_parser)
+
+        # The raw path counts the image URL; the parser cannot use an image as a citation.
+        image_sources = sources.replace(f'[other]({url})', f'![other]({url})')
+        image_body = BODY[:BODY.index('- Product')] + image_sources + '\n'
+        image_entries = vb.source_entries(vb.raw_sources(image_body, headings(image_body)))
+        image_counts = Counter(fp for fp, _ in vb.source_violations(data, image_entries))
+        image_baseline = {('fixture.md', fp): count for fp, count in image_counts.items()}
+        self.check(image_sources, baseline=image_baseline, use_parser=False)
+        with self.assertRaisesRegex(ValueError, 'absent from rendered Sources item'):
+            self.check(image_sources, baseline=image_baseline, use_parser=True)
 
     def test_raw_baseline_stays_valid_when_rendered_basis_matches(self):
         url = 'https://example.com/control'

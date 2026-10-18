@@ -162,7 +162,26 @@ Schema 1 requires exactly these top-level fields:
   removes front matter in `tools/version_basis.py`. The generated summary and its extra blank line
   are excluded. Do not hash the complete Markdown file.
 - `components`: nonempty object keyed by IDs matching `[a-z][a-z0-9-]*`. Each component has exactly
-  `name`, `basis` and `sources`. Use `unknown` when no version is recorded. Sources map
+  `name`, `basis` and `sources`. Use `unknown` when no version is recorded, but a source URL
+  recognized as pinned by the lexical URL check requires a component with a basis other than
+  `unknown`. The check treats these forms as pins: a 7-to-40-character hexadecimal commit ref, a
+  digit-bearing ref (including a slash ref such as `release/1.2`) in a generic `/blob/`, `/tree/`,
+  `/raw/`, `/blame/` or `/commit/` path; a non-moving ref in `/releases/tag/`, GitLab `/-/tags/`
+  or `/-/releases/`; a tag in `raw.githubusercontent.com/.../refs/tags/`; a SHA or digit-bearing
+  ref in its ordinary or `refs/heads/` path; a non-moving `h=` or `id=` value on any host with a
+  cgit view segment (`/tree/`, `/plain/`, `/commit/`, `/log/`, `/blob/`, `/diff/` or `/patch/`);
+  and a 7-to-40-character hexadecimal GitHub wiki revision on `github.com` or `www.github.com`.
+  For cgit queries, `id=` takes precedence over `h=`; moving values are skipped, and the
+  path rules apply if neither key pins a ref. GitLab `/-/blob/`,
+  `/-/tree/`, `/-/raw/`, `/-/blame/` and `/-/commit/` use the generic ref rule. The moving refs
+  `main`, `master`, `HEAD`, `trunk` and `develop` are excluded case-sensitively. Classification is
+  lexical and fails closed: a pin-shaped branch counts as a pin; in a generic or GitLab path,
+  a digit in the next path segment, even a file name, also makes the ref a pin. It cannot
+  identify a digit-free tag in a generic path, a SHA shorter than seven characters as a SHA
+  (a digit-bearing value can still match the tag shape), or forms outside this list, including
+  other cgit views, Gitea `/src/tag/`, `/releases/download/`, Bitbucket and googlesource paths.
+  A known basis is
+  not compared with the URL's ref. Sources map
   `s` plus the first 12 lowercase SHA-256 hex digits of the exact URL to that absolute HTTP(S) URL.
   Each URL must occur in Sources; a known basis must occur in every Sources list item citing
   that URL. Wrapped lines and continuation paragraphs in the same item count together; separate
@@ -186,7 +205,7 @@ Schema 1 requires exactly these top-level fields:
   check rejects vertical tab (U+000B), form feed (U+000C), file separator (U+001C), group
   separator (U+001D), record separator (U+001E), next line (U+0085), line separator (U+2028)
   and paragraph separator (U+2029) anywhere in a guide, because they can skew parser line
-  numbers. Conversely, `v1.0&#46;` can pass the raw-text basis boundary check but fail the
+  numbers. `v1.0&#46;` can pass the raw-text basis boundary check but fail the
   rendered one. `--no-advisory` is accepted only with `--bundle`. Both paths run
   the raw URL presence and unsupported-container checks, reference-definition and Sources
   grammar checks, component URL escape and encoding checks, and guide-wide HTML, heading

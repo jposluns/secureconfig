@@ -78,13 +78,6 @@ version_basis: {
         "sdf68595235d4": "https://letsencrypt.org/2025/01/22/ending-expiration-emails/"
       }
     },
-    "ratelimit": {
-      "name": "caddy-ratelimit documentation",
-      "basis": "unknown",
-      "sources": {
-        "s093420cd3d2f": "https://raw.githubusercontent.com/mholt/caddy-ratelimit/5625512f24f6f59d6f64fb3aafe5eecff0b286db/README.md"
-      }
-    },
     "service": {
       "name": "caddyserver/dist service unit",
       "basis": "33ae08ff08d168572df2956ed14fbc4949880d94",
@@ -107,6 +100,13 @@ version_basis: {
         "s81e5dd28d3e5": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json.mdx#L15-L17",
         "sa7c8d635bfd5": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L196-L215"
       }
+    },
+    "ratelimit-source": {
+      "name": "caddy-ratelimit source",
+      "basis": "5625512f24f6f59d6f64fb3aafe5eecff0b286db",
+      "sources": {
+        "s093420cd3d2f": "https://raw.githubusercontent.com/mholt/caddy-ratelimit/5625512f24f6f59d6f64fb3aafe5eecff0b286db/README.md"
+      }
     }
   },
   "claims": {
@@ -122,7 +122,7 @@ version_basis: {
     "mfa": {"text": "forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it.", "components": ["docs-rolling", "cloudflare"], "sources": ["docs-rolling:s8df93f3e3d4c", "cloudflare:s6f6104362214"], "status": "REASONED"},
     "access-origin": {"text": "Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's `access` setting has `cloudflared` do. Caddy still answers directly on 443.", "components": ["docs-rolling", "cloudflare"], "sources": ["docs-rolling:s3865a73ccda3", "cloudflare:s6f6104362214", "cloudflare:s81e5dd28d3e5", "cloudflare:sa7c8d635bfd5"], "status": "REASONED"},
     "body-limit": {"text": "Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public.", "components": ["docs-rolling"], "sources": ["docs-rolling:s31af5ed45a20", "docs-rolling:sbc2bd9599bd1"], "status": "REASONED"},
-    "rate-limit": {"text": "The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer.", "components": ["docs-rolling", "ratelimit"], "sources": ["docs-rolling:sec59a61934c5", "ratelimit:s093420cd3d2f"], "status": "REASONED"},
+    "rate-limit": {"text": "The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer.", "components": ["docs-rolling", "ratelimit-source"], "sources": ["docs-rolling:sec59a61934c5", "ratelimit-source:s093420cd3d2f"], "status": "REASONED"},
     "admin-bind": {"text": "The admin API defaults to localhost:2019 as of v2.11.4; never publish it or reverse-proxy to it.", "components": ["admin", "docs-rolling"], "sources": ["admin:s35044463fa67", "admin:s2bbcf239df02", "docs-rolling:s3923477355fb"], "status": "REASONED"},
     "admin-authority": {"text": "Reachable unauthenticated admin clients can replace config at POST /load, edit /config/ or stop with POST /stop.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3923477355fb"], "status": "REASONED"},
     "admin-isolation": {"text": "Host/Origin checks are not process isolation; local untrusted workloads require a permissioned Unix socket.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3923477355fb", "docs-rolling:sdbcd496895d6"], "status": "REASONED"},
@@ -167,7 +167,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | mfa: forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it. | Caddy documentation (rolling) unknown; Cloudflare docs c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | access-origin: Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's &#96;access&#96; setting has &#96;cloudflared&#96; do. Caddy still answers directly on 443. | Caddy documentation (rolling) unknown; Cloudflare docs c896795b8e8bab68d05ae78d64c9cbcda1fdb104 | REASONED |
 | body-limit: Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public. | Caddy documentation (rolling) unknown | REASONED |
-| rate-limit: The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer. | Caddy documentation (rolling) unknown; caddy-ratelimit documentation unknown | REASONED |
+| rate-limit: The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer. | Caddy documentation (rolling) unknown; caddy-ratelimit source 5625512f24f6f59d6f64fb3aafe5eecff0b286db | REASONED |
 | admin-bind: The admin API defaults to localhost:2019 as of v2.11.4; never publish it or reverse-proxy to it. | Caddy admin source v2.11.4; Caddy documentation (rolling) unknown | REASONED |
 | admin-authority: Reachable unauthenticated admin clients can replace config at POST /load, edit /config/ or stop with POST /stop. | Caddy documentation (rolling) unknown | REASONED |
 | admin-isolation: Host/Origin checks are not process isolation; local untrusted workloads require a permissioned Unix socket. | Caddy documentation (rolling) unknown | REASONED |

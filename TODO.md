@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.314**, **2.48**, **3.43**, **4.12**.
+Next ids: **1.314**, **2.48**, **3.44**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -163,13 +163,13 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.41 | `tools/version_basis.py`: fail, never baselined, a component source URL that pins a ref while that component's basis is `unknown`, so a pinned source lands in a component whose basis is that pin. A pin is a commit SHA or tag in a forge `/blob/`, `/tree/`, `/raw/`, `/blame/`, `/commit/` or `/releases/tag/` path (GitLab-style `/-/` paths included), the ref segment of a `raw.githubusercontent.com` URL, a cgit `h=` or `id=` query, or a GitHub wiki revision; `main`, `master`, `HEAD`, `trunk` and `develop` refs and release-line documentation paths such as `/docs/2.4/` are not pins. At commit 0310e00d it fails eight URLs in seven guides: `caddy.md`, `elasticsearch.md` (two), `headless-browser-services.md`, `memcached.md`, `minio.md`, `rabbitmq.md` and `vector-databases.md`; move each, with its claim references, in the same change. Regression cases in `tools/test_version_basis.py` must fail with the check removed. Follows row 3.39. (M, S) | `[gap]` |
 | 3.40 | F-LYCHEE-2026-09-28 remainder after #448: the six bare body citations in `agent-builders.md` (two), `jupyter.md`, `mlflow.md`, `sqlite-http-frontends.md` and `workflow-orchestrators.md` were written as autolinks (#447), and seven later bare `__main__.py` and `__init__.py` citations in `agent-builders.md` and `free-certificates.md` were written as autolinks (#620). Remaining: confirm with lychee `--dump` that no cited URL is extracted in truncated form, and confirm the first live weekly sweep after these changes (scheduled 2026-10-19). (S, S) | `[gap]` |
 
 ## Priority 4: Tooling and process
 
 | ID | Item | Tags |
 | --- | --- | --- |
+| 3.43 | `tools/check_bare_urls.py`: follow up three fail-closed extra findings from #623 QA that CONTRIBUTING does not yet disclose: an angle-bracket destination written with escaped or entity underscores reports a finding because the angle form is compared without unescaping; URL characters directly after an inline link or image, as in `[t](https://example.com/__x)x`, are read as part of a bare URL and report a finding; and a character reference for `)` in a destination, such as `&#41;`, reports a finding. Fix each in code with a regression fixture, or disclose it in CONTRIBUTING with a fixture pinning its outcome. (M, S) | `[gap]` |
 
 ## Decisions
 
