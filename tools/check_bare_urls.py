@@ -164,51 +164,61 @@ def parsed_findings(path, parser):
         escaped_closers = len(re.findall(r"(?<!\\)(?:\\\\)*\\\)", raw))
         return url_token(unescapeAll(raw), escaped_closers)
 
-    def parsed_position(content, start, end, autolink, original):
+    def parsed_position(content, start, end, autolink, decoded, original):
         """Check that this source span belongs to a parsed destination."""
         sentinel = f"https://bare-url-probe.invalid/path{start}x{end}"
         if sentinel in content:
             return False
         probe = content[:start] + sentinel + content[end:]
-        before = [(child.type, child.info == "auto") for child in original
-                  if child.type in ("link_open", "image")]
+        def destinations(children):
+            return [(child.type, child.info == "auto",
+                     child.attrGet("href" if child.type == "link_open" else "src"))
+                    for child in children if child.type in ("link_open", "image")]
+
+        before = destinations(original)
         after_children = parser.parseInline(
             probe, {"references": env.get("references", {})})[0].children or ()
-        after = [(child.type, child.info == "auto") for child in after_children
-                 if child.type in ("link_open", "image")]
-        if before != after:
+        after = destinations(after_children)
+        if len(before) != len(after):
             return False
-        return any(url_token(child.attrGet("href" if child.type == "link_open" else "src") or "") == sentinel
-                   and (not autolink or child.info == "auto")
-                   for child in after_children if child.type in ("link_open", "image"))
+        changed = [index for index, (old, new) in enumerate(zip(before, after))
+                   if old != new]
+        if len(changed) != 1:
+            return False
+        old, new = before[changed[0]], after[changed[0]]
+        return (old[:2] == new[:2] and old[1] == autolink
+                and new[2] == sentinel and old[2] is not None
+                and parser.normalizeLink(old[2]) == parser.normalizeLink(decoded))
 
     def raw_destinations(content, children):
-        """Count whole raw URLs at inline destination and autolink positions."""
+        """Count whole raw URLs at parsed inline link and image destinations."""
         destinations = Counter()
         spans = [(first, last) for first, last, _ in code_spans(content)]
         starts = {(match.end(), bool(match.group(1)), False)
                   for match in INLINE_DESTINATION.finditer(content)}
-        starts.update((match.start() + 1, True, True)
-                      for match in re.finditer(r"<(?=https?://)", content, re.I))
         for start, angle, autolink in starts:
             if any(first <= start < last for first, last in spans):
                 continue
             match = URL.match(content, start)
             if not match:
                 continue
-            raw = match.group()
             if angle:
                 if content[match.end():match.end() + 1] != ">":
                     continue
-                protected = max(0, raw.count(")") - raw.count("("))
+                ends = (match.end(),)
+                protected = max(0, match.group().count(")") - match.group().count("("))
             else:
-                escaped_closers = len(re.findall(r"(?<!\\)(?:\\\\)*\\\)", raw))
-                raw = url_token(raw, escaped_closers)
-                protected = escaped_closers
-            decoded = raw if angle else unescapeAll(raw)
-            if (URL.fullmatch(decoded) and url_token(decoded, protected) == decoded
-                    and parsed_position(content, start, start + len(raw), autolink, children)):
-                destinations[parser.normalizeLink(decoded)] += 1
+                protected = len(re.findall(r"(?<!\\)(?:\\\\)*\\\)", match.group()))
+                shortest = start + len(url_token(match, protected))
+                ends = range(match.end(), shortest - 1, -1)
+            for end in ends:
+                raw = content[start:end]
+                decoded = raw if angle else unescapeAll(raw)
+                if (URL.fullmatch(decoded)
+                        and parsed_position(content, start, end,
+                                            autolink, decoded, children)):
+                    destinations[parser.normalizeLink(url_token(decoded, protected))] += 1
+                    break
         return destinations
 
     text = path.read_text(encoding="utf-8")
@@ -237,7 +247,7 @@ def parsed_findings(path, parser):
             if "__" in decoded:
                 if (angle and parser.normalizeLink(decoded) not in reference_hrefs
                         and parsed_position(token.content, match.start(), match.end(),
-                                            True, children)):
+                                            True, match.group(), children)):
                     continue
                 candidates.append((candidate, parser.normalizeLink(decoded)))
         accounted = Counter()
@@ -246,7 +256,7 @@ def parsed_findings(path, parser):
             if child.type == "link_open":
                 href = child.attrGet("href")
                 match = URL.match(href or "")
-                if match and parser.normalizeLink(href) not in reference_hrefs:
+                if match and child.info != "auto" and parser.normalizeLink(href) not in reference_hrefs:
                     closers = max(0, match.group().count(")") - match.group().count("("))
                     normalized = parser.normalizeLink(url_token(match, closers))
                     if whole_destinations[normalized]:

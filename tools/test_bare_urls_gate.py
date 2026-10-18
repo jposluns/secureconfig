@@ -108,6 +108,21 @@ def main():
             assert_failure(body)
         except AssertionError as exc:
             raise AssertionError(name) from exc
+    round_seven_failures = (
+        ("autolink before bare", "<https://example.com/__x> and https://example.com/__x\n"),
+        ("bare before autolink", "https://example.com/__x and <https://example.com/__x>\n"),
+        ("link text beside autolink", "[https://example.com/__x](https://example.com/ok) <https://example.com/__x>\n"),
+        ("two autolinks before bare", "<https://example.com/__x> <https://example.com/__x> https://example.com/__x\n"),
+        ("image alt beside autolink", "![https://example.com/__x](i.png) <https://example.com/__x>\n"),
+        ("link title beside autolink", '[t](https://example.com/ok "https://example.com/__x") <https://example.com/__x>\n'),
+        ("nested destination position", '[a [b](https://example.com/__x((y) "t") c](https://example.com/ok) [t](<https&#58;//example.com/__x((y)>)\n'),
+        ("control destination position", '[a [b](https://example.com/__x\x01y "t") c](https://example.com/ok) [t](<https&#58;//example.com/__x\x01y>)\n'),
+    )
+    for name, body in round_seven_failures:
+        try:
+            assert_failure(body)
+        except AssertionError as exc:
+            raise AssertionError(name) from exc
     passing = (
         ("<https://example.com/__init__.py>\n", "# Fixture\n\n"),
         ("[source](https://example.com/__init__.py)\n", "# Fixture\n\n"),
@@ -204,6 +219,7 @@ def main():
         ("escaped underscore autolink", "<https://example.com/\\_\\_x>\n", False),
         ("disclosed entity scheme limit", "See https&#58;//example.com/__x\n", False),
         ("disclosed escaped scheme limit", "See https\\://example.com/__x\n", False),
+        ("disclosed autolink URL boundary", "<https://example.com/__x'y>\n", True),
     )
     lines = {"table cell": 5, "ATX boundary": 4, "quote boundary": 5,
              "table boundary": 5, "lazy list owner": 6, "nested lazy owner": 6,
@@ -242,7 +258,7 @@ def main():
     assert doubled[0] == 1 and doubled[1].count("  FAIL  fixture.md:3:") == 1, doubled
     repeated = fixture("https://example.com/__init__.py and https://example.com/__init__.py\n")
     assert repeated[0] == 1 and repeated[1].count("  FAIL  fixture.md:3:") == 2, repeated
-    print(f"  ok    bare URL gate: {len(failures) + len(percent_encoding_failures) + len(round_six_failures) + sum(bare for _, _, bare in regressions)} failures, "
+    print(f"  ok    bare URL gate: {len(failures) + len(percent_encoding_failures) + len(round_six_failures) + len(round_seven_failures) + sum(bare for _, _, bare in regressions)} failures, "
           f"{len(passing) + sum(not bare for _, _, bare in regressions)} exemptions, "
           "and bare, href and code-span mutation proofs")
 

@@ -107,8 +107,9 @@ character references for underscores count. `tools/check_bare_urls.py` uses the
 pinned markdown-it-py CommonMark parser with tables enabled. For each inline
 token, including those in paragraphs, headings, table cells, lists and quotes,
 it counts URL occurrences in raw content and subtracts code spans and parsed
-inline link, image and autolink destinations only when a whole raw URL sits at
-a position confirmed by the inline parse and normalizes to the destination.
+inline link and image destinations only when a whole raw URL sits at a position
+confirmed by the inline parse and normalizes to the destination. A confirmed
+autolink removes its own raw occurrence once and cannot cancel another URL.
 A destination whose scheme is written with an entity or escape has no counted
 raw URL there and cannot cancel a separate bare occurrence. A destination with
 a parser-encoded URL-ending character (`"`, `[`, `]`, `<`, `>`, a backtick or
@@ -133,8 +134,9 @@ URL written as `https&#58;//` or `https\://` exits zero even if it contains `__`
 The gate does not recognize GFM `www.` autolinks or single-underscore pairs.
 A root file that starts with `---` but
 has invalid `version_basis` front matter fails closed before its body is scanned.
-For this gate, `'`, `"`, `[`, `]` and backticks end a URL. Link titles, inline HTML
-comments and a `__…__` emphasis wrapper around a URL can report findings. An
+For this gate, `'`, `"`, `[`, `]` and backticks end a URL. An autolink with one of
+these characters after `__` can therefore report a finding, even when it renders
+as a link. Link titles, inline HTML comments and a `__…__` emphasis wrapper around a URL can report findings. An
 escaped `(` in a destination can produce one extra finding, as can a code span
 inside image alt text. Write an accepted citation as an autolink, an inline
 link destination or a code span outside image alt text.
