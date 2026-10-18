@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-17",
   "documentation_checked": "2026-09",
-  "body_sha256": "75f8188a79ee4b2b52edec5c8fab30b79882137703fb596b9ffd799f4c1faf3a",
+  "body_sha256": "83b93cd9d77db89fb54e513a79015eb077774a41ceed86c15df5135658481f50",
   "components": {
     "node": {
       "name": "Node.js documentation",
@@ -82,12 +82,45 @@ version_basis: {
         "sd0e5679b6277": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L458-L472",
         "sd9044fe58c3e": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L533-L549"
       }
+    },
+    "render": {
+      "name": "Render documentation",
+      "basis": "unknown",
+      "sources": {
+        "s1820ac471b6c": "https://render.com/docs/web-services"
+      }
+    },
+    "heroku": {
+      "name": "Heroku documentation",
+      "basis": "unknown",
+      "sources": {
+        "s370d4beec29a": "https://devcenter.heroku.com/articles/runtime-principles",
+        "s211f5fe76042": "https://devcenter.heroku.com/articles/generations",
+        "s0c5bf300cef4": "https://devcenter.heroku.com/articles/http-routing"
+      }
+    },
+    "fly-pinned": {
+      "name": "Fly.io pinned documentation",
+      "basis": "2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9",
+      "sources": {
+        "s62fec91543a1": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42",
+        "s61c1e50d2c11": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92",
+        "s254c8c8a5edd": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97",
+        "s32999aa4c58c": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176"
+      }
+    },
+    "railway": {
+      "name": "Railway documentation",
+      "basis": "72354493198302677fb6be6c692dd75c64cae2c6",
+      "sources": {
+        "sac1383056b65": "https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146"
+      }
     }
   },
   "claims": {
     "tls": {"text": "Direct HTTPS uses a certificate plus chain and private key on all-interface 443.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
     "redirect": {"text": "All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED"},
-    "bind": {"text": "Same-host proxy uses 127.0.0.1; managed ingress uses platform-required addresses and ports with edge TLS and application auth. Platform mappings are cross-guide guidance, not covered by listed Sources.", "components": ["node", "express"], "sources": ["node:s87db42190978", "express:s2acbdbd05858"], "status": "REASONED"},
+    "bind": {"text": "This guide advises 127.0.0.1 for a same-host proxy, no extra managed listeners and app auth; plain HTTP needs protected TLS ingress, absent on Fly without handlers. Listener rules vary by deployment (Heroku recommends IPv6/dual-stack for Fir Private Spaces); Railway address/injected port, Cedar address and Railway TLS termination location remain uncited.", "components": ["node", "express", "render", "heroku", "fly-pinned", "railway"], "sources": ["node:s87db42190978", "express:s2acbdbd05858", "render:s1820ac471b6c", "heroku:s370d4beec29a", "heroku:s211f5fe76042", "heroku:s0c5bf300cef4", "fly-pinned:s62fec91543a1", "fly-pinned:s61c1e50d2c11", "fly-pinned:s254c8c8a5edd", "fly-pinned:s32999aa4c58c", "railway:sac1383056b65"], "status": "REASONED"},
     "privilege": {"text": "On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout.", "components": ["node", "linux-ip", "linux-capabilities"], "sources": ["node:s87db42190978", "linux-ip:s612fed1df1ed", "linux-capabilities:s3c3a13034c04"], "status": "REASONED"},
     "proxy": {"text": "Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.", "components": ["express"], "sources": ["express:s2acbdbd05858"], "status": "REASONED"},
     "headers": {"text": "Install helmet() for security headers including HSTS.", "components": ["helmet"], "sources": ["helmet:sc1865315478e"], "status": "REASONED"},
@@ -131,12 +164,16 @@ Components (recorded basis):
 - otplib: otplib, v12.0.1
 - qrcode: qrcode, v1.5.4
 - node-v24: Node.js API documentation, v24.22.0
+- render: Render documentation, unknown
+- heroku: Heroku documentation, unknown
+- fly-pinned: Fly.io pinned documentation, 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9
+- railway: Railway documentation, 72354493198302677fb6be6c692dd75c64cae2c6
 
 Claims (full source mapping in the front matter):
 
 - tls (REASONED; node): Direct HTTPS uses a certificate plus chain and private key on all-interface 443.
 - redirect (REASONED; node): All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.
-- bind (REASONED; node, express): Same-host proxy uses 127.0.0.1; managed ingress uses platform-required addresses and ports with edge TLS and application auth. Platform mappings are cross-guide guidance, not covered by listed Sources.
+- bind (REASONED; node, express, render, heroku, fly-pinned, railway): This guide advises 127.0.0.1 for a same-host proxy, no extra managed listeners and app auth; plain HTTP needs protected TLS ingress, absent on Fly without handlers. Listener rules vary by deployment (Heroku recommends IPv6/dual-stack for Fir Private Spaces); Railway address/injected port, Cedar address and Railway TLS termination location remain uncited.
 - privilege (REASONED; node, linux-ip, linux-capabilities): On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout.
 - proxy (REASONED; express): Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.
 - headers (REASONED; helmet): Install helmet() for security headers including HSTS.
@@ -158,7 +195,7 @@ Claims (full source mapping in the front matter):
 - verify-proxy (REASONED; express): Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust.
 <!-- version-basis:end -->
 
-Preferred production layout: bind the Node app to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). On a managed platform the platform terminates TLS at its edge and you bind the address it requires, not `127.0.0.1` ([paas.md](paas.md)). Node can also terminate TLS itself, shown below. Get a certificate per [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
+This guide's preferred production layout: bind the Node app to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). For managed HTTP ingress, this guide advises using the deployment's required listener rather than `127.0.0.1`; TLS termination depends on the platform and configuration, as detailed in section 1 ([paas.md](paas.md)). Node can also terminate TLS itself, shown below. Get a certificate per [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
 ## 1. HTTPS directly in Node
 
@@ -191,7 +228,16 @@ require('node:http').createServer((req, res) => {
 }).listen(80);
 ```
 
-On Linux, binding ports below 1024 requires a process, root or not, that has `CAP_NET_BIND_SERVICE` in the user namespace governing its network namespace ([ip(7)](https://man7.org/linux/man-pages/man7/ip.7.html), [capabilities(7)](https://man7.org/linux/man-pages/man7/capabilities.7.html); stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout. The `listen(443)`/`listen(80)` above bind every interface, which is intended only for this Node-terminates-TLS layout. On a managed platform, do not add these listeners: bind the address and port the platform injects (`0.0.0.0` on `$PORT` for Render, Railway, and Heroku Cedar; `::` on `$PORT` for Heroku Fir; `0.0.0.0` matching `internal_port` for Fly) and let the platform terminate TLS at its ingress, so plain HTTP behind that protected ingress is fine and application authentication is still required ([paas.md](paas.md)).
+On Linux, binding ports below 1024 requires a process, root or not, that has `CAP_NET_BIND_SERVICE` in the user namespace governing its network namespace ([ip(7)](https://man7.org/linux/man-pages/man7/ip.7.html), [capabilities(7)](https://man7.org/linux/man-pages/man7/capabilities.7.html); stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout. The `listen(443)`/`listen(80)` above bind every interface, which is intended only for this Node-terminates-TLS layout.
+
+This guide's advice for managed platforms: do not add the `listen(443)`/`listen(80)` listeners above; bind only the listener required by your deployment. The documented HTTP ingress mappings are:
+
+- Render web services must bind `0.0.0.0`. Render recommends the `PORT` environment variable (at the time of writing, default port 10000, configurable), can usually detect another bound port, and requires the public HTTP server to use `PORT` when multiple ports are bound ([web services](https://render.com/docs/web-services)).
+- Heroku assigns each web process its port through `PORT` ([runtime principles](https://devcenter.heroku.com/articles/runtime-principles)). Fir Private Spaces networking uses IPv6 by default; Heroku warns that IPv4-only assumptions do not bind properly and recommends an IPv6 or dual-stack listener, typically `::` ([generations](https://devcenter.heroku.com/articles/generations)). These pages do not establish Cedar's listener address.
+- Fly Proxy HTTP services must be reachable over IPv4: use `0.0.0.0` and match the configured `internal_port` to the app listener ([service binding](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42)). IPv4-mapped IPv6 wildcard behaviour depends on the VM and runtime ([wildcard qualification](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92)).
+- Railway domains route to a detected or selected internal target port; the cited passage does not establish a required listener address, an injected `PORT` or the TLS termination location ([target ports](https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146)).
+
+Render's load balancer terminates inbound HTTPS and forwards HTTP to the web service ([web services](https://render.com/docs/web-services)). Heroku's HTTP routing page describes a load balancer offering SSL termination and routers forwarding HTTP to web dynos; it notes that both Private Spaces generations have different routers, so this is not a complete account of Private Spaces routing ([HTTP routing](https://devcenter.heroku.com/articles/http-routing)). Fly Proxy's `tls` handler terminates TLS and forwards plaintext ([TLS handler](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176)); without handlers it passes TCP through, allowing the app to terminate TLS itself ([TCP passthrough](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97)). This guide's advice: plain HTTP is acceptable only behind protected ingress that terminates TLS; application authentication is still required ([paas.md](paas.md)).
 
 ## 2. Behind a proxy: tell Express about it
 
@@ -307,3 +353,12 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 - Node.js HTTPS agent example (v24.22.0, checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L533-L549
 - Linux ip(7) privileged-port rule (Linux man-pages 6.19, checked October 2026): https://man7.org/linux/man-pages/man7/ip.7.html
 - Linux capabilities(7) CAP_NET_BIND_SERVICE definition (Linux man-pages 6.19, checked October 2026): https://man7.org/linux/man-pages/man7/capabilities.7.html
+- Render web-service listener and TLS termination (checked October 2026): https://render.com/docs/web-services
+- Heroku HTTP routing (checked October 2026): https://devcenter.heroku.com/articles/http-routing
+- Heroku web-process port assignment (checked October 2026): https://devcenter.heroku.com/articles/runtime-principles
+- Heroku Fir Private Spaces networking and listener recommendation (checked October 2026): https://devcenter.heroku.com/articles/generations
+- Fly TCP passthrough (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97
+- Fly TLS termination (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176
+- Fly public service binding (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42
+- Fly IPv4 and IPv6 wildcard qualification (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92
+- Railway target ports (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146
