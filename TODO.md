@@ -52,9 +52,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
-| 1.233 | `mfa.md`: admin-factors and authelia-factors: cite administrator policy and Authelia passkey behaviour. (M, M) | `[gap]` |
-| 1.234 | `mfa.md`: webauthn-library and unattended-mtls: cite library and mTLS deployment behaviour or label guidance as assessment. (M, M) | `[gap]` |
-| 1.235 | `mfa.md`: verify-recovery-history: cite the recovery-code scan behaviour. (M, M) | `[gap]` |
 | 1.239 | `identity-providers.md`: google-org-mfa: pin the remaining OIDC pricing claim while preserving the cited 2SV enforcement scope. (M, M) | `[gap]` |
 | 1.240 | `identity-providers.md`: self-hosted-mfa: cite maintenance expectations for Keycloak, authentik and Ory beyond their already pinned factor behaviour. (M, M) | `[gap]` |
 | 1.241 | `oidc-integration.md`: client-secret-storage: pin a secret-storage reference for the client-secret handling claim. (M, M) | `[gap]` |
