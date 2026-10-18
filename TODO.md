@@ -51,11 +51,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 1.202 | `lighttpd.md`: verify-config and verify-host: cite lighttpd command/service-manager behaviour and Apache SNI selection for the comparison. (M, M) | `[gap]` |
-| 1.205 | `docker.md`: auth and verify-auth: pin the authentication-provider and proxy sources for MFA rejection and the 401/403 discriminator. (M, M) | `[gap]` |
 | 1.208 | `docker.md`: alternate-entry: cite cloudflared, tailnet and self-signed TLS alternatives for the stated entry paths. (M, M) | `[gap]` |
-| 1.209 | `docker.md`: upstream and verify-redirect: cite cloud security-group/network-ACL and proxy redirect behaviour; keep database TLS/authentication source work delegated to the linked guides. (M, M) | `[gap]` |
-| 1.210 | `container-hardening.md`: docker-socket: cite the Docker privilege model for socket root equivalence. (M, M) | `[gap]` |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
 | 1.212 | `container-hardening.md`: Compose exec and process diagnostics: cite Docker Compose and process-tool behaviour used by the checks. (M, M) | `[gap]` |
 | 1.213 | `host.md`: include-order: pin OpenSSH Include/drop-in, Ubuntu 20.04 and cloud-init history relevant to SSH config ordering. (M, M) | `[gap]` |
@@ -156,7 +152,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.310 | `oidc-integration.md`: github-org-mfa: establish whether a member without 2FA fails the application membership check before treating GitHub organization membership as proof of MFA. (M, M) | `[gap]` |
 | 1.311 | `ai-infra-services.md`: onyx-auth-type: establish the stated v4.5 removal boundary beyond the pinned v4.3.13 and v4.4.0 snapshots and tag-name identity. (M, M) | `[gap]` |
 | 1.312 | `vector-databases.md`: source or narrow the hosted-console MFA arrangements for Pinecone, Qdrant Cloud, Weaviate Cloud and Zilliz that the cited pages do not establish. (M, M) | `[gap]` |
-| 1.313 | `apache.md` and `lighttpd.md`: mfa: state that an origin reachable without passing through Access is not protected by it, citing the Cloudflare self-hosted application page's note that a published application without an Access application is available to anyone on the Internet, and its following paragraph that an already publicly routable origin's IP must be protected by other methods (from #624 QA). (M, S) | `[gap]` |
 | 2.28 | `gitops-controllers.md`: Complete the remaining source audit of image tag-to-build mapping (Redis, Dex), the application-controller bind address, repo-server service method authorization, Dex API method authorization, whether Redis overwrites its password in argv, and RBAC server-side wiring. (M, M) | `[gap]` |
 | 2.29 | `self-hosted-ci-runners.md`: offline inspection outcomes are recorded in the guide. Remaining: verify and cite a pinned vendor source for the `[runners.docker]` `pid_mode` TOML key, corroborated only in rolling GitLab Runner source. (M, M) | `[gap]` |
 | 1.117 | `search-engines.md` Verify (#285): the reviewed tools/scan_credential.sh searches client output and local refs/HEAD/reflog commit trees, with tools/test_scan_credential.py retaining dummy positive/negative controls and documented limits. Still open: run a real client pipeline in a disposable copy with a known dummy admin, master or bootstrap key, require detection, then remove it and rebuild cleanly and require scoped absence; retain a separate old-commit positive control and record the stated coverage limits. No real application build was available for the hand-built fixtures. (M, M) | `[gap]` |
