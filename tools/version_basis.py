@@ -110,7 +110,7 @@ def pinned_source_ref(url):
         return None
 
     # cgit query refs take precedence over the view's path on any host.
-    if any(part in ('tree', 'plain', 'commit', 'log', 'blob') for part in parts):
+    if any(part in ('tree', 'plain', 'commit', 'log', 'blob', 'diff', 'patch') for part in parts):
         query = parse_qs(parsed.query)
         for key in ('id', 'h'):
             for ref in query.get(key, []):
