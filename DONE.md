@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.220 | `cloud-firewalls.md`: gcp-policies: cite hierarchical and network firewall policy evaluation order. (M, M) | Done, #637. Cited policy resources and CLI enumeration and describe syntax, while retaining the fetched sources' gap on network/VPC order and enforcement-order settings. |
+| 1.219 | `cloud-firewalls.md`: docker: cite Docker/UFW bypass behaviour for host-versus-cloud firewall advice. (M, M) | Done, #637. Pinned Docker's published-port UFW passage and labelled the two-layer review as guide advice. |
 | 1.213 | `host.md`: include-order: pin OpenSSH Include/drop-in, Ubuntu 20.04 and cloud-init history relevant to SSH config ordering. (M, M) | Done, #636. Pinned SSH include ordering, Ubuntu and RHEL packaging, and conditional cloud-init behaviour while retaining the current-default gap. |
 | 1.215 | `host.md`: docker-bypass: cite Docker/UFW interaction and its firewall-bypass qualification. (M, M) | Done, #636. Cited Docker's published-port UFW interaction and scoped the warning to its default Linux bridge firewall rules. |
 | 1.212 | `container-hardening.md`: Compose exec and process diagnostics: cite Docker Compose and process-tool behaviour used by the checks. (M, M) | Done, #635. Pinned Compose, Linux man-pages and Kubernetes sources now support the command and process-field descriptions, with image and runtime outcomes retained as guide expectations or assessments. |
