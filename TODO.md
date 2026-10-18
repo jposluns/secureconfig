@@ -55,7 +55,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.257 | `deployment-lifecycle.md`: retire-credentials and offboarding: source per-layer revocation and delayed invalidation checks. (M, M) | `[gap]` |
 | 1.260 | `deployment-lifecycle.md`: dns-retirement: cite DNS TTL, resource retention and takeover behaviour for the retirement procedure. (M, M) | `[gap]` |
 | 1.262 | `gpu-clouds.md`: modal-shared: cite the Shared Endpoints exception. (M, M) | `[gap]` |
-| 1.263 | `gpu-clouds.md`: listener-auth and remote-desktop: cite Ollama authentication defaults and VNC/noVNC ports and password behaviour. (M, M) | `[gap]` |
 | 1.264 | `gpu-clouds.md`: remaining Vast auth implementation: trace the delegated portal-aio configurator and runtime consumers of OPEN_BUTTON_TOKEN, WEB_PASSWORD, ENABLE_AUTH, AUTH_EXCLUDE and PORTAL_CONFIG, including precedence and route enforcement; account-security sources for RunPod, Vast.ai, Lambda and Modal remain uncited. (M, M) | `[gap]` |
 | 1.265 | `mlflow.md`: mfa and proxy-token: cite oauth2-proxy/Cloudflare fronting MFA and Cloudflare service-token header syntax. (M, M) | `[gap]` |
 | 1.266 | `paas.md`: managed-tls and listener-port: cite Railway TLS/ports, Heroku ACM and injected-port/Fly binding behaviour. (M, M) | `[gap]` |
