@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.246 | `php.md`: plain-auth: pin plain-PHP throttling and MFA mechanisms or label the recommendation as guide advice. (M, M) | Done, #651. Labelled plain-PHP throttling and MFA choices as guide advice, narrowed the PHP assessment, pinned fail2ban log-based mechanics, and retained application-filter and PHP TOTP-library gaps. |
 | 1.249 | `web-exposure.md`: apache-listing: cite Debian/Ubuntu Apache defaults and index-list behaviour. (M, M) | Done, #652. Cited Debian 2.4.69-1 listing defaults and the exact index list, retaining Ubuntu packaging as unchecked. |
 | 1.250 | `web-exposure.md`: source-maps: cite the source-map exposure claim and its scope. (M, M) | Done, #652. Cited ECMA-426 and pinned Next.js/Vite production defaults, qualifying source recovery and labelling guide reasoning and advice. |
 | 1.247 | `frontend-frameworks.md`: svelte-handle: establish layout coverage, every-request hook and calling-page metadata qualifications from SvelteKit source. (M, M) | Done, #650. Traced layout, action, hook and remote request paths and corrected the every-request scope. |
