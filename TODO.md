@@ -59,7 +59,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.258 | `deployment-lifecycle.md`: reverify: source or narrow the claim that restores recreate defaults and reset flags. (M, M) | `[gap]` |
 | 1.259 | `deployment-lifecycle.md`: certificate-monitor: cite Certbot dry-run behaviour for renewal verification. (M, M) | `[gap]` |
 | 1.260 | `deployment-lifecycle.md`: dns-retirement: cite DNS TTL, resource retention and takeover behaviour for the retirement procedure. (M, M) | `[gap]` |
-| 1.261 | `gpu-clouds.md`: verify-jupyter: cite Jupyter `/api/contents` and the 403/200 expectation with and without a token. (M, M) | `[gap]` |
 | 1.262 | `gpu-clouds.md`: modal-shared: cite the Shared Endpoints exception. (M, M) | `[gap]` |
 | 1.263 | `gpu-clouds.md`: listener-auth and remote-desktop: cite Ollama authentication defaults and VNC/noVNC ports and password behaviour. (M, M) | `[gap]` |
 | 1.264 | `gpu-clouds.md`: mfa and verify-inventory: cite platform-account MFA, Vast variables and `ss` namespace scope. (M, M) | `[gap]` |

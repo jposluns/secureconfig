@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.261 | `gpu-clouds.md`: verify-jupyter: cite Jupyter `/api/contents` and the 403/200 expectation with and without a token. (M, M) | Done, #657. Pinned Jupyter Server v2.18.0 contents routing, token authentication, anonymous 403 handling and the documented HTTP 200 success response. |
 | 1.252 | `low-code-builders.md`: Budibase initialization and validation: pin Budibase sources for the stated setup and authentication behaviour. (M, M) | Done, #655. Pinned Budibase initialization, startup seeding and CouchDB credential sources, with explicit user-count and LiteLLM image-source limits, and recorded this guide's testsecret search. |
 | 1.251 | `admin-uis.md`: private: source RedisInsight private/NAT-without-host-listener behaviour. (M, M) | Done, #654. Cited RedisInsight defaults and authentication-code limits plus Docker publication and proxy sources, retained the host-listener gap as assessment, and removed the unsupported RedisInsight two-200 assertion. |
 | 1.253 | `server-admin-panels.md`: pin Proxmox bind/LISTEN_IP/access-list behaviour as one versioned conjunction. (M, M) | Done, #653. Pinned the Proxmox bind and shared access-list implementation with dependency bounds, documenting the IPv4 fallback, residual runtime gap and guide assessments. |

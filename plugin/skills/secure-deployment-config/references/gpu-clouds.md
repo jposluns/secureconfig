@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "f282638ccb2cc6d5205a344657446ef07e886da3eeaadce60877b0ed024ffbbb",
+  "body_sha256": "08f914d0fb948ca1f17f82c3d3ebd5cd5e750ab9469da98c53eb7092cdf9ae5b",
   "components": {
     "runpod": {
       "name": "RunPod documentation",
@@ -51,6 +51,21 @@ version_basis: {
         "sc703a8030c8f": "https://jupyter-server.readthedocs.io/en/latest/operators/security.html"
       }
     },
+    "jupyter-contents": {
+      "name": "Jupyter Server contents authentication",
+      "basis": "v2.18.0",
+      "sources": {
+        "sdc3ad9152505": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/contents/handlers.py#L83-L186",
+        "sf0a3ea8ee42e": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/contents/handlers.py#L436-L445",
+        "s4bdc7b9183f3": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/base/handlers.py#L782-L789",
+        "s4e7504ed1ac8": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/base/handlers.py#L1201",
+        "s52316685e1e4": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/auth/identity.py#L465-L516",
+        "s83f1081e863e": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/auth/identity.py#L255-L298",
+        "s6c884bdf8fb4": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/docs/source/operators/security.rst#L6-L26",
+        "sb7fab0e85c94": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/docs/source/operators/security.rst#L315-L322",
+        "s58a8a77857b5": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/api/api.yaml#L82-L137"
+      }
+    },
     "iproute2": {
       "name": "iproute2 ss manual",
       "basis": "v6.12.0",
@@ -87,7 +102,7 @@ version_basis: {
     "vast-ssh": {"text": "Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance.", "components": ["vast"], "sources": ["vast:s6e0303ef19fe"], "status": "REASONED"},
     "runpod-ssh": {"text": "RunPod recommends SSH keys and offers an optional password; use the key and skip the password.", "components": ["runpod"], "sources": ["runpod:s13c43b856d4f"], "status": "REASONED"},
     "verify-inventory": {"text": "ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. The cited ss manual sections do not cover network-namespace scope.", "components": ["runpod", "vast", "iproute2"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850"], "status": "REASONED", "verify": [1]},
-    "verify-jupyter": {"text": "Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth and the missing-token 403, but not this exact endpoint or the with-token 200.", "components": ["jupyter"], "sources": ["jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
+    "verify-jupyter": {"text": "This guide's test design compares anonymous and valid-token requests directly to loopback :8888/api/contents. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in Authorization: token or the token query parameter; password-only and cookie-authenticated requests need separate controls.", "components": ["jupyter", "jupyter-contents"], "sources": ["jupyter:sc703a8030c8f", "jupyter-contents:sdc3ad9152505", "jupyter-contents:sf0a3ea8ee42e", "jupyter-contents:s4bdc7b9183f3", "jupyter-contents:s4e7504ed1ac8", "jupyter-contents:s52316685e1e4", "jupyter-contents:s83f1081e863e", "jupyter-contents:s6c884bdf8fb4", "jupyter-contents:sb7fab0e85c94", "jupyter-contents:s58a8a77857b5"], "status": "REASONED", "verify": [1]},
     "verify-mapping": {"text": "Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control.", "components": ["runpod", "vast", "modal", "jupyter"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
     "remote-desktop": {"text": "Inventory template noVNC ports such as 6080 and VNC ports such as 5900/5901; check weak or empty passwords, require a strong password plus encrypted tunnel for direct VNC, or remove its public mapping. Test with a VNC client; no noVNC/VNC source is recorded here.", "components": ["runpod", "vast"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e"], "status": "REASONED"}
   }
@@ -100,7 +115,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -128,7 +143,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | vast-ssh: Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance. | Vast.ai documentation unknown | REASONED |
 | runpod-ssh: RunPod recommends SSH keys and offers an optional password; use the key and skip the password. | RunPod documentation unknown | REASONED |
 | verify-inventory: ss inventories TCP listeners in the current network namespace only, not UDP, firewall state or platform publication; cross-check mappings and probe each from outside. The cited ss manual sections do not cover network-namespace scope. | RunPod documentation unknown; Vast.ai documentation unknown; iproute2 ss manual v6.12.0 | REASONED |
-| verify-jupyter: Probe loopback :8888/api/contents directly: the guide expects 403 without the Jupyter token and 200 with it; any anonymous data response is a finding. The cited security page documents token auth and the missing-token 403, but not this exact endpoint or the with-token 200. | Jupyter Server security unknown | REASONED |
+| verify-jupyter: This guide's test design compares anonymous and valid-token requests directly to loopback :8888/api/contents. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in Authorization: token or the token query parameter; password-only and cookie-authenticated requests need separate controls. | Jupyter Server security unknown; Jupyter Server contents authentication v2.18.0 | REASONED |
 | verify-mapping: Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control. | RunPod documentation unknown; Vast.ai documentation unknown; Modal proxy authentication unknown; Jupyter Server security unknown | REASONED |
 | remote-desktop: Inventory template noVNC ports such as 6080 and VNC ports such as 5900/5901; check weak or empty passwords, require a strong password plus encrypted tunnel for direct VNC, or remove its public mapping. Test with a VNC client; no noVNC/VNC source is recorded here. | RunPod documentation unknown; Vast.ai documentation unknown | REASONED |
 <!-- version-basis:end -->
@@ -171,7 +186,9 @@ SSH: authenticate with your own key, not a password. Lambda requires an SSH key 
 
 ## Verify
 
-REASONED: listener inventory and direct/proxied authentication pairs; no GPU-platform deployment, workload credentials or outside probe host was supplied for this metadata review, and no run is recorded. Expected readings below follow the cited platform and Jupyter documentation and the cited ss manual options; the network-namespace scope and the exact Jupyter endpoint/status pair lack direct citations.
+REASONED: listener inventory and direct/proxied authentication pairs; no GPU-platform deployment, workload credentials or outside probe host was supplied for this metadata review, and no service run is recorded. Expected readings below follow the cited platform documentation, Jupyter Server v2.18.0 implementation, REST specification and security documentation, and ss manual options; the network-namespace scope still lacks a direct citation.
+
+REASONED: following block; this guide's test design compares anonymous and valid-token requests directly to loopback `:8888/api/contents`. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in `Authorization: token` or the `token` query parameter; password-only and cookie-authenticated requests need separate controls. The Sources entries below pin the contents route, authenticated GET, API refusal, token handling and authentication/authorization defaults; the REST specification documents the successful GET response as HTTP 200. These are source-based expectations, not observed deployment results; the missing deployment and credentials prevent the live comparison here.
 
 ```bash
 ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not a firewall, and not
@@ -179,8 +196,12 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
            # mapped), and a port published by the platform need not appear here at all, so cross-check
            # against the platform's port mappings and probe each MAPPED port from outside (below).
 # Does the LISTENER itself demand auth? Test it DIRECTLY on loopback, with no platform proxy in the path,
-# as a matched pair. Jupyter uses an 'Authorization: token <token>' (or ?token=) scheme; without it
-# /api/contents returns 403, with a valid token 200. Substitute the real token.
+# as a matched pair: this guide's test design. Jupyter Server v2.18.0 accepts
+# 'Authorization: token <token>' or ?token=. With token auth enabled and no session cookie,
+# /api/contents returns 403 without credentials, not a login redirect. For the route at this URL,
+# default authorization and an existing readable path, valid-token GET completes the JSON model;
+# the REST specification documents HTTP 200 for this successful GET.
+# Any anonymous data response is a finding. Substitute the real token.
 (
   # Feed the token to curl on stdin (curl --header @-), never in argv:
   # -H "Authorization: token TOKEN" is readable in ps / /proc/<pid>/cmdline.
@@ -221,7 +242,7 @@ ss -tlnp   # TCP listening sockets in THIS network namespace only - not UDP, not
 )
 ```
 
-REASONED: exposure interpretation from the cited platform publication and Jupyter authentication documentation; no platform deployment or outside probe host is available. Every port `ss` shows listening should be either closed (not exposed at the platform layer) or authenticated (the listener itself demands a key, token, or login). A Jupyter server that answers without its token is a finding, whichever of these platforms it runs on.
+REASONED: exposure interpretation from the cited platform publication and Jupyter authentication documentation; no platform deployment or outside probe host is available. Every port `ss` shows listening should be either closed (not exposed at the platform layer) or authenticated (the listener itself demands a key, token, or login). In this guide's assessment, any anonymous Jupyter data response is a finding, whichever of these platforms it runs on; a valid session cookie is authentication, and a 403 error response is not data access.
 
 ## Common mistakes
 
@@ -239,7 +260,16 @@ REASONED: exposure interpretation from the cited platform publication and Jupyte
 - Lambda Cloud firewalls (default-deny inbound, SSH/ICMP exception, rule types): https://docs.lambda.ai/public-cloud/firewalls/
 - Modal proxy auth for web endpoints (Endpoints/Servers vs Web Functions defaults, headers): https://modal.com/docs/guide/webhook-proxy-auth
 - Vast.ai base image (portal auth: `OPEN_BUTTON_TOKEN`, `WEB_PASSWORD`, `ENABLE_AUTH`/`AUTH_EXCLUDE`): https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/README.md
-- Jupyter Server security (token authentication; a missing token is refused with 403): https://jupyter-server.readthedocs.io/en/latest/operators/security.html
+- Jupyter Server security (token authentication; the pinned API handler below establishes the missing-credentials 403): https://jupyter-server.readthedocs.io/en/latest/operators/security.html
+- Jupyter Server v2.18.0 contents handler inheritance, authenticated GET and JSON completion (checked October 2026): https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/contents/handlers.py#L83-L186
+- Jupyter Server v2.18.0 contents route registration (checked October 2026): https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/contents/handlers.py#L436-L445
+- Jupyter Server v2.18.0 API authentication failure without a login redirect (checked October 2026): https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/base/handlers.py#L782-L789
+- Jupyter Server v2.18.0 optional contents path (checked October 2026): https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/base/handlers.py#L1201
+- Jupyter Server v2.18.0 query and header token extraction and validation (checked October 2026): https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/auth/identity.py#L465-L516
+- Jupyter Server v2.18.0 token and cookie identity and disabled authentication (checked October 2026): https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/auth/identity.py#L255-L298
+- Jupyter Server v2.18.0 default token authentication and credential forms (checked October 2026): https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/docs/source/operators/security.rst#L6-L26
+- Jupyter Server v2.18.0 authorization decisions and permissive default (checked October 2026): https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/docs/source/operators/security.rst#L315-L322
+- Jupyter Server v2.18.0 REST specification for contents GET, including its HTTP 200 response (checked October 2026): https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/api/api.yaml#L82-L137
 - Lambda SSH (an SSH key is required at launch): https://docs.lambda.ai/public-cloud/on-demand/connecting-instance/
 - Vast.ai SSH (password authentication is disabled; register a key): https://docs.vast.ai/guides/instances/connect/ssh
 - RunPod SSH (key authentication recommended, optional password): https://docs.runpod.io/pods/configuration/use-ssh
