@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.252 | `low-code-builders.md`: Budibase initialization and validation: pin Budibase sources for the stated setup and authentication behaviour. (M, M) | Done, #655. Pinned Budibase initialization, startup seeding and CouchDB credential sources, with explicit user-count and LiteLLM image-source limits, and recorded this guide's testsecret search. |
 | 1.241 | `oidc-integration.md`: client-secret-storage: pin a secret-storage reference for the client-secret handling claim. (M, M) | Done, #647. Cited RFC 6749 and pinned OWASP and Docker sources and aligned the client-secret guidance with container secret-delivery priorities. |
 | 1.233 | `mfa.md`: admin-factors and authelia-factors: cite administrator policy and Authelia passkey behaviour. (M, M) | Done, #646. Cited administrator MFA policy and Authelia passkey factor behaviour, retaining guide advice where the cited policy is narrower. |
 | 1.234 | `mfa.md`: webauthn-library and unattended-mtls: cite library and mTLS deployment behaviour or label guidance as assessment. (M, M) | Done, #646. Pinned WebAuthn implementation examples and mTLS client authentication, with the remaining deployment advice labelled. |
