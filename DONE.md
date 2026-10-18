@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.263 | `gpu-clouds.md`: listener-auth and remote-desktop: cite Ollama authentication defaults and VNC/noVNC ports and password behaviour. (M, M) | Done, #662. Cited Ollama v0.34.2 local route setup and the pinned Vast linux-desktop port, password fallback and browser choices, retaining other-template and password-strength limits and the listener protection requirements. Exposure index: the 5900 row adds this template; the 5901 and 6080 example rows are removed. |
 | 1.265 | `mlflow.md`: mfa and proxy-token: cite oauth2-proxy/Cloudflare fronting MFA and Cloudflare service-token header syntax. (M, M) | Done, #661. Cited fronting MFA requirements and service-token headers, scoped MLflow credential precedence to v3.16.1 code, and labelled integration advice and evidence limits. |
 | 1.257 | `deployment-lifecycle.md`: retire-credentials and offboarding: source per-layer revocation and delayed invalidation checks. (M, M) | Done, #660. Cited per-layer revocation and delayed replay expectations while retaining the application, membership, database and deployment-timing gaps. |
 | 1.260 | `deployment-lifecycle.md`: dns-retirement: cite DNS TTL, resource retention and takeover behaviour for the retirement procedure. (M, M) | Done, #660. Cited takeover and DNS retirement order, corrected the TTL bound for serve-stale, and labelled authoritative-retention advice and platform limits. |
