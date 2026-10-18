@@ -123,6 +123,16 @@ def main():
             assert_failure(body)
         except AssertionError as exc:
             raise AssertionError(name) from exc
+    round_eight_failures = (
+        ("nested entity destination", '[a [b](https://example.com/__x((y) "t") c](<https&#58;//example.com/__x((y)>)\n'),
+        ("nested escaped destination", '[a [b](https://example.com/__x((y) "t") c](<https\\://example.com/__x((y)>)\n'),
+        ("nested control destination", '[a [b](https://example.com/__x\x01y "t") c](<https&#58;//example.com/__x\x01y>)\n'),
+    )
+    for name, body in round_eight_failures:
+        try:
+            assert_failure(body)
+        except AssertionError as exc:
+            raise AssertionError(name) from exc
     passing = (
         ("<https://example.com/__init__.py>\n", "# Fixture\n\n"),
         ("[source](https://example.com/__init__.py)\n", "# Fixture\n\n"),
@@ -220,6 +230,8 @@ def main():
         ("disclosed entity scheme limit", "See https&#58;//example.com/__x\n", False),
         ("disclosed escaped scheme limit", "See https\\://example.com/__x\n", False),
         ("disclosed autolink URL boundary", "<https://example.com/__x'y>\n", True),
+        ("disclosed inline link URL boundary", '[t](https://example.com/__x\\"y)\n', True),
+        ("disclosed escaped closer after link", "[t](https://example.com/__x)\\)\n", True),
     )
     lines = {"table cell": 5, "ATX boundary": 4, "quote boundary": 5,
              "table boundary": 5, "lazy list owner": 6, "nested lazy owner": 6,
@@ -258,7 +270,7 @@ def main():
     assert doubled[0] == 1 and doubled[1].count("  FAIL  fixture.md:3:") == 1, doubled
     repeated = fixture("https://example.com/__init__.py and https://example.com/__init__.py\n")
     assert repeated[0] == 1 and repeated[1].count("  FAIL  fixture.md:3:") == 2, repeated
-    print(f"  ok    bare URL gate: {len(failures) + len(percent_encoding_failures) + len(round_six_failures) + len(round_seven_failures) + sum(bare for _, _, bare in regressions)} failures, "
+    print(f"  ok    bare URL gate: {len(failures) + len(percent_encoding_failures) + len(round_six_failures) + len(round_seven_failures) + len(round_eight_failures) + sum(bare for _, _, bare in regressions)} failures, "
           f"{len(passing) + sum(not bare for _, _, bare in regressions)} exemptions, "
           "and bare, href and code-span mutation proofs")
 

@@ -170,15 +170,26 @@ def parsed_findings(path, parser):
         if sentinel in content:
             return False
         probe = content[:start] + sentinel + content[end:]
-        def destinations(children):
-            return [(child.type, child.info == "auto",
-                     child.attrGet("href" if child.type == "link_open" else "src"))
-                    for child in children if child.type in ("link_open", "image")]
+        def child_stream(children):
+            stream = []
+            inside_autolink = False
+            for child in children:
+                if child.type in ("link_open", "image"):
+                    stream.append((child.type, child.info == "auto",
+                                   child.attrGet("href" if child.type == "link_open" else "src")))
+                    if child.type == "link_open" and child.info == "auto":
+                        inside_autolink = True
+                else:
+                    stream.append((child.type, "" if child.type == "text" and inside_autolink
+                                   else child.content))
+                    if child.type == "link_close" and inside_autolink:
+                        inside_autolink = False
+            return stream
 
-        before = destinations(original)
+        before = child_stream(original)
         after_children = parser.parseInline(
             probe, {"references": env.get("references", {})})[0].children or ()
-        after = destinations(after_children)
+        after = child_stream(after_children)
         if len(before) != len(after):
             return False
         changed = [index for index, (old, new) in enumerate(zip(before, after))
@@ -186,7 +197,8 @@ def parsed_findings(path, parser):
         if len(changed) != 1:
             return False
         old, new = before[changed[0]], after[changed[0]]
-        return (old[:2] == new[:2] and old[1] == autolink
+        return (old[0] in ("link_open", "image") and old[:2] == new[:2]
+                and old[1] == autolink
                 and new[2] == sentinel and old[2] is not None
                 and parser.normalizeLink(old[2]) == parser.normalizeLink(decoded))
 

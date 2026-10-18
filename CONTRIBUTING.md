@@ -134,11 +134,12 @@ URL written as `https&#58;//` or `https\://` exits zero even if it contains `__`
 The gate does not recognize GFM `www.` autolinks or single-underscore pairs.
 A root file that starts with `---` but
 has invalid `version_basis` front matter fails closed before its body is scanned.
-For this gate, `'`, `"`, `[`, `]` and backticks end a URL. An autolink with one of
-these characters after `__` can therefore report a finding, even when it renders
-as a link. Link titles, inline HTML comments and a `__…__` emphasis wrapper around a URL can report findings. An
-escaped `(` in a destination can produce one extra finding, as can a code span
-inside image alt text. Write an accepted citation as an autolink, an inline
+For this gate, `'`, `"`, `[`, `]` and backticks end a URL. An autolink or inline
+link destination with one of these characters after `__` can therefore report a
+finding, even when it renders as a link. Link titles, inline HTML comments and a `__…__` emphasis wrapper around a URL can report findings. An
+escaped `(` in a destination or an escaped `)` after an inline link can produce
+one extra finding, as can a code span inside image alt text. Write an accepted
+citation as an autolink, an inline
 link destination or a code span outside image alt text.
 
 ## Version basis
