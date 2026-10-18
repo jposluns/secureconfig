@@ -55,7 +55,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.205 | `docker.md`: auth and verify-auth: pin the authentication-provider and proxy sources for MFA rejection and the 401/403 discriminator. (M, M) | `[gap]` |
 | 1.208 | `docker.md`: alternate-entry: cite cloudflared, tailnet and self-signed TLS alternatives for the stated entry paths. (M, M) | `[gap]` |
 | 1.209 | `docker.md`: upstream and verify-redirect: cite cloud security-group/network-ACL and proxy redirect behaviour; keep database TLS/authentication source work delegated to the linked guides. (M, M) | `[gap]` |
-| 1.210 | `container-hardening.md`: docker-socket: cite the Docker privilege model for socket root equivalence. (M, M) | `[gap]` |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
 | 1.212 | `container-hardening.md`: Compose exec and process diagnostics: cite Docker Compose and process-tool behaviour used by the checks. (M, M) | `[gap]` |
 | 1.213 | `host.md`: include-order: pin OpenSSH Include/drop-in, Ubuntu 20.04 and cloud-init history relevant to SSH config ordering. (M, M) | `[gap]` |

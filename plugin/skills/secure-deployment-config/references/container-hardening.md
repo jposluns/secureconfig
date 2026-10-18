@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "c5f777a2556c42ad1478c4b3419cd4f79941243c30e7f2e02f50cdce0d361469",
+  "body_sha256": "ad2822305e377fd5f48dc1c658fcd5f4732eb0c7b898a9823f607e38dddfdc8b",
   "components": {
     "docker": {
       "name": "Docker documentation",
@@ -12,6 +12,18 @@ version_basis: {
         "s6ca35cbd69e7": "https://docs.docker.com/reference/dockerfile/",
         "s8b7485a246e4": "https://docs.docker.com/reference/compose-file/",
         "s5d6294cf605e": "https://docs.docker.com/reference/cli/docker/container/run/"
+      }
+    },
+    "docker-daemon": {
+      "name": "Docker daemon security documentation",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "secebea1a69ab": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/_index.md#L84-L112",
+        "s79490cd2f3b2": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/install/linux-postinstall.md#L29-L39",
+        "s8eab393a61c6": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/rootless/_index.md#L8-L21",
+        "s94d57fcbfafe": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L1330-L1350",
+        "s372ddf9da1f0": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L1460-L1467",
+        "see4d326cd914": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L1495-L1515"
       }
     },
     "kubernetes": {
@@ -63,7 +75,7 @@ version_basis: {
     "docker-rootfs": {"text": "Compose read_only makes the root filesystem read-only; provide tmpfs only for required writable paths.", "components": ["docker"], "sources": ["docker:s8b7485a246e4"], "status": "REASONED"},
     "docker-capabilities": {"text": "cap_drop: [ALL] removes capabilities; add back only specific required capabilities with cap_add.", "components": ["docker"], "sources": ["docker:s8b7485a246e4"], "status": "REASONED"},
     "docker-escalation": {"text": "no-new-privileges prevents setuid privilege gain; the guide lists bare, equals-true and colon-true spellings as equivalent.", "components": ["docker"], "sources": ["docker:s5d6294cf605e", "docker:s8b7485a246e4"], "status": "REASONED"},
-    "docker-socket": {"text": "Do not mount /var/run/docker.sock: the guide treats access as host-root equivalent through privileged siblings; no direct socket-security source is listed.", "components": ["docker"], "sources": ["docker:s5d6294cf605e"], "status": "REASONED"},
+    "docker-socket": {"text": "Never mount /var/run/docker.sock. In Docker's default rootful configuration, daemon control and docker-group membership grant root-level host privileges; Rootless mode runs the daemon and containers without root privileges. Docker documents mounted-socket daemon control, --privileged and host bind mounts; a socket-holding container starting a privileged sibling or bind-mounting host / to escape is this guide's assessment.", "components": ["docker", "docker-daemon"], "sources": ["docker:s5d6294cf605e", "docker-daemon:secebea1a69ab", "docker-daemon:s79490cd2f3b2", "docker-daemon:s8eab393a61c6", "docker-daemon:s94d57fcbfafe", "docker-daemon:s372ddf9da1f0", "docker-daemon:see4d326cd914"], "status": "REASONED"},
     "kube-user": {"text": "runAsNonRoot rejects root; pin runAsUser and runAsGroup to 10001, with the guide noting runtime-default GID 0 if unset.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308"], "status": "REASONED"},
     "kube-rootfs": {"text": "Set readOnlyRootFilesystem per container; this is a separate recommendation, not a restricted Pod Security requirement.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
     "kube-escalation": {"text": "Set allowPrivilegeEscalation: false in the container securityContext.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
@@ -91,7 +103,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -99,7 +111,7 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | docker-rootfs: Compose read_only makes the root filesystem read-only; provide tmpfs only for required writable paths. | Docker documentation unknown | REASONED |
 | docker-capabilities: cap_drop: [ALL] removes capabilities; add back only specific required capabilities with cap_add. | Docker documentation unknown | REASONED |
 | docker-escalation: no-new-privileges prevents setuid privilege gain; the guide lists bare, equals-true and colon-true spellings as equivalent. | Docker documentation unknown | REASONED |
-| docker-socket: Do not mount /var/run/docker.sock: the guide treats access as host-root equivalent through privileged siblings; no direct socket-security source is listed. | Docker documentation unknown | REASONED |
+| docker-socket: Never mount /var/run/docker.sock. In Docker's default rootful configuration, daemon control and docker-group membership grant root-level host privileges; Rootless mode runs the daemon and containers without root privileges. Docker documents mounted-socket daemon control, --privileged and host bind mounts; a socket-holding container starting a privileged sibling or bind-mounting host / to escape is this guide's assessment. | Docker documentation unknown; Docker daemon security documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | kube-user: runAsNonRoot rejects root; pin runAsUser and runAsGroup to 10001, with the guide noting runtime-default GID 0 if unset. | Kubernetes documentation unknown | REASONED |
 | kube-rootfs: Set readOnlyRootFilesystem per container; this is a separate recommendation, not a restricted Pod Security requirement. | Kubernetes documentation unknown | REASONED |
 | kube-escalation: Set allowPrivilegeEscalation: false in the container securityContext. | Kubernetes documentation unknown | REASONED |
@@ -127,7 +139,7 @@ A model server, chat UI, or proxy is the thing most likely to face untrusted inp
 - **Read-only root filesystem.** `read_only: true` on a Compose service creates it with a read-only root filesystem; mount a small `tmpfs` for any path the process must write to.
 - **Drop capabilities.** `cap_drop: [ALL]` removes every Linux capability; add back only the specific one a service needs with `cap_add`.
 - **No privilege escalation.** `security_opt: [no-new-privileges:true]` stops a `setuid` binary from gaining more privilege than the process already has (this maps to Docker's engine-level `--security-opt no-new-privileges`; the spellings `no-new-privileges`, `no-new-privileges=true`, and `no-new-privileges:true` are equivalent).
-- **Never mount the Docker socket into a container.** `/var/run/docker.sock` is root-equivalent access to the host; a container holding it can start a privileged sibling and escape.
+- **Never mount the Docker socket into a container.** In Docker's default rootful configuration, control of the daemon grants root-level host privileges; membership of the `docker` group grants them too. Rootless mode runs the daemon and containers without root privileges. Docker documents that a container with the mounted `/var/run/docker.sock` and a Docker client can control the host daemon, and documents the `--privileged` and host bind-mount options. This guide's assessment: a container holding the socket can start a privileged sibling or bind-mount host `/` and escape to the host; Rootless mode narrows the host privilege available through this path but does not make the mount safe.
 
 ```yaml
 services:
@@ -282,6 +294,12 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
 - Docker Dockerfile reference (`USER`): https://docs.docker.com/reference/dockerfile/
 - Docker Compose file reference (`user`, `read_only`, `cap_add`, `cap_drop`, `security_opt`): https://docs.docker.com/reference/compose-file/
 - Docker run security options (`--security-opt no-new-privileges` and its engine behaviour): https://docs.docker.com/reference/cli/docker/container/run/
+- Docker daemon control-socket access and host filesystem control, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/_index.md#L84-L112
+- Docker group root-level privileges, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/install/linux-postinstall.md#L29-L39
+- Docker Rootless mode daemon and container privileges, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/rootless/_index.md#L8-L21
+- Docker run `--privileged` host control, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L1330-L1350
+- Docker run mounted socket and client access to the host daemon, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L1460-L1467
+- Docker run `--mount` host-directory bind mounts, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L1495-L1515
 - Kubernetes: Configure a security context for a Pod or Container: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 - Kubernetes: Pod Security Standards (`restricted` level, Pod Security Admission labels): https://kubernetes.io/docs/concepts/security/pod-security-standards/
 - Kubernetes: Network Policies: https://kubernetes.io/docs/concepts/services-networking/network-policies/
