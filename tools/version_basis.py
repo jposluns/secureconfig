@@ -505,13 +505,16 @@ def check_rendered_sources(data, body, heads, parser, guide, baseline=None,
                         rendered_items[entry] -= 1
                     else:
                         errors.append(f'{name}: {url} absent from rendered Sources item')
+            violating_owners = set()
             for owner, (entry, decoded_entry), target in found:
                 if owner is None:
                     # Backstop for rendered-only citations: raw container_violations()
                     # runs first on every item but cannot see every decoded target.
                     errors.append(f'{name}: {url} cited in an unsupported Sources container; '
                                   'put each citation in its own list item')
-                elif not re.search(pattern, decoded_entry + '\n' + target):
+                elif (owner not in violating_owners
+                      and not re.search(pattern, decoded_entry + '\n' + target)):
+                    violating_owners.add(owner)
                     fp = source_fingerprint(name, basis, url, entry)
                     current[fp] += 1
                     details[fp] = f'{name}: basis {basis!r} absent from Sources item for {url}'

@@ -1062,6 +1062,32 @@ class RenderedSourcesTests(unittest.TestCase):
             with self.subTest(use_parser=use_parser):
                 self.check(sources, baseline=baseline, use_parser=use_parser)
 
+    def test_repeated_citations_count_once_per_violating_item(self):
+        url = 'https://example.com/control'
+        cases = (
+            ('two links', f'- Product: [first]({url}) and [second]({url})', 1),
+            ('link and bare', f'- Product: [doc]({url}) and {url}', 1),
+            ('autolink and bare', f'- Product: <{url}> and {url}', 1),
+            ('bare and emphasized', f'- Product: {url} and *{url}*', 1),
+            ('wrapped citation', f'- Product: [doc]({url})\n  and {url}', 1),
+            ('two distinct items', f'- Product: [doc]({url}) and {url}\n'
+                                   f'- Product: [doc]({url}) and {url}', 2),
+        )
+        for label, sources, expected in cases:
+            with self.subTest(label=label):
+                body = BODY[:BODY.index('- Product')] + sources + '\n'
+                entries = vb.source_entries(vb.raw_sources(body, headings(body)))
+                data = fixture()
+                data['components']['product']['sources'] = {vb.source_id(url): url}
+                data['claims']['control']['sources'] = ['product:' + vb.source_id(url)]
+                counts = Counter(fp for fp, _ in vb.source_violations(data, entries))
+                self.assertEqual(sum(counts.values()), expected)
+                self.assertEqual(len(counts), 1)
+                baseline = {('fixture.md', fp): count for fp, count in counts.items()}
+                for use_parser in (False, True):
+                    with self.subTest(use_parser=use_parser):
+                        self.check(sources, baseline=baseline, use_parser=use_parser)
+
     def test_raw_baseline_stays_valid_when_rendered_basis_matches(self):
         url = 'https://example.com/control'
         sources = f'- Product v1.**0**\n  [doc]({url})'
@@ -1278,7 +1304,7 @@ class RenderedSourcesTests(unittest.TestCase):
             for component in data['components'].values():
                 for url in component['sources'].values():
                     old = vb.cites(raw, url)
-                    new = sum(vb.rendered_cites(value, url, link)
+                    new = sum(vb.rendered_cites(value, url, link, self.parser)
                               for value, _, link in occurrences)
                     if old != new:
                         differences.append((path.name, url, old, new))

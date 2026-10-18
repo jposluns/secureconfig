@@ -131,9 +131,9 @@ Schema 1 requires exactly these top-level fields:
   ends it. Basis matching is
   literal and case-sensitive, with no adjacent ASCII letter, digit or dot: `v2.51.0` and
   `2.51.0` are not interchangeable. Both paths require a match in the raw item text.
-  With the parser, the item's decoded visible text and, for a link or autolink, its
-  own scheme and authority with the declared URL's path, query and fragment must
-  also satisfy the basis check. The parser path is stricter, never looser.
+  With the parser, the basis must also occur in the item's decoded visible text or,
+  for a link or autolink, in its own scheme and authority with the declared URL's
+  path, query and fragment. The parser path is stricter, never looser.
   Components with basis `unknown` are exempt from the basis requirement. With the pinned
   `markdown-it-py` parser, citation presence uses decoded rendered text and link or autolink
   `href` targets. Bare URLs in rendered text count; code spans and link labels
@@ -208,9 +208,11 @@ Schema 1 requires exactly these top-level fields:
   Internationalized host names are checked according to the pinned parser's URL
   conversion, which may differ from another renderer.
   `tools/version_basis_sources_baseline.txt` grandfathers existing violations by guide and a
-  counted SHA-256 fingerprint of component ID, basis, URL and item paragraph text. New, changed
-  or excess occurrences fail, and fixed or removed occurrences require removing their stale
-  baseline entries. A raw violation consumes its baseline allowance in both paths;
+  counted SHA-256 fingerprint of component ID, basis, URL and item paragraph text. Each
+  violating Sources item counts once per component URL, even if it cites that URL more
+  than once; distinct violating items count separately. New, changed or excess items
+  fail, and fixed or removed items require removing their stale baseline entries.
+  A raw violation consumes its baseline allowance in both paths;
   the parser cannot mark that entry stale or count the same violation twice. This
   baseline has no automatic refresh; retained counts remain visible.
 - `claims`: nonempty object with the same ID grammar. Each claim requires `text`, a nonempty unique
