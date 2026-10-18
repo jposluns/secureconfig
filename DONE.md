@@ -10,6 +10,9 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.222 | `egress-metadata.md`: cloud-egress: source or narrow the universal/most-providers outbound-default claim and AWS security-group union, NACL and default-egress conjunction. (M, M) | Done, #639. Cited provider outbound defaults and AWS group and ACL behaviour, with Azure private-subnet qualification. |
+| 1.223 | `egress-metadata.md`: host-owner: cite owner-match and nftables paths for the host egress controls. (M, M) | Done, #639. Pinned owner-match and nftables semantics for the host restriction. |
+| 1.224 | `egress-metadata.md`: verify-allow: cite unauthenticated STS GET behaviour for the stated allow test. (M, M) | Done, #639. Cited STS endpoint and authentication-error documentation while marking the bare-GET response as reasoned. |
 | 1.216 | `host.md`: updates: cite unattended-upgrades and dnf-automatic package/service behaviour. (M, M) | Done, #638. Pinned Ubuntu noble update scheduling and upstream DNF 4.14.0 dnf-automatic defaults and timers, noting CentOS Stream 9's unreviewed downstream patches, and corrected the DNF installation and security defaults. |
 | 1.217 | `host.md`: verify-listeners: cite `ss`, `nc`, SSH and BusyBox behaviour for the inventory and reachability tests. (M, M) | Done, #638. Pinned listener and probe sources, corrected the BusyBox variant statement, and newly stated the packaged Ncat behaviour gap. |
 | 1.220 | `cloud-firewalls.md`: gcp-policies: cite hierarchical and network firewall policy evaluation order. (M, M) | Done, #637. Cited policy resources, CLI enumeration and describe syntax, and the evaluation-order page for policy and VPC order, the enforcement-order setting and its default. |
