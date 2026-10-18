@@ -162,7 +162,8 @@ Schema 1 requires exactly these top-level fields:
   removes front matter in `tools/version_basis.py`. The generated summary and its extra blank line
   are excluded. Do not hash the complete Markdown file.
 - `components`: nonempty object keyed by IDs matching `[a-z][a-z0-9-]*`. Each component has exactly
-  `name`, `basis` and `sources`. Use `unknown` when no version is recorded. Sources map
+  `name`, `basis` and `sources`. Use `unknown` when no version is recorded, but a source URL
+  pinned to a forge ref requires a component whose basis records that pin. Sources map
   `s` plus the first 12 lowercase SHA-256 hex digits of the exact URL to that absolute HTTP(S) URL.
   Each URL must occur in Sources; a known basis must occur in every Sources list item citing
   that URL. Wrapped lines and continuation paragraphs in the same item count together; separate
@@ -186,7 +187,7 @@ Schema 1 requires exactly these top-level fields:
   check rejects vertical tab (U+000B), form feed (U+000C), file separator (U+001C), group
   separator (U+001D), record separator (U+001E), next line (U+0085), line separator (U+2028)
   and paragraph separator (U+2029) anywhere in a guide, because they can skew parser line
-  numbers. Conversely, `v1.0&#46;` can pass the raw-text basis boundary check but fail the
+  numbers. `v1.0&#46;` can pass the raw-text basis boundary check but fail the
   rendered one. `--no-advisory` is accepted only with `--bundle`. Both paths run
   the raw URL presence and unsupported-container checks, reference-definition and Sources
   grammar checks, component URL escape and encoding checks, and guide-wide HTML, heading

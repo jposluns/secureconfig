@@ -229,7 +229,6 @@ version_basis: {
       "name": "pgvector and PostgreSQL documentation",
       "basis": "unknown",
       "sources": {
-        "saab3b3092223": "https://github.com/pgvector/pgvector/blob/v0.8.2/README.md",
         "se9846041ce1f": "https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
       }
     },
@@ -331,6 +330,13 @@ version_basis: {
         "s585ae37fd0ca": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/apis/milvus.io/v1beta1/components_types.go#L500-L525",
         "sca0e4a51219f": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/pkg/controllers/podmonitor.go#L91-L100"
       }
+    },
+    "pgvector-source": {
+      "name": "pgvector source",
+      "basis": "v0.8.2",
+      "sources": {
+        "saab3b3092223": "https://github.com/pgvector/pgvector/blob/v0.8.2/README.md"
+      }
     }
   },
   "claims": {
@@ -378,7 +384,7 @@ version_basis: {
     "milvus-health": {"text": "Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings.", "components": ["m2", "m3"], "sources": ["m2:s978d2f09057a", "m3:sdb5a4b72da10"], "status": "REASONED"},
     "chroma-bind": {"text": "Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000.", "components": ["chroma"], "sources": ["chroma:s7eb7610f68c1", "chroma:s6d6708278bef", "chroma:s59912a4c7e11", "chroma:sed8aad199780", "chroma:s3a1c76cdd7f8", "chroma:s09652c32f56a", "chroma:s784a0e779949"], "status": "REASONED"},
     "chroma-auth": {"text": "Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting.", "components": ["cd", "chroma"], "sources": ["cd:s60ad33c4b715", "chroma:se936b62a1a3d", "chroma:sbc1dd27a9bf2", "chroma:s62cd8db9e61a", "chroma:s50b8158f3388", "chroma:s6eb0ff350d15"], "status": "REASONED"},
-    "pgvector": {"text": "pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.", "components": ["pg"], "sources": ["pg:saab3b3092223"], "status": "REASONED"},
+    "pgvector": {"text": "pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.", "components": ["pgvector-source"], "sources": ["pgvector-source:saab3b3092223"], "status": "REASONED"},
     "pgvector-rls": {"text": "Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k.", "components": ["pg"], "sources": ["pg:se9846041ce1f"], "status": "REASONED"},
     "hosted-mfa": {"text": "Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity management solution on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it.", "components": ["qc", "pc", "wd"], "sources": ["qc:sc72e09d8f7e6", "pc:s1696db54b028", "wd:s51c9c4c6b4c0"], "status": "REASONED"},
     "verify-inventory": {"text": "Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure.", "components": ["qd", "docker"], "sources": ["qd:s753402e46eed", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]},
@@ -447,7 +453,7 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 | milvus-health: Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings. | Milvus v2.6.24; Milvus v3.0.2 | REASONED |
 | chroma-bind: Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000. | Chroma source 1.5.9 | REASONED |
 | chroma-auth: Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting. | Chroma migration documentation v1.0.0; Chroma source 1.5.9 | REASONED |
-| pgvector: pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles. | pgvector and PostgreSQL documentation unknown | REASONED |
+| pgvector: pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles. | pgvector source v0.8.2 | REASONED |
 | pgvector-rls: Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k. | pgvector and PostgreSQL documentation unknown | REASONED |
 | hosted-mfa: Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity management solution on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it. | Qdrant Cloud documentation unknown; Pinecone organization documentation unknown; Weaviate documentation unknown | REASONED |
 | verify-inventory: Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure. | Qdrant security documentation unknown; Docker documentation unknown | REASONED |

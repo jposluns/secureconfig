@@ -15,7 +15,7 @@ import re
 import shlex
 import sys
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 START = '<!-- version-basis:start -->'
@@ -86,6 +86,46 @@ def digest(body):
 
 def source_id(url):
     return 's' + digest(url)[:12]
+
+
+_MOVING_REFS = {'main', 'master', 'HEAD', 'trunk', 'develop'}
+_SHA_REF = re.compile(r'[0-9a-fA-F]{7,40}\Z')
+
+
+def pinned_source_ref(url):
+    """Recognize SHA and version-shaped forge refs, explicit tags, and wiki revisions."""
+    parsed = urlsplit(url)
+    parts = unquote(parsed.path).strip('/').split('/')
+    host = (parsed.hostname or '').lower()
+    def pin(ref, following=''):
+        if ref in _MOVING_REFS:
+            return None
+        return ref if (_SHA_REF.fullmatch(ref) or any(c.isdigit() for c in ref)
+                       or any(c.isdigit() for c in following)) else None
+
+    # cgit's tree segment names a view; h= or id= carries the actual ref.
+    if ('cgit' in host or 'cgit' in parts or host in ('git.kernel.org', 'git.savannah.gnu.org')):
+        for key in ('h', 'id'):
+            for value in parse_qs(parsed.query).get(key, []):
+                if value and pin(value):
+                    return value
+        return None
+    if host == 'raw.githubusercontent.com' and len(parts) >= 4:
+        return pin(parts[2], parts[3] if len(parts) >= 5 else '')
+    elif host == 'github.com' and len(parts) >= 5 and parts[2] == 'wiki':
+        return parts[-1] if _SHA_REF.fullmatch(parts[-1]) else None
+    else:
+        for index, part in enumerate(parts[:-1]):
+            if part in ('blob', 'tree', 'raw', 'blame', 'commit') and index >= 2:
+                following = parts[index + 2] if index + 3 < len(parts) else ''
+                return pin(parts[index + 1], following)
+            if part == 'releases' and parts[index + 1] == 'tag' and index + 2 < len(parts):
+                ref = parts[index + 2]
+                return ref if ref not in _MOVING_REFS else None
+            if part == 'tags' and index > 0 and parts[index - 1] == '-' and index + 1 < len(parts):
+                ref = parts[index + 1]
+                return ref if ref not in _MOVING_REFS else None
+    return None
 
 
 def verify_blocks(body, with_status=False):
@@ -629,6 +669,8 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0, parser=
             require(not _ESCAPE.search(url), 'source URL contains an escape or entity: ' + url)
             require(not _UNRESERVED.search(url),
                     'source URL percent-encodes an unreserved character: ' + url)
+            require(component['basis'] != 'unknown' or pinned_source_ref(url) is None,
+                    'pinned source URL requires a known basis: ' + url)
             require(cites(sources, url), 'source URL absent from Sources: ' + url)
     # The container count uses ATX-bounded text; see raw_sources().
     raw_current = check_source_bases(data, raw_sources(body, heads), entries, guide, baseline)
