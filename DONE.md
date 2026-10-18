@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.230 | `authentication.md`: offboarding: source membership, proxy and token revocation delays and time-to-revoke checks. (M, M) | Done, #642. Sourced Entra, Cloudflare and OAuth revocation behaviour while retaining deployment timing as a test expectation. |
+| 1.231 | `authentication.md`: verify-origin-isolation: source the proxy isolation expectation beyond the current Cloudflare citations, retaining the deployed-origin result as a test expectation. (M, M) | Done, #642. Sourced proxy and signed-header origin checks while retaining deployed reachability as a test expectation. |
 | 1.222 | `egress-metadata.md`: cloud-egress: source or narrow the universal/most-providers outbound-default claim and AWS security-group union, NACL and default-egress conjunction. (M, M) | Done, #639. Cited provider outbound defaults and AWS group and ACL behaviour, with Azure private-subnet qualification. |
 | 1.223 | `egress-metadata.md`: host-owner: cite owner-match and nftables paths for the host egress controls. (M, M) | Done, #639. Pinned owner-match and nftables semantics for the host restriction. |
 | 1.224 | `egress-metadata.md`: verify-allow: cite unauthenticated STS GET behaviour for the stated allow test. (M, M) | Done, #639. Cited STS endpoint and authentication-error documentation while marking the bare-GET response as reasoned. |
