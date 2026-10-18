@@ -32953,11 +32953,11 @@ These defaults are checked against Prefect 3.1.8+ for Basic Auth, Dagster 1.13.x
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
-| private: Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight has no dedicated source here. | Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown | REASONED |
+| private: Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight 3.8.0 config defaults to 0.0.0.0:5540 via RI_APP_HOST/RI_APP_PORT, with empty excludeAuthRoutes; fetched session/window middleware does not establish complete inbound authentication or login/dashboard 200 responses. Keeping RedisInsight and similar tools on loopback or a private network is this guide's advice. | Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown; RedisInsight 3.8.0 | REASONED |
 | mongo-enable: Recent login defaults off; current ENABLED and deprecated BASICAUTH fallback differ from some 1.0.x username-triggered builds. Set both flags and verify. | mongo-express unknown | REASONED |
 | mongo-credentials: Set nonempty BASICAUTH_USERNAME/PASSWORD instead of admin/pass defaults. | mongo-express unknown | REASONED |
 | mongo-database: Web Basic auth is separate from MongoDB credentials in ME_CONFIG_MONGODB_URL. | mongo-express unknown | REASONED |
@@ -32974,7 +32974,7 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 | pgadmin-login: pgAdmin server mode has its own accounts/login. | pgAdmin unknown | REASONED |
 | adminer-login: Adminer uses database credentials, not a separate account store; server-side connections expose even private databases to login attempts. | Adminer unknown | REASONED |
 | adminer-file: Renaming Adminer is no access control; require private access or proxy TLS/auth/MFA, updates and removal of unused copies. | Adminer unknown | REASONED |
-| verify-listeners: Inventory sockets and Docker publications; a protected frontend or absent socket does not prove backend isolation. | Grafana v13.2.2; Prometheus v3.14.0 | REASONED |
+| verify-listeners: Inventory sockets and Docker publications; as this guide's assessment, a protected frontend or absent socket does not prove backend isolation or reachability. Docker documents explicit publish addresses and IPv6-to-IPv4 proxying when no host IP is given, the bridge is IPv4-only and --userland-proxy=true (default). Fetched sources do not establish NAT publication without a host listener; the fetched Moby TCP path listens even without a proxy. | Grafana v13.2.2; Prometheus v3.14.0; Docker Engine networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f; Moby port mapping source v28.3.3 | REASONED |
 | verify-login: Anonymous dashboard data is a finding; require denial or verified login challenge. Arbitrary redirects and DNS/TLS/proxy errors are inconclusive. | mongo-express unknown; Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown | REASONED |
 | verify-data: A 200 login shell proves nothing; require a known data route to succeed authorized and deny anonymous access; 404/server errors are inconclusive. | mongo-express unknown; Grafana docs unknown; Prometheus docs unknown; phpMyAdmin unknown; pgAdmin unknown; Adminer unknown | REASONED |
 <!-- version-basis:end -->
@@ -33030,16 +33030,19 @@ Adminer is database management in a single PHP file, and a filename like `admine
 
 ## RedisInsight and similar tools
 
-Keep them on loopback or a private network and reach them through the tunnels above. When in doubt, apply the generic pattern: loopback bind, TLS proxy, proxy or SSO authentication, MFA.
+As this guide's advice, keep them on loopback or a private network and reach them through the tunnels above. When in doubt, apply the generic pattern: loopback bind, TLS proxy, proxy or SSO authentication, MFA.
+
+RedisInsight 3.8.0's default server configuration uses `RI_APP_HOST` with a fallback of `0.0.0.0` and `RI_APP_PORT` with a fallback of `5540`; its default `excludeAuthRoutes` is an empty list. The fetched `SingleUserAuthMiddleware.use` creates a default session if absent, assigns default session metadata and calls `next()`; `WindowAuthMiddleware.use` checks a window ID through `WindowAuthService` and throws on rejection. These fetched files do not establish the complete inbound authentication policy or which routes use these middleware; they do not establish either the absence of authentication or login and dashboard pages both returning 200. RedisInsight is therefore omitted from the Verify list asserting those two 200 responses.
 
 ## Verify
 
-REASONED: following block; panel sources below support the listener and anonymous front-page/data-route checks. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes.
+REASONED: following block; panel sources below support the listener and anonymous front-page/data-route checks; Docker's pinned documentation supports explicit publish addresses and Linux firewall rules for publication. Docker documents IPv6-to-IPv4 mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default). The fetched Moby port-mapping source starts the userland proxy conditionally and listens on bound TCP sockets even without a proxy; these fetched sources do not establish NAT publication without a host listener. As this guide's assessment, a socket listing alone does not prove reachability. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes.
 
 ```bash
 # On the host: each panel listener should be loopback (127.0.0.1) or a deliberately chosen private address.
-# Docker may publish to loopback OR install a NAT rule with no host listener, so also inspect the actual
-# published addresses and ports (docker ps and the port mappings) and probe any public backend mapping too:
+# Docker documents explicit publish addresses and firewall rules for publication. As this guide's assessment,
+# a socket listing alone does not prove reachability, so also inspect the actual published addresses and
+# ports (docker ps and the port mappings) and probe any public backend mapping too:
 # a protected frontend does not prove a separately published backend port is closed.
 ss -tlnp                                      # panel listeners: loopback or a private address only
 
@@ -33049,7 +33052,7 @@ curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/'
 #   PASS: a denial from whatever protects this panel - the panel's own 401/403, the reverse proxy's, or a
 #   Cloudflare Access challenge - or a redirect into that layer's login (which may be an external identity
 #   provider). FINDING: a 200 that renders the dashboard or app content. An arbitrary redirect is inconclusive.
-# SPA panels (Grafana, RedisInsight, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login page and
+# SPA panels (Grafana, a phpMyAdmin/Adminer login shell) return 200 for BOTH the login page and
 # the dashboard, so also request a route you know returns real data when authorized, and require it be denied
 # without credentials:
 curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/REPLACE_WITH_PROTECTED_PATH'   # keep the quotes; substitute inside them
@@ -33057,7 +33060,7 @@ curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/REPLACE_WITH_PROTECTE
 #   unsubstituted placeholder is inconclusive, not a pass.
 ```
 
-REASONED: preceding block; listener inventory, published-backend inspection, anonymous front-page/data-route checks and an authenticated data-route positive control follow the cited panel sources; no panel deployment or second test network is available. Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
+REASONED: preceding block; listener inventory, anonymous front-page/data-route checks and an authenticated data-route positive control follow the cited panel sources; published-backend inspection follows the pinned Docker sources and this guide's assessment that a protected frontend or absent socket does not prove backend isolation. No panel deployment or second test network is available. Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
 
 ## Sources (checked September 2026)
 
@@ -33078,6 +33081,14 @@ REASONED: preceding block; listener inventory, published-backend inspection, ano
 - Apache httpd 2.4.69 htpasswd usage (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L129
 - OWASP Password Storage Cheat Sheet at 72865b1e3b5754246a101778dc00b37f9c233373, legacy bcrypt work factor (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
 - Apache httpd 2.4.69 htpasswd zero-initialized cost (checked October 2026): https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L297
+- RedisInsight 3.8.0 default listen host and port (checked October 2026): https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/config/default.ts#L99-L100
+- RedisInsight 3.8.0 default authentication-route exclusions (checked October 2026): https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/config/default.ts#L133
+- RedisInsight 3.8.0 default-session middleware (checked October 2026): https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/src/common/middlewares/single-user-auth.middleware.ts#L20-L49
+- RedisInsight 3.8.0 window-authentication middleware (checked October 2026): https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/src/modules/auth/window-auth/middleware/window.auth.middleware.ts#L14-L35
+- Docker explicit publish addresses, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L33-L38
+- Docker conditional IPv6-to-IPv4 userland-proxy mapping, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L60-L62
+- Docker Linux firewall rules for publication, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L11-L15
+- Moby port mapping at v28.3.3, conditional proxy startup and TCP listening without a proxy (checked October 2026): https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go
 
 ======================================================================
 ==> observability-components.md
@@ -36348,7 +36359,7 @@ connection string or the tool's own login is not enough.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -36373,11 +36384,11 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 | appsmith-encryption: Entrypoint generates 13-character encryption password/salt; external values override them. Development Compose sets both abcd; replace before first start. | Appsmith v2.4.1 | REASONED |
 | appsmith-rotation: Changing an existing abcd encryption pair presumably makes stored credentials unreadable; plan re-entry. Inferred, not tested. | Appsmith v2.4.1 | REASONED |
 | budibase-publish: Proxy publishes MAIN_PORT, sample 10000; LiteLLM publishes LITELLM_PORT default 4000. | Budibase v3.46.0 | REASONED |
-| budibase-couchdb: Proxy /db/ reaches CouchDB, exposing sample budibase/budibase login to anyone reaching it. | Budibase v3.46.0 | REASONED |
-| budibase-secrets: Sample JWT_SECRET/API_ENCRYPTION_KEY are testsecret; service passwords, INTERNAL_API_KEY and LITELLM_MASTER_KEY are budibase. Replace all. | Budibase v3.46.0 | REASONED |
-| budibase-sample-check: Recorded source search found no production rejection of testsecret; source reasoning, not a live safeguard test. | Budibase v3.46.0 | REASONED |
-| budibase-init: Unauthenticated POST /api/global/users/init creates first admin until a user exists; validation runs first, so no read-only claimed-state probe. | Budibase v3.46.0 | REASONED |
-| budibase-seed: Claim admin before exposure or seed BB_ADMIN_USER_EMAIL/BB_ADMIN_USER_PASSWORD. | Budibase v3.46.0 | REASONED |
+| budibase-couchdb: Proxy /db/ reaches CouchDB. Compose maps COUCH_DB_USER/PASSWORD to COUCHDB_USER/PASSWORD; the image entrypoint adds that admin only when both are non-empty and its existing-admin check finds none for that name. With unchanged samples and that condition, anyone reaching the proxy can try budibase/budibase. | Budibase v3.46.0 | REASONED |
+| budibase-secrets: Sample JWT_SECRET/API_ENCRYPTION_KEY are testsecret; service passwords, INTERNAL_API_KEY and LITELLM_MASTER_KEY are budibase. Replace all before first start. Compose pins docker.io/litellm/litellm:main-v1.83.10-stable.patch.3 and passes LITELLM_MASTER_KEY; acceptance of budibase by that image is not established. | Budibase v3.46.0 | REASONED |
+| budibase-sample-check: This guide's October 2026 search of the full v3.46.0 tag with git grep -l testsecret v3.46.0 found exactly hosting/.env, hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot, hosting/hosting.properties, packages/backend-core/tests/jestEnv.ts and scripts/dev/manage.js. This guide inspected those hits. This guide's assessment is that these hits do not establish absence of production rejection; no live safeguard test ran. | Budibase v3.46.0 | REASONED |
+| budibase-init: POST /api/global/users/init is public; its body validator requires string email and tenantId fields, permits an optional password, rejects unknown fields and precedes adminUser. In the supplied tenant context, checkAnyUserExists() truthy causes 403 with the exact vendor error quoted in the body. The helper definition was not fetched, so which users count and any multi-tenancy exception remain unestablished. This guide assesses this POST as unsafe for read-only claimed-state probing: invalid bodies can fail validation in both states, while accepted initialization creates an admin. | Budibase v3.46.0 | REASONED |
+| budibase-seed: Claim admin before exposure (guide advice), manually or with BB_ADMIN_USER_EMAIL/BB_ADMIN_USER_PASSWORD. Startup attempts seeding only with SELF_HOSTED truthy, MULTI_TENANCY falsy and both values non-empty; in tenancy.getTenantId() context, it calls createAdminUser when the admin checklist is not checked OR the email does not exist, with hashPassword/requirePassword/skipPasswordValidation true. | Budibase v3.46.0 | REASONED |
 | windmill-code: Workers execute user scripts; a login enables code execution on worker hosts. | Windmill v1.817.0 | REASONED |
 | windmill-bind: Default 0.0.0.0:8000; SERVER_BIND_ADDR changes binary binding. Default wildcard bind was not observed. | Windmill v1.817.0 | REASONED |
 | windmill-compose: Compose exposes server 8000 internally; Caddy publishes 80/25 on all host interfaces. Bind publications privately; container loopback cutting Caddy off is inferred. | Windmill v1.817.0 | REASONED |
@@ -36400,7 +36411,7 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 | nocodb-key-logic: A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated. | Docker docs unknown | DEMONSTRATED |
 | verify-windmill-control: Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed. | Windmill v1.817.0 | REASONED |
 | verify-couchdb: Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control. | Budibase v3.46.0; CouchDB 3.5.2 | REASONED |
-| verify-litellm: Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-&#96;sk-&#96; keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. | Budibase v3.46.0; LiteLLM authentication source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
+| verify-litellm: Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-&#96;sk-&#96; keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched. | Budibase v3.46.0; LiteLLM authentication source 6ef7b86748118ceecd95271727c2fa167ce55fec | REASONED |
 | verify-tcp-outcomes: Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated. | Baserow 2.3.4; Budibase v3.46.0; Windmill v1.817.0 | DEMONSTRATED |
 | verify-tcp-inputs: Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control. | Baserow 2.3.4; Budibase v3.46.0; Windmill v1.817.0 | DEMONSTRATED |
 <!-- version-basis:end -->
@@ -36478,21 +36489,51 @@ unreadable, so plan to re-enter them (inferred from the encryption design, not t
 ## Budibase
 
 Budibase's Compose file publishes its nginx proxy on `MAIN_PORT` (10000 in the sample `.env`) and its
-LiteLLM service on `${LITELLM_PORT:-4000}`. The proxy forwards `/db/` to CouchDB. The sample
-`hosting/.env` sets `JWT_SECRET` and `API_ENCRYPTION_KEY` to `testsecret`, and the CouchDB, MinIO and
+LiteLLM service on `${LITELLM_PORT:-4000}`. The proxy forwards `/db/` to CouchDB (CouchDB upstream variable and proxy location sources below).
+The sample `hosting/.env` sets `JWT_SECRET` and `API_ENCRYPTION_KEY` to `testsecret`, and the CouchDB, MinIO and
 Redis passwords, `INTERNAL_API_KEY` and `LITELLM_MASTER_KEY` to `budibase`, under a comment that says
-"These should be updated". A search of the v3.46.0 source finds `testsecret` only in those sample files,
-a DigitalOcean first-boot script, a test setup and a development script, and no code that checks for
-it. With the sample file unchanged,
-anyone who can reach the proxy can try `budibase`/`budibase` against CouchDB through `/db/`, and the
-LiteLLM port answers to the master key `budibase`. Replace every one of those values before the first
-start.
+"These should be updated" (sample secret assignments source below).
+This guide's October 2026 search of the full v3.46.0 tag with
+`git grep -l testsecret v3.46.0` found exactly these five files:
+`hosting/.env`, `hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot`,
+`hosting/hosting.properties`, `packages/backend-core/tests/jestEnv.ts` and `scripts/dev/manage.js`.
+This guide inspected those five files: sample assignments, first-boot substitution, test assignments
+and development entries.
+This guide's assessment is that those hits do not establish that production code never rejects the sample values;
+no live safeguard test ran.
+Compose maps `COUCH_DB_USER` and `COUCH_DB_PASSWORD` to the `COUCHDB_USER` and `COUCHDB_PASSWORD`
+environment of `budibase/database:2.1.0`; the image version file also says `2.1.0`.
+The Dockerfile installs the entrypoint and selects the runner, which invokes that entrypoint for CouchDB.
+With both values non-empty, the entrypoint appends the admin credentials only if its existing-admin
+check finds no entry for that name (CouchDB image and credential mapping, entrypoint installation,
+runner command, image version file, runner call and conditional admin creation sources below).
+With the sample file unchanged and that creation condition met, anyone who can reach the proxy can try
+`budibase`/`budibase` against CouchDB through `/db/`.
+Compose pins `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` and passes `LITELLM_MASTER_KEY`
+(LiteLLM image and environment source below); acceptance of `budibase` by that image is not established.
+This guide has not established that [litellm.md](litellm.md)'s pinned source
+`6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to that image; no LiteLLM source for that image was fetched.
+Replace every one of those values before the first start.
 
-The first-run admin route `POST /api/global/users/init` needs no login and works until the first user
-exists; after that it returns an error ("You cannot initialise once an global user has been created").
-The route validates its request body before that check, so no read-only request shows whether an
-instance is claimed. Create the admin first, or seed it with `BB_ADMIN_USER_EMAIL` and
-`BB_ADMIN_USER_PASSWORD`.
+The first-run admin route `POST /api/global/users/init` is public (public init endpoint entry and
+public authentication middleware chain sources below).
+Its controller calls `checkAnyUserExists()` inside `tenancy.doInTenant(tenantId, ...)` using the request's
+`tenantId`; a truthy result produces HTTP 403 with "You cannot initialise once an global user has been created."
+(admin-init controller and refusal source below).
+The helper is imported from `packages/worker/src/utilities/users.ts`, which was not fetched;
+which users count and any multi-tenancy exception in that helper remain unestablished.
+The route's `buildAdminInitValidation()` runs before `controller.adminUser`; it requires string `email`
+and `tenantId` fields, allows an optional password and rejects unknown fields
+(admin-init body validator and middleware order sources below).
+This guide assesses this POST as unsafe for read-only claimed-state probing: invalid bodies can fail
+validation in both states, while accepted initialization creates an admin.
+Create the admin before exposure, manually or with `BB_ADMIN_USER_EMAIL` and `BB_ADMIN_USER_PASSWORD`
+(this guide's advice; admin environment definitions and app-service mapping sources below).
+Startup attempts seeding only when `SELF_HOSTED` is truthy, `MULTI_TENANCY` is falsy and both values are
+non-empty; in the `tenancy.getTenantId()` context, it calls `createAdminUser` when
+`!checklist?.adminUser?.checked || !exists`, where `exists` is `users.doesUserExist(bbAdminEmail)`.
+That call sets `hashPassword`, `requirePassword` and `skipPasswordValidation` to `true`
+(startup admin seeding conditions source below).
 
 ## Windmill
 
@@ -36650,10 +36691,10 @@ Exposed, the default login gets `200` with a token; fixed, it gets `400` (both o
 on the loopback run). Before trusting a `400`, log in once with your real credentials, so that a dead
 service is not read as fixed.
 
-REASONED: The two sample-value requests use Budibase v3.46.0 sample environment for the sample values and Budibase v3.46.0 proxy configuration (`/db/`) for the path. The Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password; the LiteLLM 401 for a non-`sk-` key when a database is connected and the 400 without one are supported by LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. These are expectations, not live observations. The recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. For Budibase, two reasoned requests use the published sample values, which are not secrets. Substitute
+REASONED: The two sample-value requests use Budibase v3.46.0 sample environment for the sample values and Budibase v3.46.0 proxy configuration (`/db/`) for the path. The Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password; the LiteLLM 401 for a non-`sk-` key when a database is connected and the 400 without one are supported by LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). These LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin `6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to Compose image `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` (LiteLLM image and environment source below); no source for that image was fetched. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. These are expectations, not live observations. The recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. For Budibase, two reasoned requests use the published sample values, which are not secrets. Substitute
 the proxy URL (`http://HOST:10000` in the sample setup) and the LiteLLM URL inside the single quotes.
 
-REASONED: following block; Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. The exposed 200 outcomes still require live comparison. No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review (October 2026, Bash 5.3.9 and ShellCheck 0.11.0) checked syntax and guard fixtures with a curl stub; no service response was observed. Bash -n and ShellCheck 0.11.0 each exited 0 with no output. In that local marking review, missing marker printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); missing set -- line printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); short assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls); long assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls). Placeholder, first empty, second empty, first option-like, second option-like, first spaced, second spaced, embedded placeholder, tab, LF, CR and DEL each printed "substitute both URLs on the set -- line above; not probing" (each exit 0, 0 stub calls). The valid fixture exited 0 with 2 stub calls and printed, in order, `stub couchdb url=http://203.0.113.10:10000/db/_session?basic=true`, `couchdb sample login: http=200 exit=0 err=fixture ok`, `stub litellm url=http://203.0.113.11:4000/v1/models` and `litellm sample key: http=200 exit=0 err=fixture ok`.
+REASONED: following block; Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). These LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin `6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to Compose image `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` (LiteLLM image and environment source below); no source for that image was fetched. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. The exposed 200 outcomes still require live comparison. No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review (October 2026, Bash 5.3.9 and ShellCheck 0.11.0) checked syntax and guard fixtures with a curl stub; no service response was observed. Bash -n and ShellCheck 0.11.0 each exited 0 with no output. In that local marking review, missing marker printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); missing set -- line printed "paste the whole block, including its set -- line; not probing" (exit 0, 0 stub calls); short assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls); long assignment printed "the set -- line needs exactly 2 values; not probing" (exit 0, 0 stub calls). Placeholder, first empty, second empty, first option-like, second option-like, first spaced, second spaced, embedded placeholder, tab, LF, CR and DEL each printed "substitute both URLs on the set -- line above; not probing" (each exit 0, 0 stub calls). The valid fixture exited 0 with 2 stub calls and printed, in order, `stub couchdb url=http://203.0.113.10:10000/db/_session?basic=true`, `couchdb sample login: http=200 exit=0 err=fixture ok`, `stub litellm url=http://203.0.113.11:4000/v1/models` and `litellm sample key: http=200 exit=0 err=fixture ok`.
 
 ```bash
 (
@@ -36673,13 +36714,15 @@ REASONED: following block; Budibase v3.46.0 sample environment supplies the samp
 )
 ```
 
-REASONED: Exposed and fixed outcomes below are expectations, not live observations. Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. Exposed, either line gets `200`, which means the sample secret is live. Fixed, the CouchDB sample login
+REASONED: Exposed and fixed outcomes below are expectations, not live observations. Budibase v3.46.0 sample environment supplies the sample values, and Budibase v3.46.0 proxy configuration (`/db/`) supplies the path. Apache CouchDB 3.5.2 `/_session` reference supports the CouchDB 401 for a wrong password. For the LiteLLM 401 with a database connected or 400 without one, see LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026). These LiteLLM outcomes remain comparison expectations: this guide has not established that litellm.md's source pin `6ef7b86748118ceecd95271727c2fa167ce55fec` corresponds to Compose image `docker.io/litellm/litellm:main-v1.83.10-stable.patch.3` (LiteLLM image and environment source below); no source for that image was fetched. No Budibase/LiteLLM containers ran; the recorded host has no container runtime. A live Budibase or LiteLLM stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Exposed: either line 200; fixed: CouchDB 401, and LiteLLM returns a 401 (or a 400 if the proxy has no database), with real credentials still accepted. Exposed, either line gets `200`, which means the sample secret is live. Fixed, the CouchDB sample login
 gets `401` ("Username or password wasn't recognized", per CouchDB's `/_session` reference) and the
 LiteLLM sample key gets a 401 (or a 400 if the proxy has no database), per the LiteLLM authentication source; compare the `/v1/models` check in [litellm.md](litellm.md). Confirm each
-service answers your real credentials as the positive control. Budibase's first-run admin route has no
-equivalent probe: its request validation runs before the "already initialised" check, so a request
-either fails validation in both states or, with a valid body on a fresh instance, creates the admin.
-Claim the admin yourself before the proxy is reachable.
+service answers your real credentials as the positive control. This guide assesses Budibase's first-run
+POST as unsafe for read-only claimed-state probing: the body validator precedes the controller's
+tenant-context `checkAnyUserExists()` call (admin-init body validator, middleware order and controller
+sources below); invalid bodies can fail validation in both states, while accepted initialization creates an admin.
+The helper definition was not fetched, so which users count and any multi-tenancy exception remain unestablished.
+Claim the admin yourself before the proxy is reachable (this guide's advice).
 
 REASONED: Manual signup procedure, per the guide's cited NocoDB 2026.09.0 first user, signup and its refusal message, NocoDB 2026.09.0 app settings (`invite_only_signup`), Baserow 2.3.4 first user, signup and its refusal message, Baserow 2.3.4 settings model (`allow_new_signups`), Appsmith v2.4.1 server properties (bind address, signup) and Appsmith v2.4.1 `SIGNUP_DISABLED` error. No browser-accessible NocoDB, Baserow or Appsmith deployment was available for the account lifecycle checks; the authoring host has no container runtime and forbids opening listeners without an isolated network namespace, and none was available. This paragraph contains no shell or configuration fragment to execute locally. Expect account creation when exposed and backend refusal when fixed, with administrator login still working. For NocoDB, Baserow and Appsmith, check signup by hand, reasoned from source. In a private browser
 window, open the instance's sign-up page and try to create an account with an address you control.
@@ -36802,6 +36845,28 @@ mean to publish is the finding.
 - Budibase v3.46.0 public worker routes: https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts
 - Budibase v3.46.0 admin init: https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/controllers/global/users.ts
 - Budibase v3.46.0 admin init route and its validation: https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts
+- Budibase v3.46.0 sample secret assignments (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/.env#L4-L16
+- Budibase v3.46.0 CouchDB image and credential mapping (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml#L111-L120
+- Budibase v3.46.0 LiteLLM image and environment (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml#L129-L144
+- Budibase v3.46.0 CouchDB upstream variable (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/proxy/nginx.prod.conf#L86
+- Budibase v3.46.0 CouchDB proxy location (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/proxy/nginx.prod.conf#L236-L239
+- Budibase v3.46.0 public init endpoint entry (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts#L40-L43
+- Budibase v3.46.0 public authentication middleware chain (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts#L133-L167
+- Budibase v3.46.0 admin-init body validator (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts#L13-L28
+- Budibase v3.46.0 admin-init middleware order (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts#L75-L79
+- Budibase v3.46.0 admin-init controller and refusal (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/controllers/global/users.ts#L229-L274
+- Budibase v3.46.0 startup admin seeding conditions (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/server/src/startup/index.ts#L226-L266
+- Budibase v3.46.0 admin environment definitions (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/backend-core/src/environment.ts#L267-L268
+- Budibase v3.46.0 app-service admin environment mapping (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml#L27-L28
+- Budibase v3.46.0 CouchDB entrypoint installation (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/Dockerfile#L89-L91
+- Budibase v3.46.0 CouchDB runner command (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/Dockerfile#L151-L154
+- Budibase v3.46.0 database image version file (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/VERSION#L1
+- Budibase v3.46.0 runner calls CouchDB entrypoint (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/runner.sh#L165-L166
+- Budibase v3.46.0 conditional CouchDB admin creation (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/docker-entrypoint.sh#L70-L75
+- Budibase v3.46.0 hosting sample secrets (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/hosting.properties#L4-L18
+- Budibase v3.46.0 first-boot sample substitution (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot#L11-L15
+- Budibase v3.46.0 test secret assignments (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/packages/backend-core/tests/jestEnv.ts#L9-L10
+- Budibase v3.46.0 development secret entries (checked October 2026): https://github.com/Budibase/budibase/blob/v3.46.0/scripts/dev/manage.js#L11-L12
 - Apache CouchDB 3.5.2 `/_session` reference: https://github.com/apache/couchdb/blob/3.5.2/src/docs/src/api/server/authn.rst
 - LiteLLM authentication source: non-`sk-` keys rejected with 401 when a database is connected; 400 without one (checked October 2026): https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/user_api_key_auth.py
 - Windmill v1.817.0 README (default credentials): https://github.com/windmill-labs/windmill/blob/v1.817.0/README.md
@@ -36821,7 +36886,7 @@ mean to publish is the finding.
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -36844,9 +36909,9 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | webmin-mfa: TOTP/Authy exists but is not configured at install; enable and enrol every user. | Webmin 2.670 | REASONED |
 | webmin-advisories: Advisories list Basic-auth MFA bypasses CVE-2026-42210/CVE-2026-56022 under Webmin prior to 2.641; use a current release. | Webmin docs 8ceae26c5a074053905cbcc6c0053be573633f3a | REASONED |
 | webmin-rate: Defaults blockhost_failures=5/blockhost_time=60 block a host for 60 seconds, not a user lockout; Basic-auth failures count only with installed passdelay=1. | Webmin 2.670 | REASONED |
-| pve-bind: pveproxy HTTPS API 8006 and spiceproxy 3128 default IPv4/IPv6 wildcard; both share LISTEN_IP in /etc/default/pveproxy. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
-| pve-cluster: LISTEN_IP is not recommended on clusters needing peer pveproxy access; use ACLs/firewall. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
-| pve-acl: Default allow policy admits unmatched clients; ALLOW_FROM needs DENY_FROM=all or POLICY=deny, not both because deny policy rejects dual matches. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-bind: pveproxy HTTPS API 8006 and spiceproxy 3128 share LISTEN_IP in /etc/default/pveproxy; new sockets without it try :: then 0.0.0.0. Dual-stack defaults and bindv6only=1 effects are documentation-backed; socket-library behaviour and installed versions remain unverified. | Proxmox VE 9.2 docs 9.2.12; pve-manager 9.2.20; Proxmox HTTP server 5119ff9bec08c69584c0c98bea3edd0098179e5f; libpve-common-perl 9.1.21 5054082fe492429fc37574985c2ca812af9a3125 | REASONED |
+| pve-cluster: The vendor warns against LISTEN_IP on clustered systems: nodes need peer pveproxy access, possibly across subnets. This guide advises management-only ACLs and firewall rules. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| pve-acl: Both daemons share ALLOW_FROM/DENY_FROM/POLICY; default allow admits unmatched clients and dual matches. Deny rejects both cases. This guide advises ALLOW_FROM with DENY_FROM=all or POLICY=deny, one of the two, not both, because deny plus DENY_FROM=all refuses everyone. | Proxmox VE 9.2 docs 9.2.12; pve-manager 9.2.20; Proxmox HTTP server 5119ff9bec08c69584c0c98bea3edd0098179e5f | REASONED |
 | pve-firewall: Firewall defaults disabled; enable and restrict 8006/22/3128 to management addresses. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
 | pve-root: root@pam can always log in as unconfined admin; installer sets the web-interface root password. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
 | pve-shell: Node shell opens /bin/login -f root without another password. | pve-manager 9.2.20 | REASONED |
@@ -36856,11 +36921,11 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 | pve-certificates: Each cluster creates its own self-signed CA. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
 | pve-tokens: API tokens default to separated privileges and cannot access VM/node consoles. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
 | verify-cockpit: Inspect effective socket reset/address and root deny file; bare port or missing deny file exposes documented defaults. | Cockpit 368 | REASONED |
-| verify-pve: Inspect LISTEN_IP/ACL policy, enabled/running firewall and management-only rules, and every admin's second factor including root@pam. | Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| verify-pve: Inspect the shared LISTEN_IP/ACL configuration for both daemons, enabled/running firewall and management-only rules, and every admin's second factor including root@pam. This guide assesses management bind on a single node or management ALLOW_FROM with DENY_FROM=all or POLICY=deny, one of the two, not both, as fixed; grep alone does not establish effective settings. | Proxmox VE 9.2 docs 9.2.12; pve-manager 9.2.20; Proxmox HTTP server 5119ff9bec08c69584c0c98bea3edd0098179e5f; libpve-common-perl 9.1.21 5054082fe492429fc37574985c2ca812af9a3125 | REASONED |
 | verify-external: Probe each public IP with a reachable control; refusal/timeout is only consistent with isolation. TCP does not test Webmin UDP. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12 | REASONED |
 | webmin-loopback: Loopback bind with no listen line produced one TCP socket and no UDP. | Webmin 2.670 | DEMONSTRATED |
 | webmin-rate-run: Fifth wrong password exceeded a five-second timeout; then even the right password received host-block 403. | Webmin 2.670 | DEMONSTRATED |
-| verify-listeners: Expect management TCP binds and no discovery UDP; clustered Proxmox may retain wildcards with ACL/firewall protection. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12 | REASONED |
+| verify-listeners: Expect management TCP binds and no discovery UDP; this guide assesses clustered Proxmox wildcards as fixed only with management-only ACLs and firewall rules. Pinned new-socket code tries :: then 0.0.0.0; dual-stack operation remains documentation-backed and must be checked on the host. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12; pve-manager 9.2.20; Proxmox HTTP server 5119ff9bec08c69584c0c98bea3edd0098179e5f; libpve-common-perl 9.1.21 5054082fe492429fc37574985c2ca812af9a3125 | REASONED |
 | verify-webmin-parser: Thirty fixtures matched miniserv parsing and bind/sockets/discovery/ACL outputs; unreadable paths were not checked. File inspection is not running-state proof. | Webmin 2.670 | DEMONSTRATED |
 | verify-tcp-loopback: Copied probe has recorded loopback provenance, not live panel-isolation evidence; loopback and mapped hex addresses pass its guard. | Cockpit 368; Webmin 2.670; Usermin 2.570; Proxmox VE 9.2 docs 9.2.12 | DEMONSTRATED |
 <!-- version-basis:end -->
@@ -36873,7 +36938,8 @@ default, none turns on a second factor by default, and none locks out an account
 passwords. Keep them off the public internet: bind them to a management address, allow only management
 networks ([cloud-firewalls.md](cloud-firewalls.md), [host.md](host.md)), reach them over a VPN or tunnel
 ([tunnels.md](tunnels.md)), and turn on each panel's second factor. Versions checked: Cockpit 368, Webmin
-2.670 (Usermin 2.570), and Proxmox VE 9.2 (pve-manager 9.2.20, pve-docs 9.2.12).
+2.670 (Usermin 2.570), and Proxmox VE 9.2 (pve-manager 9.2.20, pve-docs 9.2.12;
+libpve-http-server-perl 6.0.5 and libpve-common-perl 9.1.21 for the bind and access-list review).
 
 ## Cockpit
 
@@ -36936,16 +37002,32 @@ refused with `403` "Access denied for 127.0.0.1". Keep the network allow list as
 ## Proxmox VE
 
 `pveproxy` serves the whole Proxmox VE API over HTTPS on 8006, and `spiceproxy` listens on 3128. By
-default both "listen on the wildcard address and accept connections from both IPv4 and IPv6 clients".
+default both "listen on the wildcard address and accept connections from both IPv4 and IPv6 clients"
+according to pve-docs 9.2.12. **Implementation qualification:** when creating a new socket without
+`LISTEN_IP`, libpve-common-perl 9.1.21 tries `::`, then `0.0.0.0` if that fails, rather than guaranteeing
+both families; its restart path can reuse an existing socket. Dual-stack acceptance and the documented
+IPv6-only effect of `net.ipv6.bindv6only=1` remain documentation-backed: the socket-library implementation
+was not fetched or tested. The fetched files also do not trace PVE::HTTPServer inheritance.
+Check the running listeners and each public address as below.
 `LISTEN_IP` in `/etc/default/pveproxy` restricts the bind, but the vendor warns that it is "not
-recommended" on clustered systems, whose nodes need each other's `pveproxy`. The same file takes
-`ALLOW_FROM`, `DENY_FROM` and `POLICY`; the default policy is `allow`, under which a client that
-matches neither list is allowed, so an `ALLOW_FROM` list restricts nothing until you also set
-`DENY_FROM="all"` (the vendor's example) or `POLICY="deny"`. Set one or the other, not both: under
-`POLICY="deny"` a client that matches both lists is denied, so adding `DENY_FROM="all"` refuses
-everyone. `LISTEN_IP` binds `spiceproxy` as well as `pveproxy`. The Proxmox VE firewall "is
-completely disabled by default"; when you enable it, allow 8006, 22 and 3128 from management addresses
-only.
+recommended" on clustered systems, whose nodes need each other's `pveproxy`, possibly across subnets.
+That cluster warning is documentation-backed; this guide advises management-only access lists and
+firewall rules. Both daemons read the same file and use its `ALLOW_FROM`, `DENY_FROM` and `POLICY`.
+The implementation defaults to `allow`: allow-only matches pass, deny-only matches fail, and clients
+matching both lists or neither list follow the policy. Thus an `ALLOW_FROM` list alone restricts
+nothing under the default policy; also set `DENY_FROM="all"` (the vendor's example) or `POLICY="deny"`.
+This guide's advice is to set one or the other, not both: under `POLICY="deny"` a client that matches
+both lists is denied, so adding `DENY_FROM="all"` refuses everyone. `LISTEN_IP` binds `spiceproxy` as
+well as `pveproxy`. The Proxmox VE firewall "is completely disabled by default"; when you enable it,
+allow 8006, 22 and 3128 from management addresses only.
+
+This source conjunction uses pve-manager 9.2.20, pve-docs 9.2.12, libpve-http-server-perl 6.0.5 and
+libpve-common-perl 9.1.21 at the Sources pins. Their changelog entries identify those versions;
+pve-manager's runtime dependencies require pve-docs >= 9.2.8, libpve-http-server-perl >= 6.0.3 and
+libpve-common-perl >= 9.1.21. This guide's inference is that the selected versions satisfy those
+three bounds, not that they establish one installed package set. A host may run a later pve-common;
+its installed versions and live behaviour remain unverified. The ACL code agrees with the documented
+access table; the wildcard code adds the IPv4 fallback qualification above.
 
 The system's `root` user "can always log in via the Linux PAM realm and is an unconfined administrator",
 and the installer sets its password for the web interface. Its node shell opens with
@@ -36958,26 +37040,27 @@ separated privileges by default, and cannot reach the VM or node consoles.
 
 ## Verify
 
-REASONED: this historical run overview preserves the original authoring record, not a new live comparison; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules, per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). Two checks here were demonstrated: the Webmin configuration check, whose parser was compared with
+REASONED: this historical run overview preserves the original authoring record, not a new live comparison; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or, in this guide's assessment, clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules, per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12), now supplemented for Proxmox bind and access lists by the source conjunction and implementation qualification above. Two checks here were demonstrated: the Webmin configuration check, whose parser was compared with
 Webmin 2.670's own on thirty test files, and the TCP reachability probe, which is the block demonstrated
 on loopback in [low-code-builders.md](low-code-builders.md) with this guide's ports. Everything else
 is reasoned: the authoring host runs neither Cockpit's
 systemd socket nor Proxmox VE, and it forbids binding every interface, so no default bind was observed.
 Those expected outcomes are REASONED from the cited vendor documentation and source.
 
-REASONED: this TCP and UDP inventory instruction; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules, per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). On the host, list the listeners, TCP and UDP:
+REASONED: this TCP and UDP inventory instruction; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or, in this guide's assessment, clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules, per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12), now supplemented for Proxmox bind and access lists by the source conjunction and implementation qualification above. On the host, list the listeners, TCP and UDP:
 
 REASONED: following block; pinned Cockpit, Webmin/Usermin and Proxmox sources support this inventory. The recorded host lacks Cockpit systemd and Proxmox and forbids wildcard binds; exposed/fixed expectations follow.
 
 ```bash
-sudo ss -tlnp   # 9090 (Cockpit), 10000 (Webmin), 20000 (Usermin), 8006 and 3128 (Proxmox VE): a management address only
+sudo ss -tlnp   # 9090 (Cockpit), 10000 (Webmin), 20000 (Usermin), 8006 and 3128 (Proxmox VE): a management address only; Proxmox cluster exception below
 sudo ss -ulnp   # Webmin's discovery socket on UDP 10000 (Usermin 20000) should be gone
 ```
 
-REASONED: preceding block; this listener interpretation and the preceding TCP and UDP inventory block; the cluster exception also needs a multi-node Proxmox VE cluster with management networks, access lists and firewall rules, none of which was available; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules, per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12). Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on those ports;
+REASONED: preceding block; this listener interpretation and the preceding TCP and UDP inventory block; the cluster exception also needs a multi-node Proxmox VE cluster with management networks, access lists and firewall rules, none of which was available; a live Cockpit, Webmin/Usermin or Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the listener block through `bash -n` and ShellCheck 0.11.0 with no output, and a `sudo` stub printed `sudo stub: ss -tlnp` and `sudo stub: ss -ulnp`. Exposed listeners are wildcard TCP and Webmin/Usermin discovery UDP; fixed listeners bind management addresses with discovery UDP absent, or, in this guide's assessment, clustered Proxmox retains wildcard TCP behind management-only ACLs and firewall rules, per the guide's cited Cockpit 368 socket unit; Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket); Webmin 2.670 installer (`listen=`, `blockhost_*`, `passdelay=1`, certificate); Usermin 2.570 installer; and Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12), now supplemented for Proxmox bind and access lists by the source conjunction and implementation qualification above. Exposed, the reasoned expectation is a wildcard address (`*:`, `0.0.0.0:` or `[::]:`) on those ports;
 fixed means a management address only. On a Proxmox VE cluster, where the vendor advises against
-`LISTEN_IP`, 8006 and 3128 keep their wildcard binds; there the fixed state is the access lists and
-firewall below.
+`LISTEN_IP`, 8006 and 3128 keep their wildcard binds; this guide's assessment is that the fixed state
+there requires the management-only access lists and firewall below. The new-socket code tries `::`
+then `0.0.0.0`; dual-stack operation is documentation-backed and must be checked on the host.
 
 REASONED: this file-inspection procedure needs a Webmin host and running miniserv for comparison with sockets; a live Webmin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the parser block through `bash -n` and ShellCheck 0.11.0 without output; under `set -u`, placeholder, omitted assignment and marker-only inputs printed the respective substitution, whole-block and value-count refusals. The extracted Perl program on local exposed and fixed fixtures printed `NO effective bind=: every address`, discovery and `NO allow=`, versus `bind=10.0.0.5`, `no UDP discovery socket` and `allow=10.0.0.0/24`; extra-listener/deny/sudo and repeated-bind fixtures printed the corresponding settings and last bind. These are file results only; on the Webmin host, exposed miniserv listens on every address with discovery UDP open and offers its login to any client; fixed miniserv listens on the management address only with no discovery socket, a management-network client reaches the login, and from a client outside the allow= networks the connection fails or miniserv refuses it, per the guide's cited Webmin 2.670 miniserv (`bind`, `sockets` and the discovery socket) and Webmin 2.670 sudo login, configuration parser (`read_config_file`), allow and deny lists, and basic-authentication failure counting (`passdelay`). On a Webmin host, check the configuration miniserv reads when it starts. The block parses the file
 with a copy of miniserv's own `read_config_file` (a line starting with `#` is a comment, spaces around
@@ -37054,12 +37137,17 @@ REASONED: this Cockpit socket and root-deny inspection needs a Cockpit systemd/P
 bare `ListenStream=9090`, fixed is the drop-in's empty `ListenStream=` followed by an address and port.
 `sudo cat /etc/cockpit/disallowed-users` should list `root`; a missing file lets root log in.
 
-REASONED: this Proxmox bind, ACL, firewall and second-factor inspection needs a Proxmox node, cluster inventory and administrative web-interface access; a live Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the stated grep expression on scratch files: an empty fixture exited 1 without output, and a fixed fixture exited 0 printing `ALLOW_FROM="10.0.0.0/24"` and `DENY_FROM="all"`; a `pve-firewall` stub printed `Status: enabled/running (stub)`. Expected exposed wildcard/default-allow access and disabled firewall versus management-only bind or ACLs, enabled firewall with management-only rules, and an enrolled second factor for every administrator follow per the guide's cited Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12), Proxmox VE firewall (Proxmox VE 9.2, pve-docs 9.2.12) and Proxmox VE user management (Proxmox VE 9.2, pve-docs 9.2.12; root@pam, two-factor, lockout and API tokens). On a Proxmox VE node, reasoned: `grep -E '^(LISTEN_IP|ALLOW_FROM|DENY_FROM|POLICY)=' /etc/default/pveproxy`
-prints nothing on a default install (or reports that the file does not exist), which means the
-wildcard bind and the `allow` policy. Fixed is `LISTEN_IP` set to a management address on a single
-node, or `ALLOW_FROM` with your management networks together with `DENY_FROM="all"` or
-`POLICY="deny"` (one of the two, not both); an `ALLOW_FROM` line alone is not fixed, because under the `allow` policy a client
-that matches neither list is allowed (the access table in the vendor's `pveproxy` documentation).
+REASONED: this Proxmox bind, ACL, firewall and second-factor inspection needs a Proxmox node, cluster inventory and administrative web-interface access; a live Proxmox VE stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. Local marking review ran the stated grep expression on scratch files: an empty fixture exited 1 without output, and a fixed fixture exited 0 printing `ALLOW_FROM="10.0.0.0/24"` and `DENY_FROM="all"`; a `pve-firewall` stub printed `Status: enabled/running (stub)`. Expected exposed wildcard/default-allow access and disabled firewall versus management-only bind or ACLs, enabled firewall with management-only rules, and an enrolled second factor for every administrator are this guide's assessment based on the source conjunction and implementation qualification above and the guide's cited Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12), Proxmox VE firewall (Proxmox VE 9.2, pve-docs 9.2.12) and Proxmox VE user management (Proxmox VE 9.2, pve-docs 9.2.12; root@pam, two-factor, lockout and API tokens). On a Proxmox VE node, reasoned: `grep -E '^(LISTEN_IP|ALLOW_FROM|DENY_FROM|POLICY)=' /etc/default/pveproxy`
+reports that the file does not exist (a diagnostic and a non-zero exit) if it is absent, or
+prints nothing if the file exists but contains none of those lines, consistent with the wildcard bind and `allow`
+policy in the pinned code. This grep is only a shortlist: the reader sources the file with Bash, so
+inspect the complete file with `cat /etc/default/pveproxy` for assignments the pattern misses, shell
+logic and sourced files; no grep output alone does not establish effective settings. Confirm both
+daemons' running listeners with `ss` above. This guide's assessment of fixed is `LISTEN_IP` set to a
+management address on a single node, or `ALLOW_FROM` with your management networks together with
+`DENY_FROM="all"` or `POLICY="deny"`; this guide advises one of the two, not both. An `ALLOW_FROM`
+line alone is not fixed: under `allow`, a client matching neither list is allowed; under `deny`, a
+client matching both lists is denied (the pinned access check agrees with the vendor's access table).
 `pve-firewall status` prints whether the firewall is enabled and running. Exposed is disabled, the
 default; fixed is enabled and running, with rules that allow 8006, 22 and 3128 only from management
 addresses, which you confirm in the datacenter and node firewall rules in the web interface. In the web interface, check
@@ -37140,12 +37228,21 @@ give the server's public address. A "connected" on a port you did not mean to ex
 - Webmin 2.670 two-factor providers: https://github.com/webmin/webmin/blob/2.670/webmin/twofactor-funcs-lib.pl
 - Webmin documentation (configuration, security advisories): https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/docs/Modules/webmin-configuration.md and https://github.com/webmin/webmin.com/blob/8ceae26c5a074053905cbcc6c0053be573633f3a/content/security.md
 - Usermin 2.570 installer: https://github.com/webmin/usermin/blob/2.570/setup.sh
-- Proxmox VE `pveproxy` (bind, `LISTEN_IP`, access lists) (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveproxy.adoc
+- Proxmox VE `pveproxy` documentation (Proxmox VE 9.2, pve-docs 9.2.12), API paragraph lines 26 to 28, access lists lines 38 to 60, listening-address section lines 66 to 114 (checked October 2026): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveproxy.adoc
 - Proxmox VE user management (Proxmox VE 9.2, pve-docs 9.2.12; root@pam, two-factor, lockout and API tokens): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pveum.adoc
 - Proxmox VE firewall (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=pve-firewall.adoc
 - Proxmox VE certificates (Proxmox VE 9.2, pve-docs 9.2.12): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=certificate-management.adoc
 - Proxmox VE node shell (`/bin/login -f root`) (pve-manager 9.2.20): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=PVE/API2/Nodes.pm
-- Proxmox VE HTTP server (three-second delay on unauthorized responses): https://git.proxmox.com/?p=pve-http-server.git;a=blob_plain;hb=5119ff9bec08c69584c0c98bea3edd0098179e5f;f=src/PVE/APIServer/AnyEvent.pm
+- Proxmox VE HTTP server (three-second delay on unauthorized responses; libpve-http-server-perl 6.0.5 at 5119ff9bec08c69584c0c98bea3edd0098179e5f); access check lines 1868 to 1908, default policy line 2111 (checked October 2026): https://git.proxmox.com/?p=pve-http-server.git;a=blob_plain;hb=5119ff9bec08c69584c0c98bea3edd0098179e5f;f=src/PVE/APIServer/AnyEvent.pm
+- pve-manager 9.2.20 version, line 1 (checked October 2026): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=debian/changelog
+- pve-docs 9.2.12 version, line 1 (checked October 2026): https://git.proxmox.com/?p=pve-docs.git;a=blob_plain;hb=9370638116430c4b1ccb9707b5716eaad7c7c9d3;f=debian/changelog
+- libpve-http-server-perl 6.0.5 version, line 1, at 5119ff9bec08c69584c0c98bea3edd0098179e5f (checked October 2026): https://git.proxmox.com/?p=pve-http-server.git;a=blob_plain;hb=5119ff9bec08c69584c0c98bea3edd0098179e5f;f=debian/changelog
+- libpve-common-perl 9.1.21 version, line 1, at 5054082fe492429fc37574985c2ca812af9a3125 (checked October 2026): https://git.proxmox.com/?p=pve-common.git;a=blob_plain;hb=5054082fe492429fc37574985c2ca812af9a3125;f=debian/changelog
+- pve-manager 9.2.20 runtime dependency entries, lines 65 to 67 and 91 (checked October 2026): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=debian/control
+- pve-manager 9.2.20 pveproxy name, configuration, bind and ACLs, lines 41, 66 to 67, 75 to 76 and 98 to 137 (checked October 2026): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=PVE/Service/pveproxy.pm
+- pve-manager 9.2.20 spiceproxy shared configuration, bind and ACLs, lines 31 to 59 (checked October 2026): https://git.proxmox.com/?p=pve-manager.git;a=blob_plain;hb=49318c671b82f31e6b273b79447526161739b97a;f=PVE/Service/spiceproxy.pm
+- libpve-http-server-perl 6.0.5 configuration reader, lines 10 to 97, at 5119ff9bec08c69584c0c98bea3edd0098179e5f (checked October 2026): https://git.proxmox.com/?p=pve-http-server.git;a=blob_plain;hb=5119ff9bec08c69584c0c98bea3edd0098179e5f;f=src/PVE/APIServer/Utils.pm
+- libpve-common-perl 9.1.21 socket creation and reuse, lines 803 to 854, at 5054082fe492429fc37574985c2ca812af9a3125 (checked October 2026): https://git.proxmox.com/?p=pve-common.git;a=blob_plain;hb=5054082fe492429fc37574985c2ca812af9a3125;f=src/PVE/Daemon.pm
 
 ======================================================================
 ==> nomad-consul.md
@@ -39095,6 +39192,7 @@ Open the guide before relying on either, because defaults change between release
 | 5003 | Dify's plugin daemon debugging port, published by the supplied Compose configuration unless you remove or restrict that mapping | not stated | [agent-builders.md](agent-builders.md) |
 | 5349 | coturn TLS listener; DTLS is opt-in since 4.17.0, and this port number does not prove encryption is mandatory | Stock example config: anonymous TURN allocation | [realtime-voice-infra.md](realtime-voice-infra.md) |
 | 5432 | PostgreSQL, and pgvector on the same port (the official images, 14 through 19 checked, initialize with `listen_addresses = '*'`, trust local-socket and loopback connections unless `POSTGRES_INITDB_ARGS` sets their methods (`--auth` or `-A`, or `--auth-local` and `--auth-host`), and apply `POSTGRES_HOST_AUTH_METHOD`, a password method by default, to other addresses); the Supabase self-hosted Supavisor pooler also publishes it; also the Onyx development Compose's PostgreSQL and the Langflow example Compose's PostgreSQL | varies by service; see the guides | [postgresql.md](postgresql.md), [vector-databases.md](vector-databases.md), [cloud-firewalls.md](cloud-firewalls.md), [supabase-self-hosted.md](supabase-self-hosted.md), [connection-poolers.md](connection-poolers.md), [container-hardening.md](container-hardening.md), [ai-infra-services.md](ai-infra-services.md), [agent-builders.md](agent-builders.md) |
+| 5540 | RedisInsight 3.8.0, whose default server configuration listens on `0.0.0.0:5540` via `RI_APP_HOST` and `RI_APP_PORT` | Authentication not established by the cited files | [admin-uis.md](admin-uis.md) |
 | 5553, 5556, 5557, 5559 | Selenium Grid distributed components: Distributor, Session Map, event bus HTTP, and New Session Queue; these listeners are not protected by the Router's basic auth | Unauthenticated listeners; Grid ships with no authentication | [headless-browser-services.md](headless-browser-services.md) |
 | 5555 | Flower, the Celery monitor, or a Selenium Grid Node | Flower: auth disabled unless configured; Selenium Node: Grid ships no auth | [workflow-orchestrators.md](workflow-orchestrators.md), [headless-browser-services.md](headless-browser-services.md) |
 | 5556, 5557, 5558 | Argo CD Dex generated web, gRPC and HTTP telemetry listeners, all bound to `0.0.0.0`; starts only when configured | Web TLS enabled by default; generated gRPC config sets only `addr`, with no TLS or client-auth settings; Dex runtime authentication remains unverified | [gitops-controllers.md](gitops-controllers.md) |
