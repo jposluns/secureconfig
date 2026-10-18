@@ -126,6 +126,44 @@ else
   printf '%s\n' "$gensrc_tests" | sed 's/^/          /'
 fi
 
+echo "== bare double-underscore URLs in tracked root Markdown =="
+if bare_urls=$(python3 tools/check_bare_urls.py 2>&1); then
+  printf '%s\n' "$bare_urls"
+  if grep -q '^  FAIL  ' <<< "$bare_urls"; then
+    bad "check_bare_urls.py printed findings but exited 0"
+  elif ! grep -qE '^  ok    tracked root Markdown has no bare double-underscore URLs \((pinned parser|lexical fallback)\)$' <<< "$bare_urls"; then
+    bad "check_bare_urls.py exited 0 without its expected ok line"
+  fi
+elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$bare_urls"; then
+  bad "check_bare_urls.py crashed; bare URLs are unverified"
+  printf '%s\n' "$bare_urls" | sed 's/^/          /'
+elif grep -q '^  FAIL  ' <<< "$bare_urls"; then
+  printf '%s\n' "$bare_urls"
+  fail=1
+else
+  bad "check_bare_urls.py exited non-zero without reporting a gate result"
+  printf '%s\n' "$bare_urls" | sed 's/^/          /'
+fi
+
+echo "== bare URL gate fixtures =="
+if bare_urls_tests=$(python3 tools/test_bare_urls_gate.py 2>&1); then
+  printf '%s\n' "$bare_urls_tests"
+  if grep -q '^  FAIL  ' <<< "$bare_urls_tests"; then
+    bad "test_bare_urls_gate.py printed findings but exited 0"
+  elif ! grep -qE '^  ok    bare URL gate: [0-9]+ failures, [0-9]+ exemptions, and bare, href and code-span mutation proofs$|^  SKIP  bare URL parser fixtures: ' <<< "$bare_urls_tests"; then
+    bad "test_bare_urls_gate.py exited 0 without its expected ok line"
+  fi
+elif grep -qE '^Traceback \(most recent call last\):|^[A-Za-z_.]+Error: ' <<< "$bare_urls_tests"; then
+  bad "test_bare_urls_gate.py crashed; bare URL fixtures are unverified"
+  printf '%s\n' "$bare_urls_tests" | sed 's/^/          /'
+elif grep -q '^  FAIL  ' <<< "$bare_urls_tests"; then
+  printf '%s\n' "$bare_urls_tests"
+  fail=1
+else
+  bad "test_bare_urls_gate.py exited non-zero without reporting a result"
+  printf '%s\n' "$bare_urls_tests" | sed 's/^/          /'
+fi
+
 echo "== every guide is wired into the site =="
 wired=1
 # Strip HTML comments across the whole file (re.S, not a line-at-a-time sed) so a menu link or
