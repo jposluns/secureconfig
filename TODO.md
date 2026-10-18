@@ -58,8 +58,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.268 | `paas.md`: remaining https-redirect/verify-redirect evidence: establish Render's redirect status, Railway's HEAD redirect behaviour and POST status, and Heroku's redirect policy, configuration/application responsibility and status; cited header descriptions do not establish sanitization. (M, M) | `[gap]` |
 | 1.269 | `paas.md`: verify-app-auth and verify-secrets: source or label the exact bypass and auth procedures and the bundle scan procedure, and their limits. (M, M) | `[gap]` |
 | 1.273 | `nodejs.md`: bind, remaining source gaps: establish Railway's listener address, injected port and TLS termination location, and Heroku Cedar's listener address. (M, M) | `[gap]` |
-| 1.274 | `nodejs.md`: password: cite Argon2id recommendation and bcrypt library APIs. (M, M) | `[gap]` |
-| 1.275 | `nodejs.md`: mfa: source the fronting identity layer beyond the already pinned otplib/qrcode examples. (M, M) | `[gap]` |
 | 1.276 | `python.md`: bind, remaining source gaps: establish Railway's listener address, injected port and TLS termination location, and Heroku Cedar's listener address. (M, M) | `[gap]` |
 | 1.277 | `python.md`: password: cite bcrypt API and no-user-store conjunction. (M, M) | `[gap]` |
 | 1.278 | `python.md`: secrets: cite or label the 32-byte generation choice. (M, M) | `[gap]` |
