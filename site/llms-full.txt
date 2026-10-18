@@ -1243,7 +1243,7 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | ssh-persist: Use autossh for reconnection and a dedicated key on a restricted account for persistent forwarding. | OpenSSH unknown; autossh source 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476 | REASONED |
 | verify-token: Correct token must log login success; changed and empty tokens must fail authentication, not configuration, DNS, TLS or transport. Stop each foreground client. | frp documentation unknown; frps source v0.71.0 | REASONED |
 | verify-wg: wg show needs privilege; inspect handshake and listen-port, then ip link UP because configuration alone does not prove a running interface. | WireGuard unknown; iproute2 manuals v6.12.0; Linux source v6.8 | REASONED |
-| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw status verbose shows ufw-managed rules and defaults but omits rules from ufw's rules files. Check IPV6 in /etc/default/ufw. The pinned backend reports IPv4 filter, nat, mangle and raw tables and IPv6 filter, mangle and raw tables with ufw show raw (the manual lists nat for both). Confirm no rule admits unauthorized external traffic beyond the intended tunnel or proxy path for both IPv4 and IPv6. This guide's reasoning is that ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual unknown; iproute2 manuals v6.12.0; Linux source v6.8; Ubuntu Noble ufw source 4992be7722389108d5f2ebb5ca221b228f0c68b1 | REASONED |
+| verify-firewall: Inspect all UDP listeners and active default-deny/reject IPv4/IPv6 firewall policy; ufw status verbose shows ufw-managed rules and defaults but omits rules from ufw's rules files. Check IPV6 in /etc/default/ufw. The pinned manual describes ufw show raw as displaying filter, nat, mangle and raw tables using iptables and ip6tables; the pinned backend raw branch lists IPv4 filter, nat, mangle and raw tables and IPv6 filter, mangle and raw tables. Confirm nothing admits unauthorized external traffic to the tunneled service beyond the intended tunnel or proxy path, for both IPv4 and IPv6. This guide's reasoning is that ufw's view does not replace native nftables inspection. | WireGuard unknown; nftables unknown; Ubuntu Noble ufw manual unknown; iproute2 manuals v6.12.0; Linux source v6.8; Ubuntu Noble ufw source 4992be7722389108d5f2ebb5ca221b228f0c68b1 | REASONED |
 | verify-route: An allowed ping must traverse WireGuard, not a local route; forbidden-destination loss alone does not identify the firewall cause. | WireGuard unknown; nftables unknown | REASONED |
 | verify-counter: Read the server's full-match drop counter before/after the peer's routed forbidden ping; increases aid attribution only on an otherwise-idle peer. | WireGuard unknown; nftables unknown | REASONED |
 | verify-ssh: On the SSH server, ss must show forwarded 8080 only on loopback with GatewayPorts no. | OpenSSH unknown; iproute2 manuals v6.12.0 | REASONED |
@@ -1337,9 +1337,10 @@ ss -ulnp                  # read every UDP listener to spot any OTHER, unexpecte
 sudo ufw status verbose
 # Check IPV6 in /etc/default/ufw: yes applies IPv6 rules; no accepts IPv6 only on loopback.
 # Confirm nothing admits UNAUTHORIZED external traffic to the tunneled service beyond the intended
-# tunnel/proxy path, for BOTH IPv4 and IPv6. The pinned backend lists IPv4 filter, nat,
-# mangle and raw tables, and IPv6 filter, mangle and raw tables for `ufw show raw`
-# (the manual lists nat for both), beyond the status view:
+# tunnel/proxy path, for BOTH IPv4 and IPv6. The pinned manual describes `ufw show raw`
+# as displaying filter, nat, mangle and raw tables using iptables and ip6tables.
+# The pinned backend raw branch lists IPv4 filter, nat, mangle and raw tables,
+# and IPv6 filter, mangle and raw tables, beyond the status view:
 sudo ufw show raw
 # This guide's reasoning: the iptables/ip6tables report does not replace native nftables inspection.
 # Read the native ruleset, including the forward rule above, separately:
