@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.277 | `python.md`: password: cite bcrypt API and no-user-store conjunction. (M, M) | Done, #673. Cited the pinned argon2-cffi and bcrypt APIs, made local account storage conditional, and retained the framework-capability evidence limit and Django alternative. |
+| 1.278 | `python.md`: secrets: cite or label the 32-byte generation choice. (M, M) | Done, #673. Cited CPython v3.14.8 token input-byte and default semantics and labelled 32 bytes as the guide's example choice, with no universal sizing claim. |
 | 1.284 | `dotnet.md`: mfa: cite fronting-layer MFA enforcement. (M, M) | Done, #671. Cited Cloudflare Access independent MFA, effective-policy precedence and origin protection, preserving provider enforcement and labelling deployment limits. |
 | 1.276 | `python.md`: bind: cite platform bind mappings and their deployment scope, partial. (M, M) | Done, #670. Cited Render, Heroku and Fly listener scopes and TLS conditions plus Railway target ports, preserving advice and leaving Railway and Cedar source gaps in TODO.md under 1.276. |
 | 1.268 | `paas.md`: https-redirect and verify-redirect, partial. (M, M) | Done, #669. Cited platform redirect settings, statuses and header limits, retained the HEAD command and guide acceptance criterion, and kept unresolved evidence in TODO.md under 1.268. |

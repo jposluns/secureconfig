@@ -61,8 +61,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.274 | `nodejs.md`: password: cite Argon2id recommendation and bcrypt library APIs. (M, M) | `[gap]` |
 | 1.275 | `nodejs.md`: mfa: source the fronting identity layer beyond the already pinned otplib/qrcode examples. (M, M) | `[gap]` |
 | 1.276 | `python.md`: bind, remaining source gaps: establish Railway's listener address, injected port and TLS termination location, and Heroku Cedar's listener address. (M, M) | `[gap]` |
-| 1.277 | `python.md`: password: cite bcrypt API and no-user-store conjunction. (M, M) | `[gap]` |
-| 1.278 | `python.md`: secrets: cite or label the 32-byte generation choice. (M, M) | `[gap]` |
 | 1.279 | `go.md`: tokens: pin Token environment handling; preserve the delegation of Token generation to p4.66. (M, M) | `[gap]` |
 | 1.280 | `go.md`: mfa: cite the fronting identity layer used for MFA enforcement. (M, M) | `[gap]` |
 | 1.281 | `java.md`: mfa: cite provider/fronting enforcement for the stated MFA setup. (M, M) | `[gap]` |

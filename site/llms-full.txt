@@ -6594,7 +6594,7 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -6620,6 +6620,9 @@ Components (recorded basis):
 - heroku: Heroku documentation, unknown
 - fly-pinned: Fly.io pinned documentation, 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9
 - railway: Railway documentation, 72354493198302677fb6be6c692dd75c64cae2c6
+- argon-api: argon2-cffi API example, 25.1.0
+- bcrypt-api: Python bcrypt API example, 2b4ba9ac84df972e8e81311d09559af8dc82ef33
+- cpython-secrets: CPython secrets documentation and source, v3.14.8
 
 Claims (full source mapping in the front matter):
 
@@ -6632,8 +6635,8 @@ Claims (full source mapping in the front matter):
 - django-cookies (REASONED; django): Set SESSION_COOKIE_SECURE and CSRF_COOKIE_SECURE true.
 - django-hsts (REASONED; django): Begin HSTS at 3600 seconds and include-subdomains false; raise duration and scope only after valid HTTPS is confirmed.
 - deploy-check (REASONED; django): Run manage.py check --deploy and fix its findings.
-- password (REASONED; django, argon): Keep Django built-in hashing; Flask/FastAPI require an application user store and argon2-cffi or bcrypt. PasswordHasher.verify raises on mismatch; bcrypt and user-store assertions lack listed sources.
-- secrets (REASONED; django, stdlib-docs): Generate secrets.token_urlsafe(32) and load secrets from the environment; the choice of 32 bytes is not covered by listed Sources.
+- password (REASONED; django, argon, argon-api, bcrypt-api): Keep Django's built-in hashing; do not replace it with custom code (guide advice). For Flask/FastAPI apps implementing local password accounts, this guide advises account storage and argon2-cffi or bcrypt under authentication.md's constraints; argon2-cffi 25.1.0's PasswordHasher.verify raises VerifyMismatchError on mismatch, and these APIs do not establish framework user-store capabilities.
+- secrets (REASONED; django, stdlib-docs, cpython-secrets): Generate secrets.token_urlsafe(32) and load secrets from the environment (guide advice); 32 counts random input bytes and is this guide's example choice, not a universal size. CPython v3.14.8 uses DEFAULT_ENTROPY (32 bytes) when omitted or None, but that default may change, including in maintenance releases.
 - credential-extraction (REASONED; fastapi): FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry.
 - oidc (REASONED; fastapi, oidc-stub): OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately.
 - login-limit (REASONED; fastapi, slowapi): Rate-limiting login routes and a proxy-level limit are this guide's advice. slowapi v0.1.10 documents limits for Starlette/FastAPI HTTP endpoints; endpoints using its limit decorator must take an explicit request argument, and WebSocket endpoints are not supported.
@@ -6703,8 +6706,8 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = False   # True ONLY after every subdomain also 
 
 Follow [authentication.md](authentication.md). Framework specifics:
 
-- Django's built-in auth already hashes passwords correctly; do not replace it with custom code.
-- Flask and FastAPI have no user store; hash passwords with `argon2-cffi` or `bcrypt`:
+- Keep Django's built-in password hashing; do not replace it with custom code (this guide's advice).
+- If your Flask or FastAPI application implements its own password accounts, provide its account storage and hash passwords with `argon2-cffi` or `bcrypt` (this guide's advice; follow the algorithm and legacy-bcrypt constraints in [authentication.md](authentication.md)):
 
 ```python
 from argon2 import PasswordHasher
@@ -6713,12 +6716,16 @@ hash_ = ph.hash(password)
 ph.verify(hash_, password)   # raises on mismatch
 ```
 
-- Generate tokens and secrets with the standard library, and load them from the environment:
+The [argon2-cffi 25.1.0 example](https://github.com/hynek/argon2-cffi/blob/25.1.0/README.md#L11-L28) documents these `PasswordHasher`, `hash` and `verify` calls and a `VerifyMismatchError` on mismatch. The [pinned bcrypt example](https://github.com/pyca/bcrypt/blob/2b4ba9ac84df972e8e81311d09559af8dc82ef33/README.rst#L62-L76) documents `hashpw(password, gensalt())` and `checkpw(password, hashed)`; these API examples do not establish framework user-store capabilities.
+
+- Generate tokens and secrets with the standard library, and load them from the environment (this guide's advice):
 
 ```python
 import secrets
 token = secrets.token_urlsafe(32)
 ```
+
+In [CPython v3.14.8](https://github.com/python/cpython/blob/v3.14.8/Doc/library/secrets.rst#L91-L103), `token_urlsafe(nbytes=None)` returns URL-safe Base64 text from `nbytes` random bytes; the argument counts input bytes, not output characters. The explicit `32` above is this guide's example choice, not a size suitable for every secret. If the argument is omitted or `None`, it uses `DEFAULT_ENTROPY`, [32 bytes at this pin](https://github.com/python/cpython/blob/v3.14.8/Lib/secrets.py#L31-L45); the [documented default can change](https://github.com/python/cpython/blob/v3.14.8/Doc/library/secrets.rst#L125-L130), including in maintenance releases.
 
 - FastAPI's `fastapi.security` classes (`HTTPBearer`, `APIKeyHeader`, `OAuth2AuthorizationCodeBearer`, and so on) extract the credential from the request and declare the OpenAPI security scheme; what they check varies by helper (an API-key helper checks only that a value is present; the HTTP and OAuth2 bearer helpers may also check the scheme), but none authenticate the credential (no signature, issuer, audience, or expiry check), and `OpenIdConnect` is documented as a stub that does not implement the scheme or use the discovery URL. Use them to extract the token, then validate it (signature, issuer, audience, expiry) with an OIDC library such as Authlib, and authorize per [oidc-integration.md](oidc-integration.md).
 - Rate-limit login routes (this guide's advice; for example with a proxy-level limit or a library such as slowapi for Starlette/FastAPI ASGI apps' HTTP endpoints; endpoints using slowapi's `limit` decorator must take an explicit `request` argument, and slowapi does not support WebSocket endpoints).
@@ -6765,11 +6772,16 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 - Uvicorn settings reference: https://github.com/Kludex/uvicorn/blob/5ac6265a01ff6dcadb0e4250152c3deaf8a168a9/docs/settings.md
 - Django deployment checklist: https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 - argon2-cffi: https://argon2-cffi.readthedocs.io/
+- argon2-cffi PasswordHasher, hash and verify mismatch example (25.1.0, checked October 2026): https://github.com/hynek/argon2-cffi/blob/25.1.0/README.md#L11-L28
+- Python bcrypt hashpw, gensalt and checkpw example (commit 2b4ba9ac84df972e8e81311d09559af8dc82ef33, checked October 2026): https://github.com/pyca/bcrypt/blob/2b4ba9ac84df972e8e81311d09559af8dc82ef33/README.rst#L62-L76
 - Werkzeug serving (`ssl_context="adhoc"` requires cryptography): https://werkzeug.palletsprojects.com/en/stable/serving/
 - FastAPI security reference: https://fastapi.tiangolo.com/reference/security/ ; `OpenIdConnect` source (stub warning): https://github.com/fastapi/fastapi/blob/31bbb380748ccead62fc0f42dbf4273f11dadccf/fastapi/security/open_id_connect_url.py
 - `http.server` binds with `bind=None` and `AI_PASSIVE`, the wildcard address (pinned tag v3.14.4): https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1322-L1334
 - `python -m http.server`'s `-b/--bind` has no default value, and its help says "default: all interfaces" (pinned tag v3.14.4): https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1371-L1373
 - Python 3.14 secrets.token_urlsafe (series documentation, checked October 2026): https://docs.python.org/3.14/library/secrets.html
+- CPython token_urlsafe input bytes and Base64 output (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Doc/library/secrets.rst#L91-L103
+- CPython secrets default entropy and token_bytes fallback (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Lib/secrets.py#L31-L45
+- CPython secrets default may change in maintenance releases (v3.14.8, checked October 2026): https://github.com/python/cpython/blob/v3.14.8/Doc/library/secrets.rst#L125-L130
 - Python 3.14 os.getenv environment loading (series documentation, checked October 2026): https://docs.python.org/3.14/library/os.html#os.getenv
 - PyOTP one-time passwords and MFA (v2.9.0, checked October 2026): https://github.com/pyauth/pyotp/blob/v2.9.0/README.rst#L4-L5
 - qrcode enrolment image generation (v8.2, checked October 2026): https://github.com/lincolnloop/python-qrcode/blob/v8.2/README.rst#L41-L44
