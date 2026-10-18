@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "341933ce64b66e3a9c45957f10e9be9ed68f6e5c897a47cf599b943ff7b40671",
+  "body_sha256": "9211403206c09573b31406198b3061452859c109b74dd1d58162b1c06f02bc78",
   "components": {
     "docker-build": {
       "name": "Docker build and image history documentation",
@@ -23,6 +23,31 @@ version_basis: {
         "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
       }
     },
+    "engine-pinned": {
+      "name": "Docker Engine networking documentation",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "sd22373a822c3": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/firewall-iptables.md#L8-L15",
+        "s024cfadb4bb8": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/firewall-iptables.md#L17-L42",
+        "s1c82ff316a7e": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L60-L62",
+        "sb3dacfbaf7e1": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L33-L38",
+        "sc244607b20e4": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L11-L15"
+      }
+    },
+    "moby-unit": {
+      "name": "Moby Docker service unit",
+      "basis": "v28.3.3",
+      "sources": {
+        "s6aa0d2fb34cf": "https://github.com/moby/moby/blob/v28.3.3/contrib/init/systemd/docker.service#L1-L9"
+      }
+    },
+    "systemd-unit": {
+      "name": "systemd unit ordering",
+      "basis": "v262",
+      "sources": {
+        "s71dce3a476cd": "https://github.com/systemd/systemd/blob/v262/man/systemd.unit.xml#L826-L838"
+      }
+    },
     "boundary": {
       "name": "Docker Engine minimum boundary",
       "basis": "28.0",
@@ -35,6 +60,25 @@ version_basis: {
       "basis": "unknown",
       "sources": {
         "sae565a19136c": "https://docs.docker.com/compose/how-tos/networking/"
+      }
+    },
+    "git-ignore": {
+      "name": "Git ignore rules",
+      "basis": "v2.49.0",
+      "sources": {
+        "s5f377f0fdbd8": "https://github.com/git/git/blob/v2.49.0/Documentation/gitignore.adoc#L15-L18"
+      }
+    },
+    "docker-workload": {
+      "name": "Docker workload documentation",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "s2fa3b3cd70e6": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/_vendor/github.com/moby/buildkit/frontend/dockerfile/docs/reference.md#L2448-L2463",
+        "s8000f273883e": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/reference/compose-file/services.md#L224-L233",
+        "sb94d21792cd4": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/reference/compose-file/services.md#L1892-L1894",
+        "s28ce092b2589": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/reference/compose-file/services.md#L2008-L2021",
+        "s738280652c95": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L2495-L2502",
+        "secebea1a69ab": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/_index.md#L84-L112"
       }
     },
     "reload": {
@@ -88,14 +132,14 @@ version_basis: {
     "upstream": {"text": "Use an upstream security group or network ACL for routable publications and boot-time protection; provider configuration is not sourced here.", "components": ["engine"], "sources": ["engine:s351180c6678f"], "status": "REASONED"},
     "docker-user": {"text": "On the iptables backend, DOCKER-USER precedes Docker accepts; the nftables backend has no such chain. Match NEW traffic from outside the allowed subnet.", "components": ["engine"], "sources": ["engine:s351180c6678f", "engine:s2fecb6db5480"], "status": "REASONED"},
     "dnat": {"text": "DOCKER-USER sees post-DNAT container destinations; conntrack original destination port and ORIGINAL direction scope a published service.", "components": ["engine"], "sources": ["engine:s2fecb6db5480"], "status": "REASONED"},
-    "ipv6": {"text": "Native IPv6 forwarding needs ip6tables; the IPv6-to-IPv4 userland-proxy path terminates on host INPUT and bypasses DOCKER-USER.", "components": ["engine"], "sources": ["engine:s2fecb6db5480", "engine:s1e53417c513d"], "status": "REASONED"},
-    "proxy-path": {"text": "Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources.", "components": ["engine"], "sources": ["engine:s1e53417c513d", "engine:s2fecb6db5480"], "status": "REASONED"},
-    "persistence": {"text": "Guide recommends persisting only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves; startup-unit details lack a direct source.", "components": ["engine"], "sources": ["engine:s351180c6678f", "engine:s2fecb6db5480"], "status": "REASONED"},
+    "ipv6": {"text": "As this guide's reasoning, native IPv6 forwarding needs ip6tables; Docker documents IPv6-to-IPv4 userland-proxy mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default) and places DOCKER-USER in FORWARD. As this guide's reasoning, the proxy path terminates on host INPUT and bypasses DOCKER-USER.", "components": ["engine", "engine-pinned"], "sources": ["engine:s2fecb6db5480", "engine:s1e53417c513d", "engine-pinned:sd22373a822c3", "engine-pinned:s024cfadb4bb8", "engine-pinned:s1c82ff316a7e"], "status": "REASONED"},
+    "proxy-path": {"text": "Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. Docker documents the explicit-address option and conditional userland-proxy mapping; the INPUT restriction and probes are this guide's reasoning and advice.", "components": ["engine", "engine-pinned"], "sources": ["engine:s1e53417c513d", "engine:s2fecb6db5480", "engine-pinned:sb3dacfbaf7e1", "engine-pinned:s1c82ff316a7e", "engine-pinned:s024cfadb4bb8"], "status": "REASONED"},
+    "persistence": {"text": "As this guide's advice, persist only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves. Moby identifies docker.service and systemd documents After= ordering; as this guide's assessment, rule non-persistence, the boot-time gap, what iptables-persistent captures and its potential to break container networking have no direct source here.", "components": ["engine", "engine-pinned", "moby-unit", "systemd-unit"], "sources": ["engine:s351180c6678f", "engine:s2fecb6db5480", "engine-pinned:sc244607b20e4", "engine-pinned:s024cfadb4bb8", "moby-unit:s6aa0d2fb34cf", "systemd-unit:s71dce3a476cd"], "status": "REASONED"},
     "tls": {"text": "Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates.", "components": ["compose", "caddy-image", "caddy"], "sources": ["compose:sae565a19136c", "caddy-image:sbbb7746f7545", "caddy-image:sb126b380b9cf", "caddy-image:seea3a2adc92a", "caddy:s5520ee906a7f", "caddy:sfa5c7dc047dc"], "status": "REASONED"},
     "alternate-entry": {"text": "Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "auth": {"text": "Proxy authentication and human MFA supplement application login; no authentication-provider source is listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "secrets": {"text": "Use runtime environment files or Compose secrets, exclude .env from Git, and never put secrets in Dockerfile ENV/ARG; use temporary build secret mounts. Docker build and history behaviour is sourced; as this guide's assessment, the cited history reference does not establish that every argument value is shown; as this guide's assessment, never bake secrets into images and do not copy or print build-time secrets into the image. No direct source for the runtime delivery methods or the .env exclusion from Git is listed.", "components": ["compose", "docker-build"], "sources": ["compose:sae565a19136c", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s6283b172a5c6"], "status": "REASONED"},
-    "workload": {"text": "Use a non-root USER and the linked capability, no-new-privileges, read-only-root and Docker-socket guidance; no workload-control source is listed here.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "workload": {"text": "Keep .env in .gitignore, which ignores matching untracked files but not tracked files. Use a non-root Dockerfile USER; as this guide's assessment, a compromised app then is not root in the container. Drop capabilities, use no-new-privileges and a read-only root filesystem, and never mount the Docker socket. Docker sources establish the option names, that only trusted users should control the daemon, and that Unix permissions can limit access to its control socket; the linked guide's hardening consequences, including the mounted-socket path, remain this guide's assessment.", "components": ["compose", "git-ignore", "docker-workload"], "sources": ["compose:sae565a19136c", "git-ignore:s5f377f0fdbd8", "docker-workload:s2fa3b3cd70e6", "docker-workload:s8000f273883e", "docker-workload:sb94d21792cd4", "docker-workload:s28ce092b2589", "docker-workload:s738280652c95", "docker-workload:secebea1a69ab"], "status": "REASONED"},
     "database": {"text": "Database TLS and authentication remain necessary for connections from outside the Compose network; database vendor sources are in linked guides.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
     "verify-publish": {"text": "Compose ps is project-scoped; inventory every host container and TCP/UDP socket, including IPv6. Socket visibility alone does not prove reachability.", "components": ["compose", "engine"], "sources": ["compose:sae565a19136c", "engine:s1e53417c513d"], "status": "REASONED", "verify": [1]},
     "verify-redirect": {"text": "HTTP should redirect to HTTPS; the guide records an expected result, with no direct proxy citation or run.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED", "verify": [1]},
@@ -114,7 +158,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -128,14 +172,14 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 | upstream: Use an upstream security group or network ACL for routable publications and boot-time protection; provider configuration is not sourced here. | Docker Engine networking unknown | REASONED |
 | docker-user: On the iptables backend, DOCKER-USER precedes Docker accepts; the nftables backend has no such chain. Match NEW traffic from outside the allowed subnet. | Docker Engine networking unknown | REASONED |
 | dnat: DOCKER-USER sees post-DNAT container destinations; conntrack original destination port and ORIGINAL direction scope a published service. | Docker Engine networking unknown | REASONED |
-| ipv6: Native IPv6 forwarding needs ip6tables; the IPv6-to-IPv4 userland-proxy path terminates on host INPUT and bypasses DOCKER-USER. | Docker Engine networking unknown | REASONED |
-| proxy-path: Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. | Docker Engine networking unknown | REASONED |
-| persistence: Guide recommends persisting only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves; startup-unit details lack a direct source. | Docker Engine networking unknown | REASONED |
+| ipv6: As this guide's reasoning, native IPv6 forwarding needs ip6tables; Docker documents IPv6-to-IPv4 userland-proxy mapping when no host IP is given, the bridge is IPv4-only and &#96;--userland-proxy=true&#96; (the default) and places DOCKER-USER in FORWARD. As this guide's reasoning, the proxy path terminates on host INPUT and bypasses DOCKER-USER. | Docker Engine networking unknown; Docker Engine networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
+| proxy-path: Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. Docker documents the explicit-address option and conditional userland-proxy mapping; the INPUT restriction and probes are this guide's reasoning and advice. | Docker Engine networking unknown; Docker Engine networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
+| persistence: As this guide's advice, persist only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves. Moby identifies docker.service and systemd documents After= ordering; as this guide's assessment, rule non-persistence, the boot-time gap, what iptables-persistent captures and its potential to break container networking have no direct source here. | Docker Engine networking unknown; Docker Engine networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f; Moby Docker service unit v28.3.3; systemd unit ordering v262 | REASONED |
 | tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates. | Compose networking unknown; Caddy image fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Caddy v2.11.4 | REASONED |
 | alternate-entry: Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed. | Compose networking unknown | REASONED |
 | auth: Proxy authentication and human MFA supplement application login; no authentication-provider source is listed. | Compose networking unknown | REASONED |
 | secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and never put secrets in Dockerfile ENV/ARG; use temporary build secret mounts. Docker build and history behaviour is sourced; as this guide's assessment, the cited history reference does not establish that every argument value is shown; as this guide's assessment, never bake secrets into images and do not copy or print build-time secrets into the image. No direct source for the runtime delivery methods or the .env exclusion from Git is listed. | Compose networking unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
-| workload: Use a non-root USER and the linked capability, no-new-privileges, read-only-root and Docker-socket guidance; no workload-control source is listed here. | Compose networking unknown | REASONED |
+| workload: Keep .env in .gitignore, which ignores matching untracked files but not tracked files. Use a non-root Dockerfile USER; as this guide's assessment, a compromised app then is not root in the container. Drop capabilities, use no-new-privileges and a read-only root filesystem, and never mount the Docker socket. Docker sources establish the option names, that only trusted users should control the daemon, and that Unix permissions can limit access to its control socket; the linked guide's hardening consequences, including the mounted-socket path, remain this guide's assessment. | Compose networking unknown; Git ignore rules v2.49.0; Docker workload documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | database: Database TLS and authentication remain necessary for connections from outside the Compose network; database vendor sources are in linked guides. | Compose networking unknown | REASONED |
 | verify-publish: Compose ps is project-scoped; inventory every host container and TCP/UDP socket, including IPv6. Socket visibility alone does not prove reachability. | Compose networking unknown; Docker Engine networking unknown | REASONED |
 | verify-redirect: HTTP should redirect to HTTPS; the guide records an expected result, with no direct proxy citation or run. | Compose networking unknown | REASONED |
@@ -183,7 +227,7 @@ Where a port must be published on a routable interface, because other hosts need
 iptables -I DOCKER-USER -i ext_if -m conntrack --ctstate NEW ! -s 192.0.2.0/24 -j DROP
 ```
 
-This runs after destination NAT, so an ordinary destination match sees a container's internal IP and port, not the published host IP or port; it also covers every published port arriving on that interface, so scope it to one service with conntrack's `--ctorigdstport` and `--ctdir ORIGINAL` if you need to. `iptables` covers IPv4 only. Cover native IPv6 forwarding with an equivalent `ip6tables` `DOCKER-USER` rule, but note a second path: publishing without a host IP on an IPv4-only bridge also makes the port answer on the host's IPv6 addresses through Docker's userland proxy (it maps IPv6 to the container's IPv4). That connection terminates on a host process, so it traverses the host `INPUT` chain, not `FORWARD`, and a `DOCKER-USER` rule (which lives in `FORWARD`) never sees it. Close that path by publishing to a specific address (`-p 127.0.0.1:3000:3000` or a chosen IPv4), disabling the userland proxy, or restricting the host's IPv6 `INPUT`. Probe IPv4 and IPv6 separately, each from an allowed and a disallowed source. Confirm with `sudo iptables -nvL DOCKER-USER`, watching its counters, and by probing the port from a host outside the allowed subnet, expecting a timeout, and one inside it, expecting a connection. The rule does not survive a reboot and is not in place while the host boots; persist just the DOCKER-USER rules with a startup unit ordered after the Docker service, not a blanket `iptables-persistent` save (which also captures Docker's own dynamic chains and can break container networking on the next boot), and where the boot-time window matters, rely on the upstream control.
+This runs after destination NAT, so an ordinary destination match sees a container's internal IP and port, not the published host IP or port; it also covers every published port arriving on that interface, so scope it to one service with conntrack's `--ctorigdstport` and `--ctdir ORIGINAL` if you need to. As this guide's reasoning, `iptables` covers IPv4 only. Cover native IPv6 forwarding with an equivalent `ip6tables` `DOCKER-USER` rule, but note a second path: publishing without a host IP on an IPv4-only bridge with `--userland-proxy=true` (the default) also makes the port answer on the host's IPv6 addresses through Docker's userland proxy (it maps IPv6 to the container's IPv4). As this guide's reasoning, that connection terminates on a host process, so it traverses the host `INPUT` chain, not `FORWARD`, and a `DOCKER-USER` rule (which lives in `FORWARD`) never sees it. Close that path by publishing to a specific address (`-p 127.0.0.1:3000:3000` or a chosen IPv4), disabling the userland proxy, or restricting the host's IPv6 `INPUT`. Probe IPv4 and IPv6 separately, each from an allowed and a disallowed source. Confirm with `sudo iptables -nvL DOCKER-USER`, watching its counters, and by probing the port from a host outside the allowed subnet, expecting a timeout, and one inside it, expecting a connection. As this guide's assessment, the rule does not survive a reboot and is not in place while the host boots; persist just the DOCKER-USER rules with a startup unit ordered after the Docker service, not a blanket `iptables-persistent` save (which, as this guide's assessment, also captures Docker's own dynamic chains and can break container networking on the next boot), and where the boot-time window matters, rely on the upstream control.
 
 ## 2. Terminate TLS in one proxy container
 
@@ -223,7 +267,7 @@ Caddy obtains and renews the certificate automatically ([free-certificates.md](f
 
 - The proxy is the natural place for a first authentication gate (basic auth per the proxy guides, or Cloudflare Access); the application still needs its own login for anything multi-user ([authentication.md](authentication.md)). The proxy is also where MFA attaches for human-facing services ([mfa.md](mfa.md)).
 - Pass secrets at runtime through environment files or Docker/Compose secrets. Never bake secrets into the image. Never put secrets in Dockerfile `ENV` or `ARG`: Docker documents that both are exposed in the final image; `ENV` also persists in containers from the image, and build arguments may persist in image metadata, provenance attestations and image history. As this guide's assessment, baking a key into an image ships it to every registry the image touches. `docker image history` shows the image's history, including creation commands; as this guide's assessment, the cited reference does not establish that every argument value is shown. For build-time secrets, use a temporary secret mount for the build instruction and do not copy or print the secret into the image.
-- Keep `.env` in `.gitignore`, and run containers as a non-root user (`USER` in the Dockerfile) so a compromised app is not root in the container. Non-root is the start, not the whole of workload hardening: dropping capabilities, `--security-opt no-new-privileges`, a read-only root filesystem, and never mounting the Docker socket are in [container-hardening.md](container-hardening.md).
+- Keep `.env` in `.gitignore` (Git ignores matching untracked files, while already tracked files are unaffected), and run containers as a non-root user (`USER` in the Dockerfile); as this guide's assessment, this means a compromised app is not root in the container. As this guide's advice, non-root is the start, not the whole of workload hardening: dropping capabilities (`cap_drop`), `--security-opt no-new-privileges` (or Compose `security_opt`), a read-only root filesystem (Compose `read_only`), and never mounting the Docker socket are in [container-hardening.md](container-hardening.md). Docker documents these option names, that only trusted users should control the daemon, and that Unix permissions can limit access to its control socket; the linked guide's hardening consequences, including the mounted-socket path, remain this guide's assessment.
 - Databases in containers still need their own TLS and authentication when anything outside the Compose network connects: see [postgresql.md](postgresql.md), [mysql.md](mysql.md), [mongodb.md](mongodb.md), and [redis.md](redis.md).
 
 ## 4. Verify
@@ -246,6 +290,20 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 - Docker build variables (`ENV` persists in containers; build arguments may persist in metadata, provenance and history), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/variables.md#L17-L52
 - Docker build secrets (temporary mounts for build instructions), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22
 - Docker image history command (image history and creation-command output), at 4e9a5751518ed8223a8dcde53693badddd72604f: https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118
+- Git v2.49.0 ignore rules for untracked and tracked files (checked October 2026): https://github.com/git/git/blob/v2.49.0/Documentation/gitignore.adoc#L15-L18
+- Docker Dockerfile `USER` instruction, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/_vendor/github.com/moby/buildkit/frontend/dockerfile/docs/reference.md#L2448-L2463
+- Docker Compose `cap_drop` option, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/reference/compose-file/services.md#L224-L233
+- Docker Compose `read_only` option, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/reference/compose-file/services.md#L1892-L1894
+- Docker Compose `security_opt` and `no-new-privileges` spellings, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/reference/compose-file/services.md#L2008-L2021
+- Docker run `--security-opt no-new-privileges`, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L2495-L2502
+- Docker daemon control-socket access and host filesystem control, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/_index.md#L84-L112
+- Docker iptables and ip6tables daemon options, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/firewall-iptables.md#L8-L15
+- Docker iptables DOCKER-USER and FORWARD chains, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/firewall-iptables.md#L17-L42
+- Docker IPv6-to-IPv4 userland-proxy mapping, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L60-L62
+- Docker port publishing with an explicit host address, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L33-L38
+- Docker firewall rules and warning against modifying Docker-created rules, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L11-L15
+- Moby Docker service unit, at v28.3.3 (checked October 2026): https://github.com/moby/moby/blob/v28.3.3/contrib/init/systemd/docker.service#L1-L9
+- systemd After= unit ordering, at v262 (checked October 2026): https://github.com/systemd/systemd/blob/v262/man/systemd.unit.xml#L826-L838
 - Docker packet filtering and firewalls: https://docs.docker.com/engine/network/packet-filtering-firewalls/
 - Docker with iptables, for the `DOCKER-USER` chain (processed before Docker's own rules; matches container addresses after DNAT): https://docs.docker.com/engine/network/firewall-iptables/
 - Docker Engine 28.0 release notes, for the published-port and loopback-mapping hardening: https://docs.docker.com/engine/release-notes/28/
