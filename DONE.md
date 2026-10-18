@@ -10,6 +10,9 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.222 | `egress-metadata.md`: cloud-egress: source or narrow the universal/most-providers outbound-default claim and AWS security-group union, NACL and default-egress conjunction. (M, M) | Done, #639. Cited provider outbound defaults and AWS group and ACL behaviour, with Azure private-subnet qualification. |
+| 1.223 | `egress-metadata.md`: host-owner: cite owner-match and nftables paths for the host egress controls. (M, M) | Done, #639. Pinned owner-match and nftables semantics for the host restriction. |
+| 1.224 | `egress-metadata.md`: verify-allow: cite unauthenticated STS GET behaviour for the stated allow test. (M, M) | Done, #639. Cited STS endpoint and authentication-error documentation while marking the bare-GET response as reasoned. |
 | 1.220 | `cloud-firewalls.md`: gcp-policies: cite hierarchical and network firewall policy evaluation order. (M, M) | Done, #637. Cited policy resources, CLI enumeration and describe syntax, and the evaluation-order page for policy and VPC order, the enforcement-order setting and its default. |
 | 1.219 | `cloud-firewalls.md`: docker: cite Docker/UFW bypass behaviour for host-versus-cloud firewall advice. (M, M) | Done, #637. Pinned Docker's published-port UFW passage and labelled the two-layer review as guide advice. |
 | 1.213 | `host.md`: include-order: pin OpenSSH Include/drop-in, Ubuntu 20.04 and cloud-init history relevant to SSH config ordering. (M, M) | Done, #636. Pinned SSH include ordering, Ubuntu and RHEL packaging, and conditional cloud-init behaviour while retaining the current-default gap. |

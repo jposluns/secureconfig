@@ -57,9 +57,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.217 | `host.md`: verify-listeners: cite `ss`, `nc`, SSH and BusyBox behaviour for the inventory and reachability tests. (M, M) | `[gap]` |
 | 1.218 | `cloud-firewalls.md`: ssm, iap and bastion: cite Session Manager, IAP, Bastion and tailnet broker architectures. (M, M) | `[gap]` |
 | 1.221 | `cloud-firewalls.md`: azure-admin: cite Azure security-admin rule behaviour. (M, M) | `[gap]` |
-| 1.222 | `egress-metadata.md`: cloud-egress: source or narrow the universal/most-providers outbound-default claim and AWS security-group union, NACL and default-egress conjunction. (M, M) | `[gap]` |
-| 1.223 | `egress-metadata.md`: host-owner: cite owner-match and nftables paths for the host egress controls. (M, M) | `[gap]` |
-| 1.224 | `egress-metadata.md`: verify-allow: cite unauthenticated STS GET behaviour for the stated allow test. (M, M) | `[gap]` |
 | 1.225 | `cloudflare.md`: prerequisites: pin the free-tier up-to-50-users limit or keep the current-limit qualification explicit. (M, M) | `[gap]` |
 | 1.226 | `cloudflare.md`: quick: cite Cloudflare Quick Tunnel documentation for the unauthenticated short-lived-test claim. (M, M) | `[gap]` |
 | 1.227 | `tunnels.md`: pin `ufw status verbose` and `ufw show raw` behaviour, the incomplete status view and IPv6; the rolling citation landed but its planned pin did not. (M, M) | `[gap]` |
