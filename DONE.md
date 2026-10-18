@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.265 | `mlflow.md`: mfa and proxy-token: cite oauth2-proxy/Cloudflare fronting MFA and Cloudflare service-token header syntax. (M, M) | Done, #661. Cited fronting MFA requirements and service-token headers, scoped MLflow credential precedence to v3.16.1 code, and labelled integration advice and evidence limits. |
 | 1.255 | `deployment-lifecycle.md`: initialize-secrets, registration and setup-route: cite application bootstrap and first-owner/setup-route behaviour or narrow the universal contract. (M, M) | Done, #658. Pinned Open WebUI bootstrap and signup behaviour, scoped the first-admin warning, and labelled initialization advice and the restart test expectation with residual gaps. |
 | 1.256 | `deployment-lifecycle.md`: fronting-order and clone-secrets: cite deployment-order and clone credential-lifecycle behaviour. (M, M) | Done, #658. Corrected ACME fronting order, pinned Cloudflare Access context and labelled clone-data and credential-rotation advice while retaining the inheritance source gap. |
 | 1.261 | `gpu-clouds.md`: verify-jupyter: cite Jupyter `/api/contents` and the 403/200 expectation with and without a token. (M, M) | Done, #657. Pinned Jupyter Server v2.18.0 contents routing, token authentication, anonymous 403 handling and the documented HTTP 200 success response. |
