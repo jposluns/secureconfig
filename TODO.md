@@ -61,8 +61,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.244 | `self-hosted-idp.md`: authentik-mfa and outpost-boundaries: cite authentik factor/flow binding and outpost listeners. (M, M) | `[gap]` |
 | 1.245 | `self-hosted-idp.md`: verify-authentik-routes and idp-maintenance: cite replacement-route and maintenance behaviour. (M, M) | `[gap]` |
 | 1.246 | `php.md`: plain-auth: pin plain-PHP throttling and MFA mechanisms or label the recommendation as guide advice. (M, M) | `[gap]` |
-| 1.247 | `frontend-frameworks.md`: svelte-handle: establish layout coverage, every-request hook and calling-page metadata qualifications from SvelteKit source. (M, M) | `[gap]` |
-| 1.248 | `frontend-frameworks.md`: verify-host: source non-Vite Host allowlists and platform behaviour not established by the pinned SvelteKit/Nuxt paths. (M, M) | `[gap]` |
 | 1.249 | `web-exposure.md`: apache-listing: cite Debian/Ubuntu Apache defaults and index-list behaviour. (M, M) | `[gap]` |
 | 1.250 | `web-exposure.md`: source-maps: cite the source-map exposure claim and its scope. (M, M) | `[gap]` |
 | 1.251 | `admin-uis.md`: private: source RedisInsight private/NAT-without-host-listener behaviour. (M, M) | `[gap]` |
