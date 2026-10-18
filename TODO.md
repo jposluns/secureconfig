@@ -52,9 +52,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
-| 1.214 | `host.md`: brokered-ssh: cite SSM, IAP, Bastion and tailnet broker behaviour for the stated alternatives. (M, M) | `[gap]` |
-| 1.218 | `cloud-firewalls.md`: ssm, iap and bastion: cite Session Manager, IAP, Bastion and tailnet broker architectures. (M, M) | `[gap]` |
-| 1.221 | `cloud-firewalls.md`: azure-admin: cite Azure security-admin rule behaviour. (M, M) | `[gap]` |
 | 1.230 | `authentication.md`: offboarding: source membership, proxy and token revocation delays and time-to-revoke checks. (M, M) | `[gap]` |
 | 1.231 | `authentication.md`: verify-origin-isolation: source the proxy isolation expectation beyond the current Cloudflare citations, retaining the deployed-origin result as a test expectation. (M, M) | `[gap]` |
 | 1.232 | `mfa.md`: push-matching, webauthn-recovery and verify-offboarding: source verified push, the administrator second-hardware-key preference and operator alert, and app-level authorization revocation; map the sections of the NIST SP 800-63B-4 document already in Sources (the cited URL targets section 3.1.2) to the portions they support (citation-location maintenance, not missing support): section 3.1.3 for the authentication-fatigue rationale for secret transfer, section 3.2.5 for the non-phishing-resistance of OTP and out-of-band authenticators, sections 3.1.3.1 and 3.1.3.3 for the email prohibition and PSTN restriction, sections 4.2.1.1 and 4.2.3 for recovery-code throttling and recovery notification, and section 4.5 for invalidation of enrolled authenticators when the subscriber no longer meets eligibility requirements. (M, M) | `[gap]` |

@@ -10,6 +10,9 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.214 | `host.md`: brokered-ssh: cite SSM, IAP, Bastion and tailnet broker behaviour for the stated alternatives. (M, M) | Done, #641. The host guide now cites the broker paths and states the remaining host-firewall rule gap. |
+| 1.218 | `cloud-firewalls.md`: ssm, iap and bastion: cite Session Manager, IAP, Bastion and tailnet broker architectures. (M, M) | Done, #641. The cloud guide now cites broker ingress and outbound paths, including the IPv6 IAP range and scoped Bastion source. |
+| 1.221 | `cloud-firewalls.md`: azure-admin: cite Azure security-admin rule behaviour. (M, M) | Done, #641. The Azure check now cites admin rule order and actions and directs readers to the portal view of applied rules. |
 | 1.227 | `tunnels.md`: pin `ufw status verbose` and `ufw show raw` behaviour, the incomplete status view and IPv6; the rolling citation landed but its planned pin did not. (M, M) | Done, #640. Pinned Ubuntu Noble ufw status, raw-table and IPv6 behaviour and added native nftables inspection to Verify. |
 | 1.226 | `cloudflare.md`: quick: cite Cloudflare Quick Tunnel documentation for the unauthenticated short-lived-test claim. (M, M) | Done, #640. Pinned Quick Tunnel documentation and scoped open access to the default URL without allowed-mail. |
 | 1.225 | `cloudflare.md`: prerequisites: pin the free-tier up-to-50-users limit or keep the current-limit qualification explicit. (M, M) | Done, #640. Cited the rolling plans page and replaced the unsupported 50-user figure with an instruction to check current plan limits and a stated unknown. |
