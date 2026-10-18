@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.272 | `sqlite-http-frontends.md`: container-generator: cite Datasette container generator behaviour at its pinned version. (M, M) | Done, #664. Cited the pinned generator arguments, defaults, branches and callers, distinguished the Heroku path and labelled command-review advice and runtime limits. |
 | 1.265 | `mlflow.md`: mfa and proxy-token: cite oauth2-proxy/Cloudflare fronting MFA and Cloudflare service-token header syntax. (M, M) | Done, #661. Cited fronting MFA requirements and service-token headers, scoped MLflow credential precedence to v3.16.1 code, and labelled integration advice and evidence limits. |
 | 1.257 | `deployment-lifecycle.md`: retire-credentials and offboarding: source per-layer revocation and delayed invalidation checks. (M, M) | Done, #660. Cited per-layer revocation and delayed replay expectations while retaining the application, membership, database and deployment-timing gaps. |
 | 1.260 | `deployment-lifecycle.md`: dns-retirement: cite DNS TTL, resource retention and takeover behaviour for the retirement procedure. (M, M) | Done, #660. Cited takeover and DNS retirement order, corrected the TTL bound for serve-stale, and labelled authoritative-retention advice and platform limits. |
