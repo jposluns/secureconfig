@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-18
+
+- `realtime-webhooks.md` cites nginx release-1.26.3 `proxy_read_timeout` and HAProxy v3.0.0 `timeout client`, `timeout server`, `timeout http-request` and per-process `maxconn` for its proxy-limits summary, and labels the cross-guide coverage comparison as this guide's assessment (row 1.199) (#625)
+
 ## 2026-10-17
 
 - `apache.md` and `lighttpd.md` cite Cloudflare Access application and MFA-policy controls at a pinned docs commit for their MFA fronting option, and `lighttpd.md` cites the complete Authelia v4.39.28 supported-proxy table for lighttpd's absence from it; applying Access to these origins is labelled as each guide's assessment; row 1.313 records the origin-bypass statement neither guide makes yet (rows 1.200 and 1.201) (#624)
