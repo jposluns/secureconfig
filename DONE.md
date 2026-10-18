@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.284 | `dotnet.md`: mfa: cite fronting-layer MFA enforcement. (M, M) | Done, #671. Cited Cloudflare Access independent MFA, effective-policy precedence and origin protection, preserving provider enforcement and labelling deployment limits. |
 | 1.276 | `python.md`: bind: cite platform bind mappings and their deployment scope, partial. (M, M) | Done, #670. Cited Render, Heroku and Fly listener scopes and TLS conditions plus Railway target ports, preserving advice and leaving Railway and Cedar source gaps in TODO.md under 1.276. |
 | 1.268 | `paas.md`: https-redirect and verify-redirect, partial. (M, M) | Done, #669. Cited platform redirect settings, statuses and header limits, retained the HEAD command and guide acceptance criterion, and kept unresolved evidence in TODO.md under 1.268. |
 | 1.273 | `nodejs.md`: bind: cite platform bind mappings and their deployment scope, partial. (M, M) | Done, #668. Cited Render, Heroku and Fly listener scopes and TLS conditions plus Railway target ports, preserving advice and leaving Railway and Cedar source gaps in TODO.md under 1.273. |

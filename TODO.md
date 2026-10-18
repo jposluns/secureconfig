@@ -68,7 +68,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.281 | `java.md`: mfa: cite provider/fronting enforcement for the stated MFA setup. (M, M) | `[gap]` |
 | 1.282 | `java.md`: client-validation: cite the trust-all API and its scope. (M, M) | `[gap]` |
 | 1.283 | `agent-builders.md`: debug-remedy: establish whether the debug_permission change is available in the console UI; API remedy is already cited and UI availability is unestablished. (M, M) | `[gap]` |
-| 1.284 | `dotnet.md`: mfa: cite fronting-layer MFA enforcement. (M, M) | `[gap]` |
 | 1.285 | `gitops-controllers.md`: verify-flux: cite curl `--data-binary` behaviour; the six historical GitOps facts remain delegated to row 2.28. (M, M) | `[gap]` |
 | 1.286 | `lighttpd.md`: pin lighttpd TLS/key introduction versions for the 1.4.56 protocol defaults and 1.4.53 separate-key syntax, and pin the redirect default transition at 1.4.75. (M, M) | `[gap]` |
 | 1.287 | `self-signed.md`: key-permissions: cite filesystem command and mode behaviour for the private-key instructions. (M, M) | `[gap]` |
