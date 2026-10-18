@@ -9801,7 +9801,7 @@ The small upload must reach and succeed at the intended handler. With a delibera
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 | Claim | Basis | Status |
 | --- | --- | --- |
@@ -9814,7 +9814,7 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 | session-strict: session.use_strict_mode defaults 0; enable it. | PHP native configuration 8.x | REASONED |
 | session-regenerate: Regenerate IDs after login/privilege changes; delete_old_session defaults false. Timestamp expiry avoids immediate deletion. | PHP documentation unknown | REASONED |
 | passwords: PASSWORD_DEFAULT currently uses bcrypt; Argon2id needs an Argon2 build. Verify/rehash passwords and allow growing hashes, suggested 255 bytes. | PHP documentation unknown | REASONED |
-| plain-auth: Plain PHP rate limiting and MFA need application/proxy/identity controls; direct references are the linked guides, not PHP Sources. | PHP documentation unknown | REASONED |
+| plain-auth: Guide assessment: the cited PHP password and session functions provide no login-attempt throttling; this is not a claim about every PHP extension or application. Guide advice: apply a proxy limiter or a fail2ban jail over an application/proxy failure log, following authentication.md requirements. nginx.md section 4 documents limit_req; caddy.md section 4 states that stock Caddy has no rate limiter; apache.md gives no limiter configuration. fail2ban 1.1.1 documents filter and logpath; its nginx-limit-req jail reads the nginx error log and its filter matches limiting or delaying entries. These sources do not establish a filter for this PHP application's login form or its log format. Guide advice: for plain-PHP MFA, use a TOTP library or an identity layer in front whose policy requires MFA; mfa.md covers identity-layer options and enforcement requirements, but its library list has no PHP TOTP library. No PHP TOTP library is pinned here. | PHP documentation unknown; fail2ban 1.1.1 | REASONED |
 | laravel-debug: Set APP_ENV=production, APP_DEBUG=false and HTTPS APP_URL; debug mode exposes configuration values. | Laravel 12.x | REASONED |
 | laravel-key: Generate APP_KEY with artisan key:generate; list old keys in APP_PREVIOUS_KEYS during rotation. | Laravel 12.x | REASONED |
 | laravel-secure: Set SESSION_SECURE_COOKIE=true; the session secure configuration has no default. | Laravel 12.x | REASONED |
@@ -9895,7 +9895,13 @@ session.use_strict_mode = 1      ; default 0; the manual calls enabling it "mand
 
 Call `session_regenerate_id()` after login and on privilege change. Its `delete_old_session` parameter defaults to `false`; the manual advises against destroying the old session immediately (unstable networks, hijack detection), so expire it with a timestamp instead.
 
-Hash with `password_hash($password, PASSWORD_DEFAULT)` (bcrypt at the time of writing; `PASSWORD_ARGON2ID` needs PHP built with Argon2), check with `password_verify()`, and upgrade old hashes when `password_needs_rehash()` says so. `PASSWORD_DEFAULT` is designed to change over time, so store the hash in a column that can grow past 60 bytes (the manual suggests 255). Plain PHP has no login rate limiter; apply one at the proxy or with fail2ban per [authentication.md](authentication.md). MFA in plain PHP means a TOTP library or an identity layer in front, per [mfa.md](mfa.md).
+Hash with `password_hash($password, PASSWORD_DEFAULT)` (bcrypt at the time of writing; `PASSWORD_ARGON2ID` needs PHP built with Argon2), check with `password_verify()`, and upgrade old hashes when `password_needs_rehash()` says so. `PASSWORD_DEFAULT` is designed to change over time, so store the hash in a column that can grow past 60 bytes (the manual suggests 255).
+
+Guide assessment: the PHP password and session functions cited here provide no login-attempt throttling; this is not a claim about every PHP extension or application.
+
+Guide advice: apply a proxy limiter or a fail2ban jail over a failure log written by the application or proxy, following the authentication-endpoint requirements in [authentication.md](authentication.md). Among the linked proxy guides, [nginx.md, section 4](nginx.md#4-bound-the-expensive-endpoints) documents `limit_req`; [caddy.md, section 4](caddy.md#4-bound-the-expensive-endpoints) states that stock Caddy has no rate limiter, and [apache.md](apache.md) gives no limiter configuration. fail2ban 1.1.1 documents [`filter` and `logpath`](https://github.com/fail2ban/fail2ban/blob/1.1.1/man/jail.conf.5#L187-L200); its [`nginx-limit-req` jail](https://github.com/fail2ban/fail2ban/blob/1.1.1/config/jail.conf#L378-L384) reads the nginx error log and its [filter](https://github.com/fail2ban/fail2ban/blob/1.1.1/config/filter.d/nginx-limit-req.conf#L48-L49) matches limiting or delaying entries. These sources do not establish a filter for this PHP application's login form or its log format.
+
+Guide advice: for plain-PHP MFA, use a TOTP library or an identity layer in front whose policy requires MFA; [mfa.md](mfa.md#identity-layers-and-auth-proxies-open-source) covers identity-layer options and enforcement requirements, but its library list has no PHP TOTP library. No PHP TOTP library is pinned here.
 
 ## 3. Laravel
 
@@ -10175,6 +10181,9 @@ REASONED: Laravel exception-route comparison. A live Laravel deployment stand-up
 - PHP FPM configuration (`listen`, `listen.allowed_clients`, `listen.owner`) (PHP 8.x): https://www.php.net/manual/en/install.fpm.configuration.php
 - PHP session runtime configuration (PHP 8.x): https://www.php.net/manual/en/session.configuration.php
 - PHP `session_regenerate_id()`: https://www.php.net/manual/en/function.session-regenerate-id.php
+- fail2ban 1.1.1 jail filter and logpath options (checked October 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/man/jail.conf.5#L187-L200
+- fail2ban 1.1.1 nginx-limit-req jail and nginx limiter prerequisite (checked October 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/config/jail.conf#L378-L384
+- fail2ban 1.1.1 nginx-limit-req filter expression (checked October 2026): https://github.com/fail2ban/fail2ban/blob/1.1.1/config/filter.d/nginx-limit-req.conf#L48-L49
 - PHP `password_hash()`: https://www.php.net/manual/en/function.password-hash.php
 - PHP cURL constants (`CURLOPT_SSL_VERIFYPEER`, `CURLOPT_SSL_VERIFYHOST`, `CURLOPT_CAINFO`): https://www.php.net/manual/en/curl.constants.php
 - curl manual, exit codes 6, 7, 28 and 60 and the `exitcode` and `errormsg` write-out variables (added in curl 7.75.0) (checked October 2026): https://curl.se/docs/manpage.html

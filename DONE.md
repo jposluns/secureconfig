@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.246 | `php.md`: plain-auth: pin plain-PHP throttling and MFA mechanisms or label the recommendation as guide advice. (M, M) | Done, #651. Labelled plain-PHP throttling and MFA choices as guide advice, narrowed the PHP assessment, pinned fail2ban log-based mechanics, and retained application-filter and PHP TOTP-library gaps. |
 | 1.242 | `self-hosted-idp.md`: keycloak-bootstrap, keycloak-mfa, verify-mfa-password and admin-factor-order: cite Keycloak factor/flow enforcement and authentik factor ordering. (M, M) | Done, #645. Pinned flow, WebAuthn, required-action and authentik validation-stage sources while retaining a fresh-session password-only check. |
 | 1.243 | `self-hosted-idp.md`: http-listener, keycloak-http-opt-in, verify-direct-ports and verify-proxy-neutralization: cite Keycloak 8080/8443 listener behaviour and curl exit 0 and 28, timeout, proxy-setting and curlrc behaviour; retain curl outcomes as expectations without a live run. (M, M) | Done, #645. Pinned listener, curl exit, timeout and proxy-control sources while retaining direct-port outcomes as reasoned expectations. |
 | 1.236 | `identity-providers.md`: auth0-passkey-policy and admin-passkeys: cite Auth0/passkey tiers, password disablement and WebAuthn policy behaviour. (M, M) | Done, #644. Cited Auth0 passkey and MFA behaviour and provider WebAuthn support, with Free-tier step-up and tier-availability gaps stated. |
