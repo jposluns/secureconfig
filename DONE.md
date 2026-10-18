@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.230 | `authentication.md`: offboarding: source membership, proxy and token revocation delays and time-to-revoke checks. (M, M) | Done, #642. Sourced Entra, Cloudflare and OAuth revocation behaviour while retaining deployment timing as a test expectation. |
+| 1.231 | `authentication.md`: verify-origin-isolation: source the proxy isolation expectation beyond the current Cloudflare citations, retaining the deployed-origin result as a test expectation. (M, M) | Done, #642. Sourced proxy and signed-header origin checks while retaining deployed reachability as a test expectation. |
 | 1.214 | `host.md`: brokered-ssh: cite SSM, IAP, Bastion and tailnet broker behaviour for the stated alternatives. (M, M) | Done, #641. The host guide now cites the broker paths and states the remaining host-firewall rule gap. |
 | 1.218 | `cloud-firewalls.md`: ssm, iap and bastion: cite Session Manager, IAP, Bastion and tailnet broker architectures. (M, M) | Done, #641. The cloud guide now cites broker ingress and outbound paths, including the IPv6 IAP range and scoped Bastion source. |
 | 1.221 | `cloud-firewalls.md`: azure-admin: cite Azure security-admin rule behaviour. (M, M) | Done, #641. The Azure check now cites admin rule order and actions and directs readers to the portal view of applied rules. |
