@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "db26f6fbf4485a8c777d8255db60b9d2b0a6acd20aa3403fc57ece08044b057b",
+  "body_sha256": "9f3f92a1b87ccd4ed7230bb653bac95cbe2622cf30248c9c0b552f67f4de5769",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",
@@ -62,6 +62,13 @@ version_basis: {
         "s74206a9a30dd": "https://github.com/openssh/openssh-portable/blob/V_8_2_P1/sshd_config.5#L805-L817"
       }
     },
+    "openssh81": {
+      "name": "OpenSSH 8.1 server manual",
+      "basis": "V_8_1_P1",
+      "sources": {
+        "s76bfb1ff5934": "https://github.com/openssh/openssh-portable/blob/V_8_1_P1/sshd_config.5#L793-L804"
+      }
+    },
     "openssh99": {
       "name": "OpenSSH 9.9 server manual",
       "basis": "V_9_9_P2",
@@ -75,7 +82,8 @@ version_basis: {
       "basis": "1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc",
       "sources": {
         "sbc9404fbd678": "https://git.launchpad.net/ubuntu/+source/openssh/tree/sshd_config?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n13",
-        "s8681449a40db": "https://git.launchpad.net/ubuntu/+source/openssh/tree/debian/changelog?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n1"
+        "s8681449a40db": "https://git.launchpad.net/ubuntu/+source/openssh/tree/debian/changelog?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n1",
+        "sc389a883f3ae": "https://git.launchpad.net/ubuntu/+source/openssh/tree/debian/changelog?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n4"
       }
     },
     "rhel-c9s": {
@@ -92,7 +100,8 @@ version_basis: {
       "basis": "26.2",
       "sources": {
         "sad4ec0d2acc5": "https://github.com/canonical/cloud-init/blob/26.2/cloudinit/ssh_util.py#L548-L586",
-        "s8de0318d9aa5": "https://github.com/canonical/cloud-init/blob/26.2/cloudinit/config/cc_set_passwords.py#L60-L90"
+        "s8de0318d9aa5": "https://github.com/canonical/cloud-init/blob/26.2/cloudinit/config/cc_set_passwords.py#L60-L90",
+        "s368c8162762a": "https://github.com/canonical/cloud-init/blob/26.2/cloudinit/config/cc_set_passwords.py#L255-L255"
       }
     },
     "cloudinit20": {
@@ -100,7 +109,9 @@ version_basis: {
       "basis": "20.1",
       "sources": {
         "s471abb6d2123": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L338-L348",
-        "sa8d2f85a5876": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L17-L18"
+        "sa8d2f85a5876": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L17-L18",
+        "s872ab5dff723": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/config/cc_set_passwords.py#L97-L122",
+        "s7e40e982cb9f": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/config/cc_set_passwords.py#L230-L232"
       }
     },
     "docker": {
@@ -115,7 +126,7 @@ version_basis: {
   "claims": {
     "safe-transition": {"text": "Confirm non-root key login and sudo in a fresh session before disabling password/root access; retain the working session while testing.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
     "keys-only": {"text": "Disable PasswordAuthentication and KbdInteractiveAuthentication; enable PubkeyAuthentication and prohibit root login.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
-    "include-order": {"text": "OpenSSH server Include appeared in 8.2; first-obtained values and lexical wildcard order support 00-hardening.conf. Focal and CentOS Stream 9 source snapshots include drop-ins, and cloud-init 26.2 writes 50-cloud-init.conf when that include is present; current distribution defaults and cloud-image prevalence remain unestablished.", "components": ["ssh", "openssh82", "openssh99", "ubuntu-focal", "rhel-c9s", "cloudinit26", "cloudinit20"], "sources": ["ssh:s44f73ffcb41e", "openssh82:s74206a9a30dd", "openssh99:sb409a9bcefc5", "openssh99:s447d8f1b88bd", "ubuntu-focal:sbc9404fbd678", "ubuntu-focal:s8681449a40db", "rhel-c9s:sd34862bbf569", "rhel-c9s:s87a3827a045e", "cloudinit26:sad4ec0d2acc5", "cloudinit26:s8de0318d9aa5", "cloudinit20:s471abb6d2123", "cloudinit20:sa8d2f85a5876", "rhel-c9s:s0a2ed08d7a83"], "status": "REASONED"},
+    "include-order": {"text": "OpenSSH 8.2 added server Include; OpenSSH 9.9 documents first-obtained values and lexical wildcard order supporting 00-hardening.conf. The fetched Ubuntu focal OpenSSH 1:8.2p1-4 configuration and CentOS Stream 9 packaging place the drop-in Include near the top, before main-file settings. With ssh_pwauth: true, cloud-init 26.2 writes PasswordAuthentication yes to 50-cloud-init.conf when the main configuration includes that directory; cloud-init 20.1 instead updated the main file. Current distribution defaults and cloud-image prevalence remain unestablished.", "components": ["ssh", "openssh81", "openssh82", "openssh99", "ubuntu-focal", "rhel-c9s", "cloudinit26", "cloudinit20"], "sources": ["ssh:s44f73ffcb41e", "openssh82:s74206a9a30dd", "openssh99:sb409a9bcefc5", "openssh99:s447d8f1b88bd", "ubuntu-focal:sbc9404fbd678", "ubuntu-focal:s8681449a40db", "rhel-c9s:sd34862bbf569", "rhel-c9s:s87a3827a045e", "cloudinit26:sad4ec0d2acc5", "cloudinit26:s8de0318d9aa5", "cloudinit20:s471abb6d2123", "cloudinit20:sa8d2f85a5876", "rhel-c9s:s0a2ed08d7a83", "openssh81:s76bfb1ff5934", "ubuntu-focal:sc389a883f3ae", "cloudinit26:s368c8162762a", "cloudinit20:s872ab5dff723", "cloudinit20:s7e40e982cb9f"], "status": "REASONED"},
     "effective-config": {"text": "Validate with sshd -t before reload; inspect sshd -T global values and -T -C for Match-specific settings. Service names differ by distribution.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
     "totp": {"text": "SSH TOTP uses google-authenticator-libpam through PAM keyboard-interactive; keys-only configuration must change before adding this factor.", "components": ["ssh", "totp"], "sources": ["ssh:s44f73ffcb41e", "totp:s6f787f7b4f18"], "status": "REASONED"},
     "duo": {"text": "Duo pam_duo provides the alternative push factor through PAM keyboard-interactive.", "components": ["ssh", "duo"], "sources": ["ssh:s44f73ffcb41e", "duo:s18b76ce18df1"], "status": "REASONED"},
@@ -126,7 +137,7 @@ version_basis: {
     "brokered-ssh": {"text": "SSM/tailnet avoid public inbound SSH; IAP uses 35.235.240.0/20 and Bastion its subnet on 22 in both layers. Broker details have no direct source here.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED"},
     "firewalld-zone": {"text": "Find the public interface zone explicitly; remove its broad ssh service, add the IPv4 admin rich rule permanently, then reload to activate it.", "components": ["firewalld"], "sources": ["firewalld:sa1a1385129f1", "firewalld:sc1cb4d135f3b"], "status": "REASONED"},
     "firewalld-audit": {"text": "Inspect applicable zones for other services, port ranges, protocol/source allowances or ACCEPT targets that reopen 22; the narrow rich rule does not supersede them.", "components": ["firewalld"], "sources": ["firewalld:sa1a1385129f1", "firewalld:sc1cb4d135f3b"], "status": "REASONED"},
-    "docker-bypass": {"text": "With Docker Engine default Linux bridge firewall rules, published container traffic is diverted before UFW settings; consult docker.md before relying on the host firewall. Other modes and paths require separate review.", "components": ["ufw", "docker"], "sources": ["ufw:scff3a017f30b", "docker:sc920c6946fcf", "docker:sb5ca9f87b1f3"], "status": "REASONED"},
+    "docker-bypass": {"text": "With Docker Engine default Linux bridge firewall rules, published container traffic is diverted before UFW settings; consult docker.md before relying on the host firewall. As this guide's assessment, other modes and paths, including the userland proxy, need separate review in that guide.", "components": ["ufw", "docker"], "sources": ["ufw:scff3a017f30b", "docker:sc920c6946fcf", "docker:sb5ca9f87b1f3"], "status": "REASONED"},
     "fail2ban": {"text": "Use fail2ban to ban repeated authentication failures against SSH/login services.", "components": ["fail2ban"], "sources": ["fail2ban:s7a37ae416e85"], "status": "REASONED"},
     "crowdsec": {"text": "CrowdSec is the alternative protection for repeated authentication failures.", "components": ["crowdsec"], "sources": ["crowdsec:s4efe4c22c69b"], "status": "REASONED"},
     "updates": {"text": "Automate patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems; no update-tool source is listed.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
@@ -151,7 +162,7 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | --- | --- | --- |
 | safe-transition: Confirm non-root key login and sudo in a fresh session before disabling password/root access; retain the working session while testing. | OpenSSH documentation unknown | REASONED |
 | keys-only: Disable PasswordAuthentication and KbdInteractiveAuthentication; enable PubkeyAuthentication and prohibit root login. | OpenSSH documentation unknown | REASONED |
-| include-order: OpenSSH server Include appeared in 8.2; first-obtained values and lexical wildcard order support 00-hardening.conf. Focal and CentOS Stream 9 source snapshots include drop-ins, and cloud-init 26.2 writes 50-cloud-init.conf when that include is present; current distribution defaults and cloud-image prevalence remain unestablished. | OpenSSH documentation unknown; OpenSSH 8.2 server manual V_8_2_P1; OpenSSH 9.9 server manual V_9_9_P2; Ubuntu focal OpenSSH source 1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc; CentOS Stream 9 OpenSSH packaging 0b69a3828606595828fc3b878a7c70652303ad67; cloud-init 26.2 26.2; cloud-init 20.1 20.1 | REASONED |
+| include-order: OpenSSH 8.2 added server Include; OpenSSH 9.9 documents first-obtained values and lexical wildcard order supporting 00-hardening.conf. The fetched Ubuntu focal OpenSSH 1:8.2p1-4 configuration and CentOS Stream 9 packaging place the drop-in Include near the top, before main-file settings. With ssh_pwauth: true, cloud-init 26.2 writes PasswordAuthentication yes to 50-cloud-init.conf when the main configuration includes that directory; cloud-init 20.1 instead updated the main file. Current distribution defaults and cloud-image prevalence remain unestablished. | OpenSSH documentation unknown; OpenSSH 8.1 server manual V_8_1_P1; OpenSSH 8.2 server manual V_8_2_P1; OpenSSH 9.9 server manual V_9_9_P2; Ubuntu focal OpenSSH source 1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc; CentOS Stream 9 OpenSSH packaging 0b69a3828606595828fc3b878a7c70652303ad67; cloud-init 26.2 26.2; cloud-init 20.1 20.1 | REASONED |
 | effective-config: Validate with sshd -t before reload; inspect sshd -T global values and -T -C for Match-specific settings. Service names differ by distribution. | OpenSSH documentation unknown | REASONED |
 | totp: SSH TOTP uses google-authenticator-libpam through PAM keyboard-interactive; keys-only configuration must change before adding this factor. | OpenSSH documentation unknown; google-authenticator-libpam unknown | REASONED |
 | duo: Duo pam_duo provides the alternative push factor through PAM keyboard-interactive. | OpenSSH documentation unknown; Duo Unix unknown | REASONED |
@@ -162,7 +173,7 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | brokered-ssh: SSM/tailnet avoid public inbound SSH; IAP uses 35.235.240.0/20 and Bastion its subnet on 22 in both layers. Broker details have no direct source here. | UFW documentation unknown | REASONED |
 | firewalld-zone: Find the public interface zone explicitly; remove its broad ssh service, add the IPv4 admin rich rule permanently, then reload to activate it. | firewalld documentation unknown | REASONED |
 | firewalld-audit: Inspect applicable zones for other services, port ranges, protocol/source allowances or ACCEPT targets that reopen 22; the narrow rich rule does not supersede them. | firewalld documentation unknown | REASONED |
-| docker-bypass: With Docker Engine default Linux bridge firewall rules, published container traffic is diverted before UFW settings; consult docker.md before relying on the host firewall. Other modes and paths require separate review. | UFW documentation unknown; Docker Engine networking 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
+| docker-bypass: With Docker Engine default Linux bridge firewall rules, published container traffic is diverted before UFW settings; consult docker.md before relying on the host firewall. As this guide's assessment, other modes and paths, including the userland proxy, need separate review in that guide. | UFW documentation unknown; Docker Engine networking 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | fail2ban: Use fail2ban to ban repeated authentication failures against SSH/login services. | fail2ban unknown | REASONED |
 | crowdsec: CrowdSec is the alternative protection for repeated authentication failures. | CrowdSec unknown | REASONED |
 | updates: Automate patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems; no update-tool source is listed. | OpenSSH documentation unknown | REASONED |
@@ -188,7 +199,7 @@ PermitRootLogin no
 PubkeyAuthentication yes
 ```
 
-sshd uses the *first* value it reads for each option, and processes `Include` wildcard matches in lexical order. The fetched Ubuntu focal OpenSSH 1:8.2p1-4 configuration and CentOS Stream 9 packaging place `Include /etc/ssh/sshd_config.d/*.conf` near the top, before main-file settings; OpenSSH 8.2 added `Include` to `sshd_config`. In cloud-init 26.2, `ssh_pwauth: true` sets `PasswordAuthentication yes` in `50-cloud-init.conf` when the main configuration includes that drop-in directory; cloud-init 20.1 instead updated the main file. Read before a later main-file line or a higher-numbered drop-in, that `yes` value wins and password login stays on. Name the hardening file `00-hardening.conf` so it is read first, and confirm with `sshd -T` (below) that the value took effect; as this guide's reasoning, an upgraded main file may lack the include or an earlier drop-in may already have set it. The fetched packaging does not establish current defaults for every Debian, Ubuntu and RHEL-family release, or how often cloud images contain this drop-in.
+OpenSSH 9.9 documents that sshd uses the *first* value it reads for each option and processes `Include` wildcard matches in lexical order. The fetched Ubuntu focal OpenSSH 1:8.2p1-4 configuration and CentOS Stream 9 packaging place `Include /etc/ssh/sshd_config.d/*.conf` near the top, before main-file settings; OpenSSH 8.2 added `Include` to `sshd_config`. In cloud-init 26.2, `ssh_pwauth: true` sets `PasswordAuthentication yes` in `50-cloud-init.conf` when the main configuration includes that drop-in directory; cloud-init 20.1 instead updated the main file. Read before a later main-file line or a higher-numbered drop-in, that `yes` value wins and password login stays on. Name the hardening file `00-hardening.conf` so it is read first, and confirm with `sshd -T` (below) that the value took effect; as this guide's reasoning, an upgraded main file may lack the include or an earlier drop-in may already have set it. The fetched packaging does not establish current defaults for every Debian, Ubuntu and RHEL-family release, or how often cloud images contain this drop-in.
 
 ```bash
 sudo sshd -t && sudo systemctl reload ssh    # sshd on RHEL-family systems
@@ -229,7 +240,7 @@ sudo ufw enable
 
 SSH stays closed to the world here for the same reason rule 3 in [cloud-firewalls.md](cloud-firewalls.md) keeps it off the cloud firewall: `ufw allow OpenSSH` opens port 22 to every address on the internet. Restrict it to the range you administer from. AWS SSM Session Manager (its agent dials out to the SSM service) or a tailnet ([tailscale.md](tailscale.md)) needs no inbound SSH rule at all; GCP IAP and Azure Bastion instead connect to port 22 and need an allow for their documented source range (IAP `35.235.240.0/20`, the Azure `AzureBastionSubnet`) in both firewall layers, per [cloud-firewalls.md](cloud-firewalls.md).
 
-RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https` and so on) with the same posture, and that includes SSH: `--add-service=ssh` opens port 22 to every address exactly as `ufw allow OpenSSH` does. Open only the ports the TLS-terminating layer needs; databases and app servers stay unreachable from outside per their guides. With Docker Engine's default Linux bridge firewall rules, published container traffic is diverted before ufw's rules; see [docker.md](docker.md) before relying on the firewall. Other modes and paths, including the userland proxy, need separate review in that guide.
+RHEL-family systems use firewalld (`firewall-cmd --permanent --add-service=https` and so on) with the same posture, and that includes SSH: `--add-service=ssh` opens port 22 to every address exactly as `ufw allow OpenSSH` does. Open only the ports the TLS-terminating layer needs; databases and app servers stay unreachable from outside per their guides. With Docker Engine's default Linux bridge firewall rules, published container traffic is diverted before ufw's rules; see [docker.md](docker.md) before relying on the firewall. As this guide's assessment, other modes and paths, including the userland proxy, need separate review in that guide.
 
 ```bash
 # firewalld, where an earlier run enabled the ssh service: a rich rule does not supersede it.
@@ -281,16 +292,21 @@ REASONED: preceding block; listener and firewall inventory, disallowed-source SS
 - OpenSSH sshd_config manual: https://man.openbsd.org/sshd_config
 - CentOS Stream 9 OpenSSH patch identifier, at 0b69a3828606595828fc3b878a7c70652303ad67 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/openssh/-/blob/0b69a3828606595828fc3b878a7c70652303ad67/openssh.spec#L135-L135
 - cloud-init 20.1 default sshd_config path, at 20.1 (checked October 2026): https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L17-L18
+- OpenSSH 8.1 adjacent server keyword entries, at V_8_1_P1 (checked October 2026): https://github.com/openssh/openssh-portable/blob/V_8_1_P1/sshd_config.5#L793-L804
 - OpenSSH server Include entry, at V_8_2_P1 (checked October 2026): https://github.com/openssh/openssh-portable/blob/V_8_2_P1/sshd_config.5#L805-L817
 - OpenSSH first-obtained-value rule, at V_9_9_P2 (checked October 2026): https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshd_config.5#L51-L51
 - OpenSSH lexical Include order, at V_9_9_P2 (checked October 2026): https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshd_config.5#L912-L918
 - Ubuntu focal stock sshd_config include, at 1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc (checked October 2026): https://git.launchpad.net/ubuntu/+source/openssh/tree/sshd_config?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n13
-- Ubuntu focal source changelog for drop-in packaging, at 1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc (checked October 2026): https://git.launchpad.net/ubuntu/+source/openssh/tree/debian/changelog?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n1
+- Ubuntu focal source version, at 1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc (checked October 2026): https://git.launchpad.net/ubuntu/+source/openssh/tree/debian/changelog?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n1
+- Ubuntu focal source changelog for drop-in packaging, at 1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc (checked October 2026): https://git.launchpad.net/ubuntu/+source/openssh/tree/debian/changelog?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n4
 - CentOS Stream 9 sshd_config include patch, at 0b69a3828606595828fc3b878a7c70652303ad67 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/openssh/-/blob/0b69a3828606595828fc3b878a7c70652303ad67/openssh-7.7p1-redhat.patch#L69-L71
 - CentOS Stream 9 OpenSSH patch application, at 0b69a3828606595828fc3b878a7c70652303ad67 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/openssh/-/blob/0b69a3828606595828fc3b878a7c70652303ad67/openssh.spec#L444-L444
 - cloud-init drop-in selection and writing, at 26.2 (checked October 2026): https://github.com/canonical/cloud-init/blob/26.2/cloudinit/ssh_util.py#L548-L586
 - cloud-init ssh_pwauth value handling, at 26.2 (checked October 2026): https://github.com/canonical/cloud-init/blob/26.2/cloudinit/config/cc_set_passwords.py#L60-L90
+- cloud-init ssh_pwauth call site, at 26.2 (checked October 2026): https://github.com/canonical/cloud-init/blob/26.2/cloudinit/config/cc_set_passwords.py#L255-L255
 - cloud-init 20.1 main-file update, at 20.1 (checked October 2026): https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L338-L348
+- cloud-init 20.1 ssh_pwauth value handling, at 20.1 (checked October 2026): https://github.com/canonical/cloud-init/blob/20.1/cloudinit/config/cc_set_passwords.py#L97-L122
+- cloud-init 20.1 ssh_pwauth call site, at 20.1 (checked October 2026): https://github.com/canonical/cloud-init/blob/20.1/cloudinit/config/cc_set_passwords.py#L230-L232
 - Docker default Linux firewall integration, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L11-L32
 - Docker and ufw published-port behaviour, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L90-L102
 - ufw(8), for `default deny incoming`, `allow` and `status verbose`: https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html
