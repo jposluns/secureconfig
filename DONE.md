@@ -10,7 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
-| 1.216 | `host.md`: updates: cite unattended-upgrades and dnf-automatic package/service behaviour. (M, M) | Done, #638. Pinned Ubuntu noble and CentOS Stream 9 update scheduling and corrected the DNF installation and security defaults. |
+| 1.216 | `host.md`: updates: cite unattended-upgrades and dnf-automatic package/service behaviour. (M, M) | Done, #638. Pinned Ubuntu noble update scheduling and upstream DNF 4.14.0 dnf-automatic defaults and timers, noting CentOS Stream 9's unreviewed downstream patches, and corrected the DNF installation and security defaults. |
 | 1.217 | `host.md`: verify-listeners: cite `ss`, `nc`, SSH and BusyBox behaviour for the inventory and reachability tests. (M, M) | Done, #638. Pinned listener and probe sources, corrected the BusyBox variant statement, and newly stated the packaged Ncat behaviour gap. |
 | 1.213 | `host.md`: include-order: pin OpenSSH Include/drop-in, Ubuntu 20.04 and cloud-init history relevant to SSH config ordering. (M, M) | Done, #636. Pinned SSH include ordering, Ubuntu focal and CentOS Stream 9 packaging, and conditional cloud-init behaviour while retaining the current-default gap. |
 | 1.215 | `host.md`: docker-bypass: cite Docker/UFW interaction and its firewall-bypass qualification. (M, M) | Done, #636. Cited Docker's published-port UFW interaction and scoped the warning to its default Linux bridge firewall rules. |
