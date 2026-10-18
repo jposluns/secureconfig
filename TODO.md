@@ -55,9 +55,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.233 | `mfa.md`: admin-factors and authelia-factors: cite administrator policy and Authelia passkey behaviour. (M, M) | `[gap]` |
 | 1.234 | `mfa.md`: webauthn-library and unattended-mtls: cite library and mTLS deployment behaviour or label guidance as assessment. (M, M) | `[gap]` |
 | 1.235 | `mfa.md`: verify-recovery-history: cite the recovery-code scan behaviour. (M, M) | `[gap]` |
-| 1.236 | `identity-providers.md`: auth0-passkey-policy and admin-passkeys: cite Auth0/passkey tiers, password disablement and WebAuthn policy behaviour. (M, M) | `[gap]` |
-| 1.237 | `identity-providers.md`: entra-every-signin and application-allowlist: cite Entra Conditional Access and Google/Microsoft application allowlists. (M, M) | `[gap]` |
-| 1.238 | `identity-providers.md`: firebase-data-policy and github-proxy-workloads: cite Firebase Rules and GitHub Actions OIDC behaviour. (M, M) | `[gap]` |
 | 1.239 | `identity-providers.md`: google-org-mfa: pin the remaining OIDC pricing claim while preserving the cited 2SV enforcement scope. (M, M) | `[gap]` |
 | 1.240 | `identity-providers.md`: self-hosted-mfa: cite maintenance expectations for Keycloak, authentik and Ory beyond their already pinned factor behaviour. (M, M) | `[gap]` |
 | 1.241 | `oidc-integration.md`: client-secret-storage: pin a secret-storage reference for the client-secret handling claim. (M, M) | `[gap]` |
