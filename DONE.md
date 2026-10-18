@@ -10,6 +10,9 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.214 | `host.md`: brokered-ssh: cite SSM, IAP, Bastion and tailnet broker behaviour for the stated alternatives. (M, M) | Done, #641. The host guide now cites the broker paths and states the remaining host-firewall rule gap. |
+| 1.218 | `cloud-firewalls.md`: ssm, iap and bastion: cite Session Manager, IAP, Bastion and tailnet broker architectures. (M, M) | Done, #641. The cloud guide now cites broker ingress and outbound paths, including the IPv6 IAP range and scoped Bastion source. |
+| 1.221 | `cloud-firewalls.md`: azure-admin: cite Azure security-admin rule behaviour. (M, M) | Done, #641. The Azure check now cites admin rule order and actions and directs readers to the portal view of applied rules. |
 | 1.216 | `host.md`: updates: cite unattended-upgrades and dnf-automatic package/service behaviour. (M, M) | Done, #638. Pinned Ubuntu noble update scheduling and upstream DNF 4.14.0 dnf-automatic defaults and timers, noting CentOS Stream 9's unreviewed downstream patches, and corrected the DNF installation and security defaults. |
 | 1.217 | `host.md`: verify-listeners: cite `ss`, `nc`, SSH and BusyBox behaviour for the inventory and reachability tests. (M, M) | Done, #638. Pinned listener and probe sources, corrected the BusyBox variant statement, and newly stated the packaged Ncat behaviour gap. |
 | 1.220 | `cloud-firewalls.md`: gcp-policies: cite hierarchical and network firewall policy evaluation order. (M, M) | Done, #637. Cited policy resources, CLI enumeration and describe syntax, and the evaluation-order page for policy and VPC order, the enforcement-order setting and its default. |

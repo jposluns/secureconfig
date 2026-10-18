@@ -52,9 +52,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
-| 1.214 | `host.md`: brokered-ssh: cite SSM, IAP, Bastion and tailnet broker behaviour for the stated alternatives. (M, M) | `[gap]` |
-| 1.218 | `cloud-firewalls.md`: ssm, iap and bastion: cite Session Manager, IAP, Bastion and tailnet broker architectures. (M, M) | `[gap]` |
-| 1.221 | `cloud-firewalls.md`: azure-admin: cite Azure security-admin rule behaviour. (M, M) | `[gap]` |
 | 1.222 | `egress-metadata.md`: cloud-egress: source or narrow the universal/most-providers outbound-default claim and AWS security-group union, NACL and default-egress conjunction. (M, M) | `[gap]` |
 | 1.223 | `egress-metadata.md`: host-owner: cite owner-match and nftables paths for the host egress controls. (M, M) | `[gap]` |
 | 1.224 | `egress-metadata.md`: verify-allow: cite unauthenticated STS GET behaviour for the stated allow test. (M, M) | `[gap]` |

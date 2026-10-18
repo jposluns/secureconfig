@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "7dfced989b09144bd79630adb28f7adb87f54b383172f5dab9a6983fcfd901d2",
+  "body_sha256": "4577e81287c28b60950c88f7266bdbbdc359534e642671963e0d4be7ac2b5cbc",
   "components": {
     "aws": {
       "name": "AWS security groups and CLI",
@@ -11,7 +11,9 @@ version_basis: {
       "sources": {
         "s0c459e0aa7a1": "https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-security-group-rules.html",
         "s5594f61a25d6": "https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html",
-        "sf8813f7c4057": "https://docs.aws.amazon.com/vpc/latest/userguide/managed-prefix-lists.html"
+        "sf8813f7c4057": "https://docs.aws.amazon.com/vpc/latest/userguide/managed-prefix-lists.html",
+        "s06a2a8e07062": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-enable-ssh-connections.html#session-manager-getting-started-enable-ssh-connections",
+        "s0f77b30546ee": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-prerequisites.html#session-manager-prerequisites"
       }
     },
     "gcp": {
@@ -27,7 +29,8 @@ version_basis: {
         "sef4965908f7b": "https://docs.cloud.google.com/sdk/gcloud/reference/compute/network-firewall-policies/list",
         "s652edf39de2a": "https://docs.cloud.google.com/sdk/gcloud/reference/compute/network-firewall-policies/describe",
         "s57189bff8b8f": "https://docs.cloud.google.com/sdk/gcloud/reference/compute/firewall-rules/list",
-        "sd9ee642a0bff": "https://docs.cloud.google.com/firewall/docs/firewall-policies-rule-eval-order"
+        "sd9ee642a0bff": "https://docs.cloud.google.com/firewall/docs/firewall-policies-rule-eval-order",
+        "s7e6eda97f950": "https://docs.cloud.google.com/iap/docs/using-tcp-forwarding#create-firewall-rule"
       }
     },
     "docker-docs": {
@@ -44,21 +47,38 @@ version_basis: {
         "se217f16ce4c1": "https://learn.microsoft.com/en-us/cli/azure/network/nsg/rule",
         "scde5b083d938": "https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/get"
       }
+    },
+    "azure-docs": {
+      "name": "Azure documentation snapshot",
+      "basis": "8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f",
+      "sources": {
+        "s6d46120d991b": "https://github.com/MicrosoftDocs/azure-docs/blob/8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f/articles/bastion/bastion-nsg.md#L77-L84",
+        "s03ca867c4276": "https://github.com/MicrosoftDocs/azure-docs/blob/8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f/articles/virtual-network-manager/concept-security-admins.md#L50-L67",
+        "sb802fe01684c": "https://github.com/MicrosoftDocs/azure-docs/blob/8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f/articles/virtual-network-manager/how-to-view-applied-configurations.md#L92-L100"
+      }
+    },
+    "tailscale-docs": {
+      "name": "Tailscale documentation",
+      "basis": "unknown",
+      "sources": {
+        "scf48029376f6": "https://tailscale.com/docs/reference/faq/firewall-ports",
+        "s44f0b2a0a8ba": "https://tailscale.com/docs/features/tailscale-ssh#why-it-matters"
+      }
     }
   },
   "claims": {
     "public-front": {"text": "Allow internet sources only to the front TLS layer on 80 for redirects and 443; private sources alone reach databases/internal services, with TLS/authentication still required.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:scde5b083d938"], "status": "REASONED"},
     "ssh": {"text": "Restrict 22 to named administrative addresses or documented broker sources, never unrestricted internet ranges.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:scde5b083d938"], "status": "REASONED"},
-    "ssm": {"text": "SSM Agent dials out and requires no inbound rule; no Session Manager source is listed.", "components": ["aws"], "sources": ["aws:s5594f61a25d6"], "status": "REASONED"},
-    "iap": {"text": "IAP needs TCP 22 ingress from 35.235.240.0/20; no IAP source is listed.", "components": ["gcp"], "sources": ["gcp:s1c06c98a99c9"], "status": "REASONED"},
-    "bastion": {"text": "Bastion needs target-VM ingress from AzureBastionSubnet; tailnet is another linked alternative. Direct broker sources are absent.", "components": ["azure"], "sources": ["azure:scde5b083d938"], "status": "REASONED"},
+    "ssm": {"text": "SSM SSH uses the agent's outbound TLS connection and needs no inbound port on the managed node; allow outbound HTTPS 443 to the documented Systems Manager endpoints.", "components": ["aws"], "sources": ["aws:s5594f61a25d6", "aws:s06a2a8e07062", "aws:s0f77b30546ee"], "status": "REASONED"},
+    "iap": {"text": "IAP requires cloud ingress to SSH port 22 from 35.235.240.0/20, or 2600:2d00:1:7::/64 for IPv6 VMs.", "components": ["gcp"], "sources": ["gcp:s1c06c98a99c9", "gcp:s7e6eda97f950"], "status": "REASONED"},
+    "bastion": {"text": "Bastion requires the target VM subnet NSG to allow SSH from the AzureBastionSubnet IP range. A tailnet ordinarily needs no inbound internet firewall port, and Tailscale SSH accepts tailnet traffic on port 22. As this guide's reasoning, check the host firewall for these broker paths; the fetched IAP, Bastion and Tailscale pages do not specify a UFW or firewalld rule.", "components": ["azure", "azure-docs", "tailscale-docs", "gcp"], "sources": ["azure:scde5b083d938", "azure-docs:s6d46120d991b", "tailscale-docs:scf48029376f6", "tailscale-docs:s44f0b2a0a8ba", "gcp:s7e6eda97f950"], "status": "REASONED"},
     "least-access": {"text": "Start default-deny, add minimum allowances and retire obsolete rules; use security-group references where supported to survive app IP changes.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:scde5b083d938"], "status": "REASONED"},
     "docker": {"text": "On VMs running Docker, use both cloud and host firewall layers as this guide's advice; Docker documents that published container traffic bypasses UFW settings, as the linked Docker guide explains.", "components": ["docker-docs"], "sources": ["docker-docs:sb5ca9f87b1f3"], "status": "REASONED"},
     "verify-aws": {"text": "Per region inspect all inbound rules, protocol/port ranges, IPv4/IPv6 CIDRs, resolved prefix lists and group references; combinations of narrower ranges can still expose the internet.", "components": ["aws"], "sources": ["aws:s0c459e0aa7a1", "aws:s5594f61a25d6", "aws:sf8813f7c4057"], "status": "REASONED", "verify": [1]},
     "verify-gcp": {"text": "Per project read JSON classic VPC rules, including direction, disabled state, allowed/denied and source ranges; a table can hide whether enforcement is disabled.", "components": ["gcp"], "sources": ["gcp:s1c06c98a99c9", "gcp:s3a90bf10d4eb"], "status": "REASONED", "verify": [1]},
     "gcp-policies": {"text": "Also list/describe hierarchical and global/regional network policies and read their effective order. Hierarchical policy rules can override or delegate to global network and VPC rules. The VPC network's networkFirewallPolicyEnforcementOrder defaults to AFTER_CLASSIC_FIREWALL: hierarchical and regional system policies, VPC rules, then global and regional network policies; BEFORE_CLASSIC_FIREWALL puts global and regional network policies after hierarchical and regional system policies but before VPC rules. A matching allow or deny stops evaluation; goto_next continues it. As this guide's reasoning, a policy allow with an internet source can expose a port even when the VPC list is clean, unless an earlier rule denies it.", "components": ["gcp"], "sources": ["gcp:s1c06c98a99c9", "gcp:s68e82eab648c", "gcp:s633352524069", "gcp:sbfb2e25c9059", "gcp:s12d2856bf552", "gcp:sef4965908f7b", "gcp:s652edf39de2a", "gcp:s57189bff8b8f", "gcp:sd9ee642a0bff"], "status": "REASONED", "verify": [1]},
     "verify-azure": {"text": "Per NSG include default rules and read JSON direction/access plus singular/plural source prefixes; tables omit arrays and can conceal exposure.", "components": ["azure"], "sources": ["azure:se217f16ce4c1", "azure:scde5b083d938"], "status": "REASONED", "verify": [1]},
-    "azure-admin": {"text": "Review Virtual Network Manager security admin rules; the guide says Always allow bypasses NSGs. No security-admin-rule source is listed.", "components": ["azure"], "sources": ["azure:scde5b083d938"], "status": "REASONED", "verify": [1]},
+    "azure-admin": {"text": "Azure Virtual Network Manager security admin rules run before NSG rules: Allow continues to NSG evaluation, Always Allow bypasses NSG evaluation, and Deny stops traffic. Review the target VM's applied rules in the Azure portal; as this guide's reasoning, an applied Always Allow from an unauthorized or internet source to any restricted port, including SSH port 22, fails this check even if the NSG list looks safe. This guide has no sourced CLI command to list applied rules.", "components": ["azure", "azure-docs"], "sources": ["azure:scde5b083d938", "azure-docs:s03ca867c4276", "azure-docs:sb802fe01684c"], "status": "REASONED", "verify": [1]},
     "verify-ports": {"text": "Outside the admin range, spot-check 22, 3306, 5432, 6379 and 27017; refusal/timeout is expected, while netcat usage errors or silent local failure are inconclusive.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:scde5b083d938"], "status": "REASONED", "verify": [2]},
     "verify-complete": {"text": "The spot-check omits RDP 3389 and apps such as 8080/9200; scan all public IPv4/IPv6 ports, distinguish open/closed/filtered, and correlate allowed/disallowed controls with effective rules.", "components": ["aws", "gcp", "azure"], "sources": ["aws:s5594f61a25d6", "gcp:s1c06c98a99c9", "azure:scde5b083d938"], "status": "REASONED", "verify": [2]}
   }
@@ -77,16 +97,16 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | --- | --- | --- |
 | public-front: Allow internet sources only to the front TLS layer on 80 for redirects and 443; private sources alone reach databases/internal services, with TLS/authentication still required. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
 | ssh: Restrict 22 to named administrative addresses or documented broker sources, never unrestricted internet ranges. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
-| ssm: SSM Agent dials out and requires no inbound rule; no Session Manager source is listed. | AWS security groups and CLI unknown | REASONED |
-| iap: IAP needs TCP 22 ingress from 35.235.240.0/20; no IAP source is listed. | Google Cloud firewall and CLI unknown | REASONED |
-| bastion: Bastion needs target-VM ingress from AzureBastionSubnet; tailnet is another linked alternative. Direct broker sources are absent. | Azure NSG and CLI unknown | REASONED |
+| ssm: SSM SSH uses the agent's outbound TLS connection and needs no inbound port on the managed node; allow outbound HTTPS 443 to the documented Systems Manager endpoints. | AWS security groups and CLI unknown | REASONED |
+| iap: IAP requires cloud ingress to SSH port 22 from 35.235.240.0/20, or 2600:2d00:1:7::/64 for IPv6 VMs. | Google Cloud firewall and CLI unknown | REASONED |
+| bastion: Bastion requires the target VM subnet NSG to allow SSH from the AzureBastionSubnet IP range. A tailnet ordinarily needs no inbound internet firewall port, and Tailscale SSH accepts tailnet traffic on port 22. As this guide's reasoning, check the host firewall for these broker paths; the fetched IAP, Bastion and Tailscale pages do not specify a UFW or firewalld rule. | Azure NSG and CLI unknown; Azure documentation snapshot 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f; Tailscale documentation unknown; Google Cloud firewall and CLI unknown | REASONED |
 | least-access: Start default-deny, add minimum allowances and retire obsolete rules; use security-group references where supported to survive app IP changes. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
 | docker: On VMs running Docker, use both cloud and host firewall layers as this guide's advice; Docker documents that published container traffic bypasses UFW settings, as the linked Docker guide explains. | Docker Engine networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | verify-aws: Per region inspect all inbound rules, protocol/port ranges, IPv4/IPv6 CIDRs, resolved prefix lists and group references; combinations of narrower ranges can still expose the internet. | AWS security groups and CLI unknown | REASONED |
 | verify-gcp: Per project read JSON classic VPC rules, including direction, disabled state, allowed/denied and source ranges; a table can hide whether enforcement is disabled. | Google Cloud firewall and CLI unknown | REASONED |
 | gcp-policies: Also list/describe hierarchical and global/regional network policies and read their effective order. Hierarchical policy rules can override or delegate to global network and VPC rules. The VPC network's networkFirewallPolicyEnforcementOrder defaults to AFTER_CLASSIC_FIREWALL: hierarchical and regional system policies, VPC rules, then global and regional network policies; BEFORE_CLASSIC_FIREWALL puts global and regional network policies after hierarchical and regional system policies but before VPC rules. A matching allow or deny stops evaluation; goto_next continues it. As this guide's reasoning, a policy allow with an internet source can expose a port even when the VPC list is clean, unless an earlier rule denies it. | Google Cloud firewall and CLI unknown | REASONED |
 | verify-azure: Per NSG include default rules and read JSON direction/access plus singular/plural source prefixes; tables omit arrays and can conceal exposure. | Azure NSG and CLI unknown | REASONED |
-| azure-admin: Review Virtual Network Manager security admin rules; the guide says Always allow bypasses NSGs. No security-admin-rule source is listed. | Azure NSG and CLI unknown | REASONED |
+| azure-admin: Azure Virtual Network Manager security admin rules run before NSG rules: Allow continues to NSG evaluation, Always Allow bypasses NSG evaluation, and Deny stops traffic. Review the target VM's applied rules in the Azure portal; as this guide's reasoning, an applied Always Allow from an unauthorized or internet source to any restricted port, including SSH port 22, fails this check even if the NSG list looks safe. This guide has no sourced CLI command to list applied rules. | Azure NSG and CLI unknown; Azure documentation snapshot 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f | REASONED |
 | verify-ports: Outside the admin range, spot-check 22, 3306, 5432, 6379 and 27017; refusal/timeout is expected, while netcat usage errors or silent local failure are inconclusive. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
 | verify-complete: The spot-check omits RDP 3389 and apps such as 8080/9200; scan all public IPv4/IPv6 ports, distinguish open/closed/filtered, and correlate allowed/disallowed controls with effective rules. | AWS security groups and CLI unknown; Google Cloud firewall and CLI unknown; Azure NSG and CLI unknown | REASONED |
 <!-- version-basis:end -->
@@ -97,15 +117,15 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 1. **Public means 80/443 on the TLS layer, nothing else.** Only the load balancer, reverse proxy, or tunnel endpoint accepts traffic from `0.0.0.0/0`, and only on 80 (redirect) and 443.
 2. **Databases and internal services accept traffic from private sources only**: the application's security group, subnet, or VPC, never the internet. The per-database guides' TLS and auth still apply on top; the firewall is a layer, not the control.
-3. **SSH is not public.** Restrict port 22 to your addresses, or remove the public rule and use brokered access. AWS SSM Session Manager needs no inbound rule at all (its SSM Agent dials out to the SSM service); GCP Identity-Aware Proxy still needs an ingress allow for TCP 22 from the IAP range `35.235.240.0/20`; Azure Bastion needs the target VM to allow inbound from the `AzureBastionSubnet`; or use a tailnet ([tailscale.md](tailscale.md)). Those broker sources are scoped ranges, not the internet. Then harden the host per [host.md](host.md).
+3. **SSH is not public.** Restrict port 22 to your addresses, or remove the public rule and use brokered access. AWS SSM Session Manager SSH uses the SSM Agent's outbound TLS connection to Session Manager endpoints and needs no inbound port on the managed node; allow outbound HTTPS 443 to the documented endpoints. GCP IAP TCP forwarding requires a cloud ingress allow from `35.235.240.0/20` to SSH port 22 (or `2600:2d00:1:7::/64` for IPv6 VMs); Azure Bastion requires the target VM subnet's NSG to allow SSH from the `AzureBastionSubnet` IP address range on port 22. Or use a tailnet ([tailscale.md](tailscale.md)): Tailscale ordinarily needs no inbound internet firewall port, and Tailscale SSH accepts traffic from the tailnet on port 22. As this guide's reasoning, these broker paths avoid a public SSH rule, while the IAP and Bastion cloud allowances must stay scoped to their documented sources. As this guide's advice, check the host firewall separately; the fetched IAP, Bastion and Tailscale pages do not specify which UFW or firewalld rules, if any, are needed. Then harden the host per [host.md](host.md).
 4. **Default deny, explicit allow.** Start from no inbound rules and add the minimum; review rules whenever a service is retired. Reference security-group IDs rather than IP ranges where the provider supports it, so app-to-database access survives IP changes without widening.
 5. **Both layers matter on VMs running Docker**: as this guide's advice, use both the cloud firewall and the host's rules, remembering that Docker documents published container traffic bypassing host UFW settings ([docker.md](docker.md)).
 
 ## Verify
 
-REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules, Google firewall policy, evaluation-order and gcloud references, and Azure network security group rule properties; no authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker range (an IAP `35.235.240.0/20` rule, or an Azure Bastion subnet rule, is expected), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
+REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules, Google firewall policy, evaluation-order and gcloud references, Azure network security group rule properties, the fetched Session Manager, IAP, Bastion and Tailscale pages, and the Azure security-admin rule and applied-rules pages; no authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker source (an IAP `35.235.240.0/20` rule, its IPv6 range for IPv6 VMs, or an Azure Bastion subnet rule, is expected), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
 
-REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation and Google firewall policy and evaluation-order references; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
+REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation, Google firewall policy and evaluation-order references, and the Azure security-admin rule and applied-rules pages; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
 
 ```bash
 # AWS, once per region. Every rule, not a selection: no filter catches the exposure class, because
@@ -153,10 +173,14 @@ az network nsg rule list \
 # for each rule with "direction": "Inbound" and "access": "Allow", work out what its
 # "sourceAddressPrefix" and "sourceAddressPrefixes" actually reach: "*", "Internet", "0.0.0.0/0" and
 # "::/0" are the obvious cases, and so is any set of ranges that together cover the internet.
-# NSG rules are not the whole story: Azure Virtual Network Manager security admin rules are evaluated BEFORE the
-# NSG, and an "Always allow" admin rule sends traffic straight to the resource, bypassing the NSG. If your tenant
-# uses a network manager, also review its security admin rules (they do not appear in `nsg rule list`), or an NSG
-# that reads safe here can still be overridden into exposure.
+# NSG rules are not the whole story: Azure Virtual Network Manager security admin rules run before NSG rules.
+# Allow continues to NSG evaluation; Always Allow bypasses it; Deny stops traffic. For the target VM, use
+# the Azure portal: Networking > network interface > Support + troubleshooting > Effective security rules,
+# then select the Azure Virtual Network Manager to inspect its applied security admin rules.
+# As this guide's reasoning, an applied Always Allow from an unauthorized or internet source to any restricted
+# port, including SSH port 22, is a finding even if the NSG list above looks safe; inspect the rule source,
+# destination, action and port.
+# The fetched pages give a portal path for applied rules; this guide has no sourced CLI command to list them.
 ```
 
 - REASONED: disallowed-source port probes and their failure interpretation, per the guide's cited AWS security group rules and Azure network security group rule properties. No authorized cloud endpoints or allowed/disallowed probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching nc, while a substituted address reached five nc stubs. Live exposed connections and fixed refusals/timeouts remain unobserved; local errors are inconclusive. From an address outside the range you administer from:
@@ -181,6 +205,14 @@ az network nsg rule list \
 
 ## Sources (checked September 2026)
 
+- AWS Session Manager SSH tunnel (rolling) (checked October 2026): https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-enable-ssh-connections.html#session-manager-getting-started-enable-ssh-connections
+- AWS Session Manager managed-node outbound HTTPS prerequisites (rolling) (checked October 2026): https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-prerequisites.html#session-manager-prerequisites
+- Google Cloud IAP TCP forwarding firewall source and SSH port (rolling) (checked October 2026): https://docs.cloud.google.com/iap/docs/using-tcp-forwarding#create-firewall-rule
+- Azure Bastion target VM subnet NSG rule, at 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f (checked October 2026): https://github.com/MicrosoftDocs/azure-docs/blob/8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f/articles/bastion/bastion-nsg.md#L77-L84
+- Azure security-admin actions and NSG evaluation order, at 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f (checked October 2026): https://github.com/MicrosoftDocs/azure-docs/blob/8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f/articles/virtual-network-manager/concept-security-admins.md#L50-L67
+- Azure portal view of applied VM security-admin rules, at 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f (checked October 2026): https://github.com/MicrosoftDocs/azure-docs/blob/8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f/articles/virtual-network-manager/how-to-view-applied-configurations.md#L92-L100
+- Tailscale firewall ports (rolling) (checked October 2026): https://tailscale.com/docs/reference/faq/firewall-ports
+- Tailscale SSH tailnet port 22 (rolling) (checked October 2026): https://tailscale.com/docs/features/tailscale-ssh#why-it-matters
 - AWS CLI `describe-security-group-rules` (the `IsEgress`, `CidrIpv4`, `CidrIpv6`, `FromPort` and `ToPort` fields): https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-security-group-rules.html
 - AWS security group rules (`0.0.0.0/0` as every IPv4 address): https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html
 - Google Cloud VPC firewall rules, including the `gcloud compute firewall-rules list --format` projection used above: https://docs.cloud.google.com/firewall/docs/using-firewalls
