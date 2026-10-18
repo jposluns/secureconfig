@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "93f2c4596d605fd48288e7e0f87b07ccab5748301852bdba58ea4cbf29dab1c9",
+  "body_sha256": "cabbd47a2c78bc2d48e39aa1472f6083e58511d83954a699ae490a682dd94154",
   "components": {
     "docker-build": {
       "name": "Docker build and image history documentation",
@@ -179,6 +179,45 @@ version_basis: {
       "sources": {
         "scde5b083d938": "https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/get"
       }
+    },
+    "cloudflared-image": {
+      "name": "cloudflared container image",
+      "basis": "2026.9.3",
+      "sources": {
+        "se79f4a693e7a": "https://github.com/cloudflare/cloudflared/blob/2026.9.3/README.md#L1-L5",
+        "s8b0cac0c9e3c": "https://github.com/cloudflare/cloudflared/blob/2026.9.3/README.md#L26-L33",
+        "s5c722efb03b3": "https://github.com/cloudflare/cloudflared/blob/2026.9.3/Dockerfile#L40-L42"
+      }
+    },
+    "cloudflare-tunnel": {
+      "name": "Cloudflare Tunnel documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "s253af0f0386c": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L31-L49",
+        "sbd8e87e6c172": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel.mdx#L27-L37"
+      }
+    },
+    "compose-pinned": {
+      "name": "Docker Compose networking documentation",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "seb7ab83ee20e": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/compose/how-tos/networking.md#L13-L17"
+      }
+    },
+    "tailscale-entry": {
+      "name": "Tailscale entry documentation",
+      "basis": "unknown",
+      "sources": {
+        "s8a8000573b13": "https://tailscale.com/kb/1242/tailscale-serve",
+        "sbe30f8121245": "https://tailscale.com/kb/1223/funnel"
+      }
+    },
+    "self-signed-entry": {
+      "name": "OpenSSL documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s211b1e6e4aa4": "https://docs.openssl.org/"
+      }
     }
   },
   "claims": {
@@ -196,7 +235,7 @@ version_basis: {
     "proxy-path": {"text": "Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. Docker documents the explicit-address option and conditional userland-proxy mapping; the INPUT restriction and probes are this guide's reasoning and advice.", "components": ["engine", "engine-pinned"], "sources": ["engine:s1e53417c513d", "engine:s2fecb6db5480", "engine-pinned:sb3dacfbaf7e1", "engine-pinned:s1c82ff316a7e", "engine-pinned:s024cfadb4bb8"], "status": "REASONED"},
     "persistence": {"text": "As this guide's advice, persist only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves. Moby identifies docker.service and systemd documents After= ordering; as this guide's assessment, rule non-persistence, the boot-time gap, what iptables-persistent captures and its potential to break container networking have no direct source here.", "components": ["engine", "engine-pinned", "moby-unit", "systemd-unit"], "sources": ["engine:s351180c6678f", "engine:s2fecb6db5480", "engine-pinned:sc244607b20e4", "engine-pinned:s024cfadb4bb8", "moby-unit:s6aa0d2fb34cf", "systemd-unit:s71dce3a476cd"], "status": "REASONED"},
     "tls": {"text": "Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates.", "components": ["compose", "caddy-image", "caddy"], "sources": ["compose:sae565a19136c", "caddy-image:sbbb7746f7545", "caddy-image:sb126b380b9cf", "caddy-image:seea3a2adc92a", "caddy:s5520ee906a7f", "caddy:sfa5c7dc047dc"], "status": "REASONED"},
-    "alternate-entry": {"text": "Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed.", "components": ["compose"], "sources": ["compose:sae565a19136c"], "status": "REASONED"},
+    "alternate-entry": {"text": "As this guide's advice, hosts with no inbound ports and a Cloudflare domain use a cloudflared container, while hosts with no domain use Tailscale or internal self-signed TLS. Cloudflare documents an outbound tunnel, a container image, an HTTPS origin service URL and a domain prerequisite; Docker documents Compose service-name lookup. The http://app:3000 origin target on a shared Compose network is this guide's inference, not shown literally by the fetched Cloudflare lines. The tunnel-token setup is not shown here; the Tailscale and OpenSSL references are rolling, and the self-signed fallback remains this guide's advice.", "components": ["compose", "cloudflared-image", "cloudflare-tunnel", "compose-pinned", "tailscale-entry", "self-signed-entry"], "sources": ["compose:sae565a19136c", "cloudflared-image:se79f4a693e7a", "cloudflared-image:s8b0cac0c9e3c", "cloudflared-image:s5c722efb03b3", "cloudflare-tunnel:s253af0f0386c", "cloudflare-tunnel:sbd8e87e6c172", "compose-pinned:seb7ab83ee20e", "tailscale-entry:s8a8000573b13", "tailscale-entry:sbe30f8121245", "self-signed-entry:s211b1e6e4aa4"], "status": "REASONED"},
     "auth": {"text": "As this guide's assessment, proxy authentication and human MFA supplement application login. Caddy and nginx basic authentication reject missing credentials; nginx auth_request returns 401/403; Traefik basicAuth calls RequireAuth and forwardAuth passes through non-2xx; Cloudflare Access policies can require MFA, and Authelia can sit behind the proxy. Require MFA in the governing policy or portal; as this guide's assessment, basic auth alone is single-factor. The Caddy forward_auth rejection status, exact Traefik basicAuth status and Cloudflare Access anonymous status are not established by these fetched lines.", "components": ["compose", "caddy", "nginx-auth", "traefik-auth", "cloudflare-access", "authelia-proxy"], "sources": ["compose:sae565a19136c", "caddy:s32fb97ff942b", "caddy:sd698097c71f4", "caddy:s87dc43d9819d", "nginx-auth:s44cecab17a23", "nginx-auth:s91b029555086", "nginx-auth:s3df6e64cd6a3", "traefik-auth:s5f9a13d720c8", "traefik-auth:sfe588a6dd6a3", "traefik-auth:sbc20b015d928", "cloudflare-access:s6f6104362214", "cloudflare-access:s7cafe1b17afd", "authelia-proxy:s5ca02c783843"], "status": "REASONED"},
     "secrets": {"text": "Use runtime environment files or Compose secrets, exclude .env from Git, and never put secrets in Dockerfile ENV/ARG; use temporary build secret mounts. Docker build and history behaviour is sourced; as this guide's assessment, the cited history reference does not establish that every argument value is shown; as this guide's assessment, never bake secrets into images and do not copy or print build-time secrets into the image. No direct source for the runtime delivery methods or the .env exclusion from Git is listed.", "components": ["compose", "docker-build"], "sources": ["compose:sae565a19136c", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s6283b172a5c6"], "status": "REASONED"},
     "workload": {"text": "Keep .env in .gitignore, which ignores matching untracked files but not tracked files. Use a non-root Dockerfile USER; as this guide's assessment, a compromised app then is not root in the container. Drop capabilities, use no-new-privileges and a read-only root filesystem, and never mount the Docker socket. Docker sources establish the option names, that only trusted users should control the daemon, and that Unix permissions can limit access to its control socket; the linked guide's hardening consequences, including the mounted-socket path, remain this guide's assessment.", "components": ["compose", "git-ignore", "docker-workload"], "sources": ["compose:sae565a19136c", "git-ignore:s5f377f0fdbd8", "docker-workload:s2fa3b3cd70e6", "docker-workload:s8000f273883e", "docker-workload:sb94d21792cd4", "docker-workload:s28ce092b2589", "docker-workload:s738280652c95", "docker-workload:secebea1a69ab"], "status": "REASONED"},
@@ -236,7 +275,7 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 | proxy-path: Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. Docker documents the explicit-address option and conditional userland-proxy mapping; the INPUT restriction and probes are this guide's reasoning and advice. | Docker Engine networking unknown; Docker Engine networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | persistence: As this guide's advice, persist only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves. Moby identifies docker.service and systemd documents After= ordering; as this guide's assessment, rule non-persistence, the boot-time gap, what iptables-persistent captures and its potential to break container networking have no direct source here. | Docker Engine networking unknown; Docker Engine networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f; Moby Docker service unit v28.3.3; systemd unit ordering v262 | REASONED |
 | tls: Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates. | Compose networking unknown; Caddy image fba2853501d36e8a72f946ac8cb7ff64d07e48f2; Caddy v2.11.4 | REASONED |
-| alternate-entry: Cloudflared to http://app:3000, Tailscale or internal self-signed TLS are linked alternatives; no direct vendor sources for these alternatives are listed. | Compose networking unknown | REASONED |
+| alternate-entry: As this guide's advice, hosts with no inbound ports and a Cloudflare domain use a cloudflared container, while hosts with no domain use Tailscale or internal self-signed TLS. Cloudflare documents an outbound tunnel, a container image, an HTTPS origin service URL and a domain prerequisite; Docker documents Compose service-name lookup. The http://app:3000 origin target on a shared Compose network is this guide's inference, not shown literally by the fetched Cloudflare lines. The tunnel-token setup is not shown here; the Tailscale and OpenSSL references are rolling, and the self-signed fallback remains this guide's advice. | Compose networking unknown; cloudflared container image 2026.9.3; Cloudflare Tunnel documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104; Docker Compose networking documentation 4e9a5751518ed8223a8dcde53693badddd72604f; Tailscale entry documentation unknown; OpenSSL documentation (rolling) unknown | REASONED |
 | auth: As this guide's assessment, proxy authentication and human MFA supplement application login. Caddy and nginx basic authentication reject missing credentials; nginx auth_request returns 401/403; Traefik basicAuth calls RequireAuth and forwardAuth passes through non-2xx; Cloudflare Access policies can require MFA, and Authelia can sit behind the proxy. Require MFA in the governing policy or portal; as this guide's assessment, basic auth alone is single-factor. The Caddy forward_auth rejection status, exact Traefik basicAuth status and Cloudflare Access anonymous status are not established by these fetched lines. | Compose networking unknown; Caddy v2.11.4; nginx authentication source release-1.26.3; Traefik authentication source v3.5.0; Cloudflare Access documentation c896795b8e8bab68d05ae78d64c9cbcda1fdb104; Authelia proxy integration v4.39.28 | REASONED |
 | secrets: Use runtime environment files or Compose secrets, exclude .env from Git, and never put secrets in Dockerfile ENV/ARG; use temporary build secret mounts. Docker build and history behaviour is sourced; as this guide's assessment, the cited history reference does not establish that every argument value is shown; as this guide's assessment, never bake secrets into images and do not copy or print build-time secrets into the image. No direct source for the runtime delivery methods or the .env exclusion from Git is listed. | Compose networking unknown; Docker build and image history documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
 | workload: Keep .env in .gitignore, which ignores matching untracked files but not tracked files. Use a non-root Dockerfile USER; as this guide's assessment, a compromised app then is not root in the container. Drop capabilities, use no-new-privileges and a read-only root filesystem, and never mount the Docker socket. Docker sources establish the option names, that only trusted users should control the daemon, and that Unix permissions can limit access to its control socket; the linked guide's hardening consequences, including the mounted-socket path, remain this guide's assessment. | Compose networking unknown; Git ignore rules v2.49.0; Docker workload documentation 4e9a5751518ed8223a8dcde53693badddd72604f | REASONED |
@@ -321,7 +360,7 @@ app.example.com {
 }
 ```
 
-Caddy obtains and renews the certificate automatically ([free-certificates.md](free-certificates.md) explains the ACME requirements). Hosts with no inbound ports but a domain you can put on Cloudflare should use [cloudflare.md](cloudflare.md); run the `cloudflared` connector as a container and point it at `http://app:3000`. Hosts with no domain at all should use [tailscale.md](tailscale.md), or [self-signed.md](self-signed.md) for internal use.
+Caddy obtains and renews the certificate automatically ([free-certificates.md](free-certificates.md) explains the ACME requirements). As this guide's recommendation, hosts with no inbound ports but a domain you can put on Cloudflare should use [cloudflare.md](cloudflare.md); run the `cloudflared` connector as a container on the app's Compose network and point it at `http://app:3000`. As this guide's recommendation, hosts with no domain at all should use [tailscale.md](tailscale.md) (Serve for private tailnet access or Funnel for public access), or [self-signed.md](self-signed.md) for internal use. Docker documents service-name lookup on the shared Compose network; the `http://app:3000` origin is this guide's inference from that lookup and [cloudflare.md](cloudflare.md)'s HTTP origin example, while the fetched Cloudflare origin parameters show an HTTPS service URL rather than this literal HTTP value. This guide does not show the tunnel-token setup; [cloudflare.md](cloudflare.md) gives the protected `--token-file` path.
 
 ## 3. Authentication and secrets
 
@@ -392,3 +431,12 @@ REASONED: this firewalld reload check follows the Impact section of GHSA-x4rx-4g
 - AWS security-group rules (rolling) (checked October 2026): https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html
 - Google Cloud VPC firewall rules (rolling) (checked October 2026): https://docs.cloud.google.com/firewall/docs/using-firewalls
 - Azure NSG rule properties (rolling) (checked October 2026): https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/get
+- cloudflared 2026.9.3 outbound tunnel behaviour (checked October 2026): https://github.com/cloudflare/cloudflared/blob/2026.9.3/README.md#L1-L5
+- cloudflared 2026.9.3 Docker image (checked October 2026): https://github.com/cloudflare/cloudflared/blob/2026.9.3/README.md#L26-L33
+- cloudflared 2026.9.3 container entry point (checked October 2026): https://github.com/cloudflare/cloudflared/blob/2026.9.3/Dockerfile#L40-L42
+- Cloudflare Tunnel origin service URL example at c896795b8e8bab68d05ae78d64c9cbcda1fdb104 (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L31-L49
+- Cloudflare Tunnel published application domain prerequisite at c896795b8e8bab68d05ae78d64c9cbcda1fdb104 (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel.mdx#L27-L37
+- Docker Compose service-name lookup at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/compose/how-tos/networking.md#L13-L17
+- Tailscale Serve private tailnet entry (rolling, checked October 2026): https://tailscale.com/kb/1242/tailscale-serve
+- Tailscale Funnel public entry (rolling, checked October 2026): https://tailscale.com/kb/1223/funnel
+- OpenSSL self-signed certificate documentation (rolling, checked October 2026): https://docs.openssl.org/
