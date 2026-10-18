@@ -10581,7 +10581,7 @@ az network nsg rule list \
 - AWS managed prefix lists (a rule source that is neither a CIDR nor a security group): https://docs.aws.amazon.com/vpc/latest/userguide/managed-prefix-lists.html
 - gcloud output formats, for the `json` format value used above: https://docs.cloud.google.com/sdk/gcloud/reference/topic/formats
 - Docker and UFW published-port traffic, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L90-L102
-- Google Cloud firewall policy types, including regional network policies (rolling) (checked October 2026): https://docs.cloud.google.com/firewall/docs/firewall-policies-overview#regional_network_firewall_policies
+- Google Cloud regional network firewall policies (rolling) (checked October 2026): https://docs.cloud.google.com/firewall/docs/firewall-policies-overview#regional_network_firewall_policies
 - Google Cloud hierarchical policy resource order and delegation to lower-level rules (rolling) (checked October 2026): https://docs.cloud.google.com/firewall/docs/firewall-policies#resource_hierarchy
 - gcloud hierarchical policy list syntax (rolling) (checked October 2026): https://docs.cloud.google.com/sdk/gcloud/reference/compute/firewall-policies/list
 - gcloud hierarchical policy describe syntax (rolling) (checked October 2026): https://docs.cloud.google.com/sdk/gcloud/reference/compute/firewall-policies/describe
