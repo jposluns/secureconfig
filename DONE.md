@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.264 | `gpu-clouds.md`: mfa, verify-inventory and vast-auth-controls, partial. (M, M) | Done, #659. Cited namespace scope and Vast documentation/test expectations, narrowed the workload-MFA assertion and labelled account-MFA advice; the Vast implementation and account-source gaps remain in TODO.md under 1.264. |
 | 1.261 | `gpu-clouds.md`: verify-jupyter: cite Jupyter `/api/contents` and the 403/200 expectation with and without a token. (M, M) | Done, #657. Pinned Jupyter Server v2.18.0 contents routing, token authentication, anonymous 403 handling and the documented HTTP 200 success response. |
 | 1.254 | `deployment-lifecycle.md`: tcp-scan: cite non-OpenBSD `nc` behaviour used by the check. (M, M) | Done, #656. Cited Ubuntu netcat-openbsd, BusyBox and CentOS Ncat packaging, retained implementation gaps and added the placeholder-guard pointer. |
 | 1.258 | `deployment-lifecycle.md`: reverify: source or narrow the claim that restores recreate defaults and reset flags. (M, M) | Done, #656. Cited Docker change-related exposure and Open WebUI persistence configuration, labelling restore reasoning and retaining the database-precedence gap. |
