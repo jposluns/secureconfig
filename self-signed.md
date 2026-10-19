@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "b1b64b34433724c056373e54016dfbf6a66a2918b89b61f6f4971e8155fe8011",
+  "body_sha256": "b209ce0aa20390b1ec8888e436f6bb87ea31f15f19bcd4d8529c14faca6a432a",
   "components": {
     "openssl": {
       "name": "OpenSSL documentation (rolling)",
@@ -89,7 +89,8 @@ version_basis: {
       "sources": {
         "s876896563d01": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11937-L11942",
         "s881033f651b3": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11967-L11968",
-        "s9ab719f6189b": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11614-L11622"
+        "s9ab719f6189b": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11614-L11622",
+        "s0ef955010eb3": "https://github.com/coreutils/coreutils/blob/v9.7/doc/perm.texi#L492-L535"
       }
     },
     "node-v24": {
@@ -111,7 +112,7 @@ version_basis: {
     "extension-history": {"text": "The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
     "unencrypted-key": {"text": "-noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
     "expiry": {"text": "Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
-    "key-permissions": {"text": "This guide advises chmod 600 and service-user ownership for server.key; GNU coreutils v9.7 documents chmod's mode changes and chown's owner/group changes, not that advice. Mode 600's owner read/write and no group/other permissions remain this guide's reasoning without a cited mode definition.", "components": ["openssl", "coreutils"], "sources": ["openssl:s211b1e6e4aa4", "coreutils:s876896563d01", "coreutils:s881033f651b3", "coreutils:s9ab719f6189b"], "status": "REASONED"},
+    "key-permissions": {"text": "This guide advises chmod 600 and service-user ownership for server.key; GNU coreutils v9.7 documents chmod's mode changes and chown's owner/group changes, not that advice. Mode 600's owner read/write and no group/other permissions are this guide's reading of GNU coreutils v9.7's Numeric Modes definition in doc/perm.texi.", "components": ["openssl", "coreutils"], "sources": ["openssl:s211b1e6e4aa4", "coreutils:s876896563d01", "coreutils:s881033f651b3", "coreutils:s9ab719f6189b", "coreutils:s0ef955010eb3"], "status": "REASONED"},
     "key-compromise": {"text": "Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat.", "components": ["openssl", "git"], "sources": ["openssl:s211b1e6e4aa4", "git:sf961a2e5b8e1"], "status": "REASONED"},
     "mkcert": {"text": "mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs.", "components": ["mkcert"], "sources": ["mkcert:s41ae17dba4ce"], "status": "REASONED"},
     "mkcert-custody": {"text": "Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.", "components": ["mkcert"], "sources": ["mkcert:s41ae17dba4ce"], "status": "REASONED"},
@@ -164,7 +165,7 @@ Claims (full source mapping in the front matter):
 - extension-history (REASONED; openssl): The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension.
 - unencrypted-key (REASONED; openssl): -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions.
 - expiry (REASONED; openssl): Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves.
-- key-permissions (REASONED; openssl, coreutils): This guide advises chmod 600 and service-user ownership for server.key; GNU coreutils v9.7 documents chmod's mode changes and chown's owner/group changes, not that advice. Mode 600's owner read/write and no group/other permissions remain this guide's reasoning without a cited mode definition.
+- key-permissions (REASONED; openssl, coreutils): This guide advises chmod 600 and service-user ownership for server.key; GNU coreutils v9.7 documents chmod's mode changes and chown's owner/group changes, not that advice. Mode 600's owner read/write and no group/other permissions are this guide's reading of GNU coreutils v9.7's Numeric Modes definition in doc/perm.texi.
 - key-compromise (REASONED; openssl, git): Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat.
 - mkcert (REASONED; mkcert): mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs.
 - mkcert-custody (REASONED; mkcert): Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.
@@ -217,7 +218,7 @@ Rules that make the certificate actually work:
 
 ## 2. Protect the private key
 
-This guide advises protecting `server.key` with mode `600` and ownership by the account and group your service runs as; `app:app` below is this guide's example, to replace with that account and group. GNU coreutils v9.7 documents `chmod` changing file access permissions and taking new mode bits, and `chown owner:group` changing both owner and group (see Sources); it does not recommend a service account or select one for this key. This guide's reading of `600` is owner read/write and no group or other permissions; a pinned mode-definition citation is still absent.
+This guide advises protecting `server.key` with mode `600` and ownership by the account and group your service runs as; `app:app` below is this guide's example, to replace with that account and group. GNU coreutils v9.7 documents `chmod` changing file access permissions and taking new mode bits, and `chown owner:group` changing both owner and group (see Sources); it does not recommend a service account or select one for this key. This guide's reading of `600` is owner read/write and no group or other permissions, based on GNU coreutils v9.7's Numeric Modes definition in `doc/perm.texi` (see Sources).
 
 ```bash
 chmod 600 server.key
@@ -299,6 +300,7 @@ Self-signed certificates have no revocation and no third-party accountability, a
 - GNU coreutils v9.7 `chmod` syntax (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11937-L11942
 - GNU coreutils v9.7 mode argument (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11967-L11968
 - GNU coreutils v9.7 `chown` owner and group (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11614-L11622
+- GNU coreutils v9.7 numeric mode definition (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/perm.texi#L492-L535
 - Node.js v24.22.0 `NODE_TLS_REJECT_UNAUTHORIZED` (checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3940-L3944
 - Node.js v24.22.0 `tls.connect` client `rejectUnauthorized` (checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1786-L1789
 - Node.js v24.22.0 `tls.createServer` `rejectUnauthorized` and `requestCert` (checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L2250-L2255
