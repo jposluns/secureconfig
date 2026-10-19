@@ -10068,7 +10068,7 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -10082,6 +10082,10 @@ Components (recorded basis):
 - security65: Spring Security HSTS, 6.5
 - tomcat: Tomcat HTTP connector, 10.1
 - curl: curl minimum diagnostics version, 7.75.0
+- jdk21u: OpenJDK jdk21u javax.net.ssl sources, jdk-21.0.12.1-ga
+- entra-docs: Microsoft Entra documentation, 231747abc59ae3d50c74e215c1cdd592eb980723
+- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
+- authelia-source: Authelia source, v4.39.28
 
 Claims (full source mapping in the front matter):
 
@@ -10102,10 +10106,10 @@ Claims (full source mapping in the front matter):
 - login-limit (REASONED; security): Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts.
 - oidc-starter (REASONED; boot40): Boot 3.5 uses starter-oauth2-client; Boot 4 uses starter-security-oauth2-client and deprecates the old name.
 - oidc (REASONED; boot, security): Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC.
-- mfa (REASONED; security): Enforce MFA at the identity provider or a fronting layer per linked guides; these MFA controls lack a direct listed source.
+- mfa (REASONED; security, entra-docs, cf-docs, authelia-source): Enforce MFA at the identity provider or a fronting layer per linked guides; for example, an Entra Conditional Access policy can require an MFA authentication strength, Cloudflare Access independent MFA can enforce MFA without relying on the IdP, and Authelia supports TOTP, WebAuthn and Duo second factors. The cited pages do not establish this deployment's enforcement.
 - csrf (REASONED; security): Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection.
 - session-fixation (REASONED; security): Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled.
-- client-validation (REASONED; boot, jdk): Do not install trust-all TrustManager or hostname verifiers; this client-validation warning has no direct listed API source.
+- client-validation (REASONED; boot, jdk, jdk21u): Do not install trust-all TrustManager or hostname verifiers; pinned jdk21u sources document X509TrustManager's check methods, HostnameVerifier.verify, SSLContext.init's trust-manager input, and HttpsURLConnection default setters reaching later instances while per-instance setters affect one object. The whole-JVM-client reading is this guide's assessment.
 - client-ca (REASONED; boot, jdk): Import an internal CA with keytool into cacerts and change its default changeit password, or configure and apply a named SSL bundle to the client.
 - client-import (REASONED; boot-docs, boot41): RestClientSsl and WebClientSsl imports differ between Boot 3.5.16 and 4.1.1; apply ssl.fromBundle to the selected client.
 - actuator-exposure (REASONED; boot-docs): Boot 3.5.16/4.1.1 default web exposure is health; use an explicit allowlist. Exposure, access and authorization are separate.
@@ -10211,7 +10215,7 @@ spring.security.oauth2.client.registration.sso.scope=openid,profile,email
 spring.security.oauth2.client.provider.sso.issuer-uri=https://idp.example.com/
 ```
 
-The `issuer-uri` drives OpenID Connect discovery, and the `openid` scope is what makes the registration an OpenID Connect login that returns an ID token; without it the login is plain OAuth2. Allowlist and token checks are in [oidc-integration.md](oidc-integration.md), providers in [identity-providers.md](identity-providers.md). MFA: enforce it at the identity provider, or front the app per [mfa.md](mfa.md).
+The `issuer-uri` drives OpenID Connect discovery, and the `openid` scope is what makes the registration an OpenID Connect login that returns an ID token; without it the login is plain OAuth2. Allowlist and token checks are in [oidc-integration.md](oidc-integration.md), providers in [identity-providers.md](identity-providers.md). MFA: enforce it at the identity provider, or front the app per [mfa.md](mfa.md). Examples of layers that can require MFA, cited at the pins in Sources: a Microsoft Entra Conditional Access policy can grant access only with the built-in Multifactor authentication strength; Cloudflare Access independent MFA lets Access enforce MFA requirements without relying on the identity provider, prompting for an additional authentication method before granting access to the application; and Authelia supports configuring TOTP, WebAuthn security keys and Duo mobile push as second factors. None of those pages says a layer enforces MFA by default, and none establishes that this deployment's provider or fronting layer requires MFA; checking the effective policy and testing a login without the second factor are this guide's requirements.
 
 Do not disable CSRF protection merely because an API is "stateless". Browsers can automatically attach authentication cookies or HTTP Basic credentials, so those requests remain vulnerable to CSRF. Decide from how clients supply credentials, not from whether the application stores a session. See Spring Security's [stateless-browser qualification](https://docs.spring.io/spring-security/reference/features/exploits/csrf.html#csrf-and-stateless-browser-applications).
 
@@ -10219,7 +10223,7 @@ Spring Security's default session fixation protection uses `changeSessionId` on 
 
 ## 4. Client-side TLS discipline
 
-- Never install a trust-all `TrustManager` or hostname verifier, and never copy one from an answer that "fixes" a certificate error; it disables validation for the whole JVM client.
+- Never install a trust-all `TrustManager` or hostname verifier, and never copy one from an answer that "fixes" a certificate error. The pinned jdk21u sources document what such code switches off: `X509TrustManager` instances manage which X509 certificates may be used to authenticate the remote side of a secure socket, and its `checkClientTrusted` and `checkServerTrusted` methods throw `CertificateException` when a chain is not trusted; `HostnameVerifier.verify` decides whether a connection is allowed when the URL hostname and the server's identification hostname mismatch; `SSLContext.init` takes trust managers as that context's sources of peer authentication trust decisions. The scope depends on where the trust-all code lands: `HttpsURLConnection.setDefaultSSLSocketFactory` and `setDefaultHostnameVerifier` set the defaults inherited by `HttpsURLConnection` instances created afterwards, a process-wide default, while the per-instance `setSSLSocketFactory` and `setHostnameVerifier` replace only that one object's factory or verifier. That a trust-all pair disables certificate and hostname validation for every client built from the affected `SSLContext` or default, and any reading as broad as "the whole JVM client", are this guide's assessment of those documented contracts rather than statements on the cited lines; the prohibition applies at every scope.
 - For an internal CA, either import it into the JDK truststore, `keytool -importcert -cacerts -alias internal-ca -file /path/ca.crt` (the `cacerts` password defaults to `changeit`; change it), or declare an SSL bundle, `spring.ssl.bundle.pem.internal.truststore.certificate=file:/path/ca.crt`, and apply it to the client: `restClientBuilder.apply(ssl.fromBundle("internal"))` with an injected `RestClientSsl` (`WebClientSsl` for `WebClient`). See [self-signed.md](self-signed.md).
 
 The client SSL helper imports differ between [Boot 3.5.16](https://docs.spring.io/spring-boot/3.5/reference/io/rest-client.html) and [Boot 4.1.1](https://docs.spring.io/spring-boot/4.1/reference/io/rest-client.html):
@@ -10526,7 +10530,15 @@ The small upload must reach and succeed at the intended handler. With a delibera
 - Spring Boot 4.0 starters and deprecated OAuth2 client starter name: https://docs.spring.io/spring-boot/4.0/reference/using/build-systems.html
 - Spring Boot 4.0 migration guide, deprecated starters: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide/e11f389f3671d1eb7fa346065410b5b1eab99c3c
 - Spring Security getting started (Boot defaults): https://docs.spring.io/spring-security/reference/servlet/getting-started.html ; password storage: https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html ; redirect to HTTPS and HSTS: https://docs.spring.io/spring-security/reference/servlet/exploits/http.html
+- Microsoft Entra documentation `231747abc59ae3d50c74e215c1cdd592eb980723`, Conditional Access MFA authentication-strength requirement (checked October 2026): https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/conditional-access/policy-all-users-mfa-strength.md#L56-L57
+- Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, independent MFA enforced in Access without relying on the IdP (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24
+- Authelia source `v4.39.28`, TOTP, WebAuthn security keys and Duo push factors (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/introduction.md#L21-L31
 - keytool (importcert, cacerts): https://docs.oracle.com/en/java/javase/21/docs/specs/man/keytool.html
+- OpenJDK jdk21u `jdk-21.0.12.1-ga`, X509TrustManager interface and check methods (checked October 2026): https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/X509TrustManager.java#L31-L85
+- OpenJDK jdk21u `jdk-21.0.12.1-ga`, HostnameVerifier callback and verify method (checked October 2026): https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/HostnameVerifier.java#L29-L55
+- OpenJDK jdk21u `jdk-21.0.12.1-ga`, SSLContext.init trust-manager parameter (checked October 2026): https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/SSLContext.java#L296-L315
+- OpenJDK jdk21u `jdk-21.0.12.1-ga`, HttpsURLConnection default and per-instance hostname verifier (checked October 2026): https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/HttpsURLConnection.java#L212-L273
+- OpenJDK jdk21u `jdk-21.0.12.1-ga`, HttpsURLConnection default and per-instance SSL socket factory (checked October 2026): https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/HttpsURLConnection.java#L295-L371
 - Spring Boot application properties, Actuator access, error inclusion, H2, multipart, forms, and headers (rolling documentation, checked September 2026): https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html
 - Spring Boot application properties, including spring.web.error (rolling documentation, checked September 2026): https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html
 - Spring Boot Actuator endpoints, exposure, sanitization, and security (rolling documentation, checked September 2026): https://docs.spring.io/spring-boot/3.5/reference/actuator/endpoints.html

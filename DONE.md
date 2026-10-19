@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.281 | `java.md`: mfa: cite provider/fronting enforcement for the stated MFA setup. (M, M) | Done, #678. Cited Entra Conditional Access MFA strength, Cloudflare Access independent MFA and Authelia second factors as examples of layers that can require MFA, keeping deployment enforcement a stated guide requirement rather than a cited fact. |
+| 1.282 | `java.md`: client-validation: cite the trust-all API and its scope. (M, M) | Done, #678. Pinned jdk21u X509TrustManager, HostnameVerifier and SSLContext.init plus the HttpsURLConnection default and per-instance setter scopes, labelling the whole-JVM-client reading as this guide's assessment while keeping the prohibition unweakened. |
 | 1.262 | `gpu-clouds.md`: modal-shared: cite the Shared Endpoints exception. (M, M) | Done, #679. Cited the Modal Shared Endpoints page and the Endpoints page's Proxy tokens section for the always-required proxy token, removed the undocumented-exception statement, and labelled the cannot-be-made-public conclusion as the guide's assessment. |
 | 1.279 | `go.md`: tokens: pin Token environment handling; preserve the delegation of Token generation to p4.66. (M, M) | Done, #676. Cited Go go1.27.0 environment loading and unset-versus-empty semantics while preserving source-literal advice and token-generation delegation to authentication.md. |
 | 1.280 | `go.md`: mfa: cite the fronting identity layer used for MFA enforcement. (M, M) | Done, #676. Cited configured Cloudflare Access and Authelia MFA enforcement while retaining pquerna/otp v1.5.0 and the limits on default and deployed enforcement. |
