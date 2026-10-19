@@ -153,9 +153,12 @@ are rejected. `--write` emits one component source and one claim per line. For l
 a renderer that understands front matter; the llms bundle strips it and retains the visible summary.
 The legacy summary follows the H1. Both summaries list each component once as
 `- <id>: <name> (<basis>)`, then each claim with its status, component IDs and full text in
-metadata order. Claim text preserves balanced, equal-length backtick code spans verbatim;
-outside those spans it retains the existing HTML, pipe and backtick escaping. Unmatched
-backticks remain escaped. Component fields and the plain header retain their existing escaping.
+metadata order. Claim text preserves balanced, equal-length backtick code spans verbatim unless
+the pinned markdown-it-py parser finds raw HTML in the rendered claim; the whole claim, code spans
+included, is then escaped as before. Outside preserved spans, claim text retains the existing HTML,
+pipe and backtick escaping, and unmatched backticks remain escaped. A claim containing a literal `<`
+needs the pinned parser for this check. Component fields and the plain header retain their existing
+escaping.
 
 The two-section layout has no front matter. Its H1 is followed by a generated plain-Markdown
 header, the unchanged human body and Sources, and a generated AI section at EOF. The existing
