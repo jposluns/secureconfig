@@ -1,178 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-17",
-  "documentation_checked": "2026-09",
-  "body_sha256": "e17c3af4fb92d40391435139ae145152d8827211b3ff71dbcec2a3a642b8eb67",
-  "components": {
-    "mdn": {
-      "name": "MDN HTTP documentation",
-      "basis": "unknown",
-      "sources": {
-        "s40155272e6bf": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers",
-        "s9166d803cf3a": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control",
-        "s7f290c45ad37": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Clear-Site-Data",
-        "s46957d9dc1d5": "https://developer.mozilla.org/en-US/docs/Glossary/bfcache"
-      }
-    },
-    "nginx-source": {
-      "name": "nginx source",
-      "basis": "release-1.26.3",
-      "sources": {
-        "s24b0a72bc894": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L110-L116",
-        "s0ae4e9bc8d07": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218",
-        "sedd333de1a8c": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L665-L690",
-        "sf6eac8f6749d": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796",
-        "s70d54f325a93": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L843-L849"
-      }
-    },
-    "apache-source": {
-      "name": "Apache HTTP Server",
-      "basis": "2.4.69",
-      "sources": {
-        "s2f07cea83845": "https://github.com/apache/httpd/blob/2.4.69/docs/manual/mod/mod_headers.xml#L311-L328"
-      }
-    },
-    "caddy-source": {
-      "name": "Caddy source",
-      "basis": "v2.11.4",
-      "sources": {
-        "s0fa8b969b205": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/headers/caddyfile.go#L27-L48"
-      }
-    },
-    "cloudflare-pages": {
-      "name": "Cloudflare Pages documentation",
-      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
-      "sources": {
-        "s38b6aa1f9566": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/pages/configuration/headers.mdx#L14",
-        "sba79d4023eca": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/pages/configuration/headers.mdx#L26"
-      }
-    },
-    "scanner": {
-      "name": "Security Headers scanner",
-      "basis": "unknown",
-      "sources": {
-        "s7a94d0fcb6ad": "https://securityheaders.com/"
-      }
-    },
-    "helmet": {
-      "name": "Helmet",
-      "basis": "v8.1.0",
-      "sources": {
-        "sf42121cfc014": "https://github.com/helmetjs/helmet/blob/v8.1.0/README.md#L3"
-      }
-    },
-    "django": {
-      "name": "Django",
-      "basis": "5.2",
-      "sources": {
-        "se79954c08919": "https://docs.djangoproject.com/en/5.2/ref/middleware/#module-django.middleware.security"
-      }
-    },
-    "curl": {
-      "name": "curl",
-      "basis": "8.23.0",
-      "sources": {
-        "s2278b86c08a6": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/disable.md#L18-L20",
-        "s3b9e19f23f2d": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/globoff.md#L19-L22",
-        "s38391c89b58d": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/silent.md#L20-L25",
-        "sc1670c4672b4": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/show-error.md#L19",
-        "s891e2566ea41": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/location.md#L23-L26",
-        "sd386dc0317da": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/proto-redir.md#L19-L20",
-        "sf7e7834afa89": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/proto.md#L30-L33",
-        "s508454c45cf1": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/noproxy.md#L18-L23",
-        "s62990c766776": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/dump-header.md#L21-L23",
-        "seb2e6bc373fe": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/output.md#L53-L55",
-        "s3aefa5f74fd4": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L20-L29",
-        "se50d33437ccf": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L112-L114",
-        "sc8658f8a2e89": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/disable.md#L5",
-        "s3dbfd02b9aa2": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/globoff.md#L5",
-        "s5b5b25c9a3fe": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/silent.md#L5",
-        "s24da6d0f30ba": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/show-error.md#L5",
-        "s6bee713841f0": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/location.md#L5",
-        "se89c7271eda2": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/dump-header.md#L5",
-        "s93be9b76f8e2": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/output.md#L6",
-        "s3633dd0e6b3e": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L5",
-        "s9a3d23bc00be": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L358-L360"
-      }
-    }
-  },
-  "claims": {
-    "placement": {"text": "Set response headers at a proxy with nginx add_header, Apache Header or Caddy header, in application middleware, or in a Cloudflare Pages _headers file for static asset responses; Pages Functions responses will likely need headers set in Functions code. Applying the three proxy directives to all six listed headers is this guide's inference.", "components": ["mdn", "helmet", "django", "nginx-source", "apache-source", "caddy-source", "cloudflare-pages"], "sources": ["mdn:s40155272e6bf", "helmet:sf42121cfc014", "django:se79954c08919", "nginx-source:s24b0a72bc894", "nginx-source:sf6eac8f6749d", "apache-source:s2f07cea83845", "caddy-source:s0fa8b969b205", "cloudflare-pages:s38b6aa1f9566", "cloudflare-pages:sba79d4023eca"], "status": "REASONED"},
-    "hsts": {"text": "Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
-    "hsts-preload": {"text": "Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED"},
-    "csp": {"text": "Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
-    "csp-report-only": {"text": "Roll out Content-Security-Policy-Report-Only first on existing apps to find breakage; it enforces nothing and is not a substitute for enforcing CSP.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
-    "nosniff": {"text": "Send X-Content-Type-Options: nosniff and verify that value on the final response.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
-    "referrer": {"text": "Send Referrer-Policy: strict-origin-when-cross-origin and verify that final-response value.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
-    "permissions": {"text": "Permissions-Policy disables camera, microphone and geolocation with empty allowlists; verify all three restrictions.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
-    "framing": {"text": "X-Frame-Options: DENY or enforcing CSP frame-ancestors 'none' denies framing; supported frame-ancestors supersedes X-Frame-Options, and default-src does not cover it. frame-ancestors * overrides DENY.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
-    "all-responses": {"text": "Send headers on every response, including errors; nginx add_header inherits parent headers only when the child has no header list, and always covers statuses outside its default set. This guide assesses setting headers only on 200 / as a common proxy misconfiguration.", "components": ["mdn", "nginx-source"], "sources": ["mdn:s40155272e6bf", "nginx-source:sedd333de1a8c", "nginx-source:sf6eac8f6749d", "nginx-source:s0ae4e9bc8d07", "nginx-source:s70d54f325a93"], "status": "REASONED"},
-    "shared-cache": {"text": "Use Cache-Control: private for authenticated responses or no-store for sensitive ones; cache only public content unless authenticated caching is explicitly configured.", "components": ["mdn"], "sources": ["mdn:s9166d803cf3a"], "status": "REASONED"},
-    "cache-key": {"text": "A URL-only shared cache can leak one user's response to another; explicitly vary authenticated cache entries on the cookie or authorization header.", "components": ["mdn"], "sources": ["mdn:s9166d803cf3a", "mdn:s40155272e6bf"], "status": "REASONED"},
-    "browser-cache": {"text": "private still permits browser storage; no-store forbids private and shared storage and belongs on authenticated responses and responses setting session cookies.", "components": ["mdn"], "sources": ["mdn:s9166d803cf3a"], "status": "REASONED"},
-    "history-cache": {"text": "no-cache does not prevent a Back navigation from restoring a back/forward-cache snapshot without revalidation.", "components": ["mdn"], "sources": ["mdn:s9166d803cf3a", "mdn:s46957d9dc1d5"], "status": "REASONED"},
-    "logout-cache": {"text": "Send Clear-Site-Data on logout confirmation; cache clears browser cache and may clear back/forward cache depending on the browser.", "components": ["mdn"], "sources": ["mdn:s7f290c45ad37", "mdn:s46957d9dc1d5"], "status": "REASONED"},
-    "logout-cookies": {"text": "Clear-Site-Data cookies clears cookies across the registered domain and all subdomains, plus HTTP authentication credentials; invalidate the server session separately.", "components": ["mdn"], "sources": ["mdn:s7f290c45ad37"], "status": "REASONED"},
-    "logout-storage": {"text": "Clear-Site-Data storage removes origin local/session storage, IndexedDB and service-worker registrations; understand effects on companion applications before clearing.", "components": ["mdn"], "sources": ["mdn:s7f290c45ad37"], "status": "REASONED"},
-    "logout-header": {"text": "The cited MDN logout example includes cache, cookies, storage, executionContexts, prefetchCache and prerenderCache.", "components": ["mdn"], "sources": ["mdn:s7f290c45ad37"], "status": "REASONED"},
-    "verify-fetch": {"text": "Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while `-D -` printing each response's header block, and selecting the last one, are this guide's assessment.", "components": ["mdn", "curl"], "sources": ["mdn:s40155272e6bf", "curl:s2278b86c08a6", "curl:s3b9e19f23f2d", "curl:s38391c89b58d", "curl:sc1670c4672b4", "curl:s891e2566ea41", "curl:sd386dc0317da", "curl:sf7e7834afa89", "curl:s508454c45cf1", "curl:s62990c766776", "curl:seb2e6bc373fe", "curl:s3aefa5f74fd4", "curl:se50d33437ccf", "curl:s9a3d23bc00be", "curl:sc8658f8a2e89", "curl:s3dbfd02b9aa2", "curl:s5b5b25c9a3fe", "curl:s24da6d0f30ba", "curl:s6bee713841f0", "curl:se89c7271eda2", "curl:s93be9b76f8e2", "curl:s3633dd0e6b3e"], "status": "REASONED", "verify": [1]},
-    "verify-values": {"text": "Judge header values on the final response, not presence on an earlier hop; missing final headers are findings and a failed fetch is inconclusive.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
-    "verify-scanner": {"text": "Use the external Security Headers scanner for a second opinion; the guide states that it fetches with GET.", "components": ["scanner"], "sources": ["scanner:s7a94d0fcb6ad"], "status": "REASONED"},
-    "verify-csp": {"text": "Unexpected console violations must be absent in normal use, but this alone is insufficient; confirm a deliberately disallowed resource is blocked while an allowed one loads.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED"},
-    "verify-cache": {"text": "Warm an authenticated URL in the shared cache, then request it as user A, user B and anonymously; each response must belong only to its caller.", "components": ["mdn"], "sources": ["mdn:s9166d803cf3a"], "status": "REASONED"},
-    "verify-logout": {"text": "After logout, Back must not restore authenticated content; verify a request to the login screen and inspect no-store and Clear-Site-Data separately in every supported browser.", "components": ["mdn"], "sources": ["mdn:s9166d803cf3a", "mdn:s7f290c45ad37", "mdn:s46957d9dc1d5"], "status": "REASONED"}
-  }
-}
----
 # Security headers for your application
 
-<!-- version-basis:start -->
-**Version basis**
+Written against MDN HTTP documentation (no recorded version), nginx source release-1.26.3, Apache HTTP Server 2.4.69, Caddy source v2.11.4, Helmet v8.1.0, Django 5.2, and curl 8.23.0; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- mdn: MDN HTTP documentation (unknown)
-- nginx-source: nginx source (release-1.26.3)
-- apache-source: Apache HTTP Server (2.4.69)
-- caddy-source: Caddy source (v2.11.4)
-- cloudflare-pages: Cloudflare Pages documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
-- scanner: Security Headers scanner (unknown)
-- helmet: Helmet (v8.1.0)
-- django: Django (5.2)
-- curl: curl (8.23.0)
-
-Claims (full source mapping in the front matter):
-
-- placement (REASONED; mdn, helmet, django, nginx-source, apache-source, caddy-source, cloudflare-pages): Set response headers at a proxy with nginx add_header, Apache Header or Caddy header, in application middleware, or in a Cloudflare Pages _headers file for static asset responses; Pages Functions responses will likely need headers set in Functions code. Applying the three proxy directives to all six listed headers is this guide's inference.
-- hsts (REASONED; mdn): Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS.
-- hsts-preload (REASONED; mdn): Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates.
-- csp (REASONED; mdn): Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy.
-- csp-report-only (REASONED; mdn): Roll out Content-Security-Policy-Report-Only first on existing apps to find breakage; it enforces nothing and is not a substitute for enforcing CSP.
-- nosniff (REASONED; mdn): Send X-Content-Type-Options: nosniff and verify that value on the final response.
-- referrer (REASONED; mdn): Send Referrer-Policy: strict-origin-when-cross-origin and verify that final-response value.
-- permissions (REASONED; mdn): Permissions-Policy disables camera, microphone and geolocation with empty allowlists; verify all three restrictions.
-- framing (REASONED; mdn): X-Frame-Options: DENY or enforcing CSP frame-ancestors 'none' denies framing; supported frame-ancestors supersedes X-Frame-Options, and default-src does not cover it. frame-ancestors * overrides DENY.
-- all-responses (REASONED; mdn, nginx-source): Send headers on every response, including errors; nginx add_header inherits parent headers only when the child has no header list, and always covers statuses outside its default set. This guide assesses setting headers only on 200 / as a common proxy misconfiguration.
-- shared-cache (REASONED; mdn): Use Cache-Control: private for authenticated responses or no-store for sensitive ones; cache only public content unless authenticated caching is explicitly configured.
-- cache-key (REASONED; mdn): A URL-only shared cache can leak one user's response to another; explicitly vary authenticated cache entries on the cookie or authorization header.
-- browser-cache (REASONED; mdn): private still permits browser storage; no-store forbids private and shared storage and belongs on authenticated responses and responses setting session cookies.
-- history-cache (REASONED; mdn): no-cache does not prevent a Back navigation from restoring a back/forward-cache snapshot without revalidation.
-- logout-cache (REASONED; mdn): Send Clear-Site-Data on logout confirmation; cache clears browser cache and may clear back/forward cache depending on the browser.
-- logout-cookies (REASONED; mdn): Clear-Site-Data cookies clears cookies across the registered domain and all subdomains, plus HTTP authentication credentials; invalidate the server session separately.
-- logout-storage (REASONED; mdn): Clear-Site-Data storage removes origin local/session storage, IndexedDB and service-worker registrations; understand effects on companion applications before clearing.
-- logout-header (REASONED; mdn): The cited MDN logout example includes cache, cookies, storage, executionContexts, prefetchCache and prerenderCache.
-- verify-fetch (REASONED; mdn, curl): Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while `-D -` printing each response's header block, and selecting the last one, are this guide's assessment.
-- verify-values (REASONED; mdn): Judge header values on the final response, not presence on an earlier hop; missing final headers are findings and a failed fetch is inconclusive.
-- verify-scanner (REASONED; scanner): Use the external Security Headers scanner for a second opinion; the guide states that it fetches with GET.
-- verify-csp (REASONED; mdn): Unexpected console violations must be absent in normal use, but this alone is insufficient; confirm a deliberately disallowed resource is blocked while an allowed one loads.
-- verify-cache (REASONED; mdn): Warm an authenticated URL in the shared cache, then request it as user A, user B and anonymously; each response must belong only to its caller.
-- verify-logout (REASONED; mdn): After logout, Back must not restore authenticated content; verify a request to the login screen and inspect no-store and Clear-Site-Data separately in every supported browser.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 TLS protects the transport; these response headers protect the page. Set them at the proxy ([`add_header`](https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L110-L116) in [nginx.md](nginx.md), [`Header`](https://github.com/apache/httpd/blob/2.4.69/docs/manual/mod/mod_headers.xml#L311-L328) in [apache.md](apache.md), [`header`](https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/headers/caddyfile.go#L27-L48) in Caddy), in app middleware (helmet for Express per [nodejs.md](nodejs.md), Django's security settings per [python.md](python.md)), or in a [`_headers` file](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/pages/configuration/headers.mdx#L14) for Cloudflare Pages static asset responses. Cloudflare Pages does not apply `_headers` to Pages Functions responses; set those headers in [Functions code](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/pages/configuration/headers.mdx#L26). Applying the three proxy directives to all six headers below is this guide's inference.
 
@@ -272,3 +102,199 @@ REASONED: logout, browser history and response-header inspection, per the guide'
 - curl 8.23.0 --dump-header short form -D (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/dump-header.md#L5
 - curl 8.23.0 --output short form -o (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/output.md#L6
 - curl 8.23.0 --write-out short form -w (checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L5
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/headers.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- mdn: MDN HTTP documentation (unknown)
+- nginx-source: nginx source (release-1.26.3)
+- apache-source: Apache HTTP Server (2.4.69)
+- caddy-source: Caddy source (v2.11.4)
+- cloudflare-pages: Cloudflare Pages documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- helmet: Helmet (v8.1.0)
+- django: Django (5.2)
+- scanner: Security Headers scanner (unknown)
+- curl: curl (8.23.0)
+
+Claims (full source mapping in the JSON block below):
+
+- placement (REASONED; mdn, helmet, django, nginx-source, apache-source, caddy-source, cloudflare-pages): Set response headers at a proxy with nginx add_header, Apache Header or Caddy header, in application middleware, or in a Cloudflare Pages _headers file for static asset responses; Pages Functions responses will likely need headers set in Functions code. Applying the three proxy directives to all six listed headers is this guide's inference.
+- hsts (REASONED; mdn): Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS.
+- hsts-preload (REASONED; mdn): Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates.
+- csp (REASONED; mdn): Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy.
+- csp-report-only (REASONED; mdn): Roll out Content-Security-Policy-Report-Only first on existing apps to find breakage; it enforces nothing and is not a substitute for enforcing CSP.
+- nosniff (REASONED; mdn): Send X-Content-Type-Options: nosniff and verify that value on the final response.
+- referrer (REASONED; mdn): Send Referrer-Policy: strict-origin-when-cross-origin and verify that final-response value.
+- permissions (REASONED; mdn): Permissions-Policy disables camera, microphone and geolocation with empty allowlists; verify all three restrictions.
+- framing (REASONED; mdn): X-Frame-Options: DENY or enforcing CSP frame-ancestors 'none' denies framing; supported frame-ancestors supersedes X-Frame-Options, and default-src does not cover it. frame-ancestors * overrides DENY.
+- all-responses (REASONED; mdn, nginx-source): Send headers on every response, including errors; nginx add_header inherits parent headers only when the child has no header list, and always covers statuses outside its default set. This guide assesses setting headers only on 200 / as a common proxy misconfiguration.
+- shared-cache (REASONED; mdn): Use Cache-Control: private for authenticated responses or no-store for sensitive ones; cache only public content unless authenticated caching is explicitly configured.
+- cache-key (REASONED; mdn): A URL-only shared cache can leak one user's response to another; explicitly vary authenticated cache entries on the cookie or authorization header.
+- browser-cache (REASONED; mdn): private still permits browser storage; no-store forbids private and shared storage and belongs on authenticated responses and responses setting session cookies.
+- history-cache (REASONED; mdn): no-cache does not prevent a Back navigation from restoring a back/forward-cache snapshot without revalidation.
+- logout-cache (REASONED; mdn): Send Clear-Site-Data on logout confirmation; cache clears browser cache and may clear back/forward cache depending on the browser.
+- logout-cookies (REASONED; mdn): Clear-Site-Data cookies clears cookies across the registered domain and all subdomains, plus HTTP authentication credentials; invalidate the server session separately.
+- logout-storage (REASONED; mdn): Clear-Site-Data storage removes origin local/session storage, IndexedDB and service-worker registrations; understand effects on companion applications before clearing.
+- logout-header (REASONED; mdn): The cited MDN logout example includes cache, cookies, storage, executionContexts, prefetchCache and prerenderCache.
+- verify-fetch (REASONED; mdn, curl): Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while `-D -` printing each response's header block, and selecting the last one, are this guide's assessment.
+- verify-values (REASONED; mdn): Judge header values on the final response, not presence on an earlier hop; missing final headers are findings and a failed fetch is inconclusive.
+- verify-scanner (REASONED; scanner): Use the external Security Headers scanner for a second opinion; the guide states that it fetches with GET.
+- verify-csp (REASONED; mdn): Unexpected console violations must be absent in normal use, but this alone is insufficient; confirm a deliberately disallowed resource is blocked while an allowed one loads.
+- verify-cache (REASONED; mdn): Warm an authenticated URL in the shared cache, then request it as user A, user B and anonymously; each response must belong only to its caller.
+- verify-logout (REASONED; mdn): After logout, Back must not restore authenticated content; verify a request to the login screen and inspect no-store and Clear-Site-Data separately in every supported browser.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-17",
+  "documentation_checked": "2026-09",
+  "body_sha256": "e17c3af4fb92d40391435139ae145152d8827211b3ff71dbcec2a3a642b8eb67",
+  "components": {
+    "mdn": {
+      "name": "MDN HTTP documentation",
+      "basis": "unknown",
+      "sources": {
+        "s40155272e6bf": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers",
+        "s9166d803cf3a": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control",
+        "s7f290c45ad37": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Clear-Site-Data",
+        "s46957d9dc1d5": "https://developer.mozilla.org/en-US/docs/Glossary/bfcache"
+      }
+    },
+    "nginx-source": {
+      "name": "nginx source",
+      "basis": "release-1.26.3",
+      "sources": {
+        "s24b0a72bc894": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L110-L116",
+        "s0ae4e9bc8d07": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218",
+        "sedd333de1a8c": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L665-L690",
+        "sf6eac8f6749d": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796",
+        "s70d54f325a93": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L843-L849"
+      }
+    },
+    "apache-source": {
+      "name": "Apache HTTP Server",
+      "basis": "2.4.69",
+      "sources": {
+        "s2f07cea83845": "https://github.com/apache/httpd/blob/2.4.69/docs/manual/mod/mod_headers.xml#L311-L328"
+      }
+    },
+    "caddy-source": {
+      "name": "Caddy source",
+      "basis": "v2.11.4",
+      "sources": {
+        "s0fa8b969b205": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/headers/caddyfile.go#L27-L48"
+      }
+    },
+    "cloudflare-pages": {
+      "name": "Cloudflare Pages documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "s38b6aa1f9566": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/pages/configuration/headers.mdx#L14",
+        "sba79d4023eca": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/pages/configuration/headers.mdx#L26"
+      }
+    },
+    "helmet": {
+      "name": "Helmet",
+      "basis": "v8.1.0",
+      "sources": {
+        "sf42121cfc014": "https://github.com/helmetjs/helmet/blob/v8.1.0/README.md#L3"
+      }
+    },
+    "django": {
+      "name": "Django",
+      "basis": "5.2",
+      "sources": {
+        "se79954c08919": "https://docs.djangoproject.com/en/5.2/ref/middleware/#module-django.middleware.security"
+      }
+    },
+    "scanner": {
+      "name": "Security Headers scanner",
+      "basis": "unknown",
+      "sources": {
+        "s7a94d0fcb6ad": "https://securityheaders.com/"
+      }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "8.23.0",
+      "sources": {
+        "s2278b86c08a6": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/disable.md#L18-L20",
+        "s3b9e19f23f2d": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/globoff.md#L19-L22",
+        "s38391c89b58d": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/silent.md#L20-L25",
+        "sc1670c4672b4": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/show-error.md#L19",
+        "s891e2566ea41": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/location.md#L23-L26",
+        "sd386dc0317da": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/proto-redir.md#L19-L20",
+        "sf7e7834afa89": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/proto.md#L30-L33",
+        "s508454c45cf1": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/noproxy.md#L18-L23",
+        "s62990c766776": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/dump-header.md#L21-L23",
+        "seb2e6bc373fe": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/output.md#L53-L55",
+        "s3aefa5f74fd4": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L20-L29",
+        "se50d33437ccf": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L112-L114",
+        "sc8658f8a2e89": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/disable.md#L5",
+        "s3dbfd02b9aa2": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/globoff.md#L5",
+        "s5b5b25c9a3fe": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/silent.md#L5",
+        "s24da6d0f30ba": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/show-error.md#L5",
+        "s6bee713841f0": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/location.md#L5",
+        "se89c7271eda2": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/dump-header.md#L5",
+        "s93be9b76f8e2": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/output.md#L6",
+        "s3633dd0e6b3e": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L5",
+        "s9a3d23bc00be": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/write-out.md#L358-L360"
+      }
+    }
+  },
+  "claims": {
+    "placement": {"text": "Set response headers at a proxy with nginx add_header, Apache Header or Caddy header, in application middleware, or in a Cloudflare Pages _headers file for static asset responses; Pages Functions responses will likely need headers set in Functions code. Applying the three proxy directives to all six listed headers is this guide's inference.", "components": ["mdn", "helmet", "django", "nginx-source", "apache-source", "caddy-source", "cloudflare-pages"], "sources": ["mdn:s40155272e6bf", "helmet:sf42121cfc014", "django:se79954c08919", "nginx-source:s24b0a72bc894", "nginx-source:sf6eac8f6749d", "apache-source:s2f07cea83845", "caddy-source:s0fa8b969b205", "cloudflare-pages:s38b6aa1f9566", "cloudflare-pages:sba79d4023eca"], "status": "REASONED"},
+    "hsts": {"text": "Use HSTS max-age=31536000 with includeSubDomains only after HTTPS works across the domain; every subdomain is committed to HTTPS and max-age=0 disables HSTS.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
+    "hsts-preload": {"text": "Omit preload unless its commitment is understood; removal is slow, takes weeks and depends on browser list updates.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED"},
+    "csp": {"text": "Start CSP at default-src 'self', tailor sources to the app and prefer script nonces or hashes over unsafe-inline; Verify requires an enforcing policy.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
+    "csp-report-only": {"text": "Roll out Content-Security-Policy-Report-Only first on existing apps to find breakage; it enforces nothing and is not a substitute for enforcing CSP.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
+    "nosniff": {"text": "Send X-Content-Type-Options: nosniff and verify that value on the final response.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
+    "referrer": {"text": "Send Referrer-Policy: strict-origin-when-cross-origin and verify that final-response value.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
+    "permissions": {"text": "Permissions-Policy disables camera, microphone and geolocation with empty allowlists; verify all three restrictions.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
+    "framing": {"text": "X-Frame-Options: DENY or enforcing CSP frame-ancestors 'none' denies framing; supported frame-ancestors supersedes X-Frame-Options, and default-src does not cover it. frame-ancestors * overrides DENY.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
+    "all-responses": {"text": "Send headers on every response, including errors; nginx add_header inherits parent headers only when the child has no header list, and always covers statuses outside its default set. This guide assesses setting headers only on 200 / as a common proxy misconfiguration.", "components": ["mdn", "nginx-source"], "sources": ["mdn:s40155272e6bf", "nginx-source:sedd333de1a8c", "nginx-source:sf6eac8f6749d", "nginx-source:s0ae4e9bc8d07", "nginx-source:s70d54f325a93"], "status": "REASONED"},
+    "shared-cache": {"text": "Use Cache-Control: private for authenticated responses or no-store for sensitive ones; cache only public content unless authenticated caching is explicitly configured.", "components": ["mdn"], "sources": ["mdn:s9166d803cf3a"], "status": "REASONED"},
+    "cache-key": {"text": "A URL-only shared cache can leak one user's response to another; explicitly vary authenticated cache entries on the cookie or authorization header.", "components": ["mdn"], "sources": ["mdn:s9166d803cf3a", "mdn:s40155272e6bf"], "status": "REASONED"},
+    "browser-cache": {"text": "private still permits browser storage; no-store forbids private and shared storage and belongs on authenticated responses and responses setting session cookies.", "components": ["mdn"], "sources": ["mdn:s9166d803cf3a"], "status": "REASONED"},
+    "history-cache": {"text": "no-cache does not prevent a Back navigation from restoring a back/forward-cache snapshot without revalidation.", "components": ["mdn"], "sources": ["mdn:s9166d803cf3a", "mdn:s46957d9dc1d5"], "status": "REASONED"},
+    "logout-cache": {"text": "Send Clear-Site-Data on logout confirmation; cache clears browser cache and may clear back/forward cache depending on the browser.", "components": ["mdn"], "sources": ["mdn:s7f290c45ad37", "mdn:s46957d9dc1d5"], "status": "REASONED"},
+    "logout-cookies": {"text": "Clear-Site-Data cookies clears cookies across the registered domain and all subdomains, plus HTTP authentication credentials; invalidate the server session separately.", "components": ["mdn"], "sources": ["mdn:s7f290c45ad37"], "status": "REASONED"},
+    "logout-storage": {"text": "Clear-Site-Data storage removes origin local/session storage, IndexedDB and service-worker registrations; understand effects on companion applications before clearing.", "components": ["mdn"], "sources": ["mdn:s7f290c45ad37"], "status": "REASONED"},
+    "logout-header": {"text": "The cited MDN logout example includes cache, cookies, storage, executionContexts, prefetchCache and prerenderCache.", "components": ["mdn"], "sources": ["mdn:s7f290c45ad37"], "status": "REASONED"},
+    "verify-fetch": {"text": "Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while `-D -` printing each response's header block, and selecting the last one, are this guide's assessment.", "components": ["mdn", "curl"], "sources": ["mdn:s40155272e6bf", "curl:s2278b86c08a6", "curl:s3b9e19f23f2d", "curl:s38391c89b58d", "curl:sc1670c4672b4", "curl:s891e2566ea41", "curl:sd386dc0317da", "curl:sf7e7834afa89", "curl:s508454c45cf1", "curl:s62990c766776", "curl:seb2e6bc373fe", "curl:s3aefa5f74fd4", "curl:se50d33437ccf", "curl:s9a3d23bc00be", "curl:sc8658f8a2e89", "curl:s3dbfd02b9aa2", "curl:s5b5b25c9a3fe", "curl:s24da6d0f30ba", "curl:s6bee713841f0", "curl:se89c7271eda2", "curl:s93be9b76f8e2", "curl:s3633dd0e6b3e"], "status": "REASONED", "verify": [1]},
+    "verify-values": {"text": "Judge header values on the final response, not presence on an earlier hop; missing final headers are findings and a failed fetch is inconclusive.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED", "verify": [1]},
+    "verify-scanner": {"text": "Use the external Security Headers scanner for a second opinion; the guide states that it fetches with GET.", "components": ["scanner"], "sources": ["scanner:s7a94d0fcb6ad"], "status": "REASONED"},
+    "verify-csp": {"text": "Unexpected console violations must be absent in normal use, but this alone is insufficient; confirm a deliberately disallowed resource is blocked while an allowed one loads.", "components": ["mdn"], "sources": ["mdn:s40155272e6bf"], "status": "REASONED"},
+    "verify-cache": {"text": "Warm an authenticated URL in the shared cache, then request it as user A, user B and anonymously; each response must belong only to its caller.", "components": ["mdn"], "sources": ["mdn:s9166d803cf3a"], "status": "REASONED"},
+    "verify-logout": {"text": "After logout, Back must not restore authenticated content; verify a request to the login screen and inspect no-store and Clear-Site-Data separately in every supported browser.", "components": ["mdn"], "sources": ["mdn:s9166d803cf3a", "mdn:s7f290c45ad37", "mdn:s46957d9dc1d5"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->

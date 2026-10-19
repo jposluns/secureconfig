@@ -1776,6 +1776,35 @@ class TwoSectionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '400-character header limit'):
             components([('x' * 400, 'v1')])
 
+    def test_header_count_grammar(self):
+        for count, noun, verb, carry in ((1, 'source', 'is', 'carries'),
+                                         (2, 'sources', 'are', 'carry')):
+            with self.subTest(count=count):
+                data = fixture()
+                data['components'] = {
+                    f'c{i}': dict(name=f'Product{i}', basis='v1', sources={SID: URL})
+                    for i in range(8 + count)}
+                basis = 'basis' if count == 1 else 'bases'
+                self.assertIn(f', plus {count} more recorded {basis}.', vb.header(data))
+                for pinned, unknown in ((count, 0), (0, count), (count, count)):
+                    with self.subTest(pinned=pinned, unknown=unknown):
+                        data = fixture()
+                        for i in range(pinned):
+                            data['components'][f'p{i}'] = dict(
+                                name=f'Pin{i}', basis='a' * 7, sources={SID: URL})
+                        for i in range(unknown):
+                            data['components'][f'u{i}'] = dict(
+                                name=f'Docs{i}', basis='unknown', sources={SID: URL})
+                        clauses = []
+                        if pinned:
+                            clauses.append(f'{count} further {noun} {verb} pinned to a commit')
+                        if unknown:
+                            subject = str(count) if pinned else f'{count} further {noun}'
+                            clauses.append(f'{subject} {carry} no recorded version')
+                        expected = 'Written against Product v1.0; ' + ' and '.join(clauses) + '.'
+                        self.assertEqual(vb.versions_sentence(data), expected)
+                        self.assertTrue(vb.header(data).startswith(expected + ' Metadata reviewed'))
+
     def test_commit_pinned_headline(self):
         data = fixture()
         for size in (7, 40):
@@ -1840,7 +1869,7 @@ class TwoSectionTests(unittest.TestCase):
                 self.assertEqual(vb.versions_sentence(data),
                     'Written against Headline' + suffix + ', ' +
                     ', '.join(f'Other{i} v1' for i in range(6)) +
-                    ', and Other6 v1, plus 1 more recorded bases.')
+                    ', and Other6 v1, plus 1 more recorded basis.')
                 # Exact boundary includes the truncation and folded-count clauses.
                 data['components']['docs'] = dict(name='Docs', basis='unknown', sources={SID: URL})
                 tail = ', plus 8 more recorded bases; 1 further source carries no recorded version.'

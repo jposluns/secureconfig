@@ -1,328 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-18",
-  "documentation_checked": "2026-09",
-  "body_sha256": "69f0526c898b0ca306b1db8320a26096f1014705ad56d76b2c8534258926c517",
-  "components": {
-    "ssh": {
-      "name": "OpenSSH documentation",
-      "basis": "unknown",
-      "sources": {
-        "s44f73ffcb41e": "https://man.openbsd.org/sshd_config"
-      }
-    },
-    "ufw": {
-      "name": "UFW documentation",
-      "basis": "unknown",
-      "sources": {
-        "scff3a017f30b": "https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html"
-      }
-    },
-    "aws-ssm": {
-      "name": "AWS Session Manager",
-      "basis": "unknown",
-      "sources": {
-        "s06a2a8e07062": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-enable-ssh-connections.html#session-manager-getting-started-enable-ssh-connections",
-        "s0f77b30546ee": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-prerequisites.html#session-manager-prerequisites"
-      }
-    },
-    "gcp-iap": {
-      "name": "Google Cloud IAP",
-      "basis": "unknown",
-      "sources": {
-        "s7e6eda97f950": "https://docs.cloud.google.com/iap/docs/using-tcp-forwarding#create-firewall-rule"
-      }
-    },
-    "azure-docs": {
-      "name": "Azure documentation snapshot",
-      "basis": "8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f",
-      "sources": {
-        "s6d46120d991b": "https://github.com/MicrosoftDocs/azure-docs/blob/8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f/articles/bastion/bastion-nsg.md#L77-L84"
-      }
-    },
-    "tailscale-docs": {
-      "name": "Tailscale documentation",
-      "basis": "unknown",
-      "sources": {
-        "scf48029376f6": "https://tailscale.com/docs/reference/faq/firewall-ports",
-        "s44f0b2a0a8ba": "https://tailscale.com/docs/features/tailscale-ssh#why-it-matters"
-      }
-    },
-    "firewalld": {
-      "name": "firewalld documentation",
-      "basis": "unknown",
-      "sources": {
-        "sa1a1385129f1": "https://firewalld.org/documentation/man-pages/firewall-cmd.html",
-        "sc1cb4d135f3b": "https://firewalld.org/documentation/man-pages/firewalld.richlanguage.html"
-      }
-    },
-    "fail2ban": {
-      "name": "fail2ban",
-      "basis": "unknown",
-      "sources": {
-        "s7a37ae416e85": "https://github.com/fail2ban/fail2ban"
-      }
-    },
-    "crowdsec": {
-      "name": "CrowdSec",
-      "basis": "unknown",
-      "sources": {
-        "s4efe4c22c69b": "https://www.crowdsec.net/"
-      }
-    },
-    "totp": {
-      "name": "google-authenticator-libpam",
-      "basis": "unknown",
-      "sources": {
-        "s6f787f7b4f18": "https://github.com/google/google-authenticator-libpam"
-      }
-    },
-    "duo": {
-      "name": "Duo Unix",
-      "basis": "unknown",
-      "sources": {
-        "s18b76ce18df1": "https://duo.com/docs/duounix"
-      }
-    },
-    "openssh82": {
-      "name": "OpenSSH 8.2 server manual",
-      "basis": "V_8_2_P1",
-      "sources": {
-        "s74206a9a30dd": "https://github.com/openssh/openssh-portable/blob/V_8_2_P1/sshd_config.5#L805-L817"
-      }
-    },
-    "openssh81": {
-      "name": "OpenSSH 8.1 server manual",
-      "basis": "V_8_1_P1",
-      "sources": {
-        "s76bfb1ff5934": "https://github.com/openssh/openssh-portable/blob/V_8_1_P1/sshd_config.5#L793-L804"
-      }
-    },
-    "openssh99": {
-      "name": "OpenSSH 9.9 source",
-      "basis": "V_9_9_P2",
-      "sources": {
-        "sb409a9bcefc5": "https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshd_config.5#L51-L51",
-        "s447d8f1b88bd": "https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshd_config.5#L912-L918",
-        "saa71f4024a44": "https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshconnect2.c#L540-L543",
-        "sd768a096f236": "https://github.com/openssh/openssh-portable/blob/V_9_9_P2/ssh_config.5#L1536-L1546",
-        "s711f7f9ad562": "https://github.com/openssh/openssh-portable/blob/V_9_9_P2/ssh_config.5#L1661-L1674"
-      }
-    },
-    "ubuntu-focal": {
-      "name": "Ubuntu focal OpenSSH source",
-      "basis": "1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc",
-      "sources": {
-        "sbc9404fbd678": "https://git.launchpad.net/ubuntu/+source/openssh/tree/sshd_config?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n13",
-        "s8681449a40db": "https://git.launchpad.net/ubuntu/+source/openssh/tree/debian/changelog?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n1",
-        "sc389a883f3ae": "https://git.launchpad.net/ubuntu/+source/openssh/tree/debian/changelog?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n4"
-      }
-    },
-    "rhel-c9s": {
-      "name": "CentOS Stream 9 OpenSSH packaging",
-      "basis": "0b69a3828606595828fc3b878a7c70652303ad67",
-      "sources": {
-        "sd34862bbf569": "https://gitlab.com/redhat/centos-stream/rpms/openssh/-/blob/0b69a3828606595828fc3b878a7c70652303ad67/openssh-7.7p1-redhat.patch#L69-L71",
-        "s87a3827a045e": "https://gitlab.com/redhat/centos-stream/rpms/openssh/-/blob/0b69a3828606595828fc3b878a7c70652303ad67/openssh.spec#L444-L444",
-        "s0a2ed08d7a83": "https://gitlab.com/redhat/centos-stream/rpms/openssh/-/blob/0b69a3828606595828fc3b878a7c70652303ad67/openssh.spec#L135-L135"
-      }
-    },
-    "cloudinit26": {
-      "name": "cloud-init 26.2",
-      "basis": "26.2",
-      "sources": {
-        "sad4ec0d2acc5": "https://github.com/canonical/cloud-init/blob/26.2/cloudinit/ssh_util.py#L548-L586",
-        "s8de0318d9aa5": "https://github.com/canonical/cloud-init/blob/26.2/cloudinit/config/cc_set_passwords.py#L60-L90",
-        "s368c8162762a": "https://github.com/canonical/cloud-init/blob/26.2/cloudinit/config/cc_set_passwords.py#L255-L255"
-      }
-    },
-    "cloudinit20": {
-      "name": "cloud-init 20.1",
-      "basis": "20.1",
-      "sources": {
-        "s471abb6d2123": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L338-L348",
-        "sa8d2f85a5876": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L17-L18",
-        "s872ab5dff723": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/config/cc_set_passwords.py#L97-L122",
-        "s7e40e982cb9f": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/config/cc_set_passwords.py#L230-L232"
-      }
-    },
-    "docker": {
-      "name": "Docker Engine networking",
-      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
-      "sources": {
-        "sc920c6946fcf": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L11-L32",
-        "sb5ca9f87b1f3": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L90-L102"
-      }
-    },
-    "ubuntu-uu": {
-      "name": "Ubuntu noble unattended-upgrades source",
-      "basis": "0570be65234e2392d420308470d26920fa4cd21a",
-      "sources": {
-        "sf087d7bd33d0": "https://git.launchpad.net/ubuntu/+source/unattended-upgrades/tree/debian/postinst?id=0570be65234e2392d420308470d26920fa4cd21a#n47",
-        "s665816188e55": "https://git.launchpad.net/ubuntu/+source/unattended-upgrades/tree/data/50unattended-upgrades.Ubuntu?id=0570be65234e2392d420308470d26920fa4cd21a#n6"
-      }
-    },
-    "ubuntu-apt": {
-      "name": "Ubuntu noble-updates apt source",
-      "basis": "835f914ef5657b923fbb8b357f134b00de24c6fd",
-      "sources": {
-        "sca779f690beb": "https://git.launchpad.net/ubuntu/+source/apt/tree/debian/apt-daily-upgrade.timer?id=835f914ef5657b923fbb8b357f134b00de24c6fd#n5",
-        "sfd64eba4bd67": "https://git.launchpad.net/ubuntu/+source/apt/tree/debian/apt-daily-upgrade.service?id=835f914ef5657b923fbb8b357f134b00de24c6fd#n7",
-        "s11bc9e19894d": "https://git.launchpad.net/ubuntu/+source/apt/tree/debian/apt.systemd.daily?id=835f914ef5657b923fbb8b357f134b00de24c6fd#n491"
-      }
-    },
-    "c9s-dnf": {
-      "name": "CentOS Stream 9 dnf packaging",
-      "basis": "3d5ca2af8635e0ef77219625f734d503b9900208",
-      "sources": {
-        "s9b090e2053b2": "https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L260-L267",
-        "s32a269377ebb": "https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L75-L75",
-        "s006862fe84d1": "https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L82-L158",
-        "s50216e5989bf": "https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L281-L282"
-      }
-    },
-    "dnf4": {
-      "name": "DNF 4.14.0",
-      "basis": "4.14.0",
-      "sources": {
-        "s97934a4740a2": "https://github.com/rpm-software-management/dnf/blob/4.14.0/etc/dnf/automatic.conf#L1-L22",
-        "sbd65ffa4b83c": "https://github.com/rpm-software-management/dnf/blob/4.14.0/doc/automatic.rst#L38-L50",
-        "s5619c2b76401": "https://github.com/rpm-software-management/dnf/blob/4.14.0/doc/automatic.rst#L86-L91",
-        "sb4ab6d87f528": "https://github.com/rpm-software-management/dnf/blob/4.14.0/etc/systemd/dnf-automatic-install.timer#L7-L13",
-        "s189a68fdfaad": "https://github.com/rpm-software-management/dnf/blob/4.14.0/etc/systemd/dnf-automatic-install.service#L7-L13"
-      }
-    },
-    "iproute2": {
-      "name": "iproute2 ss manual",
-      "basis": "v6.12.0",
-      "sources": {
-        "s2afc4764d5bb": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34",
-        "sfaa932c2ca13": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44",
-        "sd295f82d643f": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163",
-        "s65278ee45850": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375",
-        "s8ecdaf9e9ea7": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L377-L378",
-        "s4e1c28d5adad": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L365-L369"
-      }
-    },
-    "ubuntu-nc": {
-      "name": "Ubuntu noble netcat-openbsd source",
-      "basis": "c047f1a4572e796c8643fb7e5a719a9d960a677b",
-      "sources": {
-        "s478aaf9a8975": "https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n257",
-        "sd7b31d3bc579": "https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n263",
-        "scc48da80246b": "https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n308",
-        "s5e260ceab82c": "https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/netcat.c?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n899"
-      }
-    },
-    "c9s-nmap": {
-      "name": "CentOS Stream 9 nmap packaging",
-      "basis": "17c2b7795d821cd7fbe311cf3f885be3ea1f122f",
-      "sources": {
-        "sd06e83963e39": "https://gitlab.com/redhat/centos-stream/rpms/nmap/-/blob/17c2b7795d821cd7fbe311cf3f885be3ea1f122f/nmap.spec#L133-L137",
-        "s3ab25d24e37a": "https://gitlab.com/redhat/centos-stream/rpms/nmap/-/blob/17c2b7795d821cd7fbe311cf3f885be3ea1f122f/nmap.spec#L6-L8"
-      }
-    },
-    "busybox": {
-      "name": "BusyBox 1.36.1",
-      "basis": "1_36_1",
-      "sources": {
-        "s34bdee292f79": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93",
-        "sd707e18625cc": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L136-L170",
-        "s14b89daa008d": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59"
-      }
-    }
-  },
-  "claims": {
-    "safe-transition": {"text": "Confirm non-root key login and sudo in a fresh session before disabling password/root access; retain the working session while testing.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
-    "keys-only": {"text": "Disable PasswordAuthentication and KbdInteractiveAuthentication; enable PubkeyAuthentication and prohibit root login.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
-    "include-order": {"text": "OpenSSH 8.2 added server Include; OpenSSH 9.9 documents that, unless noted otherwise, each keyword uses its first obtained value, and documents lexical wildcard order supporting 00-hardening.conf. The fetched Ubuntu focal OpenSSH 1:8.2p1-4 configuration and CentOS Stream 9 packaging place the drop-in Include near the top, before main-file settings. With ssh_pwauth: true, cloud-init 26.2 writes PasswordAuthentication yes to 50-cloud-init.conf when the main configuration includes that directory; cloud-init 20.1 instead updated the main file. Current distribution defaults and cloud-image prevalence remain unestablished.", "components": ["ssh", "openssh81", "openssh82", "openssh99", "ubuntu-focal", "rhel-c9s", "cloudinit26", "cloudinit20"], "sources": ["ssh:s44f73ffcb41e", "openssh82:s74206a9a30dd", "openssh99:sb409a9bcefc5", "openssh99:s447d8f1b88bd", "ubuntu-focal:sbc9404fbd678", "ubuntu-focal:s8681449a40db", "rhel-c9s:sd34862bbf569", "rhel-c9s:s87a3827a045e", "cloudinit26:sad4ec0d2acc5", "cloudinit26:s8de0318d9aa5", "cloudinit20:s471abb6d2123", "cloudinit20:sa8d2f85a5876", "rhel-c9s:s0a2ed08d7a83", "openssh81:s76bfb1ff5934", "ubuntu-focal:sc389a883f3ae", "cloudinit26:s368c8162762a", "cloudinit20:s872ab5dff723", "cloudinit20:s7e40e982cb9f"], "status": "REASONED"},
-    "effective-config": {"text": "Validate with sshd -t before reload; inspect sshd -T global values and -T -C for Match-specific settings. Service names differ by distribution.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
-    "totp": {"text": "SSH TOTP uses google-authenticator-libpam through PAM keyboard-interactive; keys-only configuration must change before adding this factor.", "components": ["ssh", "totp"], "sources": ["ssh:s44f73ffcb41e", "totp:s6f787f7b4f18"], "status": "REASONED"},
-    "duo": {"text": "Duo pam_duo provides the alternative push factor through PAM keyboard-interactive.", "components": ["ssh", "duo"], "sources": ["ssh:s44f73ffcb41e", "duo:s18b76ce18df1"], "status": "REASONED"},
-    "mfa-methods": {"text": "UsePAM yes and AuthenticationMethods publickey,keyboard-interactive require both methods; keep password/root login disabled and public keys enabled.", "components": ["ssh", "duo"], "sources": ["ssh:s44f73ffcb41e", "duo:s18b76ce18df1"], "status": "REASONED"},
-    "legacy-name": {"text": "Older configurations use ChallengeResponseAuthentication for KbdInteractiveAuthentication; enable the spelling present when configuring PAM MFA.", "components": ["ssh", "duo"], "sources": ["ssh:s44f73ffcb41e", "duo:s18b76ce18df1"], "status": "REASONED"},
-    "ufw-default": {"text": "Set deny incoming and allow outgoing, then enable UFW; permit TCP 80 and 443 for the TLS layer.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED"},
-    "ufw-ssh": {"text": "Remove any broad OpenSSH allow before adding an admin-source TCP 22 rule; adding a narrower rule does not replace the old allowance.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED"},
-    "brokered-ssh": {"text": "SSM SSH uses the agent's outbound TLS connection and needs no inbound port on the managed node; allow outbound HTTPS 443 to the documented Systems Manager endpoints. A tailnet ordinarily needs no inbound internet firewall port, and Tailscale SSH accepts tailnet traffic on port 22. IAP requires cloud ingress from 35.235.240.0/20, or 2600:2d00:1:7::/64 for IPv6 VMs, to SSH's default port 22 or its configured port; where an NSG is applied to the target VM subnet, Bastion requires an inbound SSH rule on default port 22 or a custom port with Standard or Premium SKU. Microsoft's best practice scopes that rule's source to the AzureBastionSubnet IP range. As this guide's advice, check the host firewall for these broker paths; the fetched IAP, Bastion and Tailscale pages do not specify which UFW or firewalld rules, if any, are needed.", "components": ["ufw", "aws-ssm", "gcp-iap", "azure-docs", "tailscale-docs"], "sources": ["ufw:scff3a017f30b", "aws-ssm:s06a2a8e07062", "aws-ssm:s0f77b30546ee", "gcp-iap:s7e6eda97f950", "azure-docs:s6d46120d991b", "tailscale-docs:scf48029376f6", "tailscale-docs:s44f0b2a0a8ba"], "status": "REASONED"},
-    "firewalld-zone": {"text": "Find the public interface zone explicitly; remove its broad ssh service, add the IPv4 admin rich rule permanently, then reload to activate it.", "components": ["firewalld"], "sources": ["firewalld:sa1a1385129f1", "firewalld:sc1cb4d135f3b"], "status": "REASONED"},
-    "firewalld-audit": {"text": "Inspect applicable zones for other services, port ranges, protocol/source allowances or ACCEPT targets that reopen 22; the narrow rich rule does not supersede them.", "components": ["firewalld"], "sources": ["firewalld:sa1a1385129f1", "firewalld:sc1cb4d135f3b"], "status": "REASONED"},
-    "docker-bypass": {"text": "With Docker Engine default Linux bridge firewall rules, published container traffic is diverted before UFW settings; consult docker.md before relying on the host firewall. As this guide's assessment, other modes and paths, including the userland proxy, need separate review in that guide.", "components": ["ufw", "docker"], "sources": ["ufw:scff3a017f30b", "docker:sc920c6946fcf", "docker:sb5ca9f87b1f3"], "status": "REASONED"},
-    "fail2ban": {"text": "Use fail2ban to ban repeated authentication failures against SSH/login services.", "components": ["fail2ban"], "sources": ["fail2ban:s7a37ae416e85"], "status": "REASONED"},
-    "crowdsec": {"text": "CrowdSec is the alternative protection for repeated authentication failures.", "components": ["crowdsec"], "sources": ["crowdsec:s4efe4c22c69b"], "status": "REASONED"},
-    "updates": {"text": "Automate security patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems, configured to install them. Ubuntu noble's postinst conditionally writes 20auto-upgrades, and apt-daily-upgrade invokes unattended-upgrade when its periodic interval permits; its allowed origins include the release and security pockets. CentOS Stream 9 packages dnf-automatic. Upstream DNF 4.14.0 ships the cited automatic.conf defaults apply_updates=no and upgrade_type=default and the cited timers; enable dnf-automatic-install.timer and select upgrade_type=security for security-only installation. CentOS Stream 9 applies downstream dnf-automatic patches this guide has not reviewed, so its packaged defaults remain unestablished. Other Debian and RHEL-family package defaults remain unestablished.", "components": ["ssh", "ubuntu-uu", "ubuntu-apt", "c9s-dnf", "dnf4"], "sources": ["ssh:s44f73ffcb41e", "ubuntu-uu:sf087d7bd33d0", "ubuntu-uu:s665816188e55", "ubuntu-apt:sca779f690beb", "ubuntu-apt:sfd64eba4bd67", "ubuntu-apt:s11bc9e19894d", "c9s-dnf:s9b090e2053b2", "c9s-dnf:s32a269377ebb", "c9s-dnf:s006862fe84d1", "c9s-dnf:s50216e5989bf", "dnf4:s97934a4740a2", "dnf4:sbd65ffa4b83c", "dnf4:s5619c2b76401", "dnf4:sb4ab6d87f528", "dnf4:s189a68fdfaad"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory intended TCP/UDP listeners and addresses in both IP families with explicit ss -4 and -6 runs. Ubuntu noble netcat-openbsd supports -v, -z and -w; CentOS Stream 9 packages Ncat as an nc alternative, but behaviour of packaged 7.92 remains unestablished. BusyBox 1.36.1 small nc lacks -v while its 1.10-compatible applet lists -v. As this guide's assessment, refusal or timeout proves only that this connection failed; local errors, unsupported options and exit 1 without output are inconclusive. The OpenSSH 9.9 client options select password and disable public key; the literal Permission denied (publickey) is this guide's reasoned expectation dependent on server-advertised methods, while immediate failure with NO password prompt and a Permission denied (...) method list naming neither password nor keyboard-interactive are required. As this guide's reasoning, the client prints the server's remaining methods in that list.", "components": ["ufw", "iproute2", "ubuntu-nc", "c9s-nmap", "busybox", "openssh99"], "sources": ["ufw:scff3a017f30b", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850", "iproute2:s8ecdaf9e9ea7", "iproute2:s4e1c28d5adad", "ubuntu-nc:s478aaf9a8975", "ubuntu-nc:sd7b31d3bc579", "ubuntu-nc:scc48da80246b", "c9s-nmap:sd06e83963e39", "busybox:sd707e18625cc", "busybox:s34bdee292f79", "busybox:s14b89daa008d", "c9s-nmap:s3ab25d24e37a", "ubuntu-nc:s5e260ceab82c", "openssh99:sd768a096f236", "openssh99:s711f7f9ad562", "openssh99:saa71f4024a44"], "status": "REASONED", "verify": [1]},
-    "verify-firewall": {"text": "UFW status should show default-deny ingress and admin-scoped SSH allowances; also inspect show raw because status omits /etc/ufw rules.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED", "verify": [1]},
-    "verify-external": {"text": "Disallowed-source TCP 22 must fail while allowed SSH works; correlate effective rules. As this guide's assessment, refusal alone, local errors and unsupported netcat options are inconclusive.", "components": ["ufw", "firewalld"], "sources": ["ufw:scff3a017f30b", "firewalld:sa1a1385129f1"], "status": "REASONED", "verify": [1]},
-    "verify-password": {"text": "A password-only SSH attempt must fail immediately without a password prompt and show a Permission denied (...) method list naming neither password nor keyboard-interactive. As this guide's reasoning, the client prints the server's remaining methods in that list; a prompt or a list naming either method means that path is still on.", "components": ["ssh", "openssh99"], "sources": ["ssh:s44f73ffcb41e", "openssh99:saa71f4024a44", "openssh99:sd768a096f236", "openssh99:s711f7f9ad562"], "status": "REASONED", "verify": [1]},
-    "verify-mfa": {"text": "After key acceptance require a code, reject wrong/omitted codes and unenrolled users without nullok, and use Duo failmode=secure; test before closing the working session.", "components": ["ssh", "totp", "duo"], "sources": ["ssh:s44f73ffcb41e", "totp:s6f787f7b4f18", "duo:s18b76ce18df1"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # Host baseline: SSH, firewall, updates
 
-<!-- version-basis:start -->
-**Version basis**
+Written against OpenSSH documentation (no recorded version), OpenSSH 8.2 server manual V_8_2_P1, OpenSSH 8.1 server manual V_8_1_P1, OpenSSH 9.9 source V_9_9_P2, DNF 4.14.0 4.14.0, cloud-init 26.2 26.2, cloud-init 20.1 20.1, and iproute2 ss manual v6.12.0, plus 1 more recorded basis; 9 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- ssh: OpenSSH documentation (unknown)
-- ufw: UFW documentation (unknown)
-- aws-ssm: AWS Session Manager (unknown)
-- gcp-iap: Google Cloud IAP (unknown)
-- azure-docs: Azure documentation snapshot (8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f)
-- tailscale-docs: Tailscale documentation (unknown)
-- firewalld: firewalld documentation (unknown)
-- fail2ban: fail2ban (unknown)
-- crowdsec: CrowdSec (unknown)
-- totp: google-authenticator-libpam (unknown)
-- duo: Duo Unix (unknown)
-- openssh82: OpenSSH 8.2 server manual (V_8_2_P1)
-- openssh81: OpenSSH 8.1 server manual (V_8_1_P1)
-- openssh99: OpenSSH 9.9 source (V_9_9_P2)
-- ubuntu-focal: Ubuntu focal OpenSSH source (1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc)
-- rhel-c9s: CentOS Stream 9 OpenSSH packaging (0b69a3828606595828fc3b878a7c70652303ad67)
-- cloudinit26: cloud-init 26.2 (26.2)
-- cloudinit20: cloud-init 20.1 (20.1)
-- docker: Docker Engine networking (4e9a5751518ed8223a8dcde53693badddd72604f)
-- ubuntu-uu: Ubuntu noble unattended-upgrades source (0570be65234e2392d420308470d26920fa4cd21a)
-- ubuntu-apt: Ubuntu noble-updates apt source (835f914ef5657b923fbb8b357f134b00de24c6fd)
-- c9s-dnf: CentOS Stream 9 dnf packaging (3d5ca2af8635e0ef77219625f734d503b9900208)
-- dnf4: DNF 4.14.0 (4.14.0)
-- iproute2: iproute2 ss manual (v6.12.0)
-- ubuntu-nc: Ubuntu noble netcat-openbsd source (c047f1a4572e796c8643fb7e5a719a9d960a677b)
-- c9s-nmap: CentOS Stream 9 nmap packaging (17c2b7795d821cd7fbe311cf3f885be3ea1f122f)
-- busybox: BusyBox 1.36.1 (1_36_1)
-
-Claims (full source mapping in the front matter):
-
-- safe-transition (REASONED; ssh): Confirm non-root key login and sudo in a fresh session before disabling password/root access; retain the working session while testing.
-- keys-only (REASONED; ssh): Disable PasswordAuthentication and KbdInteractiveAuthentication; enable PubkeyAuthentication and prohibit root login.
-- include-order (REASONED; ssh, openssh81, openssh82, openssh99, ubuntu-focal, rhel-c9s, cloudinit26, cloudinit20): OpenSSH 8.2 added server Include; OpenSSH 9.9 documents that, unless noted otherwise, each keyword uses its first obtained value, and documents lexical wildcard order supporting 00-hardening.conf. The fetched Ubuntu focal OpenSSH 1:8.2p1-4 configuration and CentOS Stream 9 packaging place the drop-in Include near the top, before main-file settings. With ssh_pwauth: true, cloud-init 26.2 writes PasswordAuthentication yes to 50-cloud-init.conf when the main configuration includes that directory; cloud-init 20.1 instead updated the main file. Current distribution defaults and cloud-image prevalence remain unestablished.
-- effective-config (REASONED; ssh): Validate with sshd -t before reload; inspect sshd -T global values and -T -C for Match-specific settings. Service names differ by distribution.
-- totp (REASONED; ssh, totp): SSH TOTP uses google-authenticator-libpam through PAM keyboard-interactive; keys-only configuration must change before adding this factor.
-- duo (REASONED; ssh, duo): Duo pam_duo provides the alternative push factor through PAM keyboard-interactive.
-- mfa-methods (REASONED; ssh, duo): UsePAM yes and AuthenticationMethods publickey,keyboard-interactive require both methods; keep password/root login disabled and public keys enabled.
-- legacy-name (REASONED; ssh, duo): Older configurations use ChallengeResponseAuthentication for KbdInteractiveAuthentication; enable the spelling present when configuring PAM MFA.
-- ufw-default (REASONED; ufw): Set deny incoming and allow outgoing, then enable UFW; permit TCP 80 and 443 for the TLS layer.
-- ufw-ssh (REASONED; ufw): Remove any broad OpenSSH allow before adding an admin-source TCP 22 rule; adding a narrower rule does not replace the old allowance.
-- brokered-ssh (REASONED; ufw, aws-ssm, gcp-iap, azure-docs, tailscale-docs): SSM SSH uses the agent's outbound TLS connection and needs no inbound port on the managed node; allow outbound HTTPS 443 to the documented Systems Manager endpoints. A tailnet ordinarily needs no inbound internet firewall port, and Tailscale SSH accepts tailnet traffic on port 22. IAP requires cloud ingress from 35.235.240.0/20, or 2600:2d00:1:7::/64 for IPv6 VMs, to SSH's default port 22 or its configured port; where an NSG is applied to the target VM subnet, Bastion requires an inbound SSH rule on default port 22 or a custom port with Standard or Premium SKU. Microsoft's best practice scopes that rule's source to the AzureBastionSubnet IP range. As this guide's advice, check the host firewall for these broker paths; the fetched IAP, Bastion and Tailscale pages do not specify which UFW or firewalld rules, if any, are needed.
-- firewalld-zone (REASONED; firewalld): Find the public interface zone explicitly; remove its broad ssh service, add the IPv4 admin rich rule permanently, then reload to activate it.
-- firewalld-audit (REASONED; firewalld): Inspect applicable zones for other services, port ranges, protocol/source allowances or ACCEPT targets that reopen 22; the narrow rich rule does not supersede them.
-- docker-bypass (REASONED; ufw, docker): With Docker Engine default Linux bridge firewall rules, published container traffic is diverted before UFW settings; consult docker.md before relying on the host firewall. As this guide's assessment, other modes and paths, including the userland proxy, need separate review in that guide.
-- fail2ban (REASONED; fail2ban): Use fail2ban to ban repeated authentication failures against SSH/login services.
-- crowdsec (REASONED; crowdsec): CrowdSec is the alternative protection for repeated authentication failures.
-- updates (REASONED; ssh, ubuntu-uu, ubuntu-apt, c9s-dnf, dnf4): Automate security patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems, configured to install them. Ubuntu noble's postinst conditionally writes 20auto-upgrades, and apt-daily-upgrade invokes unattended-upgrade when its periodic interval permits; its allowed origins include the release and security pockets. CentOS Stream 9 packages dnf-automatic. Upstream DNF 4.14.0 ships the cited automatic.conf defaults apply_updates=no and upgrade_type=default and the cited timers; enable dnf-automatic-install.timer and select upgrade_type=security for security-only installation. CentOS Stream 9 applies downstream dnf-automatic patches this guide has not reviewed, so its packaged defaults remain unestablished. Other Debian and RHEL-family package defaults remain unestablished.
-- verify-listeners (REASONED; ufw, iproute2, ubuntu-nc, c9s-nmap, busybox, openssh99): Inventory intended TCP/UDP listeners and addresses in both IP families with explicit ss -4 and -6 runs. Ubuntu noble netcat-openbsd supports -v, -z and -w; CentOS Stream 9 packages Ncat as an nc alternative, but behaviour of packaged 7.92 remains unestablished. BusyBox 1.36.1 small nc lacks -v while its 1.10-compatible applet lists -v. As this guide's assessment, refusal or timeout proves only that this connection failed; local errors, unsupported options and exit 1 without output are inconclusive. The OpenSSH 9.9 client options select password and disable public key; the literal Permission denied (publickey) is this guide's reasoned expectation dependent on server-advertised methods, while immediate failure with NO password prompt and a Permission denied (...) method list naming neither password nor keyboard-interactive are required. As this guide's reasoning, the client prints the server's remaining methods in that list.
-- verify-firewall (REASONED; ufw): UFW status should show default-deny ingress and admin-scoped SSH allowances; also inspect show raw because status omits /etc/ufw rules.
-- verify-external (REASONED; ufw, firewalld): Disallowed-source TCP 22 must fail while allowed SSH works; correlate effective rules. As this guide's assessment, refusal alone, local errors and unsupported netcat options are inconclusive.
-- verify-password (REASONED; ssh, openssh99): A password-only SSH attempt must fail immediately without a password prompt and show a Permission denied (...) method list naming neither password nor keyboard-interactive. As this guide's reasoning, the client prints the server's remaining methods in that list; a prompt or a list naming either method means that path is still on.
-- verify-mfa (REASONED; ssh, totp, duo): After key acceptance require a code, reject wrong/omitted codes and unenrolled users without nullok, and use Duo failmode=secure; test before closing the working session.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Every guide in this repository secures a service; this one secures the machine under them. Apply it once per host before exposing anything.
 
@@ -495,3 +175,349 @@ REASONED: preceding block; listener and firewall inventory, disallowed-source SS
 - BusyBox 1.36.1 compatible nc options, at 1_36_1 (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93
 - BusyBox 1.36.1 nc compatibility build selection, at 1_36_1 (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59
 - CentOS Stream 9 nmap package version, at 17c2b7795d821cd7fbe311cf3f885be3ea1f122f (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/nmap/-/blob/17c2b7795d821cd7fbe311cf3f885be3ea1f122f/nmap.spec#L6-L8
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/host.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- ssh: OpenSSH documentation (unknown)
+- openssh82: OpenSSH 8.2 server manual (V_8_2_P1)
+- openssh81: OpenSSH 8.1 server manual (V_8_1_P1)
+- openssh99: OpenSSH 9.9 source (V_9_9_P2)
+- ubuntu-focal: Ubuntu focal OpenSSH source (1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc)
+- rhel-c9s: CentOS Stream 9 OpenSSH packaging (0b69a3828606595828fc3b878a7c70652303ad67)
+- ufw: UFW documentation (unknown)
+- firewalld: firewalld documentation (unknown)
+- ubuntu-uu: Ubuntu noble unattended-upgrades source (0570be65234e2392d420308470d26920fa4cd21a)
+- ubuntu-apt: Ubuntu noble-updates apt source (835f914ef5657b923fbb8b357f134b00de24c6fd)
+- c9s-dnf: CentOS Stream 9 dnf packaging (3d5ca2af8635e0ef77219625f734d503b9900208)
+- dnf4: DNF 4.14.0 (4.14.0)
+- aws-ssm: AWS Session Manager (unknown)
+- gcp-iap: Google Cloud IAP (unknown)
+- azure-docs: Azure documentation snapshot (8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f)
+- tailscale-docs: Tailscale documentation (unknown)
+- fail2ban: fail2ban (unknown)
+- crowdsec: CrowdSec (unknown)
+- totp: google-authenticator-libpam (unknown)
+- duo: Duo Unix (unknown)
+- cloudinit26: cloud-init 26.2 (26.2)
+- cloudinit20: cloud-init 20.1 (20.1)
+- docker: Docker Engine networking (4e9a5751518ed8223a8dcde53693badddd72604f)
+- iproute2: iproute2 ss manual (v6.12.0)
+- ubuntu-nc: Ubuntu noble netcat-openbsd source (c047f1a4572e796c8643fb7e5a719a9d960a677b)
+- c9s-nmap: CentOS Stream 9 nmap packaging (17c2b7795d821cd7fbe311cf3f885be3ea1f122f)
+- busybox: BusyBox 1.36.1 (1_36_1)
+
+Claims (full source mapping in the JSON block below):
+
+- safe-transition (REASONED; ssh): Confirm non-root key login and sudo in a fresh session before disabling password/root access; retain the working session while testing.
+- keys-only (REASONED; ssh): Disable PasswordAuthentication and KbdInteractiveAuthentication; enable PubkeyAuthentication and prohibit root login.
+- include-order (REASONED; ssh, openssh81, openssh82, openssh99, ubuntu-focal, rhel-c9s, cloudinit26, cloudinit20): OpenSSH 8.2 added server Include; OpenSSH 9.9 documents that, unless noted otherwise, each keyword uses its first obtained value, and documents lexical wildcard order supporting 00-hardening.conf. The fetched Ubuntu focal OpenSSH 1:8.2p1-4 configuration and CentOS Stream 9 packaging place the drop-in Include near the top, before main-file settings. With ssh_pwauth: true, cloud-init 26.2 writes PasswordAuthentication yes to 50-cloud-init.conf when the main configuration includes that directory; cloud-init 20.1 instead updated the main file. Current distribution defaults and cloud-image prevalence remain unestablished.
+- effective-config (REASONED; ssh): Validate with sshd -t before reload; inspect sshd -T global values and -T -C for Match-specific settings. Service names differ by distribution.
+- totp (REASONED; ssh, totp): SSH TOTP uses google-authenticator-libpam through PAM keyboard-interactive; keys-only configuration must change before adding this factor.
+- duo (REASONED; ssh, duo): Duo pam_duo provides the alternative push factor through PAM keyboard-interactive.
+- mfa-methods (REASONED; ssh, duo): UsePAM yes and AuthenticationMethods publickey,keyboard-interactive require both methods; keep password/root login disabled and public keys enabled.
+- legacy-name (REASONED; ssh, duo): Older configurations use ChallengeResponseAuthentication for KbdInteractiveAuthentication; enable the spelling present when configuring PAM MFA.
+- ufw-default (REASONED; ufw): Set deny incoming and allow outgoing, then enable UFW; permit TCP 80 and 443 for the TLS layer.
+- ufw-ssh (REASONED; ufw): Remove any broad OpenSSH allow before adding an admin-source TCP 22 rule; adding a narrower rule does not replace the old allowance.
+- brokered-ssh (REASONED; ufw, aws-ssm, gcp-iap, azure-docs, tailscale-docs): SSM SSH uses the agent's outbound TLS connection and needs no inbound port on the managed node; allow outbound HTTPS 443 to the documented Systems Manager endpoints. A tailnet ordinarily needs no inbound internet firewall port, and Tailscale SSH accepts tailnet traffic on port 22. IAP requires cloud ingress from 35.235.240.0/20, or 2600:2d00:1:7::/64 for IPv6 VMs, to SSH's default port 22 or its configured port; where an NSG is applied to the target VM subnet, Bastion requires an inbound SSH rule on default port 22 or a custom port with Standard or Premium SKU. Microsoft's best practice scopes that rule's source to the AzureBastionSubnet IP range. As this guide's advice, check the host firewall for these broker paths; the fetched IAP, Bastion and Tailscale pages do not specify which UFW or firewalld rules, if any, are needed.
+- firewalld-zone (REASONED; firewalld): Find the public interface zone explicitly; remove its broad ssh service, add the IPv4 admin rich rule permanently, then reload to activate it.
+- firewalld-audit (REASONED; firewalld): Inspect applicable zones for other services, port ranges, protocol/source allowances or ACCEPT targets that reopen 22; the narrow rich rule does not supersede them.
+- docker-bypass (REASONED; ufw, docker): With Docker Engine default Linux bridge firewall rules, published container traffic is diverted before UFW settings; consult docker.md before relying on the host firewall. As this guide's assessment, other modes and paths, including the userland proxy, need separate review in that guide.
+- fail2ban (REASONED; fail2ban): Use fail2ban to ban repeated authentication failures against SSH/login services.
+- crowdsec (REASONED; crowdsec): CrowdSec is the alternative protection for repeated authentication failures.
+- updates (REASONED; ssh, ubuntu-uu, ubuntu-apt, c9s-dnf, dnf4): Automate security patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems, configured to install them. Ubuntu noble's postinst conditionally writes 20auto-upgrades, and apt-daily-upgrade invokes unattended-upgrade when its periodic interval permits; its allowed origins include the release and security pockets. CentOS Stream 9 packages dnf-automatic. Upstream DNF 4.14.0 ships the cited automatic.conf defaults apply_updates=no and upgrade_type=default and the cited timers; enable dnf-automatic-install.timer and select upgrade_type=security for security-only installation. CentOS Stream 9 applies downstream dnf-automatic patches this guide has not reviewed, so its packaged defaults remain unestablished. Other Debian and RHEL-family package defaults remain unestablished.
+- verify-listeners (REASONED; ufw, iproute2, ubuntu-nc, c9s-nmap, busybox, openssh99): Inventory intended TCP/UDP listeners and addresses in both IP families with explicit ss -4 and -6 runs. Ubuntu noble netcat-openbsd supports -v, -z and -w; CentOS Stream 9 packages Ncat as an nc alternative, but behaviour of packaged 7.92 remains unestablished. BusyBox 1.36.1 small nc lacks -v while its 1.10-compatible applet lists -v. As this guide's assessment, refusal or timeout proves only that this connection failed; local errors, unsupported options and exit 1 without output are inconclusive. The OpenSSH 9.9 client options select password and disable public key; the literal Permission denied (publickey) is this guide's reasoned expectation dependent on server-advertised methods, while immediate failure with NO password prompt and a Permission denied (...) method list naming neither password nor keyboard-interactive are required. As this guide's reasoning, the client prints the server's remaining methods in that list.
+- verify-firewall (REASONED; ufw): UFW status should show default-deny ingress and admin-scoped SSH allowances; also inspect show raw because status omits /etc/ufw rules.
+- verify-external (REASONED; ufw, firewalld): Disallowed-source TCP 22 must fail while allowed SSH works; correlate effective rules. As this guide's assessment, refusal alone, local errors and unsupported netcat options are inconclusive.
+- verify-password (REASONED; ssh, openssh99): A password-only SSH attempt must fail immediately without a password prompt and show a Permission denied (...) method list naming neither password nor keyboard-interactive. As this guide's reasoning, the client prints the server's remaining methods in that list; a prompt or a list naming either method means that path is still on.
+- verify-mfa (REASONED; ssh, totp, duo): After key acceptance require a code, reject wrong/omitted codes and unenrolled users without nullok, and use Duo failmode=secure; test before closing the working session.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-18",
+  "documentation_checked": "2026-09",
+  "body_sha256": "69f0526c898b0ca306b1db8320a26096f1014705ad56d76b2c8534258926c517",
+  "components": {
+    "ssh": {
+      "name": "OpenSSH documentation",
+      "basis": "unknown",
+      "sources": {
+        "s44f73ffcb41e": "https://man.openbsd.org/sshd_config"
+      }
+    },
+    "openssh82": {
+      "name": "OpenSSH 8.2 server manual",
+      "basis": "V_8_2_P1",
+      "sources": {
+        "s74206a9a30dd": "https://github.com/openssh/openssh-portable/blob/V_8_2_P1/sshd_config.5#L805-L817"
+      }
+    },
+    "openssh81": {
+      "name": "OpenSSH 8.1 server manual",
+      "basis": "V_8_1_P1",
+      "sources": {
+        "s76bfb1ff5934": "https://github.com/openssh/openssh-portable/blob/V_8_1_P1/sshd_config.5#L793-L804"
+      }
+    },
+    "openssh99": {
+      "name": "OpenSSH 9.9 source",
+      "basis": "V_9_9_P2",
+      "sources": {
+        "sb409a9bcefc5": "https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshd_config.5#L51-L51",
+        "s447d8f1b88bd": "https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshd_config.5#L912-L918",
+        "saa71f4024a44": "https://github.com/openssh/openssh-portable/blob/V_9_9_P2/sshconnect2.c#L540-L543",
+        "sd768a096f236": "https://github.com/openssh/openssh-portable/blob/V_9_9_P2/ssh_config.5#L1536-L1546",
+        "s711f7f9ad562": "https://github.com/openssh/openssh-portable/blob/V_9_9_P2/ssh_config.5#L1661-L1674"
+      }
+    },
+    "ubuntu-focal": {
+      "name": "Ubuntu focal OpenSSH source",
+      "basis": "1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc",
+      "sources": {
+        "sbc9404fbd678": "https://git.launchpad.net/ubuntu/+source/openssh/tree/sshd_config?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n13",
+        "s8681449a40db": "https://git.launchpad.net/ubuntu/+source/openssh/tree/debian/changelog?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n1",
+        "sc389a883f3ae": "https://git.launchpad.net/ubuntu/+source/openssh/tree/debian/changelog?id=1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc#n4"
+      }
+    },
+    "rhel-c9s": {
+      "name": "CentOS Stream 9 OpenSSH packaging",
+      "basis": "0b69a3828606595828fc3b878a7c70652303ad67",
+      "sources": {
+        "sd34862bbf569": "https://gitlab.com/redhat/centos-stream/rpms/openssh/-/blob/0b69a3828606595828fc3b878a7c70652303ad67/openssh-7.7p1-redhat.patch#L69-L71",
+        "s87a3827a045e": "https://gitlab.com/redhat/centos-stream/rpms/openssh/-/blob/0b69a3828606595828fc3b878a7c70652303ad67/openssh.spec#L444-L444",
+        "s0a2ed08d7a83": "https://gitlab.com/redhat/centos-stream/rpms/openssh/-/blob/0b69a3828606595828fc3b878a7c70652303ad67/openssh.spec#L135-L135"
+      }
+    },
+    "ufw": {
+      "name": "UFW documentation",
+      "basis": "unknown",
+      "sources": {
+        "scff3a017f30b": "https://manpages.ubuntu.com/manpages/noble/man8/ufw.8.html"
+      }
+    },
+    "firewalld": {
+      "name": "firewalld documentation",
+      "basis": "unknown",
+      "sources": {
+        "sa1a1385129f1": "https://firewalld.org/documentation/man-pages/firewall-cmd.html",
+        "sc1cb4d135f3b": "https://firewalld.org/documentation/man-pages/firewalld.richlanguage.html"
+      }
+    },
+    "ubuntu-uu": {
+      "name": "Ubuntu noble unattended-upgrades source",
+      "basis": "0570be65234e2392d420308470d26920fa4cd21a",
+      "sources": {
+        "sf087d7bd33d0": "https://git.launchpad.net/ubuntu/+source/unattended-upgrades/tree/debian/postinst?id=0570be65234e2392d420308470d26920fa4cd21a#n47",
+        "s665816188e55": "https://git.launchpad.net/ubuntu/+source/unattended-upgrades/tree/data/50unattended-upgrades.Ubuntu?id=0570be65234e2392d420308470d26920fa4cd21a#n6"
+      }
+    },
+    "ubuntu-apt": {
+      "name": "Ubuntu noble-updates apt source",
+      "basis": "835f914ef5657b923fbb8b357f134b00de24c6fd",
+      "sources": {
+        "sca779f690beb": "https://git.launchpad.net/ubuntu/+source/apt/tree/debian/apt-daily-upgrade.timer?id=835f914ef5657b923fbb8b357f134b00de24c6fd#n5",
+        "sfd64eba4bd67": "https://git.launchpad.net/ubuntu/+source/apt/tree/debian/apt-daily-upgrade.service?id=835f914ef5657b923fbb8b357f134b00de24c6fd#n7",
+        "s11bc9e19894d": "https://git.launchpad.net/ubuntu/+source/apt/tree/debian/apt.systemd.daily?id=835f914ef5657b923fbb8b357f134b00de24c6fd#n491"
+      }
+    },
+    "c9s-dnf": {
+      "name": "CentOS Stream 9 dnf packaging",
+      "basis": "3d5ca2af8635e0ef77219625f734d503b9900208",
+      "sources": {
+        "s9b090e2053b2": "https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L260-L267",
+        "s32a269377ebb": "https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L75-L75",
+        "s006862fe84d1": "https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L82-L158",
+        "s50216e5989bf": "https://gitlab.com/redhat/centos-stream/rpms/dnf/-/blob/3d5ca2af8635e0ef77219625f734d503b9900208/dnf.spec#L281-L282"
+      }
+    },
+    "dnf4": {
+      "name": "DNF 4.14.0",
+      "basis": "4.14.0",
+      "sources": {
+        "s97934a4740a2": "https://github.com/rpm-software-management/dnf/blob/4.14.0/etc/dnf/automatic.conf#L1-L22",
+        "sbd65ffa4b83c": "https://github.com/rpm-software-management/dnf/blob/4.14.0/doc/automatic.rst#L38-L50",
+        "s5619c2b76401": "https://github.com/rpm-software-management/dnf/blob/4.14.0/doc/automatic.rst#L86-L91",
+        "sb4ab6d87f528": "https://github.com/rpm-software-management/dnf/blob/4.14.0/etc/systemd/dnf-automatic-install.timer#L7-L13",
+        "s189a68fdfaad": "https://github.com/rpm-software-management/dnf/blob/4.14.0/etc/systemd/dnf-automatic-install.service#L7-L13"
+      }
+    },
+    "aws-ssm": {
+      "name": "AWS Session Manager",
+      "basis": "unknown",
+      "sources": {
+        "s06a2a8e07062": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-enable-ssh-connections.html#session-manager-getting-started-enable-ssh-connections",
+        "s0f77b30546ee": "https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-prerequisites.html#session-manager-prerequisites"
+      }
+    },
+    "gcp-iap": {
+      "name": "Google Cloud IAP",
+      "basis": "unknown",
+      "sources": {
+        "s7e6eda97f950": "https://docs.cloud.google.com/iap/docs/using-tcp-forwarding#create-firewall-rule"
+      }
+    },
+    "azure-docs": {
+      "name": "Azure documentation snapshot",
+      "basis": "8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f",
+      "sources": {
+        "s6d46120d991b": "https://github.com/MicrosoftDocs/azure-docs/blob/8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f/articles/bastion/bastion-nsg.md#L77-L84"
+      }
+    },
+    "tailscale-docs": {
+      "name": "Tailscale documentation",
+      "basis": "unknown",
+      "sources": {
+        "scf48029376f6": "https://tailscale.com/docs/reference/faq/firewall-ports",
+        "s44f0b2a0a8ba": "https://tailscale.com/docs/features/tailscale-ssh#why-it-matters"
+      }
+    },
+    "fail2ban": {
+      "name": "fail2ban",
+      "basis": "unknown",
+      "sources": {
+        "s7a37ae416e85": "https://github.com/fail2ban/fail2ban"
+      }
+    },
+    "crowdsec": {
+      "name": "CrowdSec",
+      "basis": "unknown",
+      "sources": {
+        "s4efe4c22c69b": "https://www.crowdsec.net/"
+      }
+    },
+    "totp": {
+      "name": "google-authenticator-libpam",
+      "basis": "unknown",
+      "sources": {
+        "s6f787f7b4f18": "https://github.com/google/google-authenticator-libpam"
+      }
+    },
+    "duo": {
+      "name": "Duo Unix",
+      "basis": "unknown",
+      "sources": {
+        "s18b76ce18df1": "https://duo.com/docs/duounix"
+      }
+    },
+    "cloudinit26": {
+      "name": "cloud-init 26.2",
+      "basis": "26.2",
+      "sources": {
+        "sad4ec0d2acc5": "https://github.com/canonical/cloud-init/blob/26.2/cloudinit/ssh_util.py#L548-L586",
+        "s8de0318d9aa5": "https://github.com/canonical/cloud-init/blob/26.2/cloudinit/config/cc_set_passwords.py#L60-L90",
+        "s368c8162762a": "https://github.com/canonical/cloud-init/blob/26.2/cloudinit/config/cc_set_passwords.py#L255-L255"
+      }
+    },
+    "cloudinit20": {
+      "name": "cloud-init 20.1",
+      "basis": "20.1",
+      "sources": {
+        "s471abb6d2123": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L338-L348",
+        "sa8d2f85a5876": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L17-L18",
+        "s872ab5dff723": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/config/cc_set_passwords.py#L97-L122",
+        "s7e40e982cb9f": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/config/cc_set_passwords.py#L230-L232"
+      }
+    },
+    "docker": {
+      "name": "Docker Engine networking",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "sc920c6946fcf": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L11-L32",
+        "sb5ca9f87b1f3": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L90-L102"
+      }
+    },
+    "iproute2": {
+      "name": "iproute2 ss manual",
+      "basis": "v6.12.0",
+      "sources": {
+        "s2afc4764d5bb": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34",
+        "sfaa932c2ca13": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44",
+        "sd295f82d643f": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163",
+        "s65278ee45850": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375",
+        "s8ecdaf9e9ea7": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L377-L378",
+        "s4e1c28d5adad": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L365-L369"
+      }
+    },
+    "ubuntu-nc": {
+      "name": "Ubuntu noble netcat-openbsd source",
+      "basis": "c047f1a4572e796c8643fb7e5a719a9d960a677b",
+      "sources": {
+        "s478aaf9a8975": "https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n257",
+        "sd7b31d3bc579": "https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n263",
+        "scc48da80246b": "https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/nc.1?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n308",
+        "s5e260ceab82c": "https://git.launchpad.net/ubuntu/+source/netcat-openbsd/tree/netcat.c?id=c047f1a4572e796c8643fb7e5a719a9d960a677b#n899"
+      }
+    },
+    "c9s-nmap": {
+      "name": "CentOS Stream 9 nmap packaging",
+      "basis": "17c2b7795d821cd7fbe311cf3f885be3ea1f122f",
+      "sources": {
+        "sd06e83963e39": "https://gitlab.com/redhat/centos-stream/rpms/nmap/-/blob/17c2b7795d821cd7fbe311cf3f885be3ea1f122f/nmap.spec#L133-L137",
+        "s3ab25d24e37a": "https://gitlab.com/redhat/centos-stream/rpms/nmap/-/blob/17c2b7795d821cd7fbe311cf3f885be3ea1f122f/nmap.spec#L6-L8"
+      }
+    },
+    "busybox": {
+      "name": "BusyBox 1.36.1",
+      "basis": "1_36_1",
+      "sources": {
+        "s34bdee292f79": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93",
+        "sd707e18625cc": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L136-L170",
+        "s14b89daa008d": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59"
+      }
+    }
+  },
+  "claims": {
+    "safe-transition": {"text": "Confirm non-root key login and sudo in a fresh session before disabling password/root access; retain the working session while testing.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
+    "keys-only": {"text": "Disable PasswordAuthentication and KbdInteractiveAuthentication; enable PubkeyAuthentication and prohibit root login.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
+    "include-order": {"text": "OpenSSH 8.2 added server Include; OpenSSH 9.9 documents that, unless noted otherwise, each keyword uses its first obtained value, and documents lexical wildcard order supporting 00-hardening.conf. The fetched Ubuntu focal OpenSSH 1:8.2p1-4 configuration and CentOS Stream 9 packaging place the drop-in Include near the top, before main-file settings. With ssh_pwauth: true, cloud-init 26.2 writes PasswordAuthentication yes to 50-cloud-init.conf when the main configuration includes that directory; cloud-init 20.1 instead updated the main file. Current distribution defaults and cloud-image prevalence remain unestablished.", "components": ["ssh", "openssh81", "openssh82", "openssh99", "ubuntu-focal", "rhel-c9s", "cloudinit26", "cloudinit20"], "sources": ["ssh:s44f73ffcb41e", "openssh82:s74206a9a30dd", "openssh99:sb409a9bcefc5", "openssh99:s447d8f1b88bd", "ubuntu-focal:sbc9404fbd678", "ubuntu-focal:s8681449a40db", "rhel-c9s:sd34862bbf569", "rhel-c9s:s87a3827a045e", "cloudinit26:sad4ec0d2acc5", "cloudinit26:s8de0318d9aa5", "cloudinit20:s471abb6d2123", "cloudinit20:sa8d2f85a5876", "rhel-c9s:s0a2ed08d7a83", "openssh81:s76bfb1ff5934", "ubuntu-focal:sc389a883f3ae", "cloudinit26:s368c8162762a", "cloudinit20:s872ab5dff723", "cloudinit20:s7e40e982cb9f"], "status": "REASONED"},
+    "effective-config": {"text": "Validate with sshd -t before reload; inspect sshd -T global values and -T -C for Match-specific settings. Service names differ by distribution.", "components": ["ssh"], "sources": ["ssh:s44f73ffcb41e"], "status": "REASONED"},
+    "totp": {"text": "SSH TOTP uses google-authenticator-libpam through PAM keyboard-interactive; keys-only configuration must change before adding this factor.", "components": ["ssh", "totp"], "sources": ["ssh:s44f73ffcb41e", "totp:s6f787f7b4f18"], "status": "REASONED"},
+    "duo": {"text": "Duo pam_duo provides the alternative push factor through PAM keyboard-interactive.", "components": ["ssh", "duo"], "sources": ["ssh:s44f73ffcb41e", "duo:s18b76ce18df1"], "status": "REASONED"},
+    "mfa-methods": {"text": "UsePAM yes and AuthenticationMethods publickey,keyboard-interactive require both methods; keep password/root login disabled and public keys enabled.", "components": ["ssh", "duo"], "sources": ["ssh:s44f73ffcb41e", "duo:s18b76ce18df1"], "status": "REASONED"},
+    "legacy-name": {"text": "Older configurations use ChallengeResponseAuthentication for KbdInteractiveAuthentication; enable the spelling present when configuring PAM MFA.", "components": ["ssh", "duo"], "sources": ["ssh:s44f73ffcb41e", "duo:s18b76ce18df1"], "status": "REASONED"},
+    "ufw-default": {"text": "Set deny incoming and allow outgoing, then enable UFW; permit TCP 80 and 443 for the TLS layer.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED"},
+    "ufw-ssh": {"text": "Remove any broad OpenSSH allow before adding an admin-source TCP 22 rule; adding a narrower rule does not replace the old allowance.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED"},
+    "brokered-ssh": {"text": "SSM SSH uses the agent's outbound TLS connection and needs no inbound port on the managed node; allow outbound HTTPS 443 to the documented Systems Manager endpoints. A tailnet ordinarily needs no inbound internet firewall port, and Tailscale SSH accepts tailnet traffic on port 22. IAP requires cloud ingress from 35.235.240.0/20, or 2600:2d00:1:7::/64 for IPv6 VMs, to SSH's default port 22 or its configured port; where an NSG is applied to the target VM subnet, Bastion requires an inbound SSH rule on default port 22 or a custom port with Standard or Premium SKU. Microsoft's best practice scopes that rule's source to the AzureBastionSubnet IP range. As this guide's advice, check the host firewall for these broker paths; the fetched IAP, Bastion and Tailscale pages do not specify which UFW or firewalld rules, if any, are needed.", "components": ["ufw", "aws-ssm", "gcp-iap", "azure-docs", "tailscale-docs"], "sources": ["ufw:scff3a017f30b", "aws-ssm:s06a2a8e07062", "aws-ssm:s0f77b30546ee", "gcp-iap:s7e6eda97f950", "azure-docs:s6d46120d991b", "tailscale-docs:scf48029376f6", "tailscale-docs:s44f0b2a0a8ba"], "status": "REASONED"},
+    "firewalld-zone": {"text": "Find the public interface zone explicitly; remove its broad ssh service, add the IPv4 admin rich rule permanently, then reload to activate it.", "components": ["firewalld"], "sources": ["firewalld:sa1a1385129f1", "firewalld:sc1cb4d135f3b"], "status": "REASONED"},
+    "firewalld-audit": {"text": "Inspect applicable zones for other services, port ranges, protocol/source allowances or ACCEPT targets that reopen 22; the narrow rich rule does not supersede them.", "components": ["firewalld"], "sources": ["firewalld:sa1a1385129f1", "firewalld:sc1cb4d135f3b"], "status": "REASONED"},
+    "docker-bypass": {"text": "With Docker Engine default Linux bridge firewall rules, published container traffic is diverted before UFW settings; consult docker.md before relying on the host firewall. As this guide's assessment, other modes and paths, including the userland proxy, need separate review in that guide.", "components": ["ufw", "docker"], "sources": ["ufw:scff3a017f30b", "docker:sc920c6946fcf", "docker:sb5ca9f87b1f3"], "status": "REASONED"},
+    "fail2ban": {"text": "Use fail2ban to ban repeated authentication failures against SSH/login services.", "components": ["fail2ban"], "sources": ["fail2ban:s7a37ae416e85"], "status": "REASONED"},
+    "crowdsec": {"text": "CrowdSec is the alternative protection for repeated authentication failures.", "components": ["crowdsec"], "sources": ["crowdsec:s4efe4c22c69b"], "status": "REASONED"},
+    "updates": {"text": "Automate security patches with unattended-upgrades on Debian/Ubuntu or dnf-automatic on RHEL-family systems, configured to install them. Ubuntu noble's postinst conditionally writes 20auto-upgrades, and apt-daily-upgrade invokes unattended-upgrade when its periodic interval permits; its allowed origins include the release and security pockets. CentOS Stream 9 packages dnf-automatic. Upstream DNF 4.14.0 ships the cited automatic.conf defaults apply_updates=no and upgrade_type=default and the cited timers; enable dnf-automatic-install.timer and select upgrade_type=security for security-only installation. CentOS Stream 9 applies downstream dnf-automatic patches this guide has not reviewed, so its packaged defaults remain unestablished. Other Debian and RHEL-family package defaults remain unestablished.", "components": ["ssh", "ubuntu-uu", "ubuntu-apt", "c9s-dnf", "dnf4"], "sources": ["ssh:s44f73ffcb41e", "ubuntu-uu:sf087d7bd33d0", "ubuntu-uu:s665816188e55", "ubuntu-apt:sca779f690beb", "ubuntu-apt:sfd64eba4bd67", "ubuntu-apt:s11bc9e19894d", "c9s-dnf:s9b090e2053b2", "c9s-dnf:s32a269377ebb", "c9s-dnf:s006862fe84d1", "c9s-dnf:s50216e5989bf", "dnf4:s97934a4740a2", "dnf4:sbd65ffa4b83c", "dnf4:s5619c2b76401", "dnf4:sb4ab6d87f528", "dnf4:s189a68fdfaad"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inventory intended TCP/UDP listeners and addresses in both IP families with explicit ss -4 and -6 runs. Ubuntu noble netcat-openbsd supports -v, -z and -w; CentOS Stream 9 packages Ncat as an nc alternative, but behaviour of packaged 7.92 remains unestablished. BusyBox 1.36.1 small nc lacks -v while its 1.10-compatible applet lists -v. As this guide's assessment, refusal or timeout proves only that this connection failed; local errors, unsupported options and exit 1 without output are inconclusive. The OpenSSH 9.9 client options select password and disable public key; the literal Permission denied (publickey) is this guide's reasoned expectation dependent on server-advertised methods, while immediate failure with NO password prompt and a Permission denied (...) method list naming neither password nor keyboard-interactive are required. As this guide's reasoning, the client prints the server's remaining methods in that list.", "components": ["ufw", "iproute2", "ubuntu-nc", "c9s-nmap", "busybox", "openssh99"], "sources": ["ufw:scff3a017f30b", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850", "iproute2:s8ecdaf9e9ea7", "iproute2:s4e1c28d5adad", "ubuntu-nc:s478aaf9a8975", "ubuntu-nc:sd7b31d3bc579", "ubuntu-nc:scc48da80246b", "c9s-nmap:sd06e83963e39", "busybox:sd707e18625cc", "busybox:s34bdee292f79", "busybox:s14b89daa008d", "c9s-nmap:s3ab25d24e37a", "ubuntu-nc:s5e260ceab82c", "openssh99:sd768a096f236", "openssh99:s711f7f9ad562", "openssh99:saa71f4024a44"], "status": "REASONED", "verify": [1]},
+    "verify-firewall": {"text": "UFW status should show default-deny ingress and admin-scoped SSH allowances; also inspect show raw because status omits /etc/ufw rules.", "components": ["ufw"], "sources": ["ufw:scff3a017f30b"], "status": "REASONED", "verify": [1]},
+    "verify-external": {"text": "Disallowed-source TCP 22 must fail while allowed SSH works; correlate effective rules. As this guide's assessment, refusal alone, local errors and unsupported netcat options are inconclusive.", "components": ["ufw", "firewalld"], "sources": ["ufw:scff3a017f30b", "firewalld:sa1a1385129f1"], "status": "REASONED", "verify": [1]},
+    "verify-password": {"text": "A password-only SSH attempt must fail immediately without a password prompt and show a Permission denied (...) method list naming neither password nor keyboard-interactive. As this guide's reasoning, the client prints the server's remaining methods in that list; a prompt or a list naming either method means that path is still on.", "components": ["ssh", "openssh99"], "sources": ["ssh:s44f73ffcb41e", "openssh99:saa71f4024a44", "openssh99:sd768a096f236", "openssh99:s711f7f9ad562"], "status": "REASONED", "verify": [1]},
+    "verify-mfa": {"text": "After key acceptance require a code, reject wrong/omitted codes and unenrolled users without nullok, and use Duo failmode=secure; test before closing the working session.", "components": ["ssh", "totp", "duo"], "sources": ["ssh:s44f73ffcb41e", "totp:s6f787f7b4f18", "duo:s18b76ce18df1"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->

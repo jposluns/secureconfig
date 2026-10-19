@@ -1,199 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-17",
-  "documentation_checked": "2026-09",
-  "body_sha256": "07eda7c75b5cada2d56a730e2c7a33df34730eec5139f55d0545aad278723811",
-  "components": {
-    "ng": {
-      "name": "nginx documentation",
-      "basis": "unknown",
-      "sources": {
-        "s6a0728ca7609": "https://nginx.org/en/docs/http/configuring_https_servers.html",
-        "s40bdf1af1596": "https://nginx.org/en/docs/http/ngx_http_core_module.html",
-        "sb3bee9429629": "https://nginx.org/en/docs/http/ngx_http_limit_req_module.html",
-        "sddc43aac8779": "https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html",
-        "sf3430c5a0b22": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html",
-        "sf32ce2956917": "https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html",
-        "sddacc1191f5f": "https://nginx.org/en/docs/http/ngx_http_realip_module.html"
-      }
-    },
-    "policy": {
-      "name": "Mozilla TLS policy",
-      "basis": "unknown",
-      "sources": {
-        "s529b0eabe2ed": "https://ssl-config.mozilla.org/"
-      }
-    },
-    "certbot": {
-      "name": "Certbot nginx configurator",
-      "basis": "v2.3.0",
-      "sources": {
-        "s3a02bfe1d7ad": "https://github.com/certbot/certbot/blob/v2.3.0/certbot-nginx/certbot_nginx/_internal/configurator.py#L711"
-      }
-    },
-    "hsts": {
-      "name": "HSTS specification",
-      "basis": "RFC 6797",
-      "sources": {
-        "s3f5af5f440f9": "https://www.rfc-editor.org/rfc/rfc6797.html#section-6.1.2"
-      }
-    },
-    "nginx-source": {
-      "name": "nginx source",
-      "basis": "release-1.26.3",
-      "sources": {
-        "s0ae4e9bc8d07": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218",
-        "s002242c2d0cd": "https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L470-L480",
-        "s305b7194043c": "https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L739-L775",
-        "sbea253fd242b": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/v2/ngx_http_v2_module.c#L76-L81",
-        "s936193a42402": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L4181-L4188",
-        "sac3cbbf7fc48": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L857-L862",
-        "s66c86979411e": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L153-L172",
-        "sabb195c173d5": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802",
-        "sa930199b563a": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L74-L80",
-        "seb1f8a9d91f9": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687",
-        "sf6eac8f6749d": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796",
-        "s3df6e64cd6a3": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182",
-        "sced570e33c0f": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138",
-        "sfafe27857e33": "https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576"
-      }
-    },
-    "authelia": {
-      "name": "Authelia nginx integration",
-      "basis": "v4.39.28",
-      "sources": {
-        "s279cd6449b53": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L39-L45",
-        "sdf01968ab996": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L245-L247",
-        "s237ae14bbb4a": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L517-L519"
-      }
-    },
-    "oauth2-proxy": {
-      "name": "oauth2-proxy nginx integration",
-      "basis": "v7.15.4",
-      "sources": {
-        "sc62400f0ea8a": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/integrations/nginx.md#L16-L18"
-      }
-    },
-    "cloudflare-access": {
-      "name": "Cloudflare Access web applications",
-      "basis": "unknown",
-      "sources": {
-        "sfe56578bedf4": "https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/"
-      }
-    },
-    "httpd": {
-      "name": "Apache httpd source",
-      "basis": "2.4.69",
-      "sources": {
-        "s309ecdd34379": "https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128",
-        "sf711558bdf3c": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45",
-        "s1c1a101a70e7": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295",
-        "s4482c55d79a2": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L382"
-      }
-    },
-    "debian-apache2": {
-      "name": "Debian apache2 packaging",
-      "basis": "2.4.69-1",
-      "sources": {
-        "sc2a26b3a7af5": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-101",
-        "s62f6ed2866ab": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1"
-      }
-    },
-    "owasp": {
-      "name": "OWASP Password Storage Cheat Sheet",
-      "basis": "commit 72865b1e",
-      "sources": {
-        "s4531e65b6502": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13"
-      }
-    }
-  },
-  "claims": {
-    "certbot": {"text": "The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides.", "components": ["ng", "certbot"], "sources": ["ng:s6a0728ca7609", "certbot:s3a02bfe1d7ad"], "status": "REASONED"},
-    "tls": {"text": "443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED"},
-    "http2": {"text": "At nginx release-1.26.3, http2 on is the HTTP/2 module directive; nginx 1.25.1 introduced it and deprecated the older listen 443 ssl http2 parameter.", "components": ["ng", "nginx-source"], "sources": ["ng:s40bdf1af1596", "nginx-source:s002242c2d0cd", "nginx-source:sbea253fd242b", "nginx-source:s936193a42402"], "status": "REASONED"},
-    "tokens": {"text": "server_tokens off suppresses nginx version in headers and error pages.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
-    "hsts": {"text": "Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age.", "components": ["ng", "hsts", "nginx-source"], "sources": ["ng:s6a0728ca7609", "hsts:s3f5af5f440f9", "nginx-source:s0ae4e9bc8d07"], "status": "REASONED"},
-    "hsts-inheritance": {"text": "At nginx release-1.26.3, a location add_header replaces inherited server headers; always changes response-code coverage, not inheritance.", "components": ["ng", "nginx-source"], "sources": ["ng:s40bdf1af1596", "nginx-source:s0ae4e9bc8d07", "nginx-source:seb1f8a9d91f9", "nginx-source:sf6eac8f6749d"], "status": "REASONED"},
-    "proxy": {"text": "Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
-    "forwarded-host": {"text": "Overwrite X-Forwarded-Host: client-set values otherwise pass upstream.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
-    "cipher-policy": {"text": "Use Mozilla for explicit cipher policy; retain the stated protocol floor.", "components": ["ng", "policy"], "sources": ["ng:s6a0728ca7609", "policy:s529b0eabe2ed"], "status": "REASONED"},
-    "tickets": {"text": "At nginx release-1.26.3, ssl_session_tickets defaults on; nginx 1.23.2 introduced automatic ticket-key rotation with a shared ssl_session_cache.", "components": ["ng", "nginx-source"], "sources": ["ng:s6a0728ca7609", "nginx-source:sac3cbbf7fc48", "nginx-source:s305b7194043c", "nginx-source:sfafe27857e33"], "status": "REASONED"},
-    "redirect": {"text": "Port 80 on IPv4/IPv6 redirects with 301; a default server reflecting $host can redirect unmatched hosts off-site, so use 444 or a canonical host.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
-    "password-file": {"text": "At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils.", "components": ["ng", "httpd", "owasp", "debian-apache2"], "sources": ["ng:sf32ce2956917", "debian-apache2:sc2a26b3a7af5", "debian-apache2:s62f6ed2866ab", "httpd:s309ecdd34379", "httpd:sf711558bdf3c", "httpd:s1c1a101a70e7", "httpd:s4482c55d79a2", "owasp:s4531e65b6502"], "status": "REASONED"},
-    "basic": {"text": "auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers.", "components": ["ng"], "sources": ["ng:sf32ce2956917", "ng:sf3430c5a0b22"], "status": "REASONED"},
-    "mtls": {"text": "At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification.", "components": ["ng", "nginx-source"], "sources": ["ng:s6a0728ca7609", "nginx-source:s66c86979411e", "nginx-source:sabb195c173d5", "nginx-source:sa930199b563a"], "status": "REASONED"},
-    "mfa": {"text": "At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia v4.39.28 and oauth2-proxy v7.15.4 document nginx auth_request integration, and Cloudflare Access documents protecting self-hosted web applications; the nginx source cited here does not cover those integrations. MFA is this guide's requirement; whether a given installation enforces it depends on its configured portal or Access policy (this guide's assessment).", "components": ["ng", "nginx-source", "authelia", "oauth2-proxy", "cloudflare-access"], "sources": ["ng:sf32ce2956917", "nginx-source:s3df6e64cd6a3", "nginx-source:sced570e33c0f", "authelia:s279cd6449b53", "authelia:sdf01968ab996", "authelia:s237ae14bbb4a", "oauth2-proxy:sc62400f0ea8a", "cloudflare-access:sfe56578bedf4"], "status": "REASONED"},
-    "body-limit": {"text": "client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
-    "rate-limit": {"text": "Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503.", "components": ["ng"], "sources": ["ng:sb3bee9429629"], "status": "REASONED"},
-    "connection-limit": {"text": "limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503.", "components": ["ng"], "sources": ["ng:sddc43aac8779"], "status": "REASONED"},
-    "location-auth": {"text": "Keep limits in the authenticated location; sibling locations do not inherit its auth or proxy headers. Repeat auth or inherit it from server; auth_basic off is deliberate.", "components": ["ng"], "sources": ["ng:sf32ce2956917", "ng:s40bdf1af1596", "ng:sf3430c5a0b22"], "status": "REASONED"},
-    "read-timeout": {"text": "proxy_read_timeout 60s limits gaps between upstream reads, not total response duration; active streams can continue indefinitely.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
-    "client-address": {"text": "At a direct edge trust the appended last X-Forwarded-For entry; behind a CDN, recover the client with trusted set_real_ip_from and real_ip_header before per-client limits.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22", "ng:sddacc1191f5f", "ng:sb3bee9429629", "ng:sddc43aac8779"], "status": "REASONED"},
-    "verify-config": {"text": "Run nginx -t before reload; no configuration-test outcome is recorded.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED", "verify": [1]},
-    "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED", "verify": [1]},
-    "verify-tls": {"text": "HTTPS must validate without -k; TLS 1.1-only rejection must be protocol_version, not a generic/local failure; test TLS 1.0 separately.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED", "verify": [1]},
-    "verify-auth": {"text": "An open path may return 200; the protected path must reject no credentials with 401/403, and valid credentials reach the app rather than 401.", "components": ["ng"], "sources": ["ng:sf32ce2956917"], "status": "REASONED", "verify": [1]},
-    "verify-size": {"text": "Authenticated 9M succeeds normally only after raising the 1m default; 11M returns 413. Disable the check with 0 in isolation to distinguish backend refusal.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED", "verify": [1]},
-    "verify-rate": {"text": "Concurrent unauthenticated probes exercise pre-auth limits; 503 does not identify the limiter. Compare both off and each alone with measured arrival rate.", "components": ["ng"], "sources": ["ng:sb3bee9429629", "ng:sddc43aac8779", "ng:sf32ce2956917"], "status": "REASONED", "verify": [1]},
-    "verify-backend": {"text": "Inspect every listener: direct public access to backend 3000 bypasses proxy TLS/auth even when front-door probes pass.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # nginx: TLS and authentication
 
-<!-- version-basis:start -->
-**Version basis**
+Written against nginx source release-1.26.3, Certbot nginx configurator v2.3.0, Authelia nginx integration v4.39.28, oauth2-proxy nginx integration v7.15.4, Apache httpd source 2.4.69, Debian apache2 packaging 2.4.69-1, HSTS specification RFC 6797, and OWASP Password Storage Cheat Sheet commit 72865b1e; 3 further sources carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 28 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- ng: nginx documentation (unknown)
-- policy: Mozilla TLS policy (unknown)
-- certbot: Certbot nginx configurator (v2.3.0)
-- hsts: HSTS specification (RFC 6797)
-- nginx-source: nginx source (release-1.26.3)
-- authelia: Authelia nginx integration (v4.39.28)
-- oauth2-proxy: oauth2-proxy nginx integration (v7.15.4)
-- cloudflare-access: Cloudflare Access web applications (unknown)
-- httpd: Apache httpd source (2.4.69)
-- debian-apache2: Debian apache2 packaging (2.4.69-1)
-- owasp: OWASP Password Storage Cheat Sheet (commit 72865b1e)
-
-Claims (full source mapping in the front matter):
-
-- certbot (REASONED; ng, certbot): The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides.
-- tls (REASONED; ng): 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off.
-- http2 (REASONED; ng, nginx-source): At nginx release-1.26.3, http2 on is the HTTP/2 module directive; nginx 1.25.1 introduced it and deprecated the older listen 443 ssl http2 parameter.
-- tokens (REASONED; ng): server_tokens off suppresses nginx version in headers and error pages.
-- hsts (REASONED; ng, hsts, nginx-source): Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age.
-- hsts-inheritance (REASONED; ng, nginx-source): At nginx release-1.26.3, a location add_header replaces inherited server headers; always changes response-code coverage, not inheritance.
-- proxy (REASONED; ng): Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host.
-- forwarded-host (REASONED; ng): Overwrite X-Forwarded-Host: client-set values otherwise pass upstream.
-- cipher-policy (REASONED; ng, policy): Use Mozilla for explicit cipher policy; retain the stated protocol floor.
-- tickets (REASONED; ng, nginx-source): At nginx release-1.26.3, ssl_session_tickets defaults on; nginx 1.23.2 introduced automatic ticket-key rotation with a shared ssl_session_cache.
-- redirect (REASONED; ng): Port 80 on IPv4/IPv6 redirects with 301; a default server reflecting $host can redirect unmatched hosts off-site, so use 444 or a canonical host.
-- password-file (REASONED; ng, httpd, owasp, debian-apache2): At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils.
-- basic (REASONED; ng): auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers.
-- mtls (REASONED; ng, nginx-source): At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification.
-- mfa (REASONED; ng, nginx-source, authelia, oauth2-proxy, cloudflare-access): At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia v4.39.28 and oauth2-proxy v7.15.4 document nginx auth_request integration, and Cloudflare Access documents protecting self-hosted web applications; the nginx source cited here does not cover those integrations. MFA is this guide's requirement; whether a given installation enforces it depends on its configured portal or Access policy (this guide's assessment).
-- body-limit (REASONED; ng): client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check.
-- rate-limit (REASONED; ng): Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503.
-- connection-limit (REASONED; ng): limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503.
-- location-auth (REASONED; ng): Keep limits in the authenticated location; sibling locations do not inherit its auth or proxy headers. Repeat auth or inherit it from server; auth_basic off is deliberate.
-- read-timeout (REASONED; ng): proxy_read_timeout 60s limits gaps between upstream reads, not total response duration; active streams can continue indefinitely.
-- client-address (REASONED; ng): At a direct edge trust the appended last X-Forwarded-For entry; behind a CDN, recover the client with trusted set_real_ip_from and real_ip_header before per-client limits.
-- verify-config (REASONED; ng): Run nginx -t before reload; no configuration-test outcome is recorded.
-- verify-redirect (REASONED; ng): HTTP should return 301 with an HTTPS Location.
-- verify-tls (REASONED; ng): HTTPS must validate without -k; TLS 1.1-only rejection must be protocol_version, not a generic/local failure; test TLS 1.0 separately.
-- verify-auth (REASONED; ng): An open path may return 200; the protected path must reject no credentials with 401/403, and valid credentials reach the app rather than 401.
-- verify-size (REASONED; ng): Authenticated 9M succeeds normally only after raising the 1m default; 11M returns 413. Disable the check with 0 in isolation to distinguish backend refusal.
-- verify-rate (REASONED; ng): Concurrent unauthenticated probes exercise pre-auth limits; 503 does not identify the limiter. Compare both off and each alone with measured arrival rate.
-- verify-backend (REASONED; ng): Inspect every listener: direct public access to backend 3000 bypasses proxy TLS/auth even when front-door probes pass.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Get a certificate first: [free-certificates.md](free-certificates.md) for a public host (note that `certbot --nginx` edits the server block for you), or [self-signed.md](self-signed.md) for internal use.
 
@@ -425,3 +234,220 @@ ss -tlnp   # read every listener; 3000: the app itself: 127.0.0.1 only, never 0.
 - Debian apache2 2.4.69-1 `apache2-utils` package description listing htpasswd (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-101
 - Debian apache2 packaging version 2.4.69-1 (checked October 2026): https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1
 - OWASP Password Storage Cheat Sheet at commit 72865b1e (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/nginx.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- nginx-source: nginx source (release-1.26.3)
+- ng: nginx documentation (unknown)
+- certbot: Certbot nginx configurator (v2.3.0)
+- authelia: Authelia nginx integration (v4.39.28)
+- oauth2-proxy: oauth2-proxy nginx integration (v7.15.4)
+- cloudflare-access: Cloudflare Access web applications (unknown)
+- httpd: Apache httpd source (2.4.69)
+- debian-apache2: Debian apache2 packaging (2.4.69-1)
+- policy: Mozilla TLS policy (unknown)
+- hsts: HSTS specification (RFC 6797)
+- owasp: OWASP Password Storage Cheat Sheet (commit 72865b1e)
+
+Claims (full source mapping in the JSON block below):
+
+- certbot (REASONED; ng, certbot): The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides.
+- tls (REASONED; ng): 443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off.
+- http2 (REASONED; ng, nginx-source): At nginx release-1.26.3, http2 on is the HTTP/2 module directive; nginx 1.25.1 introduced it and deprecated the older listen 443 ssl http2 parameter.
+- tokens (REASONED; ng): server_tokens off suppresses nginx version in headers and error pages.
+- hsts (REASONED; ng, hsts, nginx-source): Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age.
+- hsts-inheritance (REASONED; ng, nginx-source): At nginx release-1.26.3, a location add_header replaces inherited server headers; always changes response-code coverage, not inheritance.
+- proxy (REASONED; ng): Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host.
+- forwarded-host (REASONED; ng): Overwrite X-Forwarded-Host: client-set values otherwise pass upstream.
+- cipher-policy (REASONED; ng, policy): Use Mozilla for explicit cipher policy; retain the stated protocol floor.
+- tickets (REASONED; ng, nginx-source): At nginx release-1.26.3, ssl_session_tickets defaults on; nginx 1.23.2 introduced automatic ticket-key rotation with a shared ssl_session_cache.
+- redirect (REASONED; ng): Port 80 on IPv4/IPv6 redirects with 301; a default server reflecting $host can redirect unmatched hosts off-site, so use 444 or a canonical host.
+- password-file (REASONED; ng, httpd, owasp, debian-apache2): At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils.
+- basic (REASONED; ng): auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers.
+- mtls (REASONED; ng, nginx-source): At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification.
+- mfa (REASONED; ng, nginx-source, authelia, oauth2-proxy, cloudflare-access): At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia v4.39.28 and oauth2-proxy v7.15.4 document nginx auth_request integration, and Cloudflare Access documents protecting self-hosted web applications; the nginx source cited here does not cover those integrations. MFA is this guide's requirement; whether a given installation enforces it depends on its configured portal or Access policy (this guide's assessment).
+- body-limit (REASONED; ng): client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check.
+- rate-limit (REASONED; ng): Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503.
+- connection-limit (REASONED; ng): limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503.
+- location-auth (REASONED; ng): Keep limits in the authenticated location; sibling locations do not inherit its auth or proxy headers. Repeat auth or inherit it from server; auth_basic off is deliberate.
+- read-timeout (REASONED; ng): proxy_read_timeout 60s limits gaps between upstream reads, not total response duration; active streams can continue indefinitely.
+- client-address (REASONED; ng): At a direct edge trust the appended last X-Forwarded-For entry; behind a CDN, recover the client with trusted set_real_ip_from and real_ip_header before per-client limits.
+- verify-config (REASONED; ng): Run nginx -t before reload; no configuration-test outcome is recorded.
+- verify-redirect (REASONED; ng): HTTP should return 301 with an HTTPS Location.
+- verify-tls (REASONED; ng): HTTPS must validate without -k; TLS 1.1-only rejection must be protocol_version, not a generic/local failure; test TLS 1.0 separately.
+- verify-auth (REASONED; ng): An open path may return 200; the protected path must reject no credentials with 401/403, and valid credentials reach the app rather than 401.
+- verify-size (REASONED; ng): Authenticated 9M succeeds normally only after raising the 1m default; 11M returns 413. Disable the check with 0 in isolation to distinguish backend refusal.
+- verify-rate (REASONED; ng): Concurrent unauthenticated probes exercise pre-auth limits; 503 does not identify the limiter. Compare both off and each alone with measured arrival rate.
+- verify-backend (REASONED; ng): Inspect every listener: direct public access to backend 3000 bypasses proxy TLS/auth even when front-door probes pass.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-17",
+  "documentation_checked": "2026-09",
+  "body_sha256": "07eda7c75b5cada2d56a730e2c7a33df34730eec5139f55d0545aad278723811",
+  "components": {
+    "nginx-source": {
+      "name": "nginx source",
+      "basis": "release-1.26.3",
+      "sources": {
+        "s0ae4e9bc8d07": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L216-L218",
+        "s002242c2d0cd": "https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L470-L480",
+        "s305b7194043c": "https://github.com/nginx/nginx/blob/release-1.26.3/docs/xml/nginx/changes.xml#L739-L775",
+        "sbea253fd242b": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/v2/ngx_http_v2_module.c#L76-L81",
+        "s936193a42402": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_core_module.c#L4181-L4188",
+        "sac3cbbf7fc48": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L857-L862",
+        "s66c86979411e": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L153-L172",
+        "sabb195c173d5": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L788-L802",
+        "sa930199b563a": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_ssl_module.c#L74-L80",
+        "seb1f8a9d91f9": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L666-L687",
+        "sf6eac8f6749d": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_headers_filter_module.c#L788-L796",
+        "s3df6e64cd6a3": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/modules/ngx_http_auth_request_module.c#L135-L182",
+        "sced570e33c0f": "https://github.com/nginx/nginx/blob/release-1.26.3/src/http/ngx_http_request.h#L78-L138",
+        "sfafe27857e33": "https://github.com/nginx/nginx/blob/release-1.26.3/src/event/ngx_event_openssl.c#L4568-L4576"
+      }
+    },
+    "ng": {
+      "name": "nginx documentation",
+      "basis": "unknown",
+      "sources": {
+        "s6a0728ca7609": "https://nginx.org/en/docs/http/configuring_https_servers.html",
+        "s40bdf1af1596": "https://nginx.org/en/docs/http/ngx_http_core_module.html",
+        "sb3bee9429629": "https://nginx.org/en/docs/http/ngx_http_limit_req_module.html",
+        "sddc43aac8779": "https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html",
+        "sf3430c5a0b22": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html",
+        "sf32ce2956917": "https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html",
+        "sddacc1191f5f": "https://nginx.org/en/docs/http/ngx_http_realip_module.html"
+      }
+    },
+    "certbot": {
+      "name": "Certbot nginx configurator",
+      "basis": "v2.3.0",
+      "sources": {
+        "s3a02bfe1d7ad": "https://github.com/certbot/certbot/blob/v2.3.0/certbot-nginx/certbot_nginx/_internal/configurator.py#L711"
+      }
+    },
+    "authelia": {
+      "name": "Authelia nginx integration",
+      "basis": "v4.39.28",
+      "sources": {
+        "s279cd6449b53": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L39-L45",
+        "sdf01968ab996": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L245-L247",
+        "s237ae14bbb4a": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/nginx.md#L517-L519"
+      }
+    },
+    "oauth2-proxy": {
+      "name": "oauth2-proxy nginx integration",
+      "basis": "v7.15.4",
+      "sources": {
+        "sc62400f0ea8a": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/integrations/nginx.md#L16-L18"
+      }
+    },
+    "cloudflare-access": {
+      "name": "Cloudflare Access web applications",
+      "basis": "unknown",
+      "sources": {
+        "sfe56578bedf4": "https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/"
+      }
+    },
+    "httpd": {
+      "name": "Apache httpd source",
+      "basis": "2.4.69",
+      "sources": {
+        "s309ecdd34379": "https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128",
+        "sf711558bdf3c": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45",
+        "s1c1a101a70e7": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295",
+        "s4482c55d79a2": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L382"
+      }
+    },
+    "debian-apache2": {
+      "name": "Debian apache2 packaging",
+      "basis": "2.4.69-1",
+      "sources": {
+        "sc2a26b3a7af5": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-101",
+        "s62f6ed2866ab": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1"
+      }
+    },
+    "policy": {
+      "name": "Mozilla TLS policy",
+      "basis": "unknown",
+      "sources": {
+        "s529b0eabe2ed": "https://ssl-config.mozilla.org/"
+      }
+    },
+    "hsts": {
+      "name": "HSTS specification",
+      "basis": "RFC 6797",
+      "sources": {
+        "s3f5af5f440f9": "https://www.rfc-editor.org/rfc/rfc6797.html#section-6.1.2"
+      }
+    },
+    "owasp": {
+      "name": "OWASP Password Storage Cheat Sheet",
+      "basis": "commit 72865b1e",
+      "sources": {
+        "s4531e65b6502": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13"
+      }
+    }
+  },
+  "claims": {
+    "certbot": {"text": "The guide says certbot --nginx edits the server block; certificate acquisition is delegated to the linked certificate guides.", "components": ["ng", "certbot"], "sources": ["ng:s6a0728ca7609", "certbot:s3a02bfe1d7ad"], "status": "REASONED"},
+    "tls": {"text": "443 IPv4/IPv6 TLS uses certificate chain and private key, TLSv1.2/TLSv1.3 and ssl_prefer_server_ciphers off.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED"},
+    "http2": {"text": "At nginx release-1.26.3, http2 on is the HTTP/2 module directive; nginx 1.25.1 introduced it and deprecated the older listen 443 ssl http2 parameter.", "components": ["ng", "nginx-source"], "sources": ["ng:s40bdf1af1596", "nginx-source:s002242c2d0cd", "nginx-source:sbea253fd242b", "nginx-source:s936193a42402"], "status": "REASONED"},
+    "tokens": {"text": "server_tokens off suppresses nginx version in headers and error pages.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
+    "hsts": {"text": "Send HSTS only after HTTPS works; includeSubDomains commits every subdomain for max-age.", "components": ["ng", "hsts", "nginx-source"], "sources": ["ng:s6a0728ca7609", "hsts:s3f5af5f440f9", "nginx-source:s0ae4e9bc8d07"], "status": "REASONED"},
+    "hsts-inheritance": {"text": "At nginx release-1.26.3, a location add_header replaces inherited server headers; always changes response-code coverage, not inheritance.", "components": ["ng", "nginx-source"], "sources": ["ng:s40bdf1af1596", "nginx-source:s0ae4e9bc8d07", "nginx-source:seb1f8a9d91f9", "nginx-source:sf6eac8f6749d"], "status": "REASONED"},
+    "proxy": {"text": "Proxy to loopback 127.0.0.1:3000 and set Host, X-Forwarded-For, X-Forwarded-Proto and X-Forwarded-Host.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
+    "forwarded-host": {"text": "Overwrite X-Forwarded-Host: client-set values otherwise pass upstream.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
+    "cipher-policy": {"text": "Use Mozilla for explicit cipher policy; retain the stated protocol floor.", "components": ["ng", "policy"], "sources": ["ng:s6a0728ca7609", "policy:s529b0eabe2ed"], "status": "REASONED"},
+    "tickets": {"text": "At nginx release-1.26.3, ssl_session_tickets defaults on; nginx 1.23.2 introduced automatic ticket-key rotation with a shared ssl_session_cache.", "components": ["ng", "nginx-source"], "sources": ["ng:s6a0728ca7609", "nginx-source:sac3cbbf7fc48", "nginx-source:s305b7194043c", "nginx-source:sfafe27857e33"], "status": "REASONED"},
+    "redirect": {"text": "Port 80 on IPv4/IPv6 redirects with 301; a default server reflecting $host can redirect unmatched hosts off-site, so use 444 or a canonical host.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
+    "password-file": {"text": "At httpd 2.4.69, htpasswd -B selects bcrypt, bare -B uses cost 5, and -C sets the cost; the OWASP cheat sheet at commit 72865b1e recommends at least 10 for legacy bcrypt. Debian apache2 2.4.69-1 packages htpasswd in apache2-utils.", "components": ["ng", "httpd", "owasp", "debian-apache2"], "sources": ["ng:sf32ce2956917", "debian-apache2:sc2a26b3a7af5", "debian-apache2:s62f6ed2866ab", "httpd:s309ecdd34379", "httpd:sf711558bdf3c", "httpd:s1c1a101a70e7", "httpd:s4482c55d79a2", "owasp:s4531e65b6502"], "status": "REASONED"},
+    "basic": {"text": "auth_basic and auth_basic_user_file gate the existing proxied location over TLS; preserve its forwarded headers.", "components": ["ng"], "sources": ["ng:sf32ce2956917", "ng:sf3430c5a0b22"], "status": "REASONED"},
+    "mtls": {"text": "At nginx release-1.26.3, ssl_client_certificate and ssl_verify_client on configure trusted client-certificate verification.", "components": ["ng", "nginx-source"], "sources": ["ng:s6a0728ca7609", "nginx-source:s66c86979411e", "nginx-source:sabb195c173d5", "nginx-source:sa930199b563a"], "status": "REASONED"},
+    "mfa": {"text": "At nginx release-1.26.3, auth_request permits 2xx authentication subresponses and returns 401/403; Authelia v4.39.28 and oauth2-proxy v7.15.4 document nginx auth_request integration, and Cloudflare Access documents protecting self-hosted web applications; the nginx source cited here does not cover those integrations. MFA is this guide's requirement; whether a given installation enforces it depends on its configured portal or Access policy (this guide's assessment).", "components": ["ng", "nginx-source", "authelia", "oauth2-proxy", "cloudflare-access"], "sources": ["ng:sf32ce2956917", "nginx-source:s3df6e64cd6a3", "nginx-source:sced570e33c0f", "authelia:s279cd6449b53", "authelia:sdf01968ab996", "authelia:s237ae14bbb4a", "oauth2-proxy:sc62400f0ea8a", "cloudflare-access:sfe56578bedf4"], "status": "REASONED"},
+    "body-limit": {"text": "client_max_body_size defaults to 1m; 10m rejects larger bodies with 413, and 0 disables the check.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED"},
+    "rate-limit": {"text": "Per-address limit_req uses a 10r/s zone, burst 20 and nodelay; rejection status defaults to 503.", "components": ["ng"], "sources": ["ng:sb3bee9429629"], "status": "REASONED"},
+    "connection-limit": {"text": "limit_conn apiconn 10 caps concurrent connections per client address; it can also return 503.", "components": ["ng"], "sources": ["ng:sddc43aac8779"], "status": "REASONED"},
+    "location-auth": {"text": "Keep limits in the authenticated location; sibling locations do not inherit its auth or proxy headers. Repeat auth or inherit it from server; auth_basic off is deliberate.", "components": ["ng"], "sources": ["ng:sf32ce2956917", "ng:s40bdf1af1596", "ng:sf3430c5a0b22"], "status": "REASONED"},
+    "read-timeout": {"text": "proxy_read_timeout 60s limits gaps between upstream reads, not total response duration; active streams can continue indefinitely.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED"},
+    "client-address": {"text": "At a direct edge trust the appended last X-Forwarded-For entry; behind a CDN, recover the client with trusted set_real_ip_from and real_ip_header before per-client limits.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22", "ng:sddacc1191f5f", "ng:sb3bee9429629", "ng:sddc43aac8779"], "status": "REASONED"},
+    "verify-config": {"text": "Run nginx -t before reload; no configuration-test outcome is recorded.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED", "verify": [1]},
+    "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "HTTPS must validate without -k; TLS 1.1-only rejection must be protocol_version, not a generic/local failure; test TLS 1.0 separately.", "components": ["ng"], "sources": ["ng:s6a0728ca7609"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "An open path may return 200; the protected path must reject no credentials with 401/403, and valid credentials reach the app rather than 401.", "components": ["ng"], "sources": ["ng:sf32ce2956917"], "status": "REASONED", "verify": [1]},
+    "verify-size": {"text": "Authenticated 9M succeeds normally only after raising the 1m default; 11M returns 413. Disable the check with 0 in isolation to distinguish backend refusal.", "components": ["ng"], "sources": ["ng:s40bdf1af1596"], "status": "REASONED", "verify": [1]},
+    "verify-rate": {"text": "Concurrent unauthenticated probes exercise pre-auth limits; 503 does not identify the limiter. Compare both off and each alone with measured arrival rate.", "components": ["ng"], "sources": ["ng:sb3bee9429629", "ng:sddc43aac8779", "ng:sf32ce2956917"], "status": "REASONED", "verify": [1]},
+    "verify-backend": {"text": "Inspect every listener: direct public access to backend 3000 bypasses proxy TLS/auth even when front-door probes pass.", "components": ["ng"], "sources": ["ng:sf3430c5a0b22"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->

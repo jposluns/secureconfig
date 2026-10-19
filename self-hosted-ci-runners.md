@@ -1,167 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-12",
-  "documentation_checked": "2026-09",
-  "body_sha256": "72e6c5e6e8aa98cd95989f98eb383a327daaecd20809fcb2d24aea181dee4f4e",
-  "components": {
-    "github": {
-      "name": "GitHub Actions documentation",
-      "basis": "unknown",
-      "sources": {
-        "s215dc07e3642": "https://docs.github.com/en/actions/reference/security/secure-use",
-        "s92e8e4820392": "https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/manage-access",
-        "sbbcb15f795a8": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows",
-        "s4561d20e7042": "https://docs.github.com/en/actions/concepts/security/github_token",
-        "s80fe11d8c90d": "https://docs.github.com/en/actions/reference/security/oidc"
-      }
-    },
-    "github-api": {
-      "name": "GitHub REST API",
-      "basis": "2026-03-10",
-      "sources": {
-        "s8217448953a4": "https://docs.github.com/en/rest/actions/self-hosted-runners",
-        "sd36db9ea1031": "https://docs.github.com/en/rest/actions/self-hosted-runner-groups",
-        "sbeee4a47110c": "https://docs.github.com/en/rest/actions/workflow-jobs"
-      }
-    },
-    "gitlab": {
-      "name": "GitLab rolling documentation",
-      "basis": "unknown",
-      "sources": {
-        "seb30e3937183": "https://docs.gitlab.com/runner/security/",
-        "sde661ff4762e": "https://docs.gitlab.com/runner/executors/docker_autoscaler/",
-        "s265254bc5592": "https://docs.gitlab.com/runner/executors/docker/",
-        "s47b236d63dc4": "https://docs.gitlab.com/runner/configuration/advanced-configuration/",
-        "s1579c499c75b": "https://docs.gitlab.com/runner/executors/kubernetes/",
-        "sd2cbff5d5d6e": "https://docs.gitlab.com/ci/runners/new_creation_workflow/",
-        "se430cbabc011": "https://docs.gitlab.com/api/users/#create-a-runner-linked-to-a-user",
-        "saef0483b7be7": "https://docs.gitlab.com/ci/jobs/ci_job_token/",
-        "s699c1c198119": "https://docs.gitlab.com/api/project_job_token_scopes/",
-        "sbc009ff2866a": "https://docs.gitlab.com/runner/monitoring/"
-      }
-    },
-    "python": {
-      "name": "Python tomllib minimum",
-      "basis": "3.11",
-      "sources": {
-        "s37be9e98ea29": "https://docs.python.org/3.11/library/tomllib.html"
-      }
-    },
-    "docker": {
-      "name": "Docker Engine documentation",
-      "basis": "unknown",
-      "sources": {
-        "s18f59818e451": "https://docs.docker.com/engine/security/"
-      }
-    },
-    "aws": {
-      "name": "AWS EC2 documentation",
-      "basis": "unknown",
-      "sources": {
-        "s82aca706445c": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html"
-      }
-    }
-  },
-  "claims": {
-    "job-transport": {"text": "Both runners poll over HTTPS without an inbound job-polling port; verify GitLab TLS and restrict separate autoscaler management or webhook listeners.", "components": ["github", "gitlab"], "sources": ["github:s215dc07e3642", "gitlab:seb30e3937183", "gitlab:sde661ff4762e"], "status": "REASONED"},
-    "worker-account": {"text": "Use a dedicated least-privileged account, keep provisioning credentials off workers and confine rootful Docker access to disposable VMs.", "components": ["github", "gitlab", "docker"], "sources": ["github:s215dc07e3642", "gitlab:seb30e3937183", "docker:s18f59818e451"], "status": "REASONED"},
-    "worker-egress": {"text": "Enforce job egress outside job control, isolate production and other workers, and deny unused metadata over both families; IMDSv2 does not stop arbitrary authorized job code.", "components": ["github", "gitlab", "aws"], "sources": ["github:s215dc07e3642", "gitlab:seb30e3937183", "aws:s82aca706445c"], "status": "REASONED"},
-    "github-eligibility": {"text": "Keep self-hosted runners off public repositories; runner groups admit only private repositories by default and the public override should stay off.", "components": ["github"], "sources": ["github:s92e8e4820392", "github:s215dc07e3642"], "status": "REASONED"},
-    "fork-token": {"text": "Ordinary fork pull_request jobs normally receive a read-only GITHUB_TOKEN and no other secrets, but can still read host credentials and reachable services.", "components": ["github"], "sources": ["github:s215dc07e3642", "github:sbbcb15f795a8"], "status": "REASONED"},
-    "privileged-triggers": {"text": "pull_request_target and workflow_run can access secrets and write tokens; never execute untrusted PR code, artifacts or caches in these jobs.", "components": ["github"], "sources": ["github:sbbcb15f795a8", "github:s215dc07e3642"], "status": "REASONED"},
-    "private-forks": {"text": "Review private-repository fork settings, which can grant write tokens and secrets; separate trusted privileged workers from untrusted CI.", "components": ["github"], "sources": ["github:s215dc07e3642"], "status": "REASONED"},
-    "registration-token": {"text": "Registration tokens last one hour; generate on demand, never bake into images, and do not confuse expiry with runner deregistration.", "components": ["github-api"], "sources": ["github-api:s8217448953a4"], "status": "REASONED"},
-    "registration-manager": {"text": "Keep the App/PAT generating registration or JIT credentials off workers; organization endpoints need Self-hosted runners: write, repository endpoints Administration: write.", "components": ["github-api"], "sources": ["github-api:s8217448953a4"], "status": "REASONED"},
-    "jit": {"text": "Protect encoded_jit_config and the whole response; JIT runners execute at most one job.", "components": ["github-api"], "sources": ["github-api:s8217448953a4"], "status": "REASONED"},
-    "runner-credential": {"text": "Protect the installed runner authentication credential, directory and backups.", "components": ["github"], "sources": ["github:s215dc07e3642"], "status": "REASONED"},
-    "github-job-token": {"text": "GITHUB_TOKEN is repository-scoped and per-job; set read-only defaults and grant only trusted jobs additional permissions.", "components": ["github"], "sources": ["github:s4561d20e7042"], "status": "REASONED"},
-    "oidc": {"text": "Grant id-token: write only where needed; the cloud trust must restrict issuer, audience and repository/branch or protected-environment subject.", "components": ["github"], "sources": ["github:s80fe11d8c90d"], "status": "REASONED"},
-    "github-lifecycle": {"text": "Prefer ephemeral/JIT workers and destroy their machines and storage; deregistration does not destroy disks, and labels route rather than authorize jobs.", "components": ["github", "github-api"], "sources": ["github:s215dc07e3642", "github:s92e8e4820392", "github-api:s8217448953a4"], "status": "REASONED"},
-    "shell-executor": {"text": "The GitLab shell executor runs as the runner user without isolation; avoid it for untrusted jobs on shared hosts.", "components": ["gitlab"], "sources": ["gitlab:seb30e3937183"], "status": "REASONED"},
-    "docker-executor": {"text": "Use unprivileged Docker; privileged=true or services_privileged and host Docker socket/TCP access can expose the host despite privileged=false.", "components": ["gitlab", "docker"], "sources": ["gitlab:s265254bc5592", "gitlab:seb30e3937183", "docker:s18f59818e451"], "status": "REASONED"},
-    "executor-host-access": {"text": "Deny sensitive host mounts, host PID/network namespaces, unnecessary devices and capabilities; build without the host daemon.", "components": ["gitlab"], "sources": ["gitlab:s265254bc5592", "gitlab:s47b236d63dc4"], "status": "REASONED"},
-    "kubernetes-executor": {"text": "Enforce nonprivileged containers, no privilege escalation, scoped ServiceAccounts and no unnecessary token mounting; prevent job overrides.", "components": ["gitlab"], "sources": ["gitlab:s1579c499c75b"], "status": "REASONED"},
-    "gitlab-disposal": {"text": "Containers share the kernel; use disposable separate VMs/nodes as needed and one-job autoscaling workers. Instance and Docker Autoscaler GA is recorded as Runner 17.1.", "components": ["gitlab"], "sources": ["gitlab:sde661ff4762e", "gitlab:seb30e3937183"], "status": "REASONED"},
-    "gitlab-registration": {"text": "Legacy registration tokens were disabled by default in GitLab 17.0, with removal scheduled for 20.0; use runner authentication tokens.", "components": ["gitlab"], "sources": ["gitlab:sd2cbff5d5d6e"], "status": "REASONED"},
-    "gitlab-runner-token": {"text": "Protect and rotate the runner authentication token in config.toml and backups; a cloned runner can steal assigned jobs.", "components": ["gitlab"], "sources": ["gitlab:seb30e3937183", "gitlab:sd2cbff5d5d6e"], "status": "REASONED"},
-    "gitlab-creation": {"text": "POST /user/runners needs create_runner scope; keep that access token off workers and set scope/protection at creation.", "components": ["gitlab"], "sources": ["gitlab:se430cbabc011", "gitlab:sd2cbff5d5d6e"], "status": "REASONED"},
-    "gitlab-job-token": {"text": "CI_JOB_TOKEN carries supported triggering-user access during the job and appears as CI_REGISTRY_PASSWORD and inside CI_REPOSITORY_URL.", "components": ["gitlab"], "sources": ["gitlab:saef0483b7be7"], "status": "REASONED"},
-    "gitlab-allowlist": {"text": "Target-project inbound job-token allowlists limit who may access that target, not job egress; also restrict resource feature visibility.", "components": ["gitlab"], "sources": ["gitlab:saef0483b7be7", "gitlab:s699c1c198119"], "status": "REASONED"},
-    "gitlab-forks": {"text": "Instance runners on public installations accept strangers; project scope does not establish code trust. Review parent-launched fork pipelines or disable ci_allow_fork_pipelines_to_run_in_parent_project.", "components": ["gitlab"], "sources": ["gitlab:seb30e3937183"], "status": "REASONED"},
-    "gitlab-protected": {"text": "Developer access can compromise persistent runners; release runners need ref_protected and a pool separate from fork-merge-request testing.", "components": ["gitlab"], "sources": ["gitlab:seb30e3937183", "gitlab:sd2cbff5d5d6e"], "status": "REASONED"},
-    "gitlab-metrics": {"text": "Optional listen_address metrics and profiling have no built-in authorization; 9252 is allocated, not proof of the configured port.", "components": ["gitlab"], "sources": ["gitlab:sbc009ff2866a"], "status": "REASONED"},
-    "gitlab-session": {"text": "Optional session_server uses TLS and must admit required GitLab traffic at its configured address; 8093 is an example, not an established default.", "components": ["gitlab"], "sources": ["gitlab:s47b236d63dc4"], "status": "REASONED"},
-    "verify-eligibility": {"text": "Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review.", "components": ["github-api"], "sources": ["github-api:sd36db9ea1031", "github-api:s8217448953a4"], "status": "REASONED", "verify": [1]},
-    "verify-permissions": {"text": "Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate.", "components": ["github"], "sources": ["github:s4561d20e7042", "github:s80fe11d8c90d"], "status": "REASONED", "verify": [2]},
-    "verify-assignment": {"text": "A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive.", "components": ["github-api", "github"], "sources": ["github-api:sbeee4a47110c", "github:s92e8e4820392"], "status": "REASONED", "verify": [3]},
-    "verify-config": {"text": "Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status.", "components": ["python", "gitlab"], "sources": ["python:s37be9e98ea29", "gitlab:s47b236d63dc4", "gitlab:s1579c499c75b"], "status": "DEMONSTRATED", "verify": [4], "evidence": "the extracted Python program ran without sudo on 20 synthetic config.toml cases using Python 3.14.4. Docker fixtures printed true/true, a socket mount and a TCP host versus false/false, empty volumes and a null host; both exited 0. Autoscaler limits printed null/null, 1/2 and 2/1 versus 1/1, all exit 0. Kubernetes fixtures printed true versus false for the three booleans and the supplied service_account. Wrong-type strings, booleans and floats retained their JSON types; misplaced privileged printed docker.privileged null. Empty and runner-less files printed nothing and exited 0. Missing files, malformed TOML and wrong section types exited 1; the second-runner structure error followed one printed runner. Two valid runners printed indices 0 and 1. The runner token key was omitted; a dummy token copied into service_account was printed. These observations cover file inspection only."},
-    "verify-daemon": {"text": "Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone.", "components": ["gitlab", "docker"], "sources": ["gitlab:s265254bc5592", "docker:s18f59818e451"], "status": "REASONED"},
-    "verify-autoscaler": {"text": "For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly as integers; absent or other values are findings.", "components": ["gitlab"], "sources": ["gitlab:sde661ff4762e"], "status": "REASONED"},
-    "verify-gitlab-api": {"text": "Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only.", "components": ["gitlab"], "sources": ["gitlab:s699c1c198119", "gitlab:seb30e3937183"], "status": "REASONED", "verify": [5]},
-    "verify-lifecycle": {"text": "Check complete deregistration listings and infrastructure disposal; persistent-worker canary must survive in the control, but absence alone does not prove destruction or clean shared caches.", "components": ["github-api", "gitlab", "github"], "sources": ["github-api:s8217448953a4", "gitlab:sde661ff4762e", "github:s215dc07e3642"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory namespaces and publications, require the permitted-client response, then test disallowed access; any HTTP response proves reachability, failure needs corroborating firewall denial.", "components": ["gitlab"], "sources": ["gitlab:sbc009ff2866a", "gitlab:s47b236d63dc4"], "status": "REASONED", "verify": [6]}
-  }
-}
----
 # Self-hosted CI runners: GitHub Actions and GitLab Runner
 
-<!-- version-basis:start -->
-**Version basis**
+Written against GitHub Actions documentation (no recorded version), GitHub REST API 2026-03-10, and Python tomllib minimum 3.11; 3 further sources carry no recorded version. Metadata reviewed 2026-10-12; documentation checked September 2026. The guide records 37 claims: 1 demonstrated by a check that ran and 36 reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- github: GitHub Actions documentation (unknown)
-- github-api: GitHub REST API (2026-03-10)
-- gitlab: GitLab rolling documentation (unknown)
-- python: Python tomllib minimum (3.11)
-- docker: Docker Engine documentation (unknown)
-- aws: AWS EC2 documentation (unknown)
-
-Claims (full source mapping in the front matter):
-
-- job-transport (REASONED; github, gitlab): Both runners poll over HTTPS without an inbound job-polling port; verify GitLab TLS and restrict separate autoscaler management or webhook listeners.
-- worker-account (REASONED; github, gitlab, docker): Use a dedicated least-privileged account, keep provisioning credentials off workers and confine rootful Docker access to disposable VMs.
-- worker-egress (REASONED; github, gitlab, aws): Enforce job egress outside job control, isolate production and other workers, and deny unused metadata over both families; IMDSv2 does not stop arbitrary authorized job code.
-- github-eligibility (REASONED; github): Keep self-hosted runners off public repositories; runner groups admit only private repositories by default and the public override should stay off.
-- fork-token (REASONED; github): Ordinary fork pull_request jobs normally receive a read-only GITHUB_TOKEN and no other secrets, but can still read host credentials and reachable services.
-- privileged-triggers (REASONED; github): pull_request_target and workflow_run can access secrets and write tokens; never execute untrusted PR code, artifacts or caches in these jobs.
-- private-forks (REASONED; github): Review private-repository fork settings, which can grant write tokens and secrets; separate trusted privileged workers from untrusted CI.
-- registration-token (REASONED; github-api): Registration tokens last one hour; generate on demand, never bake into images, and do not confuse expiry with runner deregistration.
-- registration-manager (REASONED; github-api): Keep the App/PAT generating registration or JIT credentials off workers; organization endpoints need Self-hosted runners: write, repository endpoints Administration: write.
-- jit (REASONED; github-api): Protect encoded_jit_config and the whole response; JIT runners execute at most one job.
-- runner-credential (REASONED; github): Protect the installed runner authentication credential, directory and backups.
-- github-job-token (REASONED; github): GITHUB_TOKEN is repository-scoped and per-job; set read-only defaults and grant only trusted jobs additional permissions.
-- oidc (REASONED; github): Grant id-token: write only where needed; the cloud trust must restrict issuer, audience and repository/branch or protected-environment subject.
-- github-lifecycle (REASONED; github, github-api): Prefer ephemeral/JIT workers and destroy their machines and storage; deregistration does not destroy disks, and labels route rather than authorize jobs.
-- shell-executor (REASONED; gitlab): The GitLab shell executor runs as the runner user without isolation; avoid it for untrusted jobs on shared hosts.
-- docker-executor (REASONED; gitlab, docker): Use unprivileged Docker; privileged=true or services_privileged and host Docker socket/TCP access can expose the host despite privileged=false.
-- executor-host-access (REASONED; gitlab): Deny sensitive host mounts, host PID/network namespaces, unnecessary devices and capabilities; build without the host daemon.
-- kubernetes-executor (REASONED; gitlab): Enforce nonprivileged containers, no privilege escalation, scoped ServiceAccounts and no unnecessary token mounting; prevent job overrides.
-- gitlab-disposal (REASONED; gitlab): Containers share the kernel; use disposable separate VMs/nodes as needed and one-job autoscaling workers. Instance and Docker Autoscaler GA is recorded as Runner 17.1.
-- gitlab-registration (REASONED; gitlab): Legacy registration tokens were disabled by default in GitLab 17.0, with removal scheduled for 20.0; use runner authentication tokens.
-- gitlab-runner-token (REASONED; gitlab): Protect and rotate the runner authentication token in config.toml and backups; a cloned runner can steal assigned jobs.
-- gitlab-creation (REASONED; gitlab): POST /user/runners needs create_runner scope; keep that access token off workers and set scope/protection at creation.
-- gitlab-job-token (REASONED; gitlab): CI_JOB_TOKEN carries supported triggering-user access during the job and appears as CI_REGISTRY_PASSWORD and inside CI_REPOSITORY_URL.
-- gitlab-allowlist (REASONED; gitlab): Target-project inbound job-token allowlists limit who may access that target, not job egress; also restrict resource feature visibility.
-- gitlab-forks (REASONED; gitlab): Instance runners on public installations accept strangers; project scope does not establish code trust. Review parent-launched fork pipelines or disable ci_allow_fork_pipelines_to_run_in_parent_project.
-- gitlab-protected (REASONED; gitlab): Developer access can compromise persistent runners; release runners need ref_protected and a pool separate from fork-merge-request testing.
-- gitlab-metrics (REASONED; gitlab): Optional listen_address metrics and profiling have no built-in authorization; 9252 is allocated, not proof of the configured port.
-- gitlab-session (REASONED; gitlab): Optional session_server uses TLS and must admit required GitLab traffic at its configured address; 8093 is an example, not an established default.
-- verify-eligibility (REASONED; github-api): Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review.
-- verify-permissions (REASONED; github): Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate.
-- verify-assignment (REASONED; github-api, github): A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive.
-- verify-config (DEMONSTRATED; python, gitlab): Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status.
-- verify-daemon (REASONED; gitlab, docker): Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone.
-- verify-autoscaler (REASONED; gitlab): For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly as integers; absent or other values are findings.
-- verify-gitlab-api (REASONED; gitlab): Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only.
-- verify-lifecycle (REASONED; github-api, gitlab, github): Check complete deregistration listings and infrastructure disposal; persistent-worker canary must survive in the control, but absence alone does not prove destruction or clean shared caches.
-- verify-listeners (REASONED; gitlab): Inventory namespaces and publications, require the permitted-client response, then test disallowed access; any HTTP response proves reachability, failure needs corroborating firewall denial.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 A self-hosted runner exists to execute CI job commands on your own machine, so the trust question is
 not a bind address but who can cause code to run on it. Both GitHub Actions runners and GitLab Runner
@@ -433,3 +274,188 @@ Version boundary: GitHub.com documentation checked 18 September 2026, with REST 
 - Docker Engine security (rootful daemon, docker group as host administration): https://docs.docker.com/engine/security/
 - AWS EC2 instance metadata service (IMDSv2 does not stop authorized in-job requests): https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html
 - Python tomllib (offline config.toml inspection, Python 3.11+): https://docs.python.org/3.11/library/tomllib.html
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/self-hosted-ci-runners.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- github: GitHub Actions documentation (unknown)
+- github-api: GitHub REST API (2026-03-10)
+- gitlab: GitLab rolling documentation (unknown)
+- docker: Docker Engine documentation (unknown)
+- python: Python tomllib minimum (3.11)
+- aws: AWS EC2 documentation (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- job-transport (REASONED; github, gitlab): Both runners poll over HTTPS without an inbound job-polling port; verify GitLab TLS and restrict separate autoscaler management or webhook listeners.
+- worker-account (REASONED; github, gitlab, docker): Use a dedicated least-privileged account, keep provisioning credentials off workers and confine rootful Docker access to disposable VMs.
+- worker-egress (REASONED; github, gitlab, aws): Enforce job egress outside job control, isolate production and other workers, and deny unused metadata over both families; IMDSv2 does not stop arbitrary authorized job code.
+- github-eligibility (REASONED; github): Keep self-hosted runners off public repositories; runner groups admit only private repositories by default and the public override should stay off.
+- fork-token (REASONED; github): Ordinary fork pull_request jobs normally receive a read-only GITHUB_TOKEN and no other secrets, but can still read host credentials and reachable services.
+- privileged-triggers (REASONED; github): pull_request_target and workflow_run can access secrets and write tokens; never execute untrusted PR code, artifacts or caches in these jobs.
+- private-forks (REASONED; github): Review private-repository fork settings, which can grant write tokens and secrets; separate trusted privileged workers from untrusted CI.
+- registration-token (REASONED; github-api): Registration tokens last one hour; generate on demand, never bake into images, and do not confuse expiry with runner deregistration.
+- registration-manager (REASONED; github-api): Keep the App/PAT generating registration or JIT credentials off workers; organization endpoints need Self-hosted runners: write, repository endpoints Administration: write.
+- jit (REASONED; github-api): Protect encoded_jit_config and the whole response; JIT runners execute at most one job.
+- runner-credential (REASONED; github): Protect the installed runner authentication credential, directory and backups.
+- github-job-token (REASONED; github): GITHUB_TOKEN is repository-scoped and per-job; set read-only defaults and grant only trusted jobs additional permissions.
+- oidc (REASONED; github): Grant id-token: write only where needed; the cloud trust must restrict issuer, audience and repository/branch or protected-environment subject.
+- github-lifecycle (REASONED; github, github-api): Prefer ephemeral/JIT workers and destroy their machines and storage; deregistration does not destroy disks, and labels route rather than authorize jobs.
+- shell-executor (REASONED; gitlab): The GitLab shell executor runs as the runner user without isolation; avoid it for untrusted jobs on shared hosts.
+- docker-executor (REASONED; gitlab, docker): Use unprivileged Docker; privileged=true or services_privileged and host Docker socket/TCP access can expose the host despite privileged=false.
+- executor-host-access (REASONED; gitlab): Deny sensitive host mounts, host PID/network namespaces, unnecessary devices and capabilities; build without the host daemon.
+- kubernetes-executor (REASONED; gitlab): Enforce nonprivileged containers, no privilege escalation, scoped ServiceAccounts and no unnecessary token mounting; prevent job overrides.
+- gitlab-disposal (REASONED; gitlab): Containers share the kernel; use disposable separate VMs/nodes as needed and one-job autoscaling workers. Instance and Docker Autoscaler GA is recorded as Runner 17.1.
+- gitlab-registration (REASONED; gitlab): Legacy registration tokens were disabled by default in GitLab 17.0, with removal scheduled for 20.0; use runner authentication tokens.
+- gitlab-runner-token (REASONED; gitlab): Protect and rotate the runner authentication token in config.toml and backups; a cloned runner can steal assigned jobs.
+- gitlab-creation (REASONED; gitlab): POST /user/runners needs create_runner scope; keep that access token off workers and set scope/protection at creation.
+- gitlab-job-token (REASONED; gitlab): CI_JOB_TOKEN carries supported triggering-user access during the job and appears as CI_REGISTRY_PASSWORD and inside CI_REPOSITORY_URL.
+- gitlab-allowlist (REASONED; gitlab): Target-project inbound job-token allowlists limit who may access that target, not job egress; also restrict resource feature visibility.
+- gitlab-forks (REASONED; gitlab): Instance runners on public installations accept strangers; project scope does not establish code trust. Review parent-launched fork pipelines or disable ci_allow_fork_pipelines_to_run_in_parent_project.
+- gitlab-protected (REASONED; gitlab): Developer access can compromise persistent runners; release runners need ref_protected and a pool separate from fork-merge-request testing.
+- gitlab-metrics (REASONED; gitlab): Optional listen_address metrics and profiling have no built-in authorization; 9252 is allocated, not proof of the configured port.
+- gitlab-session (REASONED; gitlab): Optional session_server uses TLS and must admit required GitLab traffic at its configured address; 8093 is an example, not an established default.
+- verify-eligibility (REASONED; github-api): Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review.
+- verify-permissions (REASONED; github): Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate.
+- verify-assignment (REASONED; github-api, github): A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive.
+- verify-config (DEMONSTRATED; python, gitlab): Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status.
+- verify-daemon (REASONED; gitlab, docker): Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone.
+- verify-autoscaler (REASONED; gitlab): For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly as integers; absent or other values are findings.
+- verify-gitlab-api (REASONED; gitlab): Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only.
+- verify-lifecycle (REASONED; github-api, gitlab, github): Check complete deregistration listings and infrastructure disposal; persistent-worker canary must survive in the control, but absence alone does not prove destruction or clean shared caches.
+- verify-listeners (REASONED; gitlab): Inventory namespaces and publications, require the permitted-client response, then test disallowed access; any HTTP response proves reachability, failure needs corroborating firewall denial.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-12",
+  "documentation_checked": "2026-09",
+  "body_sha256": "72e6c5e6e8aa98cd95989f98eb383a327daaecd20809fcb2d24aea181dee4f4e",
+  "components": {
+    "github": {
+      "name": "GitHub Actions documentation",
+      "basis": "unknown",
+      "sources": {
+        "s215dc07e3642": "https://docs.github.com/en/actions/reference/security/secure-use",
+        "s92e8e4820392": "https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/manage-access",
+        "sbbcb15f795a8": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows",
+        "s4561d20e7042": "https://docs.github.com/en/actions/concepts/security/github_token",
+        "s80fe11d8c90d": "https://docs.github.com/en/actions/reference/security/oidc"
+      }
+    },
+    "github-api": {
+      "name": "GitHub REST API",
+      "basis": "2026-03-10",
+      "sources": {
+        "s8217448953a4": "https://docs.github.com/en/rest/actions/self-hosted-runners",
+        "sd36db9ea1031": "https://docs.github.com/en/rest/actions/self-hosted-runner-groups",
+        "sbeee4a47110c": "https://docs.github.com/en/rest/actions/workflow-jobs"
+      }
+    },
+    "gitlab": {
+      "name": "GitLab rolling documentation",
+      "basis": "unknown",
+      "sources": {
+        "seb30e3937183": "https://docs.gitlab.com/runner/security/",
+        "sde661ff4762e": "https://docs.gitlab.com/runner/executors/docker_autoscaler/",
+        "s265254bc5592": "https://docs.gitlab.com/runner/executors/docker/",
+        "s47b236d63dc4": "https://docs.gitlab.com/runner/configuration/advanced-configuration/",
+        "s1579c499c75b": "https://docs.gitlab.com/runner/executors/kubernetes/",
+        "sd2cbff5d5d6e": "https://docs.gitlab.com/ci/runners/new_creation_workflow/",
+        "se430cbabc011": "https://docs.gitlab.com/api/users/#create-a-runner-linked-to-a-user",
+        "saef0483b7be7": "https://docs.gitlab.com/ci/jobs/ci_job_token/",
+        "s699c1c198119": "https://docs.gitlab.com/api/project_job_token_scopes/",
+        "sbc009ff2866a": "https://docs.gitlab.com/runner/monitoring/"
+      }
+    },
+    "docker": {
+      "name": "Docker Engine documentation",
+      "basis": "unknown",
+      "sources": {
+        "s18f59818e451": "https://docs.docker.com/engine/security/"
+      }
+    },
+    "python": {
+      "name": "Python tomllib minimum",
+      "basis": "3.11",
+      "sources": {
+        "s37be9e98ea29": "https://docs.python.org/3.11/library/tomllib.html"
+      }
+    },
+    "aws": {
+      "name": "AWS EC2 documentation",
+      "basis": "unknown",
+      "sources": {
+        "s82aca706445c": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html"
+      }
+    }
+  },
+  "claims": {
+    "job-transport": {"text": "Both runners poll over HTTPS without an inbound job-polling port; verify GitLab TLS and restrict separate autoscaler management or webhook listeners.", "components": ["github", "gitlab"], "sources": ["github:s215dc07e3642", "gitlab:seb30e3937183", "gitlab:sde661ff4762e"], "status": "REASONED"},
+    "worker-account": {"text": "Use a dedicated least-privileged account, keep provisioning credentials off workers and confine rootful Docker access to disposable VMs.", "components": ["github", "gitlab", "docker"], "sources": ["github:s215dc07e3642", "gitlab:seb30e3937183", "docker:s18f59818e451"], "status": "REASONED"},
+    "worker-egress": {"text": "Enforce job egress outside job control, isolate production and other workers, and deny unused metadata over both families; IMDSv2 does not stop arbitrary authorized job code.", "components": ["github", "gitlab", "aws"], "sources": ["github:s215dc07e3642", "gitlab:seb30e3937183", "aws:s82aca706445c"], "status": "REASONED"},
+    "github-eligibility": {"text": "Keep self-hosted runners off public repositories; runner groups admit only private repositories by default and the public override should stay off.", "components": ["github"], "sources": ["github:s92e8e4820392", "github:s215dc07e3642"], "status": "REASONED"},
+    "fork-token": {"text": "Ordinary fork pull_request jobs normally receive a read-only GITHUB_TOKEN and no other secrets, but can still read host credentials and reachable services.", "components": ["github"], "sources": ["github:s215dc07e3642", "github:sbbcb15f795a8"], "status": "REASONED"},
+    "privileged-triggers": {"text": "pull_request_target and workflow_run can access secrets and write tokens; never execute untrusted PR code, artifacts or caches in these jobs.", "components": ["github"], "sources": ["github:sbbcb15f795a8", "github:s215dc07e3642"], "status": "REASONED"},
+    "private-forks": {"text": "Review private-repository fork settings, which can grant write tokens and secrets; separate trusted privileged workers from untrusted CI.", "components": ["github"], "sources": ["github:s215dc07e3642"], "status": "REASONED"},
+    "registration-token": {"text": "Registration tokens last one hour; generate on demand, never bake into images, and do not confuse expiry with runner deregistration.", "components": ["github-api"], "sources": ["github-api:s8217448953a4"], "status": "REASONED"},
+    "registration-manager": {"text": "Keep the App/PAT generating registration or JIT credentials off workers; organization endpoints need Self-hosted runners: write, repository endpoints Administration: write.", "components": ["github-api"], "sources": ["github-api:s8217448953a4"], "status": "REASONED"},
+    "jit": {"text": "Protect encoded_jit_config and the whole response; JIT runners execute at most one job.", "components": ["github-api"], "sources": ["github-api:s8217448953a4"], "status": "REASONED"},
+    "runner-credential": {"text": "Protect the installed runner authentication credential, directory and backups.", "components": ["github"], "sources": ["github:s215dc07e3642"], "status": "REASONED"},
+    "github-job-token": {"text": "GITHUB_TOKEN is repository-scoped and per-job; set read-only defaults and grant only trusted jobs additional permissions.", "components": ["github"], "sources": ["github:s4561d20e7042"], "status": "REASONED"},
+    "oidc": {"text": "Grant id-token: write only where needed; the cloud trust must restrict issuer, audience and repository/branch or protected-environment subject.", "components": ["github"], "sources": ["github:s80fe11d8c90d"], "status": "REASONED"},
+    "github-lifecycle": {"text": "Prefer ephemeral/JIT workers and destroy their machines and storage; deregistration does not destroy disks, and labels route rather than authorize jobs.", "components": ["github", "github-api"], "sources": ["github:s215dc07e3642", "github:s92e8e4820392", "github-api:s8217448953a4"], "status": "REASONED"},
+    "shell-executor": {"text": "The GitLab shell executor runs as the runner user without isolation; avoid it for untrusted jobs on shared hosts.", "components": ["gitlab"], "sources": ["gitlab:seb30e3937183"], "status": "REASONED"},
+    "docker-executor": {"text": "Use unprivileged Docker; privileged=true or services_privileged and host Docker socket/TCP access can expose the host despite privileged=false.", "components": ["gitlab", "docker"], "sources": ["gitlab:s265254bc5592", "gitlab:seb30e3937183", "docker:s18f59818e451"], "status": "REASONED"},
+    "executor-host-access": {"text": "Deny sensitive host mounts, host PID/network namespaces, unnecessary devices and capabilities; build without the host daemon.", "components": ["gitlab"], "sources": ["gitlab:s265254bc5592", "gitlab:s47b236d63dc4"], "status": "REASONED"},
+    "kubernetes-executor": {"text": "Enforce nonprivileged containers, no privilege escalation, scoped ServiceAccounts and no unnecessary token mounting; prevent job overrides.", "components": ["gitlab"], "sources": ["gitlab:s1579c499c75b"], "status": "REASONED"},
+    "gitlab-disposal": {"text": "Containers share the kernel; use disposable separate VMs/nodes as needed and one-job autoscaling workers. Instance and Docker Autoscaler GA is recorded as Runner 17.1.", "components": ["gitlab"], "sources": ["gitlab:sde661ff4762e", "gitlab:seb30e3937183"], "status": "REASONED"},
+    "gitlab-registration": {"text": "Legacy registration tokens were disabled by default in GitLab 17.0, with removal scheduled for 20.0; use runner authentication tokens.", "components": ["gitlab"], "sources": ["gitlab:sd2cbff5d5d6e"], "status": "REASONED"},
+    "gitlab-runner-token": {"text": "Protect and rotate the runner authentication token in config.toml and backups; a cloned runner can steal assigned jobs.", "components": ["gitlab"], "sources": ["gitlab:seb30e3937183", "gitlab:sd2cbff5d5d6e"], "status": "REASONED"},
+    "gitlab-creation": {"text": "POST /user/runners needs create_runner scope; keep that access token off workers and set scope/protection at creation.", "components": ["gitlab"], "sources": ["gitlab:se430cbabc011", "gitlab:sd2cbff5d5d6e"], "status": "REASONED"},
+    "gitlab-job-token": {"text": "CI_JOB_TOKEN carries supported triggering-user access during the job and appears as CI_REGISTRY_PASSWORD and inside CI_REPOSITORY_URL.", "components": ["gitlab"], "sources": ["gitlab:saef0483b7be7"], "status": "REASONED"},
+    "gitlab-allowlist": {"text": "Target-project inbound job-token allowlists limit who may access that target, not job egress; also restrict resource feature visibility.", "components": ["gitlab"], "sources": ["gitlab:saef0483b7be7", "gitlab:s699c1c198119"], "status": "REASONED"},
+    "gitlab-forks": {"text": "Instance runners on public installations accept strangers; project scope does not establish code trust. Review parent-launched fork pipelines or disable ci_allow_fork_pipelines_to_run_in_parent_project.", "components": ["gitlab"], "sources": ["gitlab:seb30e3937183"], "status": "REASONED"},
+    "gitlab-protected": {"text": "Developer access can compromise persistent runners; release runners need ref_protected and a pool separate from fork-merge-request testing.", "components": ["gitlab"], "sources": ["gitlab:seb30e3937183", "gitlab:sd2cbff5d5d6e"], "status": "REASONED"},
+    "gitlab-metrics": {"text": "Optional listen_address metrics and profiling have no built-in authorization; 9252 is allocated, not proof of the configured port.", "components": ["gitlab"], "sources": ["gitlab:sbc009ff2866a"], "status": "REASONED"},
+    "gitlab-session": {"text": "Optional session_server uses TLS and must admit required GitLab traffic at its configured address; 8093 is an example, not an established default.", "components": ["gitlab"], "sources": ["gitlab:s47b236d63dc4"], "status": "REASONED"},
+    "verify-eligibility": {"text": "Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review.", "components": ["github-api"], "sources": ["github-api:sd36db9ea1031", "github-api:s8217448953a4"], "status": "REASONED", "verify": [1]},
+    "verify-permissions": {"text": "Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate.", "components": ["github"], "sources": ["github:s4561d20e7042", "github:s80fe11d8c90d"], "status": "REASONED", "verify": [2]},
+    "verify-assignment": {"text": "A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive.", "components": ["github-api", "github"], "sources": ["github-api:sbeee4a47110c", "github:s92e8e4820392"], "status": "REASONED", "verify": [3]},
+    "verify-config": {"text": "Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status.", "components": ["python", "gitlab"], "sources": ["python:s37be9e98ea29", "gitlab:s47b236d63dc4", "gitlab:s1579c499c75b"], "status": "DEMONSTRATED", "verify": [4], "evidence": "the extracted Python program ran without sudo on 20 synthetic config.toml cases using Python 3.14.4. Docker fixtures printed true/true, a socket mount and a TCP host versus false/false, empty volumes and a null host; both exited 0. Autoscaler limits printed null/null, 1/2 and 2/1 versus 1/1, all exit 0. Kubernetes fixtures printed true versus false for the three booleans and the supplied service_account. Wrong-type strings, booleans and floats retained their JSON types; misplaced privileged printed docker.privileged null. Empty and runner-less files printed nothing and exited 0. Missing files, malformed TOML and wrong section types exited 1; the second-runner structure error followed one printed runner. Two valid runners printed indices 0 and 1. The runner token key was omitted; a dummy token copied into service_account was printed. These observations cover file inspection only."},
+    "verify-daemon": {"text": "Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone.", "components": ["gitlab", "docker"], "sources": ["gitlab:s265254bc5592", "docker:s18f59818e451"], "status": "REASONED"},
+    "verify-autoscaler": {"text": "For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly as integers; absent or other values are findings.", "components": ["gitlab"], "sources": ["gitlab:sde661ff4762e"], "status": "REASONED"},
+    "verify-gitlab-api": {"text": "Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only.", "components": ["gitlab"], "sources": ["gitlab:s699c1c198119", "gitlab:seb30e3937183"], "status": "REASONED", "verify": [5]},
+    "verify-lifecycle": {"text": "Check complete deregistration listings and infrastructure disposal; persistent-worker canary must survive in the control, but absence alone does not prove destruction or clean shared caches.", "components": ["github-api", "gitlab", "github"], "sources": ["github-api:s8217448953a4", "gitlab:sde661ff4762e", "github:s215dc07e3642"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inventory namespaces and publications, require the permitted-client response, then test disallowed access; any HTTP response proves reachability, failure needs corroborating firewall denial.", "components": ["gitlab"], "sources": ["gitlab:sbc009ff2866a", "gitlab:s47b236d63dc4"], "status": "REASONED", "verify": [6]}
+  }
+}
+````
+<!-- version-basis:end -->

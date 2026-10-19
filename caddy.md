@@ -1,206 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-09-27",
-  "documentation_checked": "2026-09",
-  "body_sha256": "7a5caab2cbcf90c693eab11084c5f8aebc6a3bc8e613f7ab76ca8167e3a9ea28",
-  "components": {
-    "admin": {
-      "name": "Caddy admin source",
-      "basis": "v2.11.4",
-      "sources": {
-        "s35044463fa67": "https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L1433",
-        "s2bbcf239df02": "https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L58-L67"
-      }
-    },
-    "tags": {
-      "name": "Official image tag map",
-      "basis": "d82ca5102fa6735be29d5e1fc6ce03af77eb091e",
-      "sources": {
-        "sdc8aca42f5e2": "https://github.com/docker-library/official-images/blob/d82ca5102fa6735be29d5e1fc6ce03af77eb091e/library/caddy#L7-L65"
-      }
-    },
-    "images": {
-      "name": "Caddy Docker source",
-      "basis": "fba2853501d36e8a72f946ac8cb7ff64d07e48f2",
-      "sources": {
-        "s0f0994ef9fac": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L17",
-        "s2dce0bbf3a70": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L59-L63",
-        "sd2c1b05a8088": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L27-L32",
-        "sf3e9c2d4e0cd": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L8",
-        "sc5dd3f9746fe": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L27-L32",
-        "s6c800a156eac": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L8",
-        "sc5c82704d33f": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L10",
-        "sc1cb0e1fb9eb": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L42-L47",
-        "s11528dfcc516": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L10",
-        "s70b76475a281": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L42-L47"
-      }
-    },
-    "dist": {
-      "name": "Default Caddyfile source",
-      "basis": "33ae08ff08d168572df2956ed14fbc4949880d94",
-      "sources": {
-        "s433758a90af0": "https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/config/Caddyfile"
-      }
-    },
-    "docker-network": {
-      "name": "Docker networking documentation",
-      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
-      "sources": {
-        "se1437c0f19fb": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L286",
-        "sfce645f8b46e": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/drivers/host.md#L11-L13",
-        "sfd29f33e4108": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L302-L325"
-      }
-    },
-    "docs-rolling": {
-      "name": "Caddy documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s434e7b7d7f63": "https://caddyserver.com/docs/automatic-https",
-        "s3923477355fb": "https://caddyserver.com/docs/api",
-        "sdbcd496895d6": "https://caddyserver.com/docs/caddyfile/options",
-        "s31af5ed45a20": "https://caddyserver.com/docs/caddyfile/directives/request_body",
-        "sec59a61934c5": "https://caddyserver.com/docs/caddyfile/directives",
-        "sbc2bd9599bd1": "https://caddyserver.com/docs/caddyfile/directives/basic_auth",
-        "s2e47c3139bd2": "https://caddyserver.com/docs/caddyfile/directives/tls",
-        "s3865a73ccda3": "https://caddyserver.com/docs/caddyfile/directives/reverse_proxy",
-        "s82efc39a8130": "https://caddyserver.com/docs/conventions",
-        "s5a6da5adf385": "https://caddyserver.com/docs/caddyfile/directives/header",
-        "s8df93f3e3d4c": "https://caddyserver.com/docs/caddyfile/directives/forward_auth",
-        "sf12ad47e81b5": "https://caddyserver.com/docs/command-line#signals",
-        "s38b1b78ce980": "https://caddyserver.com/docs/caddyfile/matchers"
-      }
-    },
-    "letsencrypt-notice": {
-      "name": "Let's Encrypt expiration-email notice",
-      "basis": "2025",
-      "sources": {
-        "sdf68595235d4": "https://letsencrypt.org/2025/01/22/ending-expiration-emails/"
-      }
-    },
-    "service": {
-      "name": "caddyserver/dist service unit",
-      "basis": "33ae08ff08d168572df2956ed14fbc4949880d94",
-      "sources": {
-        "se70d276b03a1": "https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/init/caddy.service#L22-L32"
-      }
-    },
-    "systemd": {
-      "name": "systemd manual",
-      "basis": "v262",
-      "sources": {
-        "see108b0e0bba": "https://github.com/systemd/systemd/blob/v262/man/systemd.exec.xml#L1558-L1660"
-      }
-    },
-    "cloudflare": {
-      "name": "Cloudflare docs",
-      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
-      "sources": {
-        "s6f6104362214": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85",
-        "s81e5dd28d3e5": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json.mdx#L15-L17",
-        "sa7c8d635bfd5": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L196-L215"
-      }
-    },
-    "ratelimit-source": {
-      "name": "caddy-ratelimit source",
-      "basis": "5625512f24f6f59d6f64fb3aafe5eecff0b286db",
-      "sources": {
-        "s093420cd3d2f": "https://raw.githubusercontent.com/mholt/caddy-ratelimit/5625512f24f6f59d6f64fb3aafe5eecff0b286db/README.md"
-      }
-    }
-  },
-  "claims": {
-    "auto-https": {"text": "Caddy 2 obtains and renews public certificates and redirects HTTP to HTTPS; DNS must point here and the example requires public 80/443.", "components": ["docs-rolling"], "sources": ["docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
-    "issuers": {"text": "Public certificates come from Let's Encrypt or ZeroSSL and renew automatically.", "components": ["docs-rolling"], "sources": ["docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
-    "renewal-monitoring": {"text": "Set the ACME email contact but monitor renewal yourself: Let's Encrypt stopped expiration emails.", "components": ["docs-rolling", "letsencrypt-notice"], "sources": ["docs-rolling:sdbcd496895d6", "letsencrypt-notice:sdf68595235d4"], "status": "REASONED"},
-    "backend": {"text": "reverse_proxy sends traffic to 127.0.0.1:3000; keep the app private to prevent TLS/auth bypass.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3865a73ccda3"], "status": "REASONED"},
-    "hsts": {"text": "Caddy sends no HSTS automatically; add it only after HTTPS works across every included subdomain.", "components": ["docs-rolling"], "sources": ["docs-rolling:s5a6da5adf385", "docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
-    "forwarded": {"text": "Caddy ignores untrusted client X-Forwarded-* by default; configure trusted_proxies behind a trusted CDN/proxy.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3865a73ccda3"], "status": "REASONED"},
-    "internal-tls": {"text": "tls internal uses a local CA; clients must trust its root, with caddy trust for the local host. tls also accepts explicit cert/key files.", "components": ["docs-rolling"], "sources": ["docs-rolling:s2e47c3139bd2", "docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
-    "basic": {"text": "basic_auth uses hashed passwords from caddy hash-password; it was named basicauth before v2.8.0 and remains single-factor.", "components": ["docs-rolling"], "sources": ["docs-rolling:sbc2bd9599bd1"], "status": "REASONED"},
-    "path-auth": {"text": "Protect /admin and /admin/* together: path matches are exact and multiple paths are OR'ed.", "components": ["docs-rolling"], "sources": ["docs-rolling:s38b1b78ce980", "docs-rolling:sbc2bd9599bd1"], "status": "REASONED"},
-    "mfa": {"text": "forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it.", "components": ["docs-rolling", "cloudflare"], "sources": ["docs-rolling:s8df93f3e3d4c", "cloudflare:s6f6104362214"], "status": "REASONED"},
-    "access-origin": {"text": "Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's `access` setting has `cloudflared` do. Caddy still answers directly on 443.", "components": ["docs-rolling", "cloudflare"], "sources": ["docs-rolling:s3865a73ccda3", "cloudflare:s6f6104362214", "cloudflare:s81e5dd28d3e5", "cloudflare:sa7c8d635bfd5"], "status": "REASONED"},
-    "body-limit": {"text": "Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public.", "components": ["docs-rolling"], "sources": ["docs-rolling:s31af5ed45a20", "docs-rolling:sbc2bd9599bd1"], "status": "REASONED"},
-    "rate-limit": {"text": "The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer.", "components": ["docs-rolling", "ratelimit-source"], "sources": ["docs-rolling:sec59a61934c5", "ratelimit-source:s093420cd3d2f"], "status": "REASONED"},
-    "admin-bind": {"text": "The admin API defaults to localhost:2019 as of v2.11.4; never publish it or reverse-proxy to it.", "components": ["admin", "docs-rolling"], "sources": ["admin:s35044463fa67", "admin:s2bbcf239df02", "docs-rolling:s3923477355fb"], "status": "REASONED"},
-    "admin-authority": {"text": "Reachable unauthenticated admin clients can replace config at POST /load, edit /config/ or stop with POST /stop.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3923477355fb"], "status": "REASONED"},
-    "admin-isolation": {"text": "Host/Origin checks are not process isolation; local untrusted workloads require a permissioned Unix socket.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3923477355fb", "docs-rolling:sdbcd496895d6"], "status": "REASONED"},
-    "docker-admin": {"text": "The official 2.11.4 Alpine, Windows Server Core 2022/2025, and Nano Server 2022/2025 runtime tags map to fba28535 Dockerfiles that EXPOSE 2019 and run the default Caddyfile without admin; absent overrides, the endpoint stays namespace-local.", "components": ["tags", "images", "dist", "admin"], "sources": ["tags:sdc8aca42f5e2", "images:s0f0994ef9fac", "images:s2dce0bbf3a70", "images:sd2c1b05a8088", "images:sf3e9c2d4e0cd", "images:s6c800a156eac", "images:sc5c82704d33f", "images:sc1cb0e1fb9eb", "images:s11528dfcc516", "images:s70b76475a281", "dist:s433758a90af0", "admin:s35044463fa67", "admin:s2bbcf239df02", "images:sc5dd3f9746fe"], "status": "REASONED"},
-    "admin-override": {"text": "A mounted admin setting or CADDY_ADMIN changes the address; do not set 0.0.0.0:2019 to make publication work.", "components": ["admin", "dist", "docs-rolling"], "sources": ["docs-rolling:sdbcd496895d6", "admin:s35044463fa67", "admin:s2bbcf239df02", "dist:s433758a90af0"], "status": "REASONED"},
-    "namespace": {"text": "The shipped admin default is localhost:2019. On Docker Engine on Linux, bridge networking keeps loopback container-local; host or container networking shares a namespace, so treat its processes as potential admin clients.", "components": ["images", "dist", "admin", "docker-network", "docs-rolling"], "sources": ["docs-rolling:s3923477355fb", "images:s0f0994ef9fac", "images:s2dce0bbf3a70", "images:sd2c1b05a8088", "images:sf3e9c2d4e0cd", "images:sc5dd3f9746fe", "images:s6c800a156eac", "images:sc5c82704d33f", "images:sc1cb0e1fb9eb", "images:s11528dfcc516", "images:s70b76475a281", "dist:s433758a90af0", "admin:s35044463fa67", "docker-network:se1437c0f19fb", "docker-network:sfce645f8b46e", "docker-network:sfd29f33e4108"], "status": "REASONED"},
-    "admin-socket": {"text": "admin unix//run/caddy/admin.sock uses owner-only mode 0200 by default; append |0600 to set it explicitly.", "components": ["docs-rolling"], "sources": ["docs-rolling:sdbcd496895d6", "docs-rolling:s82efc39a8130"], "status": "REASONED"},
-    "runtime-directory": {"text": "The dist service at 33ae08ff runs as caddy without RuntimeDirectory; systemd v262 creates /run/caddy for RuntimeDirectory=caddy at service start and owns it as caddy. Restart for the socket switch is guide reasoning.", "components": ["docs-rolling", "service", "systemd"], "sources": ["docs-rolling:sdbcd496895d6", "service:se70d276b03a1", "systemd:see108b0e0bba"], "status": "REASONED"},
-    "reload": {"text": "The dist service at 33ae08ff uses caddy reload --config /etc/caddy/Caddyfile --force; API reload uses the Caddyfile admin address. With admin off, guide reasoning requires systemd restart.", "components": ["docs-rolling", "service"], "sources": ["docs-rolling:sdbcd496895d6", "docs-rolling:sf12ad47e81b5", "service:se70d276b03a1"], "status": "REASONED"},
-    "signal-reload": {"text": "A manual run without --resume may reload startup config via SIGUSR1; API changes or reload with a different file/adapter disable signal reloads.", "components": ["docs-rolling"], "sources": ["docs-rolling:sf12ad47e81b5"], "status": "REASONED"},
-    "on-demand": {"text": "Do not enable unrestricted on_demand TLS without an ask endpoint or host allowlist; this guide does not enable it.", "components": ["docs-rolling"], "sources": ["docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
-    "verify-config": {"text": "Validate /etc/caddy/Caddyfile; no validation outcome is recorded.", "components": ["docs-rolling"], "sources": ["docs-rolling:sf12ad47e81b5"], "status": "REASONED", "verify": [1]},
-    "verify-redirect": {"text": "HTTP should redirect to HTTPS.", "components": ["docs-rolling"], "sources": ["docs-rolling:s434e7b7d7f63"], "status": "REASONED", "verify": [1]},
-    "verify-auth": {"text": "With site-wide auth, HTTPS without credentials returns 401.", "components": ["docs-rolling"], "sources": ["docs-rolling:sbc2bd9599bd1"], "status": "REASONED", "verify": [1]},
-    "verify-scope": {"text": "The @admin variant must return 401 for /admin and /admin/x, but an app response rather than 401 for a non-admin path.", "components": ["docs-rolling"], "sources": ["docs-rolling:s38b1b78ce980", "docs-rolling:sbc2bd9599bd1"], "status": "REASONED", "verify": [1]},
-    "verify-size": {"text": "Authenticated 1M reaches the app and 11M returns 413; 401/000 void the control. Auth can prevent body reads; remove request_body in isolation to attribute refusal.", "components": ["docs-rolling"], "sources": ["docs-rolling:s31af5ed45a20", "docs-rolling:sbc2bd9599bd1", "docs-rolling:sec59a61934c5"], "status": "REASONED", "verify": [1]},
-    "verify-backend": {"text": "Read all listeners: app 3000 must be loopback-only even if proxy checks pass.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3865a73ccda3"], "status": "REASONED", "verify": [1]},
-    "verify-admin": {"text": "TCP admin must bind only loopback; absent 2019 requires confirming admin off or a socket. Check Unix socket existence and owner restrictions separately.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3923477355fb", "docs-rolling:sdbcd496895d6", "docs-rolling:s82efc39a8130"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # Caddy: TLS and authentication
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Caddy admin source v2.11.4, systemd manual v262, and Let's Encrypt expiration-email notice 2025; 7 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 31 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- admin: Caddy admin source (v2.11.4)
-- tags: Official image tag map (d82ca5102fa6735be29d5e1fc6ce03af77eb091e)
-- images: Caddy Docker source (fba2853501d36e8a72f946ac8cb7ff64d07e48f2)
-- dist: Default Caddyfile source (33ae08ff08d168572df2956ed14fbc4949880d94)
-- docker-network: Docker networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
-- docs-rolling: Caddy documentation (rolling) (unknown)
-- letsencrypt-notice: Let's Encrypt expiration-email notice (2025)
-- service: caddyserver/dist service unit (33ae08ff08d168572df2956ed14fbc4949880d94)
-- systemd: systemd manual (v262)
-- cloudflare: Cloudflare docs (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
-- ratelimit-source: caddy-ratelimit source (5625512f24f6f59d6f64fb3aafe5eecff0b286db)
-
-Claims (full source mapping in the front matter):
-
-- auto-https (REASONED; docs-rolling): Caddy 2 obtains and renews public certificates and redirects HTTP to HTTPS; DNS must point here and the example requires public 80/443.
-- issuers (REASONED; docs-rolling): Public certificates come from Let's Encrypt or ZeroSSL and renew automatically.
-- renewal-monitoring (REASONED; docs-rolling, letsencrypt-notice): Set the ACME email contact but monitor renewal yourself: Let's Encrypt stopped expiration emails.
-- backend (REASONED; docs-rolling): reverse_proxy sends traffic to 127.0.0.1:3000; keep the app private to prevent TLS/auth bypass.
-- hsts (REASONED; docs-rolling): Caddy sends no HSTS automatically; add it only after HTTPS works across every included subdomain.
-- forwarded (REASONED; docs-rolling): Caddy ignores untrusted client X-Forwarded-* by default; configure trusted_proxies behind a trusted CDN/proxy.
-- internal-tls (REASONED; docs-rolling): tls internal uses a local CA; clients must trust its root, with caddy trust for the local host. tls also accepts explicit cert/key files.
-- basic (REASONED; docs-rolling): basic_auth uses hashed passwords from caddy hash-password; it was named basicauth before v2.8.0 and remains single-factor.
-- path-auth (REASONED; docs-rolling): Protect /admin and /admin/* together: path matches are exact and multiple paths are OR'ed.
-- mfa (REASONED; docs-rolling, cloudflare): forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it.
-- access-origin (REASONED; docs-rolling, cloudflare): Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's `access` setting has `cloudflared` do. Caddy still answers directly on 443.
-- body-limit (REASONED; docs-rolling): Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public.
-- rate-limit (REASONED; docs-rolling, ratelimit-source): The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer.
-- admin-bind (REASONED; admin, docs-rolling): The admin API defaults to localhost:2019 as of v2.11.4; never publish it or reverse-proxy to it.
-- admin-authority (REASONED; docs-rolling): Reachable unauthenticated admin clients can replace config at POST /load, edit /config/ or stop with POST /stop.
-- admin-isolation (REASONED; docs-rolling): Host/Origin checks are not process isolation; local untrusted workloads require a permissioned Unix socket.
-- docker-admin (REASONED; tags, images, dist, admin): The official 2.11.4 Alpine, Windows Server Core 2022/2025, and Nano Server 2022/2025 runtime tags map to fba28535 Dockerfiles that EXPOSE 2019 and run the default Caddyfile without admin; absent overrides, the endpoint stays namespace-local.
-- admin-override (REASONED; admin, dist, docs-rolling): A mounted admin setting or CADDY_ADMIN changes the address; do not set 0.0.0.0:2019 to make publication work.
-- namespace (REASONED; images, dist, admin, docker-network, docs-rolling): The shipped admin default is localhost:2019. On Docker Engine on Linux, bridge networking keeps loopback container-local; host or container networking shares a namespace, so treat its processes as potential admin clients.
-- admin-socket (REASONED; docs-rolling): admin unix//run/caddy/admin.sock uses owner-only mode 0200 by default; append &#124;0600 to set it explicitly.
-- runtime-directory (REASONED; docs-rolling, service, systemd): The dist service at 33ae08ff runs as caddy without RuntimeDirectory; systemd v262 creates /run/caddy for RuntimeDirectory=caddy at service start and owns it as caddy. Restart for the socket switch is guide reasoning.
-- reload (REASONED; docs-rolling, service): The dist service at 33ae08ff uses caddy reload --config /etc/caddy/Caddyfile --force; API reload uses the Caddyfile admin address. With admin off, guide reasoning requires systemd restart.
-- signal-reload (REASONED; docs-rolling): A manual run without --resume may reload startup config via SIGUSR1; API changes or reload with a different file/adapter disable signal reloads.
-- on-demand (REASONED; docs-rolling): Do not enable unrestricted on_demand TLS without an ask endpoint or host allowlist; this guide does not enable it.
-- verify-config (REASONED; docs-rolling): Validate /etc/caddy/Caddyfile; no validation outcome is recorded.
-- verify-redirect (REASONED; docs-rolling): HTTP should redirect to HTTPS.
-- verify-auth (REASONED; docs-rolling): With site-wide auth, HTTPS without credentials returns 401.
-- verify-scope (REASONED; docs-rolling): The @admin variant must return 401 for /admin and /admin/x, but an app response rather than 401 for a non-admin path.
-- verify-size (REASONED; docs-rolling): Authenticated 1M reaches the app and 11M returns 413; 401/000 void the control. Auth can prevent body reads; remove request_body in isolation to attribute refusal.
-- verify-backend (REASONED; docs-rolling): Read all listeners: app 3000 must be loopback-only even if proxy checks pass.
-- verify-admin (REASONED; docs-rolling): TCP admin must bind only loopback; absent 2019 requires confirming admin off or a socket. Check Unix socket existence and owner restrictions separately.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Caddy 2 obtains, installs, and renews publicly trusted certificates automatically and redirects HTTP to HTTPS by default. For a new deployment with a public domain, it is the shortest correct path to HTTPS: no ACME client, no renewal timer, no redirect block.
 
@@ -397,3 +199,227 @@ ls -l /run/caddy/admin.sock          # if you bound it to a unix socket: it exis
 - Cloudflare Access JWT validation (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json.mdx#L15-L17
 - Cloudflare Tunnel `access` setting, `cloudflared` validating the Access JWT (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L196-L215
 - Docker networking documentation at 4e9a5751518ed8223a8dcde53693badddd72604f (container loopback, host namespace sharing, and the `--network container:` loopback example; the Linux bridge/host distinction above is inferred from these documented namespace semantics): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L286, https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/drivers/host.md#L11-L13, https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L302-L325
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/caddy.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- admin: Caddy admin source (v2.11.4)
+- images: Caddy Docker source (fba2853501d36e8a72f946ac8cb7ff64d07e48f2)
+- dist: Default Caddyfile source (33ae08ff08d168572df2956ed14fbc4949880d94)
+- docs-rolling: Caddy documentation (rolling) (unknown)
+- service: caddyserver/dist service unit (33ae08ff08d168572df2956ed14fbc4949880d94)
+- ratelimit-source: caddy-ratelimit source (5625512f24f6f59d6f64fb3aafe5eecff0b286db)
+- tags: Official image tag map (d82ca5102fa6735be29d5e1fc6ce03af77eb091e)
+- docker-network: Docker networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- systemd: systemd manual (v262)
+- cloudflare: Cloudflare docs (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- letsencrypt-notice: Let's Encrypt expiration-email notice (2025)
+
+Claims (full source mapping in the JSON block below):
+
+- auto-https (REASONED; docs-rolling): Caddy 2 obtains and renews public certificates and redirects HTTP to HTTPS; DNS must point here and the example requires public 80/443.
+- issuers (REASONED; docs-rolling): Public certificates come from Let's Encrypt or ZeroSSL and renew automatically.
+- renewal-monitoring (REASONED; docs-rolling, letsencrypt-notice): Set the ACME email contact but monitor renewal yourself: Let's Encrypt stopped expiration emails.
+- backend (REASONED; docs-rolling): reverse_proxy sends traffic to 127.0.0.1:3000; keep the app private to prevent TLS/auth bypass.
+- hsts (REASONED; docs-rolling): Caddy sends no HSTS automatically; add it only after HTTPS works across every included subdomain.
+- forwarded (REASONED; docs-rolling): Caddy ignores untrusted client X-Forwarded-* by default; configure trusted_proxies behind a trusted CDN/proxy.
+- internal-tls (REASONED; docs-rolling): tls internal uses a local CA; clients must trust its root, with caddy trust for the local host. tls also accepts explicit cert/key files.
+- basic (REASONED; docs-rolling): basic_auth uses hashed passwords from caddy hash-password; it was named basicauth before v2.8.0 and remains single-factor.
+- path-auth (REASONED; docs-rolling): Protect /admin and /admin/* together: path matches are exact and multiple paths are OR'ed.
+- mfa (REASONED; docs-rolling, cloudflare): forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it.
+- access-origin (REASONED; docs-rolling, cloudflare): Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's `access` setting has `cloudflared` do. Caddy still answers directly on 443.
+- body-limit (REASONED; docs-rolling): Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public.
+- rate-limit (REASONED; docs-rolling, ratelimit-source): The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer.
+- admin-bind (REASONED; admin, docs-rolling): The admin API defaults to localhost:2019 as of v2.11.4; never publish it or reverse-proxy to it.
+- admin-authority (REASONED; docs-rolling): Reachable unauthenticated admin clients can replace config at POST /load, edit /config/ or stop with POST /stop.
+- admin-isolation (REASONED; docs-rolling): Host/Origin checks are not process isolation; local untrusted workloads require a permissioned Unix socket.
+- docker-admin (REASONED; tags, images, dist, admin): The official 2.11.4 Alpine, Windows Server Core 2022/2025, and Nano Server 2022/2025 runtime tags map to fba28535 Dockerfiles that EXPOSE 2019 and run the default Caddyfile without admin; absent overrides, the endpoint stays namespace-local.
+- admin-override (REASONED; admin, dist, docs-rolling): A mounted admin setting or CADDY_ADMIN changes the address; do not set 0.0.0.0:2019 to make publication work.
+- namespace (REASONED; images, dist, admin, docker-network, docs-rolling): The shipped admin default is localhost:2019. On Docker Engine on Linux, bridge networking keeps loopback container-local; host or container networking shares a namespace, so treat its processes as potential admin clients.
+- admin-socket (REASONED; docs-rolling): admin unix//run/caddy/admin.sock uses owner-only mode 0200 by default; append &#124;0600 to set it explicitly.
+- runtime-directory (REASONED; docs-rolling, service, systemd): The dist service at 33ae08ff runs as caddy without RuntimeDirectory; systemd v262 creates /run/caddy for RuntimeDirectory=caddy at service start and owns it as caddy. Restart for the socket switch is guide reasoning.
+- reload (REASONED; docs-rolling, service): The dist service at 33ae08ff uses caddy reload --config /etc/caddy/Caddyfile --force; API reload uses the Caddyfile admin address. With admin off, guide reasoning requires systemd restart.
+- signal-reload (REASONED; docs-rolling): A manual run without --resume may reload startup config via SIGUSR1; API changes or reload with a different file/adapter disable signal reloads.
+- on-demand (REASONED; docs-rolling): Do not enable unrestricted on_demand TLS without an ask endpoint or host allowlist; this guide does not enable it.
+- verify-config (REASONED; docs-rolling): Validate /etc/caddy/Caddyfile; no validation outcome is recorded.
+- verify-redirect (REASONED; docs-rolling): HTTP should redirect to HTTPS.
+- verify-auth (REASONED; docs-rolling): With site-wide auth, HTTPS without credentials returns 401.
+- verify-scope (REASONED; docs-rolling): The @admin variant must return 401 for /admin and /admin/x, but an app response rather than 401 for a non-admin path.
+- verify-size (REASONED; docs-rolling): Authenticated 1M reaches the app and 11M returns 413; 401/000 void the control. Auth can prevent body reads; remove request_body in isolation to attribute refusal.
+- verify-backend (REASONED; docs-rolling): Read all listeners: app 3000 must be loopback-only even if proxy checks pass.
+- verify-admin (REASONED; docs-rolling): TCP admin must bind only loopback; absent 2019 requires confirming admin off or a socket. Check Unix socket existence and owner restrictions separately.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-09-27",
+  "documentation_checked": "2026-09",
+  "body_sha256": "7a5caab2cbcf90c693eab11084c5f8aebc6a3bc8e613f7ab76ca8167e3a9ea28",
+  "components": {
+    "admin": {
+      "name": "Caddy admin source",
+      "basis": "v2.11.4",
+      "sources": {
+        "s35044463fa67": "https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L1433",
+        "s2bbcf239df02": "https://github.com/caddyserver/caddy/blob/v2.11.4/admin.go#L58-L67"
+      }
+    },
+    "images": {
+      "name": "Caddy Docker source",
+      "basis": "fba2853501d36e8a72f946ac8cb7ff64d07e48f2",
+      "sources": {
+        "s0f0994ef9fac": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L17",
+        "s2dce0bbf3a70": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/alpine/Dockerfile#L59-L63",
+        "sd2c1b05a8088": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L27-L32",
+        "sf3e9c2d4e0cd": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2022/Dockerfile#L8",
+        "sc5dd3f9746fe": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L27-L32",
+        "s6c800a156eac": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows-nanoserver/ltsc2025/Dockerfile#L8",
+        "sc5c82704d33f": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L10",
+        "sc1cb0e1fb9eb": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2022/Dockerfile#L42-L47",
+        "s11528dfcc516": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L10",
+        "s70b76475a281": "https://github.com/caddyserver/caddy-docker/blob/fba2853501d36e8a72f946ac8cb7ff64d07e48f2/2.11/windows/ltsc2025/Dockerfile#L42-L47"
+      }
+    },
+    "dist": {
+      "name": "Default Caddyfile source",
+      "basis": "33ae08ff08d168572df2956ed14fbc4949880d94",
+      "sources": {
+        "s433758a90af0": "https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/config/Caddyfile"
+      }
+    },
+    "docs-rolling": {
+      "name": "Caddy documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s434e7b7d7f63": "https://caddyserver.com/docs/automatic-https",
+        "s3923477355fb": "https://caddyserver.com/docs/api",
+        "sdbcd496895d6": "https://caddyserver.com/docs/caddyfile/options",
+        "s31af5ed45a20": "https://caddyserver.com/docs/caddyfile/directives/request_body",
+        "sec59a61934c5": "https://caddyserver.com/docs/caddyfile/directives",
+        "sbc2bd9599bd1": "https://caddyserver.com/docs/caddyfile/directives/basic_auth",
+        "s2e47c3139bd2": "https://caddyserver.com/docs/caddyfile/directives/tls",
+        "s3865a73ccda3": "https://caddyserver.com/docs/caddyfile/directives/reverse_proxy",
+        "s82efc39a8130": "https://caddyserver.com/docs/conventions",
+        "s5a6da5adf385": "https://caddyserver.com/docs/caddyfile/directives/header",
+        "s8df93f3e3d4c": "https://caddyserver.com/docs/caddyfile/directives/forward_auth",
+        "sf12ad47e81b5": "https://caddyserver.com/docs/command-line#signals",
+        "s38b1b78ce980": "https://caddyserver.com/docs/caddyfile/matchers"
+      }
+    },
+    "service": {
+      "name": "caddyserver/dist service unit",
+      "basis": "33ae08ff08d168572df2956ed14fbc4949880d94",
+      "sources": {
+        "se70d276b03a1": "https://github.com/caddyserver/dist/blob/33ae08ff08d168572df2956ed14fbc4949880d94/init/caddy.service#L22-L32"
+      }
+    },
+    "ratelimit-source": {
+      "name": "caddy-ratelimit source",
+      "basis": "5625512f24f6f59d6f64fb3aafe5eecff0b286db",
+      "sources": {
+        "s093420cd3d2f": "https://raw.githubusercontent.com/mholt/caddy-ratelimit/5625512f24f6f59d6f64fb3aafe5eecff0b286db/README.md"
+      }
+    },
+    "tags": {
+      "name": "Official image tag map",
+      "basis": "d82ca5102fa6735be29d5e1fc6ce03af77eb091e",
+      "sources": {
+        "sdc8aca42f5e2": "https://github.com/docker-library/official-images/blob/d82ca5102fa6735be29d5e1fc6ce03af77eb091e/library/caddy#L7-L65"
+      }
+    },
+    "docker-network": {
+      "name": "Docker networking documentation",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "se1437c0f19fb": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L286",
+        "sfce645f8b46e": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/drivers/host.md#L11-L13",
+        "sfd29f33e4108": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/_index.md#L302-L325"
+      }
+    },
+    "systemd": {
+      "name": "systemd manual",
+      "basis": "v262",
+      "sources": {
+        "see108b0e0bba": "https://github.com/systemd/systemd/blob/v262/man/systemd.exec.xml#L1558-L1660"
+      }
+    },
+    "cloudflare": {
+      "name": "Cloudflare docs",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "s6f6104362214": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85",
+        "s81e5dd28d3e5": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json.mdx#L15-L17",
+        "sa7c8d635bfd5": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L196-L215"
+      }
+    },
+    "letsencrypt-notice": {
+      "name": "Let's Encrypt expiration-email notice",
+      "basis": "2025",
+      "sources": {
+        "sdf68595235d4": "https://letsencrypt.org/2025/01/22/ending-expiration-emails/"
+      }
+    }
+  },
+  "claims": {
+    "auto-https": {"text": "Caddy 2 obtains and renews public certificates and redirects HTTP to HTTPS; DNS must point here and the example requires public 80/443.", "components": ["docs-rolling"], "sources": ["docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
+    "issuers": {"text": "Public certificates come from Let's Encrypt or ZeroSSL and renew automatically.", "components": ["docs-rolling"], "sources": ["docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
+    "renewal-monitoring": {"text": "Set the ACME email contact but monitor renewal yourself: Let's Encrypt stopped expiration emails.", "components": ["docs-rolling", "letsencrypt-notice"], "sources": ["docs-rolling:sdbcd496895d6", "letsencrypt-notice:sdf68595235d4"], "status": "REASONED"},
+    "backend": {"text": "reverse_proxy sends traffic to 127.0.0.1:3000; keep the app private to prevent TLS/auth bypass.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3865a73ccda3"], "status": "REASONED"},
+    "hsts": {"text": "Caddy sends no HSTS automatically; add it only after HTTPS works across every included subdomain.", "components": ["docs-rolling"], "sources": ["docs-rolling:s5a6da5adf385", "docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
+    "forwarded": {"text": "Caddy ignores untrusted client X-Forwarded-* by default; configure trusted_proxies behind a trusted CDN/proxy.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3865a73ccda3"], "status": "REASONED"},
+    "internal-tls": {"text": "tls internal uses a local CA; clients must trust its root, with caddy trust for the local host. tls also accepts explicit cert/key files.", "components": ["docs-rolling"], "sources": ["docs-rolling:s2e47c3139bd2", "docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
+    "basic": {"text": "basic_auth uses hashed passwords from caddy hash-password; it was named basicauth before v2.8.0 and remains single-factor.", "components": ["docs-rolling"], "sources": ["docs-rolling:sbc2bd9599bd1"], "status": "REASONED"},
+    "path-auth": {"text": "Protect /admin and /admin/* together: path matches are exact and multiple paths are OR'ed.", "components": ["docs-rolling"], "sources": ["docs-rolling:s38b1b78ce980", "docs-rolling:sbc2bd9599bd1"], "status": "REASONED"},
+    "mfa": {"text": "forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it.", "components": ["docs-rolling", "cloudflare"], "sources": ["docs-rolling:s8df93f3e3d4c", "cloudflare:s6f6104362214"], "status": "REASONED"},
+    "access-origin": {"text": "Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's `access` setting has `cloudflared` do. Caddy still answers directly on 443.", "components": ["docs-rolling", "cloudflare"], "sources": ["docs-rolling:s3865a73ccda3", "cloudflare:s6f6104362214", "cloudflare:s81e5dd28d3e5", "cloudflare:sa7c8d635bfd5"], "status": "REASONED"},
+    "body-limit": {"text": "Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public.", "components": ["docs-rolling"], "sources": ["docs-rolling:s31af5ed45a20", "docs-rolling:sbc2bd9599bd1"], "status": "REASONED"},
+    "rate-limit": {"text": "The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer.", "components": ["docs-rolling", "ratelimit-source"], "sources": ["docs-rolling:sec59a61934c5", "ratelimit-source:s093420cd3d2f"], "status": "REASONED"},
+    "admin-bind": {"text": "The admin API defaults to localhost:2019 as of v2.11.4; never publish it or reverse-proxy to it.", "components": ["admin", "docs-rolling"], "sources": ["admin:s35044463fa67", "admin:s2bbcf239df02", "docs-rolling:s3923477355fb"], "status": "REASONED"},
+    "admin-authority": {"text": "Reachable unauthenticated admin clients can replace config at POST /load, edit /config/ or stop with POST /stop.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3923477355fb"], "status": "REASONED"},
+    "admin-isolation": {"text": "Host/Origin checks are not process isolation; local untrusted workloads require a permissioned Unix socket.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3923477355fb", "docs-rolling:sdbcd496895d6"], "status": "REASONED"},
+    "docker-admin": {"text": "The official 2.11.4 Alpine, Windows Server Core 2022/2025, and Nano Server 2022/2025 runtime tags map to fba28535 Dockerfiles that EXPOSE 2019 and run the default Caddyfile without admin; absent overrides, the endpoint stays namespace-local.", "components": ["tags", "images", "dist", "admin"], "sources": ["tags:sdc8aca42f5e2", "images:s0f0994ef9fac", "images:s2dce0bbf3a70", "images:sd2c1b05a8088", "images:sf3e9c2d4e0cd", "images:s6c800a156eac", "images:sc5c82704d33f", "images:sc1cb0e1fb9eb", "images:s11528dfcc516", "images:s70b76475a281", "dist:s433758a90af0", "admin:s35044463fa67", "admin:s2bbcf239df02", "images:sc5dd3f9746fe"], "status": "REASONED"},
+    "admin-override": {"text": "A mounted admin setting or CADDY_ADMIN changes the address; do not set 0.0.0.0:2019 to make publication work.", "components": ["admin", "dist", "docs-rolling"], "sources": ["docs-rolling:sdbcd496895d6", "admin:s35044463fa67", "admin:s2bbcf239df02", "dist:s433758a90af0"], "status": "REASONED"},
+    "namespace": {"text": "The shipped admin default is localhost:2019. On Docker Engine on Linux, bridge networking keeps loopback container-local; host or container networking shares a namespace, so treat its processes as potential admin clients.", "components": ["images", "dist", "admin", "docker-network", "docs-rolling"], "sources": ["docs-rolling:s3923477355fb", "images:s0f0994ef9fac", "images:s2dce0bbf3a70", "images:sd2c1b05a8088", "images:sf3e9c2d4e0cd", "images:sc5dd3f9746fe", "images:s6c800a156eac", "images:sc5c82704d33f", "images:sc1cb0e1fb9eb", "images:s11528dfcc516", "images:s70b76475a281", "dist:s433758a90af0", "admin:s35044463fa67", "docker-network:se1437c0f19fb", "docker-network:sfce645f8b46e", "docker-network:sfd29f33e4108"], "status": "REASONED"},
+    "admin-socket": {"text": "admin unix//run/caddy/admin.sock uses owner-only mode 0200 by default; append |0600 to set it explicitly.", "components": ["docs-rolling"], "sources": ["docs-rolling:sdbcd496895d6", "docs-rolling:s82efc39a8130"], "status": "REASONED"},
+    "runtime-directory": {"text": "The dist service at 33ae08ff runs as caddy without RuntimeDirectory; systemd v262 creates /run/caddy for RuntimeDirectory=caddy at service start and owns it as caddy. Restart for the socket switch is guide reasoning.", "components": ["docs-rolling", "service", "systemd"], "sources": ["docs-rolling:sdbcd496895d6", "service:se70d276b03a1", "systemd:see108b0e0bba"], "status": "REASONED"},
+    "reload": {"text": "The dist service at 33ae08ff uses caddy reload --config /etc/caddy/Caddyfile --force; API reload uses the Caddyfile admin address. With admin off, guide reasoning requires systemd restart.", "components": ["docs-rolling", "service"], "sources": ["docs-rolling:sdbcd496895d6", "docs-rolling:sf12ad47e81b5", "service:se70d276b03a1"], "status": "REASONED"},
+    "signal-reload": {"text": "A manual run without --resume may reload startup config via SIGUSR1; API changes or reload with a different file/adapter disable signal reloads.", "components": ["docs-rolling"], "sources": ["docs-rolling:sf12ad47e81b5"], "status": "REASONED"},
+    "on-demand": {"text": "Do not enable unrestricted on_demand TLS without an ask endpoint or host allowlist; this guide does not enable it.", "components": ["docs-rolling"], "sources": ["docs-rolling:s434e7b7d7f63"], "status": "REASONED"},
+    "verify-config": {"text": "Validate /etc/caddy/Caddyfile; no validation outcome is recorded.", "components": ["docs-rolling"], "sources": ["docs-rolling:sf12ad47e81b5"], "status": "REASONED", "verify": [1]},
+    "verify-redirect": {"text": "HTTP should redirect to HTTPS.", "components": ["docs-rolling"], "sources": ["docs-rolling:s434e7b7d7f63"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "With site-wide auth, HTTPS without credentials returns 401.", "components": ["docs-rolling"], "sources": ["docs-rolling:sbc2bd9599bd1"], "status": "REASONED", "verify": [1]},
+    "verify-scope": {"text": "The @admin variant must return 401 for /admin and /admin/x, but an app response rather than 401 for a non-admin path.", "components": ["docs-rolling"], "sources": ["docs-rolling:s38b1b78ce980", "docs-rolling:sbc2bd9599bd1"], "status": "REASONED", "verify": [1]},
+    "verify-size": {"text": "Authenticated 1M reaches the app and 11M returns 413; 401/000 void the control. Auth can prevent body reads; remove request_body in isolation to attribute refusal.", "components": ["docs-rolling"], "sources": ["docs-rolling:s31af5ed45a20", "docs-rolling:sbc2bd9599bd1", "docs-rolling:sec59a61934c5"], "status": "REASONED", "verify": [1]},
+    "verify-backend": {"text": "Read all listeners: app 3000 must be loopback-only even if proxy checks pass.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3865a73ccda3"], "status": "REASONED", "verify": [1]},
+    "verify-admin": {"text": "TCP admin must bind only loopback; absent 2019 requires confirming admin off or a socket. Check Unix socket existence and owner restrictions separately.", "components": ["docs-rolling"], "sources": ["docs-rolling:s3923477355fb", "docs-rolling:sdbcd496895d6", "docs-rolling:s82efc39a8130"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->
