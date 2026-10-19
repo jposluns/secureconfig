@@ -58,7 +58,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.273 | `nodejs.md`: bind, remaining source gaps: establish Railway's listener address, injected port and TLS termination location, and Heroku Cedar's listener address. (M, M) | `[gap]` |
 | 1.276 | `python.md`: bind, remaining source gaps: establish Railway's listener address, injected port and TLS termination location, and Heroku Cedar's listener address. (M, M) | `[gap]` |
 | 1.283 | `agent-builders.md`: debug-remedy: establish whether the debug_permission change is available in the console UI; API remedy is already cited and UI availability is unestablished. (M, M) | `[gap]` |
-| 1.290 | `firebase-supabase.md`: local-guards: source the ShellCheck 0.11.0 and other shell/tool versions for the recorded authoring guard run. (M, M) | `[gap]` |
+| 1.290 | `firebase-supabase.md`: local-guards: establish the unrecorded bash and other tool/parser versions for the historical authoring guard and syntax runs; the ShellCheck v0.11.0 release is cited, but does not attest to the historical host binary. (M, M) | `[gap]` |
 | 1.291 | `pocketbase.md`: source-limits: trace the PocketBase CLI wrapper and Appwrite document read authorization and privileged/API-key requester classification; establish the `--dev` default. (M, M) | `[gap]` |
 | 1.292 | `authentication.md`: cloudflare-access: source or narrow the claim that Cloudflare Access can front any application unchanged, including the One-time PIN and SSO options still not established by the cited pages. (M, M) | `[gap]` |
 | 1.293 | `authentication.md`: fail2ban: source or narrow the coverage and setup of login panels beyond the cited sshd jail and failure filter. (M, M) | `[gap]` |

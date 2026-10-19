@@ -39793,7 +39793,7 @@ REASONED: logout, browser history and response-header inspection, per the guide'
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -39802,6 +39802,7 @@ Components (recorded basis):
 - postgres: PostgreSQL documentation (unknown)
 - postgres-view: PostgreSQL invoker-view minimum (15)
 - curl: curl (curl-8_14_1)
+- shellcheck: ShellCheck (v0.11.0)
 
 Claims (full source mapping in the front matter):
 
@@ -39873,8 +39874,8 @@ Claims (full source mapping in the front matter):
 - verify-key-retirement (REASONED; supabase): Compare old/new API keys after explicit deactivation and old/new JWTs after revocation, accounting for propagation and caches.
 - verify-api-removal (REASONED; supabase): Previously successful profiles requests must stop returning fixtures after schema removal or Data API disabling; retained schemas need authorized controls.
 - verify-bundle (REASONED; supabase): Filename-only service_role/eyJ/sb_secret_ scanning yields review candidates, not proof of leaks; public anon JWTs are legitimate. Use a marker control and inspect encoded/split secrets separately.
-- local-guards (DEMONSTRATED; supabase): Historical local guard tests rejected placeholders and malformed set lines; this demonstrates shell behavior only, not live authorization. Shell/tool versions are not sourced.
-- local-syntax (DEMONSTRATED; firebase, supabase): Recorded ShellCheck/bash and JSON/TOML/JavaScript parsing passed; these checks do not compile Firebase Rules, execute SQL or demonstrate services.
+- local-guards (DEMONSTRATED; supabase, shellcheck): Historical local guard tests rejected placeholders and malformed set lines; this guide's assessment is shell behavior only, not live authorization. The recorded ShellCheck 0.11.0 has a release citation, not host-binary evidence; bash and other tool/parser versions remain unrecorded.
+- local-syntax (DEMONSTRATED; firebase, supabase, shellcheck): Recorded ShellCheck 0.11.0/bash and JSON/TOML/JavaScript parsing passed; this guide's assessment is that these checks do not compile Firebase Rules, execute SQL or demonstrate services. Only the ShellCheck release is cited; bash and other tool/parser versions remain unrecorded.
 <!-- version-basis:end -->
 
 These platforms handle TLS for you on their hosted endpoints; the exposure works differently.
@@ -40737,6 +40738,8 @@ checks. These checks establish syntax and the stated shell behavior only; they d
 Firebase Rules, execute SQL policies, or demonstrate service authorization. The replacement
 was not installed in the repository, and no whole-corpus gate result is claimed.
 
+REASONED: tool-version provenance for the historical local runs above; the [ShellCheck v0.11.0 changelog](https://github.com/koalaman/shellcheck/blob/v0.11.0/CHANGELOG.md#L1) identifies the release named as ShellCheck 0.11.0 in this guide's run record, but does not establish which binary the authoring host ran. Bash and other tool/parser versions were not recorded and remain unrecorded. This guide's assessment of the recorded checks is limited to syntax and the stated shell behavior, not Firebase Rules compilation, SQL execution or service authorization.
+
 | Scope | Exposed/fixed checks and prerequisites | Status |
 | --- | --- | --- |
 | Firebase and Supabase | Check every REASONED comparison above using disposable Firebase and Supabase projects, controlled A/B accounts and mailboxes, MFA sessions, registered App Check clients, a writable emulator/service fixture, a second host, Storage objects, Realtime clients, view/RPC inventories, an outbound-request collector, a Vault canary, key-lifecycle controls, and the actual client build. Record versions, effective rules/grants/settings, requests, responses, persisted write results, positive controls, propagation intervals, and cleanup. Include all three Firebase Rules engines, Firebase Functions, Supabase Edge Functions (using deployed operation fixtures and caller/webhook credentials to compare JWT verification enabled/disabled, handler authorization, positive controls, persisted effects, and secret hygiene), emulators, API restrictions, signup (including signed-out Anonymous-provider comparisons that confirm new-account creation when enabled and rejection when disabled), Data API removal, views, every function overload, HTTP wrappers, Vault, Storage (including sessionless GET of the same saved download URL before and after Rules tightening and token revocation, with an authorized SDK direct-download positive control), both Realtime authorization paths, MFA, API-key retirement, JWT-signing-key revocation, and bundle-scan controls. | REASONED: this comparison record requires every project, account, service, second-host, collector and lifecycle capability enumerated in this row; those live fixtures were unavailable. No disposable Firebase or Supabase project or controlled A/B sessions were available for these comparisons; a live Firebase Emulator Suite stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; a local Supabase CLI stack opens listeners; the authoring host forbids that without an isolated network namespace, and none was available. Local bash -n and ShellCheck 0.11.0 runs exited 0 without output; stub runs refused placeholders and malformed set lines, and the valid request printed synthetic http=200 exit=0 err=. Local grep reported a harmless marker file and exited 1 without output after its removal; synthetic JWT decoding printed role=anon and role=service_role. The identity-based authorization comparisons require unauthorized access in the exposed state and rejection in the fixed state with intended positive controls; key retirement additionally requires old credentials to fail while replacements work, per the guide's cited Firebase security rules, Supabase row level security, Supabase API keys (legacy `service_role` is a JWT starting `eyJ`; new `sb_publishable_` and `sb_secret_` keys are short strings) and Supabase JWT signing-key rotation and revocation. Rules tightening leaves access through an existing download token intact; token revocation denies that access while the authorized SDK direct-download control still succeeds, per Firebase Storage Admin shareable download URLs, Firebase StorageReference download-token revocation and Firebase Storage SDK direct downloads and browser CORS. Each other surface named in this row rests on the Sources entry cited at its step above. Live behavior is not demonstrated. |
@@ -40822,6 +40825,7 @@ was not installed in the repository, and no whole-corpus gate result is claimed.
 - [Firebase Storage SDK direct downloads and browser CORS](https://firebase.google.com/docs/storage/web/download-files).
 - [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
 - [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
+- [ShellCheck v0.11.0 changelog release entry (checked October 2026)](https://github.com/koalaman/shellcheck/blob/v0.11.0/CHANGELOG.md#L1).
 
 ======================================================================
 ==> supabase-self-hosted.md
