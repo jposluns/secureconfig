@@ -165,7 +165,7 @@ describing the tool, application or service and explaining that this guide helps
 AI assistant check that it is configured securely. The generated top block follows that
 paragraph: the `ai-assistant-prompt` HTML anchor, the invitation line, the unchanged per-guide
 `text` prompt with its raw URL, and the versions/dates header. The intro is ordinary digested
-body text. The rest of the human body and Sources follow the generated top block.
+body text. The rest of the body and Sources follow the generated top block.
 The single EOF marker pair wraps the fixed H2 "About the AI assistant section below", a
 two-sentence note linking back to the prompt anchor, the summary, and the complete metadata
 in a four-backtick `json` fence. The prompt appears only at the top. END is the last non-blank
@@ -205,16 +205,16 @@ metadata, refusing any difference. It never rebinds. Rebuild both bundles and ru
 the same change as each migration batch. `--check` and `--write` preserve each guide's layout.
 
 For a two-section guide with its generated block immediately after the H1, run
-`python3 tools/version_basis.py --introduce GUIDE --intro 'One human-written paragraph.'`.
-This accepts the historical form as well as a new top prompt without an intro. It validates
-the original guide, inserts the supplied paragraph, moves the prompt/header below it, shortens
-the EOF note and rebinds the digest. Before writing, it asserts that the new body equals the
-old body with only that paragraph and its two separator LFs inserted after the H1, that no
-other metadata changed, and that the result validates and renders identically. It refuses
-legacy front matter, an existing intro before a top prompt, and invalid or stale inputs.
-Review the intro for meaning; paragraph syntax cannot establish human authorship or accuracy.
-Rebuild both bundles and run the gates for each migration batch. This tooling change delivers
-no guide edits.
+`python3 tools/version_basis.py --introduce GUIDE --intro 'The reviewed intro paragraph.'`.
+Intro paragraphs may be drafted by a worker; each is reviewed against its guide before it is
+applied. This accepts the historical form as well as a new top prompt without an intro. It
+validates the original guide, inserts the supplied paragraph, moves the prompt/header below
+it, shortens the EOF note and rebinds the digest. Before writing, it asserts that the new body
+equals the old body with only that paragraph and its two separator LFs inserted after the H1,
+that no other metadata changed, and that the result validates and renders identically. It
+refuses legacy front matter, an existing intro before a top prompt, and invalid or stale
+inputs. Review the intro for meaning; paragraph syntax cannot establish its accuracy. Rebuild
+both bundles and run the gates for each migration batch.
 
 Schema 1 requires exactly these top-level fields:
 
