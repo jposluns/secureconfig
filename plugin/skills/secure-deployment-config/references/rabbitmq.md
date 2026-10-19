@@ -1,205 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-09-26",
-  "documentation_checked": "2026-09",
-  "body_sha256": "02208e1c7164f30bd94a7488df842c3d2b5709113cd61925722fae35b7159460",
-  "components": {
-    "docs": {
-      "name": "RabbitMQ documentation",
-      "basis": "unknown",
-      "sources": {
-        "s8f066afff416": "https://www.rabbitmq.com/docs/access-control",
-        "s348b5e1d08ae": "https://www.rabbitmq.com/docs/vhosts",
-        "sf81e470be6fa": "https://www.rabbitmq.com/docs/man/rabbitmqctl.8",
-        "s021280c36c46": "https://www.rabbitmq.com/docs/management",
-        "s62cc3cf19b55": "https://www.rabbitmq.com/docs/definitions",
-        "s59532e00cbad": "https://www.rabbitmq.com/docs/http-api-reference",
-        "sffc9f05633d5": "https://www.rabbitmq.com/docs/ssl",
-        "s7d28cf5cc259": "https://www.rabbitmq.com/docs/configure",
-        "s73c5514e15ab": "https://www.rabbitmq.com/docs/plugins",
-        "s5a539132e128": "https://www.rabbitmq.com/docs/man/rabbitmq-plugins.8",
-        "sc3e3083ffb2f": "https://www.rabbitmq.com/docs/networking",
-        "sa40d365d073f": "https://www.rabbitmq.com/docs/cli",
-        "s02ce3c777d63": "https://www.rabbitmq.com/docs/clustering-ssl",
-        "sf274b2ed7c10": "https://www.rabbitmq.com/docs/man/rabbitmq-diagnostics.8",
-        "sef3085ec2cc9": "https://www.rabbitmq.com/docs/queues",
-        "s008b12a42f70": "https://www.rabbitmq.com/docs/channels"
-      }
-    },
-    "source": {
-      "name": "RabbitMQ source",
-      "basis": "v4.3.6",
-      "sources": {
-        "sd358fada6993": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/Makefile#L33-L38",
-        "s23753cce5d91": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L22",
-        "s776b41dfa37a": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L65-L71",
-        "s2373a87402c7": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L151-L154",
-        "scde094099cd2": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L178-L186",
-        "s429261f04d72": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L1206-L1233",
-        "s3db3e9410319": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L2008-L2025",
-        "s631a5974cf74": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/scripts/rabbitmq-env#L143-L146",
-        "sb2136f9c4d1a": "https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env",
-        "s9977401b5976": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.6",
-        "s314eda502b64": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L104-L118",
-        "s8dd5ade37995": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60"
-      }
-    },
-    "image": {
-      "name": "RabbitMQ image source",
-      "basis": "76efb370838e36e4b120e252e75cf0dac70a7d55",
-      "sources": {
-        "s9d5790722619": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/ubuntu/10-defaults.conf#L8",
-        "s6e9f51045566": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/ubuntu/Dockerfile#L321",
-        "se5da6700ffd7": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/10-defaults.conf#L8",
-        "sb5b8462e18fd": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/Dockerfile#L327"
-      }
-    },
-    "admin": {
-      "name": "rabbitmqadmin",
-      "basis": "v2",
-      "sources": {
-        "sdd5688854073": "https://www.rabbitmq.com/docs/management-cli"
-      }
-    },
-    "otp": {
-      "name": "Erlang/OTP distribution",
-      "basis": "27",
-      "sources": {
-        "s18749583e522": "https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html",
-        "s2e4092cc0780": "https://raw.githubusercontent.com/erlang/otp/OTP-27.0/lib/ssl/src/inet_tls_dist.erl"
-      }
-    },
-    "topic-min": {
-      "name": "RabbitMQ topic authorization introduction",
-      "basis": "3.7.0",
-      "sources": {
-        "se34f4e7886f1": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0"
-      }
-    },
-    "curl": {
-      "name": "curl documentation",
-      "basis": "unknown",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
-      }
-    },
-    "pika": {
-      "name": "Pika documentation",
-      "basis": "unknown",
-      "sources": {
-        "s2cf9e4181462": "https://pika.readthedocs.io/en/stable/examples/tls_server_authentication.html",
-        "sbc29096927d1": "https://pika.readthedocs.io/en/stable/modules/parameters.html",
-        "sbe84810afdaa": "https://pika.readthedocs.io/en/stable/modules/adapters/blocking.html",
-        "s2bd3b0912faf": "https://pika.readthedocs.io/en/stable/modules/exceptions.html"
-      }
-    },
-    "management-source": {
-      "name": "RabbitMQ management documentation source",
-      "basis": "db23826ebaa810b3cdd525fd290125d65f6c3005",
-      "sources": {
-        "s0aa37c76e851": "https://github.com/rabbitmq/rabbitmq-website/blob/db23826ebaa810b3cdd525fd290125d65f6c3005/versioned_docs/version-4.3/management/index.md#L1365-L1381"
-      }
-    }
-  },
-  "claims": {
-    "guest": {"text": "Upstream guest/guest is an administrator restricted to localhost; create real users and delete or change guest.", "components": ["docs", "source"], "sources": ["docs:s8f066afff416", "source:sd358fada6993"], "status": "REASONED"},
-    "docker-guest": {"text": "Shipped official 4.3 images disable guest loopback restriction; later configuration can restore it.", "components": ["image"], "sources": ["image:s9d5790722619", "image:s6e9f51045566", "image:se5da6700ffd7", "image:sb5b8462e18fd"], "status": "REASONED"},
-    "vhosts": {"text": "Separate users/vhosts and remove old grants; vhosts isolate resources, not CPU or memory.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:s348b5e1d08ae", "docs:sf81e470be6fa"], "status": "REASONED"},
-    "resource-grants": {"text": "Configure/write/read regexes scope app.*; amq.default is excluded; binding needs queue write and exchange read.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED"},
-    "roles": {"text": "Tags replace previous tags and grant management authority, not resource permissions; observer gets monitoring and empty grants.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:sf81e470be6fa"], "status": "REASONED"},
-    "definitions-boot": {"text": "Reviewed local boot imports need no management plugin, do not overwrite existing definitions, and suppress blank-node default creation.", "components": ["docs"], "sources": ["docs:s62cc3cf19b55"], "status": "REASONED"},
-    "definitions-runtime": {"text": "Runtime imports merge, retain omitted objects and immutable conflicts, and can fail partially; they are not reconciliation.", "components": ["docs"], "sources": ["docs:s59532e00cbad", "docs:s62cc3cf19b55"], "status": "REASONED"},
-    "definitions-export": {"text": "v2 export transformations remove users, permissions and runtime parameters; protect TOML credentials and review remaining secrets.", "components": ["docs", "admin"], "sources": ["docs:s62cc3cf19b55", "admin:sdd5688854073"], "status": "REASONED"},
-    "amqp-tls": {"text": "Private 5671 requires trusted client certificates; remove plaintext 5672 after migration.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED"},
-    "tls-depth": {"text": "ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED"},
-    "tls-identity": {"text": "mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sffc9f05633d5"], "status": "REASONED"},
-    "management-bind": {"text": "Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:s7d28cf5cc259", "docs:s73c5514e15ab", "docs:s5a539132e128"], "status": "REASONED"},
-    "management-default": {"text": "v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0.", "components": ["source", "management-source"], "sources": ["source:s23753cce5d91", "source:s776b41dfa37a", "source:s2373a87402c7", "source:scde094099cd2", "source:s314eda502b64", "source:s8dd5ade37995", "management-source:s0aa37c76e851"], "status": "REASONED"},
-    "management-auth": {"text": "Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad"], "status": "REASONED"},
-    "epmd": {"text": "epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains.", "components": ["docs"], "sources": ["docs:sc3e3083ffb2f"], "status": "REASONED"},
-    "distribution-port": {"text": "Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it.", "components": ["source", "docs"], "sources": ["source:s429261f04d72", "source:s3db3e9410319", "docs:sc3e3083ffb2f"], "status": "REASONED"},
-    "cli-ports": {"text": "CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset.", "components": ["source", "docs"], "sources": ["source:s631a5974cf74", "docs:sc3e3083ffb2f"], "status": "REASONED"},
-    "cookie": {"text": "Matching owner-only cookie files grant powerful node/CLI access; protect secret delivery and restrict peer reachability.", "components": ["docs"], "sources": ["docs:sa40d365d073f"], "status": "REASONED"},
-    "distribution-tls": {"text": "Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27.", "components": ["docs", "otp", "source"], "sources": ["docs:s02ce3c777d63", "otp:s18749583e522", "source:sb2136f9c4d1a", "source:s9977401b5976"], "status": "REASONED"},
-    "distribution-identity": {"text": "Verify peer certificates both ways and outbound node hostnames; coordinate transport changes and retain cookie/firewall controls.", "components": ["otp"], "sources": ["otp:s18749583e522", "otp:s2e4092cc0780"], "status": "REASONED"},
-    "topic-default": {"text": "Topic authorization dates from 3.7; absent or cleared topic permissions leave topic operations unrestricted by that layer.", "components": ["docs", "topic-min"], "sources": ["docs:s8f066afff416", "topic-min:se34f4e7886f1"], "status": "REASONED"},
-    "topic-patterns": {"text": "Topic write/read regexes gate publish/binding keys; tenant1 exact keys exclude wildcard bindings, not existing queued messages.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED"},
-    "topic-bypass": {"text": "Exchange relay can bypass direct topic-write checks; strong isolation needs admin-owned routes, no configure and queue-only read grants.", "components": ["docs"], "sources": ["docs:s8f066afff416"], "status": "REASONED"},
-    "verify-accounts": {"text": "Inspect migrated vhost grants, observer tags/empty patterns and guest removal; failed listings prove nothing.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED", "verify": [1]},
-    "verify-inventory": {"text": "Inventory all listeners and cookie ownership/mode; local binds and mode do not establish isolation or secrecy.", "components": ["docs"], "sources": ["docs:sc3e3083ffb2f", "docs:sf274b2ed7c10", "docs:sa40d365d073f"], "status": "REASONED", "verify": [2]},
-    "verify-network": {"text": "Forbidden external connections must fail while allowed private peers connect; confirm plaintext 5672 removal with live AMQPS.", "components": ["docs"], "sources": ["docs:sc3e3083ffb2f"], "status": "REASONED", "verify": [3, 4]},
-    "verify-distribution": {"text": "Allowed CLI host must authenticate ping to the actual node with matching cookie; TCP reachability alone is insufficient.", "components": ["docs"], "sources": ["docs:sf274b2ed7c10", "docs:sa40d365d073f"], "status": "REASONED", "verify": [5]},
-    "verify-loopback": {"text": "Authenticated loopback /api/overview must return 200 while private HTTP 15672 is unreachable.", "components": ["docs", "curl"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [6]},
-    "verify-management": {"text": "Observer overview and ops user listing return 200; anonymous overview and observer user listing refuse with actual auth errors.", "components": ["docs", "curl"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [7]},
-    "verify-mtls": {"text": "Certificate-present handshake succeeds and absent certificate gets broker-attributed rejection; server Verification: OK is insufficient.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED", "verify": [8]},
-    "queue-default": {"text": "RabbitMQ 4.3 disables transient non-exclusive queues by default; the protocol fixture uses a durable queue.", "components": ["docs"], "sources": ["docs:sef3085ec2cc9"], "status": "REASONED"},
-    "verify-amqp": {"text": "Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons.", "components": ["docs", "pika"], "sources": ["docs:s8f066afff416", "docs:sef3085ec2cc9", "docs:s008b12a42f70", "pika:s2cf9e4181462", "pika:sbc29096927d1", "pika:sbe84810afdaa", "pika:s2bd3b0912faf"], "status": "REASONED", "verify": [9]},
-    "verify-definitions": {"text": "Compare approved blank-node users/grants and reduced versus private full exports; empty selected sections do not prove secrecy.", "components": ["docs", "admin"], "sources": ["docs:sf81e470be6fa", "docs:s62cc3cf19b55", "admin:sdd5688854073", "docs:s59532e00cbad"], "status": "REASONED", "verify": [10]},
-    "verify-distribution-tls": {"text": "TLS CLI/nodes succeed; plaintext and missing/untrusted certificate peers fail with TLS evidence, not cookie/DNS errors.", "components": ["docs", "otp"], "sources": ["docs:s02ce3c777d63", "otp:s18749583e522"], "status": "REASONED", "verify": [11]},
-    "verify-topic": {"text": "Tenant1 operations succeed; other keys/wildcards fail; compare relay bypass with hardened route-creation denial.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED", "verify": [12]}
-  }
-}
----
 # RabbitMQ: users, TLS listener, and the guest account
 
-<!-- version-basis:start -->
-**Version basis**
+Written against RabbitMQ source v4.3.6, rabbitmqadmin v2, RabbitMQ topic authorization introduction 3.7.0, and Erlang/OTP distribution 27; 2 further sources are pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 35 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- docs: RabbitMQ documentation (unknown)
-- source: RabbitMQ source (v4.3.6)
-- image: RabbitMQ image source (76efb370838e36e4b120e252e75cf0dac70a7d55)
-- admin: rabbitmqadmin (v2)
-- otp: Erlang/OTP distribution (27)
-- topic-min: RabbitMQ topic authorization introduction (3.7.0)
-- curl: curl documentation (unknown)
-- pika: Pika documentation (unknown)
-- management-source: RabbitMQ management documentation source (db23826ebaa810b3cdd525fd290125d65f6c3005)
-
-Claims (full source mapping in the front matter):
-
-- guest (REASONED; docs, source): Upstream guest/guest is an administrator restricted to localhost; create real users and delete or change guest.
-- docker-guest (REASONED; image): Shipped official 4.3 images disable guest loopback restriction; later configuration can restore it.
-- vhosts (REASONED; docs): Separate users/vhosts and remove old grants; vhosts isolate resources, not CPU or memory.
-- resource-grants (REASONED; docs): Configure/write/read regexes scope app.*; amq.default is excluded; binding needs queue write and exchange read.
-- roles (REASONED; docs): Tags replace previous tags and grant management authority, not resource permissions; observer gets monitoring and empty grants.
-- definitions-boot (REASONED; docs): Reviewed local boot imports need no management plugin, do not overwrite existing definitions, and suppress blank-node default creation.
-- definitions-runtime (REASONED; docs): Runtime imports merge, retain omitted objects and immutable conflicts, and can fail partially; they are not reconciliation.
-- definitions-export (REASONED; docs, admin): v2 export transformations remove users, permissions and runtime parameters; protect TOML credentials and review remaining secrets.
-- amqp-tls (REASONED; docs): Private 5671 requires trusted client certificates; remove plaintext 5672 after migration.
-- tls-depth (REASONED; docs): ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates.
-- tls-identity (REASONED; docs): mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured.
-- management-bind (REASONED; docs): Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management.
-- management-default (REASONED; source, management-source): v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0.
-- management-auth (REASONED; docs): Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access.
-- epmd (REASONED; docs): epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains.
-- distribution-port (REASONED; source, docs): Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it.
-- cli-ports (REASONED; source, docs): CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset.
-- cookie (REASONED; docs): Matching owner-only cookie files grant powerful node/CLI access; protect secret delivery and restrict peer reachability.
-- distribution-tls (REASONED; docs, otp, source): Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27.
-- distribution-identity (REASONED; otp): Verify peer certificates both ways and outbound node hostnames; coordinate transport changes and retain cookie/firewall controls.
-- topic-default (REASONED; docs, topic-min): Topic authorization dates from 3.7; absent or cleared topic permissions leave topic operations unrestricted by that layer.
-- topic-patterns (REASONED; docs): Topic write/read regexes gate publish/binding keys; tenant1 exact keys exclude wildcard bindings, not existing queued messages.
-- topic-bypass (REASONED; docs): Exchange relay can bypass direct topic-write checks; strong isolation needs admin-owned routes, no configure and queue-only read grants.
-- verify-accounts (REASONED; docs): Inspect migrated vhost grants, observer tags/empty patterns and guest removal; failed listings prove nothing.
-- verify-inventory (REASONED; docs): Inventory all listeners and cookie ownership/mode; local binds and mode do not establish isolation or secrecy.
-- verify-network (REASONED; docs): Forbidden external connections must fail while allowed private peers connect; confirm plaintext 5672 removal with live AMQPS.
-- verify-distribution (REASONED; docs): Allowed CLI host must authenticate ping to the actual node with matching cookie; TCP reachability alone is insufficient.
-- verify-loopback (REASONED; docs, curl): Authenticated loopback /api/overview must return 200 while private HTTP 15672 is unreachable.
-- verify-management (REASONED; docs, curl): Observer overview and ops user listing return 200; anonymous overview and observer user listing refuse with actual auth errors.
-- verify-mtls (REASONED; docs): Certificate-present handshake succeeds and absent certificate gets broker-attributed rejection; server Verification: OK is insufficient.
-- queue-default (REASONED; docs): RabbitMQ 4.3 disables transient non-exclusive queues by default; the protocol fixture uses a durable queue.
-- verify-amqp (REASONED; docs, pika): Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons.
-- verify-definitions (REASONED; docs, admin): Compare approved blank-node users/grants and reduced versus private full exports; empty selected sections do not prove secrecy.
-- verify-distribution-tls (REASONED; docs, otp): TLS CLI/nodes succeed; plaintext and missing/untrusted certificate peers fail with TLS evidence, not cookie/DNS errors.
-- verify-topic (REASONED; docs): Tenant1 operations succeed; other keys/wildcards fail; compare relay bypass with hardened route-creation denial.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 RabbitMQ's default `guest`/`guest` account can only connect from localhost, which protects fresh installs exactly until someone "fixes" it. The official Docker image ships that fix: its `/etc/rabbitmq/conf.d/10-defaults.conf` sets `loopback_users.guest = false`, so in a container from that image as shipped (a later configuration layer can set it back) the default `guest`/`guest` administrator, wherever it exists, can log in from any address that reaches the broker. The documented recommendation is to create real users and delete `guest` or change its password.
 
@@ -838,3 +641,226 @@ The write pattern gates publishing and the read pattern gates the routing keys a
 - Pika blocking connection and channel methods: https://pika.readthedocs.io/en/stable/modules/adapters/blocking.html
 - Pika authentication and authorization exceptions: https://pika.readthedocs.io/en/stable/modules/exceptions.html
 - curl password prompts, TLS validation, and diagnostic flags: https://curl.se/docs/manpage.html
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/rabbitmq.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- docs: RabbitMQ documentation (unknown)
+- source: RabbitMQ source (v4.3.6)
+- image: RabbitMQ image source (76efb370838e36e4b120e252e75cf0dac70a7d55)
+- admin: rabbitmqadmin (v2)
+- topic-min: RabbitMQ topic authorization introduction (3.7.0)
+- management-source: RabbitMQ management documentation source (db23826ebaa810b3cdd525fd290125d65f6c3005)
+- otp: Erlang/OTP distribution (27)
+- curl: curl documentation (unknown)
+- pika: Pika documentation (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- guest (REASONED; docs, source): Upstream guest/guest is an administrator restricted to localhost; create real users and delete or change guest.
+- docker-guest (REASONED; image): Shipped official 4.3 images disable guest loopback restriction; later configuration can restore it.
+- vhosts (REASONED; docs): Separate users/vhosts and remove old grants; vhosts isolate resources, not CPU or memory.
+- resource-grants (REASONED; docs): Configure/write/read regexes scope app.*; amq.default is excluded; binding needs queue write and exchange read.
+- roles (REASONED; docs): Tags replace previous tags and grant management authority, not resource permissions; observer gets monitoring and empty grants.
+- definitions-boot (REASONED; docs): Reviewed local boot imports need no management plugin, do not overwrite existing definitions, and suppress blank-node default creation.
+- definitions-runtime (REASONED; docs): Runtime imports merge, retain omitted objects and immutable conflicts, and can fail partially; they are not reconciliation.
+- definitions-export (REASONED; docs, admin): v2 export transformations remove users, permissions and runtime parameters; protect TOML credentials and review remaining secrets.
+- amqp-tls (REASONED; docs): Private 5671 requires trusted client certificates; remove plaintext 5672 after migration.
+- tls-depth (REASONED; docs): ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates.
+- tls-identity (REASONED; docs): mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured.
+- management-bind (REASONED; docs): Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management.
+- management-default (REASONED; source, management-source): v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0.
+- management-auth (REASONED; docs): Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access.
+- epmd (REASONED; docs): epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains.
+- distribution-port (REASONED; source, docs): Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it.
+- cli-ports (REASONED; source, docs): CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset.
+- cookie (REASONED; docs): Matching owner-only cookie files grant powerful node/CLI access; protect secret delivery and restrict peer reachability.
+- distribution-tls (REASONED; docs, otp, source): Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27.
+- distribution-identity (REASONED; otp): Verify peer certificates both ways and outbound node hostnames; coordinate transport changes and retain cookie/firewall controls.
+- topic-default (REASONED; docs, topic-min): Topic authorization dates from 3.7; absent or cleared topic permissions leave topic operations unrestricted by that layer.
+- topic-patterns (REASONED; docs): Topic write/read regexes gate publish/binding keys; tenant1 exact keys exclude wildcard bindings, not existing queued messages.
+- topic-bypass (REASONED; docs): Exchange relay can bypass direct topic-write checks; strong isolation needs admin-owned routes, no configure and queue-only read grants.
+- verify-accounts (REASONED; docs): Inspect migrated vhost grants, observer tags/empty patterns and guest removal; failed listings prove nothing.
+- verify-inventory (REASONED; docs): Inventory all listeners and cookie ownership/mode; local binds and mode do not establish isolation or secrecy.
+- verify-network (REASONED; docs): Forbidden external connections must fail while allowed private peers connect; confirm plaintext 5672 removal with live AMQPS.
+- verify-distribution (REASONED; docs): Allowed CLI host must authenticate ping to the actual node with matching cookie; TCP reachability alone is insufficient.
+- verify-loopback (REASONED; docs, curl): Authenticated loopback /api/overview must return 200 while private HTTP 15672 is unreachable.
+- verify-management (REASONED; docs, curl): Observer overview and ops user listing return 200; anonymous overview and observer user listing refuse with actual auth errors.
+- verify-mtls (REASONED; docs): Certificate-present handshake succeeds and absent certificate gets broker-attributed rejection; server Verification: OK is insufficient.
+- queue-default (REASONED; docs): RabbitMQ 4.3 disables transient non-exclusive queues by default; the protocol fixture uses a durable queue.
+- verify-amqp (REASONED; docs, pika): Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons.
+- verify-definitions (REASONED; docs, admin): Compare approved blank-node users/grants and reduced versus private full exports; empty selected sections do not prove secrecy.
+- verify-distribution-tls (REASONED; docs, otp): TLS CLI/nodes succeed; plaintext and missing/untrusted certificate peers fail with TLS evidence, not cookie/DNS errors.
+- verify-topic (REASONED; docs): Tenant1 operations succeed; other keys/wildcards fail; compare relay bypass with hardened route-creation denial.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "02208e1c7164f30bd94a7488df842c3d2b5709113cd61925722fae35b7159460",
+  "components": {
+    "docs": {
+      "name": "RabbitMQ documentation",
+      "basis": "unknown",
+      "sources": {
+        "s8f066afff416": "https://www.rabbitmq.com/docs/access-control",
+        "s348b5e1d08ae": "https://www.rabbitmq.com/docs/vhosts",
+        "sf81e470be6fa": "https://www.rabbitmq.com/docs/man/rabbitmqctl.8",
+        "s021280c36c46": "https://www.rabbitmq.com/docs/management",
+        "s62cc3cf19b55": "https://www.rabbitmq.com/docs/definitions",
+        "s59532e00cbad": "https://www.rabbitmq.com/docs/http-api-reference",
+        "sffc9f05633d5": "https://www.rabbitmq.com/docs/ssl",
+        "s7d28cf5cc259": "https://www.rabbitmq.com/docs/configure",
+        "s73c5514e15ab": "https://www.rabbitmq.com/docs/plugins",
+        "s5a539132e128": "https://www.rabbitmq.com/docs/man/rabbitmq-plugins.8",
+        "sc3e3083ffb2f": "https://www.rabbitmq.com/docs/networking",
+        "sa40d365d073f": "https://www.rabbitmq.com/docs/cli",
+        "s02ce3c777d63": "https://www.rabbitmq.com/docs/clustering-ssl",
+        "sf274b2ed7c10": "https://www.rabbitmq.com/docs/man/rabbitmq-diagnostics.8",
+        "sef3085ec2cc9": "https://www.rabbitmq.com/docs/queues",
+        "s008b12a42f70": "https://www.rabbitmq.com/docs/channels"
+      }
+    },
+    "source": {
+      "name": "RabbitMQ source",
+      "basis": "v4.3.6",
+      "sources": {
+        "sd358fada6993": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/Makefile#L33-L38",
+        "s23753cce5d91": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L22",
+        "s776b41dfa37a": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L65-L71",
+        "s2373a87402c7": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L151-L154",
+        "scde094099cd2": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L178-L186",
+        "s429261f04d72": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L1206-L1233",
+        "s3db3e9410319": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L2008-L2025",
+        "s631a5974cf74": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/scripts/rabbitmq-env#L143-L146",
+        "sb2136f9c4d1a": "https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env",
+        "s9977401b5976": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.6",
+        "s314eda502b64": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L104-L118",
+        "s8dd5ade37995": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60"
+      }
+    },
+    "image": {
+      "name": "RabbitMQ image source",
+      "basis": "76efb370838e36e4b120e252e75cf0dac70a7d55",
+      "sources": {
+        "s9d5790722619": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/ubuntu/10-defaults.conf#L8",
+        "s6e9f51045566": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/ubuntu/Dockerfile#L321",
+        "se5da6700ffd7": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/10-defaults.conf#L8",
+        "sb5b8462e18fd": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/Dockerfile#L327"
+      }
+    },
+    "admin": {
+      "name": "rabbitmqadmin",
+      "basis": "v2",
+      "sources": {
+        "sdd5688854073": "https://www.rabbitmq.com/docs/management-cli"
+      }
+    },
+    "topic-min": {
+      "name": "RabbitMQ topic authorization introduction",
+      "basis": "3.7.0",
+      "sources": {
+        "se34f4e7886f1": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0"
+      }
+    },
+    "management-source": {
+      "name": "RabbitMQ management documentation source",
+      "basis": "db23826ebaa810b3cdd525fd290125d65f6c3005",
+      "sources": {
+        "s0aa37c76e851": "https://github.com/rabbitmq/rabbitmq-website/blob/db23826ebaa810b3cdd525fd290125d65f6c3005/versioned_docs/version-4.3/management/index.md#L1365-L1381"
+      }
+    },
+    "otp": {
+      "name": "Erlang/OTP distribution",
+      "basis": "27",
+      "sources": {
+        "s18749583e522": "https://www.erlang.org/docs/27/apps/ssl/ssl_distribution.html",
+        "s2e4092cc0780": "https://raw.githubusercontent.com/erlang/otp/OTP-27.0/lib/ssl/src/inet_tls_dist.erl"
+      }
+    },
+    "curl": {
+      "name": "curl documentation",
+      "basis": "unknown",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    },
+    "pika": {
+      "name": "Pika documentation",
+      "basis": "unknown",
+      "sources": {
+        "s2cf9e4181462": "https://pika.readthedocs.io/en/stable/examples/tls_server_authentication.html",
+        "sbc29096927d1": "https://pika.readthedocs.io/en/stable/modules/parameters.html",
+        "sbe84810afdaa": "https://pika.readthedocs.io/en/stable/modules/adapters/blocking.html",
+        "s2bd3b0912faf": "https://pika.readthedocs.io/en/stable/modules/exceptions.html"
+      }
+    }
+  },
+  "claims": {
+    "guest": {"text": "Upstream guest/guest is an administrator restricted to localhost; create real users and delete or change guest.", "components": ["docs", "source"], "sources": ["docs:s8f066afff416", "source:sd358fada6993"], "status": "REASONED"},
+    "docker-guest": {"text": "Shipped official 4.3 images disable guest loopback restriction; later configuration can restore it.", "components": ["image"], "sources": ["image:s9d5790722619", "image:s6e9f51045566", "image:se5da6700ffd7", "image:sb5b8462e18fd"], "status": "REASONED"},
+    "vhosts": {"text": "Separate users/vhosts and remove old grants; vhosts isolate resources, not CPU or memory.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:s348b5e1d08ae", "docs:sf81e470be6fa"], "status": "REASONED"},
+    "resource-grants": {"text": "Configure/write/read regexes scope app.*; amq.default is excluded; binding needs queue write and exchange read.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED"},
+    "roles": {"text": "Tags replace previous tags and grant management authority, not resource permissions; observer gets monitoring and empty grants.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:sf81e470be6fa"], "status": "REASONED"},
+    "definitions-boot": {"text": "Reviewed local boot imports need no management plugin, do not overwrite existing definitions, and suppress blank-node default creation.", "components": ["docs"], "sources": ["docs:s62cc3cf19b55"], "status": "REASONED"},
+    "definitions-runtime": {"text": "Runtime imports merge, retain omitted objects and immutable conflicts, and can fail partially; they are not reconciliation.", "components": ["docs"], "sources": ["docs:s59532e00cbad", "docs:s62cc3cf19b55"], "status": "REASONED"},
+    "definitions-export": {"text": "v2 export transformations remove users, permissions and runtime parameters; protect TOML credentials and review remaining secrets.", "components": ["docs", "admin"], "sources": ["docs:s62cc3cf19b55", "admin:sdd5688854073"], "status": "REASONED"},
+    "amqp-tls": {"text": "Private 5671 requires trusted client certificates; remove plaintext 5672 after migration.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED"},
+    "tls-depth": {"text": "ssl_options.depth defaults to 1; clientAuth usage and intermediate-chain depth must fit deployed certificates.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED"},
+    "tls-identity": {"text": "mTLS does not map a RabbitMQ username; password auth remains unless certificate plugin/SASL EXTERNAL is configured.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sffc9f05633d5"], "status": "REASONED"},
+    "management-bind": {"text": "Apply and restart with loopback HTTP 15672/private HTTPS 15671 before enabling management.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:s7d28cf5cc259", "docs:s73c5514e15ab", "docs:s5a539132e128"], "status": "REASONED"},
+    "management-default": {"text": "v4.3.6 starts plain HTTP 15672 when no management listener is configured; the source sets no address, and a 4.3 docs example described as setting some parameters to their default values includes management.tcp.ip = 0.0.0.0.", "components": ["source", "management-source"], "sources": ["source:s23753cce5d91", "source:s776b41dfa37a", "source:s2373a87402c7", "source:scde094099cd2", "source:s314eda502b64", "source:s8dd5ade37995", "management-source:s0aa37c76e851"], "status": "REASONED"},
+    "management-auth": {"text": "Management has separate TLS and RabbitMQ HTTP credentials; restrict admin networks and human access.", "components": ["docs"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad"], "status": "REASONED"},
+    "epmd": {"text": "epmd defaults to 4369; ERL_EPMD_ADDRESS requires broker and epmd restart, or socket-unit changes; loopback remains.", "components": ["docs"], "sources": ["docs:sc3e3083ffb2f"], "status": "REASONED"},
+    "distribution-port": {"text": "Distribution defaults to node port plus 20000 (25672); nonempty environment or configured range can replace it.", "components": ["source", "docs"], "sources": ["source:s429261f04d72", "source:s3db3e9410319", "docs:sc3e3083ffb2f"], "status": "REASONED"},
+    "cli-ports": {"text": "CLI defaults 35672-35682; prefixed variables fall back to unprefixed forms, treating empty as unset.", "components": ["source", "docs"], "sources": ["source:s631a5974cf74", "docs:sc3e3083ffb2f"], "status": "REASONED"},
+    "cookie": {"text": "Matching owner-only cookie files grant powerful node/CLI access; protect secret delivery and restrict peer reachability.", "components": ["docs"], "sources": ["docs:sa40d365d073f"], "status": "REASONED"},
+    "distribution-tls": {"text": "Use Erlang TLS distribution for server and CLI with matching launch arguments; 4.3 requires at least OTP 27.", "components": ["docs", "otp", "source"], "sources": ["docs:s02ce3c777d63", "otp:s18749583e522", "source:sb2136f9c4d1a", "source:s9977401b5976"], "status": "REASONED"},
+    "distribution-identity": {"text": "Verify peer certificates both ways and outbound node hostnames; coordinate transport changes and retain cookie/firewall controls.", "components": ["otp"], "sources": ["otp:s18749583e522", "otp:s2e4092cc0780"], "status": "REASONED"},
+    "topic-default": {"text": "Topic authorization dates from 3.7; absent or cleared topic permissions leave topic operations unrestricted by that layer.", "components": ["docs", "topic-min"], "sources": ["docs:s8f066afff416", "topic-min:se34f4e7886f1"], "status": "REASONED"},
+    "topic-patterns": {"text": "Topic write/read regexes gate publish/binding keys; tenant1 exact keys exclude wildcard bindings, not existing queued messages.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED"},
+    "topic-bypass": {"text": "Exchange relay can bypass direct topic-write checks; strong isolation needs admin-owned routes, no configure and queue-only read grants.", "components": ["docs"], "sources": ["docs:s8f066afff416"], "status": "REASONED"},
+    "verify-accounts": {"text": "Inspect migrated vhost grants, observer tags/empty patterns and guest removal; failed listings prove nothing.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED", "verify": [1]},
+    "verify-inventory": {"text": "Inventory all listeners and cookie ownership/mode; local binds and mode do not establish isolation or secrecy.", "components": ["docs"], "sources": ["docs:sc3e3083ffb2f", "docs:sf274b2ed7c10", "docs:sa40d365d073f"], "status": "REASONED", "verify": [2]},
+    "verify-network": {"text": "Forbidden external connections must fail while allowed private peers connect; confirm plaintext 5672 removal with live AMQPS.", "components": ["docs"], "sources": ["docs:sc3e3083ffb2f"], "status": "REASONED", "verify": [3, 4]},
+    "verify-distribution": {"text": "Allowed CLI host must authenticate ping to the actual node with matching cookie; TCP reachability alone is insufficient.", "components": ["docs"], "sources": ["docs:sf274b2ed7c10", "docs:sa40d365d073f"], "status": "REASONED", "verify": [5]},
+    "verify-loopback": {"text": "Authenticated loopback /api/overview must return 200 while private HTTP 15672 is unreachable.", "components": ["docs", "curl"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [6]},
+    "verify-management": {"text": "Observer overview and ops user listing return 200; anonymous overview and observer user listing refuse with actual auth errors.", "components": ["docs", "curl"], "sources": ["docs:s021280c36c46", "docs:s59532e00cbad", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [7]},
+    "verify-mtls": {"text": "Certificate-present handshake succeeds and absent certificate gets broker-attributed rejection; server Verification: OK is insufficient.", "components": ["docs"], "sources": ["docs:sffc9f05633d5"], "status": "REASONED", "verify": [8]},
+    "queue-default": {"text": "RabbitMQ 4.3 disables transient non-exclusive queues by default; the protocol fixture uses a durable queue.", "components": ["docs"], "sources": ["docs:sef3085ec2cc9"], "status": "REASONED"},
+    "verify-amqp": {"text": "Pika 1.x fixture requires app round trip, observer authentication and resource-specific 403 ACCESS_REFUSED; log connection refusal reasons.", "components": ["docs", "pika"], "sources": ["docs:s8f066afff416", "docs:sef3085ec2cc9", "docs:s008b12a42f70", "pika:s2cf9e4181462", "pika:sbc29096927d1", "pika:sbe84810afdaa", "pika:s2bd3b0912faf"], "status": "REASONED", "verify": [9]},
+    "verify-definitions": {"text": "Compare approved blank-node users/grants and reduced versus private full exports; empty selected sections do not prove secrecy.", "components": ["docs", "admin"], "sources": ["docs:sf81e470be6fa", "docs:s62cc3cf19b55", "admin:sdd5688854073", "docs:s59532e00cbad"], "status": "REASONED", "verify": [10]},
+    "verify-distribution-tls": {"text": "TLS CLI/nodes succeed; plaintext and missing/untrusted certificate peers fail with TLS evidence, not cookie/DNS errors.", "components": ["docs", "otp"], "sources": ["docs:s02ce3c777d63", "otp:s18749583e522"], "status": "REASONED", "verify": [11]},
+    "verify-topic": {"text": "Tenant1 operations succeed; other keys/wildcards fail; compare relay bypass with hardened route-creation denial.", "components": ["docs"], "sources": ["docs:s8f066afff416", "docs:sf81e470be6fa"], "status": "REASONED", "verify": [12]}
+  }
+}
+````
+<!-- version-basis:end -->
