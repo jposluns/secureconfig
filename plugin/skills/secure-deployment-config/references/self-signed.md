@@ -1,6 +1,6 @@
 # Self-signed certificates
 
-Written against OpenSSL documentation (rolling) (no recorded version), Requests TLS documentation v2.32.3, Git ignore documentation v2.43.0, curl command documentation curl-8_12_1, Node.js extra CA certificates v22.19.0, RFC 9525 service identity RFC 9525, Debian ca-certificates trixie, and Ubuntu ca-certificates noble, plus 3 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 24 claims: 1 demonstrated by a check that ran and 23 reasoned from cited sources.
+Written against OpenSSL documentation (rolling) (no recorded version), Requests TLS documentation v2.32.3, Git ignore documentation v2.43.0, curl command documentation curl-8_12_1, Node.js extra CA certificates v22.19.0, Service identity RFC 9525, Debian ca-certificates trixie, and Ubuntu ca-certificates noble, plus 3 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 24 claims: 1 demonstrated by a check that ran and 23 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -162,7 +162,7 @@ Components (recorded basis):
 - git: Git ignore documentation (v2.43.0)
 - curl-source: curl command documentation (curl-8_12_1)
 - node: Node.js extra CA certificates (v22.19.0)
-- rfc9525: RFC 9525 service identity (RFC 9525)
+- rfc9525: Service identity (RFC 9525)
 - debian-ca: Debian ca-certificates (trixie)
 - ubuntu-ca: Ubuntu ca-certificates (noble)
 - rhel-ca: RHEL shared system certificates (RHEL 9)
@@ -250,7 +250,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "rfc9525": {
-      "name": "RFC 9525 service identity",
+      "name": "Service identity",
       "basis": "RFC 9525",
       "sources": {
         "s8dcb5fcc7802": "https://www.rfc-editor.org/rfc/rfc9525.html#section-2",
