@@ -900,9 +900,7 @@ def versions_sentence(data):
         sentence += '.'
         if len(sentence) <= 400:
             return sentence
-    # Keep the merged headline even when it alone exceeds the limit. If only
-    # the trailing counts overflow, omit those too rather than lose the headline.
-    return 'Written against ' + entries[0] + '.'
+    raise ValueError('first recorded version entry cannot fit the 400-character header limit')
 
 
 def header(data):

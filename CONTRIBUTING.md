@@ -174,8 +174,9 @@ The header names the first component in metadata order first, with its release b
 `(no recorded version)` for `unknown`. It merges identical component names in metadata order
 and folds other commit-pinned and unknown components into counts, excluding the named headline.
 Its versions sentence keeps at most eight merged entries and 400 characters, dropping entries
-from the tail. The merged headline is always kept, even if it alone exceeds 400 characters;
-trailing counts are omitted only if they cannot fit alongside it. Zero status counts are omitted.
+from the tail. The merged headline and truncation and folded counts are always kept; if the
+sentence still exceeds 400 characters with only that entry, generation raises `ValueError`.
+Zero status counts are omitted.
 Keep headline components first.
 The fixed note title also supplies the header anchor.
 

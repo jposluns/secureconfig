@@ -1773,8 +1773,8 @@ class TwoSectionTests(unittest.TestCase):
         sentence = components([(f'Product{i}' + 'x' * 90, 'v1') for i in range(8)])
         self.assertLessEqual(len(sentence), 400)
         self.assertIn('plus 5 more recorded bases', sentence)
-        self.assertEqual(components([('x' * 400, 'v1')]),
-                         'Written against ' + 'x' * 400 + ' v1.')
+        with self.assertRaisesRegex(ValueError, '400-character header limit'):
+            components([('x' * 400, 'v1')])
 
     def test_commit_pinned_headline(self):
         data = fixture()
@@ -1850,11 +1850,14 @@ class TwoSectionTests(unittest.TestCase):
                 self.assertEqual(len(expected), 400)
                 self.assertEqual(vb.versions_sentence(data), expected)
                 data['components']['headline']['name'] += 'x'
-                self.assertEqual(vb.versions_sentence(data),
-                                 'Written against ' + 'x' * (size + 1) + suffix + '.')
-                data['components']['headline']['name'] = 'x' * 400
-                self.assertEqual(vb.versions_sentence(data),
-                                 'Written against ' + 'x' * 400 + suffix + '.')
+                for render in (vb.versions_sentence, vb.header):
+                    with self.assertRaisesRegex(ValueError, '400-character header limit'):
+                        render(data)
+                data['components'] = {
+                    'headline': dict(name='x' * 400, basis=basis, sources={SID: URL})}
+                for render in (vb.versions_sentence, vb.header):
+                    with self.assertRaisesRegex(ValueError, '400-character header limit'):
+                        render(data)
 
     def test_malformed_mixed_and_stale_sections(self):
         current = vb.migrated(self.legacy(), 'fixture.md')
