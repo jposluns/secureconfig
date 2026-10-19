@@ -10,6 +10,9 @@ import sys
 import tempfile
 import textwrap
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from version_basis import split
+
 ROOT = Path(__file__).resolve().parent.parent
 workflow = (ROOT / ".github/workflows/linkcheck.yml").read_text(encoding="utf-8")
 scripts = re.findall(r"          python3 - <<'PY'\n(.*?)          PY\n", workflow, re.S)
@@ -66,6 +69,8 @@ body_cases = [
     ('round1-href-single-regression', "<a href='{u}'>x</a>\n"),
     ('body-code-span', '`{u}`\n'),
     ('body-fenced-block', '```text\n{u}\n```\n'),
+    ('two-section-fenced-json', '# Guide\n\n## About the AI assistant section below\n\n'
+                                '````json\n{{"url": "{u}"}}\n````\n'),
     ('body-autolink', '<{u}>\n'),
     ('body-explicit-link', '[link]({u})\n'),
 ]
@@ -144,9 +149,9 @@ if not base_excludes:
     sys.exit("FAIL: configuration base URL is not excluded")
 for path in ROOT.glob("*.md"):
     text = path.read_text(encoding="utf-8")
-    if not text.startswith("---\nversion_basis: "):
+    metadata, _ = split(text)
+    if metadata is None:
         continue
-    metadata = json.loads(text.split("\n---", 2)[0].removeprefix("---\nversion_basis: "))
     for component in metadata["components"].values():
         for url in component["sources"].values():
             if any(pattern.search(url) for pattern in base_excludes):
