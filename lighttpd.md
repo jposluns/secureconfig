@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-18",
+  "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "4820416ec8782cef5daecd72cfde56cbfe85e55376d9be1fb9efc4698f710d6c",
+  "body_sha256": "aa010c3e401699d0b9ff9541720750e57529d097494238fca31e5db6a0c3826f",
   "components": {
     "tls": {
       "name": "lighttpd TLS minimum",
@@ -129,17 +129,28 @@ version_basis: {
       "sources": {
         "s558db45d4d61": "https://github.com/apache/httpd/blob/2.4.69/docs/manual/vhosts/details.xml#L217-L231"
       }
+    },
+    "release-news": {
+      "name": "lighttpd release NEWS",
+      "basis": "1.4.75",
+      "sources": {
+        "s4e990a9e5ec1": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L1660-L1660",
+        "se97c93bf64a8": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L1927-L1927",
+        "s1658d22c71f9": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L2465-L2465",
+        "s95dd525fe4ac": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L2505-L2505",
+        "sc0d0162991d5": "https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L6-L7"
+      }
     }
   },
   "claims": {
-    "tls-defaults": {"text": "lighttpd 1.4.56 and later disables SSLv2, SSLv3, TLS 1.0 and TLS 1.1 by default.", "components": ["tls"], "sources": ["tls:sbff3cb2e01a8"], "status": "REASONED"},
+    "tls-defaults": {"text": "For this guide's 1.4.56-and-later scope, NEWS records the mod_openssl MinProtocol TLSv1.2 default in 1.4.56. Disabling SSLv2, SSLv3, TLS 1.0 and TLS 1.1 is this guide's reading of that floor; NEWS does not establish defaults for every later release.", "components": ["tls", "release-news"], "sources": ["tls:sbff3cb2e01a8", "release-news:s4e990a9e5ec1", "release-news:se97c93bf64a8"], "status": "REASONED"},
     "tls-listeners": {"text": "Load mod_openssl and enable TLS on both :443 and [::]:443 with ssl.pemfile and ssl.privkey; omitting the IPv6 socket leaves IPv6 clients on plain HTTP.", "components": ["tls"], "sources": ["tls:sbff3cb2e01a8"], "status": "REASONED"},
     "certificate-chain": {"text": "ssl.pemfile uses fullchain.pem rather than a certificate without its chain.", "components": ["tls"], "sources": ["tls:sbff3cb2e01a8"], "status": "REASONED"},
-    "separate-key": {"text": "ssl.privkey exists from 1.4.53; older versions need certificate and key concatenated into ssl.pemfile.", "components": ["key"], "sources": ["key:sbff3cb2e01a8"], "status": "REASONED"},
-    "protocol-floor": {"text": "ssl.openssl.ssl-conf-cmd sets MinProtocol to TLSv1.2 explicitly; recent versions already default to TLS 1.2.", "components": ["tls"], "sources": ["tls:sbff3cb2e01a8"], "status": "REASONED"},
+    "separate-key": {"text": "NEWS records optional mod_openssl ssl.privkey in 1.4.53. On older versions, concatenate certificate and key into ssl.pemfile (this guide's compatibility advice; the entry does not establish that procedure).", "components": ["key", "release-news"], "sources": ["key:sbff3cb2e01a8", "release-news:s1658d22c71f9", "release-news:s95dd525fe4ac"], "status": "REASONED"},
+    "protocol-floor": {"text": "Set MinProtocol to TLSv1.2 with ssl.openssl.ssl-conf-cmd explicitly (this guide's advice); NEWS records that default for mod_openssl in 1.4.56, not every later release.", "components": ["tls", "release-news"], "sources": ["tls:sbff3cb2e01a8", "release-news:s4e990a9e5ec1", "release-news:se97c93bf64a8"], "status": "REASONED"},
     "module-defaults": {"text": "In lighttpd 1.4.75, mod_h2 is inserted unless server.feature-flags disables server.h2proto (enabled by default); when server.compat-module-load is enabled (the default), mod_indexfile and mod_dirlisting are conditionally added when enabled, mod_staticfile is added when absent, and compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. Load mod_redirect explicitly.", "components": ["docs", "modules-source"], "sources": ["docs:s6d5666b862a0", "modules-source:s8680e561bed2", "modules-source:s8e9688979427", "modules-source:s9bd716d27e8d", "modules-source:s21288573041a", "modules-source:s67bb3733d81c"], "status": "REASONED"},
     "http-redirect": {"text": "For the http scheme, redirect to HTTPS preserving authority, path and query; port 80 must redirect rather than serve content.", "components": ["docs"], "sources": ["docs:s6de629323c64"], "status": "REASONED"},
-    "redirect-code": {"text": "Set url.redirect-code to 308 explicitly on versions before 1.4.75.", "components": ["redirect"], "sources": ["redirect:s6de629323c64"], "status": "REASONED"},
+    "redirect-code": {"text": "NEWS records url.redirect-code = 308 as the new default in 1.4.75. Set 308 explicitly before 1.4.75 (this guide's advice; the entry does not specify each earlier default).", "components": ["redirect", "release-news"], "sources": ["redirect:s6de629323c64", "release-news:sc0d0162991d5"], "status": "REASONED"},
     "basic-auth": {"text": "Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable.", "components": ["docs"], "sources": ["docs:s1dbd1ce27da5"], "status": "REASONED"},
     "password-file": {"text": "Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally, with other hashes of at least 13 characters checked through crypt() when built with crypt support; under USE_LIB_CRYPTO_MD4, the $1+ntlm$ path derives an NTLM hash and calls crypt() with that derived value and a $1$ salt. Check the build and platform's accepted hashes before choosing a flag; this check is this guide's compatibility advice.", "components": ["docs", "authn-source", "htpasswd-tool", "debian-package", "fedora-package"], "sources": ["docs:s1dbd1ce27da5", "authn-source:s2c11c0fbc0ca", "authn-source:se971effb489f", "htpasswd-tool:scde9004bb967", "debian-package:s436bdf5f1fb9", "fedora-package:s919088d03a5e"], "status": "REASONED"},
     "mfa": {"text": "Basic authentication is single-factor; add MFA by fronting this service with Cloudflare Access or an MFA-capable proxy (this guide's requirement). Authelia v4.39.28's complete supported-proxy list has no lighttpd entry (this guide's inference from the table); Cloudflare Access documents self-hosted application and MFA policy controls; applying them to lighttpd is this guide's assessment. This guide assesses that a lighttpd origin reachable without passing through Access is not protected by it.", "components": ["docs", "authelia", "cloudflare-access"], "sources": ["docs:s1dbd1ce27da5", "authelia:s77083bc8faa2", "cloudflare-access:sfddb92e438ca", "cloudflare-access:s7cafe1b17afd", "cloudflare-access:sdcac732541da", "cloudflare-access:s603bdb6b24ab", "cloudflare-access:s863803bd9a1f"], "status": "REASONED"},
@@ -158,7 +169,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -176,17 +187,18 @@ Components (recorded basis):
 - lighttpd-verify-source: lighttpd verify source (1.4.75)
 - systemd-reload: systemd reload manual (v262)
 - apache-vhosts: Apache virtual-host source (2.4.69)
+- release-news: lighttpd release NEWS (1.4.75)
 
 Claims (full source mapping in the front matter):
 
-- tls-defaults (REASONED; tls): lighttpd 1.4.56 and later disables SSLv2, SSLv3, TLS 1.0 and TLS 1.1 by default.
+- tls-defaults (REASONED; tls, release-news): For this guide's 1.4.56-and-later scope, NEWS records the mod_openssl MinProtocol TLSv1.2 default in 1.4.56. Disabling SSLv2, SSLv3, TLS 1.0 and TLS 1.1 is this guide's reading of that floor; NEWS does not establish defaults for every later release.
 - tls-listeners (REASONED; tls): Load mod_openssl and enable TLS on both :443 and [::]:443 with ssl.pemfile and ssl.privkey; omitting the IPv6 socket leaves IPv6 clients on plain HTTP.
 - certificate-chain (REASONED; tls): ssl.pemfile uses fullchain.pem rather than a certificate without its chain.
-- separate-key (REASONED; key): ssl.privkey exists from 1.4.53; older versions need certificate and key concatenated into ssl.pemfile.
-- protocol-floor (REASONED; tls): ssl.openssl.ssl-conf-cmd sets MinProtocol to TLSv1.2 explicitly; recent versions already default to TLS 1.2.
+- separate-key (REASONED; key, release-news): NEWS records optional mod_openssl ssl.privkey in 1.4.53. On older versions, concatenate certificate and key into ssl.pemfile (this guide's compatibility advice; the entry does not establish that procedure).
+- protocol-floor (REASONED; tls, release-news): Set MinProtocol to TLSv1.2 with ssl.openssl.ssl-conf-cmd explicitly (this guide's advice); NEWS records that default for mod_openssl in 1.4.56, not every later release.
 - module-defaults (REASONED; docs, modules-source): In lighttpd 1.4.75, mod_h2 is inserted unless server.feature-flags disables server.h2proto (enabled by default); when server.compat-module-load is enabled (the default), mod_indexfile and mod_dirlisting are conditionally added when enabled, mod_staticfile is added when absent, and compatibility handling can also add other modules, including authentication and TLS modules under their respective conditions. Load mod_redirect explicitly.
 - http-redirect (REASONED; docs): For the http scheme, redirect to HTTPS preserving authority, path and query; port 80 must redirect rather than serve content.
-- redirect-code (REASONED; redirect): Set url.redirect-code to 308 explicitly on versions before 1.4.75.
+- redirect-code (REASONED; redirect, release-news): NEWS records url.redirect-code = 308 as the new default in 1.4.75. Set 308 explicitly before 1.4.75 (this guide's advice; the entry does not specify each earlier default).
 - basic-auth (REASONED; docs): Load mod_auth and mod_authn_file, select the htpasswd file backend and require valid-user Basic authentication on / over TLS; application login is preferable.
 - password-file (REASONED; docs, authn-source, htpasswd-tool, debian-package, fedora-package): Create the user file with Apache htpasswd (Debian apache2-utils; Fedora httpd-tools is this guide's package assessment); lighttpd 1.4.75 reads username:stored-hash entries and checks {SHA} SHA-1 and $apr1$ internally, with other hashes of at least 13 characters checked through crypt() when built with crypt support; under USE_LIB_CRYPTO_MD4, the $1+ntlm$ path derives an NTLM hash and calls crypt() with that derived value and a $1$ salt. Check the build and platform's accepted hashes before choosing a flag; this check is this guide's compatibility advice.
 - mfa (REASONED; docs, authelia, cloudflare-access): Basic authentication is single-factor; add MFA by fronting this service with Cloudflare Access or an MFA-capable proxy (this guide's requirement). Authelia v4.39.28's complete supported-proxy list has no lighttpd entry (this guide's inference from the table); Cloudflare Access documents self-hosted application and MFA policy controls; applying them to lighttpd is this guide's assessment. This guide assesses that a lighttpd origin reachable without passing through Access is not protected by it.
@@ -197,7 +209,7 @@ Claims (full source mapping in the front matter):
 - verify-host (REASONED; docs, lighttpd-verify-source, apache-vhosts): In lighttpd 1.4.75, request-time $HTTP["host"] matching uses the HTTP Host value, while TLS SNI can select mod_openssl settings before request headers; a Host outside a conditional auth.require falls back to global configuration for that rule (this guide's inference from conditional merging and mod_auth documentation). On a protected path, this guide interprets 401 as the pass and 200 as the protected path served without authentication on this TLS connection to a client that sends another host. Apache 2.4.69 uses the SNI hostname, when the client sends it and the server supports SNI, for name-based TLS virtual-host selection; varying Host while keeping URL and SNI fixed is this guide's auth-check advice.
 <!-- version-basis:end -->
 
-Applies to lighttpd 1.4.56 and later, which disables SSLv2/SSLv3/TLS 1.0/TLS 1.1 by default. Get a certificate first: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
+Applies to lighttpd 1.4.56 and later. NEWS records the `mod_openssl` `MinProtocol TLSv1.2` default in its 1.4.56 release section (https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L1660-L1660; https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L1927-L1927). Disabling SSLv2/SSLv3/TLS 1.0/TLS 1.1 is this guide's reading of that floor; NEWS does not establish defaults for every later release. Get a certificate first: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
 ## 1. Enable TLS
 
@@ -219,8 +231,8 @@ $SERVER["socket"] == "[::]:443" {
 
 Version notes:
 
-- `ssl.privkey` exists from lighttpd 1.4.53. On older versions, concatenate certificate and key into one file and point `ssl.pemfile` at it.
-- To set the protocol floor explicitly (recent versions already default to TLS 1.2):
+- NEWS records the optional `mod_openssl` `ssl.privkey` directive in its 1.4.53 release section (https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L2465-L2465; https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L2505-L2505). On older versions, concatenate certificate and key into one file and point `ssl.pemfile` at it (this guide's compatibility advice; the entry does not establish that procedure).
+- To set the protocol floor explicitly (this guide's advice; NEWS records the `mod_openssl` TLS 1.2 minimum default in 1.4.56, not every later release):
 
 ```
 ssl.openssl.ssl-conf-cmd = ( "MinProtocol" => "TLSv1.2" )
@@ -238,6 +250,8 @@ $HTTP["scheme"] == "http" {
     url.redirect-code = 308        # explicit on versions before 1.4.75
 }
 ```
+
+NEWS records `url.redirect-code = 308` as the new default in its 1.4.75 release section (https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L6-L7). Setting 308 explicitly before 1.4.75 is this guide's advice; the entry does not specify each earlier default.
 
 ## 3. Require authentication
 
@@ -303,6 +317,12 @@ curl -q -s -o /dev/null -w '%{http_code}\n' -H 'Host: not-configured.example' \
 - Pointing `ssl.pemfile` at a certificate without its chain; use `fullchain.pem`.
 
 ## Sources (checked September 2026)
+
+- lighttpd 1.4.75 NEWS, 1.4.56 release heading (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L1660-L1660
+- lighttpd 1.4.75 NEWS, 1.4.56 mod_openssl protocol default (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L1927-L1927
+- lighttpd 1.4.75 NEWS, 1.4.53 release heading (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L2465-L2465
+- lighttpd 1.4.75 NEWS, 1.4.53 optional separate-key directive (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L2505-L2505
+- lighttpd 1.4.75 NEWS, 1.4.75 redirect-code default (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/NEWS#L6-L7
 
 - lighttpd 1.4.75 -f option (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/doc/lighttpd.8#L22-L23
 - lighttpd 1.4.75 -t and -tt options (checked October 2026): https://git.lighttpd.net/lighttpd/lighttpd1.4/src/tag/lighttpd-1.4.75/doc/lighttpd.8#L33-L37
