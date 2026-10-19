@@ -10,6 +10,7 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.262 | `gpu-clouds.md`: modal-shared: cite the Shared Endpoints exception. (M, M) | Done, #679. Cited the Modal Shared Endpoints page and the Endpoints page's Proxy tokens section for the always-required proxy token, removed the undocumented-exception statement, and labelled the cannot-be-made-public conclusion as the guide's assessment. |
 | 1.279 | `go.md`: tokens: pin Token environment handling; preserve the delegation of Token generation to p4.66. (M, M) | Done, #676. Cited Go go1.27.0 environment loading and unset-versus-empty semantics while preserving source-literal advice and token-generation delegation to authentication.md. |
 | 1.280 | `go.md`: mfa: cite the fronting identity layer used for MFA enforcement. (M, M) | Done, #676. Cited configured Cloudflare Access and Authelia MFA enforcement while retaining pquerna/otp v1.5.0 and the limits on default and deployed enforcement. |
 | 1.277 | `python.md`: password: cite bcrypt API and no-user-store conjunction. (M, M) | Done, #673. Cited the pinned argon2-cffi and bcrypt APIs, made local account storage conditional, and retained the framework-capability evidence limit and Django alternative. |
