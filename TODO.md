@@ -52,13 +52,12 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
-| 1.264 | `gpu-clouds.md`: remaining Vast auth implementation: trace the delegated portal-aio configurator and runtime consumers of OPEN_BUTTON_TOKEN, WEB_PASSWORD, ENABLE_AUTH, AUTH_EXCLUDE and PORTAL_CONFIG, including precedence and route enforcement; account-security sources for RunPod, Vast.ai, Lambda and Modal remain uncited. (M, M) | `[gap]` |
+| 1.264 | `gpu-clouds.md`: account-security sources for RunPod, Vast.ai, Lambda and Modal remain uncited. (M, M) | `[gap]` |
 | 1.266 | `paas.md`: remaining managed-tls/listener-port evidence: establish Fly automatic certificate renewal, Railway TLS termination component and listener address/injected-port contract, Heroku Cedar listener address, Vercel Functions listener/port contract, and resolve the ACM Private Spaces wildcard contradiction. (M, M) | `[gap]` |
 | 1.268 | `paas.md`: remaining https-redirect/verify-redirect evidence: establish Render's redirect status, Railway's HEAD redirect behaviour and POST status, and Heroku's redirect policy, configuration/application responsibility and status; cited header descriptions do not establish sanitization. (M, M) | `[gap]` |
 | 1.273 | `nodejs.md`: bind, remaining source gaps: establish Railway's listener address, injected port and TLS termination location, and Heroku Cedar's listener address. (M, M) | `[gap]` |
 | 1.276 | `python.md`: bind, remaining source gaps: establish Railway's listener address, injected port and TLS termination location, and Heroku Cedar's listener address. (M, M) | `[gap]` |
 | 1.283 | `agent-builders.md`: debug-remedy: establish whether the debug_permission change is available in the console UI; API remedy is already cited and UI availability is unestablished. (M, M) | `[gap]` |
-| 1.285 | `gitops-controllers.md`: verify-flux: cite curl `--data-binary` behaviour; the six historical GitOps facts remain delegated to row 2.28. (M, M) | `[gap]` |
 | 1.286 | `lighttpd.md`: pin lighttpd TLS/key introduction versions for the 1.4.56 protocol defaults and 1.4.53 separate-key syntax, and pin the redirect default transition at 1.4.75. (M, M) | `[gap]` |
 | 1.290 | `firebase-supabase.md`: local-guards: source the ShellCheck 0.11.0 and other shell/tool versions for the recorded authoring guard run. (M, M) | `[gap]` |
 | 1.291 | `pocketbase.md`: source-limits: trace the PocketBase CLI wrapper and Appwrite document read authorization and privileged/API-key requester classification; establish the `--dev` default. (M, M) | `[gap]` |
