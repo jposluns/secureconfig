@@ -760,11 +760,11 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docker: Official MongoDB Docker images (0a29f3374c7fa7c38cfe280363b754f898e0a5eb)
 - bind: MongoDB bind source (r8.0.32)
+- v8: MongoDB documentation (8.0)
+- docker: Official MongoDB Docker images (0a29f3374c7fa7c38cfe280363b754f898e0a5eb)
 - docs: MongoDB documentation (unknown)
 - shell: mongosh documentation (unknown)
-- v8: MongoDB documentation (8.0)
 - bash: Bash documentation (unknown)
 
 Claims (full source mapping in the JSON block below):
@@ -858,6 +858,43 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "8b2445dc1e8749610ca70401436e9371ff8e3717fc36d5980a8f76e7520e47ae",
   "components": {
+    "bind": {
+      "name": "MongoDB bind source",
+      "basis": "r8.0.32",
+      "sources": {
+        "s754f20f4ec55": "https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_base.cpp#L125-L132",
+        "s492eaf134763": "https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_server_helpers.cpp#L404-L410"
+      }
+    },
+    "v8": {
+      "name": "MongoDB documentation",
+      "basis": "8.0",
+      "sources": {
+        "s6f1f3f56616d": "https://www.mongodb.com/docs/v8.0/core/auditing/",
+        "s9e86819e68db": "https://www.mongodb.com/docs/v8.0/reference/audit-message/mongo/",
+        "seedf77aa3e73": "https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/",
+        "s9fcdc05982a6": "https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/",
+        "s1f3040d0fe4c": "https://www.mongodb.com/docs/v8.0/reference/parameters/",
+        "s4ffa7b653364": "https://www.mongodb.com/docs/v8.0/reference/program/mongod/",
+        "s3b7dabf8f41b": "https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/",
+        "see769a1a1e2b": "https://www.mongodb.com/docs/v8.0/reference/configuration-options/",
+        "sf88108a9609d": "https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/",
+        "sdd8ad5fe92b2": "https://www.mongodb.com/docs/v8.0/core/csfle/",
+        "s23650ad42657": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/",
+        "s2a52e3acf56a": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/automatic-encryption/",
+        "s2876af0be5e7": "https://www.mongodb.com/docs/v8.0/core/csfle/reference/csfle-options-clients/",
+        "se39572dfb8ad": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/",
+        "s1b94cb5e8305": "https://www.mongodb.com/docs/v8.0/release-notes/7.0/",
+        "s1d229cb03243": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/",
+        "se55ecf8e7f85": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/qe-options-clients/",
+        "s47b976aa1f45": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/",
+        "sd08442f8ff38": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/",
+        "sc9621a9507cc": "https://www.mongodb.com/docs/v8.0/administration/monitoring/",
+        "sb5d5b8d3dfa1": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/encryption-algorithms/",
+        "s43213b00956d": "https://www.mongodb.com/docs/v8.0/release-notes/8.0/",
+        "s09f3af996812": "https://www.mongodb.com/docs/v8.0/release-notes/8.0-compatibility/"
+      }
+    },
     "docker": {
       "name": "Official MongoDB Docker images",
       "basis": "0a29f3374c7fa7c38cfe280363b754f898e0a5eb",
@@ -869,14 +906,6 @@ Claims (full source mapping in the JSON block below):
         "sec084eaf4f47": "https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/Dockerfile#L122-L125",
         "s794426369608": "https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/windows/windowsservercore-ltsc2022/Dockerfile#L67",
         "sb1af26c1c65f": "https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L71-L87"
-      }
-    },
-    "bind": {
-      "name": "MongoDB bind source",
-      "basis": "r8.0.32",
-      "sources": {
-        "s754f20f4ec55": "https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_base.cpp#L125-L132",
-        "s492eaf134763": "https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_server_helpers.cpp#L404-L410"
       }
     },
     "docs": {
@@ -919,35 +948,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "unknown",
       "sources": {
         "s5ed633d4d270": "https://www.mongodb.com/docs/mongodb-shell/reference/options/"
-      }
-    },
-    "v8": {
-      "name": "MongoDB documentation",
-      "basis": "8.0",
-      "sources": {
-        "s6f1f3f56616d": "https://www.mongodb.com/docs/v8.0/core/auditing/",
-        "s9e86819e68db": "https://www.mongodb.com/docs/v8.0/reference/audit-message/mongo/",
-        "seedf77aa3e73": "https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/",
-        "s9fcdc05982a6": "https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/",
-        "s1f3040d0fe4c": "https://www.mongodb.com/docs/v8.0/reference/parameters/",
-        "s4ffa7b653364": "https://www.mongodb.com/docs/v8.0/reference/program/mongod/",
-        "s3b7dabf8f41b": "https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/",
-        "see769a1a1e2b": "https://www.mongodb.com/docs/v8.0/reference/configuration-options/",
-        "sf88108a9609d": "https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/",
-        "sdd8ad5fe92b2": "https://www.mongodb.com/docs/v8.0/core/csfle/",
-        "s23650ad42657": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/",
-        "s2a52e3acf56a": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/automatic-encryption/",
-        "s2876af0be5e7": "https://www.mongodb.com/docs/v8.0/core/csfle/reference/csfle-options-clients/",
-        "se39572dfb8ad": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/",
-        "s1b94cb5e8305": "https://www.mongodb.com/docs/v8.0/release-notes/7.0/",
-        "s1d229cb03243": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/",
-        "se55ecf8e7f85": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/qe-options-clients/",
-        "s47b976aa1f45": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/",
-        "sd08442f8ff38": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/",
-        "sc9621a9507cc": "https://www.mongodb.com/docs/v8.0/administration/monitoring/",
-        "sb5d5b8d3dfa1": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/encryption-algorithms/",
-        "s43213b00956d": "https://www.mongodb.com/docs/v8.0/release-notes/8.0/",
-        "s09f3af996812": "https://www.mongodb.com/docs/v8.0/release-notes/8.0-compatibility/"
       }
     },
     "bash": {

@@ -902,9 +902,9 @@ Components (recorded basis):
 
 - default: Kafka listener default (4.3.1)
 - docs: Kafka documentation (4.3)
-- kafka-design: Apache Kafka issue tracker and KIPs (unknown)
 - source: Kafka source (4.3.0)
 - legacy: Kafka legacy authorization (3.9)
+- kafka-design: Apache Kafka issue tracker and KIPs (unknown)
 - redpanda: Redpanda documentation (unknown)
 - openssl: OpenSSL documentation (3.5)
 
@@ -989,14 +989,6 @@ Claims (full source mapping in the JSON block below):
         "s4d4a39897877": "https://kafka.apache.org/43/operations/monitoring/"
       }
     },
-    "kafka-design": {
-      "name": "Apache Kafka issue tracker and KIPs",
-      "basis": "unknown",
-      "sources": {
-        "s2083e6339454": "https://issues.apache.org/jira/browse/KAFKA-15513",
-        "sdeef4a8b642f": "https://cwiki.apache.org/confluence/spaces/KAFKA/pages/195728007/KIP-801+Implement+an+Authorizer+that+stores+metadata+in+__cluster_metadata"
-      }
-    },
     "source": {
       "name": "Kafka source",
       "basis": "4.3.0",
@@ -1020,6 +1012,14 @@ Claims (full source mapping in the JSON block below):
       "basis": "3.9",
       "sources": {
         "se10d0fcd0e46": "https://kafka.apache.org/39/security/authorization-and-acls/"
+      }
+    },
+    "kafka-design": {
+      "name": "Apache Kafka issue tracker and KIPs",
+      "basis": "unknown",
+      "sources": {
+        "s2083e6339454": "https://issues.apache.org/jira/browse/KAFKA-15513",
+        "sdeef4a8b642f": "https://cwiki.apache.org/confluence/spaces/KAFKA/pages/195728007/KIP-801+Implement+an+Authorizer+that+stores+metadata+in+__cluster_metadata"
       }
     },
     "redpanda": {

@@ -1,6 +1,6 @@
 # Self-hosted chat and agent UIs: AnythingLLM, LobeChat, Chainlit, OpenHands
 
-Written against LobeHub v2.2.16, Docker CLI v27.5.1, Docker Compose v2.32.4, compose-go v2.4.7, Moby v27.5.1, and curl minimum write-out version 7.75.0; 7 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 30 claims, all reasoned from cited sources.
+Written against AnythingLLM documentation (no recorded version), LobeHub v2.2.16, Docker CLI v27.5.1, Docker Compose v2.32.4, compose-go v2.4.7, Moby v27.5.1, and curl minimum write-out version 7.75.0; 6 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 30 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

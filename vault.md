@@ -1173,12 +1173,12 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: Vault documentation (unknown)
 - run: Vault loopback run (2.1.1)
 - ha: Vault handler source (v1.21.0)
 - forward: Vault forwarding source (v1.20.0)
 - jwt-min: Vault JWT audience minimum (1.17)
 - wrap-history: Vault historical wrapping qualification (0.8)
+- docs: Vault documentation (unknown)
 - curl: curl minimum write-out version (7.75.0)
 
 Claims (full source mapping in the JSON block below):
@@ -1227,6 +1227,41 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "c0cc4cc8e447a97ecaf2d7468cc3b61f66ab601a32ecad3bd7ff8c892b95d894",
   "components": {
+    "run": {
+      "name": "Vault loopback run",
+      "basis": "2.1.1",
+      "sources": {
+        "sd936be5e4c41": "https://github.com/hashicorp/vault/blob/v2.1.1/builtin/credential/approle/backend.go"
+      }
+    },
+    "ha": {
+      "name": "Vault handler source",
+      "basis": "v1.21.0",
+      "sources": {
+        "s8c81f240066a": "https://raw.githubusercontent.com/hashicorp/vault/v1.21.0/http/handler.go"
+      }
+    },
+    "forward": {
+      "name": "Vault forwarding source",
+      "basis": "v1.20.0",
+      "sources": {
+        "sfdb628929b01": "https://raw.githubusercontent.com/hashicorp/vault/v1.20.0/http/logical.go"
+      }
+    },
+    "jwt-min": {
+      "name": "Vault JWT audience minimum",
+      "basis": "1.17",
+      "sources": {
+        "sf213104862ac": "https://developer.hashicorp.com/vault/docs/auth/jwt"
+      }
+    },
+    "wrap-history": {
+      "name": "Vault historical wrapping qualification",
+      "basis": "0.8",
+      "sources": {
+        "sa79f2fd07092": "https://developer.hashicorp.com/vault/docs/concepts/response-wrapping"
+      }
+    },
     "docs": {
       "name": "Vault documentation",
       "basis": "unknown",
@@ -1281,41 +1316,6 @@ Claims (full source mapping in the JSON block below):
         "sd032f083ae99": "https://developer.hashicorp.com/vault/docs/commands/operator/raft",
         "s70ec02f4b4d7": "https://developer.hashicorp.com/vault/docs/commands/status",
         "sdb9905c2f649": "https://developer.hashicorp.com/vault/docs/commands/token/lookup"
-      }
-    },
-    "run": {
-      "name": "Vault loopback run",
-      "basis": "2.1.1",
-      "sources": {
-        "sd936be5e4c41": "https://github.com/hashicorp/vault/blob/v2.1.1/builtin/credential/approle/backend.go"
-      }
-    },
-    "ha": {
-      "name": "Vault handler source",
-      "basis": "v1.21.0",
-      "sources": {
-        "s8c81f240066a": "https://raw.githubusercontent.com/hashicorp/vault/v1.21.0/http/handler.go"
-      }
-    },
-    "forward": {
-      "name": "Vault forwarding source",
-      "basis": "v1.20.0",
-      "sources": {
-        "sfdb628929b01": "https://raw.githubusercontent.com/hashicorp/vault/v1.20.0/http/logical.go"
-      }
-    },
-    "jwt-min": {
-      "name": "Vault JWT audience minimum",
-      "basis": "1.17",
-      "sources": {
-        "sf213104862ac": "https://developer.hashicorp.com/vault/docs/auth/jwt"
-      }
-    },
-    "wrap-history": {
-      "name": "Vault historical wrapping qualification",
-      "basis": "0.8",
-      "sources": {
-        "sa79f2fd07092": "https://developer.hashicorp.com/vault/docs/concepts/response-wrapping"
       }
     },
     "curl": {

@@ -1,6 +1,6 @@
 # Model servers: llama.cpp, vLLM, TGI, SGLang, Triton, and LM Studio
 
-Written against vLLM v0.30.0, TGI launcher/image v3.3.7, SGLang v0.5.20, and curl minimum write-out version 7.75.0; 8 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 75 claims: 3 demonstrated by a check that ran and 72 reasoned from cited sources.
+Written against llama.cpp (pinned to a commit), vLLM v0.30.0, TGI launcher/image v3.3.7, SGLang v0.5.20, and curl minimum write-out version 7.75.0; 7 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 75 claims: 3 demonstrated by a check that ran and 72 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -556,12 +556,12 @@ Components (recorded basis):
 
 - llama: llama.cpp (e0dff58475bc9ed68eedcb265ee998f2fcabb3b1)
 - vllm: vLLM (v0.30.0)
+- tgi: TGI launcher/image (v3.3.7)
+- sglang: SGLang (v0.5.20)
 - vllm-a: vLLM source (dee37d89115db4c94a820a79a78a7828e141c910)
 - vllm-b: vLLM second source (8c1557a79c539ffe82d004d2a0c8d7b5e71159ce)
-- tgi: TGI launcher/image (v3.3.7)
 - tgi-router: TGI router (24ee40d143d8d046039f12f76940a85886cbe152)
 - tgi-docs: TGI documentation (unknown)
-- sglang: SGLang (v0.5.20)
 - sglang-rolling: SGLang documentation (rolling) (unknown)
 - triton: Triton source (546a78766fb112128aa0b10a70c55f4f39c3b1df)
 - triton-rolling: Triton documentation (rolling) (unknown)
@@ -712,6 +712,34 @@ Claims (full source mapping in the JSON block below):
         "sed65b4428b70": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/executor/uniproc_executor.py#L77-L88"
       }
     },
+    "tgi": {
+      "name": "TGI launcher/image",
+      "basis": "v3.3.7",
+      "sources": {
+        "s6d442de48f37": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs#L769-L774",
+        "se7504fa5bd0c": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/Dockerfile#L147-L149",
+        "sbe4cfd078ceb": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/router/src/server.rs#L1906-L1910",
+        "s3f8623221ee5": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs"
+      }
+    },
+    "sglang": {
+      "name": "SGLang",
+      "basis": "v0.5.20",
+      "sources": {
+        "saf08ef6910b0": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L72-L73",
+        "sbf57dc2f54d2": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L155-L162",
+        "sa5df753aef88": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/auth.py#L145-L151",
+        "scce1a63feba8": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L397-L399",
+        "s0a4966847154": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/server_args_config_parser.py#L118-L187",
+        "s8ca6d030efbc": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/server_args_config_parser.py#L68-L83",
+        "scc4de2d1f4bc": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/environ.py",
+        "s50e55d90147c": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/engine.py#L1109",
+        "se29cdc6dade1": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L311-L325",
+        "sc1a3bbee2b6e": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L704-L711",
+        "sedc94f049a2d": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L732-L736",
+        "sd5cd1ab725c3": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/http_server.py#L818-L850"
+      }
+    },
     "vllm-a": {
       "name": "vLLM source",
       "basis": "dee37d89115db4c94a820a79a78a7828e141c910",
@@ -739,16 +767,6 @@ Claims (full source mapping in the JSON block below):
         "se5d922e084ed": "https://github.com/vllm-project/vllm/blob/8c1557a79c539ffe82d004d2a0c8d7b5e71159ce/vllm/envs.py#L801"
       }
     },
-    "tgi": {
-      "name": "TGI launcher/image",
-      "basis": "v3.3.7",
-      "sources": {
-        "s6d442de48f37": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs#L769-L774",
-        "se7504fa5bd0c": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/Dockerfile#L147-L149",
-        "sbe4cfd078ceb": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/router/src/server.rs#L1906-L1910",
-        "s3f8623221ee5": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs"
-      }
-    },
     "tgi-router": {
       "name": "TGI router",
       "basis": "24ee40d143d8d046039f12f76940a85886cbe152",
@@ -762,24 +780,6 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s07efbedb395d": "https://github.com/huggingface/text-generation-inference",
         "sf21d69ac884f": "https://huggingface.co/docs/text-generation-inference/reference/launcher"
-      }
-    },
-    "sglang": {
-      "name": "SGLang",
-      "basis": "v0.5.20",
-      "sources": {
-        "saf08ef6910b0": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L72-L73",
-        "sbf57dc2f54d2": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L155-L162",
-        "sa5df753aef88": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/auth.py#L145-L151",
-        "scce1a63feba8": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L397-L399",
-        "s0a4966847154": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/server_args_config_parser.py#L118-L187",
-        "s8ca6d030efbc": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/server_args_config_parser.py#L68-L83",
-        "scc4de2d1f4bc": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/environ.py",
-        "s50e55d90147c": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/engine.py#L1109",
-        "se29cdc6dade1": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L311-L325",
-        "sc1a3bbee2b6e": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L704-L711",
-        "sedc94f049a2d": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L732-L736",
-        "sd5cd1ab725c3": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/http_server.py#L818-L850"
       }
     },
     "sglang-rolling": {

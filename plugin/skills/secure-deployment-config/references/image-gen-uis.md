@@ -286,13 +286,13 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 Components (recorded basis):
 
 - comfy: ComfyUI (v0.37.0)
+- webui: AUTOMATIC1111 (v1.10.1)
+- fooocus: Fooocus (v2.5.5)
 - comfy-rolling: ComfyUI documentation (rolling) (unknown)
 - comfy-registry-rolling: ComfyUI Registry documentation (rolling) (unknown)
 - comfy-advisory: ComfyUI January 2025 security advisory (unknown)
 - comfy-manager-advisory: ComfyUI-Manager security advisory (unknown)
-- webui: AUTOMATIC1111 (v1.10.1)
 - invoke-rolling: InvokeAI documentation (rolling) (unknown)
-- fooocus: Fooocus (v2.5.5)
 - gradio: Gradio (3.41.2)
 - engine: Docker Engine minimum loopback boundary (28.0)
 - compose: Compose Specification (914ec15d1fa4)
@@ -345,6 +345,55 @@ Claims (full source mapping in the JSON block below):
         "sbd178d58a098": "https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64"
       }
     },
+    "webui": {
+      "name": "AUTOMATIC1111",
+      "basis": "v1.10.1",
+      "sources": {
+        "s42a42cca605b": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113",
+        "s0195caed3cb9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L114-L139",
+        "sd5f3496b66aa": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L70-L90",
+        "s82803810022a": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L6",
+        "s914278bcbf70": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_cmd_options.py#L7-L15",
+        "s66a044b7666c": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L199-L205",
+        "sb59e633133f6": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L274-L284",
+        "s57d98254f09d": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L689-L690",
+        "s256946a60534": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/models.py#L221-L231",
+        "s5b2e23d1781d": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/paths_internal.py#L12-L13",
+        "sfa27f3a86456": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/launch_utils.py#L463-L464",
+        "sebe977aeb6f3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/sysinfo.py#L130-L148",
+        "sc9117bccdef5": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui.py#L1223-L1232",
+        "s370f032e0497": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L10-L16",
+        "saf69abeba189": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/requirements_versions.txt#L11",
+        "sf3f6d5cafad0": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_init.py#L17-L24",
+        "sbfd3d01539c3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui_loadsave.py#L14-L73",
+        "s7b714092036e": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L77-L78",
+        "s23a49b75b6a1": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L79-L82",
+        "s9a93a7fe8617": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L47",
+        "s72ec61fe38c9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L51"
+      }
+    },
+    "fooocus": {
+      "name": "Fooocus",
+      "basis": "v2.5.5",
+      "sources": {
+        "s38232435e83d": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301",
+        "s63ce6f5a8fa9": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/ldm_patched/modules/args_parser.py#L36",
+        "sca9aed72a579": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/args_manager.py#L43-L47",
+        "s456b2a263c88": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L13-L14",
+        "s2eb7ac87bb1f": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/webui.py#L1120-L1128",
+        "s35ce6e657cb8": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entry_with_update.py#L16-L46",
+        "s6157fae93872": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/Dockerfile#L17-L29",
+        "s5c792b662186": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entrypoint.sh#L33",
+        "s79380d927e3b": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker-compose.yml#L6-L11",
+        "s431336fa6375": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker.md#L19-L78",
+        "scb18d8c421f5": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/.dockerignore#L53",
+        "s170da4e26268": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L8-L16",
+        "s21eb28118a14": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L19-L34",
+        "sfcc14904297e": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L37-L41",
+        "s2ef62a4cd853": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L7-L9",
+        "sc90edaf29ac7": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/requirements_versions.txt#L13"
+      }
+    },
     "comfy-rolling": {
       "name": "ComfyUI documentation (rolling)",
       "basis": "unknown",
@@ -373,33 +422,6 @@ Claims (full source mapping in the JSON block below):
         "s4ce66189c3c9": "https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7"
       }
     },
-    "webui": {
-      "name": "AUTOMATIC1111",
-      "basis": "v1.10.1",
-      "sources": {
-        "s42a42cca605b": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113",
-        "s0195caed3cb9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L114-L139",
-        "sd5f3496b66aa": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L70-L90",
-        "s82803810022a": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L6",
-        "s914278bcbf70": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_cmd_options.py#L7-L15",
-        "s66a044b7666c": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L199-L205",
-        "sb59e633133f6": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L274-L284",
-        "s57d98254f09d": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L689-L690",
-        "s256946a60534": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/models.py#L221-L231",
-        "s5b2e23d1781d": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/paths_internal.py#L12-L13",
-        "sfa27f3a86456": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/launch_utils.py#L463-L464",
-        "sebe977aeb6f3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/sysinfo.py#L130-L148",
-        "sc9117bccdef5": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui.py#L1223-L1232",
-        "s370f032e0497": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L10-L16",
-        "saf69abeba189": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/requirements_versions.txt#L11",
-        "sf3f6d5cafad0": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_init.py#L17-L24",
-        "sbfd3d01539c3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui_loadsave.py#L14-L73",
-        "s7b714092036e": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L77-L78",
-        "s23a49b75b6a1": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L79-L82",
-        "s9a93a7fe8617": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L47",
-        "s72ec61fe38c9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L51"
-      }
-    },
     "invoke-rolling": {
       "name": "InvokeAI documentation (rolling)",
       "basis": "unknown",
@@ -407,28 +429,6 @@ Claims (full source mapping in the JSON block below):
         "s23a1a14da479": "https://invoke.ai/features/multi-user-mode/admin-guide/",
         "s4c6175f3800d": "https://invoke.ai/features/multi-user-mode/api-guide/",
         "sb0dc1b679ef2": "https://invoke.ai/configuration/invokeai-yaml/"
-      }
-    },
-    "fooocus": {
-      "name": "Fooocus",
-      "basis": "v2.5.5",
-      "sources": {
-        "s38232435e83d": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301",
-        "s63ce6f5a8fa9": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/ldm_patched/modules/args_parser.py#L36",
-        "sca9aed72a579": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/args_manager.py#L43-L47",
-        "s456b2a263c88": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L13-L14",
-        "s2eb7ac87bb1f": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/webui.py#L1120-L1128",
-        "s35ce6e657cb8": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entry_with_update.py#L16-L46",
-        "s6157fae93872": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/Dockerfile#L17-L29",
-        "s5c792b662186": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entrypoint.sh#L33",
-        "s79380d927e3b": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker-compose.yml#L6-L11",
-        "s431336fa6375": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker.md#L19-L78",
-        "scb18d8c421f5": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/.dockerignore#L53",
-        "s170da4e26268": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L8-L16",
-        "s21eb28118a14": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L19-L34",
-        "sfcc14904297e": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L37-L41",
-        "s2ef62a4cd853": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L7-L9",
-        "sc90edaf29ac7": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/requirements_versions.txt#L13"
       }
     },
     "gradio": {
