@@ -1,193 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-12",
-  "documentation_checked": "2026-10",
-  "body_sha256": "98bf2bbbb774a4c7e71ec7f07b9035b6127771baa4c953d0b35d251f59f0b34c",
-  "components": {
-    "meili": {
-      "name": "Meilisearch release reference",
-      "basis": "v1.53.2",
-      "sources": {
-        "sbed426856353": "https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L95-L97",
-        "sa5636634c0e5": "https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L534-L560",
-        "sb9cb7736ecb6": "https://raw.githubusercontent.com/meilisearch/meilisearch/v1.53.2/Dockerfile"
-      }
-    },
-    "typesense": {
-      "name": "Typesense",
-      "basis": "30.2",
-      "sources": {
-        "s9671c6e07c7f": "https://typesense.org/docs/30.2/api/server-configuration.html",
-        "s2c4b6bcfaf53": "https://typesense.org/docs/30.2/api/api-keys.html",
-        "sa9d1feeb6147": "https://typesense.org/docs/30.2/api/vector-search.html",
-        "s4a43ef5aa4f9": "https://raw.githubusercontent.com/typesense/typesense/v30.2/src/http_server.cpp",
-        "s29b60ad510db": "https://raw.githubusercontent.com/typesense/typesense/v30.2/src/core_api.cpp"
-      }
-    },
-    "curl": {
-      "name": "curl minimum",
-      "basis": "7.75.0",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
-      }
-    },
-    "nc": {
-      "name": "OpenBSD-compatible netcat",
-      "basis": "unknown",
-      "sources": {
-        "s096a08149c92": "https://man.openbsd.org/nc"
-      }
-    },
-    "meili-docs": {
-      "name": "Meilisearch documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "sb0775887509a": "https://www.meilisearch.com/docs/resources/self_hosting/security/master_api_keys",
-        "s9ea7561d005d": "https://www.meilisearch.com/docs/capabilities/security/advanced/tenant_token_payload",
-        "s26bf028aa235": "https://www.meilisearch.com/docs/resources/self_hosting/security/http2_ssl",
-        "s5a14ae3a4b54": "https://www.meilisearch.com/docs/resources/self_hosting/configuration/reference",
-        "s733eae6c1299": "https://www.meilisearch.com/docs/resources/self_hosting/data_backup/overview",
-        "s034b9614262f": "https://www.meilisearch.com/docs/capabilities/indexing/how_to/edit_documents_with_functions"
-      }
-    },
-    "typesense-docs": {
-      "name": "Typesense documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s6fb918104d58": "https://typesense.org/docs/guide/data-access-control.html",
-        "s02ce5458d664": "https://typesense.org/docs/guide/backups.html"
-      }
-    },
-    "meili-advisory": {
-      "name": "Meilisearch SSRF advisory",
-      "basis": "unknown",
-      "sources": {
-        "sb8b81d3f76ff": "https://www.meilisearch.com/blog/CVE-update-Jan-2026"
-      }
-    },
-    "caddy": {
-      "name": "Caddy",
-      "basis": "v2.11.4",
-      "sources": {
-        "sb0b62262df7b": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88",
-        "sb4be8e0cfe75": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L347-L381",
-        "sd11645c28457": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L459-L476",
-        "s9702adeb8c11": "https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go"
-      }
-    },
-    "git-grep": {
-      "name": "Git grep manual",
-      "basis": "2.55.0",
-      "sources": {
-        "se138ed3614b1": "https://git-scm.com/docs/git-grep"
-      }
-    },
-    "git-rev-list": {
-      "name": "Git rev-list manual",
-      "basis": "2.56.0",
-      "sources": {
-        "sa551f03eb541": "https://git-scm.com/docs/git-rev-list"
-      }
-    },
-    "git": {
-      "name": "Git manual",
-      "basis": "2.56.0",
-      "sources": {
-        "s1d8fe6ad85ac": "https://git-scm.com/docs/git"
-      }
-    }
-  },
-  "claims": {
-    "meili-mode": {"text": "Development is keyless unless MEILI_MASTER_KEY is set; production requires a master key of at least 16 bytes.", "components": ["meili-docs"], "sources": ["meili-docs:sb0775887509a"], "status": "REASONED"},
-    "meili-bind": {"text": "Binary defaults localhost:7700 unless implicit config.toml overrides it; environment and CLI override the file.", "components": ["meili"], "sources": ["meili:sbed426856353", "meili:sa5636634c0e5"], "status": "REASONED"},
-    "meili-image": {"text": "Official image sets MEILI_HTTP_ADDR=0.0.0.0:7700; publish only host loopback or use an unpublished private proxy network.", "components": ["meili"], "sources": ["meili:sb9cb7736ecb6"], "status": "REASONED"},
-    "meili-keys": {"text": "Four default keys and their permissions are version-dependent; inspect GET /keys and keep admin, read-only admin and master keys server-side.", "components": ["meili-docs"], "sources": ["meili-docs:sb0775887509a"], "status": "REASONED"},
-    "meili-tenant": {"text": "For confidential search, restrict indexes or issue tenant JWTs with enforced rules; keep the signing key server-side and set exp no later than parent expiry.", "components": ["meili-docs"], "sources": ["meili-docs:s9ea7561d005d", "meili-docs:sb0775887509a"], "status": "REASONED"},
-    "meili-tls": {"text": "Native HTTPS uses ssl-cert-path and ssl-key-path; the proxy pattern confines plaintext locally and verifies TLS across machines.", "components": ["meili-docs"], "sources": ["meili-docs:s26bf028aa235"], "status": "REASONED"},
-    "typesense-bootstrap": {"text": "Bootstrap api-key is required and controls all endpoints/data; supply it through TYPESENSE_API_KEY or a protected file and use a revocable operational key routinely.", "components": ["typesense", "typesense-docs"], "sources": ["typesense:s9671c6e07c7f", "typesense-docs:s6fb918104d58"], "status": "REASONED"},
-    "typesense-api": {"text": "API defaults 0.0.0.0:8108; set api-address=127.0.0.1 and api-port=8108 for a same-host proxy.", "components": ["typesense"], "sources": ["typesense:s9671c6e07c7f"], "status": "REASONED"},
-    "typesense-peer": {"text": "Separate peering defaults to 8107; select a private address and admit only cluster members.", "components": ["typesense"], "sources": ["typesense:s9671c6e07c7f"], "status": "REASONED"},
-    "typesense-scope": {"text": "Parent search key uses documents:search and named/regex collections; derive browser keys with filter_by and field restrictions, keeping the parent server-side.", "components": ["typesense", "typesense-docs"], "sources": ["typesense:s2c4b6bcfaf53", "typesense-docs:s6fb918104d58"], "status": "REASONED"},
-    "typesense-expiry": {"text": "Set expires_at on browser keys no later than parent expiry; collection scope alone does not isolate JOIN data.", "components": ["typesense-docs"], "sources": ["typesense-docs:s6fb918104d58"], "status": "REASONED"},
-    "typesense-tls": {"text": "Self-managed native TLS uses ssl-certificate and ssl-certificate-key; cloud terminates TLS; restrict API and peering access independently.", "components": ["typesense"], "sources": ["typesense:s9671c6e07c7f"], "status": "REASONED"},
-    "admin-surface": {"text": "Keep management UIs private or behind MFA; engine bearer keys are not a second factor and Meilisearch production disables the development preview.", "components": ["meili-docs", "typesense-docs"], "sources": ["meili-docs:s5a14ae3a4b54", "typesense-docs:s6fb918104d58"], "status": "REASONED"},
-    "backup": {"text": "Protect and encrypt dumps, snapshots, volumes and backups; Typesense backs up snapshot output rather than the live directory and restores privately with auth.", "components": ["meili-docs", "typesense-docs"], "sources": ["meili-docs:s733eae6c1299", "typesense-docs:s02ce5458d664"], "status": "REASONED"},
-    "meili-egress": {"text": "Upgrade Meilisearch v1.8 through v1.34.0 for SSRF fixed in v1.34.1; avoid allowed-IP-networks=any and restrict remote/webhook administration and egress.", "components": ["meili-docs", "meili-advisory"], "sources": ["meili-advisory:sb8b81d3f76ff", "meili-docs:s5a14ae3a4b54"], "status": "REASONED"},
-    "typesense-egress": {"text": "Remote embeddings send provider credentials outbound; restrict destinations and protect those secrets.", "components": ["typesense"], "sources": ["typesense:sa9d1feeb6147"], "status": "REASONED"},
-    "meili-functions": {"text": "Leave experimental document-editing functions disabled unless needed; Rhai transformations belong to trusted workloads, not arbitrary OS execution.", "components": ["meili-docs"], "sources": ["meili-docs:s034b9614262f"], "status": "REASONED"},
-    "verify-meili-auth": {"text": "Loopback keyless search returned 200; protected search returned anonymous 401 and keyed 200 with the fixture.", "components": ["meili-docs"], "sources": ["meili-docs:sb0775887509a"], "status": "DEMONSTRATED", "evidence": "keyless Meilisearch returned the fixture to an anonymous search with `200`, so the authentication row printed `FAIL: unexpected HTTP status`: the exposed state.", "verify": [1]},
-    "verify-meili-write": {"text": "Search key was refused index creation with 403; Default Admin received 202 and the task succeeded.", "components": ["meili-docs"], "sources": ["meili-docs:sb0775887509a"], "status": "DEMONSTRATED", "evidence": "the write row got `403` `invalid_api_key` for the search key and `202` for the Default Admin API Key, whose task then reported `succeeded`. Started with", "verify": [1]},
-    "verify-meili-production": {"text": "Production startup without a master key was refused in the recorded run.", "components": ["meili-docs"], "sources": ["meili-docs:sb0775887509a"], "status": "DEMONSTRATED", "evidence": "Meilisearch refused to start: \"You must provide a master key to secure your instance in a production environment\"."},
-    "verify-typesense-auth": {"text": "Loopback Typesense refused anonymous search with 401 and returned the fixture with a collection-scoped key and 200.", "components": ["typesense", "typesense-docs"], "sources": ["typesense-docs:s6fb918104d58", "typesense:s4a43ef5aa4f9"], "status": "DEMONSTRATED", "evidence": "answered the authentication row with `401` anonymously and `200` on a collection-scoped search key", "verify": [1]},
-    "verify-typesense-write": {"text": "Search-key collection creation returned 401; bootstrap creation returned 201.", "components": ["typesense"], "sources": ["typesense:s4a43ef5aa4f9", "typesense:s29b60ad510db"], "status": "DEMONSTRATED", "evidence": "the write row with `401` for that key and `201` for the bootstrap key.", "verify": [1]},
-    "verify-rotation": {"text": "Disclosed Typesense operational key succeeded before deletion, failed after deletion, and its replacement succeeded.", "components": ["typesense"], "sources": ["typesense:s2c4b6bcfaf53"], "status": "DEMONSTRATED", "evidence": "A disclosed operational key got `200` before rotation, `401` after it was deleted, and its replacement `200`. A Meilisearch tenant token", "verify": [1]},
-    "verify-tenant": {"text": "Tenant token and scoped-key filters resisted other-tenant overrides while parent controls returned both fixtures.", "components": ["meili-docs", "typesense-docs"], "sources": ["meili-docs:s9ea7561d005d", "typesense-docs:s6fb918104d58"], "status": "DEMONSTRATED", "evidence": "A Meilisearch tenant token filtered to one tenant returned only that tenant's fixture, and a request adding a filter for the other tenant returned nothing, while the parent key returned both; a Typesense scoped key embedding `filter_by` behaved the same way under an overriding `filter_by`. For JOINs,", "verify": [1]},
-    "verify-join": {"text": "Collection-scoped key leaked a joined billing field; an embedded exclude_fields restriction removed it.", "components": ["typesense-docs"], "sources": ["typesense-docs:s6fb918104d58"], "status": "DEMONSTRATED", "evidence": "For JOINs, a Typesense key scoped to collection `products` was refused a direct search of `companies` with `401`, but a `products` search with `include_fields=$companies(billing)` returned the joined company's billing field: collection scoping alone did not isolate joined data. A scoped key embedding `exclude_fields=$companies(billing)` returned the same query without it.", "verify": [1]},
-    "verify-proxy": {"text": "Recorded same-host Caddy TLS proxy preserved anonymous/keyed auth distinctions for both engines; no external isolation is established.", "components": ["meili-docs", "typesense-docs", "caddy"], "sources": ["meili-docs:sb0775887509a", "typesense-docs:s6fb918104d58", "caddy:sb0b62262df7b", "caddy:sb4be8e0cfe75", "caddy:sd11645c28457", "caddy:s9702adeb8c11"], "status": "DEMONSTRATED", "evidence": "Behind the same proxy, keyless Meilisearch made the block print `FAIL: unexpected HTTP status` on an anonymous `200`, the exposed state, and Typesense with its plaintext backend on `127.0.0.1:8108` gave `401` anonymously then `200` on a collection-scoped search key.", "verify": [1]},
-    "verify-request": {"text": "Paired requests require Bash, curl 7.75.0+, verified HTTPS and identical origin/method/path/body; inspect engine JSON, not status alone.", "components": ["curl", "meili-docs", "typesense-docs"], "sources": ["curl:s2b2686afaf41", "meili-docs:sb0775887509a", "typesense-docs:s6fb918104d58"], "status": "REASONED"},
-    "verify-external": {"text": "Inventory actual listeners, publications and IPv4/IPv6 rules; external TCP success fails, while refusal/timeout needs live private controls and policy evidence.", "components": ["meili", "typesense", "nc"], "sources": ["meili:sb9cb7736ecb6", "typesense:s9671c6e07c7f", "nc:s096a08149c92"], "status": "REASONED", "verify": [2]},
-    "verify-local-tcp": {"text": "Recorded netcat loopback reachable/refused shapes returned FAIL/exit 1 and INCONCLUSIVE/exit 2 respectively; external reachability remains unobserved.", "components": ["nc"], "sources": ["nc:s096a08149c92"], "status": "DEMONSTRATED", "evidence": "The block against 127.0.0.1, where the engines listened, printed `FAIL: TCP 7700 is reachable` (exit `1`), the reachable shape; against 127.0.0.2, where nothing listens, each port's `Connection refused` printed `INCONCLUSIVE` and the block ended with exit `2`, the refused shape."},
-    "verify-bundle": {"text": "Repository credential scanner searches literal output and local commit-tree content; regression fixtures ran, while real-client-build controls remain unobserved.", "components": ["meili-docs", "typesense-docs", "git-grep", "git-rev-list", "git"], "sources": ["meili-docs:sb0775887509a", "typesense-docs:s6fb918104d58", "git-grep:se138ed3614b1", "git-rev-list:sa551f03eb541", "git:s1d8fe6ad85ac"], "status": "REASONED", "verify": [3]}
-  }
-}
----
 # Search engines for RAG: Meilisearch and Typesense
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Meilisearch release reference v1.53.2, Typesense 30.2, Caddy v2.11.4, curl minimum 7.75.0, Git grep manual 2.55.0, Git rev-list manual 2.56.0, and Git manual 2.56.0; 4 further sources carry no recorded version. Metadata reviewed 2026-10-12; documentation checked October 2026. The guide records 30 claims: 10 demonstrated by a check that ran and 20 reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-12; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- meili: Meilisearch release reference (v1.53.2)
-- typesense: Typesense (30.2)
-- curl: curl minimum (7.75.0)
-- nc: OpenBSD-compatible netcat (unknown)
-- meili-docs: Meilisearch documentation (rolling) (unknown)
-- typesense-docs: Typesense documentation (rolling) (unknown)
-- meili-advisory: Meilisearch SSRF advisory (unknown)
-- caddy: Caddy (v2.11.4)
-- git-grep: Git grep manual (2.55.0)
-- git-rev-list: Git rev-list manual (2.56.0)
-- git: Git manual (2.56.0)
-
-Claims (full source mapping in the front matter):
-
-- meili-mode (REASONED; meili-docs): Development is keyless unless MEILI_MASTER_KEY is set; production requires a master key of at least 16 bytes.
-- meili-bind (REASONED; meili): Binary defaults localhost:7700 unless implicit config.toml overrides it; environment and CLI override the file.
-- meili-image (REASONED; meili): Official image sets MEILI_HTTP_ADDR=0.0.0.0:7700; publish only host loopback or use an unpublished private proxy network.
-- meili-keys (REASONED; meili-docs): Four default keys and their permissions are version-dependent; inspect GET /keys and keep admin, read-only admin and master keys server-side.
-- meili-tenant (REASONED; meili-docs): For confidential search, restrict indexes or issue tenant JWTs with enforced rules; keep the signing key server-side and set exp no later than parent expiry.
-- meili-tls (REASONED; meili-docs): Native HTTPS uses ssl-cert-path and ssl-key-path; the proxy pattern confines plaintext locally and verifies TLS across machines.
-- typesense-bootstrap (REASONED; typesense, typesense-docs): Bootstrap api-key is required and controls all endpoints/data; supply it through TYPESENSE_API_KEY or a protected file and use a revocable operational key routinely.
-- typesense-api (REASONED; typesense): API defaults 0.0.0.0:8108; set api-address=127.0.0.1 and api-port=8108 for a same-host proxy.
-- typesense-peer (REASONED; typesense): Separate peering defaults to 8107; select a private address and admit only cluster members.
-- typesense-scope (REASONED; typesense, typesense-docs): Parent search key uses documents:search and named/regex collections; derive browser keys with filter_by and field restrictions, keeping the parent server-side.
-- typesense-expiry (REASONED; typesense-docs): Set expires_at on browser keys no later than parent expiry; collection scope alone does not isolate JOIN data.
-- typesense-tls (REASONED; typesense): Self-managed native TLS uses ssl-certificate and ssl-certificate-key; cloud terminates TLS; restrict API and peering access independently.
-- admin-surface (REASONED; meili-docs, typesense-docs): Keep management UIs private or behind MFA; engine bearer keys are not a second factor and Meilisearch production disables the development preview.
-- backup (REASONED; meili-docs, typesense-docs): Protect and encrypt dumps, snapshots, volumes and backups; Typesense backs up snapshot output rather than the live directory and restores privately with auth.
-- meili-egress (REASONED; meili-docs, meili-advisory): Upgrade Meilisearch v1.8 through v1.34.0 for SSRF fixed in v1.34.1; avoid allowed-IP-networks=any and restrict remote/webhook administration and egress.
-- typesense-egress (REASONED; typesense): Remote embeddings send provider credentials outbound; restrict destinations and protect those secrets.
-- meili-functions (REASONED; meili-docs): Leave experimental document-editing functions disabled unless needed; Rhai transformations belong to trusted workloads, not arbitrary OS execution.
-- verify-meili-auth (DEMONSTRATED; meili-docs): Loopback keyless search returned 200; protected search returned anonymous 401 and keyed 200 with the fixture.
-- verify-meili-write (DEMONSTRATED; meili-docs): Search key was refused index creation with 403; Default Admin received 202 and the task succeeded.
-- verify-meili-production (DEMONSTRATED; meili-docs): Production startup without a master key was refused in the recorded run.
-- verify-typesense-auth (DEMONSTRATED; typesense, typesense-docs): Loopback Typesense refused anonymous search with 401 and returned the fixture with a collection-scoped key and 200.
-- verify-typesense-write (DEMONSTRATED; typesense): Search-key collection creation returned 401; bootstrap creation returned 201.
-- verify-rotation (DEMONSTRATED; typesense): Disclosed Typesense operational key succeeded before deletion, failed after deletion, and its replacement succeeded.
-- verify-tenant (DEMONSTRATED; meili-docs, typesense-docs): Tenant token and scoped-key filters resisted other-tenant overrides while parent controls returned both fixtures.
-- verify-join (DEMONSTRATED; typesense-docs): Collection-scoped key leaked a joined billing field; an embedded exclude_fields restriction removed it.
-- verify-proxy (DEMONSTRATED; meili-docs, typesense-docs, caddy): Recorded same-host Caddy TLS proxy preserved anonymous/keyed auth distinctions for both engines; no external isolation is established.
-- verify-request (REASONED; curl, meili-docs, typesense-docs): Paired requests require Bash, curl 7.75.0+, verified HTTPS and identical origin/method/path/body; inspect engine JSON, not status alone.
-- verify-external (REASONED; meili, typesense, nc): Inventory actual listeners, publications and IPv4/IPv6 rules; external TCP success fails, while refusal/timeout needs live private controls and policy evidence.
-- verify-local-tcp (DEMONSTRATED; nc): Recorded netcat loopback reachable/refused shapes returned FAIL/exit 1 and INCONCLUSIVE/exit 2 respectively; external reachability remains unobserved.
-- verify-bundle (REASONED; meili-docs, typesense-docs, git-grep, git-rev-list, git): Repository credential scanner searches literal output and local commit-tree content; regression fixtures ran, while real-client-build controls remain unobserved.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Both back RAG pipelines and site search. Meilisearch ships a keyless development mode meant for a laptop and answers unauthenticated until you set a master key; Typesense requires an operator-supplied bootstrap key from the moment it starts, with no keyless mode. Meilisearch's default admin key is full access except key management, and Typesense's bootstrap key is admin over all endpoints and data; ship an unprotected dev-mode instance, or leak either engine's privileged key, and the whole corpus, every document your RAG pipeline embedded, is readable and writable by whoever has it.
 
@@ -432,3 +247,214 @@ Version scope: Typesense 30.2; Meilisearch current unversioned documentation che
 - Git grep manual (page last updated in 2.55.0; fixed strings, pattern files, binary text, names only, no-index and tree operands; supplied excerpts checked October 2026): https://git-scm.com/docs/git-grep
 - Git rev-list manual (page last updated in 2.56.0; all refs, HEAD and reflogs; supplied excerpts checked October 2026): https://git-scm.com/docs/git-rev-list
 - Git manual (page last updated in 2.56.0; --no-pager disables paging; supplied excerpt checked October 2026): https://git-scm.com/docs/git
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/search-engines.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- meili: Meilisearch release reference (v1.53.2)
+- typesense: Typesense (30.2)
+- meili-docs: Meilisearch documentation (rolling) (unknown)
+- meili-advisory: Meilisearch SSRF advisory (unknown)
+- typesense-docs: Typesense documentation (rolling) (unknown)
+- caddy: Caddy (v2.11.4)
+- curl: curl minimum (7.75.0)
+- nc: OpenBSD-compatible netcat (unknown)
+- git-grep: Git grep manual (2.55.0)
+- git-rev-list: Git rev-list manual (2.56.0)
+- git: Git manual (2.56.0)
+
+Claims (full source mapping in the JSON block below):
+
+- meili-mode (REASONED; meili-docs): Development is keyless unless MEILI_MASTER_KEY is set; production requires a master key of at least 16 bytes.
+- meili-bind (REASONED; meili): Binary defaults localhost:7700 unless implicit config.toml overrides it; environment and CLI override the file.
+- meili-image (REASONED; meili): Official image sets MEILI_HTTP_ADDR=0.0.0.0:7700; publish only host loopback or use an unpublished private proxy network.
+- meili-keys (REASONED; meili-docs): Four default keys and their permissions are version-dependent; inspect GET /keys and keep admin, read-only admin and master keys server-side.
+- meili-tenant (REASONED; meili-docs): For confidential search, restrict indexes or issue tenant JWTs with enforced rules; keep the signing key server-side and set exp no later than parent expiry.
+- meili-tls (REASONED; meili-docs): Native HTTPS uses ssl-cert-path and ssl-key-path; the proxy pattern confines plaintext locally and verifies TLS across machines.
+- typesense-bootstrap (REASONED; typesense, typesense-docs): Bootstrap api-key is required and controls all endpoints/data; supply it through TYPESENSE_API_KEY or a protected file and use a revocable operational key routinely.
+- typesense-api (REASONED; typesense): API defaults 0.0.0.0:8108; set api-address=127.0.0.1 and api-port=8108 for a same-host proxy.
+- typesense-peer (REASONED; typesense): Separate peering defaults to 8107; select a private address and admit only cluster members.
+- typesense-scope (REASONED; typesense, typesense-docs): Parent search key uses documents:search and named/regex collections; derive browser keys with filter_by and field restrictions, keeping the parent server-side.
+- typesense-expiry (REASONED; typesense-docs): Set expires_at on browser keys no later than parent expiry; collection scope alone does not isolate JOIN data.
+- typesense-tls (REASONED; typesense): Self-managed native TLS uses ssl-certificate and ssl-certificate-key; cloud terminates TLS; restrict API and peering access independently.
+- admin-surface (REASONED; meili-docs, typesense-docs): Keep management UIs private or behind MFA; engine bearer keys are not a second factor and Meilisearch production disables the development preview.
+- backup (REASONED; meili-docs, typesense-docs): Protect and encrypt dumps, snapshots, volumes and backups; Typesense backs up snapshot output rather than the live directory and restores privately with auth.
+- meili-egress (REASONED; meili-docs, meili-advisory): Upgrade Meilisearch v1.8 through v1.34.0 for SSRF fixed in v1.34.1; avoid allowed-IP-networks=any and restrict remote/webhook administration and egress.
+- typesense-egress (REASONED; typesense): Remote embeddings send provider credentials outbound; restrict destinations and protect those secrets.
+- meili-functions (REASONED; meili-docs): Leave experimental document-editing functions disabled unless needed; Rhai transformations belong to trusted workloads, not arbitrary OS execution.
+- verify-meili-auth (DEMONSTRATED; meili-docs): Loopback keyless search returned 200; protected search returned anonymous 401 and keyed 200 with the fixture.
+- verify-meili-write (DEMONSTRATED; meili-docs): Search key was refused index creation with 403; Default Admin received 202 and the task succeeded.
+- verify-meili-production (DEMONSTRATED; meili-docs): Production startup without a master key was refused in the recorded run.
+- verify-typesense-auth (DEMONSTRATED; typesense, typesense-docs): Loopback Typesense refused anonymous search with 401 and returned the fixture with a collection-scoped key and 200.
+- verify-typesense-write (DEMONSTRATED; typesense): Search-key collection creation returned 401; bootstrap creation returned 201.
+- verify-rotation (DEMONSTRATED; typesense): Disclosed Typesense operational key succeeded before deletion, failed after deletion, and its replacement succeeded.
+- verify-tenant (DEMONSTRATED; meili-docs, typesense-docs): Tenant token and scoped-key filters resisted other-tenant overrides while parent controls returned both fixtures.
+- verify-join (DEMONSTRATED; typesense-docs): Collection-scoped key leaked a joined billing field; an embedded exclude_fields restriction removed it.
+- verify-proxy (DEMONSTRATED; meili-docs, typesense-docs, caddy): Recorded same-host Caddy TLS proxy preserved anonymous/keyed auth distinctions for both engines; no external isolation is established.
+- verify-request (REASONED; curl, meili-docs, typesense-docs): Paired requests require Bash, curl 7.75.0+, verified HTTPS and identical origin/method/path/body; inspect engine JSON, not status alone.
+- verify-external (REASONED; meili, typesense, nc): Inventory actual listeners, publications and IPv4/IPv6 rules; external TCP success fails, while refusal/timeout needs live private controls and policy evidence.
+- verify-local-tcp (DEMONSTRATED; nc): Recorded netcat loopback reachable/refused shapes returned FAIL/exit 1 and INCONCLUSIVE/exit 2 respectively; external reachability remains unobserved.
+- verify-bundle (REASONED; meili-docs, typesense-docs, git-grep, git-rev-list, git): Repository credential scanner searches literal output and local commit-tree content; regression fixtures ran, while real-client-build controls remain unobserved.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-12",
+  "documentation_checked": "2026-10",
+  "body_sha256": "98bf2bbbb774a4c7e71ec7f07b9035b6127771baa4c953d0b35d251f59f0b34c",
+  "components": {
+    "meili": {
+      "name": "Meilisearch release reference",
+      "basis": "v1.53.2",
+      "sources": {
+        "sbed426856353": "https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L95-L97",
+        "sa5636634c0e5": "https://github.com/meilisearch/meilisearch/blob/v1.53.2/crates/meilisearch/src/option.rs#L534-L560",
+        "sb9cb7736ecb6": "https://raw.githubusercontent.com/meilisearch/meilisearch/v1.53.2/Dockerfile"
+      }
+    },
+    "typesense": {
+      "name": "Typesense",
+      "basis": "30.2",
+      "sources": {
+        "s9671c6e07c7f": "https://typesense.org/docs/30.2/api/server-configuration.html",
+        "s2c4b6bcfaf53": "https://typesense.org/docs/30.2/api/api-keys.html",
+        "sa9d1feeb6147": "https://typesense.org/docs/30.2/api/vector-search.html",
+        "s4a43ef5aa4f9": "https://raw.githubusercontent.com/typesense/typesense/v30.2/src/http_server.cpp",
+        "s29b60ad510db": "https://raw.githubusercontent.com/typesense/typesense/v30.2/src/core_api.cpp"
+      }
+    },
+    "meili-docs": {
+      "name": "Meilisearch documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "sb0775887509a": "https://www.meilisearch.com/docs/resources/self_hosting/security/master_api_keys",
+        "s9ea7561d005d": "https://www.meilisearch.com/docs/capabilities/security/advanced/tenant_token_payload",
+        "s26bf028aa235": "https://www.meilisearch.com/docs/resources/self_hosting/security/http2_ssl",
+        "s5a14ae3a4b54": "https://www.meilisearch.com/docs/resources/self_hosting/configuration/reference",
+        "s733eae6c1299": "https://www.meilisearch.com/docs/resources/self_hosting/data_backup/overview",
+        "s034b9614262f": "https://www.meilisearch.com/docs/capabilities/indexing/how_to/edit_documents_with_functions"
+      }
+    },
+    "meili-advisory": {
+      "name": "Meilisearch SSRF advisory",
+      "basis": "unknown",
+      "sources": {
+        "sb8b81d3f76ff": "https://www.meilisearch.com/blog/CVE-update-Jan-2026"
+      }
+    },
+    "typesense-docs": {
+      "name": "Typesense documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s6fb918104d58": "https://typesense.org/docs/guide/data-access-control.html",
+        "s02ce5458d664": "https://typesense.org/docs/guide/backups.html"
+      }
+    },
+    "caddy": {
+      "name": "Caddy",
+      "basis": "v2.11.4",
+      "sources": {
+        "sb0b62262df7b": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88",
+        "sb4be8e0cfe75": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L347-L381",
+        "sd11645c28457": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/options.go#L459-L476",
+        "s9702adeb8c11": "https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go"
+      }
+    },
+    "curl": {
+      "name": "curl minimum",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    },
+    "nc": {
+      "name": "OpenBSD-compatible netcat",
+      "basis": "unknown",
+      "sources": {
+        "s096a08149c92": "https://man.openbsd.org/nc"
+      }
+    },
+    "git-grep": {
+      "name": "Git grep manual",
+      "basis": "2.55.0",
+      "sources": {
+        "se138ed3614b1": "https://git-scm.com/docs/git-grep"
+      }
+    },
+    "git-rev-list": {
+      "name": "Git rev-list manual",
+      "basis": "2.56.0",
+      "sources": {
+        "sa551f03eb541": "https://git-scm.com/docs/git-rev-list"
+      }
+    },
+    "git": {
+      "name": "Git manual",
+      "basis": "2.56.0",
+      "sources": {
+        "s1d8fe6ad85ac": "https://git-scm.com/docs/git"
+      }
+    }
+  },
+  "claims": {
+    "meili-mode": {"text": "Development is keyless unless MEILI_MASTER_KEY is set; production requires a master key of at least 16 bytes.", "components": ["meili-docs"], "sources": ["meili-docs:sb0775887509a"], "status": "REASONED"},
+    "meili-bind": {"text": "Binary defaults localhost:7700 unless implicit config.toml overrides it; environment and CLI override the file.", "components": ["meili"], "sources": ["meili:sbed426856353", "meili:sa5636634c0e5"], "status": "REASONED"},
+    "meili-image": {"text": "Official image sets MEILI_HTTP_ADDR=0.0.0.0:7700; publish only host loopback or use an unpublished private proxy network.", "components": ["meili"], "sources": ["meili:sb9cb7736ecb6"], "status": "REASONED"},
+    "meili-keys": {"text": "Four default keys and their permissions are version-dependent; inspect GET /keys and keep admin, read-only admin and master keys server-side.", "components": ["meili-docs"], "sources": ["meili-docs:sb0775887509a"], "status": "REASONED"},
+    "meili-tenant": {"text": "For confidential search, restrict indexes or issue tenant JWTs with enforced rules; keep the signing key server-side and set exp no later than parent expiry.", "components": ["meili-docs"], "sources": ["meili-docs:s9ea7561d005d", "meili-docs:sb0775887509a"], "status": "REASONED"},
+    "meili-tls": {"text": "Native HTTPS uses ssl-cert-path and ssl-key-path; the proxy pattern confines plaintext locally and verifies TLS across machines.", "components": ["meili-docs"], "sources": ["meili-docs:s26bf028aa235"], "status": "REASONED"},
+    "typesense-bootstrap": {"text": "Bootstrap api-key is required and controls all endpoints/data; supply it through TYPESENSE_API_KEY or a protected file and use a revocable operational key routinely.", "components": ["typesense", "typesense-docs"], "sources": ["typesense:s9671c6e07c7f", "typesense-docs:s6fb918104d58"], "status": "REASONED"},
+    "typesense-api": {"text": "API defaults 0.0.0.0:8108; set api-address=127.0.0.1 and api-port=8108 for a same-host proxy.", "components": ["typesense"], "sources": ["typesense:s9671c6e07c7f"], "status": "REASONED"},
+    "typesense-peer": {"text": "Separate peering defaults to 8107; select a private address and admit only cluster members.", "components": ["typesense"], "sources": ["typesense:s9671c6e07c7f"], "status": "REASONED"},
+    "typesense-scope": {"text": "Parent search key uses documents:search and named/regex collections; derive browser keys with filter_by and field restrictions, keeping the parent server-side.", "components": ["typesense", "typesense-docs"], "sources": ["typesense:s2c4b6bcfaf53", "typesense-docs:s6fb918104d58"], "status": "REASONED"},
+    "typesense-expiry": {"text": "Set expires_at on browser keys no later than parent expiry; collection scope alone does not isolate JOIN data.", "components": ["typesense-docs"], "sources": ["typesense-docs:s6fb918104d58"], "status": "REASONED"},
+    "typesense-tls": {"text": "Self-managed native TLS uses ssl-certificate and ssl-certificate-key; cloud terminates TLS; restrict API and peering access independently.", "components": ["typesense"], "sources": ["typesense:s9671c6e07c7f"], "status": "REASONED"},
+    "admin-surface": {"text": "Keep management UIs private or behind MFA; engine bearer keys are not a second factor and Meilisearch production disables the development preview.", "components": ["meili-docs", "typesense-docs"], "sources": ["meili-docs:s5a14ae3a4b54", "typesense-docs:s6fb918104d58"], "status": "REASONED"},
+    "backup": {"text": "Protect and encrypt dumps, snapshots, volumes and backups; Typesense backs up snapshot output rather than the live directory and restores privately with auth.", "components": ["meili-docs", "typesense-docs"], "sources": ["meili-docs:s733eae6c1299", "typesense-docs:s02ce5458d664"], "status": "REASONED"},
+    "meili-egress": {"text": "Upgrade Meilisearch v1.8 through v1.34.0 for SSRF fixed in v1.34.1; avoid allowed-IP-networks=any and restrict remote/webhook administration and egress.", "components": ["meili-docs", "meili-advisory"], "sources": ["meili-advisory:sb8b81d3f76ff", "meili-docs:s5a14ae3a4b54"], "status": "REASONED"},
+    "typesense-egress": {"text": "Remote embeddings send provider credentials outbound; restrict destinations and protect those secrets.", "components": ["typesense"], "sources": ["typesense:sa9d1feeb6147"], "status": "REASONED"},
+    "meili-functions": {"text": "Leave experimental document-editing functions disabled unless needed; Rhai transformations belong to trusted workloads, not arbitrary OS execution.", "components": ["meili-docs"], "sources": ["meili-docs:s034b9614262f"], "status": "REASONED"},
+    "verify-meili-auth": {"text": "Loopback keyless search returned 200; protected search returned anonymous 401 and keyed 200 with the fixture.", "components": ["meili-docs"], "sources": ["meili-docs:sb0775887509a"], "status": "DEMONSTRATED", "evidence": "keyless Meilisearch returned the fixture to an anonymous search with `200`, so the authentication row printed `FAIL: unexpected HTTP status`: the exposed state.", "verify": [1]},
+    "verify-meili-write": {"text": "Search key was refused index creation with 403; Default Admin received 202 and the task succeeded.", "components": ["meili-docs"], "sources": ["meili-docs:sb0775887509a"], "status": "DEMONSTRATED", "evidence": "the write row got `403` `invalid_api_key` for the search key and `202` for the Default Admin API Key, whose task then reported `succeeded`. Started with", "verify": [1]},
+    "verify-meili-production": {"text": "Production startup without a master key was refused in the recorded run.", "components": ["meili-docs"], "sources": ["meili-docs:sb0775887509a"], "status": "DEMONSTRATED", "evidence": "Meilisearch refused to start: \"You must provide a master key to secure your instance in a production environment\"."},
+    "verify-typesense-auth": {"text": "Loopback Typesense refused anonymous search with 401 and returned the fixture with a collection-scoped key and 200.", "components": ["typesense", "typesense-docs"], "sources": ["typesense-docs:s6fb918104d58", "typesense:s4a43ef5aa4f9"], "status": "DEMONSTRATED", "evidence": "answered the authentication row with `401` anonymously and `200` on a collection-scoped search key", "verify": [1]},
+    "verify-typesense-write": {"text": "Search-key collection creation returned 401; bootstrap creation returned 201.", "components": ["typesense"], "sources": ["typesense:s4a43ef5aa4f9", "typesense:s29b60ad510db"], "status": "DEMONSTRATED", "evidence": "the write row with `401` for that key and `201` for the bootstrap key.", "verify": [1]},
+    "verify-rotation": {"text": "Disclosed Typesense operational key succeeded before deletion, failed after deletion, and its replacement succeeded.", "components": ["typesense"], "sources": ["typesense:s2c4b6bcfaf53"], "status": "DEMONSTRATED", "evidence": "A disclosed operational key got `200` before rotation, `401` after it was deleted, and its replacement `200`. A Meilisearch tenant token", "verify": [1]},
+    "verify-tenant": {"text": "Tenant token and scoped-key filters resisted other-tenant overrides while parent controls returned both fixtures.", "components": ["meili-docs", "typesense-docs"], "sources": ["meili-docs:s9ea7561d005d", "typesense-docs:s6fb918104d58"], "status": "DEMONSTRATED", "evidence": "A Meilisearch tenant token filtered to one tenant returned only that tenant's fixture, and a request adding a filter for the other tenant returned nothing, while the parent key returned both; a Typesense scoped key embedding `filter_by` behaved the same way under an overriding `filter_by`. For JOINs,", "verify": [1]},
+    "verify-join": {"text": "Collection-scoped key leaked a joined billing field; an embedded exclude_fields restriction removed it.", "components": ["typesense-docs"], "sources": ["typesense-docs:s6fb918104d58"], "status": "DEMONSTRATED", "evidence": "For JOINs, a Typesense key scoped to collection `products` was refused a direct search of `companies` with `401`, but a `products` search with `include_fields=$companies(billing)` returned the joined company's billing field: collection scoping alone did not isolate joined data. A scoped key embedding `exclude_fields=$companies(billing)` returned the same query without it.", "verify": [1]},
+    "verify-proxy": {"text": "Recorded same-host Caddy TLS proxy preserved anonymous/keyed auth distinctions for both engines; no external isolation is established.", "components": ["meili-docs", "typesense-docs", "caddy"], "sources": ["meili-docs:sb0775887509a", "typesense-docs:s6fb918104d58", "caddy:sb0b62262df7b", "caddy:sb4be8e0cfe75", "caddy:sd11645c28457", "caddy:s9702adeb8c11"], "status": "DEMONSTRATED", "evidence": "Behind the same proxy, keyless Meilisearch made the block print `FAIL: unexpected HTTP status` on an anonymous `200`, the exposed state, and Typesense with its plaintext backend on `127.0.0.1:8108` gave `401` anonymously then `200` on a collection-scoped search key.", "verify": [1]},
+    "verify-request": {"text": "Paired requests require Bash, curl 7.75.0+, verified HTTPS and identical origin/method/path/body; inspect engine JSON, not status alone.", "components": ["curl", "meili-docs", "typesense-docs"], "sources": ["curl:s2b2686afaf41", "meili-docs:sb0775887509a", "typesense-docs:s6fb918104d58"], "status": "REASONED"},
+    "verify-external": {"text": "Inventory actual listeners, publications and IPv4/IPv6 rules; external TCP success fails, while refusal/timeout needs live private controls and policy evidence.", "components": ["meili", "typesense", "nc"], "sources": ["meili:sb9cb7736ecb6", "typesense:s9671c6e07c7f", "nc:s096a08149c92"], "status": "REASONED", "verify": [2]},
+    "verify-local-tcp": {"text": "Recorded netcat loopback reachable/refused shapes returned FAIL/exit 1 and INCONCLUSIVE/exit 2 respectively; external reachability remains unobserved.", "components": ["nc"], "sources": ["nc:s096a08149c92"], "status": "DEMONSTRATED", "evidence": "The block against 127.0.0.1, where the engines listened, printed `FAIL: TCP 7700 is reachable` (exit `1`), the reachable shape; against 127.0.0.2, where nothing listens, each port's `Connection refused` printed `INCONCLUSIVE` and the block ended with exit `2`, the refused shape."},
+    "verify-bundle": {"text": "Repository credential scanner searches literal output and local commit-tree content; regression fixtures ran, while real-client-build controls remain unobserved.", "components": ["meili-docs", "typesense-docs", "git-grep", "git-rev-list", "git"], "sources": ["meili-docs:sb0775887509a", "typesense-docs:s6fb918104d58", "git-grep:se138ed3614b1", "git-rev-list:sa551f03eb541", "git:s1d8fe6ad85ac"], "status": "REASONED", "verify": [3]}
+  }
+}
+````
+<!-- version-basis:end -->

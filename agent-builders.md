@@ -1,381 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-17",
-  "documentation_checked": "2026-09",
-  "body_sha256": "49aeeb6f2264d04bfeae494a08061515cc6649f8cda6dc14173a133553160593",
-  "components": {
-    "dify": {
-      "name": "Dify documentation",
-      "basis": "unknown",
-      "sources": {
-        "sc63a91c72255": "https://docs.dify.ai/en/self-host/deploy/quick-start/docker-compose",
-        "s144cc3f563a1": "https://docs.dify.ai/en/self-host/deploy/configuration/environments",
-        "sd5ae6b9492f0": "https://docs.dify.ai/en/api-reference/guides/get-started"
-      }
-    },
-    "dify-console": {
-      "name": "Dify console/config source",
-      "basis": "d39d9ddb7430522e0c828c6953afdf773ba6e675",
-      "sources": {
-        "sb28809d177bf": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/docker/.env.example",
-        "s1e4c822a36b1": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/docker/docker-compose.yaml#L573-L644",
-        "s1cd4f464c880": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/plugin.py#L567-L585",
-        "saa9ceb383427": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/__init__.py#L14-L61",
-        "s3998f01569b8": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/common/wraps.py#L11-L32",
-        "s39e0b615af71": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/configs/enterprise/__init__.py#L38-L41",
-        "s5384bb9d1e75": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/wraps.py#L308-L321",
-        "s7cdbcd9957ac": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/wraps.py#L113-L125",
-        "s182d16f6e475": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/libs/login.py#L47-L59",
-        "sf9235e345b51": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/libs/login.py#L152-L169",
-        "s1edf3fa3d667": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/models/account.py#L402-L407",
-        "s09ea6abe9b9c": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/plugin.py#L1086-L1106",
-        "s662ba88445cd": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/plugin.py#L170-L172",
-        "s4b8c82f515c6": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/services/plugin/plugin_permission_service.py#L14-L36"
-      }
-    },
-    "dify-compose": {
-      "name": "Dify Compose source",
-      "basis": "8387590ace4a094de812b7847fc6a4c3a27cd52b",
-      "sources": {
-        "s517af9c43635": "https://github.com/langgenius/dify/blob/8387590ace4a094de812b7847fc6a4c3a27cd52b/docker/docker-compose.yaml"
-      }
-    },
-    "docker": {
-      "name": "Docker",
-      "basis": "unknown",
-      "sources": {
-        "s351180c6678f": "https://docs.docker.com/engine/network/packet-filtering-firewalls/",
-        "se716ad33db1f": "https://docs.docker.com/reference/compose-file/merge/",
-        "s3e97c2c250b6": "https://docs.docker.com/reference/cli/docker/compose/ps/"
-      }
-    },
-    "docker-merge": {
-      "name": "Docker Compose merge source",
-      "basis": "31d174d090fd7111ca2199ed54a3978e0d4ac74d",
-      "sources": {
-        "s72ea21230137": "https://github.com/docker/docs/blob/31d174d090fd7111ca2199ed54a3978e0d4ac74d/content/reference/compose-file/merge.md#L103-L115",
-        "sc9bb17bb3323": "https://github.com/docker/docs/blob/31d174d090fd7111ca2199ed54a3978e0d4ac74d/content/reference/compose-file/merge.md#L142-L151",
-        "s9d483ca7e4f4": "https://github.com/docker/docs/blob/31d174d090fd7111ca2199ed54a3978e0d4ac74d/content/reference/compose-file/merge.md#L184-L220"
-      }
-    },
-    "compose-243": {
-      "name": "Docker Compose go.mod",
-      "basis": "v2.24.3",
-      "sources": {
-        "s025e0d398762": "https://github.com/docker/compose/blob/v2.24.3/go.mod#L9"
-      }
-    },
-    "compose-244": {
-      "name": "Docker Compose release source",
-      "basis": "v2.24.4",
-      "sources": {
-        "s31edecddf3be": "https://github.com/docker/compose/blob/v2.24.4/go.mod#L9",
-        "s6fc4eeeedfbd": "https://github.com/docker/compose/releases/tag/v2.24.4"
-      }
-    },
-    "compose-go-rc2": {
-      "name": "compose-go loader",
-      "basis": "v2.0.0-rc.2",
-      "sources": {
-        "sc2bf2c1e7297": "https://github.com/compose-spec/compose-go/blob/v2.0.0-rc.2/loader/null.go#L41-L46"
-      }
-    },
-    "compose-go-rc3": {
-      "name": "compose-go reset loader",
-      "basis": "v2.0.0-rc.3",
-      "sources": {
-        "s8d6dab78abf1": "https://github.com/compose-spec/compose-go/blob/v2.0.0-rc.3/loader/reset.go#L41-L50"
-      }
-    },
-    "certbot": {
-      "name": "Dify certbot source",
-      "basis": "4c1ad40f8e8a6ee58a958330558f2178b7e47fa7",
-      "sources": {
-        "sba8e43d56b94": "https://github.com/langgenius/dify/blob/4c1ad40f8e8a6ee58a958330558f2178b7e47fa7/docker/certbot/README.md"
-      }
-    },
-    "flowise": {
-      "name": "Flowise documentation",
-      "basis": "unknown",
-      "sources": {
-        "s546a18b65918": "https://docs.flowiseai.com/configuration/authorization/chatflow-level",
-        "sfee1ae75d51a": "https://docs.flowiseai.com/configuration/environment-variables",
-        "scabc8335d0c7": "https://docs.flowiseai.com/configuration/sso",
-        "s23c31010d23d": "https://docs.flowiseai.com/api-reference/prediction",
-        "s7b675aa70798": "https://docs.flowiseai.com/configuration/deployment/digital-ocean"
-      }
-    },
-    "flowise-auth": {
-      "name": "Flowise account minimum",
-      "basis": "v3.0.1",
-      "sources": {
-        "s6fd9f4266a98": "https://docs.flowiseai.com/configuration/authorization/app-level"
-      }
-    },
-    "flowise-compose": {
-      "name": "Flowise Compose",
-      "basis": "4ea391204a499fb6d19747104502362295b4dde3",
-      "sources": {
-        "s81474794a92d": "https://github.com/FlowiseAI/Flowise/blob/4ea391204a499fb6d19747104502362295b4dde3/docker/docker-compose.yml"
-      }
-    },
-    "langflow-1126": {
-      "name": "Langflow settings source",
-      "basis": "v1.12.6",
-      "sources": {
-        "s8049fb15747e": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/groups/server.py#L21-L24",
-        "s46241ad0c9d0": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/groups/server.py#L45-L48",
-        "sd7fd176a7394": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L96-L104",
-        "s400ca0f879b4": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L135-L148",
-        "sb7ab44ba0da0": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/constants.py#L3-L6",
-        "s8e8d73b2b8bd": "https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push.Dockerfile#L234-L235",
-        "s419881904281": "https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push_backend.Dockerfile#L124-L128",
-        "s57f0e83270f9": "https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push_ep.Dockerfile#L164-L169",
-        "s44bfa70223f9": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/base.py#L89-L117",
-        "sf521d52020be": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L553-L556",
-        "s6cf1768228ea": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L225-L245",
-        "s1ee798ffcdbe": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L670-L690",
-        "s6485ba67d66f": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L216-L230",
-        "s842c850d80b0": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L344",
-        "s253a7815151a": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L48",
-        "s9701f0527287": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L173-L178",
-        "sb2a88f59cc75": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L619-L669",
-        "s3ff960d5d18a": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L142-L213"
-      }
-    },
-    "langflow-compose": {
-      "name": "Langflow Compose",
-      "basis": "c6dbca308dc85526d5cecb31211821ec4f5e1d05",
-      "sources": {
-        "s7f4564c949cb": "https://github.com/langflow-ai/langflow/blob/c6dbca308dc85526d5cecb31211821ec4f5e1d05/docker_example/docker-compose.yml"
-      }
-    },
-    "librechat-compose": {
-      "name": "LibreChat Compose",
-      "basis": "1596df724a840f894831fc74f21de8d8df72fcb1",
-      "sources": {
-        "sb3cc671b90e3": "https://github.com/danny-avila/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml"
-      }
-    },
-    "langflow": {
-      "name": "Langflow documentation",
-      "basis": "unknown",
-      "sources": {
-        "s5cfeeba4d9b3": "https://docs.langflow.org/api-keys-and-authentication",
-        "s885461210e4e": "https://docs.langflow.org/environment-variables",
-        "s5a55bdef1f33": "https://docs.langflow.org/deployment-prod-best-practices",
-        "sca4ee617805d": "https://docs.langflow.org/security",
-        "sec83eaf2b841": "https://docs.langflow.org/authentication-overview"
-      }
-    },
-    "librechat": {
-      "name": "LibreChat documentation",
-      "basis": "unknown",
-      "sources": {
-        "s41811a0d442f": "https://www.librechat.ai/docs/configuration/dotenv",
-        "s70ac8e7c9504": "https://www.librechat.ai/docs/configuration/authentication",
-        "s7896961bc713": "https://www.librechat.ai/docs/configuration/authentication/OAuth2-OIDC",
-        "s43fbe74e3c42": "https://www.librechat.ai/docs/configuration/authentication/OAuth2-OIDC/keycloak",
-        "s3f1c594392bc": "https://www.librechat.ai/docs/local/docker",
-        "s432d72870381": "https://www.librechat.ai/docs/remote/nginx",
-        "s9f9e35619ce7": "https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/actions"
-      }
-    },
-    "librechat-mfa": {
-      "name": "LibreChat changelog",
-      "basis": "v0.7.7",
-      "sources": {
-        "s3909883e4681": "https://www.librechat.ai/changelog/v0.7.7"
-      }
-    },
-    "daemon": {
-      "name": "Dify plugin daemon",
-      "basis": "0.6.10",
-      "sources": {
-        "scb80ef9b341b": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/server.go#L109-L134",
-        "sbb1558888c1a": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/codec.go#L14-L49",
-        "s1d0863ded6ed": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/runtime_intialization_handlers.go#L18-L42",
-        "sfabe22af22d6": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/hooks.go#L51-L90",
-        "sbccc30db5bfe": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/hooks.go#L158-L240",
-        "s6490d756c639": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/service/debugging_service/connection_key.go#L23-L123",
-        "sa0aa7e953ee0": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/pkg/utils/cache/redis.go#L208-L230",
-        "sa3ee5e4e8a84": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/service/install_service/controlpanel.go#L50-L85",
-        "s14d062f60b1b": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/io.go#L18-L68",
-        "sa3fa1b50ea09": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/pkg/entities/requests/tool.go#L27-L36",
-        "s8e20b988ea0b": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/pkg/entities/requests/model.go#L9-L34",
-        "s191317bdf3a7": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/types/app/config.go#L101-L106",
-        "s32b7d021da01": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/control_panel/watch_dog.go#L32-L46",
-        "sb19f8717ed1f": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/server/http_server.go#L130-L134",
-        "s2efeb062db27": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/hooks.go#L132-L153"
-      }
-    },
-    "daemon-source": {
-      "name": "Dify plugin daemon source",
-      "basis": "1310a18b2f6bc6f18768a0a6265484830891433c",
-      "sources": {
-        "s629f3bfbae72": "https://github.com/langgenius/dify-plugin-daemon/blob/1310a18b2f6bc6f18768a0a6265484830891433c/internal/core/debugging_runtime/hooks.go#L158-L237",
-        "s07045a0003da": "https://github.com/langgenius/dify-plugin-daemon/blob/1310a18b2f6bc6f18768a0a6265484830891433c/internal/core/debugging_runtime/runtime_intialization_handlers.go#L44-L75",
-        "s2b36558b0078": "https://github.com/langgenius/dify-plugin-daemon/blob/1310a18b2f6bc6f18768a0a6265484830891433c/internal/core/debugging_runtime/runtime_intialization_handlers.go#L139-L183"
-      }
-    }
-  },
-  "claims": {
-    "flowise-port": {"text": "Flowise PORT defaults 3000; Compose publishes ${PORT}:${PORT}; replace with host-loopback mapping.", "components": ["flowise", "flowise-compose"], "sources": ["flowise:sfee1ae75d51a", "flowise-compose:s81474794a92d"], "status": "REASONED"},
-    "langflow-port": {"text": "Langflow 1.12.6 settings default port 7860; example Compose publishes 7860:7860 and Postgres 5432:5432; keep database unpublished or private.", "components": ["langflow", "langflow-compose", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-compose:s7f4564c949cb", "langflow-1126:s8049fb15747e", "langflow-1126:s44bfa70223f9"], "status": "REASONED"},
-    "librechat-port": {"text": "LibreChat defaults 3080; Compose publishes ${PORT}:${PORT} and admin-panel ${ADMIN_PANEL_PORT:-3000}:3000; restrict both.", "components": ["librechat", "librechat-compose"], "sources": ["librechat:s3f1c594392bc", "librechat-compose:sb3cc671b90e3"], "status": "REASONED"},
-    "compose-merge": {"text": "Override ports lists merge; !override replaces and !reset clears. Guide assessment: require Docker Compose 2.24.4+ for both; pinned v2.24.3 uses compose-go rc.2, whose loader handles !reset, while pinned v2.24.4 uses rc.3 with both tags. Later-release behaviour is not established by these pins.", "components": ["docker", "docker-merge", "compose-243", "compose-244", "compose-go-rc2", "compose-go-rc3"], "sources": ["docker:se716ad33db1f", "docker-merge:s72ea21230137", "docker-merge:sc9bb17bb3323", "docker-merge:s9d483ca7e4f4", "compose-243:s025e0d398762", "compose-244:s31edecddf3be", "compose-244:s6fc4eeeedfbd", "compose-go-rc2:sc2bf2c1e7297", "compose-go-rc3:s8d6dab78abf1"], "status": "REASONED"},
-    "docker-firewall": {"text": "Docker published traffic can bypass UFW; removing or narrowing publications is required.", "components": ["docker"], "sources": ["docker:s351180c6678f"], "status": "REASONED"},
-    "dify-ports": {"text": "Dify publishes nginx 80/443 and plugin debugging 5003, with more vector-profile ports; EXPOSE_NGINX_SSL_PORT remains published when HTTPS serving is off.", "components": ["dify-console", "dify-compose"], "sources": ["dify-console:sb28809d177bf", "dify-compose:s517af9c43635", "dify-console:s1e4c822a36b1"], "status": "REASONED"},
-    "dify-debug-bind": {"text": "Compose pins daemon 0.6.10-local, publishes 5003 on all host interfaces; EXPOSE_PLUGIN_DEBUGGING_HOST is client destination, not bind control.", "components": ["dify-console"], "sources": ["dify-console:s1e4c822a36b1", "dify-console:sb28809d177bf"], "status": "REASONED"},
-    "daemon-listener": {"text": "Daemon 0.6.10 uses plaintext newline-delimited JSON TCP; PLUGIN_DEBUGGING_HOST/PORT map to remote-installing listener, default 0.0.0.0:5003.", "components": ["dify-console", "daemon"], "sources": ["dify-console:s1e4c822a36b1", "daemon:scb80ef9b341b", "daemon:sbb1558888c1a", "daemon:sbccc30db5bfe", "daemon:s2efeb062db27"], "status": "REASONED"},
-    "daemon-key": {"text": "Per-tenant UUID debugging key has Redis bidirectional mappings with two-hour expiry; retrieval refreshes expiry, not key, and expiry leaves authenticated runtime connected.", "components": ["daemon"], "sources": ["daemon:s6490d756c639", "daemon:sa0aa7e953ee0", "daemon:sfabe22af22d6"], "status": "REASONED"},
-    "daemon-rejection": {"text": "Wrong key yields handshake failed, invalid key and closes; lookup is Redis-based and TCP key guessing has no rate limiter.", "components": ["daemon"], "sources": ["daemon:s1d0863ded6ed", "daemon:sfabe22af22d6", "daemon:sbccc30db5bfe"], "status": "REASONED"},
-    "daemon-preauth": {"text": "Non-handshake messages can parse/store declarations and buffer assets before authentication.", "components": ["daemon-source"], "sources": ["daemon-source:s629f3bfbae72", "daemon-source:s07045a0003da", "daemon-source:s2b36558b0078"], "status": "REASONED"},
-    "daemon-assets": {"text": "Asset limit compares decoded buffered bytes plus incoming base64 string length against 50 MiB; accepted chunks increment decoded length.", "components": ["daemon-source"], "sources": ["daemon-source:s07045a0003da"], "status": "REASONED"},
-    "daemon-authority": {"text": "Key holder registers tenant runtime receiving invocation parameters/prompts/credentials and returning results; this alone does not demonstrate host shell execution.", "components": ["daemon"], "sources": ["daemon:sa3ee5e4e8a84", "daemon:s14d062f60b1b", "daemon:sa3fa1b50ea09", "daemon:s8e20b988ea0b"], "status": "REASONED"},
-    "debug-key-access": {"text": "Initialized authenticated member with active workspace after setup can GET current workspace debugging-key under documented default permissions.", "components": ["dify-console"], "sources": ["dify-console:s1cd4f464c880", "dify-console:s5384bb9d1e75", "dify-console:s7cdbcd9957ac", "dify-console:s182d16f6e475", "dify-console:sf9235e345b51", "dify-console:saa9ceb383427", "dify-console:s3998f01569b8", "dify-console:s39e0b615af71"], "status": "REASONED"},
-    "rbac-default": {"text": "RBAC_ENABLED defaults false and skips enterprise RBAC checks.", "components": ["dify-console"], "sources": ["dify-console:s3998f01569b8", "dify-console:s39e0b615af71"], "status": "REASONED"},
-    "plugin-permission": {"text": "No plugin-permission row allows every member; existing row default noone differs, and admins permits only admin/owner.", "components": ["dify-console"], "sources": ["dify-console:saa9ceb383427", "dify-console:s1edf3fa3d667"], "status": "REASONED"},
-    "debug-remedy": {"text": "Admin/owner may POST permission/change with debug_permission admins; preserve install_permission, whose omitted value defaults everyone; UI availability unestablished.", "components": ["dify-console"], "sources": ["dify-console:s09ea6abe9b9c", "dify-console:s662ba88445cd", "dify-console:s4b8c82f515c6"], "status": "REASONED"},
-    "debug-disable": {"text": "PLUGIN_REMOTE_INSTALLING_ENABLED defaults true; false prevents TCP startup and removes debugging-key route, while ports: !reset [] separately removes publication.", "components": ["daemon", "docker"], "sources": ["daemon:s191317bdf3a7", "daemon:s32b7d021da01", "daemon:sb19f8717ed1f", "docker:se716ad33db1f"], "status": "REASONED"},
-    "verify-debug-config": {"text": "Merged Compose should change from published 5003/default-enabled to no publication and explicit false after override and recreation; no Docker/listener demonstration.", "components": ["dify-console", "daemon", "docker"], "sources": ["dify-console:s1e4c822a36b1", "daemon:s191317bdf3a7", "daemon:s32b7d021da01", "daemon:sb19f8717ed1f", "docker:se716ad33db1f"], "status": "REASONED"},
-    "flowise-tls": {"text": "Flowise documented TLS uses nginx/certbot upstream localhost:3000; configure NUMBER_OF_PROXIES for real client addresses.", "components": ["flowise"], "sources": ["flowise:s7b675aa70798", "flowise:sfee1ae75d51a"], "status": "REASONED"},
-    "librechat-tls": {"text": "LibreChat documented TLS uses nginx upstream localhost:3080; TRUST_PROXY defaults 1 and must match proxy hops.", "components": ["librechat"], "sources": ["librechat:s432d72870381", "librechat:s41811a0d442f"], "status": "REASONED"},
-    "langflow-tls": {"text": "Langflow 1.12.6 LANGFLOW_SSL_CERT_FILE/KEY_FILE settings feed native TLS; guide assessment: a proxy remains a place for login/MFA.", "components": ["langflow", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-1126:s46241ad0c9d0", "langflow-1126:s44bfa70223f9", "langflow-1126:sf521d52020be", "langflow-1126:s6cf1768228ea", "langflow-1126:s1ee798ffcdbe", "langflow-1126:s9701f0527287", "langflow-1126:sb2a88f59cc75"], "status": "REASONED"},
-    "langflow-cookies": {"text": "Langflow 1.12.6 LANGFLOW_ACCESS_SECURE and LANGFLOW_REFRESH_SECURE default false; set both true behind HTTPS.", "components": ["langflow", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-1126:s400ca0f879b4", "langflow-1126:s842c850d80b0", "langflow-1126:s253a7815151a"], "status": "REASONED"},
-    "dify-tls": {"text": "Certbot challenge/domain/email and fullchain.pem/privkey.pem precede certificate update; enable HTTPS and recreate nginx; default HTTPS false, protocols TLSv1.2 TLSv1.3.", "components": ["certbot", "dify-console"], "sources": ["certbot:sba8e43d56b94", "dify-console:sb28809d177bf"], "status": "REASONED"},
-    "dify-urls": {"text": "Set CONSOLE_API_URL, CONSOLE_WEB_URL and APP_WEB_URL to public HTTPS; CONSOLE_API_URL controls HTTPS-only cookies.", "components": ["dify"], "sources": ["dify:s144cc3f563a1"], "status": "REASONED"},
-    "dify-bootstrap": {"text": "INIT_PASSWORD defaults empty; set it before first up to gate /install and claim admin privately.", "components": ["dify", "dify-console"], "sources": ["dify:s144cc3f563a1", "dify:sc63a91c72255", "dify-console:sb28809d177bf"], "status": "REASONED"},
-    "dify-secret": {"text": "SECRET_KEY signs session/JWT and encrypts stored OAuth credentials; generate random value, or empty auto-generates in storage.", "components": ["dify", "dify-console"], "sources": ["dify:s144cc3f563a1", "dify-console:sb28809d177bf"], "status": "REASONED"},
-    "dify-registration": {"text": "ALLOW_REGISTER=false default closes ordinary self-registration, but not invitations or /install bootstrap.", "components": ["dify-console"], "sources": ["dify-console:sb28809d177bf"], "status": "REASONED"},
-    "dify-db-redis": {"text": "Replace DB_PASSWORD and REDIS_PASSWORD defaults difyai123456 and update embedded CELERY_BROKER_URL password.", "components": ["dify-console"], "sources": ["dify-console:sb28809d177bf"], "status": "REASONED"},
-    "dify-sandbox": {"text": "Replace CODE_EXECUTION_API_KEY/SANDBOX_API_KEY default dify-sandbox together.", "components": ["dify-console"], "sources": ["dify-console:sb28809d177bf"], "status": "REASONED"},
-    "dify-plugin-keys": {"text": "Replace PLUGIN_DAEMON_KEY and PLUGIN_DIFY_INNER_API_KEY example service credentials.", "components": ["dify-console"], "sources": ["dify-console:sb28809d177bf"], "status": "REASONED"},
-    "dify-agent-keys": {"text": "Replace DIFY_AGENT_API_TOKEN and DIFY_AGENT_SERVER_SECRET_KEY; signing key needs unpadded base64url of 32 random bytes.", "components": ["dify-console"], "sources": ["dify-console:sb28809d177bf"], "status": "REASONED"},
-    "dify-weaviate": {"text": "If enabled, rotate WEAVIATE_API_KEY and matching allowed keys; disable anonymous access.", "components": ["dify-console"], "sources": ["dify-console:sb28809d177bf"], "status": "REASONED"},
-    "dify-api": {"text": "App Bearer keys are separate from console accounts; create per app and keep calls/keys on the backend.", "components": ["dify"], "sources": ["dify:sd5ae6b9492f0"], "status": "REASONED"},
-    "flowise-accounts": {"text": "From v3.0.1, email/password accounts use JWT HTTP-only cookies; old FLOWISE_USERNAME/PASSWORD are deprecated migration settings; claim admin privately.", "components": ["flowise-auth"], "sources": ["flowise-auth:s6fd9f4266a98"], "status": "REASONED"},
-    "flowise-secrets": {"text": "Randomize JWT_AUTH_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET, EXPRESS_SESSION_SECRET default flowise, and TOKEN_HASH_SECRET; APP_URL defaults localhost:3000.", "components": ["flowise-auth", "flowise"], "sources": ["flowise-auth:s6fd9f4266a98", "flowise:sfee1ae75d51a"], "status": "REASONED"},
-    "flowise-encryption": {"text": "FLOWISE_SECRETKEY_OVERWRITE supplies stored-credential encryption key; otherwise it lives under SECRETKEY_PATH.", "components": ["flowise"], "sources": ["flowise:sfee1ae75d51a"], "status": "REASONED"},
-    "flowise-prediction": {"text": "Chatflow without assigned key is public by ID; assign per-chatflow API key (DefaultKey is precreated), Bearer requests reject missing key with 401.", "components": ["flowise"], "sources": ["flowise:s546a18b65918", "flowise:s23c31010d23d"], "status": "REASONED"},
-    "langflow-auto": {"text": "Langflow 1.12.6 application AUTO_LOGIN defaults True; pinned official image Dockerfiles set false; explicitly disable it and set a superuser password other than legacy langflow; username defaults langflow and password defaults empty.", "components": ["langflow", "langflow-1126"], "sources": ["langflow:s5cfeeba4d9b3", "langflow:s885461210e4e", "langflow-1126:sd7fd176a7394", "langflow-1126:sb7ab44ba0da0", "langflow-1126:s8e8d73b2b8bd", "langflow-1126:s57f0e83270f9", "langflow-1126:s419881904281", "langflow-1126:s6485ba67d66f", "langflow-1126:s3ff960d5d18a", "langflow-1126:s842c850d80b0", "langflow-1126:s253a7815151a"], "status": "REASONED"},
-    "langflow-secret": {"text": "Set permanent random LANGFLOW_SECRET_KEY; documented auto-generated key is unsuitable for production.", "components": ["langflow"], "sources": ["langflow:s5a55bdef1f33"], "status": "REASONED"},
-    "langflow-signup": {"text": "NEW_USER_IS_ACTIVE defaults False but ENABLE_SIGNUP True; disable signup and keep activation requirement.", "components": ["langflow"], "sources": ["langflow:s885461210e4e"], "status": "REASONED"},
-    "langflow-api": {"text": "With auto-login off, POST /api/v1/run/<flow-id> needs x-api-key; create via settings or CLI. SKIP_AUTH_AUTO_LOGIN defaults false, applies only with auto-login and is slated for removal.", "components": ["langflow"], "sources": ["langflow:s5cfeeba4d9b3", "langflow:s885461210e4e"], "status": "REASONED"},
-    "langflow-host": {"text": "Langflow 1.12.6 settings default HOST localhost; guide assessment: bridged containers need 0.0.0.0 plus host-loopback publication and injected env_file/environment; rolling docs remain unversioned.", "components": ["langflow", "langflow-compose", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-compose:s7f4564c949cb", "langflow-1126:s8049fb15747e", "langflow-1126:s44bfa70223f9"], "status": "REASONED"},
-    "librechat-bootstrap": {"text": "First registered user becomes admin; close ALLOW_REGISTRATION after claiming it.", "components": ["librechat"], "sources": ["librechat:s3f1c594392bc", "librechat:s41811a0d442f"], "status": "REASONED"},
-    "librechat-sso": {"text": "For SSO-only, disable email login and deliberately enable social registration/login; configure OPENID_* and optional required role with provider allowlist and MFA.", "components": ["librechat"], "sources": ["librechat:s41811a0d442f", "librechat:s70ac8e7c9504", "librechat:s7896961bc713", "librechat:s43fbe74e3c42"], "status": "REASONED"},
-    "librechat-secrets": {"text": "CREDS_KEY is 32 bytes, CREDS_IV 16; JWT secrets at least 32 bytes. Blank values bootstrap keys with persistence caveats; retired JWT defaults are refused.", "components": ["librechat"], "sources": ["librechat:s41811a0d442f"], "status": "REASONED"},
-    "librechat-urls": {"text": "DOMAIN_CLIENT and DOMAIN_SERVER must use public HTTPS URL.", "components": ["librechat"], "sources": ["librechat:s41811a0d442f", "librechat:s432d72870381"], "status": "REASONED"},
-    "mfa": {"text": "Instance-wide native MFA enforcement is not documented; use provider/fronting MFA. Flowise SSO is Enterprise; Langflow offers external JWT/JWKS.", "components": ["flowise", "langflow", "librechat"], "sources": ["flowise:scabc8335d0c7", "langflow:sec83eaf2b841", "librechat:s70ac8e7c9504"], "status": "REASONED"},
-    "librechat-mfa": {"text": "v0.7.7 changelog lists two-factor enrolment/backup codes, but checked authentication docs do not establish enforced MFA.", "components": ["librechat-mfa", "librechat"], "sources": ["librechat-mfa:s3909883e4681", "librechat:s70ac8e7c9504"], "status": "REASONED"},
-    "containment": {"text": "Treat editor as code/SSRF authority; isolate runtime, limit mounts/privileges and default-deny egress including metadata; rotate exposed provider keys.", "components": ["langflow", "flowise", "librechat", "dify-console"], "sources": ["langflow:sca4ee617805d", "flowise:sfee1ae75d51a", "librechat:s9f9e35619ce7", "dify-console:sb28809d177bf"], "status": "REASONED"},
-    "flowise-guards": {"text": "Keep HTTP_SECURITY_CHECK and CUSTOM_MCP_SECURITY_CHECK enabled; disabling MCP check permits arbitrary command execution.", "components": ["flowise"], "sources": ["flowise:sfee1ae75d51a"], "status": "REASONED"},
-    "librechat-actions": {"text": "Unset actions.allowedDomains allows public domains with private-target SSRF checks; configured allowlist denies others, and listed private destination grants exception.", "components": ["librechat"], "sources": ["librechat:s9f9e35619ce7"], "status": "REASONED"},
-    "dify-ssrf": {"text": "Keep Dify SSRF proxy for sandbox and HTTP-request nodes; HTTP allowlists do not contain arbitrary local tools.", "components": ["dify-console", "dify-compose"], "sources": ["dify-console:sb28809d177bf", "dify-compose:s517af9c43635"], "status": "REASONED"},
-    "verify-network": {"text": "Inventory all listeners and actual Publishers; direct TCP 5003 success proves exposure, refusal/timeout needs same-host reachable control and merged-model evidence.", "components": ["dify-console", "daemon", "docker"], "sources": ["dify-console:s1e4c822a36b1", "daemon:s32b7d021da01", "docker:s3e97c2c250b6", "docker:s351180c6678f"], "status": "REASONED", "verify": [1]},
-    "verify-editor": {"text": "Curl checks transport only; fresh unauthenticated browser must show login, and /install must be already claimed rather than open admin setup.", "components": ["dify", "flowise-auth", "langflow", "librechat"], "sources": ["dify:sc63a91c72255", "flowise-auth:s6fd9f4266a98", "langflow:s5cfeeba4d9b3", "librechat:s70ac8e7c9504"], "status": "REASONED", "verify": [1]},
-    "verify-dify": {"text": "Direct /v1/parameters matched pair expects missing-Bearer 401 and valid-key parameters 200; app_unavailable 400 is inconclusive; bundled nginx is not strict api-service attribution.", "components": ["dify"], "sources": ["dify:sd5ae6b9492f0"], "status": "REASONED", "verify": [1]},
-    "verify-flowise": {"text": "Assigned-key chatflow prediction must reject missing key and return real output with valid Bearer key; keyless flow is public.", "components": ["flowise"], "sources": ["flowise:s546a18b65918", "flowise:s23c31010d23d"], "status": "REASONED", "verify": [1]},
-    "verify-langflow": {"text": "Run API must reject absent x-api-key and return real output with valid key; routing, transport or validation errors are inconclusive.", "components": ["langflow"], "sources": ["langflow:s5cfeeba4d9b3"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # Agent and workflow builders: Dify, Flowise, Langflow, LibreChat
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Dify plugin daemon 0.6.10, Flowise account minimum v3.0.1, Langflow settings source v1.12.6, LibreChat changelog v0.7.7, Docker Compose go.mod v2.24.3, Docker Compose release source v2.24.4, compose-go loader v2.0.0-rc.2, and compose-go reset loader v2.0.0-rc.3; 8 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 58 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- dify: Dify documentation (unknown)
-- dify-console: Dify console/config source (d39d9ddb7430522e0c828c6953afdf773ba6e675)
-- dify-compose: Dify Compose source (8387590ace4a094de812b7847fc6a4c3a27cd52b)
-- docker: Docker (unknown)
-- docker-merge: Docker Compose merge source (31d174d090fd7111ca2199ed54a3978e0d4ac74d)
-- compose-243: Docker Compose go.mod (v2.24.3)
-- compose-244: Docker Compose release source (v2.24.4)
-- compose-go-rc2: compose-go loader (v2.0.0-rc.2)
-- compose-go-rc3: compose-go reset loader (v2.0.0-rc.3)
-- certbot: Dify certbot source (4c1ad40f8e8a6ee58a958330558f2178b7e47fa7)
-- flowise: Flowise documentation (unknown)
-- flowise-auth: Flowise account minimum (v3.0.1)
-- flowise-compose: Flowise Compose (4ea391204a499fb6d19747104502362295b4dde3)
-- langflow-1126: Langflow settings source (v1.12.6)
-- langflow-compose: Langflow Compose (c6dbca308dc85526d5cecb31211821ec4f5e1d05)
-- librechat-compose: LibreChat Compose (1596df724a840f894831fc74f21de8d8df72fcb1)
-- langflow: Langflow documentation (unknown)
-- librechat: LibreChat documentation (unknown)
-- librechat-mfa: LibreChat changelog (v0.7.7)
-- daemon: Dify plugin daemon (0.6.10)
-- daemon-source: Dify plugin daemon source (1310a18b2f6bc6f18768a0a6265484830891433c)
-
-Claims (full source mapping in the front matter):
-
-- flowise-port (REASONED; flowise, flowise-compose): Flowise PORT defaults 3000; Compose publishes ${PORT}:${PORT}; replace with host-loopback mapping.
-- langflow-port (REASONED; langflow, langflow-compose, langflow-1126): Langflow 1.12.6 settings default port 7860; example Compose publishes 7860:7860 and Postgres 5432:5432; keep database unpublished or private.
-- librechat-port (REASONED; librechat, librechat-compose): LibreChat defaults 3080; Compose publishes ${PORT}:${PORT} and admin-panel ${ADMIN_PANEL_PORT:-3000}:3000; restrict both.
-- compose-merge (REASONED; docker, docker-merge, compose-243, compose-244, compose-go-rc2, compose-go-rc3): Override ports lists merge; !override replaces and !reset clears. Guide assessment: require Docker Compose 2.24.4+ for both; pinned v2.24.3 uses compose-go rc.2, whose loader handles !reset, while pinned v2.24.4 uses rc.3 with both tags. Later-release behaviour is not established by these pins.
-- docker-firewall (REASONED; docker): Docker published traffic can bypass UFW; removing or narrowing publications is required.
-- dify-ports (REASONED; dify-console, dify-compose): Dify publishes nginx 80/443 and plugin debugging 5003, with more vector-profile ports; EXPOSE_NGINX_SSL_PORT remains published when HTTPS serving is off.
-- dify-debug-bind (REASONED; dify-console): Compose pins daemon 0.6.10-local, publishes 5003 on all host interfaces; EXPOSE_PLUGIN_DEBUGGING_HOST is client destination, not bind control.
-- daemon-listener (REASONED; dify-console, daemon): Daemon 0.6.10 uses plaintext newline-delimited JSON TCP; PLUGIN_DEBUGGING_HOST/PORT map to remote-installing listener, default 0.0.0.0:5003.
-- daemon-key (REASONED; daemon): Per-tenant UUID debugging key has Redis bidirectional mappings with two-hour expiry; retrieval refreshes expiry, not key, and expiry leaves authenticated runtime connected.
-- daemon-rejection (REASONED; daemon): Wrong key yields handshake failed, invalid key and closes; lookup is Redis-based and TCP key guessing has no rate limiter.
-- daemon-preauth (REASONED; daemon-source): Non-handshake messages can parse/store declarations and buffer assets before authentication.
-- daemon-assets (REASONED; daemon-source): Asset limit compares decoded buffered bytes plus incoming base64 string length against 50 MiB; accepted chunks increment decoded length.
-- daemon-authority (REASONED; daemon): Key holder registers tenant runtime receiving invocation parameters/prompts/credentials and returning results; this alone does not demonstrate host shell execution.
-- debug-key-access (REASONED; dify-console): Initialized authenticated member with active workspace after setup can GET current workspace debugging-key under documented default permissions.
-- rbac-default (REASONED; dify-console): RBAC_ENABLED defaults false and skips enterprise RBAC checks.
-- plugin-permission (REASONED; dify-console): No plugin-permission row allows every member; existing row default noone differs, and admins permits only admin/owner.
-- debug-remedy (REASONED; dify-console): Admin/owner may POST permission/change with debug_permission admins; preserve install_permission, whose omitted value defaults everyone; UI availability unestablished.
-- debug-disable (REASONED; daemon, docker): PLUGIN_REMOTE_INSTALLING_ENABLED defaults true; false prevents TCP startup and removes debugging-key route, while ports: !reset [] separately removes publication.
-- verify-debug-config (REASONED; dify-console, daemon, docker): Merged Compose should change from published 5003/default-enabled to no publication and explicit false after override and recreation; no Docker/listener demonstration.
-- flowise-tls (REASONED; flowise): Flowise documented TLS uses nginx/certbot upstream localhost:3000; configure NUMBER_OF_PROXIES for real client addresses.
-- librechat-tls (REASONED; librechat): LibreChat documented TLS uses nginx upstream localhost:3080; TRUST_PROXY defaults 1 and must match proxy hops.
-- langflow-tls (REASONED; langflow, langflow-1126): Langflow 1.12.6 LANGFLOW_SSL_CERT_FILE/KEY_FILE settings feed native TLS; guide assessment: a proxy remains a place for login/MFA.
-- langflow-cookies (REASONED; langflow, langflow-1126): Langflow 1.12.6 LANGFLOW_ACCESS_SECURE and LANGFLOW_REFRESH_SECURE default false; set both true behind HTTPS.
-- dify-tls (REASONED; certbot, dify-console): Certbot challenge/domain/email and fullchain.pem/privkey.pem precede certificate update; enable HTTPS and recreate nginx; default HTTPS false, protocols TLSv1.2 TLSv1.3.
-- dify-urls (REASONED; dify): Set CONSOLE_API_URL, CONSOLE_WEB_URL and APP_WEB_URL to public HTTPS; CONSOLE_API_URL controls HTTPS-only cookies.
-- dify-bootstrap (REASONED; dify, dify-console): INIT_PASSWORD defaults empty; set it before first up to gate /install and claim admin privately.
-- dify-secret (REASONED; dify, dify-console): SECRET_KEY signs session/JWT and encrypts stored OAuth credentials; generate random value, or empty auto-generates in storage.
-- dify-registration (REASONED; dify-console): ALLOW_REGISTER=false default closes ordinary self-registration, but not invitations or /install bootstrap.
-- dify-db-redis (REASONED; dify-console): Replace DB_PASSWORD and REDIS_PASSWORD defaults difyai123456 and update embedded CELERY_BROKER_URL password.
-- dify-sandbox (REASONED; dify-console): Replace CODE_EXECUTION_API_KEY/SANDBOX_API_KEY default dify-sandbox together.
-- dify-plugin-keys (REASONED; dify-console): Replace PLUGIN_DAEMON_KEY and PLUGIN_DIFY_INNER_API_KEY example service credentials.
-- dify-agent-keys (REASONED; dify-console): Replace DIFY_AGENT_API_TOKEN and DIFY_AGENT_SERVER_SECRET_KEY; signing key needs unpadded base64url of 32 random bytes.
-- dify-weaviate (REASONED; dify-console): If enabled, rotate WEAVIATE_API_KEY and matching allowed keys; disable anonymous access.
-- dify-api (REASONED; dify): App Bearer keys are separate from console accounts; create per app and keep calls/keys on the backend.
-- flowise-accounts (REASONED; flowise-auth): From v3.0.1, email/password accounts use JWT HTTP-only cookies; old FLOWISE_USERNAME/PASSWORD are deprecated migration settings; claim admin privately.
-- flowise-secrets (REASONED; flowise-auth, flowise): Randomize JWT_AUTH_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET, EXPRESS_SESSION_SECRET default flowise, and TOKEN_HASH_SECRET; APP_URL defaults localhost:3000.
-- flowise-encryption (REASONED; flowise): FLOWISE_SECRETKEY_OVERWRITE supplies stored-credential encryption key; otherwise it lives under SECRETKEY_PATH.
-- flowise-prediction (REASONED; flowise): Chatflow without assigned key is public by ID; assign per-chatflow API key (DefaultKey is precreated), Bearer requests reject missing key with 401.
-- langflow-auto (REASONED; langflow, langflow-1126): Langflow 1.12.6 application AUTO_LOGIN defaults True; pinned official image Dockerfiles set false; explicitly disable it and set a superuser password other than legacy langflow; username defaults langflow and password defaults empty.
-- langflow-secret (REASONED; langflow): Set permanent random LANGFLOW_SECRET_KEY; documented auto-generated key is unsuitable for production.
-- langflow-signup (REASONED; langflow): NEW_USER_IS_ACTIVE defaults False but ENABLE_SIGNUP True; disable signup and keep activation requirement.
-- langflow-api (REASONED; langflow): With auto-login off, POST /api/v1/run/&lt;flow-id&gt; needs x-api-key; create via settings or CLI. SKIP_AUTH_AUTO_LOGIN defaults false, applies only with auto-login and is slated for removal.
-- langflow-host (REASONED; langflow, langflow-compose, langflow-1126): Langflow 1.12.6 settings default HOST localhost; guide assessment: bridged containers need 0.0.0.0 plus host-loopback publication and injected env_file/environment; rolling docs remain unversioned.
-- librechat-bootstrap (REASONED; librechat): First registered user becomes admin; close ALLOW_REGISTRATION after claiming it.
-- librechat-sso (REASONED; librechat): For SSO-only, disable email login and deliberately enable social registration/login; configure OPENID_* and optional required role with provider allowlist and MFA.
-- librechat-secrets (REASONED; librechat): CREDS_KEY is 32 bytes, CREDS_IV 16; JWT secrets at least 32 bytes. Blank values bootstrap keys with persistence caveats; retired JWT defaults are refused.
-- librechat-urls (REASONED; librechat): DOMAIN_CLIENT and DOMAIN_SERVER must use public HTTPS URL.
-- mfa (REASONED; flowise, langflow, librechat): Instance-wide native MFA enforcement is not documented; use provider/fronting MFA. Flowise SSO is Enterprise; Langflow offers external JWT/JWKS.
-- librechat-mfa (REASONED; librechat-mfa, librechat): v0.7.7 changelog lists two-factor enrolment/backup codes, but checked authentication docs do not establish enforced MFA.
-- containment (REASONED; langflow, flowise, librechat, dify-console): Treat editor as code/SSRF authority; isolate runtime, limit mounts/privileges and default-deny egress including metadata; rotate exposed provider keys.
-- flowise-guards (REASONED; flowise): Keep HTTP_SECURITY_CHECK and CUSTOM_MCP_SECURITY_CHECK enabled; disabling MCP check permits arbitrary command execution.
-- librechat-actions (REASONED; librechat): Unset actions.allowedDomains allows public domains with private-target SSRF checks; configured allowlist denies others, and listed private destination grants exception.
-- dify-ssrf (REASONED; dify-console, dify-compose): Keep Dify SSRF proxy for sandbox and HTTP-request nodes; HTTP allowlists do not contain arbitrary local tools.
-- verify-network (REASONED; dify-console, daemon, docker): Inventory all listeners and actual Publishers; direct TCP 5003 success proves exposure, refusal/timeout needs same-host reachable control and merged-model evidence.
-- verify-editor (REASONED; dify, flowise-auth, langflow, librechat): Curl checks transport only; fresh unauthenticated browser must show login, and /install must be already claimed rather than open admin setup.
-- verify-dify (REASONED; dify): Direct /v1/parameters matched pair expects missing-Bearer 401 and valid-key parameters 200; app_unavailable 400 is inconclusive; bundled nginx is not strict api-service attribution.
-- verify-flowise (REASONED; flowise): Assigned-key chatflow prediction must reject missing key and return real output with valid Bearer key; keyless flow is public.
-- verify-langflow (REASONED; langflow): Run API must reject absent x-api-key and return real output with valid key; routing, transport or validation errors are inconclusive.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Each of these tools stores your provider API keys (OpenAI, Anthropic, and the rest) and exposes both an editor UI and callable APIs, so an open instance is a secrets vault plus free compute for whoever finds it. All four ship with login of some kind; the exposure comes from skipping the first-run setup, leaving default secrets in place, and publishing the container port on every interface over plain HTTP. And because each one runs user-authored flows with custom-code and HTTP-request/tool nodes, the editor is effectively code-execution and server-side-request authority on the host, so authentication decides who gets in but does not contain what a flow can then run or reach (section 8, [egress-metadata.md](egress-metadata.md)). None of them offers a native second factor that this guide can rely on, so MFA comes from an OIDC provider (where the tool supports OIDC) or from the fronting layer ([mfa.md](mfa.md)).
 
@@ -651,3 +278,402 @@ curl -q -g -sS -L --proto-redir '=https' --noproxy '*' --connect-timeout 5 --max
 - Dify plugin permission model (row default `noone`, unlike the no-row allowance above): https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/models/account.py#L402-L407
 - Dify permission-change API (admin or owner only, request defaults, create or update the permission row): https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/plugin.py#L1086-L1106 ; https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/plugin.py#L170-L172 ; https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/services/plugin/plugin_permission_service.py#L14-L36
 - `docker compose ps` output fields (`Service`, `Publishers`, `PublishedPort`): https://docs.docker.com/reference/cli/docker/compose/ps/
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/agent-builders.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- daemon: Dify plugin daemon (0.6.10)
+- flowise-auth: Flowise account minimum (v3.0.1)
+- langflow-1126: Langflow settings source (v1.12.6)
+- librechat-mfa: LibreChat changelog (v0.7.7)
+- dify: Dify documentation (unknown)
+- dify-console: Dify console/config source (d39d9ddb7430522e0c828c6953afdf773ba6e675)
+- dify-compose: Dify Compose source (8387590ace4a094de812b7847fc6a4c3a27cd52b)
+- certbot: Dify certbot source (4c1ad40f8e8a6ee58a958330558f2178b7e47fa7)
+- daemon-source: Dify plugin daemon source (1310a18b2f6bc6f18768a0a6265484830891433c)
+- flowise: Flowise documentation (unknown)
+- flowise-compose: Flowise Compose (4ea391204a499fb6d19747104502362295b4dde3)
+- langflow-compose: Langflow Compose (c6dbca308dc85526d5cecb31211821ec4f5e1d05)
+- langflow: Langflow documentation (unknown)
+- librechat-compose: LibreChat Compose (1596df724a840f894831fc74f21de8d8df72fcb1)
+- librechat: LibreChat documentation (unknown)
+- docker: Docker (unknown)
+- docker-merge: Docker Compose merge source (31d174d090fd7111ca2199ed54a3978e0d4ac74d)
+- compose-243: Docker Compose go.mod (v2.24.3)
+- compose-244: Docker Compose release source (v2.24.4)
+- compose-go-rc2: compose-go loader (v2.0.0-rc.2)
+- compose-go-rc3: compose-go reset loader (v2.0.0-rc.3)
+
+Claims (full source mapping in the JSON block below):
+
+- flowise-port (REASONED; flowise, flowise-compose): Flowise PORT defaults 3000; Compose publishes ${PORT}:${PORT}; replace with host-loopback mapping.
+- langflow-port (REASONED; langflow, langflow-compose, langflow-1126): Langflow 1.12.6 settings default port 7860; example Compose publishes 7860:7860 and Postgres 5432:5432; keep database unpublished or private.
+- librechat-port (REASONED; librechat, librechat-compose): LibreChat defaults 3080; Compose publishes ${PORT}:${PORT} and admin-panel ${ADMIN_PANEL_PORT:-3000}:3000; restrict both.
+- compose-merge (REASONED; docker, docker-merge, compose-243, compose-244, compose-go-rc2, compose-go-rc3): Override ports lists merge; !override replaces and !reset clears. Guide assessment: require Docker Compose 2.24.4+ for both; pinned v2.24.3 uses compose-go rc.2, whose loader handles !reset, while pinned v2.24.4 uses rc.3 with both tags. Later-release behaviour is not established by these pins.
+- docker-firewall (REASONED; docker): Docker published traffic can bypass UFW; removing or narrowing publications is required.
+- dify-ports (REASONED; dify-console, dify-compose): Dify publishes nginx 80/443 and plugin debugging 5003, with more vector-profile ports; EXPOSE_NGINX_SSL_PORT remains published when HTTPS serving is off.
+- dify-debug-bind (REASONED; dify-console): Compose pins daemon 0.6.10-local, publishes 5003 on all host interfaces; EXPOSE_PLUGIN_DEBUGGING_HOST is client destination, not bind control.
+- daemon-listener (REASONED; dify-console, daemon): Daemon 0.6.10 uses plaintext newline-delimited JSON TCP; PLUGIN_DEBUGGING_HOST/PORT map to remote-installing listener, default 0.0.0.0:5003.
+- daemon-key (REASONED; daemon): Per-tenant UUID debugging key has Redis bidirectional mappings with two-hour expiry; retrieval refreshes expiry, not key, and expiry leaves authenticated runtime connected.
+- daemon-rejection (REASONED; daemon): Wrong key yields handshake failed, invalid key and closes; lookup is Redis-based and TCP key guessing has no rate limiter.
+- daemon-preauth (REASONED; daemon-source): Non-handshake messages can parse/store declarations and buffer assets before authentication.
+- daemon-assets (REASONED; daemon-source): Asset limit compares decoded buffered bytes plus incoming base64 string length against 50 MiB; accepted chunks increment decoded length.
+- daemon-authority (REASONED; daemon): Key holder registers tenant runtime receiving invocation parameters/prompts/credentials and returning results; this alone does not demonstrate host shell execution.
+- debug-key-access (REASONED; dify-console): Initialized authenticated member with active workspace after setup can GET current workspace debugging-key under documented default permissions.
+- rbac-default (REASONED; dify-console): RBAC_ENABLED defaults false and skips enterprise RBAC checks.
+- plugin-permission (REASONED; dify-console): No plugin-permission row allows every member; existing row default noone differs, and admins permits only admin/owner.
+- debug-remedy (REASONED; dify-console): Admin/owner may POST permission/change with debug_permission admins; preserve install_permission, whose omitted value defaults everyone; UI availability unestablished.
+- debug-disable (REASONED; daemon, docker): PLUGIN_REMOTE_INSTALLING_ENABLED defaults true; false prevents TCP startup and removes debugging-key route, while ports: !reset [] separately removes publication.
+- verify-debug-config (REASONED; dify-console, daemon, docker): Merged Compose should change from published 5003/default-enabled to no publication and explicit false after override and recreation; no Docker/listener demonstration.
+- flowise-tls (REASONED; flowise): Flowise documented TLS uses nginx/certbot upstream localhost:3000; configure NUMBER_OF_PROXIES for real client addresses.
+- librechat-tls (REASONED; librechat): LibreChat documented TLS uses nginx upstream localhost:3080; TRUST_PROXY defaults 1 and must match proxy hops.
+- langflow-tls (REASONED; langflow, langflow-1126): Langflow 1.12.6 LANGFLOW_SSL_CERT_FILE/KEY_FILE settings feed native TLS; guide assessment: a proxy remains a place for login/MFA.
+- langflow-cookies (REASONED; langflow, langflow-1126): Langflow 1.12.6 LANGFLOW_ACCESS_SECURE and LANGFLOW_REFRESH_SECURE default false; set both true behind HTTPS.
+- dify-tls (REASONED; certbot, dify-console): Certbot challenge/domain/email and fullchain.pem/privkey.pem precede certificate update; enable HTTPS and recreate nginx; default HTTPS false, protocols TLSv1.2 TLSv1.3.
+- dify-urls (REASONED; dify): Set CONSOLE_API_URL, CONSOLE_WEB_URL and APP_WEB_URL to public HTTPS; CONSOLE_API_URL controls HTTPS-only cookies.
+- dify-bootstrap (REASONED; dify, dify-console): INIT_PASSWORD defaults empty; set it before first up to gate /install and claim admin privately.
+- dify-secret (REASONED; dify, dify-console): SECRET_KEY signs session/JWT and encrypts stored OAuth credentials; generate random value, or empty auto-generates in storage.
+- dify-registration (REASONED; dify-console): ALLOW_REGISTER=false default closes ordinary self-registration, but not invitations or /install bootstrap.
+- dify-db-redis (REASONED; dify-console): Replace DB_PASSWORD and REDIS_PASSWORD defaults difyai123456 and update embedded CELERY_BROKER_URL password.
+- dify-sandbox (REASONED; dify-console): Replace CODE_EXECUTION_API_KEY/SANDBOX_API_KEY default dify-sandbox together.
+- dify-plugin-keys (REASONED; dify-console): Replace PLUGIN_DAEMON_KEY and PLUGIN_DIFY_INNER_API_KEY example service credentials.
+- dify-agent-keys (REASONED; dify-console): Replace DIFY_AGENT_API_TOKEN and DIFY_AGENT_SERVER_SECRET_KEY; signing key needs unpadded base64url of 32 random bytes.
+- dify-weaviate (REASONED; dify-console): If enabled, rotate WEAVIATE_API_KEY and matching allowed keys; disable anonymous access.
+- dify-api (REASONED; dify): App Bearer keys are separate from console accounts; create per app and keep calls/keys on the backend.
+- flowise-accounts (REASONED; flowise-auth): From v3.0.1, email/password accounts use JWT HTTP-only cookies; old FLOWISE_USERNAME/PASSWORD are deprecated migration settings; claim admin privately.
+- flowise-secrets (REASONED; flowise-auth, flowise): Randomize JWT_AUTH_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET, EXPRESS_SESSION_SECRET default flowise, and TOKEN_HASH_SECRET; APP_URL defaults localhost:3000.
+- flowise-encryption (REASONED; flowise): FLOWISE_SECRETKEY_OVERWRITE supplies stored-credential encryption key; otherwise it lives under SECRETKEY_PATH.
+- flowise-prediction (REASONED; flowise): Chatflow without assigned key is public by ID; assign per-chatflow API key (DefaultKey is precreated), Bearer requests reject missing key with 401.
+- langflow-auto (REASONED; langflow, langflow-1126): Langflow 1.12.6 application AUTO_LOGIN defaults True; pinned official image Dockerfiles set false; explicitly disable it and set a superuser password other than legacy langflow; username defaults langflow and password defaults empty.
+- langflow-secret (REASONED; langflow): Set permanent random LANGFLOW_SECRET_KEY; documented auto-generated key is unsuitable for production.
+- langflow-signup (REASONED; langflow): NEW_USER_IS_ACTIVE defaults False but ENABLE_SIGNUP True; disable signup and keep activation requirement.
+- langflow-api (REASONED; langflow): With auto-login off, POST /api/v1/run/&lt;flow-id&gt; needs x-api-key; create via settings or CLI. SKIP_AUTH_AUTO_LOGIN defaults false, applies only with auto-login and is slated for removal.
+- langflow-host (REASONED; langflow, langflow-compose, langflow-1126): Langflow 1.12.6 settings default HOST localhost; guide assessment: bridged containers need 0.0.0.0 plus host-loopback publication and injected env_file/environment; rolling docs remain unversioned.
+- librechat-bootstrap (REASONED; librechat): First registered user becomes admin; close ALLOW_REGISTRATION after claiming it.
+- librechat-sso (REASONED; librechat): For SSO-only, disable email login and deliberately enable social registration/login; configure OPENID_* and optional required role with provider allowlist and MFA.
+- librechat-secrets (REASONED; librechat): CREDS_KEY is 32 bytes, CREDS_IV 16; JWT secrets at least 32 bytes. Blank values bootstrap keys with persistence caveats; retired JWT defaults are refused.
+- librechat-urls (REASONED; librechat): DOMAIN_CLIENT and DOMAIN_SERVER must use public HTTPS URL.
+- mfa (REASONED; flowise, langflow, librechat): Instance-wide native MFA enforcement is not documented; use provider/fronting MFA. Flowise SSO is Enterprise; Langflow offers external JWT/JWKS.
+- librechat-mfa (REASONED; librechat-mfa, librechat): v0.7.7 changelog lists two-factor enrolment/backup codes, but checked authentication docs do not establish enforced MFA.
+- containment (REASONED; langflow, flowise, librechat, dify-console): Treat editor as code/SSRF authority; isolate runtime, limit mounts/privileges and default-deny egress including metadata; rotate exposed provider keys.
+- flowise-guards (REASONED; flowise): Keep HTTP_SECURITY_CHECK and CUSTOM_MCP_SECURITY_CHECK enabled; disabling MCP check permits arbitrary command execution.
+- librechat-actions (REASONED; librechat): Unset actions.allowedDomains allows public domains with private-target SSRF checks; configured allowlist denies others, and listed private destination grants exception.
+- dify-ssrf (REASONED; dify-console, dify-compose): Keep Dify SSRF proxy for sandbox and HTTP-request nodes; HTTP allowlists do not contain arbitrary local tools.
+- verify-network (REASONED; dify-console, daemon, docker): Inventory all listeners and actual Publishers; direct TCP 5003 success proves exposure, refusal/timeout needs same-host reachable control and merged-model evidence.
+- verify-editor (REASONED; dify, flowise-auth, langflow, librechat): Curl checks transport only; fresh unauthenticated browser must show login, and /install must be already claimed rather than open admin setup.
+- verify-dify (REASONED; dify): Direct /v1/parameters matched pair expects missing-Bearer 401 and valid-key parameters 200; app_unavailable 400 is inconclusive; bundled nginx is not strict api-service attribution.
+- verify-flowise (REASONED; flowise): Assigned-key chatflow prediction must reject missing key and return real output with valid Bearer key; keyless flow is public.
+- verify-langflow (REASONED; langflow): Run API must reject absent x-api-key and return real output with valid key; routing, transport or validation errors are inconclusive.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-17",
+  "documentation_checked": "2026-09",
+  "body_sha256": "49aeeb6f2264d04bfeae494a08061515cc6649f8cda6dc14173a133553160593",
+  "components": {
+    "daemon": {
+      "name": "Dify plugin daemon",
+      "basis": "0.6.10",
+      "sources": {
+        "scb80ef9b341b": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/server.go#L109-L134",
+        "sbb1558888c1a": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/codec.go#L14-L49",
+        "s1d0863ded6ed": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/runtime_intialization_handlers.go#L18-L42",
+        "sfabe22af22d6": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/hooks.go#L51-L90",
+        "sbccc30db5bfe": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/hooks.go#L158-L240",
+        "s6490d756c639": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/service/debugging_service/connection_key.go#L23-L123",
+        "sa0aa7e953ee0": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/pkg/utils/cache/redis.go#L208-L230",
+        "sa3ee5e4e8a84": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/service/install_service/controlpanel.go#L50-L85",
+        "s14d062f60b1b": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/io.go#L18-L68",
+        "sa3fa1b50ea09": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/pkg/entities/requests/tool.go#L27-L36",
+        "s8e20b988ea0b": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/pkg/entities/requests/model.go#L9-L34",
+        "s191317bdf3a7": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/types/app/config.go#L101-L106",
+        "s32b7d021da01": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/control_panel/watch_dog.go#L32-L46",
+        "sb19f8717ed1f": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/server/http_server.go#L130-L134",
+        "s2efeb062db27": "https://github.com/langgenius/dify-plugin-daemon/blob/0.6.10/internal/core/debugging_runtime/hooks.go#L132-L153"
+      }
+    },
+    "flowise-auth": {
+      "name": "Flowise account minimum",
+      "basis": "v3.0.1",
+      "sources": {
+        "s6fd9f4266a98": "https://docs.flowiseai.com/configuration/authorization/app-level"
+      }
+    },
+    "langflow-1126": {
+      "name": "Langflow settings source",
+      "basis": "v1.12.6",
+      "sources": {
+        "s8049fb15747e": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/groups/server.py#L21-L24",
+        "s46241ad0c9d0": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/groups/server.py#L45-L48",
+        "sd7fd176a7394": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L96-L104",
+        "s400ca0f879b4": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L135-L148",
+        "sb7ab44ba0da0": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/constants.py#L3-L6",
+        "s8e8d73b2b8bd": "https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push.Dockerfile#L234-L235",
+        "s419881904281": "https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push_backend.Dockerfile#L124-L128",
+        "s57f0e83270f9": "https://github.com/langflow-ai/langflow/blob/v1.12.6/docker/build_and_push_ep.Dockerfile#L164-L169",
+        "s44bfa70223f9": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/base.py#L89-L117",
+        "sf521d52020be": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L553-L556",
+        "s6cf1768228ea": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L225-L245",
+        "s1ee798ffcdbe": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L670-L690",
+        "s6485ba67d66f": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L216-L230",
+        "s842c850d80b0": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L344",
+        "s253a7815151a": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/lfx/src/lfx/services/settings/auth.py#L48",
+        "s9701f0527287": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L173-L178",
+        "sb2a88f59cc75": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/__main__.py#L619-L669",
+        "s3ff960d5d18a": "https://github.com/langflow-ai/langflow/blob/v1.12.6/src/backend/base/langflow/services/utils.py#L142-L213"
+      }
+    },
+    "librechat-mfa": {
+      "name": "LibreChat changelog",
+      "basis": "v0.7.7",
+      "sources": {
+        "s3909883e4681": "https://www.librechat.ai/changelog/v0.7.7"
+      }
+    },
+    "dify": {
+      "name": "Dify documentation",
+      "basis": "unknown",
+      "sources": {
+        "sc63a91c72255": "https://docs.dify.ai/en/self-host/deploy/quick-start/docker-compose",
+        "s144cc3f563a1": "https://docs.dify.ai/en/self-host/deploy/configuration/environments",
+        "sd5ae6b9492f0": "https://docs.dify.ai/en/api-reference/guides/get-started"
+      }
+    },
+    "dify-console": {
+      "name": "Dify console/config source",
+      "basis": "d39d9ddb7430522e0c828c6953afdf773ba6e675",
+      "sources": {
+        "sb28809d177bf": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/docker/.env.example",
+        "s1e4c822a36b1": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/docker/docker-compose.yaml#L573-L644",
+        "s1cd4f464c880": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/plugin.py#L567-L585",
+        "saa9ceb383427": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/__init__.py#L14-L61",
+        "s3998f01569b8": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/common/wraps.py#L11-L32",
+        "s39e0b615af71": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/configs/enterprise/__init__.py#L38-L41",
+        "s5384bb9d1e75": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/wraps.py#L308-L321",
+        "s7cdbcd9957ac": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/wraps.py#L113-L125",
+        "s182d16f6e475": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/libs/login.py#L47-L59",
+        "sf9235e345b51": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/libs/login.py#L152-L169",
+        "s1edf3fa3d667": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/models/account.py#L402-L407",
+        "s09ea6abe9b9c": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/plugin.py#L1086-L1106",
+        "s662ba88445cd": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/controllers/console/workspace/plugin.py#L170-L172",
+        "s4b8c82f515c6": "https://github.com/langgenius/dify/blob/d39d9ddb7430522e0c828c6953afdf773ba6e675/api/services/plugin/plugin_permission_service.py#L14-L36"
+      }
+    },
+    "dify-compose": {
+      "name": "Dify Compose source",
+      "basis": "8387590ace4a094de812b7847fc6a4c3a27cd52b",
+      "sources": {
+        "s517af9c43635": "https://github.com/langgenius/dify/blob/8387590ace4a094de812b7847fc6a4c3a27cd52b/docker/docker-compose.yaml"
+      }
+    },
+    "certbot": {
+      "name": "Dify certbot source",
+      "basis": "4c1ad40f8e8a6ee58a958330558f2178b7e47fa7",
+      "sources": {
+        "sba8e43d56b94": "https://github.com/langgenius/dify/blob/4c1ad40f8e8a6ee58a958330558f2178b7e47fa7/docker/certbot/README.md"
+      }
+    },
+    "daemon-source": {
+      "name": "Dify plugin daemon source",
+      "basis": "1310a18b2f6bc6f18768a0a6265484830891433c",
+      "sources": {
+        "s629f3bfbae72": "https://github.com/langgenius/dify-plugin-daemon/blob/1310a18b2f6bc6f18768a0a6265484830891433c/internal/core/debugging_runtime/hooks.go#L158-L237",
+        "s07045a0003da": "https://github.com/langgenius/dify-plugin-daemon/blob/1310a18b2f6bc6f18768a0a6265484830891433c/internal/core/debugging_runtime/runtime_intialization_handlers.go#L44-L75",
+        "s2b36558b0078": "https://github.com/langgenius/dify-plugin-daemon/blob/1310a18b2f6bc6f18768a0a6265484830891433c/internal/core/debugging_runtime/runtime_intialization_handlers.go#L139-L183"
+      }
+    },
+    "flowise": {
+      "name": "Flowise documentation",
+      "basis": "unknown",
+      "sources": {
+        "s546a18b65918": "https://docs.flowiseai.com/configuration/authorization/chatflow-level",
+        "sfee1ae75d51a": "https://docs.flowiseai.com/configuration/environment-variables",
+        "scabc8335d0c7": "https://docs.flowiseai.com/configuration/sso",
+        "s23c31010d23d": "https://docs.flowiseai.com/api-reference/prediction",
+        "s7b675aa70798": "https://docs.flowiseai.com/configuration/deployment/digital-ocean"
+      }
+    },
+    "flowise-compose": {
+      "name": "Flowise Compose",
+      "basis": "4ea391204a499fb6d19747104502362295b4dde3",
+      "sources": {
+        "s81474794a92d": "https://github.com/FlowiseAI/Flowise/blob/4ea391204a499fb6d19747104502362295b4dde3/docker/docker-compose.yml"
+      }
+    },
+    "langflow-compose": {
+      "name": "Langflow Compose",
+      "basis": "c6dbca308dc85526d5cecb31211821ec4f5e1d05",
+      "sources": {
+        "s7f4564c949cb": "https://github.com/langflow-ai/langflow/blob/c6dbca308dc85526d5cecb31211821ec4f5e1d05/docker_example/docker-compose.yml"
+      }
+    },
+    "langflow": {
+      "name": "Langflow documentation",
+      "basis": "unknown",
+      "sources": {
+        "s5cfeeba4d9b3": "https://docs.langflow.org/api-keys-and-authentication",
+        "s885461210e4e": "https://docs.langflow.org/environment-variables",
+        "s5a55bdef1f33": "https://docs.langflow.org/deployment-prod-best-practices",
+        "sca4ee617805d": "https://docs.langflow.org/security",
+        "sec83eaf2b841": "https://docs.langflow.org/authentication-overview"
+      }
+    },
+    "librechat-compose": {
+      "name": "LibreChat Compose",
+      "basis": "1596df724a840f894831fc74f21de8d8df72fcb1",
+      "sources": {
+        "sb3cc671b90e3": "https://github.com/danny-avila/LibreChat/blob/1596df724a840f894831fc74f21de8d8df72fcb1/docker-compose.yml"
+      }
+    },
+    "librechat": {
+      "name": "LibreChat documentation",
+      "basis": "unknown",
+      "sources": {
+        "s41811a0d442f": "https://www.librechat.ai/docs/configuration/dotenv",
+        "s70ac8e7c9504": "https://www.librechat.ai/docs/configuration/authentication",
+        "s7896961bc713": "https://www.librechat.ai/docs/configuration/authentication/OAuth2-OIDC",
+        "s43fbe74e3c42": "https://www.librechat.ai/docs/configuration/authentication/OAuth2-OIDC/keycloak",
+        "s3f1c594392bc": "https://www.librechat.ai/docs/local/docker",
+        "s432d72870381": "https://www.librechat.ai/docs/remote/nginx",
+        "s9f9e35619ce7": "https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/actions"
+      }
+    },
+    "docker": {
+      "name": "Docker",
+      "basis": "unknown",
+      "sources": {
+        "s351180c6678f": "https://docs.docker.com/engine/network/packet-filtering-firewalls/",
+        "se716ad33db1f": "https://docs.docker.com/reference/compose-file/merge/",
+        "s3e97c2c250b6": "https://docs.docker.com/reference/cli/docker/compose/ps/"
+      }
+    },
+    "docker-merge": {
+      "name": "Docker Compose merge source",
+      "basis": "31d174d090fd7111ca2199ed54a3978e0d4ac74d",
+      "sources": {
+        "s72ea21230137": "https://github.com/docker/docs/blob/31d174d090fd7111ca2199ed54a3978e0d4ac74d/content/reference/compose-file/merge.md#L103-L115",
+        "sc9bb17bb3323": "https://github.com/docker/docs/blob/31d174d090fd7111ca2199ed54a3978e0d4ac74d/content/reference/compose-file/merge.md#L142-L151",
+        "s9d483ca7e4f4": "https://github.com/docker/docs/blob/31d174d090fd7111ca2199ed54a3978e0d4ac74d/content/reference/compose-file/merge.md#L184-L220"
+      }
+    },
+    "compose-243": {
+      "name": "Docker Compose go.mod",
+      "basis": "v2.24.3",
+      "sources": {
+        "s025e0d398762": "https://github.com/docker/compose/blob/v2.24.3/go.mod#L9"
+      }
+    },
+    "compose-244": {
+      "name": "Docker Compose release source",
+      "basis": "v2.24.4",
+      "sources": {
+        "s31edecddf3be": "https://github.com/docker/compose/blob/v2.24.4/go.mod#L9",
+        "s6fc4eeeedfbd": "https://github.com/docker/compose/releases/tag/v2.24.4"
+      }
+    },
+    "compose-go-rc2": {
+      "name": "compose-go loader",
+      "basis": "v2.0.0-rc.2",
+      "sources": {
+        "sc2bf2c1e7297": "https://github.com/compose-spec/compose-go/blob/v2.0.0-rc.2/loader/null.go#L41-L46"
+      }
+    },
+    "compose-go-rc3": {
+      "name": "compose-go reset loader",
+      "basis": "v2.0.0-rc.3",
+      "sources": {
+        "s8d6dab78abf1": "https://github.com/compose-spec/compose-go/blob/v2.0.0-rc.3/loader/reset.go#L41-L50"
+      }
+    }
+  },
+  "claims": {
+    "flowise-port": {"text": "Flowise PORT defaults 3000; Compose publishes ${PORT}:${PORT}; replace with host-loopback mapping.", "components": ["flowise", "flowise-compose"], "sources": ["flowise:sfee1ae75d51a", "flowise-compose:s81474794a92d"], "status": "REASONED"},
+    "langflow-port": {"text": "Langflow 1.12.6 settings default port 7860; example Compose publishes 7860:7860 and Postgres 5432:5432; keep database unpublished or private.", "components": ["langflow", "langflow-compose", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-compose:s7f4564c949cb", "langflow-1126:s8049fb15747e", "langflow-1126:s44bfa70223f9"], "status": "REASONED"},
+    "librechat-port": {"text": "LibreChat defaults 3080; Compose publishes ${PORT}:${PORT} and admin-panel ${ADMIN_PANEL_PORT:-3000}:3000; restrict both.", "components": ["librechat", "librechat-compose"], "sources": ["librechat:s3f1c594392bc", "librechat-compose:sb3cc671b90e3"], "status": "REASONED"},
+    "compose-merge": {"text": "Override ports lists merge; !override replaces and !reset clears. Guide assessment: require Docker Compose 2.24.4+ for both; pinned v2.24.3 uses compose-go rc.2, whose loader handles !reset, while pinned v2.24.4 uses rc.3 with both tags. Later-release behaviour is not established by these pins.", "components": ["docker", "docker-merge", "compose-243", "compose-244", "compose-go-rc2", "compose-go-rc3"], "sources": ["docker:se716ad33db1f", "docker-merge:s72ea21230137", "docker-merge:sc9bb17bb3323", "docker-merge:s9d483ca7e4f4", "compose-243:s025e0d398762", "compose-244:s31edecddf3be", "compose-244:s6fc4eeeedfbd", "compose-go-rc2:sc2bf2c1e7297", "compose-go-rc3:s8d6dab78abf1"], "status": "REASONED"},
+    "docker-firewall": {"text": "Docker published traffic can bypass UFW; removing or narrowing publications is required.", "components": ["docker"], "sources": ["docker:s351180c6678f"], "status": "REASONED"},
+    "dify-ports": {"text": "Dify publishes nginx 80/443 and plugin debugging 5003, with more vector-profile ports; EXPOSE_NGINX_SSL_PORT remains published when HTTPS serving is off.", "components": ["dify-console", "dify-compose"], "sources": ["dify-console:sb28809d177bf", "dify-compose:s517af9c43635", "dify-console:s1e4c822a36b1"], "status": "REASONED"},
+    "dify-debug-bind": {"text": "Compose pins daemon 0.6.10-local, publishes 5003 on all host interfaces; EXPOSE_PLUGIN_DEBUGGING_HOST is client destination, not bind control.", "components": ["dify-console"], "sources": ["dify-console:s1e4c822a36b1", "dify-console:sb28809d177bf"], "status": "REASONED"},
+    "daemon-listener": {"text": "Daemon 0.6.10 uses plaintext newline-delimited JSON TCP; PLUGIN_DEBUGGING_HOST/PORT map to remote-installing listener, default 0.0.0.0:5003.", "components": ["dify-console", "daemon"], "sources": ["dify-console:s1e4c822a36b1", "daemon:scb80ef9b341b", "daemon:sbb1558888c1a", "daemon:sbccc30db5bfe", "daemon:s2efeb062db27"], "status": "REASONED"},
+    "daemon-key": {"text": "Per-tenant UUID debugging key has Redis bidirectional mappings with two-hour expiry; retrieval refreshes expiry, not key, and expiry leaves authenticated runtime connected.", "components": ["daemon"], "sources": ["daemon:s6490d756c639", "daemon:sa0aa7e953ee0", "daemon:sfabe22af22d6"], "status": "REASONED"},
+    "daemon-rejection": {"text": "Wrong key yields handshake failed, invalid key and closes; lookup is Redis-based and TCP key guessing has no rate limiter.", "components": ["daemon"], "sources": ["daemon:s1d0863ded6ed", "daemon:sfabe22af22d6", "daemon:sbccc30db5bfe"], "status": "REASONED"},
+    "daemon-preauth": {"text": "Non-handshake messages can parse/store declarations and buffer assets before authentication.", "components": ["daemon-source"], "sources": ["daemon-source:s629f3bfbae72", "daemon-source:s07045a0003da", "daemon-source:s2b36558b0078"], "status": "REASONED"},
+    "daemon-assets": {"text": "Asset limit compares decoded buffered bytes plus incoming base64 string length against 50 MiB; accepted chunks increment decoded length.", "components": ["daemon-source"], "sources": ["daemon-source:s07045a0003da"], "status": "REASONED"},
+    "daemon-authority": {"text": "Key holder registers tenant runtime receiving invocation parameters/prompts/credentials and returning results; this alone does not demonstrate host shell execution.", "components": ["daemon"], "sources": ["daemon:sa3ee5e4e8a84", "daemon:s14d062f60b1b", "daemon:sa3fa1b50ea09", "daemon:s8e20b988ea0b"], "status": "REASONED"},
+    "debug-key-access": {"text": "Initialized authenticated member with active workspace after setup can GET current workspace debugging-key under documented default permissions.", "components": ["dify-console"], "sources": ["dify-console:s1cd4f464c880", "dify-console:s5384bb9d1e75", "dify-console:s7cdbcd9957ac", "dify-console:s182d16f6e475", "dify-console:sf9235e345b51", "dify-console:saa9ceb383427", "dify-console:s3998f01569b8", "dify-console:s39e0b615af71"], "status": "REASONED"},
+    "rbac-default": {"text": "RBAC_ENABLED defaults false and skips enterprise RBAC checks.", "components": ["dify-console"], "sources": ["dify-console:s3998f01569b8", "dify-console:s39e0b615af71"], "status": "REASONED"},
+    "plugin-permission": {"text": "No plugin-permission row allows every member; existing row default noone differs, and admins permits only admin/owner.", "components": ["dify-console"], "sources": ["dify-console:saa9ceb383427", "dify-console:s1edf3fa3d667"], "status": "REASONED"},
+    "debug-remedy": {"text": "Admin/owner may POST permission/change with debug_permission admins; preserve install_permission, whose omitted value defaults everyone; UI availability unestablished.", "components": ["dify-console"], "sources": ["dify-console:s09ea6abe9b9c", "dify-console:s662ba88445cd", "dify-console:s4b8c82f515c6"], "status": "REASONED"},
+    "debug-disable": {"text": "PLUGIN_REMOTE_INSTALLING_ENABLED defaults true; false prevents TCP startup and removes debugging-key route, while ports: !reset [] separately removes publication.", "components": ["daemon", "docker"], "sources": ["daemon:s191317bdf3a7", "daemon:s32b7d021da01", "daemon:sb19f8717ed1f", "docker:se716ad33db1f"], "status": "REASONED"},
+    "verify-debug-config": {"text": "Merged Compose should change from published 5003/default-enabled to no publication and explicit false after override and recreation; no Docker/listener demonstration.", "components": ["dify-console", "daemon", "docker"], "sources": ["dify-console:s1e4c822a36b1", "daemon:s191317bdf3a7", "daemon:s32b7d021da01", "daemon:sb19f8717ed1f", "docker:se716ad33db1f"], "status": "REASONED"},
+    "flowise-tls": {"text": "Flowise documented TLS uses nginx/certbot upstream localhost:3000; configure NUMBER_OF_PROXIES for real client addresses.", "components": ["flowise"], "sources": ["flowise:s7b675aa70798", "flowise:sfee1ae75d51a"], "status": "REASONED"},
+    "librechat-tls": {"text": "LibreChat documented TLS uses nginx upstream localhost:3080; TRUST_PROXY defaults 1 and must match proxy hops.", "components": ["librechat"], "sources": ["librechat:s432d72870381", "librechat:s41811a0d442f"], "status": "REASONED"},
+    "langflow-tls": {"text": "Langflow 1.12.6 LANGFLOW_SSL_CERT_FILE/KEY_FILE settings feed native TLS; guide assessment: a proxy remains a place for login/MFA.", "components": ["langflow", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-1126:s46241ad0c9d0", "langflow-1126:s44bfa70223f9", "langflow-1126:sf521d52020be", "langflow-1126:s6cf1768228ea", "langflow-1126:s1ee798ffcdbe", "langflow-1126:s9701f0527287", "langflow-1126:sb2a88f59cc75"], "status": "REASONED"},
+    "langflow-cookies": {"text": "Langflow 1.12.6 LANGFLOW_ACCESS_SECURE and LANGFLOW_REFRESH_SECURE default false; set both true behind HTTPS.", "components": ["langflow", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-1126:s400ca0f879b4", "langflow-1126:s842c850d80b0", "langflow-1126:s253a7815151a"], "status": "REASONED"},
+    "dify-tls": {"text": "Certbot challenge/domain/email and fullchain.pem/privkey.pem precede certificate update; enable HTTPS and recreate nginx; default HTTPS false, protocols TLSv1.2 TLSv1.3.", "components": ["certbot", "dify-console"], "sources": ["certbot:sba8e43d56b94", "dify-console:sb28809d177bf"], "status": "REASONED"},
+    "dify-urls": {"text": "Set CONSOLE_API_URL, CONSOLE_WEB_URL and APP_WEB_URL to public HTTPS; CONSOLE_API_URL controls HTTPS-only cookies.", "components": ["dify"], "sources": ["dify:s144cc3f563a1"], "status": "REASONED"},
+    "dify-bootstrap": {"text": "INIT_PASSWORD defaults empty; set it before first up to gate /install and claim admin privately.", "components": ["dify", "dify-console"], "sources": ["dify:s144cc3f563a1", "dify:sc63a91c72255", "dify-console:sb28809d177bf"], "status": "REASONED"},
+    "dify-secret": {"text": "SECRET_KEY signs session/JWT and encrypts stored OAuth credentials; generate random value, or empty auto-generates in storage.", "components": ["dify", "dify-console"], "sources": ["dify:s144cc3f563a1", "dify-console:sb28809d177bf"], "status": "REASONED"},
+    "dify-registration": {"text": "ALLOW_REGISTER=false default closes ordinary self-registration, but not invitations or /install bootstrap.", "components": ["dify-console"], "sources": ["dify-console:sb28809d177bf"], "status": "REASONED"},
+    "dify-db-redis": {"text": "Replace DB_PASSWORD and REDIS_PASSWORD defaults difyai123456 and update embedded CELERY_BROKER_URL password.", "components": ["dify-console"], "sources": ["dify-console:sb28809d177bf"], "status": "REASONED"},
+    "dify-sandbox": {"text": "Replace CODE_EXECUTION_API_KEY/SANDBOX_API_KEY default dify-sandbox together.", "components": ["dify-console"], "sources": ["dify-console:sb28809d177bf"], "status": "REASONED"},
+    "dify-plugin-keys": {"text": "Replace PLUGIN_DAEMON_KEY and PLUGIN_DIFY_INNER_API_KEY example service credentials.", "components": ["dify-console"], "sources": ["dify-console:sb28809d177bf"], "status": "REASONED"},
+    "dify-agent-keys": {"text": "Replace DIFY_AGENT_API_TOKEN and DIFY_AGENT_SERVER_SECRET_KEY; signing key needs unpadded base64url of 32 random bytes.", "components": ["dify-console"], "sources": ["dify-console:sb28809d177bf"], "status": "REASONED"},
+    "dify-weaviate": {"text": "If enabled, rotate WEAVIATE_API_KEY and matching allowed keys; disable anonymous access.", "components": ["dify-console"], "sources": ["dify-console:sb28809d177bf"], "status": "REASONED"},
+    "dify-api": {"text": "App Bearer keys are separate from console accounts; create per app and keep calls/keys on the backend.", "components": ["dify"], "sources": ["dify:sd5ae6b9492f0"], "status": "REASONED"},
+    "flowise-accounts": {"text": "From v3.0.1, email/password accounts use JWT HTTP-only cookies; old FLOWISE_USERNAME/PASSWORD are deprecated migration settings; claim admin privately.", "components": ["flowise-auth"], "sources": ["flowise-auth:s6fd9f4266a98"], "status": "REASONED"},
+    "flowise-secrets": {"text": "Randomize JWT_AUTH_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET, EXPRESS_SESSION_SECRET default flowise, and TOKEN_HASH_SECRET; APP_URL defaults localhost:3000.", "components": ["flowise-auth", "flowise"], "sources": ["flowise-auth:s6fd9f4266a98", "flowise:sfee1ae75d51a"], "status": "REASONED"},
+    "flowise-encryption": {"text": "FLOWISE_SECRETKEY_OVERWRITE supplies stored-credential encryption key; otherwise it lives under SECRETKEY_PATH.", "components": ["flowise"], "sources": ["flowise:sfee1ae75d51a"], "status": "REASONED"},
+    "flowise-prediction": {"text": "Chatflow without assigned key is public by ID; assign per-chatflow API key (DefaultKey is precreated), Bearer requests reject missing key with 401.", "components": ["flowise"], "sources": ["flowise:s546a18b65918", "flowise:s23c31010d23d"], "status": "REASONED"},
+    "langflow-auto": {"text": "Langflow 1.12.6 application AUTO_LOGIN defaults True; pinned official image Dockerfiles set false; explicitly disable it and set a superuser password other than legacy langflow; username defaults langflow and password defaults empty.", "components": ["langflow", "langflow-1126"], "sources": ["langflow:s5cfeeba4d9b3", "langflow:s885461210e4e", "langflow-1126:sd7fd176a7394", "langflow-1126:sb7ab44ba0da0", "langflow-1126:s8e8d73b2b8bd", "langflow-1126:s57f0e83270f9", "langflow-1126:s419881904281", "langflow-1126:s6485ba67d66f", "langflow-1126:s3ff960d5d18a", "langflow-1126:s842c850d80b0", "langflow-1126:s253a7815151a"], "status": "REASONED"},
+    "langflow-secret": {"text": "Set permanent random LANGFLOW_SECRET_KEY; documented auto-generated key is unsuitable for production.", "components": ["langflow"], "sources": ["langflow:s5a55bdef1f33"], "status": "REASONED"},
+    "langflow-signup": {"text": "NEW_USER_IS_ACTIVE defaults False but ENABLE_SIGNUP True; disable signup and keep activation requirement.", "components": ["langflow"], "sources": ["langflow:s885461210e4e"], "status": "REASONED"},
+    "langflow-api": {"text": "With auto-login off, POST /api/v1/run/<flow-id> needs x-api-key; create via settings or CLI. SKIP_AUTH_AUTO_LOGIN defaults false, applies only with auto-login and is slated for removal.", "components": ["langflow"], "sources": ["langflow:s5cfeeba4d9b3", "langflow:s885461210e4e"], "status": "REASONED"},
+    "langflow-host": {"text": "Langflow 1.12.6 settings default HOST localhost; guide assessment: bridged containers need 0.0.0.0 plus host-loopback publication and injected env_file/environment; rolling docs remain unversioned.", "components": ["langflow", "langflow-compose", "langflow-1126"], "sources": ["langflow:s885461210e4e", "langflow-compose:s7f4564c949cb", "langflow-1126:s8049fb15747e", "langflow-1126:s44bfa70223f9"], "status": "REASONED"},
+    "librechat-bootstrap": {"text": "First registered user becomes admin; close ALLOW_REGISTRATION after claiming it.", "components": ["librechat"], "sources": ["librechat:s3f1c594392bc", "librechat:s41811a0d442f"], "status": "REASONED"},
+    "librechat-sso": {"text": "For SSO-only, disable email login and deliberately enable social registration/login; configure OPENID_* and optional required role with provider allowlist and MFA.", "components": ["librechat"], "sources": ["librechat:s41811a0d442f", "librechat:s70ac8e7c9504", "librechat:s7896961bc713", "librechat:s43fbe74e3c42"], "status": "REASONED"},
+    "librechat-secrets": {"text": "CREDS_KEY is 32 bytes, CREDS_IV 16; JWT secrets at least 32 bytes. Blank values bootstrap keys with persistence caveats; retired JWT defaults are refused.", "components": ["librechat"], "sources": ["librechat:s41811a0d442f"], "status": "REASONED"},
+    "librechat-urls": {"text": "DOMAIN_CLIENT and DOMAIN_SERVER must use public HTTPS URL.", "components": ["librechat"], "sources": ["librechat:s41811a0d442f", "librechat:s432d72870381"], "status": "REASONED"},
+    "mfa": {"text": "Instance-wide native MFA enforcement is not documented; use provider/fronting MFA. Flowise SSO is Enterprise; Langflow offers external JWT/JWKS.", "components": ["flowise", "langflow", "librechat"], "sources": ["flowise:scabc8335d0c7", "langflow:sec83eaf2b841", "librechat:s70ac8e7c9504"], "status": "REASONED"},
+    "librechat-mfa": {"text": "v0.7.7 changelog lists two-factor enrolment/backup codes, but checked authentication docs do not establish enforced MFA.", "components": ["librechat-mfa", "librechat"], "sources": ["librechat-mfa:s3909883e4681", "librechat:s70ac8e7c9504"], "status": "REASONED"},
+    "containment": {"text": "Treat editor as code/SSRF authority; isolate runtime, limit mounts/privileges and default-deny egress including metadata; rotate exposed provider keys.", "components": ["langflow", "flowise", "librechat", "dify-console"], "sources": ["langflow:sca4ee617805d", "flowise:sfee1ae75d51a", "librechat:s9f9e35619ce7", "dify-console:sb28809d177bf"], "status": "REASONED"},
+    "flowise-guards": {"text": "Keep HTTP_SECURITY_CHECK and CUSTOM_MCP_SECURITY_CHECK enabled; disabling MCP check permits arbitrary command execution.", "components": ["flowise"], "sources": ["flowise:sfee1ae75d51a"], "status": "REASONED"},
+    "librechat-actions": {"text": "Unset actions.allowedDomains allows public domains with private-target SSRF checks; configured allowlist denies others, and listed private destination grants exception.", "components": ["librechat"], "sources": ["librechat:s9f9e35619ce7"], "status": "REASONED"},
+    "dify-ssrf": {"text": "Keep Dify SSRF proxy for sandbox and HTTP-request nodes; HTTP allowlists do not contain arbitrary local tools.", "components": ["dify-console", "dify-compose"], "sources": ["dify-console:sb28809d177bf", "dify-compose:s517af9c43635"], "status": "REASONED"},
+    "verify-network": {"text": "Inventory all listeners and actual Publishers; direct TCP 5003 success proves exposure, refusal/timeout needs same-host reachable control and merged-model evidence.", "components": ["dify-console", "daemon", "docker"], "sources": ["dify-console:s1e4c822a36b1", "daemon:s32b7d021da01", "docker:s3e97c2c250b6", "docker:s351180c6678f"], "status": "REASONED", "verify": [1]},
+    "verify-editor": {"text": "Curl checks transport only; fresh unauthenticated browser must show login, and /install must be already claimed rather than open admin setup.", "components": ["dify", "flowise-auth", "langflow", "librechat"], "sources": ["dify:sc63a91c72255", "flowise-auth:s6fd9f4266a98", "langflow:s5cfeeba4d9b3", "librechat:s70ac8e7c9504"], "status": "REASONED", "verify": [1]},
+    "verify-dify": {"text": "Direct /v1/parameters matched pair expects missing-Bearer 401 and valid-key parameters 200; app_unavailable 400 is inconclusive; bundled nginx is not strict api-service attribution.", "components": ["dify"], "sources": ["dify:sd5ae6b9492f0"], "status": "REASONED", "verify": [1]},
+    "verify-flowise": {"text": "Assigned-key chatflow prediction must reject missing key and return real output with valid Bearer key; keyless flow is public.", "components": ["flowise"], "sources": ["flowise:s546a18b65918", "flowise:s23c31010d23d"], "status": "REASONED", "verify": [1]},
+    "verify-langflow": {"text": "Run API must reject absent x-api-key and return real output with valid key; routing, transport or validation errors are inconclusive.", "components": ["langflow"], "sources": ["langflow:s5cfeeba4d9b3"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->

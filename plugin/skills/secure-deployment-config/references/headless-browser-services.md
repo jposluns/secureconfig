@@ -1,222 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-05",
-  "documentation_checked": "2026-10",
-  "body_sha256": "83eb3c90295cb9d91e397cfa9e10e498bcf3591cc59ea0b23a98e47d7021298b",
-  "components": {
-    "chromium": {
-      "name": "Chromium",
-      "basis": "154.0.8037.57",
-      "sources": {
-        "s087ba883abe3": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L69-L158",
-        "s65073710f8bd": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L160-L282",
-        "sc62d44c2dee6": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L325-L417",
-        "s6e1b34a120d1": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/headless_devtools.cc#L31-L145",
-        "sdf5f61d9b325": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/command_line_handler.cc#L199-L206",
-        "s005d90d4912a": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/public/common/content_switches.cc#L596-L607",
-        "s804c1266fb81": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L267-L312",
-        "s66b210123ff8": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L459-L630",
-        "s1044899c624a": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L811-L880",
-        "s1ca85f782546": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L1032-L1055",
-        "s0a2a5fec4975": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.h#L26"
-      }
-    },
-    "cdp": {
-      "name": "Chrome DevTools Protocol",
-      "basis": "unknown",
-      "sources": {
-        "se77e8fd82ffd": "https://developer.chrome.com/docs/devtools/remote-debugging/",
-        "s523649d3b233": "https://chromedevtools.github.io/devtools-protocol/"
-      }
-    },
-    "chrome-change": {
-      "name": "Chrome remote-debugging announcement",
-      "basis": "unknown",
-      "sources": {
-        "s643c9edab288": "https://developer.chrome.com/blog/remote-debugging-port"
-      }
-    },
-    "selenium": {
-      "name": "Selenium Grid",
-      "basis": "unknown",
-      "sources": {
-        "sb304923778ab": "https://www.selenium.dev/documentation/grid/configuration/cli_options/",
-        "s0a0129b8dd37": "https://www.selenium.dev/documentation/grid/getting_started/"
-      }
-    },
-    "selenium-docker": {
-      "name": "Selenium Docker images",
-      "basis": "aafe4d6136f3bb5afcd9b7cb691c624516d06e1b",
-      "sources": {
-        "s992336986b07": "https://github.com/SeleniumHQ/docker-selenium/blob/aafe4d6136f3bb5afcd9b7cb691c624516d06e1b/ENV_VARIABLES.md"
-      }
-    },
-    "browserless": {
-      "name": "browserless",
-      "basis": "unknown",
-      "sources": {
-        "sc0a7a8f6c093": "https://docs.browserless.io/enterprise/docker/config"
-      }
-    },
-    "playwright": {
-      "name": "Playwright",
-      "basis": "unknown",
-      "sources": {
-        "sc13c2e85f08c": "https://playwright.dev/docs/api/class-browsertype",
-        "s94dfef953286": "https://playwright.dev/docs/docker"
-      }
-    },
-    "browserless-token-default": {
-      "name": "browserless (open source)",
-      "basis": "2.56.7",
-      "sources": {
-        "s87c144d59098": "https://github.com/browserless/browserless/blob/v2.56.7/src/config.ts#L250",
-        "sdf3b808e8920": "https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L103-L117",
-        "se8b696d56eda": "https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L264-L271",
-        "sc7973e3e21df": "https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L445-L454"
-      }
-    },
-    "browserless-file-fix": {
-      "name": "browserless Playwright file-protocol fix",
-      "basis": "2.51.0",
-      "sources": {
-        "s94f1d485c2b7": "https://raw.githubusercontent.com/browserless/browserless/v2.51.0/CHANGELOG.md",
-        "s90a20f6566c9": "https://github.com/browserless/browserless/commit/a18a1231ead2ecc4114347d5d1fafd69bffeb735",
-        "sf2642da1de49": "https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/browsers/browsers.playwright.ts",
-        "s7ee912fa0a9a": "https://github.com/browserless/browserless/blob/v2.51.0/src/http.ts#L91-L103",
-        "sa985cbba01ad": "https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/config.ts"
-      }
-    },
-    "browserless-docs": {
-      "name": "browserless documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "sa189d41ee219": "https://docs.browserless.io/enterprise/open-source",
-        "sf1ec52c41f54": "https://docs.browserless.io/enterprise/utility-functions/pressure"
-      }
-    },
-    "playwright-source": {
-      "name": "Playwright source",
-      "basis": "v1.58.2",
-      "sources": {
-        "scb030dc29caf": "https://github.com/microsoft/playwright/blob/v1.58.2/packages/playwright-core/src/cli/program.ts#L292-L307",
-        "sbbcd84289455": "https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/browserServerImpl.ts",
-        "s5a6acbd08927": "https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/remote/playwrightServer.ts"
-      }
-    },
-    "curl-docs": {
-      "name": "curl documentation",
-      "basis": "curl-8_14_1",
-      "sources": {
-        "s5e1383feef7d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79",
-        "s82a34ee18632": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md"
-      }
-    },
-    "cve-record-source": {
-      "name": "CVE-2026-92811 record snapshot",
-      "basis": "b0b0976792a7c9d6d66ee553050c21cb088a0659",
-      "sources": {
-        "sba82c9b5f230": "https://raw.githubusercontent.com/CVEProject/cvelistV5/b0b0976792a7c9d6d66ee553050c21cb088a0659/cves/2026/92xxx/CVE-2026-92811.json"
-      }
-    }
-  },
-  "claims": {
-    "cdp-bind": {"text": "Command-line DevTools binds 127.0.0.1, falling back to ::1; stock browser and headless shell have no remote-debugging-address switch.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1", "chromium:s005d90d4912a"], "status": "REASONED"},
-    "cdp-port": {"text": "Explicit nonzero DevTools ports do not fall back to another port; port 0 requests an ephemeral port.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1"], "status": "REASONED"},
-    "cdp-approval": {"text": "Feature-gated approval mode uses DevToolsActivePort or 9222, with requested/ephemeral IPv4 then IPv6 fallback; command-line modes take precedence.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s65073710f8bd", "chromium:sc62d44c2dee6", "chromium:s0a2a5fec4975"], "status": "REASONED"},
-    "cdp-discovery": {"text": "Command-line /json and /json/version disclose debugger URLs; approval-mode 404 does not establish isolation.", "components": ["chromium"], "sources": ["chromium:s66b210123ff8", "chromium:s1ca85f782546"], "status": "REASONED", "verify": [2]},
-    "cdp-auth": {"text": "Command-line CDP has no client authentication or password flag; Host and Origin checks do not authenticate clients.", "components": ["chromium"], "sources": ["chromium:s66b210123ff8", "chromium:s1044899c624a"], "status": "REASONED"},
-    "cdp-capabilities": {"text": "CDP grants page JavaScript, cookie/credential and tab control; restrict ingress, browser egress and local-file reach.", "components": ["cdp"], "sources": ["cdp:s523649d3b233"], "status": "REASONED"},
-    "cdp-private": {"text": "Keep DevTools loopback/private behind authenticated access; inspect forwarders and container namespaces, since publishing cannot reach container loopback.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1", "chromium:s804c1266fb81"], "status": "REASONED"},
-    "cdp-profile": {"text": "Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement.", "components": ["chrome-change", "chromium"], "sources": ["chrome-change:s643c9edab288", "chromium:s65073710f8bd"], "status": "REASONED"},
-    "cdp-policy": {"text": "RemoteDebuggingAllowed gates browser command-line and approval modes; headless-shell startup lacks the corresponding profile/policy check.", "components": ["chromium"], "sources": ["chromium:s65073710f8bd", "chromium:sc62d44c2dee6", "chromium:s6e1b34a120d1"], "status": "REASONED"},
-    "cdp-pipe": {"text": "Pipe mode alone opens no TCP port; supplying a port too can start an independent listener, and pipe access still grants browser control.", "components": ["chromium"], "sources": ["chromium:sc62d44c2dee6", "chromium:s6e1b34a120d1", "chromium:sdf5f61d9b325"], "status": "REASONED"},
-    "grid-auth": {"text": "Router username/password are unset by default, including Docker SE_ROUTER_USERNAME and SE_ROUTER_PASSWORD.", "components": ["selenium", "selenium-docker"], "sources": ["selenium:sb304923778ab", "selenium-docker:s992336986b07"], "status": "REASONED"},
-    "grid-bind": {"text": "Grid host is usually autodetected; Docker SE_BIND_HOST is unset and historical Grid 3 binds 0.0.0.0. Set and observe a private host with bind-host.", "components": ["selenium", "selenium-docker"], "sources": ["selenium:sb304923778ab", "selenium-docker:s992336986b07"], "status": "REASONED"},
-    "grid-ports": {"text": "Router, Hub, Standalone and UI use 4444; Nodes use 5555. Keep all private.", "components": ["selenium"], "sources": ["selenium:s0a0129b8dd37"], "status": "REASONED"},
-    "grid-distributed": {"text": "Distributed event bus uses 4442/4443; Distributor, Session Map, bus HTTP and New Session Queue add 5553/5556/5557/5559.", "components": ["selenium"], "sources": ["selenium:sb304923778ab", "selenium:s0a0129b8dd37"], "status": "REASONED"},
-    "grid-bus": {"text": "Router Basic auth does not protect the bus; registration-secret validates event messages without encrypting transport, so isolate every participant.", "components": ["selenium"], "sources": ["selenium:sb304923778ab", "selenium:s0a0129b8dd37"], "status": "REASONED"},
-    "grid-vnc": {"text": "Docker enables VNC by default on 5900 and noVNC on 7900; replace the example secret password or disable VNC, and avoid passwordless mode.", "components": ["selenium-docker"], "sources": ["selenium-docker:s992336986b07"], "status": "REASONED"},
-    "grid-tls": {"text": "Native https-certificate/https-private-key or a TLS proxy protects Router Basic credentials; TLS is not on by default.", "components": ["selenium"], "sources": ["selenium:sb304923778ab"], "status": "REASONED"},
-    "browserless-auth": {"text": "Open-source 2.56.7 reads an unset or empty TOKEN as null; no token is generated and endpoints are unauthenticated by default.", "components": ["browserless-token-default", "browserless-docs"], "sources": ["browserless-token-default:s87c144d59098", "browserless-docs:sa189d41ee219"], "status": "REASONED"},
-    "browserless-bind": {"text": "browserless uses 3000; publish 127.0.0.1:3000:3000 or keep an internal network with no host mapping.", "components": ["browserless"], "sources": ["browserless:sc0a7a8f6c093"], "status": "REASONED"},
-    "browserless-token": {"text": "Use a randomized TOKEN, protect token-bearing connection URLs and logs, and terminate TLS at the fronting layer.", "components": ["browserless"], "sources": ["browserless:sc0a7a8f6c093"], "status": "REASONED"},
-    "browserless-file": {"text": "Require browserless 2.51.0 or later containing the pinned Playwright fix, keep ALLOW_FILE_PROTOCOL=false, and run the file-protocol check.", "components": ["browserless", "browserless-file-fix"], "sources": ["browserless:sc0a7a8f6c093", "browserless-file-fix:s94f1d485c2b7", "browserless-file-fix:s90a20f6566c9", "browserless-file-fix:sa985cbba01ad"], "status": "REASONED"},
-    "playwright-auth": {"text": "Playwright server has no password/user model; reachable endpoints grant OS-user control, so bind 127.0.0.1 and protect endpoint URLs.", "components": ["playwright"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286"], "status": "REASONED"},
-    "playwright-discovery": {"text": "Guide records run-server path / and launchServer random paths discoverable through GET /json; a secret path is not an access boundary.", "components": ["playwright", "playwright-source"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286", "playwright-source:scb030dc29caf", "playwright-source:sbbcd84289455", "playwright-source:s5a6acbd08927"], "status": "REASONED"},
-    "playwright-tls": {"text": "Authenticate WebSocket upgrades and discovery at a wss proxy; connect accepts custom headers and the server supplies no native TLS.", "components": ["playwright"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286"], "status": "REASONED"},
-    "debug-bypass": {"text": "A separately forwarded Chromium debug endpoint bypasses front-tool authentication; keep 9222 unpublished and restrict browser egress.", "components": ["cdp", "selenium", "browserless", "playwright"], "sources": ["cdp:s523649d3b233", "selenium:s0a0129b8dd37", "browserless:sc0a7a8f6c093", "playwright:sc13c2e85f08c"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory every listener, including distributed Grid and configured Playwright ports, and require intended loopback/private addresses.", "components": ["chromium", "selenium", "selenium-docker", "browserless", "playwright"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1", "selenium:sb304923778ab", "selenium:s0a0129b8dd37", "selenium-docker:s992336986b07", "browserless:sc0a7a8f6c093", "playwright:sc13c2e85f08c"], "status": "REASONED", "verify": [1]},
-    "verify-cdp": {"text": "External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive.", "components": ["chromium", "curl-docs"], "sources": ["chromium:s804c1266fb81", "chromium:s66b210123ff8", "curl-docs:s5e1383feef7d"], "status": "REASONED", "verify": [2]},
-    "verify-grid": {"text": "Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately.", "components": ["selenium", "curl-docs"], "sources": ["selenium:sb304923778ab", "selenium:s0a0129b8dd37", "curl-docs:s5e1383feef7d"], "status": "REASONED", "verify": [2]},
-    "verify-browserless": {"text": "For open-source 2.56.7, expect /pressure load JSON without a configured TOKEN; with a nonempty TOKEN, expect 401 for missing/wrong tokens and JSON for a correct-token control.", "components": ["browserless-token-default", "browserless-docs", "curl-docs"], "sources": ["browserless-token-default:s87c144d59098", "browserless-token-default:sdf3b808e8920", "browserless-token-default:se8b696d56eda", "browserless-token-default:sc7973e3e21df", "browserless-docs:sa189d41ee219", "browserless-docs:sf1ec52c41f54", "curl-docs:s5e1383feef7d", "curl-docs:s82a34ee18632"], "status": "REASONED", "verify": [2]},
-    "verify-playwright": {"text": "Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port.", "components": ["playwright", "playwright-source"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286", "playwright-source:scb030dc29caf", "playwright-source:sbbcd84289455", "playwright-source:s5a6acbd08927"], "status": "REASONED", "verify": [2]},
-    "browserless-file-cve": {"text": "CVE-2026-92811 describes authenticated Playwright file reads despite ALLOW_FILE_PROTOCOL=false; its affected range 1.44.0 through 2.56.7 conflicts with the vendor 2.51.0 fix.", "components": ["browserless-file-fix", "cve-record-source"], "sources": ["cve-record-source:sba82c9b5f230", "browserless-file-fix:s94f1d485c2b7", "browserless-file-fix:s90a20f6566c9"], "status": "REASONED"},
-    "verify-browserless-file": {"text": "With a valid token on every enabled Playwright WebSocket route, confirm HTTP navigation first, then attempt a readable container canary: exposed returns contents; fixed refuses with a blocked-URL policy reason.", "components": ["browserless-file-fix", "cve-record-source"], "sources": ["cve-record-source:sba82c9b5f230", "browserless-file-fix:sf2642da1de49", "browserless-file-fix:s7ee912fa0a9a", "browserless-file-fix:sa985cbba01ad"], "status": "REASONED"}
-  }
-}
----
 # Headless browser services: Chrome DevTools Protocol, Selenium Grid, browserless, and Playwright server
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Chromium 154.0.8037.57, browserless (open source) 2.56.7, browserless Playwright file-protocol fix 2.51.0, Playwright source v1.58.2, and curl documentation curl-8_14_1; 2 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 32 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- chromium: Chromium (154.0.8037.57)
-- cdp: Chrome DevTools Protocol (unknown)
-- chrome-change: Chrome remote-debugging announcement (unknown)
-- selenium: Selenium Grid (unknown)
-- selenium-docker: Selenium Docker images (aafe4d6136f3bb5afcd9b7cb691c624516d06e1b)
-- browserless: browserless (unknown)
-- playwright: Playwright (unknown)
-- browserless-token-default: browserless (open source) (2.56.7)
-- browserless-file-fix: browserless Playwright file-protocol fix (2.51.0)
-- browserless-docs: browserless documentation (rolling) (unknown)
-- playwright-source: Playwright source (v1.58.2)
-- curl-docs: curl documentation (curl-8_14_1)
-- cve-record-source: CVE-2026-92811 record snapshot (b0b0976792a7c9d6d66ee553050c21cb088a0659)
-
-Claims (full source mapping in the front matter):
-
-- cdp-bind (REASONED; chromium): Command-line DevTools binds 127.0.0.1, falling back to ::1; stock browser and headless shell have no remote-debugging-address switch.
-- cdp-port (REASONED; chromium): Explicit nonzero DevTools ports do not fall back to another port; port 0 requests an ephemeral port.
-- cdp-approval (REASONED; chromium): Feature-gated approval mode uses DevToolsActivePort or 9222, with requested/ephemeral IPv4 then IPv6 fallback; command-line modes take precedence.
-- cdp-discovery (REASONED; chromium): Command-line /json and /json/version disclose debugger URLs; approval-mode 404 does not establish isolation.
-- cdp-auth (REASONED; chromium): Command-line CDP has no client authentication or password flag; Host and Origin checks do not authenticate clients.
-- cdp-capabilities (REASONED; cdp): CDP grants page JavaScript, cookie/credential and tab control; restrict ingress, browser egress and local-file reach.
-- cdp-private (REASONED; chromium): Keep DevTools loopback/private behind authenticated access; inspect forwarders and container namespaces, since publishing cannot reach container loopback.
-- cdp-profile (REASONED; chrome-change, chromium): Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement.
-- cdp-policy (REASONED; chromium): RemoteDebuggingAllowed gates browser command-line and approval modes; headless-shell startup lacks the corresponding profile/policy check.
-- cdp-pipe (REASONED; chromium): Pipe mode alone opens no TCP port; supplying a port too can start an independent listener, and pipe access still grants browser control.
-- grid-auth (REASONED; selenium, selenium-docker): Router username/password are unset by default, including Docker SE_ROUTER_USERNAME and SE_ROUTER_PASSWORD.
-- grid-bind (REASONED; selenium, selenium-docker): Grid host is usually autodetected; Docker SE_BIND_HOST is unset and historical Grid 3 binds 0.0.0.0. Set and observe a private host with bind-host.
-- grid-ports (REASONED; selenium): Router, Hub, Standalone and UI use 4444; Nodes use 5555. Keep all private.
-- grid-distributed (REASONED; selenium): Distributed event bus uses 4442/4443; Distributor, Session Map, bus HTTP and New Session Queue add 5553/5556/5557/5559.
-- grid-bus (REASONED; selenium): Router Basic auth does not protect the bus; registration-secret validates event messages without encrypting transport, so isolate every participant.
-- grid-vnc (REASONED; selenium-docker): Docker enables VNC by default on 5900 and noVNC on 7900; replace the example secret password or disable VNC, and avoid passwordless mode.
-- grid-tls (REASONED; selenium): Native https-certificate/https-private-key or a TLS proxy protects Router Basic credentials; TLS is not on by default.
-- browserless-auth (REASONED; browserless-token-default, browserless-docs): Open-source 2.56.7 reads an unset or empty TOKEN as null; no token is generated and endpoints are unauthenticated by default.
-- browserless-bind (REASONED; browserless): browserless uses 3000; publish 127.0.0.1:3000:3000 or keep an internal network with no host mapping.
-- browserless-token (REASONED; browserless): Use a randomized TOKEN, protect token-bearing connection URLs and logs, and terminate TLS at the fronting layer.
-- browserless-file (REASONED; browserless, browserless-file-fix): Require browserless 2.51.0 or later containing the pinned Playwright fix, keep ALLOW_FILE_PROTOCOL=false, and run the file-protocol check.
-- playwright-auth (REASONED; playwright): Playwright server has no password/user model; reachable endpoints grant OS-user control, so bind 127.0.0.1 and protect endpoint URLs.
-- playwright-discovery (REASONED; playwright, playwright-source): Guide records run-server path / and launchServer random paths discoverable through GET /json; a secret path is not an access boundary.
-- playwright-tls (REASONED; playwright): Authenticate WebSocket upgrades and discovery at a wss proxy; connect accepts custom headers and the server supplies no native TLS.
-- debug-bypass (REASONED; cdp, selenium, browserless, playwright): A separately forwarded Chromium debug endpoint bypasses front-tool authentication; keep 9222 unpublished and restrict browser egress.
-- verify-listeners (REASONED; chromium, selenium, selenium-docker, browserless, playwright): Inventory every listener, including distributed Grid and configured Playwright ports, and require intended loopback/private addresses.
-- verify-cdp (REASONED; chromium, curl-docs): External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive.
-- verify-grid (REASONED; selenium, curl-docs): Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately.
-- verify-browserless (REASONED; browserless-token-default, browserless-docs, curl-docs): For open-source 2.56.7, expect /pressure load JSON without a configured TOKEN; with a nonempty TOKEN, expect 401 for missing/wrong tokens and JSON for a correct-token control.
-- verify-playwright (REASONED; playwright, playwright-source): Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port.
-- browserless-file-cve (REASONED; browserless-file-fix, cve-record-source): CVE-2026-92811 describes authenticated Playwright file reads despite ALLOW_FILE_PROTOCOL=false; its affected range 1.44.0 through 2.56.7 conflicts with the vendor 2.51.0 fix.
-- verify-browserless-file (REASONED; browserless-file-fix, cve-record-source): With a valid token on every enabled Playwright WebSocket route, confirm HTTP navigation first, then attempt a readable container canary: exposed returns contents; fixed refuses with a blocked-URL policy reason.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Agent and scraping stacks run these to drive a real browser, and that is exactly the exposure: whoever
 reaches the endpoint gets JavaScript execution inside the pages the browser opens, the profile's cookie
@@ -499,3 +285,243 @@ missing files, authentication failures, connection failures, and timeouts are in
 - Browserless ALLOW_FILE_PROTOCOL configuration and false default (pinned tag v2.51.0; version basis 2.51.0): https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/config.ts
 - Playwright run-server default path, generated launchServer path and GET /json discovery (pinned tag v1.58.2): https://github.com/microsoft/playwright/blob/v1.58.2/packages/playwright-core/src/cli/program.ts#L292-L307, https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/browserServerImpl.ts, https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/remote/playwrightServer.ts
 - curl diagnostic variables added in 7.75.0 and configuration input from stdin (pinned tag curl-8_14_1): https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79, https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/headless-browser-services.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- chromium: Chromium (154.0.8037.57)
+- browserless-token-default: browserless (open source) (2.56.7)
+- browserless-file-fix: browserless Playwright file-protocol fix (2.51.0)
+- playwright-source: Playwright source (v1.58.2)
+- cdp: Chrome DevTools Protocol (unknown)
+- chrome-change: Chrome remote-debugging announcement (unknown)
+- selenium: Selenium Grid (unknown)
+- selenium-docker: Selenium Docker images (aafe4d6136f3bb5afcd9b7cb691c624516d06e1b)
+- browserless: browserless (unknown)
+- browserless-docs: browserless documentation (rolling) (unknown)
+- playwright: Playwright (unknown)
+- curl-docs: curl documentation (curl-8_14_1)
+- cve-record-source: CVE-2026-92811 record snapshot (b0b0976792a7c9d6d66ee553050c21cb088a0659)
+
+Claims (full source mapping in the JSON block below):
+
+- cdp-bind (REASONED; chromium): Command-line DevTools binds 127.0.0.1, falling back to ::1; stock browser and headless shell have no remote-debugging-address switch.
+- cdp-port (REASONED; chromium): Explicit nonzero DevTools ports do not fall back to another port; port 0 requests an ephemeral port.
+- cdp-approval (REASONED; chromium): Feature-gated approval mode uses DevToolsActivePort or 9222, with requested/ephemeral IPv4 then IPv6 fallback; command-line modes take precedence.
+- cdp-discovery (REASONED; chromium): Command-line /json and /json/version disclose debugger URLs; approval-mode 404 does not establish isolation.
+- cdp-auth (REASONED; chromium): Command-line CDP has no client authentication or password flag; Host and Origin checks do not authenticate clients.
+- cdp-capabilities (REASONED; cdp): CDP grants page JavaScript, cookie/credential and tab control; restrict ingress, browser egress and local-file reach.
+- cdp-private (REASONED; chromium): Keep DevTools loopback/private behind authenticated access; inspect forwarders and container namespaces, since publishing cannot reach container loopback.
+- cdp-profile (REASONED; chrome-change, chromium): Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement.
+- cdp-policy (REASONED; chromium): RemoteDebuggingAllowed gates browser command-line and approval modes; headless-shell startup lacks the corresponding profile/policy check.
+- cdp-pipe (REASONED; chromium): Pipe mode alone opens no TCP port; supplying a port too can start an independent listener, and pipe access still grants browser control.
+- grid-auth (REASONED; selenium, selenium-docker): Router username/password are unset by default, including Docker SE_ROUTER_USERNAME and SE_ROUTER_PASSWORD.
+- grid-bind (REASONED; selenium, selenium-docker): Grid host is usually autodetected; Docker SE_BIND_HOST is unset and historical Grid 3 binds 0.0.0.0. Set and observe a private host with bind-host.
+- grid-ports (REASONED; selenium): Router, Hub, Standalone and UI use 4444; Nodes use 5555. Keep all private.
+- grid-distributed (REASONED; selenium): Distributed event bus uses 4442/4443; Distributor, Session Map, bus HTTP and New Session Queue add 5553/5556/5557/5559.
+- grid-bus (REASONED; selenium): Router Basic auth does not protect the bus; registration-secret validates event messages without encrypting transport, so isolate every participant.
+- grid-vnc (REASONED; selenium-docker): Docker enables VNC by default on 5900 and noVNC on 7900; replace the example secret password or disable VNC, and avoid passwordless mode.
+- grid-tls (REASONED; selenium): Native https-certificate/https-private-key or a TLS proxy protects Router Basic credentials; TLS is not on by default.
+- browserless-auth (REASONED; browserless-token-default, browserless-docs): Open-source 2.56.7 reads an unset or empty TOKEN as null; no token is generated and endpoints are unauthenticated by default.
+- browserless-bind (REASONED; browserless): browserless uses 3000; publish 127.0.0.1:3000:3000 or keep an internal network with no host mapping.
+- browserless-token (REASONED; browserless): Use a randomized TOKEN, protect token-bearing connection URLs and logs, and terminate TLS at the fronting layer.
+- browserless-file (REASONED; browserless, browserless-file-fix): Require browserless 2.51.0 or later containing the pinned Playwright fix, keep ALLOW_FILE_PROTOCOL=false, and run the file-protocol check.
+- playwright-auth (REASONED; playwright): Playwright server has no password/user model; reachable endpoints grant OS-user control, so bind 127.0.0.1 and protect endpoint URLs.
+- playwright-discovery (REASONED; playwright, playwright-source): Guide records run-server path / and launchServer random paths discoverable through GET /json; a secret path is not an access boundary.
+- playwright-tls (REASONED; playwright): Authenticate WebSocket upgrades and discovery at a wss proxy; connect accepts custom headers and the server supplies no native TLS.
+- debug-bypass (REASONED; cdp, selenium, browserless, playwright): A separately forwarded Chromium debug endpoint bypasses front-tool authentication; keep 9222 unpublished and restrict browser egress.
+- verify-listeners (REASONED; chromium, selenium, selenium-docker, browserless, playwright): Inventory every listener, including distributed Grid and configured Playwright ports, and require intended loopback/private addresses.
+- verify-cdp (REASONED; chromium, curl-docs): External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive.
+- verify-grid (REASONED; selenium, curl-docs): Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately.
+- verify-browserless (REASONED; browserless-token-default, browserless-docs, curl-docs): For open-source 2.56.7, expect /pressure load JSON without a configured TOKEN; with a nonempty TOKEN, expect 401 for missing/wrong tokens and JSON for a correct-token control.
+- verify-playwright (REASONED; playwright, playwright-source): Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port.
+- browserless-file-cve (REASONED; browserless-file-fix, cve-record-source): CVE-2026-92811 describes authenticated Playwright file reads despite ALLOW_FILE_PROTOCOL=false; its affected range 1.44.0 through 2.56.7 conflicts with the vendor 2.51.0 fix.
+- verify-browserless-file (REASONED; browserless-file-fix, cve-record-source): With a valid token on every enabled Playwright WebSocket route, confirm HTTP navigation first, then attempt a readable container canary: exposed returns contents; fixed refuses with a blocked-URL policy reason.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-05",
+  "documentation_checked": "2026-10",
+  "body_sha256": "83eb3c90295cb9d91e397cfa9e10e498bcf3591cc59ea0b23a98e47d7021298b",
+  "components": {
+    "chromium": {
+      "name": "Chromium",
+      "basis": "154.0.8037.57",
+      "sources": {
+        "s087ba883abe3": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L69-L158",
+        "s65073710f8bd": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L160-L282",
+        "sc62d44c2dee6": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.cc#L325-L417",
+        "s6e1b34a120d1": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/headless_devtools.cc#L31-L145",
+        "sdf5f61d9b325": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/headless/lib/browser/command_line_handler.cc#L199-L206",
+        "s005d90d4912a": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/public/common/content_switches.cc#L596-L607",
+        "s804c1266fb81": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L267-L312",
+        "s66b210123ff8": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L459-L630",
+        "s1044899c624a": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L811-L880",
+        "s1ca85f782546": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/content/browser/devtools/devtools_http_handler.cc#L1032-L1055",
+        "s0a2a5fec4975": "https://github.com/chromium/chromium/blob/73c14f6228d7cd537c855007e8f88678969cc0eb/chrome/browser/devtools/remote_debugging_server.h#L26"
+      }
+    },
+    "browserless-token-default": {
+      "name": "browserless (open source)",
+      "basis": "2.56.7",
+      "sources": {
+        "s87c144d59098": "https://github.com/browserless/browserless/blob/v2.56.7/src/config.ts#L250",
+        "sdf3b808e8920": "https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L103-L117",
+        "se8b696d56eda": "https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L264-L271",
+        "sc7973e3e21df": "https://github.com/browserless/browserless/blob/v2.56.7/src/server.ts#L445-L454"
+      }
+    },
+    "browserless-file-fix": {
+      "name": "browserless Playwright file-protocol fix",
+      "basis": "2.51.0",
+      "sources": {
+        "s94f1d485c2b7": "https://raw.githubusercontent.com/browserless/browserless/v2.51.0/CHANGELOG.md",
+        "s90a20f6566c9": "https://github.com/browserless/browserless/commit/a18a1231ead2ecc4114347d5d1fafd69bffeb735",
+        "sf2642da1de49": "https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/browsers/browsers.playwright.ts",
+        "s7ee912fa0a9a": "https://github.com/browserless/browserless/blob/v2.51.0/src/http.ts#L91-L103",
+        "sa985cbba01ad": "https://raw.githubusercontent.com/browserless/browserless/v2.51.0/src/config.ts"
+      }
+    },
+    "playwright-source": {
+      "name": "Playwright source",
+      "basis": "v1.58.2",
+      "sources": {
+        "scb030dc29caf": "https://github.com/microsoft/playwright/blob/v1.58.2/packages/playwright-core/src/cli/program.ts#L292-L307",
+        "sbbcd84289455": "https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/browserServerImpl.ts",
+        "s5a6acbd08927": "https://raw.githubusercontent.com/microsoft/playwright/v1.58.2/packages/playwright-core/src/remote/playwrightServer.ts"
+      }
+    },
+    "cdp": {
+      "name": "Chrome DevTools Protocol",
+      "basis": "unknown",
+      "sources": {
+        "se77e8fd82ffd": "https://developer.chrome.com/docs/devtools/remote-debugging/",
+        "s523649d3b233": "https://chromedevtools.github.io/devtools-protocol/"
+      }
+    },
+    "chrome-change": {
+      "name": "Chrome remote-debugging announcement",
+      "basis": "unknown",
+      "sources": {
+        "s643c9edab288": "https://developer.chrome.com/blog/remote-debugging-port"
+      }
+    },
+    "selenium": {
+      "name": "Selenium Grid",
+      "basis": "unknown",
+      "sources": {
+        "sb304923778ab": "https://www.selenium.dev/documentation/grid/configuration/cli_options/",
+        "s0a0129b8dd37": "https://www.selenium.dev/documentation/grid/getting_started/"
+      }
+    },
+    "selenium-docker": {
+      "name": "Selenium Docker images",
+      "basis": "aafe4d6136f3bb5afcd9b7cb691c624516d06e1b",
+      "sources": {
+        "s992336986b07": "https://github.com/SeleniumHQ/docker-selenium/blob/aafe4d6136f3bb5afcd9b7cb691c624516d06e1b/ENV_VARIABLES.md"
+      }
+    },
+    "browserless": {
+      "name": "browserless",
+      "basis": "unknown",
+      "sources": {
+        "sc0a7a8f6c093": "https://docs.browserless.io/enterprise/docker/config"
+      }
+    },
+    "browserless-docs": {
+      "name": "browserless documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "sa189d41ee219": "https://docs.browserless.io/enterprise/open-source",
+        "sf1ec52c41f54": "https://docs.browserless.io/enterprise/utility-functions/pressure"
+      }
+    },
+    "playwright": {
+      "name": "Playwright",
+      "basis": "unknown",
+      "sources": {
+        "sc13c2e85f08c": "https://playwright.dev/docs/api/class-browsertype",
+        "s94dfef953286": "https://playwright.dev/docs/docker"
+      }
+    },
+    "curl-docs": {
+      "name": "curl documentation",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s5e1383feef7d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79",
+        "s82a34ee18632": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md"
+      }
+    },
+    "cve-record-source": {
+      "name": "CVE-2026-92811 record snapshot",
+      "basis": "b0b0976792a7c9d6d66ee553050c21cb088a0659",
+      "sources": {
+        "sba82c9b5f230": "https://raw.githubusercontent.com/CVEProject/cvelistV5/b0b0976792a7c9d6d66ee553050c21cb088a0659/cves/2026/92xxx/CVE-2026-92811.json"
+      }
+    }
+  },
+  "claims": {
+    "cdp-bind": {"text": "Command-line DevTools binds 127.0.0.1, falling back to ::1; stock browser and headless shell have no remote-debugging-address switch.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1", "chromium:s005d90d4912a"], "status": "REASONED"},
+    "cdp-port": {"text": "Explicit nonzero DevTools ports do not fall back to another port; port 0 requests an ephemeral port.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1"], "status": "REASONED"},
+    "cdp-approval": {"text": "Feature-gated approval mode uses DevToolsActivePort or 9222, with requested/ephemeral IPv4 then IPv6 fallback; command-line modes take precedence.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s65073710f8bd", "chromium:sc62d44c2dee6", "chromium:s0a2a5fec4975"], "status": "REASONED"},
+    "cdp-discovery": {"text": "Command-line /json and /json/version disclose debugger URLs; approval-mode 404 does not establish isolation.", "components": ["chromium"], "sources": ["chromium:s66b210123ff8", "chromium:s1ca85f782546"], "status": "REASONED", "verify": [2]},
+    "cdp-auth": {"text": "Command-line CDP has no client authentication or password flag; Host and Origin checks do not authenticate clients.", "components": ["chromium"], "sources": ["chromium:s66b210123ff8", "chromium:s1044899c624a"], "status": "REASONED"},
+    "cdp-capabilities": {"text": "CDP grants page JavaScript, cookie/credential and tab control; restrict ingress, browser egress and local-file reach.", "components": ["cdp"], "sources": ["cdp:s523649d3b233"], "status": "REASONED"},
+    "cdp-private": {"text": "Keep DevTools loopback/private behind authenticated access; inspect forwarders and container namespaces, since publishing cannot reach container loopback.", "components": ["chromium"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1", "chromium:s804c1266fb81"], "status": "REASONED"},
+    "cdp-profile": {"text": "Chrome 136 requires non-default user data; pinned desktop branding check excludes normal Chromium, and Chrome for Testing exemption rests on the announcement.", "components": ["chrome-change", "chromium"], "sources": ["chrome-change:s643c9edab288", "chromium:s65073710f8bd"], "status": "REASONED"},
+    "cdp-policy": {"text": "RemoteDebuggingAllowed gates browser command-line and approval modes; headless-shell startup lacks the corresponding profile/policy check.", "components": ["chromium"], "sources": ["chromium:s65073710f8bd", "chromium:sc62d44c2dee6", "chromium:s6e1b34a120d1"], "status": "REASONED"},
+    "cdp-pipe": {"text": "Pipe mode alone opens no TCP port; supplying a port too can start an independent listener, and pipe access still grants browser control.", "components": ["chromium"], "sources": ["chromium:sc62d44c2dee6", "chromium:s6e1b34a120d1", "chromium:sdf5f61d9b325"], "status": "REASONED"},
+    "grid-auth": {"text": "Router username/password are unset by default, including Docker SE_ROUTER_USERNAME and SE_ROUTER_PASSWORD.", "components": ["selenium", "selenium-docker"], "sources": ["selenium:sb304923778ab", "selenium-docker:s992336986b07"], "status": "REASONED"},
+    "grid-bind": {"text": "Grid host is usually autodetected; Docker SE_BIND_HOST is unset and historical Grid 3 binds 0.0.0.0. Set and observe a private host with bind-host.", "components": ["selenium", "selenium-docker"], "sources": ["selenium:sb304923778ab", "selenium-docker:s992336986b07"], "status": "REASONED"},
+    "grid-ports": {"text": "Router, Hub, Standalone and UI use 4444; Nodes use 5555. Keep all private.", "components": ["selenium"], "sources": ["selenium:s0a0129b8dd37"], "status": "REASONED"},
+    "grid-distributed": {"text": "Distributed event bus uses 4442/4443; Distributor, Session Map, bus HTTP and New Session Queue add 5553/5556/5557/5559.", "components": ["selenium"], "sources": ["selenium:sb304923778ab", "selenium:s0a0129b8dd37"], "status": "REASONED"},
+    "grid-bus": {"text": "Router Basic auth does not protect the bus; registration-secret validates event messages without encrypting transport, so isolate every participant.", "components": ["selenium"], "sources": ["selenium:sb304923778ab", "selenium:s0a0129b8dd37"], "status": "REASONED"},
+    "grid-vnc": {"text": "Docker enables VNC by default on 5900 and noVNC on 7900; replace the example secret password or disable VNC, and avoid passwordless mode.", "components": ["selenium-docker"], "sources": ["selenium-docker:s992336986b07"], "status": "REASONED"},
+    "grid-tls": {"text": "Native https-certificate/https-private-key or a TLS proxy protects Router Basic credentials; TLS is not on by default.", "components": ["selenium"], "sources": ["selenium:sb304923778ab"], "status": "REASONED"},
+    "browserless-auth": {"text": "Open-source 2.56.7 reads an unset or empty TOKEN as null; no token is generated and endpoints are unauthenticated by default.", "components": ["browserless-token-default", "browserless-docs"], "sources": ["browserless-token-default:s87c144d59098", "browserless-docs:sa189d41ee219"], "status": "REASONED"},
+    "browserless-bind": {"text": "browserless uses 3000; publish 127.0.0.1:3000:3000 or keep an internal network with no host mapping.", "components": ["browserless"], "sources": ["browserless:sc0a7a8f6c093"], "status": "REASONED"},
+    "browserless-token": {"text": "Use a randomized TOKEN, protect token-bearing connection URLs and logs, and terminate TLS at the fronting layer.", "components": ["browserless"], "sources": ["browserless:sc0a7a8f6c093"], "status": "REASONED"},
+    "browserless-file": {"text": "Require browserless 2.51.0 or later containing the pinned Playwright fix, keep ALLOW_FILE_PROTOCOL=false, and run the file-protocol check.", "components": ["browserless", "browserless-file-fix"], "sources": ["browserless:sc0a7a8f6c093", "browserless-file-fix:s94f1d485c2b7", "browserless-file-fix:s90a20f6566c9", "browserless-file-fix:sa985cbba01ad"], "status": "REASONED"},
+    "playwright-auth": {"text": "Playwright server has no password/user model; reachable endpoints grant OS-user control, so bind 127.0.0.1 and protect endpoint URLs.", "components": ["playwright"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286"], "status": "REASONED"},
+    "playwright-discovery": {"text": "Guide records run-server path / and launchServer random paths discoverable through GET /json; a secret path is not an access boundary.", "components": ["playwright", "playwright-source"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286", "playwright-source:scb030dc29caf", "playwright-source:sbbcd84289455", "playwright-source:s5a6acbd08927"], "status": "REASONED"},
+    "playwright-tls": {"text": "Authenticate WebSocket upgrades and discovery at a wss proxy; connect accepts custom headers and the server supplies no native TLS.", "components": ["playwright"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286"], "status": "REASONED"},
+    "debug-bypass": {"text": "A separately forwarded Chromium debug endpoint bypasses front-tool authentication; keep 9222 unpublished and restrict browser egress.", "components": ["cdp", "selenium", "browserless", "playwright"], "sources": ["cdp:s523649d3b233", "selenium:s0a0129b8dd37", "browserless:sc0a7a8f6c093", "playwright:sc13c2e85f08c"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inventory every listener, including distributed Grid and configured Playwright ports, and require intended loopback/private addresses.", "components": ["chromium", "selenium", "selenium-docker", "browserless", "playwright"], "sources": ["chromium:s087ba883abe3", "chromium:s6e1b34a120d1", "selenium:sb304923778ab", "selenium:s0a0129b8dd37", "selenium-docker:s992336986b07", "browserless:sc0a7a8f6c093", "playwright:sc13c2e85f08c"], "status": "REASONED", "verify": [1]},
+    "verify-cdp": {"text": "External command-line CDP returns 200 with webSocketDebuggerUrl when forwarded; fixed isolation retains a working local control. Approval-mode 404 is inconclusive.", "components": ["chromium", "curl-docs"], "sources": ["chromium:s804c1266fb81", "chromium:s66b210123ff8", "curl-docs:s5e1383feef7d"], "status": "REASONED", "verify": [2]},
+    "verify-grid": {"text": "Grid /status returns ready/node JSON when exposed; Router 401 with Basic challenge shows auth but still proves reachability. Probe Nodes separately.", "components": ["selenium", "curl-docs"], "sources": ["selenium:sb304923778ab", "selenium:s0a0129b8dd37", "curl-docs:s5e1383feef7d"], "status": "REASONED", "verify": [2]},
+    "verify-browserless": {"text": "For open-source 2.56.7, expect /pressure load JSON without a configured TOKEN; with a nonempty TOKEN, expect 401 for missing/wrong tokens and JSON for a correct-token control.", "components": ["browserless-token-default", "browserless-docs", "curl-docs"], "sources": ["browserless-token-default:s87c144d59098", "browserless-token-default:sdf3b808e8920", "browserless-token-default:se8b696d56eda", "browserless-token-default:sc7973e3e21df", "browserless-docs:sa189d41ee219", "browserless-docs:sf1ec52c41f54", "curl-docs:s5e1383feef7d", "curl-docs:s82a34ee18632"], "status": "REASONED", "verify": [2]},
+    "verify-playwright": {"text": "Any HTTP answer proves Playwright reachability; launchServer uses an ephemeral port unless set, while run-server takes --port.", "components": ["playwright", "playwright-source"], "sources": ["playwright:sc13c2e85f08c", "playwright:s94dfef953286", "playwright-source:scb030dc29caf", "playwright-source:sbbcd84289455", "playwright-source:s5a6acbd08927"], "status": "REASONED", "verify": [2]},
+    "browserless-file-cve": {"text": "CVE-2026-92811 describes authenticated Playwright file reads despite ALLOW_FILE_PROTOCOL=false; its affected range 1.44.0 through 2.56.7 conflicts with the vendor 2.51.0 fix.", "components": ["browserless-file-fix", "cve-record-source"], "sources": ["cve-record-source:sba82c9b5f230", "browserless-file-fix:s94f1d485c2b7", "browserless-file-fix:s90a20f6566c9"], "status": "REASONED"},
+    "verify-browserless-file": {"text": "With a valid token on every enabled Playwright WebSocket route, confirm HTTP navigation first, then attempt a readable container canary: exposed returns contents; fixed refuses with a blocked-URL policy reason.", "components": ["browserless-file-fix", "cve-record-source"], "sources": ["cve-record-source:sba82c9b5f230", "browserless-file-fix:sf2642da1de49", "browserless-file-fix:s7ee912fa0a9a", "browserless-file-fix:sa985cbba01ad"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->
