@@ -226,7 +226,7 @@ Schema 1 requires exactly these top-level fields:
 - `body_sha256`: lowercase SHA-256 of the UTF-8 body returned by `without_summary()` after `split()`
   in `tools/version_basis.py`. Legacy front matter and the summary are excluded. For the new
   layout, the EOF section and exactly two separator LFs are removed, and validation recomputes
-  and strips only the exact generated top block (or historical header). Human-body bytes, including trailing whitespace,
+  and strips only the exact generated top block (or historical header). Non-generated body bytes, including trailing whitespace,
   retain their old meaning. Do not hash the complete Markdown file. A changed or stale header
   fails even with `--write` or `--rebind`; after changing metadata that affects the header,
   replace the block with `top_block(data, guide)` (historical form: `header(data)`) before regenerating. Do not rebind
