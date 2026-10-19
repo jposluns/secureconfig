@@ -171,6 +171,62 @@ class VersionBasisTests(unittest.TestCase):
                     self.assertEqual(vb.without_summary(vb.split(rendered)[1]), BODY)
                     self.assertEqual(vb.updated(rendered, 'fixture.md'), rendered)
 
+    def test_claim_html_safety_in_both_layouts(self):
+        parser = gate_parser(required=True)
+        cases = (
+            '[x](/`foo) <b>evil</b> `',
+            '[x](/foo "`title") <b>evil</b> `',
+            '<https://example.com/`foo> <b>evil</b> `',
+            '![x](/`foo) <b>evil</b> `',
+            '[outer [x]](/`foo) <b>evil</b> `',
+            '`safe`<b>evil</b>',
+            '[x](/`foo) <!-- evil --> `',
+            '[x](/`foo) <div>evil</div> `',
+            '[x]: /url "[x](/`foo) <b>evil</b> `"',
+        )
+        def html_tokens(tokens):
+            return [token for token in tokens if token.type in ('html_inline', 'html_block')] + [
+                child for token in tokens for child in html_tokens(token.children or [])]
+        for text in cases:
+            for two_section in (False, True):
+                with self.subTest(text=text, two_section=two_section):
+                    data = fixture()
+                    data['claims']['control']['text'] = text
+                    legacy = vb.updated(document(data), 'fixture.md')
+                    rendered = vb.migrated(legacy, 'fixture.md') if two_section else legacy
+                    line = next(line for line in rendered.split('\n')
+                                if line.startswith('- control ('))
+                    self.assertEqual(html_tokens(parser.parse(line)), [])
+                    self.assertEqual(vb.split(rendered)[0], data)
+                    self.assertEqual(vb.without_summary(vb.split(rendered)[1]), BODY)
+                    self.assertEqual(vb.updated(rendered, 'fixture.md'), rendered)
+                    end = rendered if two_section else vb.migrated(rendered, 'fixture.md')
+                    poisoned = end.replace(line, '- control (REASONED; product): ' + text)
+                    with self.assertRaisesRegex(ValueError, 'HTML in AI section'):
+                        vb.split(poisoned)
+        self.assertEqual(vb.claim_text(cases[0]), vb.cell(cases[0]))
+        self.assertEqual(vb.claim_text(cases[5]), '`safe`&lt;b&gt;evil&lt;/b&gt;')
+        with self.assertRaisesRegex(ValueError, 'HTML in AI section'):
+            vb.split(end.replace(line, '<div>evil</div>'))
+        with self.assertRaisesRegex(ValueError, 'HTML in AI section'):
+            vb.split(end.replace(line, '[x]: /foo "`title <b `"'))
+        for raw in ('[x](/`foo) <b `', '[x](/foo "`title") <b `',
+                    '<https://example.com/`foo> <b `', '![x](/`foo) <b `'):
+            with self.subTest(raw=raw), self.assertRaisesRegex(ValueError, 'HTML in AI section'):
+                vb.split(end.replace(line, '- control (REASONED; product): ' + raw))
+        for text in ('[`<b>`](/foo)', '![`<b>`](/foo)',
+                     '![outer ![`<b>`](/inner)](/outer)'):
+            with self.subTest(code_label=text):
+                data = fixture()
+                data['claims']['control']['text'] = text
+                self.assertEqual(vb.claim_text(text), text)
+                vb.migrated(vb.updated(document(data), 'fixture.md'), 'fixture.md')
+        with patch('check_verify_marking.gate_parser', side_effect=ParserUnavailable('absent')):
+            with self.assertRaisesRegex(ValueError, 'HTML safety requires the pinned parser'):
+                vb.claim_text(cases[0])
+            with self.assertRaisesRegex(ValueError, 'HTML safety requires the pinned parser'):
+                vb.split(poisoned)
+
     def test_component_parentheses_and_plain_header(self):
         data = fixture()
         data['components']['product'].update(name='Product, `edition`', basis='v1, `v2`')
