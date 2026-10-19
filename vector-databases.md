@@ -409,29 +409,29 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- q: Qdrant source, v1.19.1
-- qd: Qdrant security documentation, unknown
-- w: Weaviate source, v1.39.6
-- wd: Weaviate documentation, unknown
-- m2: Milvus, v2.6.24
-- m3: Milvus, v3.0.2
-- chroma: Chroma source, 1.5.9
-- pc: Pinecone organization documentation, unknown
-- qc: Qdrant Cloud documentation, unknown
-- cd: Chroma migration documentation, v1.0.0
-- pg: PostgreSQL documentation, unknown
-- docker: Docker documentation, unknown
-- k8s: Kubernetes documentation, unknown
-- grpc2: grpc-go (Milvus v2.6.24 go.mod), v1.82.1
-- grpc3: grpc-go (Milvus v3.0.2 go.mod), v1.82.2
-- ml: memberlist (Weaviate v1.39.6 go.mod), v0.5.4
-- goflags: go-flags, v1.6.1
-- gostd2: Go standard library, go1.25.8
-- gostd3: Go standard library, go1.26.6
-- curl-docs: curl documentation (rolling), unknown
-- milvus-helm: Milvus Helm chart, 5.0.30
-- milvus-operator: Milvus Operator, v1.3.11
-- pgvector-source: pgvector source, v0.8.2
+- q: Qdrant source (v1.19.1)
+- qd: Qdrant security documentation (unknown)
+- w: Weaviate source (v1.39.6)
+- wd: Weaviate documentation (unknown)
+- m2: Milvus (v2.6.24)
+- m3: Milvus (v3.0.2)
+- chroma: Chroma source (1.5.9)
+- pc: Pinecone organization documentation (unknown)
+- qc: Qdrant Cloud documentation (unknown)
+- cd: Chroma migration documentation (v1.0.0)
+- pg: PostgreSQL documentation (unknown)
+- docker: Docker documentation (unknown)
+- k8s: Kubernetes documentation (unknown)
+- grpc2: grpc-go (Milvus v2.6.24 go.mod) (v1.82.1)
+- grpc3: grpc-go (Milvus v3.0.2 go.mod) (v1.82.2)
+- ml: memberlist (Weaviate v1.39.6 go.mod) (v0.5.4)
+- goflags: go-flags (v1.6.1)
+- gostd2: Go standard library (go1.25.8)
+- gostd3: Go standard library (go1.26.6)
+- curl-docs: curl documentation (rolling) (unknown)
+- milvus-helm: Milvus Helm chart (5.0.30)
+- milvus-operator: Milvus Operator (v1.3.11)
+- pgvector-source: pgvector source (v0.8.2)
 
 Claims (full source mapping in the front matter):
 

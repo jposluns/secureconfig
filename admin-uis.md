@@ -159,21 +159,21 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- mongo: mongo-express, unknown
-- grafana: Grafana docs, unknown
-- prometheus: Prometheus docs, unknown
-- phpmyadmin: phpMyAdmin, unknown
-- pgadmin: pgAdmin, unknown
-- adminer: Adminer, unknown
-- prometheus-pin: Prometheus, v3.14.0
-- grafana-pin: Grafana, v13.2.2
-- go: Go net, unknown
-- htpasswd: Apache htpasswd, 2.4
-- httpd-source: Apache httpd htpasswd source, 2.4.69
-- owasp-source: OWASP Password Storage Cheat Sheet, 72865b1e3b5754246a101778dc00b37f9c233373
-- redisinsight: RedisInsight, 3.8.0
-- engine-pinned: Docker Engine networking documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- moby-pinned: Moby port mapping source, v28.3.3
+- mongo: mongo-express (unknown)
+- grafana: Grafana docs (unknown)
+- prometheus: Prometheus docs (unknown)
+- phpmyadmin: phpMyAdmin (unknown)
+- pgadmin: pgAdmin (unknown)
+- adminer: Adminer (unknown)
+- prometheus-pin: Prometheus (v3.14.0)
+- grafana-pin: Grafana (v13.2.2)
+- go: Go net (unknown)
+- htpasswd: Apache htpasswd (2.4)
+- httpd-source: Apache httpd htpasswd source (2.4.69)
+- owasp-source: OWASP Password Storage Cheat Sheet (72865b1e3b5754246a101778dc00b37f9c233373)
+- redisinsight: RedisInsight (3.8.0)
+- engine-pinned: Docker Engine networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- moby-pinned: Moby port mapping source (v28.3.3)
 
 Claims (full source mapping in the front matter):
 

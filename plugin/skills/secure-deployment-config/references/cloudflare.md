@@ -120,13 +120,13 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- cf: Cloudflare Zero Trust, unknown
-- token-file: cloudflared token-file minimum, 2025.4.0
-- installer: cloudflared service installer, 2026.9.3
-- curl: curl manual, unknown
-- curl-opts: curl command-line options, curl-8_23_0
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- cloudflared-readme: cloudflared README, 2026.9.3
+- cf: Cloudflare Zero Trust (unknown)
+- token-file: cloudflared token-file minimum (2025.4.0)
+- installer: cloudflared service installer (2026.9.3)
+- curl: curl manual (unknown)
+- curl-opts: curl command-line options (curl-8_23_0)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- cloudflared-readme: cloudflared README (2026.9.3)
 
 Claims (full source mapping in the front matter):
 
@@ -155,7 +155,7 @@ Claims (full source mapping in the front matter):
 - verify-login (REASONED; cf): Private browsing must show Access login; anonymous HEAD must redirect to the team's cloudflareaccess.com login, never app content.
 - verify-token (REASONED; cf, curl): On a route known to serve application content with HTTP 200, send the hidden-prompt service token through curl --header @- and expect http=200 location=. Login redirects, denials and transport errors fail; compare anonymous denial because token success alone does not prove Access enforcement. The probe discards the body, so 200 alone cannot identify content.
 - verify-policy (REASONED; cf): Inspect loopback binding and effective inbound policy, including existing allows and container NAT; permitted sources depend on topology.
-- verify-origin (REASONED; cf, curl, cf-docs, curl-opts): From another host, probe the actual origin port (HTTP 3000 in the same-host example or HTTPS for a remote origin): an explicit refusal from the confirmed origin address while the allowed-vantage control (tunnel-host loopback, or the &#96;cloudflared&#96; host to a remote origin using the effective HTTP Host separately from the certificate name) returns the app's status, not 000, together with an effective inbound-policy check supports isolation; those controls do not confirm the probed public address; no reply and TLS trust or hostname errors are inconclusive (including when combined trust cannot be reproduced), and any HTTP reply from the confirmed origin address directly on the app's port exposes bypass; an HTTP reply from an unconfirmed address only shows something answers there and requires address-mapping confirmation before calling this origin exposed, never fixed (this guide's assessment of probe outcomes).
+- verify-origin (REASONED; cf, curl, cf-docs, curl-opts): From another host, probe the actual origin port (HTTP 3000 in the same-host example or HTTPS for a remote origin): an explicit refusal from the confirmed origin address while the allowed-vantage control (tunnel-host loopback, or the `cloudflared` host to a remote origin using the effective HTTP Host separately from the certificate name) returns the app's status, not 000, together with an effective inbound-policy check supports isolation; those controls do not confirm the probed public address; no reply and TLS trust or hostname errors are inconclusive (including when combined trust cannot be reproduced), and any HTTP reply from the confirmed origin address directly on the app's port exposes bypass; an HTTP reply from an unconfirmed address only shows something answers there and requires address-mapping confirmation before calling this origin exposed, never fixed (this guide's assessment of probe outcomes).
 - verify-aop (REASONED; cf, cf-docs, curl, curl-opts): Trust the origin server CA when probing 443 directly: missing-client-certificate refusal indicates AOP only from an independently confirmed origin address; a refusal or reply from an unconfirmed address shows only that something answers there and requires address-mapping confirmation before calling this origin fixed or exposed; the service-token GET does not confirm the probed public address; a firewall drop is inconclusive in this probe, even if the service-token GET answers; the effective inbound policy establishes isolation, while app 401/403 shows app authorization only from the confirmed origin address (this guide's assessment of probe outcomes).
 - verify-http (REASONED; cf, curl): Probe a known app route and virtual host on no-tunnel origin port 80 from outside: either an explicit refusal from the confirmed origin address or only a redirect from that confirmed address to the canonical HTTPS host without app content supports the fixed state when the service-token GET on that route answers with its success status; that GET does not confirm the probed public address; app content from that confirmed address over HTTP shows exposure, while app content from an unconfirmed address only shows that something answers there and requires address-mapping confirmation before calling this origin exposed; no reply is inconclusive. The listed Sources do not prescribe a redirect code (this guide's assessment of probe outcomes).
 - token-file (REASONED; token-file, cf): cloudflared 2025.4.0 or later supports tunnel run --token-file /absolute/path/to/token; restrict the file to the service account with mode 0600 on Linux/macOS or a restricted Windows ACL.

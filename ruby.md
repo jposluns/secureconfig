@@ -131,17 +131,17 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- puma-readme: Puma README, aef89221e4d729c3133c723844382331ba3bbbd9
-- puma-dsl: Puma DSL, d70de8b4e926f1f5fa0269dc46cdfadf52562628
-- puma: Puma defaults, v8.0.2
-- rails: Rails documentation, unknown
-- assume: Action Pack, 7.1
-- credentials: Rails credentials source, e4cd6ae6f1f0a847958b3aa846c9fd8a3014922a
-- rack: Rack::Attack, unknown
-- sidekiq: Sidekiq Web, unknown
-- net-http: Net::HTTP source, 39cf5f648a9e5e25312909a2dc26681edaa2402c
-- openssl-ruby: Ruby OpenSSL source, a77ed4b9908e179cea8f018f7e245535301746a8
-- openssl: OpenSSL documentation, unknown
+- puma-readme: Puma README (aef89221e4d729c3133c723844382331ba3bbbd9)
+- puma-dsl: Puma DSL (d70de8b4e926f1f5fa0269dc46cdfadf52562628)
+- puma: Puma defaults (v8.0.2)
+- rails: Rails documentation (unknown)
+- assume: Action Pack (7.1)
+- credentials: Rails credentials source (e4cd6ae6f1f0a847958b3aa846c9fd8a3014922a)
+- rack: Rack::Attack (unknown)
+- sidekiq: Sidekiq Web (unknown)
+- net-http: Net::HTTP source (39cf5f648a9e5e25312909a2dc26681edaa2402c)
+- openssl-ruby: Ruby OpenSSL source (a77ed4b9908e179cea8f018f7e245535301746a8)
+- openssl: OpenSSL documentation (unknown)
 
 Claims (full source mapping in the front matter):
 

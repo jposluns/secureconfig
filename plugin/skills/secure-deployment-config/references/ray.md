@@ -239,19 +239,19 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- ray: Ray pinned source, ray-2.58.0
-- docs: Ray documentation, unknown
-- token-min: Ray token authentication introduction, 2.52.0
-- redis-history: Ray Redis history announcement, unknown
-- docker: Docker publishing documentation, unknown
-- kuberay-auth: KubeRay authentication documentation, unknown
-- kuberay: KubeRay chart, v1.7.0
-- kubernetes: Kubernetes security contexts, unknown
-- python: CPython WSGI server, v3.11.0
-- curl: curl minimum write-out version, 7.75.0
-- docker-release: Docker Engine release notes, 4e9a5751518ed8223a8dcde53693badddd72604f
-- kuberay-auth-source: KubeRay authentication source, v1.6.0
-- kuberay-auth-prior: KubeRay prior RayCluster types, v1.5.0
+- ray: Ray pinned source (ray-2.58.0)
+- docs: Ray documentation (unknown)
+- token-min: Ray token authentication introduction (2.52.0)
+- redis-history: Ray Redis history announcement (unknown)
+- docker: Docker publishing documentation (unknown)
+- kuberay-auth: KubeRay authentication documentation (unknown)
+- kuberay: KubeRay chart (v1.7.0)
+- kubernetes: Kubernetes security contexts (unknown)
+- python: CPython WSGI server (v3.11.0)
+- curl: curl minimum write-out version (7.75.0)
+- docker-release: Docker Engine release notes (4e9a5751518ed8223a8dcde53693badddd72604f)
+- kuberay-auth-source: KubeRay authentication source (v1.6.0)
+- kuberay-auth-prior: KubeRay prior RayCluster types (v1.5.0)
 
 Claims (full source mapping in the front matter):
 

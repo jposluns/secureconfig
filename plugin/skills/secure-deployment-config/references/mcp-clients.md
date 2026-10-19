@@ -118,14 +118,14 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- mcp: MCP, 2026-07-28
-- mcp-2025-06-18: MCP 2025-06-18 authorization, 86f6e0c675afea9a8f233e09b6faf566b126086c
-- mcp-2025-11-25: MCP 2025-11-25 authorization, 86f6e0c675afea9a8f233e09b6faf566b126086c
-- rfc: OAuth and HTTP RFCs, unknown
-- oauth: OAuth 2.1 draft, draft-ietf-oauth-v2-1-14
-- cimd: CIMD draft, draft-ietf-oauth-client-id-metadata-document-00
-- oidc: OpenID Connect, 1.0 errata 2
-- owasp: OWASP SSRF guidance, unknown
+- mcp: MCP (2026-07-28)
+- mcp-2025-06-18: MCP 2025-06-18 authorization (86f6e0c675afea9a8f233e09b6faf566b126086c)
+- mcp-2025-11-25: MCP 2025-11-25 authorization (86f6e0c675afea9a8f233e09b6faf566b126086c)
+- rfc: OAuth and HTTP RFCs (unknown)
+- oauth: OAuth 2.1 draft (draft-ietf-oauth-v2-1-14)
+- cimd: CIMD draft (draft-ietf-oauth-client-id-metadata-document-00)
+- oidc: OpenID Connect (1.0 errata 2)
+- owasp: OWASP SSRF guidance (unknown)
 
 Claims (full source mapping in the front matter):
 

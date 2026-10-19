@@ -77,10 +77,10 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- ts: Tailscale documentation, unknown
-- cli: Tailscale CLI change, v1.52
-- ss: ss, unknown
-- curl: curl option documentation, 7.75.0
+- ts: Tailscale documentation (unknown)
+- cli: Tailscale CLI change (v1.52)
+- ss: ss (unknown)
+- curl: curl option documentation (7.75.0)
 
 Claims (full source mapping in the front matter):
 

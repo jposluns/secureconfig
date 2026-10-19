@@ -170,15 +170,15 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: PostgreSQL documentation, unknown
-- docker: PostgreSQL image source, d588a44673ea9d123c1acb1a6924de10a27fc315
-- init: PostgreSQL initdb source, REL_17_11
-- pg12: PostgreSQL TLS minimum, 12
-- pg14: PostgreSQL SCRAM default, 14
-- pg15: PostgreSQL schema defaults, 15
-- pg16: PostgreSQL membership and require_auth, 16
-- pg18: PostgreSQL MD5 and logging changes, 18
-- audit: pgAudit source, dedd42ec3fe880bf581dd578c0df87ed4ad246cd
+- docs: PostgreSQL documentation (unknown)
+- docker: PostgreSQL image source (d588a44673ea9d123c1acb1a6924de10a27fc315)
+- init: PostgreSQL initdb source (REL_17_11)
+- pg12: PostgreSQL TLS minimum (12)
+- pg14: PostgreSQL SCRAM default (14)
+- pg15: PostgreSQL schema defaults (15)
+- pg16: PostgreSQL membership and require_auth (16)
+- pg18: PostgreSQL MD5 and logging changes (18)
+- audit: pgAudit source (dedd42ec3fe880bf581dd578c0df87ed4ad246cd)
 
 Claims (full source mapping in the front matter):
 

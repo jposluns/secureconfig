@@ -240,31 +240,31 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- python: Python http.server documentation, 3.14.4
-- gunicorn: Gunicorn documentation, unknown
-- uvicorn: Uvicorn source, 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9
-- django: Django documentation, 6.1
-- argon: argon2-cffi documentation, unknown
-- werkzeug: Werkzeug documentation, unknown
-- fastapi: FastAPI documentation, unknown
-- oidc-stub: FastAPI OpenIdConnect source, 31bbb380748ccead62fc0f42dbf4273f11dadccf
-- python-pin: Python http.server source, v3.14.4
-- stdlib-docs: Python standard library documentation, 3.14
-- pyotp: PyOTP, v2.9.0
-- qrcode: qrcode, v8.2
-- django-otp: django-otp, 1.6.1
-- requests: Requests, v2.32.3
-- slowapi: slowapi source, v0.1.10
-- httpx: HTTPX source and documentation, 0.28.1
-- cpython-ssl: CPython ssl source and documentation, v3.14.8
-- openssl: OpenSSL documentation, openssl-4.0.3
-- render: Render documentation, unknown
-- heroku: Heroku documentation, unknown
-- fly-pinned: Fly.io pinned documentation, 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9
-- railway: Railway documentation, 72354493198302677fb6be6c692dd75c64cae2c6
-- argon-api: argon2-cffi API example, 25.1.0
-- bcrypt-api: Python bcrypt API example, 2b4ba9ac84df972e8e81311d09559af8dc82ef33
-- cpython-secrets: CPython secrets documentation and source, v3.14.8
+- python: Python http.server documentation (3.14.4)
+- gunicorn: Gunicorn documentation (unknown)
+- uvicorn: Uvicorn source (5ac6265a01ff6dcadb0e4250152c3deaf8a168a9)
+- django: Django documentation (6.1)
+- argon: argon2-cffi documentation (unknown)
+- werkzeug: Werkzeug documentation (unknown)
+- fastapi: FastAPI documentation (unknown)
+- oidc-stub: FastAPI OpenIdConnect source (31bbb380748ccead62fc0f42dbf4273f11dadccf)
+- python-pin: Python http.server source (v3.14.4)
+- stdlib-docs: Python standard library documentation (3.14)
+- pyotp: PyOTP (v2.9.0)
+- qrcode: qrcode (v8.2)
+- django-otp: django-otp (1.6.1)
+- requests: Requests (v2.32.3)
+- slowapi: slowapi source (v0.1.10)
+- httpx: HTTPX source and documentation (0.28.1)
+- cpython-ssl: CPython ssl source and documentation (v3.14.8)
+- openssl: OpenSSL documentation (openssl-4.0.3)
+- render: Render documentation (unknown)
+- heroku: Heroku documentation (unknown)
+- fly-pinned: Fly.io pinned documentation (2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9)
+- railway: Railway documentation (72354493198302677fb6be6c692dd75c64cae2c6)
+- argon-api: argon2-cffi API example (25.1.0)
+- bcrypt-api: Python bcrypt API example (2b4ba9ac84df972e8e81311d09559af8dc82ef33)
+- cpython-secrets: CPython secrets documentation and source (v3.14.8)
 
 Claims (full source mapping in the front matter):
 

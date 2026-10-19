@@ -51,7 +51,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- server: code-server, v4.137.0
+- server: code-server (v4.137.0)
 
 Claims (full source mapping in the front matter):
 

@@ -308,36 +308,36 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- entra: Microsoft Entra documentation, unknown
-- google: Google Cloud Identity pricing, unknown
-- google-docs: Google 2-Step Verification and prompts documentation, unknown
-- okta: Okta pricing, unknown
-- firebase: Firebase documentation, unknown
-- auth0: Auth0 documentation, unknown
-- cognito: Amazon Cognito pricing, unknown
-- clerk: Clerk pricing, unknown
-- workos: WorkOS pricing, unknown
-- supabase: Supabase pricing, unknown
-- github: GitHub OAuth apps, unknown
-- aws-identity: AWS IAM Identity Center and ALB, unknown
-- duo: Duo documentation, unknown
-- authelia-source: Authelia, v4.39.28
-- supabase-docs: Supabase MFA documentation, 10c7379c970ae4d2f30f3158194061cf5ffb8fc5
-- okta-docs: Okta Verify documentation, a4f65eea34b89af7f2f543e43a74a0dfbc709cd0
-- oauth2-proxy: oauth2-proxy, v7.15.4
-- zitadel-source: Zitadel documentation, ab3b44cd743709649e46f7708da2f6a6a70bc227
-- authentik-source: authentik source, version/2026.8.3
-- keycloak-source: Keycloak documentation, 26.7.4
-- ory-kratos: Ory Kratos, v26.2.0
-- ory-hydra: Ory Hydra, v26.2.0
-- google-oidc-docs: Google OpenID Connect documentation, unknown
-- okta-passkey-docs: Okta passkey documentation, a4f65eea34b89af7f2f543e43a74a0dfbc709cd0
-- supabase-rls-docs: Supabase RLS documentation, 10c7379c970ae4d2f30f3158194061cf5ffb8fc5
-- auth0-mfa-source: Auth0 archived MFA documentation, 5258d17ede3eea0ed0e330d15f8921a542564f68
-- entra-conditional: Microsoft Entra Conditional Access documentation, 231747abc59ae3d50c74e215c1cdd592eb980723
-- entra-allowlist: Microsoft Entra token and application access documentation, 231747abc59ae3d50c74e215c1cdd592eb980723
-- github-docs: GitHub Actions documentation, cb051611377a0d2904411e6157154e9b4953d870
-- entra-docs: Microsoft Authenticator documentation, 231747abc59ae3d50c74e215c1cdd592eb980723
+- entra: Microsoft Entra documentation (unknown)
+- google: Google Cloud Identity pricing (unknown)
+- google-docs: Google 2-Step Verification and prompts documentation (unknown)
+- okta: Okta pricing (unknown)
+- firebase: Firebase documentation (unknown)
+- auth0: Auth0 documentation (unknown)
+- cognito: Amazon Cognito pricing (unknown)
+- clerk: Clerk pricing (unknown)
+- workos: WorkOS pricing (unknown)
+- supabase: Supabase pricing (unknown)
+- github: GitHub OAuth apps (unknown)
+- aws-identity: AWS IAM Identity Center and ALB (unknown)
+- duo: Duo documentation (unknown)
+- authelia-source: Authelia (v4.39.28)
+- supabase-docs: Supabase MFA documentation (10c7379c970ae4d2f30f3158194061cf5ffb8fc5)
+- okta-docs: Okta Verify documentation (a4f65eea34b89af7f2f543e43a74a0dfbc709cd0)
+- oauth2-proxy: oauth2-proxy (v7.15.4)
+- zitadel-source: Zitadel documentation (ab3b44cd743709649e46f7708da2f6a6a70bc227)
+- authentik-source: authentik source (version/2026.8.3)
+- keycloak-source: Keycloak documentation (26.7.4)
+- ory-kratos: Ory Kratos (v26.2.0)
+- ory-hydra: Ory Hydra (v26.2.0)
+- google-oidc-docs: Google OpenID Connect documentation (unknown)
+- okta-passkey-docs: Okta passkey documentation (a4f65eea34b89af7f2f543e43a74a0dfbc709cd0)
+- supabase-rls-docs: Supabase RLS documentation (10c7379c970ae4d2f30f3158194061cf5ffb8fc5)
+- auth0-mfa-source: Auth0 archived MFA documentation (5258d17ede3eea0ed0e330d15f8921a542564f68)
+- entra-conditional: Microsoft Entra Conditional Access documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
+- entra-allowlist: Microsoft Entra token and application access documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
+- github-docs: GitHub Actions documentation (cb051611377a0d2904411e6157154e9b4953d870)
+- entra-docs: Microsoft Authenticator documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
 
 Claims (full source mapping in the front matter):
 

@@ -95,12 +95,12 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- aws: AWS security groups and CLI, unknown
-- gcp: Google Cloud firewall and CLI, unknown
-- docker-docs: Docker Engine networking documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- azure: Azure NSG and CLI, unknown
-- azure-docs: Azure documentation snapshot, 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f
-- tailscale-docs: Tailscale documentation, unknown
+- aws: AWS security groups and CLI (unknown)
+- gcp: Google Cloud firewall and CLI (unknown)
+- docker-docs: Docker Engine networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- azure: Azure NSG and CLI (unknown)
+- azure-docs: Azure documentation snapshot (8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f)
+- tailscale-docs: Tailscale documentation (unknown)
 
 Claims (full source mapping in the front matter):
 

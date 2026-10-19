@@ -177,15 +177,15 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- livekit: LiveKit, v1.13.7
-- livekit-protocol: LiveKit protocol, a4f4b5c0c23f167d0c07de1e1d7652125882e73c
-- livekit-docs: LiveKit documentation, unknown
-- lk: livekit-cli, v2.18.2
-- coturn: coturn, 4.18.0
-- dtls: coturn DTLS opt-in introduction, 4.17.0
-- curl: curl minimum write-out version, 7.75.0
-- openssl-cli: OpenSSL CLI, 3.0
-- openssl-dgst: OpenSSL dgst, 3.5
+- livekit: LiveKit (v1.13.7)
+- livekit-protocol: LiveKit protocol (a4f4b5c0c23f167d0c07de1e1d7652125882e73c)
+- livekit-docs: LiveKit documentation (unknown)
+- lk: livekit-cli (v2.18.2)
+- coturn: coturn (4.18.0)
+- dtls: coturn DTLS opt-in introduction (4.17.0)
+- curl: curl minimum write-out version (7.75.0)
+- openssl-cli: OpenSSL CLI (3.0)
+- openssl-dgst: OpenSSL dgst (3.5)
 
 Claims (full source mapping in the front matter):
 

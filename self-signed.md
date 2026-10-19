@@ -142,18 +142,18 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- openssl: OpenSSL documentation (rolling), unknown
-- mkcert: mkcert, unknown
-- requests: Requests TLS documentation, v2.32.3
-- git: Git ignore documentation, v2.43.0
-- curl-source: curl command documentation, curl-8_12_1
-- node: Node.js extra CA certificates, v22.19.0
-- rfc9525: RFC 9525 service identity, RFC 9525
-- debian-ca: Debian ca-certificates, trixie
-- ubuntu-ca: Ubuntu ca-certificates, noble
-- rhel-ca: RHEL shared system certificates, RHEL 9
-- coreutils: GNU coreutils file permissions, v9.7
-- node-v24: Node.js API documentation, v24.22.0
+- openssl: OpenSSL documentation (rolling) (unknown)
+- mkcert: mkcert (unknown)
+- requests: Requests TLS documentation (v2.32.3)
+- git: Git ignore documentation (v2.43.0)
+- curl-source: curl command documentation (curl-8_12_1)
+- node: Node.js extra CA certificates (v22.19.0)
+- rfc9525: RFC 9525 service identity (RFC 9525)
+- debian-ca: Debian ca-certificates (trixie)
+- ubuntu-ca: Ubuntu ca-certificates (noble)
+- rhel-ca: RHEL shared system certificates (RHEL 9)
+- coreutils: GNU coreutils file permissions (v9.7)
+- node-v24: Node.js API documentation (v24.22.0)
 
 Claims (full source mapping in the front matter):
 

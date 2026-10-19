@@ -181,14 +181,14 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: ClickHouse documentation, unknown
-- config: ClickHouse server config source, 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6
-- docker: ClickHouse Docker source, 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6
-- users: ClickHouse users source, b40982f9416bb4bc2d423d7e75ec384e79494b99
-- totp: ClickHouse TOTP release announcement, unknown
-- sources: ClickHouse privilege registry, 37c6c8c9bfc1de323e9a27711c5649352364bcba
-- curl: curl documentation, unknown
-- roles: ClickHouse role source, 1163c482760fb0204e40f8fb5d81ffa1272bc9ea
+- docs: ClickHouse documentation (unknown)
+- config: ClickHouse server config source (9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6)
+- docker: ClickHouse Docker source (9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6)
+- users: ClickHouse users source (b40982f9416bb4bc2d423d7e75ec384e79494b99)
+- totp: ClickHouse TOTP release announcement (unknown)
+- sources: ClickHouse privilege registry (37c6c8c9bfc1de323e9a27711c5649352364bcba)
+- curl: curl documentation (unknown)
+- roles: ClickHouse role source (1163c482760fb0204e40f8fb5d81ffa1272bc9ea)
 
 Claims (full source mapping in the front matter):
 

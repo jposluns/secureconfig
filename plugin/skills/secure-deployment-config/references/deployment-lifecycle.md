@@ -243,31 +243,31 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- nmap: Nmap documentation, unknown
-- shodan: Shodan, unknown
-- censys: Censys, unknown
-- vercel: Vercel Deployment Protection, unknown
-- access: Cloudflare Access policies, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- dns: BIND dig documentation, 9.18.39
-- openssl: OpenSSL command documentation, 3.0
-- openbsd-nc: OpenBSD nc manual, 7.6
-- owasp-takeover: OWASP subdomain takeover prevention, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
-- wstg: OWASP Web Security Testing Guide, v4.2
-- dns-rfcs: DNS caching RFCs, unknown
-- owasp-docs: OWASP security guidance, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
-- entra-docs: Microsoft Entra revocation model, 231747abc59ae3d50c74e215c1cdd592eb980723
-- cloudflare-access: Cloudflare Access and origin configuration, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- oauth2-proxy: OAuth2 Proxy, v7.15.4
-- authelia: Authelia, v4.39.28
-- oauth-revocation: OAuth 2.0 Token Revocation RFC, unknown
-- nist: NIST digital identity guidelines, SP 800-63B-4
-- ubuntu-nc: Ubuntu noble netcat-openbsd source, c047f1a4572e796c8643fb7e5a719a9d960a677b
-- c9s-nmap: CentOS Stream 9 nmap packaging, 17c2b7795d821cd7fbe311cf3f885be3ea1f122f
-- busybox: BusyBox 1.36.1, 1_36_1
-- docker-notes: Docker Engine release notes, 4e9a5751518ed8223a8dcde53693badddd72604f
-- webui: Open WebUI, 0a7c15832fb30b1903753e83f81dc7d27e5b0944
-- certbot-v230: Certbot user guide and source, v2.3.0
-- le: Let's Encrypt documentation, unknown
+- nmap: Nmap documentation (unknown)
+- shodan: Shodan (unknown)
+- censys: Censys (unknown)
+- vercel: Vercel Deployment Protection (unknown)
+- access: Cloudflare Access policies (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- dns: BIND dig documentation (9.18.39)
+- openssl: OpenSSL command documentation (3.0)
+- openbsd-nc: OpenBSD nc manual (7.6)
+- owasp-takeover: OWASP subdomain takeover prevention (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
+- wstg: OWASP Web Security Testing Guide (v4.2)
+- dns-rfcs: DNS caching RFCs (unknown)
+- owasp-docs: OWASP security guidance (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
+- entra-docs: Microsoft Entra revocation model (231747abc59ae3d50c74e215c1cdd592eb980723)
+- cloudflare-access: Cloudflare Access and origin configuration (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- oauth2-proxy: OAuth2 Proxy (v7.15.4)
+- authelia: Authelia (v4.39.28)
+- oauth-revocation: OAuth 2.0 Token Revocation RFC (unknown)
+- nist: NIST digital identity guidelines (SP 800-63B-4)
+- ubuntu-nc: Ubuntu noble netcat-openbsd source (c047f1a4572e796c8643fb7e5a719a9d960a677b)
+- c9s-nmap: CentOS Stream 9 nmap packaging (17c2b7795d821cd7fbe311cf3f885be3ea1f122f)
+- busybox: BusyBox 1.36.1 (1_36_1)
+- docker-notes: Docker Engine release notes (4e9a5751518ed8223a8dcde53693badddd72604f)
+- webui: Open WebUI (0a7c15832fb30b1903753e83f81dc7d27e5b0944)
+- certbot-v230: Certbot user guide and source (v2.3.0)
+- le: Let's Encrypt documentation (unknown)
 
 Claims (full source mapping in the front matter):
 

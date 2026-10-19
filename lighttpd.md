@@ -162,20 +162,20 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- tls: lighttpd TLS minimum, 1.4.56
-- key: lighttpd separate-key minimum, 1.4.53
-- redirect: lighttpd redirect default transition, 1.4.75
-- docs: lighttpd documentation, unknown
-- modules-source: lighttpd module loader source, 1.4.75
-- authn-source: lighttpd file authentication source, 1.4.75
-- htpasswd-tool: Apache htpasswd manual, 2.4
-- debian-package: Debian apache2-utils package, trixie
-- authelia: Authelia proxy support, v4.39.28
-- cloudflare-access: Cloudflare Access documentation, commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- fedora-package: Fedora httpd-tools package, unknown
-- lighttpd-verify-source: lighttpd verify source, 1.4.75
-- systemd-reload: systemd reload manual, v262
-- apache-vhosts: Apache virtual-host source, 2.4.69
+- tls: lighttpd TLS minimum (1.4.56)
+- key: lighttpd separate-key minimum (1.4.53)
+- redirect: lighttpd redirect default transition (1.4.75)
+- docs: lighttpd documentation (unknown)
+- modules-source: lighttpd module loader source (1.4.75)
+- authn-source: lighttpd file authentication source (1.4.75)
+- htpasswd-tool: Apache htpasswd manual (2.4)
+- debian-package: Debian apache2-utils package (trixie)
+- authelia: Authelia proxy support (v4.39.28)
+- cloudflare-access: Cloudflare Access documentation (commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- fedora-package: Fedora httpd-tools package (unknown)
+- lighttpd-verify-source: lighttpd verify source (1.4.75)
+- systemd-reload: systemd reload manual (v262)
+- apache-vhosts: Apache virtual-host source (2.4.69)
 
 Claims (full source mapping in the front matter):
 

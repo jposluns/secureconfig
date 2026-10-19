@@ -152,14 +152,14 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- pgb: PgBouncer documentation, unknown
-- pgb-bind: PgBouncer listener source, pgbouncer_1_26_0
-- pgb-source: PgBouncer source and fixes, 1.25.2
-- pgpool: Pgpool-II documentation, unknown
-- pgpool-source: Pgpool-II backend handshake, 4.7.2
-- postgres: PostgreSQL documentation, unknown
-- ldap-min: PgBouncer LDAP minimum, 1.25.0
-- expiry-fix: PgBouncer password-expiry fix, 1.24.1
+- pgb: PgBouncer documentation (unknown)
+- pgb-bind: PgBouncer listener source (pgbouncer_1_26_0)
+- pgb-source: PgBouncer source and fixes (1.25.2)
+- pgpool: Pgpool-II documentation (unknown)
+- pgpool-source: Pgpool-II backend handshake (4.7.2)
+- postgres: PostgreSQL documentation (unknown)
+- ldap-min: PgBouncer LDAP minimum (1.25.0)
+- expiry-fix: PgBouncer password-expiry fix (1.24.1)
 
 Claims (full source mapping in the front matter):
 

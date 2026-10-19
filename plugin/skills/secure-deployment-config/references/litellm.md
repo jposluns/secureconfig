@@ -133,11 +133,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: LiteLLM documentation, unknown
-- source: LiteLLM source, 6ef7b86748118ceecd95271727c2fa167ce55fec
-- sso: LiteLLM SSO allowance, v1.76.0
-- metrics: LiteLLM metrics default, v1.85.0
-- cli: LiteLLM CLI, v1.102.1
+- docs: LiteLLM documentation (unknown)
+- source: LiteLLM source (6ef7b86748118ceecd95271727c2fa167ce55fec)
+- sso: LiteLLM SSO allowance (v1.76.0)
+- metrics: LiteLLM metrics default (v1.85.0)
+- cli: LiteLLM CLI (v1.102.1)
 
 Claims (full source mapping in the front matter):
 

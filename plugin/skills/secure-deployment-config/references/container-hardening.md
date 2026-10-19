@@ -132,16 +132,16 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docker: Docker documentation, unknown
-- docker-daemon: Docker daemon security documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- compose-2324: Docker Compose source and reference, v2.32.4
-- procfs-619: Linux process status and capabilities manuals, man-pages-6.19
-- kubernetes-website: Kubernetes process namespace documentation, 47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8
-- kubernetes: Kubernetes documentation, unknown
-- kubernetes-134: Kubernetes Pod Security Admission, 1.34
-- kubectl-134: kubectl source, v1.34.0
-- rfc7396: JSON Merge Patch, RFC 7396
-- busybox-1361: BusyBox source, 1_36_1
+- docker: Docker documentation (unknown)
+- docker-daemon: Docker daemon security documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- compose-2324: Docker Compose source and reference (v2.32.4)
+- procfs-619: Linux process status and capabilities manuals (man-pages-6.19)
+- kubernetes-website: Kubernetes process namespace documentation (47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8)
+- kubernetes: Kubernetes documentation (unknown)
+- kubernetes-134: Kubernetes Pod Security Admission (1.34)
+- kubectl-134: kubectl source (v1.34.0)
+- rfc7396: JSON Merge Patch (RFC 7396)
+- busybox-1361: BusyBox source (1_36_1)
 
 Claims (full source mapping in the front matter):
 

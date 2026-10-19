@@ -228,24 +228,24 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- langfuse: Langfuse documentation, unknown
-- lf-session: Langfuse session source, 24c949d8dd5617219a8415f80e4c65ad611ff05c
-- lf-compose: Langfuse Compose, 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab
-- phoenix: Phoenix documentation, unknown
-- phoenix-tls-min: Phoenix TLS announcement, unknown
-- phoenix-tls: Phoenix TLS source, 080959576563900038688ddf01f3bee110005df5
-- helicone: Helicone documentation, unknown
-- helicone-compose: Helicone Compose, b12ebaccb824ab9778757ca197ff302d97fda421
-- otel: OpenTelemetry Collector, v0.161.0
-- otel-dist: Collector distributions, v0.161.0
-- otel-docs: Collector security guidance, unknown
-- basicauth: Collector Basic auth extension, 1c897ba9c67afc3c9e218b5cd05a6de49435f4de
-- bearertokenauth: Collector bearer token auth extension, 1c897ba9c67afc3c9e218b5cd05a6de49435f4de
-- phoenix-auth: Phoenix gRPC auth source, f11c885c063f1c9b6146693cda401c5d645d8294
-- pprof: Collector pprof source, 443567a6a00d7cff8cae1432a6fef655d8698e94
-- health: Collector health source, d922ffb299c6b9be026f97dd7d6a5f0f507efdeb
-- curl: curl minimum, 7.75.0
-- phoenix-bind: Phoenix listener source, arize-phoenix-v20.16.0
+- langfuse: Langfuse documentation (unknown)
+- lf-session: Langfuse session source (24c949d8dd5617219a8415f80e4c65ad611ff05c)
+- lf-compose: Langfuse Compose (0dd0a7fbe2feb300b8776f02b3684eeee3fbceab)
+- phoenix: Phoenix documentation (unknown)
+- phoenix-tls-min: Phoenix TLS announcement (unknown)
+- phoenix-tls: Phoenix TLS source (080959576563900038688ddf01f3bee110005df5)
+- helicone: Helicone documentation (unknown)
+- helicone-compose: Helicone Compose (b12ebaccb824ab9778757ca197ff302d97fda421)
+- otel: OpenTelemetry Collector (v0.161.0)
+- otel-dist: Collector distributions (v0.161.0)
+- otel-docs: Collector security guidance (unknown)
+- basicauth: Collector Basic auth extension (1c897ba9c67afc3c9e218b5cd05a6de49435f4de)
+- bearertokenauth: Collector bearer token auth extension (1c897ba9c67afc3c9e218b5cd05a6de49435f4de)
+- phoenix-auth: Phoenix gRPC auth source (f11c885c063f1c9b6146693cda401c5d645d8294)
+- pprof: Collector pprof source (443567a6a00d7cff8cae1432a6fef655d8698e94)
+- health: Collector health source (d922ffb299c6b9be026f97dd7d6a5f0f507efdeb)
+- curl: curl minimum (7.75.0)
+- phoenix-bind: Phoenix listener source (arize-phoenix-v20.16.0)
 
 Claims (full source mapping in the front matter):
 

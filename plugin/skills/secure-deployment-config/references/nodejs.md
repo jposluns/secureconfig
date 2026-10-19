@@ -190,24 +190,24 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- node: Node.js documentation, unknown
-- linux-ip: Linux man-pages ip(7), 6.19
-- linux-capabilities: Linux man-pages capabilities(7), 6.19
-- express: Express proxy documentation, unknown
-- session: express-session documentation, unknown
-- helmet: Helmet documentation, unknown
-- rate: express-rate-limit minimum, v8
-- otplib: otplib, v12.0.1
-- qrcode: qrcode, v1.5.4
-- node-v24: Node.js API documentation, v24.22.0
-- render: Render documentation, unknown
-- heroku: Heroku documentation, unknown
-- fly-pinned: Fly.io pinned documentation, 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9
-- railway: Railway documentation, 72354493198302677fb6be6c692dd75c64cae2c6
-- owasp: OWASP password storage cheat sheet, commit 72865b1e
-- bcrypt: node.bcrypt.js, v6.0.0
-- argon2: node-argon2, v0.45.1
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
+- node: Node.js documentation (unknown)
+- linux-ip: Linux man-pages ip(7) (6.19)
+- linux-capabilities: Linux man-pages capabilities(7) (6.19)
+- express: Express proxy documentation (unknown)
+- session: express-session documentation (unknown)
+- helmet: Helmet documentation (unknown)
+- rate: express-rate-limit minimum (v8)
+- otplib: otplib (v12.0.1)
+- qrcode: qrcode (v1.5.4)
+- node-v24: Node.js API documentation (v24.22.0)
+- render: Render documentation (unknown)
+- heroku: Heroku documentation (unknown)
+- fly-pinned: Fly.io pinned documentation (2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9)
+- railway: Railway documentation (72354493198302677fb6be6c692dd75c64cae2c6)
+- owasp: OWASP password storage cheat sheet (commit 72865b1e)
+- bcrypt: node.bcrypt.js (v6.0.0)
+- argon2: node-argon2 (v0.45.1)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
 
 Claims (full source mapping in the front matter):
 

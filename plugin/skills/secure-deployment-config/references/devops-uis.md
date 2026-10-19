@@ -247,27 +247,27 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- portainer: Portainer, unknown
-- coolify: Coolify, unknown
-- dokploy: Dokploy, unknown
-- npm: Nginx Proxy Manager, unknown
-- vaultwarden: Vaultwarden docs, unknown
-- vaultwarden-pin: Vaultwarden config, 3347698712d3e99e652ad4394ef2fc0ce2800fdd
-- dashboard: Dashboard docs, unknown
-- dashboard-old: Dashboard arguments, v2.7.0
-- jenkins: Jenkins, unknown
-- gitea: Gitea docs, unknown
-- gitlab: GitLab CE, unknown
-- kuma: Uptime Kuma, unknown
-- docker: Docker Engine, unknown
-- dozzle: Dozzle, unknown
-- filebrowser: Filebrowser, unknown
-- nodered: Node-RED, unknown
-- gitea-pin: Gitea listener, v1.27.3
-- gitea-mfa-min: Gitea MFA minimum, 1.24
-- registry-docs: Docker Registry documentation (rolling), unknown
-- htpasswd: Apache htpasswd, 2.4
-- owasp-passwords: OWASP password storage, 1a3f58ed2714f258a1d713966457f1a0f426e841
+- portainer: Portainer (unknown)
+- coolify: Coolify (unknown)
+- dokploy: Dokploy (unknown)
+- npm: Nginx Proxy Manager (unknown)
+- vaultwarden: Vaultwarden docs (unknown)
+- vaultwarden-pin: Vaultwarden config (3347698712d3e99e652ad4394ef2fc0ce2800fdd)
+- dashboard: Dashboard docs (unknown)
+- dashboard-old: Dashboard arguments (v2.7.0)
+- jenkins: Jenkins (unknown)
+- gitea: Gitea docs (unknown)
+- gitlab: GitLab CE (unknown)
+- kuma: Uptime Kuma (unknown)
+- docker: Docker Engine (unknown)
+- dozzle: Dozzle (unknown)
+- filebrowser: Filebrowser (unknown)
+- nodered: Node-RED (unknown)
+- gitea-pin: Gitea listener (v1.27.3)
+- gitea-mfa-min: Gitea MFA minimum (1.24)
+- registry-docs: Docker Registry documentation (rolling) (unknown)
+- htpasswd: Apache htpasswd (2.4)
+- owasp-passwords: OWASP password storage (1a3f58ed2714f258a1d713966457f1a0f426e841)
 
 Claims (full source mapping in the front matter):
 

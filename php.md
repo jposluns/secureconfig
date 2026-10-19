@@ -168,14 +168,14 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- php: PHP documentation, unknown
-- curl: curl manual, 7.75.0
-- php8: PHP native configuration, 8.x
-- template84: PHP production template, 8.4
-- template83: PHP production template, 8.3
-- laravel: Laravel, 12.x
-- debugbar: Laravel Debugbar, unknown
-- fail2ban: fail2ban, 1.1.1
+- php: PHP documentation (unknown)
+- curl: curl manual (7.75.0)
+- php8: PHP native configuration (8.x)
+- template84: PHP production template (8.4)
+- template83: PHP production template (8.3)
+- laravel: Laravel (12.x)
+- debugbar: Laravel Debugbar (unknown)
+- fail2ban: fail2ban (1.1.1)
 
 Claims (full source mapping in the front matter):
 

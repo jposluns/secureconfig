@@ -201,22 +201,22 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- oauth: OAuth security BCP and PKCE, unknown
-- core: OpenID Connect Core, 1.0
-- discovery: OpenID Connect Discovery, 1.0
-- logout: OpenID Connect RP-Initiated Logout, 1.0
-- google: Google identity documentation, unknown
-- entra: Microsoft Entra documentation, unknown
-- github-2fa: GitHub organization two-factor authentication policy, cb051611377a0d2904411e6157154e9b4953d870
-- github: GitHub OAuth and REST documentation, unknown
-- okta: Okta documentation, unknown
-- openid-client: openid-client, unknown
-- authjs: Auth.js, unknown
-- authlib: Authlib, unknown
-- go-oidc: go-oidc, unknown
-- secret-rfc: RFC 6749 client authentication, unknown
-- docker-build: Docker build documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- owasp-docs: OWASP Cheat Sheet Series, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
+- oauth: OAuth security BCP and PKCE (unknown)
+- core: OpenID Connect Core (1.0)
+- discovery: OpenID Connect Discovery (1.0)
+- logout: OpenID Connect RP-Initiated Logout (1.0)
+- google: Google identity documentation (unknown)
+- entra: Microsoft Entra documentation (unknown)
+- github-2fa: GitHub organization two-factor authentication policy (cb051611377a0d2904411e6157154e9b4953d870)
+- github: GitHub OAuth and REST documentation (unknown)
+- okta: Okta documentation (unknown)
+- openid-client: openid-client (unknown)
+- authjs: Auth.js (unknown)
+- authlib: Authlib (unknown)
+- go-oidc: go-oidc (unknown)
+- secret-rfc: RFC 6749 client authentication (unknown)
+- docker-build: Docker build documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- owasp-docs: OWASP Cheat Sheet Series (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
 
 Claims (full source mapping in the front matter):
 

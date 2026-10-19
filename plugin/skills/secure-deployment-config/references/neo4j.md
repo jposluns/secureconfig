@@ -290,27 +290,27 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: Neo4j documentation, unknown
-- cluster: Neo4j Enterprise, 5.26
-- docker: Neo4j Docker entrypoint, 5359427c4f51d0d51cce5b048757a2c21e6f377e
-- openssl: OpenSSL, 3
-- tls: TLS RFC 8446, unknown
-- timeout: timeout, unknown
-- apoc: APOC documentation, unknown
-- ssrf: Neo4j SSRF guidance, unknown
-- neo5: Packaged Neo4j, 5
-- password-min: Neo4j password setting minimum, 5.3
-- load-min: Neo4j LOAD minimum, 5.13
-- cidr-min: Neo4j CIDR LOAD minimum, 5.16
-- shell-history: Cypher Shell history minimum, 2025.08
-- shell-timeout: Cypher Shell timeout minimum, 2025.12
-- driver-history: Neo4j server timeout exception, 4.2 through 5.2
-- errors5: Neo4j 5 error-obfuscation minimum, 5.26.21
-- errors-current: Neo4j current error-obfuscation minimum, 2026.01.3
-- http-deprecated: Neo4j HTTP API deprecation, 5.26
-- query-min: Neo4j Query API minimum, 5.19
-- query-default: Neo4j Query API default minimum, 5.25
-- cypher: Cypher UDF deprecation, 25
+- docs: Neo4j documentation (unknown)
+- cluster: Neo4j Enterprise (5.26)
+- docker: Neo4j Docker entrypoint (5359427c4f51d0d51cce5b048757a2c21e6f377e)
+- openssl: OpenSSL (3)
+- tls: TLS RFC 8446 (unknown)
+- timeout: timeout (unknown)
+- apoc: APOC documentation (unknown)
+- ssrf: Neo4j SSRF guidance (unknown)
+- neo5: Packaged Neo4j (5)
+- password-min: Neo4j password setting minimum (5.3)
+- load-min: Neo4j LOAD minimum (5.13)
+- cidr-min: Neo4j CIDR LOAD minimum (5.16)
+- shell-history: Cypher Shell history minimum (2025.08)
+- shell-timeout: Cypher Shell timeout minimum (2025.12)
+- driver-history: Neo4j server timeout exception (4.2 through 5.2)
+- errors5: Neo4j 5 error-obfuscation minimum (5.26.21)
+- errors-current: Neo4j current error-obfuscation minimum (2026.01.3)
+- http-deprecated: Neo4j HTTP API deprecation (5.26)
+- query-min: Neo4j Query API minimum (5.19)
+- query-default: Neo4j Query API default minimum (5.25)
+- cypher: Cypher UDF deprecation (25)
 
 Claims (full source mapping in the front matter):
 
