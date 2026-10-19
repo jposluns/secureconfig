@@ -1,278 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-15",
-  "documentation_checked": "2026-09",
-  "body_sha256": "b9931192e8250b1cb318e09284506c74670be8caecc620df4a16d60b15d8d9a0",
-  "components": {
-    "searx": {
-      "name": "SearxNG documentation",
-      "basis": "unknown",
-      "sources": {
-        "s99812c56f9f8": "https://docs.searxng.org/admin/settings/settings_server.html",
-        "sb89a5ded36cc": "https://docs.searxng.org/admin/installation-docker.html"
-      }
-    },
-    "localai": {
-      "name": "LocalAI documentation",
-      "basis": "unknown",
-      "sources": {
-        "sac7ce142c7f6": "https://localai.io/docs/basics/getting_started/",
-        "sc3fe058c79a4": "https://localai.io/docs/reference/cli-reference/"
-      }
-    },
-    "tei-docs": {
-      "name": "TEI documentation",
-      "basis": "unknown",
-      "sources": {
-        "s7d188dacbcfc": "https://huggingface.co/docs/text-embeddings-inference/en/quick_tour",
-        "s013618141267": "https://huggingface.co/docs/text-embeddings-inference/en/cli_arguments"
-      }
-    },
-    "tei": {
-      "name": "TEI HTTP source",
-      "basis": "v1.9.0",
-      "sources": {
-        "s2b649738d265": "https://github.com/huggingface/text-embeddings-inference/blob/v1.9.0/router/src/http/server.rs"
-      }
-    },
-    "langserve": {
-      "name": "LangServe source",
-      "basis": "27e57afeda13007a7f4e007c5d1f5e8489963aa4",
-      "sources": {
-        "sa9fa1381b09a": "https://github.com/langchain-ai/langserve/blob/27e57afeda13007a7f4e007c5d1f5e8489963aa4/README.md"
-      }
-    },
-    "mem0": {
-      "name": "Mem0 documentation",
-      "basis": "unknown",
-      "sources": {
-        "s37e3935419ed": "https://docs.mem0.ai/open-source/features/rest-api"
-      }
-    },
-    "mem0-source": {
-      "name": "Mem0 server source",
-      "basis": "c7ee362aff94a369af70f13f2b4f853f6793ff4c",
-      "sources": {
-        "sa73e09554796": "https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/docker-compose.yaml",
-        "s491ae4b02d2d": "https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/main.py"
-      }
-    },
-    "onyx": {
-      "name": "Onyx documentation",
-      "basis": "unknown",
-      "sources": {
-        "sc7649811ee67": "https://docs.onyx.app/deployment/authentication/basic.md",
-        "scb3a0b1624de": "https://docs.onyx.app/deployment/local/docker.md"
-      }
-    },
-    "onyx-compose": {
-      "name": "Onyx Compose",
-      "basis": "a0370f232ba4e4625131fae518b86e5530e98ec5",
-      "sources": {
-        "sc35a382f123e": "https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.prod.yml",
-        "sb82664aa67ff": "https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.dev.yml",
-        "s1b87311a0e14": "https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.yml"
-      }
-    },
-    "docker": {
-      "name": "Docker",
-      "basis": "unknown",
-      "sources": {
-        "s351180c6678f": "https://docs.docker.com/engine/network/packet-filtering-firewalls/",
-        "sae565a19136c": "https://docs.docker.com/compose/how-tos/networking/",
-        "se716ad33db1f": "https://docs.docker.com/reference/compose-file/merge/",
-        "s3e97c2c250b6": "https://docs.docker.com/reference/cli/docker/compose/ps/"
-      }
-    },
-    "grep": {
-      "name": "GNU grep",
-      "basis": "3.12",
-      "sources": {
-        "sa8d467168870": "https://www.gnu.org/software/grep/manual/grep.html#Exit-Status"
-      }
-    },
-    "curl": {
-      "name": "curl documentation",
-      "basis": "unknown",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
-      }
-    },
-    "searx-source": {
-      "name": "SearxNG source",
-      "basis": "d4ce87c23431f607162fc5c39ce52c538d64588f",
-      "sources": {
-        "s1669cd3902ff": "https://raw.githubusercontent.com/searxng/searxng/d4ce87c23431f607162fc5c39ce52c538d64588f/searx/webapp.py"
-      }
-    },
-    "onyx-data": {
-      "name": "Onyx data model",
-      "basis": "15ead4ca364e654d40dac842ee9d0bb9e0fe5471",
-      "sources": {
-        "s991ce173678a": "https://raw.githubusercontent.com/onyx-dot-app/onyx/15ead4ca364e654d40dac842ee9d0bb9e0fe5471/backend/onyx/db/models.py"
-      }
-    },
-    "tei-grpc": {
-      "name": "TEI gRPC source",
-      "basis": "1bb59202500e5f69dd8be63dd1604f7625124fbe",
-      "sources": {
-        "s509a423cecd0": "https://raw.githubusercontent.com/huggingface/text-embeddings-inference/1bb59202500e5f69dd8be63dd1604f7625124fbe/router/src/grpc/server.rs"
-      }
-    },
-    "onyx-v43": {
-      "name": "Onyx v4.3 source",
-      "basis": "v4.3.13",
-      "sources": {
-        "s279734512e1b": "https://github.com/onyx-dot-app/onyx/blob/v4.3.13/backend/onyx/configs/app_configs.py#L133-L142",
-        "sb03484e56906": "https://github.com/onyx-dot-app/onyx/blob/v4.3.13/backend/onyx/main.py#L581-L608",
-        "seb430888edc4": "https://github.com/onyx-dot-app/onyx/blob/v4.3.13/web/package.json#L3"
-      }
-    },
-    "onyx-v44": {
-      "name": "Onyx v4.4 source",
-      "basis": "v4.4.0",
-      "sources": {
-        "s799b0a246cf5": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/main.py#L371-L372",
-        "sac84754b3dd2": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/main.py#L392-L397",
-        "s9275371ceeec": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/auth/users.py#L183-L200",
-        "s735ec883db85": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/db/sso_provider.py#L197-L209",
-        "s520509d43646": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/alembic/versions/1fc2904131a3_add_sso_provider_table_and_seed_from_env.py#L60-L93",
-        "se5438628cc59": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/alembic/versions/f7ca3e2f45d9_migrate_no_auth_data_to_placeholder.py#L129-L147",
-        "sbc5f578e1c7e": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/web/package.json#L3"
-      }
-    }
-  },
-  "claims": {
-    "searx-bind": {"text": "Direct SearxNG defaults 127.0.0.1:8888 via server.bind_address/port; documented Docker wildcard 8888:8080 needs loopback replacement or removal.", "components": ["searx"], "sources": ["searx:s99812c56f9f8", "searx:sb89a5ded36cc"], "status": "REASONED"},
-    "searx-auth": {"text": "Verified SearxNG configuration has no authentication; protect search with authenticated ingress.", "components": ["searx"], "sources": ["searx:s99812c56f9f8"], "status": "REASONED"},
-    "searx-secret": {"text": "Set unique server.secret_key/SEARXNG_SECRET; production startup refuses shipped ultrasecretkey, which is not user authentication.", "components": ["searx", "searx-source"], "sources": ["searx:s99812c56f9f8", "searx-source:s1669cd3902ff"], "status": "REASONED"},
-    "searx-egress": {"text": "Server-side search/image fetches, including image redirects, need outbound restrictions against internal/metadata destinations.", "components": ["searx-source"], "sources": ["searx-source:s1669cd3902ff"], "status": "REASONED"},
-    "localai-bind": {"text": "LocalAI defaults :8080; set LOCALAI_ADDRESS or --address for host loopback; documented 8080:8080 publication needs restriction.", "components": ["localai"], "sources": ["localai:sc3fe058c79a4", "localai:sac7ce142c7f6"], "status": "REASONED"},
-    "localai-key": {"text": "LOCALAI_API_KEY is unset by default; set unique native key and retain ingress authentication.", "components": ["localai"], "sources": ["localai:sac7ce142c7f6"], "status": "REASONED"},
-    "localai-oauth": {"text": "LOCALAI_AUTH=true enables multi-user OAuth with per-user keys.", "components": ["localai"], "sources": ["localai:sac7ce142c7f6"], "status": "REASONED"},
-    "tei-bind": {"text": "TEI CLI defaults 0.0.0.0:3000, distinct from documented container 80 mapped to host 8080; use hostname/port or private publication.", "components": ["tei-docs"], "sources": ["tei-docs:s013618141267", "tei-docs:s7d188dacbcfc"], "status": "REASONED"},
-    "tei-key": {"text": "API_KEY/--api-key is unset by default; configured key requires Authorization Bearer on inference routes.", "components": ["tei-docs", "tei"], "sources": ["tei-docs:s013618141267", "tei:s2b649738d265"], "status": "REASONED"},
-    "tei-exempt": {"text": "HTTP /, /health, /ping, /metrics, /docs and /api-doc/openapi.json remain outside inference auth on the main port.", "components": ["tei"], "sources": ["tei:s2b649738d265"], "status": "REASONED"},
-    "tei-metrics": {"text": "HTTP metrics share main port and expose model/request information; prometheus-port default 9000 starts standalone exporter only in gRPC build.", "components": ["tei-docs", "tei", "tei-grpc"], "sources": ["tei-docs:s013618141267", "tei:s2b649738d265", "tei-grpc:s509a423cecd0"], "status": "REASONED"},
-    "langserve": {"text": "Deprecated 2024-11-18; README recommends LangGraph Platform. Existing quickstart localhost:8000 needs FastAPI application auth or full authenticated proxy.", "components": ["langserve"], "sources": ["langserve:sa9fa1381b09a"], "status": "REASONED"},
-    "private-publication": {"text": "Container loopback is not host/proxy reachability; retain container-network access and remove or host-loopback-scope publications.", "components": ["docker"], "sources": ["docker:sae565a19136c", "docker:s351180c6678f"], "status": "REASONED"},
-    "firewall": {"text": "No-host-IP Docker publications bind all host interfaces; Linux forwarding can bypass UFW.", "components": ["docker"], "sources": ["docker:s351180c6678f"], "status": "REASONED"},
-    "compose-reset": {"text": "Ordinary override ports merge; use !reset [] to remove Mem0 Postgres publication, inspect effective invocation/model, or edit base if unsupported.", "components": ["docker", "mem0-source"], "sources": ["docker:se716ad33db1f", "mem0-source:sa73e09554796"], "status": "REASONED"},
-    "ingress": {"text": "Publish only authenticated TLS ingress and gate every capability route; production Onyx publication boundary alone proves no certificate or access policy.", "components": ["onyx-compose", "docker"], "sources": ["onyx-compose:sc35a382f123e", "docker:s351180c6678f"], "status": "REASONED"},
-    "mem0-auth": {"text": "Mem0 auth defaults on: dashboard JWT, per-user X-API-Key m0sk_ or legacy ADMIN_API_KEY; do not deploy AUTH_DISABLED=true.", "components": ["mem0"], "sources": ["mem0:s37e3935419ed"], "status": "REASONED"},
-    "mem0-warnings": {"text": "AUTH_DISABLED warning suppresses short nonempty ADMIN_API_KEY (<16) warning via if/elif; unset key has separate branch; warnings do not stop startup.", "components": ["mem0-source"], "sources": ["mem0-source:s491ae4b02d2d"], "status": "REASONED"},
-    "mem0-jwt": {"text": "With auth on, missing JWT_SECRET raises at startup; generate with openssl rand -base64 48 and keep signing secret private.", "components": ["mem0", "mem0-source"], "sources": ["mem0:s37e3935419ed", "mem0-source:s491ae4b02d2d"], "status": "REASONED"},
-    "mem0-bootstrap": {"text": "POST /auth/register grants first admin only while no user exists, then returns 403; bootstrap privately with make bootstrap or host-only wizard.", "components": ["mem0"], "sources": ["mem0:s37e3935419ed"], "status": "REASONED"},
-    "mem0-open": {"text": "Root redirect, /docs and /openapi.json stay open and cannot prove protected-route authentication.", "components": ["mem0"], "sources": ["mem0:s37e3935419ed"], "status": "REASONED"},
-    "mem0-api-port": {"text": "Compose runs API 0.0.0.0:8000 and wildcard host 8888:8000; remove publication or replace with host loopback.", "components": ["mem0-source"], "sources": ["mem0-source:sa73e09554796"], "status": "REASONED"},
-    "mem0-db-port": {"text": "Compose publishes Postgres 8432:5432 independently of application auth; remove host mapping and retain database auth.", "components": ["mem0-source"], "sources": ["mem0-source:sa73e09554796"], "status": "REASONED"},
-    "mem0-dashboard": {"text": "Compose dashboard 3000:3000 needs private publication and protected ingress; dashboard authentication coverage is unverified.", "components": ["mem0-source"], "sources": ["mem0-source:sa73e09554796"], "status": "REASONED"},
-    "mem0-reload": {"text": "Compose uvicorn --reload is a development setting; remove for production.", "components": ["mem0-source"], "sources": ["mem0-source:sa73e09554796"], "status": "REASONED"},
-    "onyx-prod": {"text": "Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished.", "components": ["onyx-compose"], "sources": ["onyx-compose:sc35a382f123e"], "status": "REASONED"},
-    "onyx-bootstrap": {"text": "Email/password auth is on and first signup becomes admin; claim privately before exposure.", "components": ["onyx"], "sources": ["onyx:sc7649811ee67"], "status": "REASONED"},
-    "onyx-auth-type": {"text": "This guide infers from the v4.3.13 and v4.4.0 tag trees that AUTH_TYPE no longer selects runtime authentication in v4.4.0; legacy values remain for migrations, a one-time legacy SAML import at startup, and a stale-value warning. Tag names alone supply version identity, since neither tree's manifest records the release version; the recorded v4.5 removal plan and its completion are unverified by these files.", "components": ["onyx", "onyx-v43", "onyx-v44"], "sources": ["onyx:sc7649811ee67", "onyx-v43:s279734512e1b", "onyx-v43:sb03484e56906", "onyx-v44:s799b0a246cf5", "onyx-v44:sac84754b3dd2", "onyx-v44:s9275371ceeec", "onyx-v44:s735ec883db85", "onyx-v44:s520509d43646", "onyx-v44:se5438628cc59", "onyx-v43:seb430888edc4", "onyx-v44:sbc5f578e1c7e"], "status": "REASONED"},
-    "onyx-base": {"text": "Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication.", "components": ["onyx-compose", "onyx"], "sources": ["onyx-compose:sb82664aa67ff", "onyx-compose:s1b87311a0e14", "onyx:scb3a0b1624de"], "status": "REASONED"},
-    "onyx-api": {"text": "Development override adds API 8080:8080; remove unless deliberately restricted for access.", "components": ["onyx-compose"], "sources": ["onyx-compose:sb82664aa67ff"], "status": "REASONED"},
-    "onyx-backing": {"text": "Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these.", "components": ["onyx-compose"], "sources": ["onyx-compose:sb82664aa67ff"], "status": "REASONED"},
-    "onyx-port-env": {"text": "${VAR:-default} changes or restores host port; an empty variable does not remove publication.", "components": ["onyx-compose"], "sources": ["onyx-compose:sb82664aa67ff", "onyx-compose:s1b87311a0e14"], "status": "REASONED"},
-    "onyx-secrets": {"text": "Connector credential_json persists in database; use least privilege, protect storage/backups and rotate after exposure.", "components": ["onyx-data"], "sources": ["onyx-data:s991ce173678a"], "status": "REASONED"},
-    "mfa": {"text": "Native MFA coverage remains unverified; guide relies on identity/fronting MFA and separate machine credentials.", "components": ["mem0", "onyx"], "sources": ["mem0:s37e3935419ed", "onyx:sc7649811ee67"], "status": "REASONED"},
-    "secrets": {"text": "Runtime provider/signing/service keys stay out of source/images; outbound provider credentials are not inbound authentication.", "components": ["localai", "tei-docs", "mem0", "onyx-data"], "sources": ["localai:sac7ce142c7f6", "tei-docs:s013618141267", "mem0:s37e3935419ed", "onyx-data:s991ce173678a"], "status": "REASONED"},
-    "verify-placeholder": {"text": "Placeholder scan should print matched tokens with grep_exit=0, clean with 1; read errors are inconclusive. Local guard outcomes and a direct grep match are recorded in the Verify overview; the deployed-state outcomes remain unobserved.", "components": ["curl", "grep"], "sources": ["curl:s2b2686afaf41", "grep:sa8d467168870"], "status": "DEMONSTRATED", "evidence": "printed the token and `grep_exit=0` for the exposed fixture and `grep_exit=1` for the fixed fixture", "verify": [1]},
-    "verify-guards": {"text": "Whole-block marker/count and empty/placeholder guards are prerequisites, not exposure proof; omitted guards and matching inherited positional values remain limits.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED"},
-    "verify-inventory": {"text": "Compare full IPv4/IPv6 socket, merged model and running Publishers inventory; DNAT may escape ss, exposed-only entries are not publications, and empty/error inventories do not pass.", "components": ["docker"], "sources": ["docker:s351180c6678f", "docker:se716ad33db1f", "docker:s3e97c2c250b6"], "status": "REASONED", "verify": [2]},
-    "verify-direct": {"text": "Any direct HTTP response or completed TCP connection proves reachability; refused actual backend plus inventory/working ingress supports isolation, timeout or http=000 alone does not.", "components": ["curl", "docker"], "sources": ["curl:s2b2686afaf41", "docker:s351180c6678f"], "status": "REASONED", "verify": [3]},
-    "verify-backing": {"text": "Probe every actual private application/backing TCP port; connection success is exposure, refusal needs configuration evidence, timeout/local/netcat-option errors are inconclusive.", "components": ["docker"], "sources": ["docker:s351180c6678f", "docker:s3e97c2c250b6"], "status": "REASONED", "verify": [4]},
-    "verify-ingress": {"text": "Harmless protected request should reject anonymous caller and admit authorized control; inspect redirect destination/body, and test routes outside native auth through ingress too.", "components": ["localai", "tei-docs", "tei", "mem0", "onyx", "curl"], "sources": ["localai:sac7ce142c7f6", "tei-docs:s013618141267", "tei:s2b649738d265", "mem0:s37e3935419ed", "onyx:sc7649811ee67", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [5]},
-    "verify-tei": {"text": "POST /embed with harmless inputs should reject missing key 401 and return embeddings with valid key; anonymous health/docs/metrics cannot test native auth.", "components": ["tei"], "sources": ["tei:s2b649738d265"], "status": "REASONED", "verify": [5, 6, 7]},
-    "verify-native": {"text": "From trusted private position vary only empty/wrong/valid credential for same request; first two reject, third returns real output, without publishing a test port.", "components": ["localai", "tei-docs", "mem0", "onyx", "langserve"], "sources": ["localai:sac7ce142c7f6", "tei-docs:s013618141267", "mem0:s37e3935419ed", "onyx:sc7649811ee67", "langserve:sa9fa1381b09a"], "status": "REASONED", "verify": [6]},
-    "verify-native-limits": {"text": "Intentionally anonymous private SearxNG/LangServe instead use authenticated ingress; exact selected Mem0/Onyx response codes and dashboard policy remain unverified.", "components": ["searx", "langserve", "mem0", "onyx"], "sources": ["searx:s99812c56f9f8", "langserve:sa9fa1381b09a", "mem0:s37e3935419ed", "onyx:sc7649811ee67"], "status": "REASONED", "verify": [6]},
-    "verify-positive": {"text": "Authorized ingress request must return expected application body, paired with negative checks; 2xx alone, login page, errors or unreachable service cannot establish success.", "components": ["curl", "localai", "tei-docs", "mem0", "onyx"], "sources": ["curl:s2b2686afaf41", "localai:sac7ce142c7f6", "tei-docs:s013618141267", "mem0:s37e3935419ed", "onyx:sc7649811ee67"], "status": "REASONED", "verify": [7]},
-    "verify-headers": {"text": "Credential headers go on curl stdin under control-character guard; separate ingress/native credentials require both, not argv.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [6, 7]},
-    "verify-browser": {"text": "A password-only attempt at an MFA-protected operation must be refused, and the operation must succeed after the second factor; a direct forged identity header must be refused at the network boundary, a valid authenticated session must reach the app through the proxy, and a forged trusted header sent through it must not change the identity in the app log; neither was demonstrated.", "components": ["mem0", "onyx"], "sources": ["mem0:s37e3935419ed", "onyx:sc7649811ee67"], "status": "REASONED"}
-  }
-}
----
 # AI infrastructure services: SearxNG, LocalAI, Text Embeddings Inference, LangServe, Mem0, and Onyx
 
-<!-- version-basis:start -->
-**Version basis**
+Written against SearxNG documentation (no recorded version), TEI HTTP source v1.9.0, Onyx v4.3 source v4.3.13, Onyx v4.4 source v4.4.0, and GNU grep 3.12; 6 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-15; documentation checked September 2026. The guide records 47 claims: 1 demonstrated by a check that ran and 46 reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- searx: SearxNG documentation (unknown)
-- localai: LocalAI documentation (unknown)
-- tei-docs: TEI documentation (unknown)
-- tei: TEI HTTP source (v1.9.0)
-- langserve: LangServe source (27e57afeda13007a7f4e007c5d1f5e8489963aa4)
-- mem0: Mem0 documentation (unknown)
-- mem0-source: Mem0 server source (c7ee362aff94a369af70f13f2b4f853f6793ff4c)
-- onyx: Onyx documentation (unknown)
-- onyx-compose: Onyx Compose (a0370f232ba4e4625131fae518b86e5530e98ec5)
-- docker: Docker (unknown)
-- grep: GNU grep (3.12)
-- curl: curl documentation (unknown)
-- searx-source: SearxNG source (d4ce87c23431f607162fc5c39ce52c538d64588f)
-- onyx-data: Onyx data model (15ead4ca364e654d40dac842ee9d0bb9e0fe5471)
-- tei-grpc: TEI gRPC source (1bb59202500e5f69dd8be63dd1604f7625124fbe)
-- onyx-v43: Onyx v4.3 source (v4.3.13)
-- onyx-v44: Onyx v4.4 source (v4.4.0)
-
-Claims (full source mapping in the front matter):
-
-- searx-bind (REASONED; searx): Direct SearxNG defaults 127.0.0.1:8888 via server.bind_address/port; documented Docker wildcard 8888:8080 needs loopback replacement or removal.
-- searx-auth (REASONED; searx): Verified SearxNG configuration has no authentication; protect search with authenticated ingress.
-- searx-secret (REASONED; searx, searx-source): Set unique server.secret_key/SEARXNG_SECRET; production startup refuses shipped ultrasecretkey, which is not user authentication.
-- searx-egress (REASONED; searx-source): Server-side search/image fetches, including image redirects, need outbound restrictions against internal/metadata destinations.
-- localai-bind (REASONED; localai): LocalAI defaults :8080; set LOCALAI_ADDRESS or --address for host loopback; documented 8080:8080 publication needs restriction.
-- localai-key (REASONED; localai): LOCALAI_API_KEY is unset by default; set unique native key and retain ingress authentication.
-- localai-oauth (REASONED; localai): LOCALAI_AUTH=true enables multi-user OAuth with per-user keys.
-- tei-bind (REASONED; tei-docs): TEI CLI defaults 0.0.0.0:3000, distinct from documented container 80 mapped to host 8080; use hostname/port or private publication.
-- tei-key (REASONED; tei-docs, tei): API_KEY/--api-key is unset by default; configured key requires Authorization Bearer on inference routes.
-- tei-exempt (REASONED; tei): HTTP /, /health, /ping, /metrics, /docs and /api-doc/openapi.json remain outside inference auth on the main port.
-- tei-metrics (REASONED; tei-docs, tei, tei-grpc): HTTP metrics share main port and expose model/request information; prometheus-port default 9000 starts standalone exporter only in gRPC build.
-- langserve (REASONED; langserve): Deprecated 2024-11-18; README recommends LangGraph Platform. Existing quickstart localhost:8000 needs FastAPI application auth or full authenticated proxy.
-- private-publication (REASONED; docker): Container loopback is not host/proxy reachability; retain container-network access and remove or host-loopback-scope publications.
-- firewall (REASONED; docker): No-host-IP Docker publications bind all host interfaces; Linux forwarding can bypass UFW.
-- compose-reset (REASONED; docker, mem0-source): Ordinary override ports merge; use !reset [] to remove Mem0 Postgres publication, inspect effective invocation/model, or edit base if unsupported.
-- ingress (REASONED; onyx-compose, docker): Publish only authenticated TLS ingress and gate every capability route; production Onyx publication boundary alone proves no certificate or access policy.
-- mem0-auth (REASONED; mem0): Mem0 auth defaults on: dashboard JWT, per-user X-API-Key m0sk_ or legacy ADMIN_API_KEY; do not deploy AUTH_DISABLED=true.
-- mem0-warnings (REASONED; mem0-source): AUTH_DISABLED warning suppresses short nonempty ADMIN_API_KEY (&lt;16) warning via if/elif; unset key has separate branch; warnings do not stop startup.
-- mem0-jwt (REASONED; mem0, mem0-source): With auth on, missing JWT_SECRET raises at startup; generate with openssl rand -base64 48 and keep signing secret private.
-- mem0-bootstrap (REASONED; mem0): POST /auth/register grants first admin only while no user exists, then returns 403; bootstrap privately with make bootstrap or host-only wizard.
-- mem0-open (REASONED; mem0): Root redirect, /docs and /openapi.json stay open and cannot prove protected-route authentication.
-- mem0-api-port (REASONED; mem0-source): Compose runs API 0.0.0.0:8000 and wildcard host 8888:8000; remove publication or replace with host loopback.
-- mem0-db-port (REASONED; mem0-source): Compose publishes Postgres 8432:5432 independently of application auth; remove host mapping and retain database auth.
-- mem0-dashboard (REASONED; mem0-source): Compose dashboard 3000:3000 needs private publication and protected ingress; dashboard authentication coverage is unverified.
-- mem0-reload (REASONED; mem0-source): Compose uvicorn --reload is a development setting; remove for production.
-- onyx-prod (REASONED; onyx-compose): Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished.
-- onyx-bootstrap (REASONED; onyx): Email/password auth is on and first signup becomes admin; claim privately before exposure.
-- onyx-auth-type (REASONED; onyx, onyx-v43, onyx-v44): This guide infers from the v4.3.13 and v4.4.0 tag trees that AUTH_TYPE no longer selects runtime authentication in v4.4.0; legacy values remain for migrations, a one-time legacy SAML import at startup, and a stale-value warning. Tag names alone supply version identity, since neither tree's manifest records the release version; the recorded v4.5 removal plan and its completion are unverified by these files.
-- onyx-base (REASONED; onyx-compose, onyx): Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication.
-- onyx-api (REASONED; onyx-compose): Development override adds API 8080:8080; remove unless deliberately restricted for access.
-- onyx-backing (REASONED; onyx-compose): Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these.
-- onyx-port-env (REASONED; onyx-compose): ${VAR:-default} changes or restores host port; an empty variable does not remove publication.
-- onyx-secrets (REASONED; onyx-data): Connector credential_json persists in database; use least privilege, protect storage/backups and rotate after exposure.
-- mfa (REASONED; mem0, onyx): Native MFA coverage remains unverified; guide relies on identity/fronting MFA and separate machine credentials.
-- secrets (REASONED; localai, tei-docs, mem0, onyx-data): Runtime provider/signing/service keys stay out of source/images; outbound provider credentials are not inbound authentication.
-- verify-placeholder (DEMONSTRATED; curl, grep): Placeholder scan should print matched tokens with grep_exit=0, clean with 1; read errors are inconclusive. Local guard outcomes and a direct grep match are recorded in the Verify overview; the deployed-state outcomes remain unobserved.
-- verify-guards (REASONED; curl): Whole-block marker/count and empty/placeholder guards are prerequisites, not exposure proof; omitted guards and matching inherited positional values remain limits.
-- verify-inventory (REASONED; docker): Compare full IPv4/IPv6 socket, merged model and running Publishers inventory; DNAT may escape ss, exposed-only entries are not publications, and empty/error inventories do not pass.
-- verify-direct (REASONED; curl, docker): Any direct HTTP response or completed TCP connection proves reachability; refused actual backend plus inventory/working ingress supports isolation, timeout or http=000 alone does not.
-- verify-backing (REASONED; docker): Probe every actual private application/backing TCP port; connection success is exposure, refusal needs configuration evidence, timeout/local/netcat-option errors are inconclusive.
-- verify-ingress (REASONED; localai, tei-docs, tei, mem0, onyx, curl): Harmless protected request should reject anonymous caller and admit authorized control; inspect redirect destination/body, and test routes outside native auth through ingress too.
-- verify-tei (REASONED; tei): POST /embed with harmless inputs should reject missing key 401 and return embeddings with valid key; anonymous health/docs/metrics cannot test native auth.
-- verify-native (REASONED; localai, tei-docs, mem0, onyx, langserve): From trusted private position vary only empty/wrong/valid credential for same request; first two reject, third returns real output, without publishing a test port.
-- verify-native-limits (REASONED; searx, langserve, mem0, onyx): Intentionally anonymous private SearxNG/LangServe instead use authenticated ingress; exact selected Mem0/Onyx response codes and dashboard policy remain unverified.
-- verify-positive (REASONED; curl, localai, tei-docs, mem0, onyx): Authorized ingress request must return expected application body, paired with negative checks; 2xx alone, login page, errors or unreachable service cannot establish success.
-- verify-headers (REASONED; curl): Credential headers go on curl stdin under control-character guard; separate ingress/native credentials require both, not argv.
-- verify-browser (REASONED; mem0, onyx): A password-only attempt at an MFA-protected operation must be refused, and the operation must succeed after the second factor; a direct forged identity header must be refused at the network boundary, a valid authenticated session must reach the app through the proxy, and a forged trusted header sent through it must not change the identity in the app log; neither was demonstrated.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 These services expose search, inference, embeddings, document access, or an agent's memory. Their authentication stories differ: SearxNG and LangServe require a fronting layer or application authentication, LocalAI and Text Embeddings Inference each have a key that is unset by default, and Mem0 and Onyx ship authentication on. The deployment command decides what the network sees. Mem0's Compose file and Onyx's development Compose publish backing services beside the authenticated application, where application login cannot protect them.
 
@@ -759,3 +489,299 @@ The service facts come from the maintainer's vendor-source verification record d
 - [Onyx data model](https://raw.githubusercontent.com/onyx-dot-app/onyx/15ead4ca364e654d40dac842ee9d0bb9e0fe5471/backend/onyx/db/models.py): the retained per-connector `Credential.credential_json` storage.
 - [Text Embeddings Inference gRPC server](https://raw.githubusercontent.com/huggingface/text-embeddings-inference/1bb59202500e5f69dd8be63dd1604f7625124fbe/router/src/grpc/server.rs): the standalone Prometheus exporter (`prom_builder.install()`) of the gRPC build, distinct from the HTTP build's main-port `/metrics`.
 
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/ai-infra-services.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- searx: SearxNG documentation (unknown)
+- tei: TEI HTTP source (v1.9.0)
+- onyx-v43: Onyx v4.3 source (v4.3.13)
+- onyx-v44: Onyx v4.4 source (v4.4.0)
+- searx-source: SearxNG source (d4ce87c23431f607162fc5c39ce52c538d64588f)
+- localai: LocalAI documentation (unknown)
+- tei-docs: TEI documentation (unknown)
+- tei-grpc: TEI gRPC source (1bb59202500e5f69dd8be63dd1604f7625124fbe)
+- langserve: LangServe source (27e57afeda13007a7f4e007c5d1f5e8489963aa4)
+- mem0: Mem0 documentation (unknown)
+- mem0-source: Mem0 server source (c7ee362aff94a369af70f13f2b4f853f6793ff4c)
+- onyx: Onyx documentation (unknown)
+- onyx-compose: Onyx Compose (a0370f232ba4e4625131fae518b86e5530e98ec5)
+- onyx-data: Onyx data model (15ead4ca364e654d40dac842ee9d0bb9e0fe5471)
+- docker: Docker (unknown)
+- grep: GNU grep (3.12)
+- curl: curl documentation (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- searx-bind (REASONED; searx): Direct SearxNG defaults 127.0.0.1:8888 via server.bind_address/port; documented Docker wildcard 8888:8080 needs loopback replacement or removal.
+- searx-auth (REASONED; searx): Verified SearxNG configuration has no authentication; protect search with authenticated ingress.
+- searx-secret (REASONED; searx, searx-source): Set unique server.secret_key/SEARXNG_SECRET; production startup refuses shipped ultrasecretkey, which is not user authentication.
+- searx-egress (REASONED; searx-source): Server-side search/image fetches, including image redirects, need outbound restrictions against internal/metadata destinations.
+- localai-bind (REASONED; localai): LocalAI defaults :8080; set LOCALAI_ADDRESS or --address for host loopback; documented 8080:8080 publication needs restriction.
+- localai-key (REASONED; localai): LOCALAI_API_KEY is unset by default; set unique native key and retain ingress authentication.
+- localai-oauth (REASONED; localai): LOCALAI_AUTH=true enables multi-user OAuth with per-user keys.
+- tei-bind (REASONED; tei-docs): TEI CLI defaults 0.0.0.0:3000, distinct from documented container 80 mapped to host 8080; use hostname/port or private publication.
+- tei-key (REASONED; tei-docs, tei): API_KEY/--api-key is unset by default; configured key requires Authorization Bearer on inference routes.
+- tei-exempt (REASONED; tei): HTTP /, /health, /ping, /metrics, /docs and /api-doc/openapi.json remain outside inference auth on the main port.
+- tei-metrics (REASONED; tei-docs, tei, tei-grpc): HTTP metrics share main port and expose model/request information; prometheus-port default 9000 starts standalone exporter only in gRPC build.
+- langserve (REASONED; langserve): Deprecated 2024-11-18; README recommends LangGraph Platform. Existing quickstart localhost:8000 needs FastAPI application auth or full authenticated proxy.
+- private-publication (REASONED; docker): Container loopback is not host/proxy reachability; retain container-network access and remove or host-loopback-scope publications.
+- firewall (REASONED; docker): No-host-IP Docker publications bind all host interfaces; Linux forwarding can bypass UFW.
+- compose-reset (REASONED; docker, mem0-source): Ordinary override ports merge; use !reset [] to remove Mem0 Postgres publication, inspect effective invocation/model, or edit base if unsupported.
+- ingress (REASONED; onyx-compose, docker): Publish only authenticated TLS ingress and gate every capability route; production Onyx publication boundary alone proves no certificate or access policy.
+- mem0-auth (REASONED; mem0): Mem0 auth defaults on: dashboard JWT, per-user X-API-Key m0sk_ or legacy ADMIN_API_KEY; do not deploy AUTH_DISABLED=true.
+- mem0-warnings (REASONED; mem0-source): AUTH_DISABLED warning suppresses short nonempty ADMIN_API_KEY (&lt;16) warning via if/elif; unset key has separate branch; warnings do not stop startup.
+- mem0-jwt (REASONED; mem0, mem0-source): With auth on, missing JWT_SECRET raises at startup; generate with openssl rand -base64 48 and keep signing secret private.
+- mem0-bootstrap (REASONED; mem0): POST /auth/register grants first admin only while no user exists, then returns 403; bootstrap privately with make bootstrap or host-only wizard.
+- mem0-open (REASONED; mem0): Root redirect, /docs and /openapi.json stay open and cannot prove protected-route authentication.
+- mem0-api-port (REASONED; mem0-source): Compose runs API 0.0.0.0:8000 and wildcard host 8888:8000; remove publication or replace with host loopback.
+- mem0-db-port (REASONED; mem0-source): Compose publishes Postgres 8432:5432 independently of application auth; remove host mapping and retain database auth.
+- mem0-dashboard (REASONED; mem0-source): Compose dashboard 3000:3000 needs private publication and protected ingress; dashboard authentication coverage is unverified.
+- mem0-reload (REASONED; mem0-source): Compose uvicorn --reload is a development setting; remove for production.
+- onyx-prod (REASONED; onyx-compose): Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished.
+- onyx-bootstrap (REASONED; onyx): Email/password auth is on and first signup becomes admin; claim privately before exposure.
+- onyx-auth-type (REASONED; onyx, onyx-v43, onyx-v44): This guide infers from the v4.3.13 and v4.4.0 tag trees that AUTH_TYPE no longer selects runtime authentication in v4.4.0; legacy values remain for migrations, a one-time legacy SAML import at startup, and a stale-value warning. Tag names alone supply version identity, since neither tree's manifest records the release version; the recorded v4.5 removal plan and its completion are unverified by these files.
+- onyx-base (REASONED; onyx-compose, onyx): Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication.
+- onyx-api (REASONED; onyx-compose): Development override adds API 8080:8080; remove unless deliberately restricted for access.
+- onyx-backing (REASONED; onyx-compose): Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these.
+- onyx-port-env (REASONED; onyx-compose): ${VAR:-default} changes or restores host port; an empty variable does not remove publication.
+- onyx-secrets (REASONED; onyx-data): Connector credential_json persists in database; use least privilege, protect storage/backups and rotate after exposure.
+- mfa (REASONED; mem0, onyx): Native MFA coverage remains unverified; guide relies on identity/fronting MFA and separate machine credentials.
+- secrets (REASONED; localai, tei-docs, mem0, onyx-data): Runtime provider/signing/service keys stay out of source/images; outbound provider credentials are not inbound authentication.
+- verify-placeholder (DEMONSTRATED; curl, grep): Placeholder scan should print matched tokens with grep_exit=0, clean with 1; read errors are inconclusive. Local guard outcomes and a direct grep match are recorded in the Verify overview; the deployed-state outcomes remain unobserved.
+- verify-guards (REASONED; curl): Whole-block marker/count and empty/placeholder guards are prerequisites, not exposure proof; omitted guards and matching inherited positional values remain limits.
+- verify-inventory (REASONED; docker): Compare full IPv4/IPv6 socket, merged model and running Publishers inventory; DNAT may escape ss, exposed-only entries are not publications, and empty/error inventories do not pass.
+- verify-direct (REASONED; curl, docker): Any direct HTTP response or completed TCP connection proves reachability; refused actual backend plus inventory/working ingress supports isolation, timeout or http=000 alone does not.
+- verify-backing (REASONED; docker): Probe every actual private application/backing TCP port; connection success is exposure, refusal needs configuration evidence, timeout/local/netcat-option errors are inconclusive.
+- verify-ingress (REASONED; localai, tei-docs, tei, mem0, onyx, curl): Harmless protected request should reject anonymous caller and admit authorized control; inspect redirect destination/body, and test routes outside native auth through ingress too.
+- verify-tei (REASONED; tei): POST /embed with harmless inputs should reject missing key 401 and return embeddings with valid key; anonymous health/docs/metrics cannot test native auth.
+- verify-native (REASONED; localai, tei-docs, mem0, onyx, langserve): From trusted private position vary only empty/wrong/valid credential for same request; first two reject, third returns real output, without publishing a test port.
+- verify-native-limits (REASONED; searx, langserve, mem0, onyx): Intentionally anonymous private SearxNG/LangServe instead use authenticated ingress; exact selected Mem0/Onyx response codes and dashboard policy remain unverified.
+- verify-positive (REASONED; curl, localai, tei-docs, mem0, onyx): Authorized ingress request must return expected application body, paired with negative checks; 2xx alone, login page, errors or unreachable service cannot establish success.
+- verify-headers (REASONED; curl): Credential headers go on curl stdin under control-character guard; separate ingress/native credentials require both, not argv.
+- verify-browser (REASONED; mem0, onyx): A password-only attempt at an MFA-protected operation must be refused, and the operation must succeed after the second factor; a direct forged identity header must be refused at the network boundary, a valid authenticated session must reach the app through the proxy, and a forged trusted header sent through it must not change the identity in the app log; neither was demonstrated.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-15",
+  "documentation_checked": "2026-09",
+  "body_sha256": "b9931192e8250b1cb318e09284506c74670be8caecc620df4a16d60b15d8d9a0",
+  "components": {
+    "searx": {
+      "name": "SearxNG documentation",
+      "basis": "unknown",
+      "sources": {
+        "s99812c56f9f8": "https://docs.searxng.org/admin/settings/settings_server.html",
+        "sb89a5ded36cc": "https://docs.searxng.org/admin/installation-docker.html"
+      }
+    },
+    "tei": {
+      "name": "TEI HTTP source",
+      "basis": "v1.9.0",
+      "sources": {
+        "s2b649738d265": "https://github.com/huggingface/text-embeddings-inference/blob/v1.9.0/router/src/http/server.rs"
+      }
+    },
+    "onyx-v43": {
+      "name": "Onyx v4.3 source",
+      "basis": "v4.3.13",
+      "sources": {
+        "s279734512e1b": "https://github.com/onyx-dot-app/onyx/blob/v4.3.13/backend/onyx/configs/app_configs.py#L133-L142",
+        "sb03484e56906": "https://github.com/onyx-dot-app/onyx/blob/v4.3.13/backend/onyx/main.py#L581-L608",
+        "seb430888edc4": "https://github.com/onyx-dot-app/onyx/blob/v4.3.13/web/package.json#L3"
+      }
+    },
+    "onyx-v44": {
+      "name": "Onyx v4.4 source",
+      "basis": "v4.4.0",
+      "sources": {
+        "s799b0a246cf5": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/main.py#L371-L372",
+        "sac84754b3dd2": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/main.py#L392-L397",
+        "s9275371ceeec": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/auth/users.py#L183-L200",
+        "s735ec883db85": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/onyx/db/sso_provider.py#L197-L209",
+        "s520509d43646": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/alembic/versions/1fc2904131a3_add_sso_provider_table_and_seed_from_env.py#L60-L93",
+        "se5438628cc59": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/alembic/versions/f7ca3e2f45d9_migrate_no_auth_data_to_placeholder.py#L129-L147",
+        "sbc5f578e1c7e": "https://github.com/onyx-dot-app/onyx/blob/v4.4.0/web/package.json#L3"
+      }
+    },
+    "searx-source": {
+      "name": "SearxNG source",
+      "basis": "d4ce87c23431f607162fc5c39ce52c538d64588f",
+      "sources": {
+        "s1669cd3902ff": "https://raw.githubusercontent.com/searxng/searxng/d4ce87c23431f607162fc5c39ce52c538d64588f/searx/webapp.py"
+      }
+    },
+    "localai": {
+      "name": "LocalAI documentation",
+      "basis": "unknown",
+      "sources": {
+        "sac7ce142c7f6": "https://localai.io/docs/basics/getting_started/",
+        "sc3fe058c79a4": "https://localai.io/docs/reference/cli-reference/"
+      }
+    },
+    "tei-docs": {
+      "name": "TEI documentation",
+      "basis": "unknown",
+      "sources": {
+        "s7d188dacbcfc": "https://huggingface.co/docs/text-embeddings-inference/en/quick_tour",
+        "s013618141267": "https://huggingface.co/docs/text-embeddings-inference/en/cli_arguments"
+      }
+    },
+    "tei-grpc": {
+      "name": "TEI gRPC source",
+      "basis": "1bb59202500e5f69dd8be63dd1604f7625124fbe",
+      "sources": {
+        "s509a423cecd0": "https://raw.githubusercontent.com/huggingface/text-embeddings-inference/1bb59202500e5f69dd8be63dd1604f7625124fbe/router/src/grpc/server.rs"
+      }
+    },
+    "langserve": {
+      "name": "LangServe source",
+      "basis": "27e57afeda13007a7f4e007c5d1f5e8489963aa4",
+      "sources": {
+        "sa9fa1381b09a": "https://github.com/langchain-ai/langserve/blob/27e57afeda13007a7f4e007c5d1f5e8489963aa4/README.md"
+      }
+    },
+    "mem0": {
+      "name": "Mem0 documentation",
+      "basis": "unknown",
+      "sources": {
+        "s37e3935419ed": "https://docs.mem0.ai/open-source/features/rest-api"
+      }
+    },
+    "mem0-source": {
+      "name": "Mem0 server source",
+      "basis": "c7ee362aff94a369af70f13f2b4f853f6793ff4c",
+      "sources": {
+        "sa73e09554796": "https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/docker-compose.yaml",
+        "s491ae4b02d2d": "https://github.com/mem0ai/mem0/blob/c7ee362aff94a369af70f13f2b4f853f6793ff4c/server/main.py"
+      }
+    },
+    "onyx": {
+      "name": "Onyx documentation",
+      "basis": "unknown",
+      "sources": {
+        "sc7649811ee67": "https://docs.onyx.app/deployment/authentication/basic.md",
+        "scb3a0b1624de": "https://docs.onyx.app/deployment/local/docker.md"
+      }
+    },
+    "onyx-compose": {
+      "name": "Onyx Compose",
+      "basis": "a0370f232ba4e4625131fae518b86e5530e98ec5",
+      "sources": {
+        "sc35a382f123e": "https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.prod.yml",
+        "sb82664aa67ff": "https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.dev.yml",
+        "s1b87311a0e14": "https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.yml"
+      }
+    },
+    "onyx-data": {
+      "name": "Onyx data model",
+      "basis": "15ead4ca364e654d40dac842ee9d0bb9e0fe5471",
+      "sources": {
+        "s991ce173678a": "https://raw.githubusercontent.com/onyx-dot-app/onyx/15ead4ca364e654d40dac842ee9d0bb9e0fe5471/backend/onyx/db/models.py"
+      }
+    },
+    "docker": {
+      "name": "Docker",
+      "basis": "unknown",
+      "sources": {
+        "s351180c6678f": "https://docs.docker.com/engine/network/packet-filtering-firewalls/",
+        "sae565a19136c": "https://docs.docker.com/compose/how-tos/networking/",
+        "se716ad33db1f": "https://docs.docker.com/reference/compose-file/merge/",
+        "s3e97c2c250b6": "https://docs.docker.com/reference/cli/docker/compose/ps/"
+      }
+    },
+    "grep": {
+      "name": "GNU grep",
+      "basis": "3.12",
+      "sources": {
+        "sa8d467168870": "https://www.gnu.org/software/grep/manual/grep.html#Exit-Status"
+      }
+    },
+    "curl": {
+      "name": "curl documentation",
+      "basis": "unknown",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    }
+  },
+  "claims": {
+    "searx-bind": {"text": "Direct SearxNG defaults 127.0.0.1:8888 via server.bind_address/port; documented Docker wildcard 8888:8080 needs loopback replacement or removal.", "components": ["searx"], "sources": ["searx:s99812c56f9f8", "searx:sb89a5ded36cc"], "status": "REASONED"},
+    "searx-auth": {"text": "Verified SearxNG configuration has no authentication; protect search with authenticated ingress.", "components": ["searx"], "sources": ["searx:s99812c56f9f8"], "status": "REASONED"},
+    "searx-secret": {"text": "Set unique server.secret_key/SEARXNG_SECRET; production startup refuses shipped ultrasecretkey, which is not user authentication.", "components": ["searx", "searx-source"], "sources": ["searx:s99812c56f9f8", "searx-source:s1669cd3902ff"], "status": "REASONED"},
+    "searx-egress": {"text": "Server-side search/image fetches, including image redirects, need outbound restrictions against internal/metadata destinations.", "components": ["searx-source"], "sources": ["searx-source:s1669cd3902ff"], "status": "REASONED"},
+    "localai-bind": {"text": "LocalAI defaults :8080; set LOCALAI_ADDRESS or --address for host loopback; documented 8080:8080 publication needs restriction.", "components": ["localai"], "sources": ["localai:sc3fe058c79a4", "localai:sac7ce142c7f6"], "status": "REASONED"},
+    "localai-key": {"text": "LOCALAI_API_KEY is unset by default; set unique native key and retain ingress authentication.", "components": ["localai"], "sources": ["localai:sac7ce142c7f6"], "status": "REASONED"},
+    "localai-oauth": {"text": "LOCALAI_AUTH=true enables multi-user OAuth with per-user keys.", "components": ["localai"], "sources": ["localai:sac7ce142c7f6"], "status": "REASONED"},
+    "tei-bind": {"text": "TEI CLI defaults 0.0.0.0:3000, distinct from documented container 80 mapped to host 8080; use hostname/port or private publication.", "components": ["tei-docs"], "sources": ["tei-docs:s013618141267", "tei-docs:s7d188dacbcfc"], "status": "REASONED"},
+    "tei-key": {"text": "API_KEY/--api-key is unset by default; configured key requires Authorization Bearer on inference routes.", "components": ["tei-docs", "tei"], "sources": ["tei-docs:s013618141267", "tei:s2b649738d265"], "status": "REASONED"},
+    "tei-exempt": {"text": "HTTP /, /health, /ping, /metrics, /docs and /api-doc/openapi.json remain outside inference auth on the main port.", "components": ["tei"], "sources": ["tei:s2b649738d265"], "status": "REASONED"},
+    "tei-metrics": {"text": "HTTP metrics share main port and expose model/request information; prometheus-port default 9000 starts standalone exporter only in gRPC build.", "components": ["tei-docs", "tei", "tei-grpc"], "sources": ["tei-docs:s013618141267", "tei:s2b649738d265", "tei-grpc:s509a423cecd0"], "status": "REASONED"},
+    "langserve": {"text": "Deprecated 2024-11-18; README recommends LangGraph Platform. Existing quickstart localhost:8000 needs FastAPI application auth or full authenticated proxy.", "components": ["langserve"], "sources": ["langserve:sa9fa1381b09a"], "status": "REASONED"},
+    "private-publication": {"text": "Container loopback is not host/proxy reachability; retain container-network access and remove or host-loopback-scope publications.", "components": ["docker"], "sources": ["docker:sae565a19136c", "docker:s351180c6678f"], "status": "REASONED"},
+    "firewall": {"text": "No-host-IP Docker publications bind all host interfaces; Linux forwarding can bypass UFW.", "components": ["docker"], "sources": ["docker:s351180c6678f"], "status": "REASONED"},
+    "compose-reset": {"text": "Ordinary override ports merge; use !reset [] to remove Mem0 Postgres publication, inspect effective invocation/model, or edit base if unsupported.", "components": ["docker", "mem0-source"], "sources": ["docker:se716ad33db1f", "mem0-source:sa73e09554796"], "status": "REASONED"},
+    "ingress": {"text": "Publish only authenticated TLS ingress and gate every capability route; production Onyx publication boundary alone proves no certificate or access policy.", "components": ["onyx-compose", "docker"], "sources": ["onyx-compose:sc35a382f123e", "docker:s351180c6678f"], "status": "REASONED"},
+    "mem0-auth": {"text": "Mem0 auth defaults on: dashboard JWT, per-user X-API-Key m0sk_ or legacy ADMIN_API_KEY; do not deploy AUTH_DISABLED=true.", "components": ["mem0"], "sources": ["mem0:s37e3935419ed"], "status": "REASONED"},
+    "mem0-warnings": {"text": "AUTH_DISABLED warning suppresses short nonempty ADMIN_API_KEY (<16) warning via if/elif; unset key has separate branch; warnings do not stop startup.", "components": ["mem0-source"], "sources": ["mem0-source:s491ae4b02d2d"], "status": "REASONED"},
+    "mem0-jwt": {"text": "With auth on, missing JWT_SECRET raises at startup; generate with openssl rand -base64 48 and keep signing secret private.", "components": ["mem0", "mem0-source"], "sources": ["mem0:s37e3935419ed", "mem0-source:s491ae4b02d2d"], "status": "REASONED"},
+    "mem0-bootstrap": {"text": "POST /auth/register grants first admin only while no user exists, then returns 403; bootstrap privately with make bootstrap or host-only wizard.", "components": ["mem0"], "sources": ["mem0:s37e3935419ed"], "status": "REASONED"},
+    "mem0-open": {"text": "Root redirect, /docs and /openapi.json stay open and cannot prove protected-route authentication.", "components": ["mem0"], "sources": ["mem0:s37e3935419ed"], "status": "REASONED"},
+    "mem0-api-port": {"text": "Compose runs API 0.0.0.0:8000 and wildcard host 8888:8000; remove publication or replace with host loopback.", "components": ["mem0-source"], "sources": ["mem0-source:sa73e09554796"], "status": "REASONED"},
+    "mem0-db-port": {"text": "Compose publishes Postgres 8432:5432 independently of application auth; remove host mapping and retain database auth.", "components": ["mem0-source"], "sources": ["mem0-source:sa73e09554796"], "status": "REASONED"},
+    "mem0-dashboard": {"text": "Compose dashboard 3000:3000 needs private publication and protected ingress; dashboard authentication coverage is unverified.", "components": ["mem0-source"], "sources": ["mem0-source:sa73e09554796"], "status": "REASONED"},
+    "mem0-reload": {"text": "Compose uvicorn --reload is a development setting; remove for production.", "components": ["mem0-source"], "sources": ["mem0-source:sa73e09554796"], "status": "REASONED"},
+    "onyx-prod": {"text": "Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished.", "components": ["onyx-compose"], "sources": ["onyx-compose:sc35a382f123e"], "status": "REASONED"},
+    "onyx-bootstrap": {"text": "Email/password auth is on and first signup becomes admin; claim privately before exposure.", "components": ["onyx"], "sources": ["onyx:sc7649811ee67"], "status": "REASONED"},
+    "onyx-auth-type": {"text": "This guide infers from the v4.3.13 and v4.4.0 tag trees that AUTH_TYPE no longer selects runtime authentication in v4.4.0; legacy values remain for migrations, a one-time legacy SAML import at startup, and a stale-value warning. Tag names alone supply version identity, since neither tree's manifest records the release version; the recorded v4.5 removal plan and its completion are unverified by these files.", "components": ["onyx", "onyx-v43", "onyx-v44"], "sources": ["onyx:sc7649811ee67", "onyx-v43:s279734512e1b", "onyx-v43:sb03484e56906", "onyx-v44:s799b0a246cf5", "onyx-v44:sac84754b3dd2", "onyx-v44:s9275371ceeec", "onyx-v44:s735ec883db85", "onyx-v44:s520509d43646", "onyx-v44:se5438628cc59", "onyx-v43:seb430888edc4", "onyx-v44:sbc5f578e1c7e"], "status": "REASONED"},
+    "onyx-base": {"text": "Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication.", "components": ["onyx-compose", "onyx"], "sources": ["onyx-compose:sb82664aa67ff", "onyx-compose:s1b87311a0e14", "onyx:scb3a0b1624de"], "status": "REASONED"},
+    "onyx-api": {"text": "Development override adds API 8080:8080; remove unless deliberately restricted for access.", "components": ["onyx-compose"], "sources": ["onyx-compose:sb82664aa67ff"], "status": "REASONED"},
+    "onyx-backing": {"text": "Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these.", "components": ["onyx-compose"], "sources": ["onyx-compose:sb82664aa67ff"], "status": "REASONED"},
+    "onyx-port-env": {"text": "${VAR:-default} changes or restores host port; an empty variable does not remove publication.", "components": ["onyx-compose"], "sources": ["onyx-compose:sb82664aa67ff", "onyx-compose:s1b87311a0e14"], "status": "REASONED"},
+    "onyx-secrets": {"text": "Connector credential_json persists in database; use least privilege, protect storage/backups and rotate after exposure.", "components": ["onyx-data"], "sources": ["onyx-data:s991ce173678a"], "status": "REASONED"},
+    "mfa": {"text": "Native MFA coverage remains unverified; guide relies on identity/fronting MFA and separate machine credentials.", "components": ["mem0", "onyx"], "sources": ["mem0:s37e3935419ed", "onyx:sc7649811ee67"], "status": "REASONED"},
+    "secrets": {"text": "Runtime provider/signing/service keys stay out of source/images; outbound provider credentials are not inbound authentication.", "components": ["localai", "tei-docs", "mem0", "onyx-data"], "sources": ["localai:sac7ce142c7f6", "tei-docs:s013618141267", "mem0:s37e3935419ed", "onyx-data:s991ce173678a"], "status": "REASONED"},
+    "verify-placeholder": {"text": "Placeholder scan should print matched tokens with grep_exit=0, clean with 1; read errors are inconclusive. Local guard outcomes and a direct grep match are recorded in the Verify overview; the deployed-state outcomes remain unobserved.", "components": ["curl", "grep"], "sources": ["curl:s2b2686afaf41", "grep:sa8d467168870"], "status": "DEMONSTRATED", "evidence": "printed the token and `grep_exit=0` for the exposed fixture and `grep_exit=1` for the fixed fixture", "verify": [1]},
+    "verify-guards": {"text": "Whole-block marker/count and empty/placeholder guards are prerequisites, not exposure proof; omitted guards and matching inherited positional values remain limits.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED"},
+    "verify-inventory": {"text": "Compare full IPv4/IPv6 socket, merged model and running Publishers inventory; DNAT may escape ss, exposed-only entries are not publications, and empty/error inventories do not pass.", "components": ["docker"], "sources": ["docker:s351180c6678f", "docker:se716ad33db1f", "docker:s3e97c2c250b6"], "status": "REASONED", "verify": [2]},
+    "verify-direct": {"text": "Any direct HTTP response or completed TCP connection proves reachability; refused actual backend plus inventory/working ingress supports isolation, timeout or http=000 alone does not.", "components": ["curl", "docker"], "sources": ["curl:s2b2686afaf41", "docker:s351180c6678f"], "status": "REASONED", "verify": [3]},
+    "verify-backing": {"text": "Probe every actual private application/backing TCP port; connection success is exposure, refusal needs configuration evidence, timeout/local/netcat-option errors are inconclusive.", "components": ["docker"], "sources": ["docker:s351180c6678f", "docker:s3e97c2c250b6"], "status": "REASONED", "verify": [4]},
+    "verify-ingress": {"text": "Harmless protected request should reject anonymous caller and admit authorized control; inspect redirect destination/body, and test routes outside native auth through ingress too.", "components": ["localai", "tei-docs", "tei", "mem0", "onyx", "curl"], "sources": ["localai:sac7ce142c7f6", "tei-docs:s013618141267", "tei:s2b649738d265", "mem0:s37e3935419ed", "onyx:sc7649811ee67", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [5]},
+    "verify-tei": {"text": "POST /embed with harmless inputs should reject missing key 401 and return embeddings with valid key; anonymous health/docs/metrics cannot test native auth.", "components": ["tei"], "sources": ["tei:s2b649738d265"], "status": "REASONED", "verify": [5, 6, 7]},
+    "verify-native": {"text": "From trusted private position vary only empty/wrong/valid credential for same request; first two reject, third returns real output, without publishing a test port.", "components": ["localai", "tei-docs", "mem0", "onyx", "langserve"], "sources": ["localai:sac7ce142c7f6", "tei-docs:s013618141267", "mem0:s37e3935419ed", "onyx:sc7649811ee67", "langserve:sa9fa1381b09a"], "status": "REASONED", "verify": [6]},
+    "verify-native-limits": {"text": "Intentionally anonymous private SearxNG/LangServe instead use authenticated ingress; exact selected Mem0/Onyx response codes and dashboard policy remain unverified.", "components": ["searx", "langserve", "mem0", "onyx"], "sources": ["searx:s99812c56f9f8", "langserve:sa9fa1381b09a", "mem0:s37e3935419ed", "onyx:sc7649811ee67"], "status": "REASONED", "verify": [6]},
+    "verify-positive": {"text": "Authorized ingress request must return expected application body, paired with negative checks; 2xx alone, login page, errors or unreachable service cannot establish success.", "components": ["curl", "localai", "tei-docs", "mem0", "onyx"], "sources": ["curl:s2b2686afaf41", "localai:sac7ce142c7f6", "tei-docs:s013618141267", "mem0:s37e3935419ed", "onyx:sc7649811ee67"], "status": "REASONED", "verify": [7]},
+    "verify-headers": {"text": "Credential headers go on curl stdin under control-character guard; separate ingress/native credentials require both, not argv.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [6, 7]},
+    "verify-browser": {"text": "A password-only attempt at an MFA-protected operation must be refused, and the operation must succeed after the second factor; a direct forged identity header must be refused at the network boundary, a valid authenticated session must reach the app through the proxy, and a forged trusted header sent through it must not change the identity in the app log; neither was demonstrated.", "components": ["mem0", "onyx"], "sources": ["mem0:s37e3935419ed", "onyx:sc7649811ee67"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->

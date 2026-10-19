@@ -1,303 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-17",
-  "documentation_checked": "2026-09",
-  "body_sha256": "49cf8484be9817a2c60e5b7c478cdb97fdaa412fb555ac56cc03d63099b5ebe8",
-  "components": {
-    "langfuse": {
-      "name": "Langfuse documentation",
-      "basis": "unknown",
-      "sources": {
-        "s34b0fb076e86": "https://langfuse.com/self-hosting/security/authentication-and-sso",
-        "sfdfc0ea9fdc1": "https://langfuse.com/docs/api-and-data-platform/features/public-api",
-        "sb92c8a6aaad1": "https://langfuse.com/self-hosting/configuration",
-        "scd1d81693f96": "https://langfuse.com/self-hosting/administration/headless-initialization"
-      }
-    },
-    "lf-session": {
-      "name": "Langfuse session source",
-      "basis": "24c949d8dd5617219a8415f80e4c65ad611ff05c",
-      "sources": {
-        "s01522120437c": "https://github.com/langfuse/langfuse/blob/24c949d8dd5617219a8415f80e4c65ad611ff05c/web/src/env.mjs"
-      }
-    },
-    "lf-compose": {
-      "name": "Langfuse Compose",
-      "basis": "0dd0a7fbe2feb300b8776f02b3684eeee3fbceab",
-      "sources": {
-        "s4d19a7b83526": "https://github.com/langfuse/langfuse/blob/0dd0a7fbe2feb300b8776f02b3684eeee3fbceab/docker-compose.yml"
-      }
-    },
-    "phoenix": {
-      "name": "Phoenix documentation",
-      "basis": "unknown",
-      "sources": {
-        "s5a90699b7950": "https://arize.com/docs/phoenix/self-hosting/features/authentication"
-      }
-    },
-    "phoenix-tls-min": {
-      "name": "Phoenix TLS announcement",
-      "basis": "unknown",
-      "sources": {
-        "s8af9d57a7636": "https://arize.com/docs/phoenix/release-notes/04-2025/04-28-2025-tls-support-for-phoenix-server"
-      }
-    },
-    "phoenix-tls": {
-      "name": "Phoenix TLS source",
-      "basis": "080959576563900038688ddf01f3bee110005df5",
-      "sources": {
-        "s33e12a73fb58": "https://github.com/Arize-ai/phoenix/blob/080959576563900038688ddf01f3bee110005df5/src/phoenix/config.py"
-      }
-    },
-    "helicone": {
-      "name": "Helicone documentation",
-      "basis": "unknown",
-      "sources": {
-        "s48d6e38bf1fa": "https://docs.helicone.ai/getting-started/self-host/manual",
-        "sac4298a08e00": "https://docs.helicone.ai/getting-started/self-host/docker"
-      }
-    },
-    "helicone-compose": {
-      "name": "Helicone Compose",
-      "basis": "b12ebaccb824ab9778757ca197ff302d97fda421",
-      "sources": {
-        "s05ca7cfb09fe": "https://github.com/Helicone/helicone/blob/b12ebaccb824ab9778757ca197ff302d97fda421/docker/docker-compose.yml"
-      }
-    },
-    "otel": {
-      "name": "OpenTelemetry Collector",
-      "basis": "v0.161.0",
-      "sources": {
-        "s6eb17ad3eb47": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/receiver/otlpreceiver/factory.go#L41-L67",
-        "s3252b8ba9775": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L2058-L2070",
-        "s5a13f52d7e6d": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L1793-L1811",
-        "sb419d6444c19": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L1737-L1743",
-        "s9780bf233e75": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/service/telemetry/otelconftelemetry/factory.go#L49-L64",
-        "se93854d097ec": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/extension/zpagesextension/factory.go#L15-L29",
-        "s6957342b0bf4": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/extension/zpagesextension/zpagesextension.go#L87-L105",
-        "sdac173d533e6": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/config/confighttp/server.go#L352-L364"
-      }
-    },
-    "otel-dist": {
-      "name": "Collector distributions",
-      "basis": "v0.161.0",
-      "sources": {
-        "s08ca284a6d6f": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/config.yaml#L1-L81",
-        "s9d2ef3c6b75d": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/config.yaml#L1-L81",
-        "s7a517873f7be": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/Dockerfile#L10-L15",
-        "sc806e2cc23e6": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/Dockerfile#L10-L15",
-        "s96832924ecbd": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/.goreleaser.yaml#L86-L118",
-        "s3cf497a4401c": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/.goreleaser.yaml#L94-L126",
-        "s532d68e28e68": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/otelcol.service#L5-L7",
-        "saa59feb48156": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/otelcol-contrib.service#L5-L7",
-        "s73f6337cd50e": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/otelcol.conf#L1-L5",
-        "sff25af5f7a79": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/otelcol-contrib.conf#L1-L5",
-        "sd829f5067d73": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/postinstall.sh#L6-L16",
-        "secd03f9c13d6": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/postinstall.sh#L6-L16",
-        "s353fc01c0b2c": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/postinstall-rpm.sh#L6-L9",
-        "s72fc7a0602d1": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/postinstall-rpm.sh#L6-L9",
-        "sb93573df35e2": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-k8s/Dockerfile#L1-L17"
-      }
-    },
-    "otel-docs": {
-      "name": "Collector security guidance",
-      "basis": "unknown",
-      "sources": {
-        "s5fc11440844b": "https://opentelemetry.io/docs/security/config-best-practices/"
-      }
-    },
-    "basicauth": {
-      "name": "Collector Basic auth extension",
-      "basis": "1c897ba9c67afc3c9e218b5cd05a6de49435f4de",
-      "sources": {
-        "s473397b3887e": "https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/basicauthextension"
-      }
-    },
-    "bearertokenauth": {
-      "name": "Collector bearer token auth extension",
-      "basis": "1c897ba9c67afc3c9e218b5cd05a6de49435f4de",
-      "sources": {
-        "sc102b008afb0": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/README.md#L21-L39",
-        "s664ba81d1aa6": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L30-L43",
-        "saa550790364b": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L73-L122",
-        "s93d4733c051d": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L156-L189",
-        "s828ec6427328": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L197-L205",
-        "s48a3bfa9c99e": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L234-L255",
-        "s4326cb59f96e": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L264-L272",
-        "sa8d47408d195": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/factory.go#L15-L18"
-      }
-    },
-    "phoenix-auth": {
-      "name": "Phoenix gRPC auth source",
-      "basis": "f11c885c063f1c9b6146693cda401c5d645d8294",
-      "sources": {
-        "sdbf548dbb448": "https://github.com/Arize-ai/phoenix/blob/f11c885c063f1c9b6146693cda401c5d645d8294/src/phoenix/server/bearer_auth.py"
-      }
-    },
-    "pprof": {
-      "name": "Collector pprof source",
-      "basis": "443567a6a00d7cff8cae1432a6fef655d8698e94",
-      "sources": {
-        "s3f2efc571022": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/443567a6a00d7cff8cae1432a6fef655d8698e94/extension/pprofextension/README.md"
-      }
-    },
-    "health": {
-      "name": "Collector health source",
-      "basis": "d922ffb299c6b9be026f97dd7d6a5f0f507efdeb",
-      "sources": {
-        "s6ac60517accc": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/d922ffb299c6b9be026f97dd7d6a5f0f507efdeb/extension/healthcheckextension/README.md"
-      }
-    },
-    "curl": {
-      "name": "curl minimum",
-      "basis": "7.75.0",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
-      }
-    },
-    "phoenix-bind": {
-      "name": "Phoenix listener source",
-      "basis": "arize-phoenix-v20.16.0",
-      "sources": {
-        "s19ffeb67866e": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.16.0/src/phoenix/config.py#L3111-L3117",
-        "sfc104ed5254a": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.16.0/src/phoenix/server/grpc_server.py#L107-L109"
-      }
-    }
-  },
-  "claims": {
-    "lf-signup": {"text": "Email/password and public signup default on; AUTH_DISABLE_SIGNUP=true also prevents invite acceptance by new users.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED"},
-    "lf-bootstrap": {"text": "Create first account before closing signup, or initialize org before headless user/project with LANGFUSE_INIT_*.", "components": ["langfuse"], "sources": ["langfuse:scd1d81693f96", "langfuse:s34b0fb076e86"], "status": "REASONED"},
-    "lf-sso": {"text": "AUTH_DISABLE_USERNAME_PASSWORD=true requires SSO; supported Auth.js providers need correct NEXTAUTH_URL beyond password login.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED"},
-    "lf-session": {"text": "AUTH_SESSION_MAX_AGE must be integer >5 minutes; source default is 20160, while documentation says 43200; check pinned release.", "components": ["lf-session", "langfuse"], "sources": ["lf-session:s01522120437c", "langfuse:s34b0fb076e86"], "status": "REASONED"},
-    "lf-api": {"text": "Ingestion/public API use project public-key username and secret-key password via Basic auth, separately from UI credentials.", "components": ["langfuse"], "sources": ["langfuse:sfdfc0ea9fdc1"], "status": "REASONED"},
-    "lf-mfa": {"text": "Langfuse login has no native MFA; enforce it at the identity provider.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED"},
-    "lf-session-secret": {"text": "Replace shipped NEXTAUTH_SECRET=mysecret before first start; known session protection secret permits forged sessions bypassing sign-in controls.", "components": ["langfuse", "lf-compose"], "sources": ["langfuse:sb92c8a6aaad1", "lf-compose:s4d19a7b83526"], "status": "REASONED"},
-    "lf-salt": {"text": "Replace shipped SALT=mysalt used for API-key hashes with a separate random value.", "components": ["langfuse", "lf-compose"], "sources": ["langfuse:sb92c8a6aaad1", "lf-compose:s4d19a7b83526"], "status": "REASONED"},
-    "lf-encryption": {"text": "Replace all-zero ENCRYPTION_KEY with 32 random hex bytes; later changes need re-encryption and exposed provider credentials need rotation.", "components": ["langfuse", "lf-compose"], "sources": ["langfuse:sb92c8a6aaad1", "lf-compose:s4d19a7b83526"], "status": "REASONED"},
-    "lf-minio": {"text": "Rotate bundled minio/miniosecret and matching LANGFUSE_S3_* keys; MinIO S3 host 9090 is wildcard-published.", "components": ["lf-compose", "langfuse"], "sources": ["lf-compose:s4d19a7b83526", "langfuse:sb92c8a6aaad1"], "status": "REASONED"},
-    "lf-ports": {"text": "langfuse-web host 3000 is wildcard-published; bundled Postgres, ClickHouse and Redis default loopback; keep all publications private.", "components": ["lf-compose"], "sources": ["lf-compose:s4d19a7b83526"], "status": "REASONED"},
-    "lf-tls": {"text": "Container deployment needs proxy TLS; an HTTPS public URL does not establish native Langfuse TLS.", "components": ["langfuse"], "sources": ["langfuse:sb92c8a6aaad1"], "status": "REASONED"},
-    "phoenix-enable": {"text": "Phoenix auth defaults disabled; enable PHOENIX_ENABLE_AUTH=True with random PHOENIX_SECRET.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
-    "phoenix-admin": {"text": "Auth creates admin@localhost/admin unless first-account startup sets PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD; later environment changes are inert.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
-    "phoenix-password": {"text": "Existing admin needs UI password replacement before exposure; remove the inert initial-password variable afterwards.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
-    "phoenix-http": {"text": "HTTP UI/REST/OTLP defaults to 0.0.0.0:6006; restrict its bind/publication and backing database exposure.", "components": ["phoenix-bind", "phoenix"], "sources": ["phoenix-bind:s19ffeb67866e", "phoenix:s5a90699b7950"], "status": "REASONED"},
-    "phoenix-grpc": {"text": "Separate OTLP gRPC defaults to [::]:4317 independently of PHOENIX_HOST; isolate namespace/publication/firewall separately.", "components": ["phoenix-bind"], "sources": ["phoenix-bind:s19ffeb67866e", "phoenix-bind:sfc104ed5254a"], "status": "REASONED"},
-    "phoenix-keys": {"text": "Enabling auth blocks collection/API access until system or user API keys exist; PHOENIX_API_KEY is sent as Bearer.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
-    "phoenix-mfa": {"text": "No native MFA; federate OAuth2/OIDC or use identity-aware ingress and enforce MFA there.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
-    "phoenix-signup": {"text": "PHOENIX_OAUTH2_<IDP>_ALLOW_SIGN_UP defaults True; set False and restrict provider membership.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
-    "phoenix-basic": {"text": "Local password login remains beside SSO; PHOENIX_DISABLE_BASIC_AUTH=True closes it after an approved IdP administrator is tested.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
-    "phoenix-tls": {"text": "Native HTTP/gRPC TLS exists from 8.29, defaults off, uses certificate/key files; later per-protocol switches override PHOENIX_TLS_ENABLED.", "components": ["phoenix-tls-min", "phoenix-tls"], "sources": ["phoenix-tls-min:s8af9d57a7636", "phoenix-tls:s33e12a73fb58"], "status": "REASONED"},
-    "helicone-login": {"text": "Better Auth uses signup and organizations; test@helicone.ai/password is a local manual trial, not the deployment security model.", "components": ["helicone"], "sources": ["helicone:s48d6e38bf1fa", "helicone:sac4298a08e00"], "status": "REASONED"},
-    "helicone-secret": {"text": "Replace BETTER_AUTH_SECRET examples change-me-in-production and Compose your-secret-key before first start.", "components": ["helicone", "helicone-compose"], "sources": ["helicone:sac4298a08e00", "helicone-compose:s05ca7cfb09fe"], "status": "REASONED"},
-    "helicone-ports": {"text": "Backing Postgres/ClickHouse/MinIO/Redis/MailHog publications bypass UI login, including 54388:5432 and 18123:8123; remove or loopback-scope them.", "components": ["helicone-compose"], "sources": ["helicone-compose:s05ca7cfb09fe"], "status": "REASONED"},
-    "helicone-boundary": {"text": "Restrict signup, protect dashboard/Jawn/S3 and gateway separately with private networking or authenticated ingress and MFA; rotate example storage credentials.", "components": ["helicone", "helicone-compose"], "sources": ["helicone:sac4298a08e00", "helicone-compose:s05ca7cfb09fe"], "status": "REASONED"},
-    "helicone-ingest": {"text": "AI Gateway ingestion and provider environment keys are separate from web sessions; protect those secrets.", "components": ["helicone"], "sources": ["helicone:sac4298a08e00"], "status": "REASONED"},
-    "otel-default": {"text": "OTLP factory defaults localhost:4317 gRPC and localhost:4318 HTTP at v0.161.0; bind every enabled receiver explicitly.", "components": ["otel", "otel-docs"], "sources": ["otel:s6eb17ad3eb47", "otel-docs:s5fc11440844b"], "status": "REASONED"},
-    "otel-history": {"text": "OTLP localhost transition was v0.104.0; UseLocalHostAsDefaultHost stabilized v0.110.0 and was removed v0.112.0.", "components": ["otel"], "sources": ["otel:s3252b8ba9775", "otel:s5a13f52d7e6d", "otel:sb419d6444c19"], "status": "REASONED"},
-    "otel-shipped": {"text": "Both shipped configs override component defaults with unauthenticated IPv4 wildcard OTLP 4317/4318, Jaeger 14250/6832/6831/14268 and Zipkin 9411.", "components": ["otel-dist"], "sources": ["otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d"], "status": "REASONED"},
-    "otel-diagnostics": {"text": "Shipped pprof 1777 and zPages 55679 are wildcard and unauthenticated; remove from extensions/service.extensions or restrict separately.", "components": ["otel-dist", "otel", "pprof"], "sources": ["otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d", "otel:se93854d097ec", "otel:s6957342b0bf4", "otel:sdac173d533e6", "pprof:s3f2efc571022"], "status": "REASONED"},
-    "otel-images": {"text": "Dockerfiles COPY/select shipped config; EXPOSE 4317/4318/55679 is not host publication, but container peers may reach wildcard listeners.", "components": ["otel-dist"], "sources": ["otel-dist:s7a517873f7be", "otel-dist:sc806e2cc23e6"], "status": "REASONED"},
-    "otel-packages": {"text": "Systemd reads distribution otelcol.conf; OTELCOL_OPTIONS selects config.yaml; config|noreplace installation can retain local config, and postinstall manages service.", "components": ["otel-dist"], "sources": ["otel-dist:s96832924ecbd", "otel-dist:s3cf497a4401c", "otel-dist:s532d68e28e68", "otel-dist:saa59feb48156", "otel-dist:s73f6337cd50e", "otel-dist:sff25af5f7a79", "otel-dist:sd829f5067d73", "otel-dist:secd03f9c13d6", "otel-dist:s353fc01c0b2c", "otel-dist:s72fc7a0602d1"], "status": "REASONED"},
-    "otel-tls": {"text": "Require TLS on receivers/exporters and authentication on every receiver protocol accepting off-host data.", "components": ["otel-docs"], "sources": ["otel-docs:s5fc11440844b"], "status": "REASONED"},
-    "otel-auth": {"text": "Declare authenticator, start it in service.extensions, and attach each receiver protocol with auth.authenticator; Basic supports htpasswd/client_auth.", "components": ["otel-docs", "basicauth"], "sources": ["otel-docs:s5fc11440844b", "basicauth:s473397b3887e"], "status": "REASONED"},
-    "otel-bearer": {"text": "bearertokenauth accepts a static token or token file; filename takes precedence over token, and each file line with a non-whitespace field contributes its first whitespace-delimited field. The configurable header (default Authorization) and scheme (default Bearer) apply to HTTP and gRPC outgoing calls; the header becomes the lower-case gRPC metadata key. On incoming requests, Authenticate checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with each configured scheme-prefixed token and accepts any match; outgoing calls send only the first token.", "components": ["otel-docs", "bearertokenauth"], "sources": ["otel-docs:s5fc11440844b", "bearertokenauth:sc102b008afb0", "bearertokenauth:s664ba81d1aa6", "bearertokenauth:saa550790364b", "bearertokenauth:s93d4733c051d", "bearertokenauth:s828ec6427328", "bearertokenauth:s48a3bfa9c99e", "bearertokenauth:s4326cb59f96e", "bearertokenauth:sa8d47408d195"], "status": "REASONED"},
-    "otel-metrics": {"text": "Internal metrics factory defaults localhost:8888; shipped configs set 127.0.0.1:8888; 0.0.0.0:8888 scrape target is outbound.", "components": ["otel", "otel-dist"], "sources": ["otel:s9780bf233e75", "otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d"], "status": "REASONED"},
-    "otel-health": {"text": "Review enabled health-check 13133 independently of receiver authentication.", "components": ["health", "otel-dist"], "sources": ["health:s6ac60517accc", "otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d"], "status": "REASONED"},
-    "otel-k8s": {"text": "otelcol-k8s Dockerfile supplies no default config COPY/CMD; EXPOSE alone establishes no listener; Helm/operator are out of scope.", "components": ["otel-dist"], "sources": ["otel-dist:sb93573df35e2"], "status": "REASONED"},
-    "otel-minimal": {"text": "Run only required components and use a non-root process.", "components": ["otel-docs"], "sources": ["otel-docs:s5fc11440844b"], "status": "REASONED"},
-    "verify-inventory": {"text": "Inspect effective config, namespace TCP/UDP, publications and firewall; shipped wildcard listeners should become intended private listeners; outside failures need positive controls.", "components": ["otel-dist", "otel-docs", "phoenix-bind"], "sources": ["otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d", "otel-docs:s5fc11440844b", "phoenix-bind:s19ffeb67866e", "phoenix-bind:sfc104ed5254a"], "status": "REASONED", "verify": [1]},
-    "verify-dashboard": {"text": "Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED", "verify": [1]},
-    "verify-lf-api": {"text": "Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth.", "components": ["langfuse"], "sources": ["langfuse:sfdfc0ea9fdc1"], "status": "REASONED", "verify": [1]},
-    "verify-collector": {"text": "Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive.", "components": ["otel-docs", "basicauth"], "sources": ["otel-docs:s5fc11440844b", "basicauth:s473397b3887e"], "status": "REASONED", "verify": [1]},
-    "verify-phoenix-admin": {"text": "Default admin/admin must fail with replacement password succeeding; with basic auth disabled, require local-login refusal and approved MFA IdP success.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
-    "verify-phoenix-read": {"text": "Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive.", "components": ["phoenix", "curl"], "sources": ["phoenix:s5a90699b7950", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
-    "verify-phoenix-http": {"text": "Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key is not a positive control.", "components": ["phoenix", "phoenix-auth"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:sdbf548dbb448"], "status": "REASONED"},
-    "verify-phoenix-grpc": {"text": "Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned.", "components": ["phoenix-auth", "phoenix-bind"], "sources": ["phoenix-auth:sdbf548dbb448", "phoenix-bind:sfc104ed5254a"], "status": "REASONED"}
-  }
-}
----
 # LLM tracing and observability: Langfuse, Phoenix, Helicone, OpenTelemetry Collector
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Langfuse documentation (no recorded version), Phoenix listener source arize-phoenix-v20.16.0, OpenTelemetry Collector v0.161.0, Collector distributions v0.161.0, and curl minimum 7.75.0; 9 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- langfuse: Langfuse documentation (unknown)
-- lf-session: Langfuse session source (24c949d8dd5617219a8415f80e4c65ad611ff05c)
-- lf-compose: Langfuse Compose (0dd0a7fbe2feb300b8776f02b3684eeee3fbceab)
-- phoenix: Phoenix documentation (unknown)
-- phoenix-tls-min: Phoenix TLS announcement (unknown)
-- phoenix-tls: Phoenix TLS source (080959576563900038688ddf01f3bee110005df5)
-- helicone: Helicone documentation (unknown)
-- helicone-compose: Helicone Compose (b12ebaccb824ab9778757ca197ff302d97fda421)
-- otel: OpenTelemetry Collector (v0.161.0)
-- otel-dist: Collector distributions (v0.161.0)
-- otel-docs: Collector security guidance (unknown)
-- basicauth: Collector Basic auth extension (1c897ba9c67afc3c9e218b5cd05a6de49435f4de)
-- bearertokenauth: Collector bearer token auth extension (1c897ba9c67afc3c9e218b5cd05a6de49435f4de)
-- phoenix-auth: Phoenix gRPC auth source (f11c885c063f1c9b6146693cda401c5d645d8294)
-- pprof: Collector pprof source (443567a6a00d7cff8cae1432a6fef655d8698e94)
-- health: Collector health source (d922ffb299c6b9be026f97dd7d6a5f0f507efdeb)
-- curl: curl minimum (7.75.0)
-- phoenix-bind: Phoenix listener source (arize-phoenix-v20.16.0)
-
-Claims (full source mapping in the front matter):
-
-- lf-signup (REASONED; langfuse): Email/password and public signup default on; AUTH_DISABLE_SIGNUP=true also prevents invite acceptance by new users.
-- lf-bootstrap (REASONED; langfuse): Create first account before closing signup, or initialize org before headless user/project with LANGFUSE_INIT_*.
-- lf-sso (REASONED; langfuse): AUTH_DISABLE_USERNAME_PASSWORD=true requires SSO; supported Auth.js providers need correct NEXTAUTH_URL beyond password login.
-- lf-session (REASONED; lf-session, langfuse): AUTH_SESSION_MAX_AGE must be integer &gt;5 minutes; source default is 20160, while documentation says 43200; check pinned release.
-- lf-api (REASONED; langfuse): Ingestion/public API use project public-key username and secret-key password via Basic auth, separately from UI credentials.
-- lf-mfa (REASONED; langfuse): Langfuse login has no native MFA; enforce it at the identity provider.
-- lf-session-secret (REASONED; langfuse, lf-compose): Replace shipped NEXTAUTH_SECRET=mysecret before first start; known session protection secret permits forged sessions bypassing sign-in controls.
-- lf-salt (REASONED; langfuse, lf-compose): Replace shipped SALT=mysalt used for API-key hashes with a separate random value.
-- lf-encryption (REASONED; langfuse, lf-compose): Replace all-zero ENCRYPTION_KEY with 32 random hex bytes; later changes need re-encryption and exposed provider credentials need rotation.
-- lf-minio (REASONED; lf-compose, langfuse): Rotate bundled minio/miniosecret and matching LANGFUSE_S3_* keys; MinIO S3 host 9090 is wildcard-published.
-- lf-ports (REASONED; lf-compose): langfuse-web host 3000 is wildcard-published; bundled Postgres, ClickHouse and Redis default loopback; keep all publications private.
-- lf-tls (REASONED; langfuse): Container deployment needs proxy TLS; an HTTPS public URL does not establish native Langfuse TLS.
-- phoenix-enable (REASONED; phoenix): Phoenix auth defaults disabled; enable PHOENIX_ENABLE_AUTH=True with random PHOENIX_SECRET.
-- phoenix-admin (REASONED; phoenix): Auth creates admin@localhost/admin unless first-account startup sets PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD; later environment changes are inert.
-- phoenix-password (REASONED; phoenix): Existing admin needs UI password replacement before exposure; remove the inert initial-password variable afterwards.
-- phoenix-http (REASONED; phoenix-bind, phoenix): HTTP UI/REST/OTLP defaults to 0.0.0.0:6006; restrict its bind/publication and backing database exposure.
-- phoenix-grpc (REASONED; phoenix-bind): Separate OTLP gRPC defaults to [::]:4317 independently of PHOENIX_HOST; isolate namespace/publication/firewall separately.
-- phoenix-keys (REASONED; phoenix): Enabling auth blocks collection/API access until system or user API keys exist; PHOENIX_API_KEY is sent as Bearer.
-- phoenix-mfa (REASONED; phoenix): No native MFA; federate OAuth2/OIDC or use identity-aware ingress and enforce MFA there.
-- phoenix-signup (REASONED; phoenix): PHOENIX_OAUTH2_&lt;IDP&gt;_ALLOW_SIGN_UP defaults True; set False and restrict provider membership.
-- phoenix-basic (REASONED; phoenix): Local password login remains beside SSO; PHOENIX_DISABLE_BASIC_AUTH=True closes it after an approved IdP administrator is tested.
-- phoenix-tls (REASONED; phoenix-tls-min, phoenix-tls): Native HTTP/gRPC TLS exists from 8.29, defaults off, uses certificate/key files; later per-protocol switches override PHOENIX_TLS_ENABLED.
-- helicone-login (REASONED; helicone): Better Auth uses signup and organizations; test@helicone.ai/password is a local manual trial, not the deployment security model.
-- helicone-secret (REASONED; helicone, helicone-compose): Replace BETTER_AUTH_SECRET examples change-me-in-production and Compose your-secret-key before first start.
-- helicone-ports (REASONED; helicone-compose): Backing Postgres/ClickHouse/MinIO/Redis/MailHog publications bypass UI login, including 54388:5432 and 18123:8123; remove or loopback-scope them.
-- helicone-boundary (REASONED; helicone, helicone-compose): Restrict signup, protect dashboard/Jawn/S3 and gateway separately with private networking or authenticated ingress and MFA; rotate example storage credentials.
-- helicone-ingest (REASONED; helicone): AI Gateway ingestion and provider environment keys are separate from web sessions; protect those secrets.
-- otel-default (REASONED; otel, otel-docs): OTLP factory defaults localhost:4317 gRPC and localhost:4318 HTTP at v0.161.0; bind every enabled receiver explicitly.
-- otel-history (REASONED; otel): OTLP localhost transition was v0.104.0; UseLocalHostAsDefaultHost stabilized v0.110.0 and was removed v0.112.0.
-- otel-shipped (REASONED; otel-dist): Both shipped configs override component defaults with unauthenticated IPv4 wildcard OTLP 4317/4318, Jaeger 14250/6832/6831/14268 and Zipkin 9411.
-- otel-diagnostics (REASONED; otel-dist, otel, pprof): Shipped pprof 1777 and zPages 55679 are wildcard and unauthenticated; remove from extensions/service.extensions or restrict separately.
-- otel-images (REASONED; otel-dist): Dockerfiles COPY/select shipped config; EXPOSE 4317/4318/55679 is not host publication, but container peers may reach wildcard listeners.
-- otel-packages (REASONED; otel-dist): Systemd reads distribution otelcol.conf; OTELCOL_OPTIONS selects config.yaml; config&#124;noreplace installation can retain local config, and postinstall manages service.
-- otel-tls (REASONED; otel-docs): Require TLS on receivers/exporters and authentication on every receiver protocol accepting off-host data.
-- otel-auth (REASONED; otel-docs, basicauth): Declare authenticator, start it in service.extensions, and attach each receiver protocol with auth.authenticator; Basic supports htpasswd/client_auth.
-- otel-bearer (REASONED; otel-docs, bearertokenauth): bearertokenauth accepts a static token or token file; filename takes precedence over token, and each file line with a non-whitespace field contributes its first whitespace-delimited field. The configurable header (default Authorization) and scheme (default Bearer) apply to HTTP and gRPC outgoing calls; the header becomes the lower-case gRPC metadata key. On incoming requests, Authenticate checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with each configured scheme-prefixed token and accepts any match; outgoing calls send only the first token.
-- otel-metrics (REASONED; otel, otel-dist): Internal metrics factory defaults localhost:8888; shipped configs set 127.0.0.1:8888; 0.0.0.0:8888 scrape target is outbound.
-- otel-health (REASONED; health, otel-dist): Review enabled health-check 13133 independently of receiver authentication.
-- otel-k8s (REASONED; otel-dist): otelcol-k8s Dockerfile supplies no default config COPY/CMD; EXPOSE alone establishes no listener; Helm/operator are out of scope.
-- otel-minimal (REASONED; otel-docs): Run only required components and use a non-root process.
-- verify-inventory (REASONED; otel-dist, otel-docs, phoenix-bind): Inspect effective config, namespace TCP/UDP, publications and firewall; shipped wildcard listeners should become intended private listeners; outside failures need positive controls.
-- verify-dashboard (REASONED; langfuse): Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data.
-- verify-lf-api (REASONED; langfuse): Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth.
-- verify-collector (REASONED; otel-docs, basicauth): Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive.
-- verify-phoenix-admin (REASONED; phoenix): Default admin/admin must fail with replacement password succeeding; with basic auth disabled, require local-login refusal and approved MFA IdP success.
-- verify-phoenix-read (REASONED; phoenix, curl): Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive.
-- verify-phoenix-http (REASONED; phoenix, phoenix-auth): Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key is not a positive control.
-- verify-phoenix-grpc (REASONED; phoenix-auth, phoenix-bind): Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 These tools store full prompts, completions, and often the provider API keys used to generate them, so an
 exposed dashboard leaks your most sensitive data at once. Several ship with authentication off or with open
@@ -672,3 +377,324 @@ that accepts spans with no credential at all.
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0): https://curl.se/docs/manpage.html
 - Phoenix defaults `HOST = "0.0.0.0"`, `PORT = 6006`, `GRPC_PORT = 4317` (pinned tag arize-phoenix-v20.16.0): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.16.0/src/phoenix/config.py#L3111-L3117
 - Phoenix gRPC OTLP server binds `[::]` regardless of the HTTP host (pinned tag arize-phoenix-v20.16.0): https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.16.0/src/phoenix/server/grpc_server.py#L107-L109
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/llm-observability.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- langfuse: Langfuse documentation (unknown)
+- phoenix-bind: Phoenix listener source (arize-phoenix-v20.16.0)
+- otel: OpenTelemetry Collector (v0.161.0)
+- otel-dist: Collector distributions (v0.161.0)
+- lf-session: Langfuse session source (24c949d8dd5617219a8415f80e4c65ad611ff05c)
+- lf-compose: Langfuse Compose (0dd0a7fbe2feb300b8776f02b3684eeee3fbceab)
+- phoenix: Phoenix documentation (unknown)
+- phoenix-tls-min: Phoenix TLS announcement (unknown)
+- phoenix-tls: Phoenix TLS source (080959576563900038688ddf01f3bee110005df5)
+- phoenix-auth: Phoenix gRPC auth source (f11c885c063f1c9b6146693cda401c5d645d8294)
+- helicone: Helicone documentation (unknown)
+- helicone-compose: Helicone Compose (b12ebaccb824ab9778757ca197ff302d97fda421)
+- otel-docs: Collector security guidance (unknown)
+- basicauth: Collector Basic auth extension (1c897ba9c67afc3c9e218b5cd05a6de49435f4de)
+- bearertokenauth: Collector bearer token auth extension (1c897ba9c67afc3c9e218b5cd05a6de49435f4de)
+- pprof: Collector pprof source (443567a6a00d7cff8cae1432a6fef655d8698e94)
+- health: Collector health source (d922ffb299c6b9be026f97dd7d6a5f0f507efdeb)
+- curl: curl minimum (7.75.0)
+
+Claims (full source mapping in the JSON block below):
+
+- lf-signup (REASONED; langfuse): Email/password and public signup default on; AUTH_DISABLE_SIGNUP=true also prevents invite acceptance by new users.
+- lf-bootstrap (REASONED; langfuse): Create first account before closing signup, or initialize org before headless user/project with LANGFUSE_INIT_*.
+- lf-sso (REASONED; langfuse): AUTH_DISABLE_USERNAME_PASSWORD=true requires SSO; supported Auth.js providers need correct NEXTAUTH_URL beyond password login.
+- lf-session (REASONED; lf-session, langfuse): AUTH_SESSION_MAX_AGE must be integer &gt;5 minutes; source default is 20160, while documentation says 43200; check pinned release.
+- lf-api (REASONED; langfuse): Ingestion/public API use project public-key username and secret-key password via Basic auth, separately from UI credentials.
+- lf-mfa (REASONED; langfuse): Langfuse login has no native MFA; enforce it at the identity provider.
+- lf-session-secret (REASONED; langfuse, lf-compose): Replace shipped NEXTAUTH_SECRET=mysecret before first start; known session protection secret permits forged sessions bypassing sign-in controls.
+- lf-salt (REASONED; langfuse, lf-compose): Replace shipped SALT=mysalt used for API-key hashes with a separate random value.
+- lf-encryption (REASONED; langfuse, lf-compose): Replace all-zero ENCRYPTION_KEY with 32 random hex bytes; later changes need re-encryption and exposed provider credentials need rotation.
+- lf-minio (REASONED; lf-compose, langfuse): Rotate bundled minio/miniosecret and matching LANGFUSE_S3_* keys; MinIO S3 host 9090 is wildcard-published.
+- lf-ports (REASONED; lf-compose): langfuse-web host 3000 is wildcard-published; bundled Postgres, ClickHouse and Redis default loopback; keep all publications private.
+- lf-tls (REASONED; langfuse): Container deployment needs proxy TLS; an HTTPS public URL does not establish native Langfuse TLS.
+- phoenix-enable (REASONED; phoenix): Phoenix auth defaults disabled; enable PHOENIX_ENABLE_AUTH=True with random PHOENIX_SECRET.
+- phoenix-admin (REASONED; phoenix): Auth creates admin@localhost/admin unless first-account startup sets PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD; later environment changes are inert.
+- phoenix-password (REASONED; phoenix): Existing admin needs UI password replacement before exposure; remove the inert initial-password variable afterwards.
+- phoenix-http (REASONED; phoenix-bind, phoenix): HTTP UI/REST/OTLP defaults to 0.0.0.0:6006; restrict its bind/publication and backing database exposure.
+- phoenix-grpc (REASONED; phoenix-bind): Separate OTLP gRPC defaults to [::]:4317 independently of PHOENIX_HOST; isolate namespace/publication/firewall separately.
+- phoenix-keys (REASONED; phoenix): Enabling auth blocks collection/API access until system or user API keys exist; PHOENIX_API_KEY is sent as Bearer.
+- phoenix-mfa (REASONED; phoenix): No native MFA; federate OAuth2/OIDC or use identity-aware ingress and enforce MFA there.
+- phoenix-signup (REASONED; phoenix): PHOENIX_OAUTH2_&lt;IDP&gt;_ALLOW_SIGN_UP defaults True; set False and restrict provider membership.
+- phoenix-basic (REASONED; phoenix): Local password login remains beside SSO; PHOENIX_DISABLE_BASIC_AUTH=True closes it after an approved IdP administrator is tested.
+- phoenix-tls (REASONED; phoenix-tls-min, phoenix-tls): Native HTTP/gRPC TLS exists from 8.29, defaults off, uses certificate/key files; later per-protocol switches override PHOENIX_TLS_ENABLED.
+- helicone-login (REASONED; helicone): Better Auth uses signup and organizations; test@helicone.ai/password is a local manual trial, not the deployment security model.
+- helicone-secret (REASONED; helicone, helicone-compose): Replace BETTER_AUTH_SECRET examples change-me-in-production and Compose your-secret-key before first start.
+- helicone-ports (REASONED; helicone-compose): Backing Postgres/ClickHouse/MinIO/Redis/MailHog publications bypass UI login, including 54388:5432 and 18123:8123; remove or loopback-scope them.
+- helicone-boundary (REASONED; helicone, helicone-compose): Restrict signup, protect dashboard/Jawn/S3 and gateway separately with private networking or authenticated ingress and MFA; rotate example storage credentials.
+- helicone-ingest (REASONED; helicone): AI Gateway ingestion and provider environment keys are separate from web sessions; protect those secrets.
+- otel-default (REASONED; otel, otel-docs): OTLP factory defaults localhost:4317 gRPC and localhost:4318 HTTP at v0.161.0; bind every enabled receiver explicitly.
+- otel-history (REASONED; otel): OTLP localhost transition was v0.104.0; UseLocalHostAsDefaultHost stabilized v0.110.0 and was removed v0.112.0.
+- otel-shipped (REASONED; otel-dist): Both shipped configs override component defaults with unauthenticated IPv4 wildcard OTLP 4317/4318, Jaeger 14250/6832/6831/14268 and Zipkin 9411.
+- otel-diagnostics (REASONED; otel-dist, otel, pprof): Shipped pprof 1777 and zPages 55679 are wildcard and unauthenticated; remove from extensions/service.extensions or restrict separately.
+- otel-images (REASONED; otel-dist): Dockerfiles COPY/select shipped config; EXPOSE 4317/4318/55679 is not host publication, but container peers may reach wildcard listeners.
+- otel-packages (REASONED; otel-dist): Systemd reads distribution otelcol.conf; OTELCOL_OPTIONS selects config.yaml; config&#124;noreplace installation can retain local config, and postinstall manages service.
+- otel-tls (REASONED; otel-docs): Require TLS on receivers/exporters and authentication on every receiver protocol accepting off-host data.
+- otel-auth (REASONED; otel-docs, basicauth): Declare authenticator, start it in service.extensions, and attach each receiver protocol with auth.authenticator; Basic supports htpasswd/client_auth.
+- otel-bearer (REASONED; otel-docs, bearertokenauth): bearertokenauth accepts a static token or token file; filename takes precedence over token, and each file line with a non-whitespace field contributes its first whitespace-delimited field. The configurable header (default Authorization) and scheme (default Bearer) apply to HTTP and gRPC outgoing calls; the header becomes the lower-case gRPC metadata key. On incoming requests, Authenticate checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with each configured scheme-prefixed token and accepts any match; outgoing calls send only the first token.
+- otel-metrics (REASONED; otel, otel-dist): Internal metrics factory defaults localhost:8888; shipped configs set 127.0.0.1:8888; 0.0.0.0:8888 scrape target is outbound.
+- otel-health (REASONED; health, otel-dist): Review enabled health-check 13133 independently of receiver authentication.
+- otel-k8s (REASONED; otel-dist): otelcol-k8s Dockerfile supplies no default config COPY/CMD; EXPOSE alone establishes no listener; Helm/operator are out of scope.
+- otel-minimal (REASONED; otel-docs): Run only required components and use a non-root process.
+- verify-inventory (REASONED; otel-dist, otel-docs, phoenix-bind): Inspect effective config, namespace TCP/UDP, publications and firewall; shipped wildcard listeners should become intended private listeners; outside failures need positive controls.
+- verify-dashboard (REASONED; langfuse): Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data.
+- verify-lf-api (REASONED; langfuse): Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth.
+- verify-collector (REASONED; otel-docs, basicauth): Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive.
+- verify-phoenix-admin (REASONED; phoenix): Default admin/admin must fail with replacement password succeeding; with basic auth disabled, require local-login refusal and approved MFA IdP success.
+- verify-phoenix-read (REASONED; phoenix, curl): Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive.
+- verify-phoenix-http (REASONED; phoenix, phoenix-auth): Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key is not a positive control.
+- verify-phoenix-grpc (REASONED; phoenix-auth, phoenix-bind): Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-17",
+  "documentation_checked": "2026-09",
+  "body_sha256": "49cf8484be9817a2c60e5b7c478cdb97fdaa412fb555ac56cc03d63099b5ebe8",
+  "components": {
+    "langfuse": {
+      "name": "Langfuse documentation",
+      "basis": "unknown",
+      "sources": {
+        "s34b0fb076e86": "https://langfuse.com/self-hosting/security/authentication-and-sso",
+        "sfdfc0ea9fdc1": "https://langfuse.com/docs/api-and-data-platform/features/public-api",
+        "sb92c8a6aaad1": "https://langfuse.com/self-hosting/configuration",
+        "scd1d81693f96": "https://langfuse.com/self-hosting/administration/headless-initialization"
+      }
+    },
+    "phoenix-bind": {
+      "name": "Phoenix listener source",
+      "basis": "arize-phoenix-v20.16.0",
+      "sources": {
+        "s19ffeb67866e": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.16.0/src/phoenix/config.py#L3111-L3117",
+        "sfc104ed5254a": "https://github.com/Arize-ai/phoenix/blob/arize-phoenix-v20.16.0/src/phoenix/server/grpc_server.py#L107-L109"
+      }
+    },
+    "otel": {
+      "name": "OpenTelemetry Collector",
+      "basis": "v0.161.0",
+      "sources": {
+        "s6eb17ad3eb47": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/receiver/otlpreceiver/factory.go#L41-L67",
+        "s3252b8ba9775": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L2058-L2070",
+        "s5a13f52d7e6d": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L1793-L1811",
+        "sb419d6444c19": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/CHANGELOG.md#L1737-L1743",
+        "s9780bf233e75": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/service/telemetry/otelconftelemetry/factory.go#L49-L64",
+        "se93854d097ec": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/extension/zpagesextension/factory.go#L15-L29",
+        "s6957342b0bf4": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/extension/zpagesextension/zpagesextension.go#L87-L105",
+        "sdac173d533e6": "https://github.com/open-telemetry/opentelemetry-collector/blob/v0.161.0/config/confighttp/server.go#L352-L364"
+      }
+    },
+    "otel-dist": {
+      "name": "Collector distributions",
+      "basis": "v0.161.0",
+      "sources": {
+        "s08ca284a6d6f": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/config.yaml#L1-L81",
+        "s9d2ef3c6b75d": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/config.yaml#L1-L81",
+        "s7a517873f7be": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/Dockerfile#L10-L15",
+        "sc806e2cc23e6": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/Dockerfile#L10-L15",
+        "s96832924ecbd": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/.goreleaser.yaml#L86-L118",
+        "s3cf497a4401c": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/.goreleaser.yaml#L94-L126",
+        "s532d68e28e68": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/otelcol.service#L5-L7",
+        "saa59feb48156": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/otelcol-contrib.service#L5-L7",
+        "s73f6337cd50e": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/otelcol.conf#L1-L5",
+        "sff25af5f7a79": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/otelcol-contrib.conf#L1-L5",
+        "sd829f5067d73": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/postinstall.sh#L6-L16",
+        "secd03f9c13d6": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/postinstall.sh#L6-L16",
+        "s353fc01c0b2c": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol/postinstall-rpm.sh#L6-L9",
+        "s72fc7a0602d1": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-contrib/postinstall-rpm.sh#L6-L9",
+        "sb93573df35e2": "https://github.com/open-telemetry/opentelemetry-collector-releases/blob/v0.161.0/distributions/otelcol-k8s/Dockerfile#L1-L17"
+      }
+    },
+    "lf-session": {
+      "name": "Langfuse session source",
+      "basis": "24c949d8dd5617219a8415f80e4c65ad611ff05c",
+      "sources": {
+        "s01522120437c": "https://github.com/langfuse/langfuse/blob/24c949d8dd5617219a8415f80e4c65ad611ff05c/web/src/env.mjs"
+      }
+    },
+    "lf-compose": {
+      "name": "Langfuse Compose",
+      "basis": "0dd0a7fbe2feb300b8776f02b3684eeee3fbceab",
+      "sources": {
+        "s4d19a7b83526": "https://github.com/langfuse/langfuse/blob/0dd0a7fbe2feb300b8776f02b3684eeee3fbceab/docker-compose.yml"
+      }
+    },
+    "phoenix": {
+      "name": "Phoenix documentation",
+      "basis": "unknown",
+      "sources": {
+        "s5a90699b7950": "https://arize.com/docs/phoenix/self-hosting/features/authentication"
+      }
+    },
+    "phoenix-tls-min": {
+      "name": "Phoenix TLS announcement",
+      "basis": "unknown",
+      "sources": {
+        "s8af9d57a7636": "https://arize.com/docs/phoenix/release-notes/04-2025/04-28-2025-tls-support-for-phoenix-server"
+      }
+    },
+    "phoenix-tls": {
+      "name": "Phoenix TLS source",
+      "basis": "080959576563900038688ddf01f3bee110005df5",
+      "sources": {
+        "s33e12a73fb58": "https://github.com/Arize-ai/phoenix/blob/080959576563900038688ddf01f3bee110005df5/src/phoenix/config.py"
+      }
+    },
+    "phoenix-auth": {
+      "name": "Phoenix gRPC auth source",
+      "basis": "f11c885c063f1c9b6146693cda401c5d645d8294",
+      "sources": {
+        "sdbf548dbb448": "https://github.com/Arize-ai/phoenix/blob/f11c885c063f1c9b6146693cda401c5d645d8294/src/phoenix/server/bearer_auth.py"
+      }
+    },
+    "helicone": {
+      "name": "Helicone documentation",
+      "basis": "unknown",
+      "sources": {
+        "s48d6e38bf1fa": "https://docs.helicone.ai/getting-started/self-host/manual",
+        "sac4298a08e00": "https://docs.helicone.ai/getting-started/self-host/docker"
+      }
+    },
+    "helicone-compose": {
+      "name": "Helicone Compose",
+      "basis": "b12ebaccb824ab9778757ca197ff302d97fda421",
+      "sources": {
+        "s05ca7cfb09fe": "https://github.com/Helicone/helicone/blob/b12ebaccb824ab9778757ca197ff302d97fda421/docker/docker-compose.yml"
+      }
+    },
+    "otel-docs": {
+      "name": "Collector security guidance",
+      "basis": "unknown",
+      "sources": {
+        "s5fc11440844b": "https://opentelemetry.io/docs/security/config-best-practices/"
+      }
+    },
+    "basicauth": {
+      "name": "Collector Basic auth extension",
+      "basis": "1c897ba9c67afc3c9e218b5cd05a6de49435f4de",
+      "sources": {
+        "s473397b3887e": "https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/basicauthextension"
+      }
+    },
+    "bearertokenauth": {
+      "name": "Collector bearer token auth extension",
+      "basis": "1c897ba9c67afc3c9e218b5cd05a6de49435f4de",
+      "sources": {
+        "sc102b008afb0": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/README.md#L21-L39",
+        "s664ba81d1aa6": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L30-L43",
+        "saa550790364b": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L73-L122",
+        "s93d4733c051d": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L156-L189",
+        "s828ec6427328": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L197-L205",
+        "s48a3bfa9c99e": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L234-L255",
+        "s4326cb59f96e": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/bearertokenauth.go#L264-L272",
+        "sa8d47408d195": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1c897ba9c67afc3c9e218b5cd05a6de49435f4de/extension/bearertokenauthextension/factory.go#L15-L18"
+      }
+    },
+    "pprof": {
+      "name": "Collector pprof source",
+      "basis": "443567a6a00d7cff8cae1432a6fef655d8698e94",
+      "sources": {
+        "s3f2efc571022": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/443567a6a00d7cff8cae1432a6fef655d8698e94/extension/pprofextension/README.md"
+      }
+    },
+    "health": {
+      "name": "Collector health source",
+      "basis": "d922ffb299c6b9be026f97dd7d6a5f0f507efdeb",
+      "sources": {
+        "s6ac60517accc": "https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/d922ffb299c6b9be026f97dd7d6a5f0f507efdeb/extension/healthcheckextension/README.md"
+      }
+    },
+    "curl": {
+      "name": "curl minimum",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    }
+  },
+  "claims": {
+    "lf-signup": {"text": "Email/password and public signup default on; AUTH_DISABLE_SIGNUP=true also prevents invite acceptance by new users.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED"},
+    "lf-bootstrap": {"text": "Create first account before closing signup, or initialize org before headless user/project with LANGFUSE_INIT_*.", "components": ["langfuse"], "sources": ["langfuse:scd1d81693f96", "langfuse:s34b0fb076e86"], "status": "REASONED"},
+    "lf-sso": {"text": "AUTH_DISABLE_USERNAME_PASSWORD=true requires SSO; supported Auth.js providers need correct NEXTAUTH_URL beyond password login.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED"},
+    "lf-session": {"text": "AUTH_SESSION_MAX_AGE must be integer >5 minutes; source default is 20160, while documentation says 43200; check pinned release.", "components": ["lf-session", "langfuse"], "sources": ["lf-session:s01522120437c", "langfuse:s34b0fb076e86"], "status": "REASONED"},
+    "lf-api": {"text": "Ingestion/public API use project public-key username and secret-key password via Basic auth, separately from UI credentials.", "components": ["langfuse"], "sources": ["langfuse:sfdfc0ea9fdc1"], "status": "REASONED"},
+    "lf-mfa": {"text": "Langfuse login has no native MFA; enforce it at the identity provider.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED"},
+    "lf-session-secret": {"text": "Replace shipped NEXTAUTH_SECRET=mysecret before first start; known session protection secret permits forged sessions bypassing sign-in controls.", "components": ["langfuse", "lf-compose"], "sources": ["langfuse:sb92c8a6aaad1", "lf-compose:s4d19a7b83526"], "status": "REASONED"},
+    "lf-salt": {"text": "Replace shipped SALT=mysalt used for API-key hashes with a separate random value.", "components": ["langfuse", "lf-compose"], "sources": ["langfuse:sb92c8a6aaad1", "lf-compose:s4d19a7b83526"], "status": "REASONED"},
+    "lf-encryption": {"text": "Replace all-zero ENCRYPTION_KEY with 32 random hex bytes; later changes need re-encryption and exposed provider credentials need rotation.", "components": ["langfuse", "lf-compose"], "sources": ["langfuse:sb92c8a6aaad1", "lf-compose:s4d19a7b83526"], "status": "REASONED"},
+    "lf-minio": {"text": "Rotate bundled minio/miniosecret and matching LANGFUSE_S3_* keys; MinIO S3 host 9090 is wildcard-published.", "components": ["lf-compose", "langfuse"], "sources": ["lf-compose:s4d19a7b83526", "langfuse:sb92c8a6aaad1"], "status": "REASONED"},
+    "lf-ports": {"text": "langfuse-web host 3000 is wildcard-published; bundled Postgres, ClickHouse and Redis default loopback; keep all publications private.", "components": ["lf-compose"], "sources": ["lf-compose:s4d19a7b83526"], "status": "REASONED"},
+    "lf-tls": {"text": "Container deployment needs proxy TLS; an HTTPS public URL does not establish native Langfuse TLS.", "components": ["langfuse"], "sources": ["langfuse:sb92c8a6aaad1"], "status": "REASONED"},
+    "phoenix-enable": {"text": "Phoenix auth defaults disabled; enable PHOENIX_ENABLE_AUTH=True with random PHOENIX_SECRET.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
+    "phoenix-admin": {"text": "Auth creates admin@localhost/admin unless first-account startup sets PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD; later environment changes are inert.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
+    "phoenix-password": {"text": "Existing admin needs UI password replacement before exposure; remove the inert initial-password variable afterwards.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
+    "phoenix-http": {"text": "HTTP UI/REST/OTLP defaults to 0.0.0.0:6006; restrict its bind/publication and backing database exposure.", "components": ["phoenix-bind", "phoenix"], "sources": ["phoenix-bind:s19ffeb67866e", "phoenix:s5a90699b7950"], "status": "REASONED"},
+    "phoenix-grpc": {"text": "Separate OTLP gRPC defaults to [::]:4317 independently of PHOENIX_HOST; isolate namespace/publication/firewall separately.", "components": ["phoenix-bind"], "sources": ["phoenix-bind:s19ffeb67866e", "phoenix-bind:sfc104ed5254a"], "status": "REASONED"},
+    "phoenix-keys": {"text": "Enabling auth blocks collection/API access until system or user API keys exist; PHOENIX_API_KEY is sent as Bearer.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
+    "phoenix-mfa": {"text": "No native MFA; federate OAuth2/OIDC or use identity-aware ingress and enforce MFA there.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
+    "phoenix-signup": {"text": "PHOENIX_OAUTH2_<IDP>_ALLOW_SIGN_UP defaults True; set False and restrict provider membership.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
+    "phoenix-basic": {"text": "Local password login remains beside SSO; PHOENIX_DISABLE_BASIC_AUTH=True closes it after an approved IdP administrator is tested.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
+    "phoenix-tls": {"text": "Native HTTP/gRPC TLS exists from 8.29, defaults off, uses certificate/key files; later per-protocol switches override PHOENIX_TLS_ENABLED.", "components": ["phoenix-tls-min", "phoenix-tls"], "sources": ["phoenix-tls-min:s8af9d57a7636", "phoenix-tls:s33e12a73fb58"], "status": "REASONED"},
+    "helicone-login": {"text": "Better Auth uses signup and organizations; test@helicone.ai/password is a local manual trial, not the deployment security model.", "components": ["helicone"], "sources": ["helicone:s48d6e38bf1fa", "helicone:sac4298a08e00"], "status": "REASONED"},
+    "helicone-secret": {"text": "Replace BETTER_AUTH_SECRET examples change-me-in-production and Compose your-secret-key before first start.", "components": ["helicone", "helicone-compose"], "sources": ["helicone:sac4298a08e00", "helicone-compose:s05ca7cfb09fe"], "status": "REASONED"},
+    "helicone-ports": {"text": "Backing Postgres/ClickHouse/MinIO/Redis/MailHog publications bypass UI login, including 54388:5432 and 18123:8123; remove or loopback-scope them.", "components": ["helicone-compose"], "sources": ["helicone-compose:s05ca7cfb09fe"], "status": "REASONED"},
+    "helicone-boundary": {"text": "Restrict signup, protect dashboard/Jawn/S3 and gateway separately with private networking or authenticated ingress and MFA; rotate example storage credentials.", "components": ["helicone", "helicone-compose"], "sources": ["helicone:sac4298a08e00", "helicone-compose:s05ca7cfb09fe"], "status": "REASONED"},
+    "helicone-ingest": {"text": "AI Gateway ingestion and provider environment keys are separate from web sessions; protect those secrets.", "components": ["helicone"], "sources": ["helicone:sac4298a08e00"], "status": "REASONED"},
+    "otel-default": {"text": "OTLP factory defaults localhost:4317 gRPC and localhost:4318 HTTP at v0.161.0; bind every enabled receiver explicitly.", "components": ["otel", "otel-docs"], "sources": ["otel:s6eb17ad3eb47", "otel-docs:s5fc11440844b"], "status": "REASONED"},
+    "otel-history": {"text": "OTLP localhost transition was v0.104.0; UseLocalHostAsDefaultHost stabilized v0.110.0 and was removed v0.112.0.", "components": ["otel"], "sources": ["otel:s3252b8ba9775", "otel:s5a13f52d7e6d", "otel:sb419d6444c19"], "status": "REASONED"},
+    "otel-shipped": {"text": "Both shipped configs override component defaults with unauthenticated IPv4 wildcard OTLP 4317/4318, Jaeger 14250/6832/6831/14268 and Zipkin 9411.", "components": ["otel-dist"], "sources": ["otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d"], "status": "REASONED"},
+    "otel-diagnostics": {"text": "Shipped pprof 1777 and zPages 55679 are wildcard and unauthenticated; remove from extensions/service.extensions or restrict separately.", "components": ["otel-dist", "otel", "pprof"], "sources": ["otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d", "otel:se93854d097ec", "otel:s6957342b0bf4", "otel:sdac173d533e6", "pprof:s3f2efc571022"], "status": "REASONED"},
+    "otel-images": {"text": "Dockerfiles COPY/select shipped config; EXPOSE 4317/4318/55679 is not host publication, but container peers may reach wildcard listeners.", "components": ["otel-dist"], "sources": ["otel-dist:s7a517873f7be", "otel-dist:sc806e2cc23e6"], "status": "REASONED"},
+    "otel-packages": {"text": "Systemd reads distribution otelcol.conf; OTELCOL_OPTIONS selects config.yaml; config|noreplace installation can retain local config, and postinstall manages service.", "components": ["otel-dist"], "sources": ["otel-dist:s96832924ecbd", "otel-dist:s3cf497a4401c", "otel-dist:s532d68e28e68", "otel-dist:saa59feb48156", "otel-dist:s73f6337cd50e", "otel-dist:sff25af5f7a79", "otel-dist:sd829f5067d73", "otel-dist:secd03f9c13d6", "otel-dist:s353fc01c0b2c", "otel-dist:s72fc7a0602d1"], "status": "REASONED"},
+    "otel-tls": {"text": "Require TLS on receivers/exporters and authentication on every receiver protocol accepting off-host data.", "components": ["otel-docs"], "sources": ["otel-docs:s5fc11440844b"], "status": "REASONED"},
+    "otel-auth": {"text": "Declare authenticator, start it in service.extensions, and attach each receiver protocol with auth.authenticator; Basic supports htpasswd/client_auth.", "components": ["otel-docs", "basicauth"], "sources": ["otel-docs:s5fc11440844b", "basicauth:s473397b3887e"], "status": "REASONED"},
+    "otel-bearer": {"text": "bearertokenauth accepts a static token or token file; filename takes precedence over token, and each file line with a non-whitespace field contributes its first whitespace-delimited field. The configurable header (default Authorization) and scheme (default Bearer) apply to HTTP and gRPC outgoing calls; the header becomes the lower-case gRPC metadata key. On incoming requests, Authenticate checks the canonical HTTP header or lower-case gRPC metadata key and compares its first value with each configured scheme-prefixed token and accepts any match; outgoing calls send only the first token.", "components": ["otel-docs", "bearertokenauth"], "sources": ["otel-docs:s5fc11440844b", "bearertokenauth:sc102b008afb0", "bearertokenauth:s664ba81d1aa6", "bearertokenauth:saa550790364b", "bearertokenauth:s93d4733c051d", "bearertokenauth:s828ec6427328", "bearertokenauth:s48a3bfa9c99e", "bearertokenauth:s4326cb59f96e", "bearertokenauth:sa8d47408d195"], "status": "REASONED"},
+    "otel-metrics": {"text": "Internal metrics factory defaults localhost:8888; shipped configs set 127.0.0.1:8888; 0.0.0.0:8888 scrape target is outbound.", "components": ["otel", "otel-dist"], "sources": ["otel:s9780bf233e75", "otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d"], "status": "REASONED"},
+    "otel-health": {"text": "Review enabled health-check 13133 independently of receiver authentication.", "components": ["health", "otel-dist"], "sources": ["health:s6ac60517accc", "otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d"], "status": "REASONED"},
+    "otel-k8s": {"text": "otelcol-k8s Dockerfile supplies no default config COPY/CMD; EXPOSE alone establishes no listener; Helm/operator are out of scope.", "components": ["otel-dist"], "sources": ["otel-dist:sb93573df35e2"], "status": "REASONED"},
+    "otel-minimal": {"text": "Run only required components and use a non-root process.", "components": ["otel-docs"], "sources": ["otel-docs:s5fc11440844b"], "status": "REASONED"},
+    "verify-inventory": {"text": "Inspect effective config, namespace TCP/UDP, publications and firewall; shipped wildcard listeners should become intended private listeners; outside failures need positive controls.", "components": ["otel-dist", "otel-docs", "phoenix-bind"], "sources": ["otel-dist:s08ca284a6d6f", "otel-dist:s9d2ef3c6b75d", "otel-docs:s5fc11440844b", "phoenix-bind:s19ffeb67866e", "phoenix-bind:sfc104ed5254a"], "status": "REASONED", "verify": [1]},
+    "verify-dashboard": {"text": "Langfuse curl is reachability only; fresh unauthenticated browser must show login rather than project data.", "components": ["langfuse"], "sources": ["langfuse:s34b0fb076e86"], "status": "REASONED", "verify": [1]},
+    "verify-lf-api": {"text": "Direct /api/public/projects pair should yield 401 without key and 200 with expected project ID; proxy-only results cannot prove native auth.", "components": ["langfuse"], "sources": ["langfuse:sfdfc0ea9fdc1"], "status": "REASONED", "verify": [1]},
+    "verify-collector": {"text": "Direct OTLP/HTTP JSON /v1/traces should reject anonymous 401/403 and admit configured auth 2xx; wrong content type and failed connections are inconclusive.", "components": ["otel-docs", "basicauth"], "sources": ["otel-docs:s5fc11440844b", "basicauth:s473397b3887e"], "status": "REASONED", "verify": [1]},
+    "verify-phoenix-admin": {"text": "Default admin/admin must fail with replacement password succeeding; with basic auth disabled, require local-login refusal and approved MFA IdP success.", "components": ["phoenix"], "sources": ["phoenix:s5a90699b7950"], "status": "REASONED"},
+    "verify-phoenix-read": {"text": "Anonymous /v1/projects should reject 401/403, versus exposed project data 2xx; 404, redirect, 415 and transport errors are inconclusive.", "components": ["phoenix", "curl"], "sources": ["phoenix:s5a90699b7950", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
+    "verify-phoenix-http": {"text": "Empty protobuf POST /v1/traces on 6006 tests admission, not persistence: anonymous rejects, write-authorized key admits, viewer key is not a positive control.", "components": ["phoenix", "phoenix-auth"], "sources": ["phoenix:s5a90699b7950", "phoenix-auth:sdbf548dbb448"], "status": "REASONED"},
+    "verify-phoenix-grpc": {"text": "Separate empty gRPC TraceService/Export requires UNAUTHENTICATED without key, OK with write key; auth-off anonymous OK and viewer PERMISSION_DENIED remain source-reasoned.", "components": ["phoenix-auth", "phoenix-bind"], "sources": ["phoenix-auth:sdbf548dbb448", "phoenix-bind:sfc104ed5254a"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->

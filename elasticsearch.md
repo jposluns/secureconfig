@@ -1,446 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-09-26",
-  "documentation_checked": "2026-09",
-  "body_sha256": "b7be20e1e922213f3221d68ed2688b87163c51f827766052d8f533076a1938ab",
-  "components": {
-    "es": {
-      "name": "Elasticsearch documentation",
-      "basis": "unknown",
-      "sources": {
-        "sad43b70af67a": "https://www.elastic.co/subscriptions",
-        "s64e4e307f36c": "https://www.elastic.co/docs/deploy-manage/security/self-auto-setup",
-        "se8bbf661f24e": "https://www.elastic.co/docs/reference/elasticsearch/command-line-tools/reset-password",
-        "sce3095052f8d": "https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/security-settings",
-        "s38b60fd8e2bf": "https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-elasticsearch-docker-configure",
-        "sc3d6362bc8f4": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/ldap",
-        "s0c10cfba4d6b": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role-mapping",
-        "s204396515260": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/anonymous-access",
-        "s0f65658e7273": "https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings",
-        "s2882d7d6f2fc": "https://www.elastic.co/docs/deploy-manage/security/logging-configuration/enabling-audit-logs",
-        "s5603a653318d": "https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/auding-settings",
-        "s4fb9bf780cf5": "https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf",
-        "see6eaa520863": "https://www.elastic.co/docs/reference/elasticsearch/security-privileges",
-        "sfc6fef9020b3": "https://www.elastic.co/docs/reference/elasticsearch/elasticsearch-audit-events"
-      }
-    },
-    "es-api": {
-      "name": "Elasticsearch API",
-      "basis": "8.x",
-      "sources": {
-        "s088db4f93f33": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role",
-        "s0c10cfba4d6b": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role-mapping",
-        "sb82b2da8da5d": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-user",
-        "sbec1f2938348": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-create-api-key"
-      }
-    },
-    "es819": {
-      "name": "Elasticsearch reference",
-      "basis": "8.19",
-      "sources": {
-        "s805957cad810": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-level-security.html",
-        "s52adbc714b10": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/document-level-security.html",
-        "s15feb5b3e00c": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-and-document-access-control.html",
-        "se332a9504a82": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-limitations.html",
-        "s03b37cd41154": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html",
-        "s1ce03cd781c3": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html",
-        "s3cac63e6ba14": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-s3.html",
-        "s28a1fe315963": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-gcs.html",
-        "s6279b842bc10": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-azure.html",
-        "sb98bd971e2f6": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html",
-        "s93987af8201d": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshot-restore.html",
-        "s3e5630e4430d": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-restore-snapshot.html"
-      }
-    },
-    "es8": {
-      "name": "Elasticsearch listener source",
-      "basis": "8.19.22",
-      "sources": {
-        "sa56cdc9270ea": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L112-L121",
-        "s46c7adfdc6c4": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L233-L239",
-        "s8ca2413b2af3": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L28-L42",
-        "s59c2dd10f083": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/http/HttpTransportSettings.java#L70-L89",
-        "s0310c5c2e42f": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/transport/TransportSettings.java#L34-L62",
-        "s6e6cf4d739bd": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/x-pack/plugin/security/cli/src/main/java/org/elasticsearch/xpack/security/cli/AutoConfigureNode.java#L788-L821",
-        "s70c493fe7770": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/x-pack/plugin/security/cli/src/main/java/org/elasticsearch/xpack/security/cli/AutoConfigureNode.java#L876-L891",
-        "s8d4c513fdf84": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/distribution/docker/src/docker/config/elasticsearch.yml#L1-L2"
-      }
-    },
-    "es9": {
-      "name": "Elasticsearch listener source",
-      "basis": "9.5.4",
-      "sources": {
-        "s666c63ad2a02": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L112-L121",
-        "s429c675c1092": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L233-L239",
-        "sa27fc323d90c": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L28-L42",
-        "s8fded6a7640c": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/http/HttpTransportSettings.java#L64-L83",
-        "s1f0a06e68675": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/transport/TransportSettings.java#L34-L57",
-        "scf100fafec80": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/x-pack/plugin/security/cli/src/main/java/org/elasticsearch/xpack/security/cli/AutoConfigureNode.java#L800-L833",
-        "s0ba542d80d53": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/x-pack/plugin/security/cli/src/main/java/org/elasticsearch/xpack/security/cli/AutoConfigureNode.java#L888-L903",
-        "sa4fd281c6186": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/distribution/docker/src/docker/config/elasticsearch.yml#L1-L2"
-      }
-    },
-    "images": {
-      "name": "Elasticsearch Docker library",
-      "basis": "8480a06d8ca03ca7da29a469fdbddb5f9f31df61",
-      "sources": {
-        "s09177781dc63": "https://github.com/docker-library/official-images/blob/8480a06d8ca03ca7da29a469fdbddb5f9f31df61/library/elasticsearch#L2-L19",
-        "sae45a2b7731f": "https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/config/elasticsearch.yml",
-        "sab290cdf87a1": "https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/config/elasticsearch.yml",
-        "s7088372053e9": "https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/config/elasticsearch.yml",
-        "s0c3512f7e923": "https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/Dockerfile#L123",
-        "s1683d032b409": "https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/Dockerfile#L38",
-        "s6c51d507efec": "https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/Dockerfile#L57",
-        "s5c4452cc7b82": "https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/Dockerfile#L99",
-        "s849d2f17dbc8": "https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/Dockerfile#L57",
-        "s30233ea32bf6": "https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/Dockerfile#L99"
-      }
-    },
-    "os": {
-      "name": "OpenSearch documentation",
-      "basis": "unknown",
-      "sources": {
-        "s73e416ebf765": "https://docs.opensearch.org/latest/security/configuration/demo-configuration/",
-        "s4e3281cb3d23": "https://docs.opensearch.org/latest/security/configuration/tls/",
-        "s07ddf2781a70": "https://docs.opensearch.org/latest/security/access-control/users-roles/",
-        "s204396515260": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/anonymous-access",
-        "sc3d6362bc8f4": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/ldap",
-        "s0e349fff0934": "https://docs.opensearch.org/latest/security/api/roles/create-role/",
-        "s4f63d2563816": "https://docs.opensearch.org/latest/security/api/users/create-user/",
-        "s1a9aa4907daf": "https://docs.opensearch.org/latest/security/api/role-mappings/create-role-mapping/",
-        "sfbdd4a41adf5": "https://docs.opensearch.org/latest/security/access-control/api-keys/",
-        "sa596b3a14984": "https://docs.opensearch.org/latest/security/api/api-keys/create/",
-        "s40051274ea31": "https://docs.opensearch.org/latest/security/configuration/security-admin/",
-        "sc921fd158473": "https://docs.opensearch.org/latest/security/configuration/configuration/",
-        "s4142fe7a4236": "https://docs.opensearch.org/latest/security/authentication-backends/basic-authc/",
-        "s3f64f7b4cf84": "https://docs.opensearch.org/latest/install-and-configure/configuring-opensearch/network-settings/",
-        "s2f39d5e48027": "https://docs.opensearch.org/latest/security/audit-logs/index/",
-        "seafbd3b9677e": "https://docs.opensearch.org/latest/security/api/audit/patch-audit-configuration/",
-        "s0d675c5ecd3c": "https://docs.opensearch.org/latest/security/api/audit/update-audit-configuration/",
-        "seafc6e5e5595": "https://docs.opensearch.org/latest/security/api/audit/get-audit-configuration/",
-        "s9ddd20a83871": "https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest",
-        "sbd093eef861b": "https://docs.opensearch.org/latest/security/access-control/permissions/",
-        "s7d28cfa527a1": "https://docs.opensearch.org/latest/security/access-control/anonymous-authentication/",
-        "sbad13e007c8f": "https://docs.opensearch.org/latest/security/audit-logs/field-reference/"
-      }
-    },
-    "os36": {
-      "name": "OpenSearch reference",
-      "basis": "3.6",
-      "sources": {
-        "s42d975e3cd92": "https://docs.opensearch.org/3.6/security/access-control/field-level-security/",
-        "sade7ff6b2bb3": "https://docs.opensearch.org/3.6/security/access-control/document-level-security/",
-        "sf0940d73ed6e": "https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/"
-      }
-    },
-    "os31": {
-      "name": "OpenSearch S3 reference",
-      "basis": "3.1",
-      "sources": {
-        "s089decb3330d": "https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/"
-      }
-    },
-    "os38": {
-      "name": "OpenSearch S3 source",
-      "basis": "3.8.0",
-      "sources": {
-        "sc57180db39be": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java"
-      }
-    },
-    "gcs38": {
-      "name": "OpenSearch GCS source",
-      "basis": "3.8.0",
-      "sources": {
-        "s631e8e354e26": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStoragePlugin.java#L125-L144",
-        "s9ff434d5553c": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageRepository.java#L74-L84",
-        "s7e94d736aed9": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageBlobStore.java#L259-L266",
-        "s1f1e29ea0106": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageBlobStore.java#L289-L291",
-        "sfe65ec0f6f8c": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageBlobStore.java#L370-L373",
-        "s90d52029d8d8": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageRepository.java#L147-L150",
-        "sfa59a5382e57": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageService.java#L247-L285"
-      }
-    },
-    "azure38": {
-      "name": "OpenSearch Azure source",
-      "basis": "3.8.0",
-      "sources": {
-        "s85d096884518": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureRepositoryPlugin.java#L133-L153",
-        "sc2902fffc253": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureRepository.java#L75-L107",
-        "s22bd450a8a30": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureBlobStore.java#L351-L394",
-        "sa4a6997abb47": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureBlobContainer.java#L140-L157",
-        "s287622988f18": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureRepository.java#L185-L200",
-        "sdea961e1b3be": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureStorageService.java#L195-L239"
-      }
-    },
-    "corecrypto38": {
-      "name": "OpenSearch repository crypto source",
-      "basis": "3.8.0",
-      "sources": {
-        "sb8b00bcc45a2": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/action/admin/cluster/repositories/put/PutRepositoryRequest.java#L248-L271",
-        "s6599b9d988eb": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/action/admin/cluster/crypto/CryptoSettings.java#L54-L63",
-        "s72395c1b171c": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/repositories/blobstore/BlobStoreProvider.java#L44-L96",
-        "s85afe5ff10ee": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/repositories/blobstore/BlobStoreRepository.java#L1073-L1085",
-        "sa01a018a581d": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/common/blobstore/EncryptedBlobStore.java#L39-L51",
-        "s248fbcd97369": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/common/blobstore/EncryptedBlobStore.java#L60-L67",
-        "s0ed030669257": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/common/blobstore/EncryptedBlobContainer.java#L94-L110",
-        "s726bdb2f7cab": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/crypto/CryptoHandlerRegistry.java#L144-L167",
-        "s73ce68ed27f1": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/crypto-kms/src/main/java/org/opensearch/crypto/kms/CryptoKmsPlugin.java#L26-L27",
-        "sc99eb8d33be7": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageRepository.java#L60",
-        "sef269e173cbc": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureRepository.java#L72",
-        "s2ee18ff27a14": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/repositories/blobstore/MeteredBlobStoreRepository.java#L49",
-        "sb739f2d2b9bb": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/repositories/blobstore/BlobStoreRepository.java#L1098"
-      }
-    },
-    "kb": {
-      "name": "Kibana reference",
-      "basis": "8.19",
-      "sources": {
-        "s0fe3c0d2e958": "https://www.elastic.co/guide/en/kibana/8.19/settings.html",
-        "sf71765842118": "https://www.elastic.co/guide/en/kibana/8.19/docker.html"
-      }
-    },
-    "kb8": {
-      "name": "Kibana source",
-      "basis": "8.19.22",
-      "sources": {
-        "sd77254a631b1": "https://github.com/elastic/kibana/blob/fd8e6f336cd7a18d0fd805de4608e1e38e0da163/config/kibana.yml#L4-L11",
-        "s14662915ed7e": "https://github.com/elastic/kibana/blob/fd8e6f336cd7a18d0fd805de4608e1e38e0da163/src/dev/build/tasks/os_packages/docker_generator/templates/kibana_yml.template.ts#L22-L26"
-      }
-    },
-    "kb9": {
-      "name": "Kibana source",
-      "basis": "9.5.4",
-      "sources": {
-        "sd0f70697a909": "https://github.com/elastic/kibana/blob/abf4eb613d64cdb3a6290671ce1cb67399677ab3/src/core/packages/http/server-internal/src/http_config.ts#L146-L155",
-        "s39aaa733de4b": "https://github.com/elastic/kibana/blob/abf4eb613d64cdb3a6290671ce1cb67399677ab3/src/dev/build/tasks/os_packages/docker_generator/templates/kibana_yml.template.ts#L22-L26"
-      }
-    },
-    "dash": {
-      "name": "OpenSearch Dashboards",
-      "basis": "3.8.0",
-      "sources": {
-        "sae1b7f23ca6c": "https://raw.githubusercontent.com/opensearch-project/OpenSearch-Dashboards/3.8.0/config/opensearch_dashboards.yml"
-      }
-    },
-    "dash36": {
-      "name": "Dashboards TLS reference",
-      "basis": "3.6",
-      "sources": {
-        "sea686fca5804": "https://docs.opensearch.org/3.6/install-and-configure/install-dashboards/tls/"
-      }
-    },
-    "cloud": {
-      "name": "Cloud provider documentation",
-      "basis": "unknown",
-      "sources": {
-        "s710600aeb168": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html",
-        "sdc6a5af591ff": "https://docs.cloud.google.com/storage/docs/encryption",
-        "saeb8db497f20": "https://learn.microsoft.com/en-us/azure/storage/common/storage-service-encryption",
-        "se1e1c91f80b4": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html",
-        "se54783905d19": "https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html",
-        "sc53339f5429f": "https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html"
-      }
-    },
-    "host": {
-      "name": "Host inspection documentation",
-      "basis": "unknown",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html",
-        "s64522c42b5bc": "https://man7.org/linux/man-pages/man5/systemd.unit.5.html",
-        "s1b4e67e38127": "https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html",
-        "s42b4720299f5": "https://man7.org/linux/man-pages/man8/findmnt.8.html",
-        "sd23c3d0f42a7": "https://man7.org/linux/man-pages/man8/lsblk.8.html",
-        "s252144371961": "https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html",
-        "s9823c4e9efa4": "https://man7.org/linux/man-pages/man1/systemctl.1.html"
-      }
-    },
-    "os-license-source": {
-      "name": "OpenSearch Security licence source",
-      "basis": "4ba3cc0e2ebec61b726b227fdf51e55f4a502182",
-      "sources": {
-        "s6e10cf9ec35a": "https://github.com/opensearch-project/security/blob/4ba3cc0e2ebec61b726b227fdf51e55f4a502182/LICENSE.txt"
-      }
-    },
-    "os-users-source": {
-      "name": "OpenSearch demo users source",
-      "basis": "03a224d16045a8f561e2d7d84b8765c95309524c",
-      "sources": {
-        "se8c473c01153": "https://github.com/opensearch-project/security/blob/03a224d16045a8f561e2d7d84b8765c95309524c/config/internal_users.yml"
-      }
-    }
-  },
-  "claims": {
-    "es-tier": {"text": "Self-managed 8.x TLS, native users, RBAC, REST keys, anonymous controls and CORS are free Basic; LDAP/audit and FLS/DLS require Platinum/Enterprise, with current Platinum restricted to existing customers.", "components": ["es"], "sources": ["es:sad43b70af67a"], "status": "REASONED"},
-    "es-auto": {"text": "Eligible initial startup enables auth, HTTP/transport TLS and elastic password; redirected output, unwritable config or existing settings can skip setup, with stated discovery exceptions; packages require password reset.", "components": ["es"], "sources": ["es:s64e4e307f36c", "es:se8bbf661f24e"], "status": "REASONED"},
-    "es-tls": {"text": "Keep xpack.security.enabled and HTTP TLS enabled; repair CA trust/certificates instead of disabling protection.", "components": ["es"], "sources": ["es:sce3095052f8d"], "status": "REASONED"},
-    "es-bind": {"text": "network.host defaults `_local_` on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback.", "components": ["es8", "es9"], "sources": ["es8:sa56cdc9270ea", "es8:s46c7adfdc6c4", "es8:s8ca2413b2af3", "es9:s666c63ad2a02", "es9:s429c675c1092", "es9:sa27fc323d90c"], "status": "REASONED"},
-    "es-http-range": {"text": "HTTP defaults to an available port in 9200-9300, subject to effective host/bind/publish settings.", "components": ["es8", "es9"], "sources": ["es8:s59c2dd10f083", "es9:s8fded6a7640c"], "status": "REASONED"},
-    "es-transport-range": {"text": "Transport defaults to an available port in 9300-9399; inspect effective profile and actual listener ports.", "components": ["es8", "es9"], "sources": ["es8:s0310c5c2e42f", "es9:s1f0a06e68675"], "status": "REASONED"},
-    "es-auto-http": {"text": "Auto-configuration writes http.host=0.0.0.0 only when none of the three HTTP or three network address settings has a value, including enrollment.", "components": ["es8", "es9"], "sources": ["es8:s6e6cf4d739bd", "es9:scf100fafec80"], "status": "REASONED"},
-    "es-auto-transport": {"text": "Transport address guard respects existing settings; new-cluster wildcard is commented and enrollment activates it only for a discovered nonlocal, nonloopback publish address.", "components": ["es8", "es9"], "sources": ["es8:s6e6cf4d739bd", "es8:s70c493fe7770", "es9:scf100fafec80", "es9:s0ba542d80d53"], "status": "REASONED"},
-    "es-docker": {"text": "Pinned image map covers 8.19.22/9.4.6/9.5.3; shipped network.host=0.0.0.0 widens API and transport unless overridden. EXPOSE includes 9300, so avoid -P, host networking and untrusted peers.", "components": ["images", "es"], "sources": ["images:s09177781dc63", "images:sae45a2b7731f", "images:sab290cdf87a1", "images:s7088372053e9", "images:s0c3512f7e923", "images:s1683d032b409", "images:s6c51d507efec", "images:s5c4452cc7b82", "images:s849d2f17dbc8", "images:s30233ea32bf6", "es:s38b60fd8e2bf"], "status": "REASONED"},
-    "es-source-docker": {"text": "Source configurations at 8.19.22/9.5.4 also set network.host wildcard, making both auto-configuration address guards false.", "components": ["es8", "es9"], "sources": ["es8:s8d4c513fdf84", "es9:sa4fd281c6186"], "status": "REASONED"},
-    "es-role": {"text": "Give each app an index-read role and dedicated native user; manage_own_api_key permits self-issued keys without broader index access, and superuser is not an app role.", "components": ["es-api"], "sources": ["es-api:s088db4f93f33", "es-api:s0c10cfba4d6b", "es-api:sb82b2da8da5d"], "status": "REASONED"},
-    "credential-files": {"text": "Use protected 0600 header/request/response files and verified CA input; base64 Basic is not encryption and file input does not prevent file readers or tracing.", "components": ["host"], "sources": ["host:s2b2686afaf41"], "status": "REASONED"},
-    "es-key": {"text": "Explicit API-key role descriptors intersect creator permissions; omitted descriptors inherit a snapshot, omitted expiration never expires, and an API key cannot create another privileged key.", "components": ["es-api"], "sources": ["es-api:sbec1f2938348"], "status": "REASONED"},
-    "es-ldap": {"text": "Optional paid LDAP mapping binds the specific realm and group DN; native-user roles are assigned through the user API.", "components": ["es"], "sources": ["es:sc3d6362bc8f4", "es:s0c10cfba4d6b"], "status": "REASONED"},
-    "es-fls": {"text": "8.19 field_security.grant restricts concrete fields, not aliases; metadata remains accessible and omission grants all fields. Minimum guide scope 8.0 is not an introduction claim.", "components": ["es819"], "sources": ["es819:s805957cad810"], "status": "REASONED"},
-    "es-dls": {"text": "8.19 query restricts documents; omission removes DLS. Keep tenant readers read-only and remove unrestricted roles that combine to defeat restrictions.", "components": ["es819"], "sources": ["es819:s52adbc714b10", "es819:s15feb5b3e00c"], "status": "REASONED"},
-    "es-fls-limits": {"text": "DLS has aggregate/scoring inference channels and query/API restrictions including joins, lookups, percolate and date now; test actual queries and prefer separate indices for stronger isolation.", "components": ["es819"], "sources": ["es819:se332a9504a82"], "status": "REASONED"},
-    "es-key-review": {"text": "Review previously issued key permission snapshots separately after changing roles; role edits alone do not establish repaired key restrictions.", "components": ["es819"], "sources": ["es819:s15feb5b3e00c"], "status": "REASONED"},
-    "es-anonymous": {"text": "Remove anonymous.roles from every effective node configuration and restart; no roles disables anonymous access. A tested 401 alone cannot prove it is globally off.", "components": ["es"], "sources": ["es:s204396515260"], "status": "REASONED"},
-    "es-cors": {"text": "CORS defaults disabled; if needed configure exact origin, methods and headers, restart nodes and retain authorization.", "components": ["es"], "sources": ["es:s0f65658e7273"], "status": "REASONED"},
-    "es-audit": {"text": "Audit defaults disabled; enable on each 8.x node with restart and collect CLUSTERNAME_audit.json independently. Dynamic enablement documented for 9.5+ does not apply to 8.x.", "components": ["es"], "sources": ["es:s2882d7d6f2fc"], "status": "REASONED"},
-    "es-audit-body": {"text": "Request-body emission defaults false; keep it off and avoid event exclusions/ignore policies suppressing authentication_failed.", "components": ["es"], "sources": ["es:s5603a653318d"], "status": "REASONED"},
-    "os-tier": {"text": "OpenSearch Security is free Apache-2.0 with no paid security tier; keep authentication and TLS enabled.", "components": ["os-license-source"], "sources": ["os-license-source:s6e10cf9ec35a"], "status": "REASONED"},
-    "os-demo-users": {"text": "From 2.12 demo setup requires initial admin password but only changes admin; six other seeded users retain demo credentials until removed/replaced and applied to the live security index.", "components": ["os", "os-users-source"], "sources": ["os:s73e416ebf765", "os-users-source:se8c473c01153"], "status": "REASONED"},
-    "os-tls": {"text": "Replace demo certificates; REST TLS defaults false underneath demo setup and requires plugins.security.ssl.http.enabled=true with production certificates.", "components": ["os"], "sources": ["os:s4e3281cb3d23"], "status": "REASONED"},
-    "os-rbac": {"text": "Create a custom index-read role and internal user with explicit mapping; Security REST administration requires its own authorization and other mappings may add grants.", "components": ["os"], "sources": ["os:s07ddf2781a70", "os:s204396515260", "os:sc3d6362bc8f4", "os:s0e349fff0934", "os:s4f63d2563816", "os:s1a9aa4907daf"], "status": "REASONED"},
-    "os-api-key": {"text": "Native scoped keys require 3.7+ and security administrators; enable api_tokens and explicit lifetime/count limits, using index_pattern and duration_seconds rather than Elasticsearch fields.", "components": ["os"], "sources": ["os:sfbdd4a41adf5", "os:sa596b3a14984"], "status": "REASONED"},
-    "os-key-default": {"text": "Omitted token duration uses max_duration_seconds, documented default 7776000; example caps at 86400 with 100 tokens, and returned token is retrievable only once.", "components": ["os"], "sources": ["os:sa596b3a14984"], "status": "REASONED"},
-    "os-apply": {"text": "securityadmin applies local configuration to the live index; back up first, use file/type-limited upload, production CA/admin certificate and hostname verification because stale files overwrite live changes.", "components": ["os"], "sources": ["os:s40051274ea31"], "status": "REASONED"},
-    "os-fls": {"text": "3.6 FLS/DLS recipe uses JSON-string dls and visible tenant_id in fls; review all roles and inclusion/exclusion interactions, not Elasticsearch role-combination assumptions.", "components": ["os36"], "sources": ["os36:s42d975e3cd92", "os36:sade7ff6b2bb3"], "status": "REASONED"},
-    "os-dls": {"text": "dfm_empty_overrides_all affects unrestricted-role precedence; DLS does not constrain writes and adaptive filter-level DLS limits APIs/cross-cluster search. Tokens need independent restriction tests.", "components": ["os36"], "sources": ["os36:sade7ff6b2bb3"], "status": "REASONED"},
-    "os-anonymous": {"text": "Set live anonymous_auth_enabled=false while preserving authentication domains; update through securityadmin, not just local YAML.", "components": ["os"], "sources": ["os:sc921fd158473", "os:s4142fe7a4236"], "status": "REASONED"},
-    "os-cors": {"text": "CORS defaults false; exact-origin static settings go in opensearch.yml and require restart, independently of authentication.", "components": ["os"], "sources": ["os:s3f64f7b4cf84"], "status": "REASONED"},
-    "os-audit": {"text": "Auditing needs destination and enabled config; internal_opensearch stores daily audit indexes, while shipped enabled=true alone records nothing without storage type.", "components": ["os"], "sources": ["os:s2f39d5e48027"], "status": "REASONED"},
-    "os-audit-body": {"text": "Read live audit config, enable REST and disable request-body logging via admin-certificate PATCH; preserve defaults and do not suppress FAILED_LOGIN.", "components": ["os"], "sources": ["os:seafbd3b9677e", "os:s0d675c5ecd3c"], "status": "REASONED"},
-    "os-audit-headers": {"text": "exclude_sensitive_headers defaults true; readonly REST fields require complete audit-file application. Read back enabled, REST, body=false and headers=true separately.", "components": ["os"], "sources": ["os:seafc6e5e5595", "os:s0d675c5ecd3c"], "status": "REASONED"},
-    "storage": {"text": "Use OS/provider encryption below path.data, including logs/swap/local snapshots; path.data only selects a directory and encryption-at-rest support is not a product encryption switch.", "components": ["es819", "os"], "sources": ["es819:s03b37cd41154", "es819:s1ce03cd781c3", "os:s9ddd20a83871"], "status": "REASONED"},
-    "mount-enforcement": {"text": "RequiresMountsFor plus AssertPathIsMountPoint prevents ordinary-directory fallback with systemd; reload manager and verify encrypted device chain separately.", "components": ["host"], "sources": ["host:s64522c42b5bc"], "status": "REASONED"},
-    "snapshot-boundary": {"text": "Ordinary snapshots use free Basic/OpenSearch; remote repository encryption is independent of node disks and authorized server-side downloads are decrypted.", "components": ["es", "os31", "cloud"], "sources": ["es:s4fb9bf780cf5", "os31:s089decb3330d", "cloud:s710600aeb168"], "status": "REASONED"},
-    "cloud-defaults": {"text": "New AWS S3, GCS and Azure objects are encrypted server-side by default; assess historical objects and customer key ownership separately.", "components": ["cloud"], "sources": ["cloud:s710600aeb168", "cloud:sdc6a5af591ff", "cloud:saeb8db497f20"], "status": "REASONED"},
-    "es-s3": {"text": "8.19 server_side_encryption defaults false; true requests AES256 SSE-S3, not client encryption. Omit it when using bucket-default KMS and verify resulting metadata.", "components": ["es819"], "sources": ["es819:s3cac63e6ba14"], "status": "REASONED"},
-    "os-s3": {"text": "3.1 removed server_side_encryption; server_side_encryption_type accepts AES256/aws:kms/bucket_default. Default changed from bucket_default to AES256 in 3.8; explicitly select intended mode.", "components": ["os31", "os38"], "sources": ["os31:s089decb3330d", "os38:sc57180db39be"], "status": "REASONED"},
-    "os-s3-kms": {"text": "Explicit KMS repository mode uses server_side_encryption_kms_key_id ARN with object/KMS permissions; this is server-side encryption and settings are not Elasticsearch-compatible.", "components": ["os31", "cloud"], "sources": ["os31:s089decb3330d", "cloud:se1e1c91f80b4"], "status": "REASONED"},
-    "es-gcs-azure": {"text": "8.19 GCS/Azure setting lists document no client-side-encryption switch; configure provider key policy and access. GCS supplied keys remain server-side and Azure keys/SAS are authentication.", "components": ["es819"], "sources": ["es819:s28a1fe315963", "es819:s6279b842bc10"], "status": "REASONED"},
-    "os-gcs-azure": {"text": "Follow 3.6 plugin/credential workflow. This guide's review of OpenSearch 3.8.0 GCS and Azure plugin-specific settings, blob upload and client construction found no plugin-specific client-side-encryption setting; the core repository crypto_settings path wraps the non-server-side-encryption blob store in client-side EncryptedBlobStore when crypto metadata is supplied. The cited common provider and GCS/Azure createBlobStore methods show a path to both repository types; this guide's assessment is that end-to-end applicability and live encryption behaviour for either type remain unestablished. The path requires a registered key-provider plugin matching key_provider_type and a key_provider_name; the cited tree includes an aws-kms provider, while available providers in a deployment, minimum versions and later-release behaviour remain unestablished. This guide's advice: Configure required customer-managed encryption through provider policy and grant key access.", "components": ["os36", "gcs38", "azure38", "corecrypto38", "cloud"], "sources": ["os36:sf0940d73ed6e", "gcs38:s631e8e354e26", "gcs38:s9ff434d5553c", "gcs38:s7e94d736aed9", "gcs38:sfa59a5382e57", "azure38:s85d096884518", "azure38:sc2902fffc253", "azure38:s22bd450a8a30", "azure38:sdea961e1b3be", "gcs38:s1f1e29ea0106", "gcs38:sfe65ec0f6f8c", "gcs38:s90d52029d8d8", "azure38:sa4a6997abb47", "azure38:s287622988f18", "corecrypto38:sb8b00bcc45a2", "corecrypto38:s6599b9d988eb", "corecrypto38:s72395c1b171c", "corecrypto38:s85afe5ff10ee", "corecrypto38:sa01a018a581d", "corecrypto38:s248fbcd97369", "corecrypto38:s0ed030669257", "corecrypto38:s726bdb2f7cab", "corecrypto38:s73ce68ed27f1", "cloud:sdc6a5af591ff", "cloud:saeb8db497f20", "corecrypto38:sc99eb8d33be7", "corecrypto38:sef269e173cbc", "corecrypto38:s2ee18ff27a14", "corecrypto38:sb739f2d2b9bb"], "status": "REASONED"},
-    "snapshot-integrity": {"text": "Keep repositories private and keys recoverable; do not rewrite active repository files. Configuration backups are separate and security-state snapshots are sensitive.", "components": ["es819"], "sources": ["es819:sb98bd971e2f6", "es819:s93987af8201d"], "status": "REASONED"},
-    "kibana-default": {"text": "Kibana defaults HTTP localhost:5601 with server TLS disabled; 8.19.22/9.5.4 Docker templates explicitly use wildcard host, requiring override/publication review.", "components": ["kb", "kb8", "kb9"], "sources": ["kb:s0fe3c0d2e958", "kb8:sd77254a631b1", "kb8:s14662915ed7e", "kb9:sd0f70697a909", "kb9:s39aaa733de4b"], "status": "REASONED"},
-    "kibana-tls": {"text": "Free Basic 8.19 server.ssl certificate/key protects incoming UI traffic; elasticsearch.ssl CA/full verification protects the separate backend hop.", "components": ["kb"], "sources": ["kb:s0fe3c0d2e958"], "status": "REASONED"},
-    "dash-default": {"text": "Dashboards 3.8.0 sample defaults localhost:5601 with server TLS disabled; inspect installation/container overrides.", "components": ["dash"], "sources": ["dash:sae1b7f23ca6c"], "status": "REASONED"},
-    "dash-tls": {"text": "Dashboards server.ssl protects UI, cookie.secure restricts session cookie to HTTPS, and opensearch.ssl CA/full verification protects the backend hop; restart after changes.", "components": ["dash36"], "sources": ["dash36:sea686fca5804"], "status": "REASONED"},
-    "ui-network": {"text": "UI binding is independent of 9200/9300; loopback suits only a same-namespace proxy, while private access requires intended interface, matching certificates and network restrictions.", "components": ["kb", "dash36"], "sources": ["kb:sf71765842118", "dash36:sea686fca5804"], "status": "REASONED"},
-    "verify-rbac": {"text": "Known app-data/other-data documents distinguish broad access from scoped 200/403 for user and key; 401/404/errors are inconclusive and pre-3.7 OpenSearch uses the user only.", "components": ["es", "os"], "sources": ["es:see6eaa520863", "os:sbd093eef861b"], "status": "REASONED", "verify": [1]},
-    "verify-anonymous": {"text": "Require effective anonymous settings on every node plus a formerly anonymous-readable known document becoming 401 while admin still gets 200; endpoint-specific 401 alone is insufficient.", "components": ["es", "os"], "sources": ["es:s204396515260", "os:s7d28cfa527a1"], "status": "REASONED", "verify": [1]},
-    "verify-tls": {"text": "Admin HTTPS must return 200/cluster JSON before interpreting plaintext; TLS listener must return no HTTP status, with DNS/timeouts/unreachable states inconclusive.", "components": ["es", "os"], "sources": ["es:sce3095052f8d", "os:s4e3281cb3d23"], "status": "REASONED", "verify": [1]},
-    "verify-cors": {"text": "Inspect preflight headers: no grant to untrusted origin, exact grant for trusted enabled origin; with CORS disabled neither is granted.", "components": ["es", "os"], "sources": ["es:s0f65658e7273", "os:s3f64f7b4cf84"], "status": "REASONED", "verify": [1]},
-    "verify-audit": {"text": "Fresh failed-authentication probe must correlate with new authentication_failed/FAILED_LOGIN in node and independent collector records; 401 alone proves no delivery.", "components": ["es", "os"], "sources": ["es:sfc6fef9020b3", "os:sbad13e007c8f"], "status": "REASONED", "verify": [1]},
-    "verify-audit-body": {"text": "Compare unique marker present with body logging enabled and absent from a new matching event when disabled; independently verify header exclusion and effective configuration.", "components": ["es", "os"], "sources": ["es:s5603a653318d", "os:sbad13e007c8f"], "status": "REASONED", "verify": [1]},
-    "verify-listeners": {"text": "Locate actual running listeners/ports and inspect publication; intentional bridge-container wildcard differs from host-network exposure and no output alone is inconclusive.", "components": ["es8", "es9", "host"], "sources": ["es8:s59c2dd10f083", "es9:s1f0a06e68675", "host:s1b4e67e38127"], "status": "REASONED", "verify": [2]},
-    "verify-fls-dls": {"text": "Two-tenant fixture compares unrestricted and actual restricted credentials through search, GET, requested fields and aggregations, with allowed-field and administrator controls; no inference-proof claim.", "components": ["es819", "os36"], "sources": ["es819:s805957cad810", "es819:s52adbc714b10", "os36:s42d975e3cd92", "os36:sade7ff6b2bb3"], "status": "REASONED", "verify": [3]},
-    "verify-storage": {"text": "Data-path device chain must traverse intended encryption mapping; unrelated mapping or successful unlocked reads proves nothing, and provider volumes need their own metadata.", "components": ["host"], "sources": ["host:s42b4720299f5", "host:sd23c3d0f42a7", "host:s252144371961"], "status": "REASONED", "verify": [4]},
-    "verify-mount": {"text": "Isolated unavailable-mount fixture must fail startup for that reason without writes to the ordinary directory; restored encrypted mount must start successfully.", "components": ["host"], "sources": ["host:s64522c42b5bc", "host:s9823c4e9efa4"], "status": "REASONED", "verify": [5]},
-    "verify-snapshot": {"text": "Harmless explicit-index snapshot/restore must complete and preserve both fixtures without global/security state; timeouts need operation-state inspection before retry.", "components": ["es819", "os36"], "sources": ["es819:sb98bd971e2f6", "es819:s3e5630e4430d", "os36:sf0940d73ed6e"], "status": "REASONED", "verify": [3]},
-    "verify-object-key": {"text": "Inspect actual new/retained repository object mode/key; controlled object-read and KMS-only denial need provider evidence plus authorized controls. Repository verify proves neither encryption nor isolation.", "components": ["cloud"], "sources": ["cloud:se54783905d19", "cloud:sc53339f5429f", "cloud:se1e1c91f80b4"], "status": "REASONED", "verify": [6]},
-    "verify-ui": {"text": "Require expected CA-validated HTTPS and rejected plaintext UI after an exposed HTTP fixture; verify prohibited-network denial with authorized success and effective private binding.", "components": ["kb", "dash36", "host"], "sources": ["kb:s0fe3c0d2e958", "dash36:sea686fca5804", "host:s1b4e67e38127"], "status": "REASONED", "verify": [7, 8]},
-    "verify-ui-backend": {"text": "Browser TLS does not prove backend full verification or Dashboards Secure cookie; inspect both separately with effective settings and publication.", "components": ["kb", "dash36"], "sources": ["kb:s0fe3c0d2e958", "dash36:sea686fca5804"], "status": "REASONED", "verify": [7, 8]}
-  }
-}
----
 # Elasticsearch and OpenSearch: keep security switched on
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Elasticsearch API 8.x, Elasticsearch reference 8.19, Elasticsearch listener source 8.19.22 and 9.5.4, OpenSearch reference 3.6, OpenSearch S3 reference 3.1, OpenSearch S3 source 3.8.0, OpenSearch GCS source 3.8.0, and OpenSearch Azure source 3.8.0, plus 5 more recorded bases; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 65 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- es: Elasticsearch documentation (unknown)
-- es-api: Elasticsearch API (8.x)
-- es819: Elasticsearch reference (8.19)
-- es8: Elasticsearch listener source (8.19.22)
-- es9: Elasticsearch listener source (9.5.4)
-- images: Elasticsearch Docker library (8480a06d8ca03ca7da29a469fdbddb5f9f31df61)
-- os: OpenSearch documentation (unknown)
-- os36: OpenSearch reference (3.6)
-- os31: OpenSearch S3 reference (3.1)
-- os38: OpenSearch S3 source (3.8.0)
-- gcs38: OpenSearch GCS source (3.8.0)
-- azure38: OpenSearch Azure source (3.8.0)
-- corecrypto38: OpenSearch repository crypto source (3.8.0)
-- kb: Kibana reference (8.19)
-- kb8: Kibana source (8.19.22)
-- kb9: Kibana source (9.5.4)
-- dash: OpenSearch Dashboards (3.8.0)
-- dash36: Dashboards TLS reference (3.6)
-- cloud: Cloud provider documentation (unknown)
-- host: Host inspection documentation (unknown)
-- os-license-source: OpenSearch Security licence source (4ba3cc0e2ebec61b726b227fdf51e55f4a502182)
-- os-users-source: OpenSearch demo users source (03a224d16045a8f561e2d7d84b8765c95309524c)
-
-Claims (full source mapping in the front matter):
-
-- es-tier (REASONED; es): Self-managed 8.x TLS, native users, RBAC, REST keys, anonymous controls and CORS are free Basic; LDAP/audit and FLS/DLS require Platinum/Enterprise, with current Platinum restricted to existing customers.
-- es-auto (REASONED; es): Eligible initial startup enables auth, HTTP/transport TLS and elastic password; redirected output, unwritable config or existing settings can skip setup, with stated discovery exceptions; packages require password reset.
-- es-tls (REASONED; es): Keep xpack.security.enabled and HTTP TLS enabled; repair CA trust/certificates instead of disabling protection.
-- es-bind (REASONED; es8, es9): network.host defaults `_local_` on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback.
-- es-http-range (REASONED; es8, es9): HTTP defaults to an available port in 9200-9300, subject to effective host/bind/publish settings.
-- es-transport-range (REASONED; es8, es9): Transport defaults to an available port in 9300-9399; inspect effective profile and actual listener ports.
-- es-auto-http (REASONED; es8, es9): Auto-configuration writes http.host=0.0.0.0 only when none of the three HTTP or three network address settings has a value, including enrollment.
-- es-auto-transport (REASONED; es8, es9): Transport address guard respects existing settings; new-cluster wildcard is commented and enrollment activates it only for a discovered nonlocal, nonloopback publish address.
-- es-docker (REASONED; images, es): Pinned image map covers 8.19.22/9.4.6/9.5.3; shipped network.host=0.0.0.0 widens API and transport unless overridden. EXPOSE includes 9300, so avoid -P, host networking and untrusted peers.
-- es-source-docker (REASONED; es8, es9): Source configurations at 8.19.22/9.5.4 also set network.host wildcard, making both auto-configuration address guards false.
-- es-role (REASONED; es-api): Give each app an index-read role and dedicated native user; manage_own_api_key permits self-issued keys without broader index access, and superuser is not an app role.
-- credential-files (REASONED; host): Use protected 0600 header/request/response files and verified CA input; base64 Basic is not encryption and file input does not prevent file readers or tracing.
-- es-key (REASONED; es-api): Explicit API-key role descriptors intersect creator permissions; omitted descriptors inherit a snapshot, omitted expiration never expires, and an API key cannot create another privileged key.
-- es-ldap (REASONED; es): Optional paid LDAP mapping binds the specific realm and group DN; native-user roles are assigned through the user API.
-- es-fls (REASONED; es819): 8.19 field_security.grant restricts concrete fields, not aliases; metadata remains accessible and omission grants all fields. Minimum guide scope 8.0 is not an introduction claim.
-- es-dls (REASONED; es819): 8.19 query restricts documents; omission removes DLS. Keep tenant readers read-only and remove unrestricted roles that combine to defeat restrictions.
-- es-fls-limits (REASONED; es819): DLS has aggregate/scoring inference channels and query/API restrictions including joins, lookups, percolate and date now; test actual queries and prefer separate indices for stronger isolation.
-- es-key-review (REASONED; es819): Review previously issued key permission snapshots separately after changing roles; role edits alone do not establish repaired key restrictions.
-- es-anonymous (REASONED; es): Remove anonymous.roles from every effective node configuration and restart; no roles disables anonymous access. A tested 401 alone cannot prove it is globally off.
-- es-cors (REASONED; es): CORS defaults disabled; if needed configure exact origin, methods and headers, restart nodes and retain authorization.
-- es-audit (REASONED; es): Audit defaults disabled; enable on each 8.x node with restart and collect CLUSTERNAME_audit.json independently. Dynamic enablement documented for 9.5+ does not apply to 8.x.
-- es-audit-body (REASONED; es): Request-body emission defaults false; keep it off and avoid event exclusions/ignore policies suppressing authentication_failed.
-- os-tier (REASONED; os-license-source): OpenSearch Security is free Apache-2.0 with no paid security tier; keep authentication and TLS enabled.
-- os-demo-users (REASONED; os, os-users-source): From 2.12 demo setup requires initial admin password but only changes admin; six other seeded users retain demo credentials until removed/replaced and applied to the live security index.
-- os-tls (REASONED; os): Replace demo certificates; REST TLS defaults false underneath demo setup and requires plugins.security.ssl.http.enabled=true with production certificates.
-- os-rbac (REASONED; os): Create a custom index-read role and internal user with explicit mapping; Security REST administration requires its own authorization and other mappings may add grants.
-- os-api-key (REASONED; os): Native scoped keys require 3.7+ and security administrators; enable api_tokens and explicit lifetime/count limits, using index_pattern and duration_seconds rather than Elasticsearch fields.
-- os-key-default (REASONED; os): Omitted token duration uses max_duration_seconds, documented default 7776000; example caps at 86400 with 100 tokens, and returned token is retrievable only once.
-- os-apply (REASONED; os): securityadmin applies local configuration to the live index; back up first, use file/type-limited upload, production CA/admin certificate and hostname verification because stale files overwrite live changes.
-- os-fls (REASONED; os36): 3.6 FLS/DLS recipe uses JSON-string dls and visible tenant_id in fls; review all roles and inclusion/exclusion interactions, not Elasticsearch role-combination assumptions.
-- os-dls (REASONED; os36): dfm_empty_overrides_all affects unrestricted-role precedence; DLS does not constrain writes and adaptive filter-level DLS limits APIs/cross-cluster search. Tokens need independent restriction tests.
-- os-anonymous (REASONED; os): Set live anonymous_auth_enabled=false while preserving authentication domains; update through securityadmin, not just local YAML.
-- os-cors (REASONED; os): CORS defaults false; exact-origin static settings go in opensearch.yml and require restart, independently of authentication.
-- os-audit (REASONED; os): Auditing needs destination and enabled config; internal_opensearch stores daily audit indexes, while shipped enabled=true alone records nothing without storage type.
-- os-audit-body (REASONED; os): Read live audit config, enable REST and disable request-body logging via admin-certificate PATCH; preserve defaults and do not suppress FAILED_LOGIN.
-- os-audit-headers (REASONED; os): exclude_sensitive_headers defaults true; readonly REST fields require complete audit-file application. Read back enabled, REST, body=false and headers=true separately.
-- storage (REASONED; es819, os): Use OS/provider encryption below path.data, including logs/swap/local snapshots; path.data only selects a directory and encryption-at-rest support is not a product encryption switch.
-- mount-enforcement (REASONED; host): RequiresMountsFor plus AssertPathIsMountPoint prevents ordinary-directory fallback with systemd; reload manager and verify encrypted device chain separately.
-- snapshot-boundary (REASONED; es, os31, cloud): Ordinary snapshots use free Basic/OpenSearch; remote repository encryption is independent of node disks and authorized server-side downloads are decrypted.
-- cloud-defaults (REASONED; cloud): New AWS S3, GCS and Azure objects are encrypted server-side by default; assess historical objects and customer key ownership separately.
-- es-s3 (REASONED; es819): 8.19 server_side_encryption defaults false; true requests AES256 SSE-S3, not client encryption. Omit it when using bucket-default KMS and verify resulting metadata.
-- os-s3 (REASONED; os31, os38): 3.1 removed server_side_encryption; server_side_encryption_type accepts AES256/aws:kms/bucket_default. Default changed from bucket_default to AES256 in 3.8; explicitly select intended mode.
-- os-s3-kms (REASONED; os31, cloud): Explicit KMS repository mode uses server_side_encryption_kms_key_id ARN with object/KMS permissions; this is server-side encryption and settings are not Elasticsearch-compatible.
-- es-gcs-azure (REASONED; es819): 8.19 GCS/Azure setting lists document no client-side-encryption switch; configure provider key policy and access. GCS supplied keys remain server-side and Azure keys/SAS are authentication.
-- os-gcs-azure (REASONED; os36, gcs38, azure38, corecrypto38, cloud): Follow 3.6 plugin/credential workflow. This guide's review of OpenSearch 3.8.0 GCS and Azure plugin-specific settings, blob upload and client construction found no plugin-specific client-side-encryption setting; the core repository crypto_settings path wraps the non-server-side-encryption blob store in client-side EncryptedBlobStore when crypto metadata is supplied. The cited common provider and GCS/Azure createBlobStore methods show a path to both repository types; this guide's assessment is that end-to-end applicability and live encryption behaviour for either type remain unestablished. The path requires a registered key-provider plugin matching key_provider_type and a key_provider_name; the cited tree includes an aws-kms provider, while available providers in a deployment, minimum versions and later-release behaviour remain unestablished. This guide's advice: Configure required customer-managed encryption through provider policy and grant key access.
-- snapshot-integrity (REASONED; es819): Keep repositories private and keys recoverable; do not rewrite active repository files. Configuration backups are separate and security-state snapshots are sensitive.
-- kibana-default (REASONED; kb, kb8, kb9): Kibana defaults HTTP localhost:5601 with server TLS disabled; 8.19.22/9.5.4 Docker templates explicitly use wildcard host, requiring override/publication review.
-- kibana-tls (REASONED; kb): Free Basic 8.19 server.ssl certificate/key protects incoming UI traffic; elasticsearch.ssl CA/full verification protects the separate backend hop.
-- dash-default (REASONED; dash): Dashboards 3.8.0 sample defaults localhost:5601 with server TLS disabled; inspect installation/container overrides.
-- dash-tls (REASONED; dash36): Dashboards server.ssl protects UI, cookie.secure restricts session cookie to HTTPS, and opensearch.ssl CA/full verification protects the backend hop; restart after changes.
-- ui-network (REASONED; kb, dash36): UI binding is independent of 9200/9300; loopback suits only a same-namespace proxy, while private access requires intended interface, matching certificates and network restrictions.
-- verify-rbac (REASONED; es, os): Known app-data/other-data documents distinguish broad access from scoped 200/403 for user and key; 401/404/errors are inconclusive and pre-3.7 OpenSearch uses the user only.
-- verify-anonymous (REASONED; es, os): Require effective anonymous settings on every node plus a formerly anonymous-readable known document becoming 401 while admin still gets 200; endpoint-specific 401 alone is insufficient.
-- verify-tls (REASONED; es, os): Admin HTTPS must return 200/cluster JSON before interpreting plaintext; TLS listener must return no HTTP status, with DNS/timeouts/unreachable states inconclusive.
-- verify-cors (REASONED; es, os): Inspect preflight headers: no grant to untrusted origin, exact grant for trusted enabled origin; with CORS disabled neither is granted.
-- verify-audit (REASONED; es, os): Fresh failed-authentication probe must correlate with new authentication_failed/FAILED_LOGIN in node and independent collector records; 401 alone proves no delivery.
-- verify-audit-body (REASONED; es, os): Compare unique marker present with body logging enabled and absent from a new matching event when disabled; independently verify header exclusion and effective configuration.
-- verify-listeners (REASONED; es8, es9, host): Locate actual running listeners/ports and inspect publication; intentional bridge-container wildcard differs from host-network exposure and no output alone is inconclusive.
-- verify-fls-dls (REASONED; es819, os36): Two-tenant fixture compares unrestricted and actual restricted credentials through search, GET, requested fields and aggregations, with allowed-field and administrator controls; no inference-proof claim.
-- verify-storage (REASONED; host): Data-path device chain must traverse intended encryption mapping; unrelated mapping or successful unlocked reads proves nothing, and provider volumes need their own metadata.
-- verify-mount (REASONED; host): Isolated unavailable-mount fixture must fail startup for that reason without writes to the ordinary directory; restored encrypted mount must start successfully.
-- verify-snapshot (REASONED; es819, os36): Harmless explicit-index snapshot/restore must complete and preserve both fixtures without global/security state; timeouts need operation-state inspection before retry.
-- verify-object-key (REASONED; cloud): Inspect actual new/retained repository object mode/key; controlled object-read and KMS-only denial need provider evidence plus authorized controls. Repository verify proves neither encryption nor isolation.
-- verify-ui (REASONED; kb, dash36, host): Require expected CA-validated HTTPS and rejected plaintext UI after an exposed HTTP fixture; verify prohibited-network denial with authorized success and effective private binding.
-- verify-ui-backend (REASONED; kb, dash36): Browser TLS does not prove backend full verification or Dashboards Secure cookie; inspect both separately with effective settings and publication.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Open Elasticsearch instances produced some of the largest data leaks on record. Modern versions ship secure; the failure mode today is deliberately switching protection off to make an error message go away.
 
@@ -1445,3 +1007,467 @@ REASONED: deployment expectations and source-audit limits recorded in this guide
 - Elasticsearch standard configuration leaves network and HTTP settings commented: [8.19.22](https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/distribution/src/config/elasticsearch.yml#L51-L63), [9.5.4](https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/distribution/src/config/elasticsearch.yml#L51-L63); Docker configuration sets `network.host: 0.0.0.0`: [8.19.22](https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/distribution/docker/src/docker/config/elasticsearch.yml#L1-L2), [9.5.4](https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/distribution/docker/src/docker/config/elasticsearch.yml#L1-L2).
 - Kibana host and port schema defaults: [9.5.4](https://github.com/elastic/kibana/blob/abf4eb613d64cdb3a6290671ce1cb67399677ab3/src/core/packages/http/server-internal/src/http_config.ts#L146-L155); sample configuration: [8.19.22](https://github.com/elastic/kibana/blob/fd8e6f336cd7a18d0fd805de4608e1e38e0da163/config/kibana.yml#L4-L11), [9.5.4](https://github.com/elastic/kibana/blob/abf4eb613d64cdb3a6290671ce1cb67399677ab3/config/kibana.yml#L4-L11).
 - Kibana Docker wildcard host configuration: [8.19.22](https://github.com/elastic/kibana/blob/fd8e6f336cd7a18d0fd805de4608e1e38e0da163/src/dev/build/tasks/os_packages/docker_generator/templates/kibana_yml.template.ts#L22-L26), [9.5.4](https://github.com/elastic/kibana/blob/abf4eb613d64cdb3a6290671ce1cb67399677ab3/src/dev/build/tasks/os_packages/docker_generator/templates/kibana_yml.template.ts#L22-L26).
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/elasticsearch.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- es-api: Elasticsearch API (8.x)
+- es819: Elasticsearch reference (8.19)
+- es8: Elasticsearch listener source (8.19.22)
+- es9: Elasticsearch listener source (9.5.4)
+- os36: OpenSearch reference (3.6)
+- os31: OpenSearch S3 reference (3.1)
+- os38: OpenSearch S3 source (3.8.0)
+- gcs38: OpenSearch GCS source (3.8.0)
+- azure38: OpenSearch Azure source (3.8.0)
+- corecrypto38: OpenSearch repository crypto source (3.8.0)
+- dash: OpenSearch Dashboards (3.8.0)
+- dash36: Dashboards TLS reference (3.6)
+- es: Elasticsearch documentation (unknown)
+- images: Elasticsearch Docker library (8480a06d8ca03ca7da29a469fdbddb5f9f31df61)
+- os: OpenSearch documentation (unknown)
+- os-license-source: OpenSearch Security licence source (4ba3cc0e2ebec61b726b227fdf51e55f4a502182)
+- os-users-source: OpenSearch demo users source (03a224d16045a8f561e2d7d84b8765c95309524c)
+- kb: Kibana reference (8.19)
+- kb8: Kibana source (8.19.22)
+- kb9: Kibana source (9.5.4)
+- cloud: Cloud provider documentation (unknown)
+- host: Host inspection documentation (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- es-tier (REASONED; es): Self-managed 8.x TLS, native users, RBAC, REST keys, anonymous controls and CORS are free Basic; LDAP/audit and FLS/DLS require Platinum/Enterprise, with current Platinum restricted to existing customers.
+- es-auto (REASONED; es): Eligible initial startup enables auth, HTTP/transport TLS and elastic password; redirected output, unwritable config or existing settings can skip setup, with stated discovery exceptions; packages require password reset.
+- es-tls (REASONED; es): Keep xpack.security.enabled and HTTP TLS enabled; repair CA trust/certificates instead of disabling protection.
+- es-bind (REASONED; es8, es9): network.host defaults `_local_` on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback.
+- es-http-range (REASONED; es8, es9): HTTP defaults to an available port in 9200-9300, subject to effective host/bind/publish settings.
+- es-transport-range (REASONED; es8, es9): Transport defaults to an available port in 9300-9399; inspect effective profile and actual listener ports.
+- es-auto-http (REASONED; es8, es9): Auto-configuration writes http.host=0.0.0.0 only when none of the three HTTP or three network address settings has a value, including enrollment.
+- es-auto-transport (REASONED; es8, es9): Transport address guard respects existing settings; new-cluster wildcard is commented and enrollment activates it only for a discovered nonlocal, nonloopback publish address.
+- es-docker (REASONED; images, es): Pinned image map covers 8.19.22/9.4.6/9.5.3; shipped network.host=0.0.0.0 widens API and transport unless overridden. EXPOSE includes 9300, so avoid -P, host networking and untrusted peers.
+- es-source-docker (REASONED; es8, es9): Source configurations at 8.19.22/9.5.4 also set network.host wildcard, making both auto-configuration address guards false.
+- es-role (REASONED; es-api): Give each app an index-read role and dedicated native user; manage_own_api_key permits self-issued keys without broader index access, and superuser is not an app role.
+- credential-files (REASONED; host): Use protected 0600 header/request/response files and verified CA input; base64 Basic is not encryption and file input does not prevent file readers or tracing.
+- es-key (REASONED; es-api): Explicit API-key role descriptors intersect creator permissions; omitted descriptors inherit a snapshot, omitted expiration never expires, and an API key cannot create another privileged key.
+- es-ldap (REASONED; es): Optional paid LDAP mapping binds the specific realm and group DN; native-user roles are assigned through the user API.
+- es-fls (REASONED; es819): 8.19 field_security.grant restricts concrete fields, not aliases; metadata remains accessible and omission grants all fields. Minimum guide scope 8.0 is not an introduction claim.
+- es-dls (REASONED; es819): 8.19 query restricts documents; omission removes DLS. Keep tenant readers read-only and remove unrestricted roles that combine to defeat restrictions.
+- es-fls-limits (REASONED; es819): DLS has aggregate/scoring inference channels and query/API restrictions including joins, lookups, percolate and date now; test actual queries and prefer separate indices for stronger isolation.
+- es-key-review (REASONED; es819): Review previously issued key permission snapshots separately after changing roles; role edits alone do not establish repaired key restrictions.
+- es-anonymous (REASONED; es): Remove anonymous.roles from every effective node configuration and restart; no roles disables anonymous access. A tested 401 alone cannot prove it is globally off.
+- es-cors (REASONED; es): CORS defaults disabled; if needed configure exact origin, methods and headers, restart nodes and retain authorization.
+- es-audit (REASONED; es): Audit defaults disabled; enable on each 8.x node with restart and collect CLUSTERNAME_audit.json independently. Dynamic enablement documented for 9.5+ does not apply to 8.x.
+- es-audit-body (REASONED; es): Request-body emission defaults false; keep it off and avoid event exclusions/ignore policies suppressing authentication_failed.
+- os-tier (REASONED; os-license-source): OpenSearch Security is free Apache-2.0 with no paid security tier; keep authentication and TLS enabled.
+- os-demo-users (REASONED; os, os-users-source): From 2.12 demo setup requires initial admin password but only changes admin; six other seeded users retain demo credentials until removed/replaced and applied to the live security index.
+- os-tls (REASONED; os): Replace demo certificates; REST TLS defaults false underneath demo setup and requires plugins.security.ssl.http.enabled=true with production certificates.
+- os-rbac (REASONED; os): Create a custom index-read role and internal user with explicit mapping; Security REST administration requires its own authorization and other mappings may add grants.
+- os-api-key (REASONED; os): Native scoped keys require 3.7+ and security administrators; enable api_tokens and explicit lifetime/count limits, using index_pattern and duration_seconds rather than Elasticsearch fields.
+- os-key-default (REASONED; os): Omitted token duration uses max_duration_seconds, documented default 7776000; example caps at 86400 with 100 tokens, and returned token is retrievable only once.
+- os-apply (REASONED; os): securityadmin applies local configuration to the live index; back up first, use file/type-limited upload, production CA/admin certificate and hostname verification because stale files overwrite live changes.
+- os-fls (REASONED; os36): 3.6 FLS/DLS recipe uses JSON-string dls and visible tenant_id in fls; review all roles and inclusion/exclusion interactions, not Elasticsearch role-combination assumptions.
+- os-dls (REASONED; os36): dfm_empty_overrides_all affects unrestricted-role precedence; DLS does not constrain writes and adaptive filter-level DLS limits APIs/cross-cluster search. Tokens need independent restriction tests.
+- os-anonymous (REASONED; os): Set live anonymous_auth_enabled=false while preserving authentication domains; update through securityadmin, not just local YAML.
+- os-cors (REASONED; os): CORS defaults false; exact-origin static settings go in opensearch.yml and require restart, independently of authentication.
+- os-audit (REASONED; os): Auditing needs destination and enabled config; internal_opensearch stores daily audit indexes, while shipped enabled=true alone records nothing without storage type.
+- os-audit-body (REASONED; os): Read live audit config, enable REST and disable request-body logging via admin-certificate PATCH; preserve defaults and do not suppress FAILED_LOGIN.
+- os-audit-headers (REASONED; os): exclude_sensitive_headers defaults true; readonly REST fields require complete audit-file application. Read back enabled, REST, body=false and headers=true separately.
+- storage (REASONED; es819, os): Use OS/provider encryption below path.data, including logs/swap/local snapshots; path.data only selects a directory and encryption-at-rest support is not a product encryption switch.
+- mount-enforcement (REASONED; host): RequiresMountsFor plus AssertPathIsMountPoint prevents ordinary-directory fallback with systemd; reload manager and verify encrypted device chain separately.
+- snapshot-boundary (REASONED; es, os31, cloud): Ordinary snapshots use free Basic/OpenSearch; remote repository encryption is independent of node disks and authorized server-side downloads are decrypted.
+- cloud-defaults (REASONED; cloud): New AWS S3, GCS and Azure objects are encrypted server-side by default; assess historical objects and customer key ownership separately.
+- es-s3 (REASONED; es819): 8.19 server_side_encryption defaults false; true requests AES256 SSE-S3, not client encryption. Omit it when using bucket-default KMS and verify resulting metadata.
+- os-s3 (REASONED; os31, os38): 3.1 removed server_side_encryption; server_side_encryption_type accepts AES256/aws:kms/bucket_default. Default changed from bucket_default to AES256 in 3.8; explicitly select intended mode.
+- os-s3-kms (REASONED; os31, cloud): Explicit KMS repository mode uses server_side_encryption_kms_key_id ARN with object/KMS permissions; this is server-side encryption and settings are not Elasticsearch-compatible.
+- es-gcs-azure (REASONED; es819): 8.19 GCS/Azure setting lists document no client-side-encryption switch; configure provider key policy and access. GCS supplied keys remain server-side and Azure keys/SAS are authentication.
+- os-gcs-azure (REASONED; os36, gcs38, azure38, corecrypto38, cloud): Follow 3.6 plugin/credential workflow. This guide's review of OpenSearch 3.8.0 GCS and Azure plugin-specific settings, blob upload and client construction found no plugin-specific client-side-encryption setting; the core repository crypto_settings path wraps the non-server-side-encryption blob store in client-side EncryptedBlobStore when crypto metadata is supplied. The cited common provider and GCS/Azure createBlobStore methods show a path to both repository types; this guide's assessment is that end-to-end applicability and live encryption behaviour for either type remain unestablished. The path requires a registered key-provider plugin matching key_provider_type and a key_provider_name; the cited tree includes an aws-kms provider, while available providers in a deployment, minimum versions and later-release behaviour remain unestablished. This guide's advice: Configure required customer-managed encryption through provider policy and grant key access.
+- snapshot-integrity (REASONED; es819): Keep repositories private and keys recoverable; do not rewrite active repository files. Configuration backups are separate and security-state snapshots are sensitive.
+- kibana-default (REASONED; kb, kb8, kb9): Kibana defaults HTTP localhost:5601 with server TLS disabled; 8.19.22/9.5.4 Docker templates explicitly use wildcard host, requiring override/publication review.
+- kibana-tls (REASONED; kb): Free Basic 8.19 server.ssl certificate/key protects incoming UI traffic; elasticsearch.ssl CA/full verification protects the separate backend hop.
+- dash-default (REASONED; dash): Dashboards 3.8.0 sample defaults localhost:5601 with server TLS disabled; inspect installation/container overrides.
+- dash-tls (REASONED; dash36): Dashboards server.ssl protects UI, cookie.secure restricts session cookie to HTTPS, and opensearch.ssl CA/full verification protects the backend hop; restart after changes.
+- ui-network (REASONED; kb, dash36): UI binding is independent of 9200/9300; loopback suits only a same-namespace proxy, while private access requires intended interface, matching certificates and network restrictions.
+- verify-rbac (REASONED; es, os): Known app-data/other-data documents distinguish broad access from scoped 200/403 for user and key; 401/404/errors are inconclusive and pre-3.7 OpenSearch uses the user only.
+- verify-anonymous (REASONED; es, os): Require effective anonymous settings on every node plus a formerly anonymous-readable known document becoming 401 while admin still gets 200; endpoint-specific 401 alone is insufficient.
+- verify-tls (REASONED; es, os): Admin HTTPS must return 200/cluster JSON before interpreting plaintext; TLS listener must return no HTTP status, with DNS/timeouts/unreachable states inconclusive.
+- verify-cors (REASONED; es, os): Inspect preflight headers: no grant to untrusted origin, exact grant for trusted enabled origin; with CORS disabled neither is granted.
+- verify-audit (REASONED; es, os): Fresh failed-authentication probe must correlate with new authentication_failed/FAILED_LOGIN in node and independent collector records; 401 alone proves no delivery.
+- verify-audit-body (REASONED; es, os): Compare unique marker present with body logging enabled and absent from a new matching event when disabled; independently verify header exclusion and effective configuration.
+- verify-listeners (REASONED; es8, es9, host): Locate actual running listeners/ports and inspect publication; intentional bridge-container wildcard differs from host-network exposure and no output alone is inconclusive.
+- verify-fls-dls (REASONED; es819, os36): Two-tenant fixture compares unrestricted and actual restricted credentials through search, GET, requested fields and aggregations, with allowed-field and administrator controls; no inference-proof claim.
+- verify-storage (REASONED; host): Data-path device chain must traverse intended encryption mapping; unrelated mapping or successful unlocked reads proves nothing, and provider volumes need their own metadata.
+- verify-mount (REASONED; host): Isolated unavailable-mount fixture must fail startup for that reason without writes to the ordinary directory; restored encrypted mount must start successfully.
+- verify-snapshot (REASONED; es819, os36): Harmless explicit-index snapshot/restore must complete and preserve both fixtures without global/security state; timeouts need operation-state inspection before retry.
+- verify-object-key (REASONED; cloud): Inspect actual new/retained repository object mode/key; controlled object-read and KMS-only denial need provider evidence plus authorized controls. Repository verify proves neither encryption nor isolation.
+- verify-ui (REASONED; kb, dash36, host): Require expected CA-validated HTTPS and rejected plaintext UI after an exposed HTTP fixture; verify prohibited-network denial with authorized success and effective private binding.
+- verify-ui-backend (REASONED; kb, dash36): Browser TLS does not prove backend full verification or Dashboards Secure cookie; inspect both separately with effective settings and publication.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "b7be20e1e922213f3221d68ed2688b87163c51f827766052d8f533076a1938ab",
+  "components": {
+    "es-api": {
+      "name": "Elasticsearch API",
+      "basis": "8.x",
+      "sources": {
+        "s088db4f93f33": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role",
+        "s0c10cfba4d6b": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role-mapping",
+        "sb82b2da8da5d": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-user",
+        "sbec1f2938348": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-create-api-key"
+      }
+    },
+    "es819": {
+      "name": "Elasticsearch reference",
+      "basis": "8.19",
+      "sources": {
+        "s805957cad810": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-level-security.html",
+        "s52adbc714b10": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/document-level-security.html",
+        "s15feb5b3e00c": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/field-and-document-access-control.html",
+        "se332a9504a82": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/security-limitations.html",
+        "s03b37cd41154": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/tune-for-search-speed.html",
+        "s1ce03cd781c3": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/path-settings-overview.html",
+        "s3cac63e6ba14": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-s3.html",
+        "s28a1fe315963": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-gcs.html",
+        "s6279b842bc10": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/repository-azure.html",
+        "sb98bd971e2f6": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-take-snapshot.html",
+        "s93987af8201d": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshot-restore.html",
+        "s3e5630e4430d": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/snapshots-restore-snapshot.html"
+      }
+    },
+    "es8": {
+      "name": "Elasticsearch listener source",
+      "basis": "8.19.22",
+      "sources": {
+        "sa56cdc9270ea": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L112-L121",
+        "s46c7adfdc6c4": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L233-L239",
+        "s8ca2413b2af3": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L28-L42",
+        "s59c2dd10f083": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/http/HttpTransportSettings.java#L70-L89",
+        "s0310c5c2e42f": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/server/src/main/java/org/elasticsearch/transport/TransportSettings.java#L34-L62",
+        "s6e6cf4d739bd": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/x-pack/plugin/security/cli/src/main/java/org/elasticsearch/xpack/security/cli/AutoConfigureNode.java#L788-L821",
+        "s70c493fe7770": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/x-pack/plugin/security/cli/src/main/java/org/elasticsearch/xpack/security/cli/AutoConfigureNode.java#L876-L891",
+        "s8d4c513fdf84": "https://github.com/elastic/elasticsearch/blob/3b2a41103de35e0af4064d647974032fcc1bcde9/distribution/docker/src/docker/config/elasticsearch.yml#L1-L2"
+      }
+    },
+    "es9": {
+      "name": "Elasticsearch listener source",
+      "basis": "9.5.4",
+      "sources": {
+        "s666c63ad2a02": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L112-L121",
+        "s429c675c1092": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L233-L239",
+        "sa27fc323d90c": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/common/network/NetworkService.java#L28-L42",
+        "s8fded6a7640c": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/http/HttpTransportSettings.java#L64-L83",
+        "s1f0a06e68675": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/server/src/main/java/org/elasticsearch/transport/TransportSettings.java#L34-L57",
+        "scf100fafec80": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/x-pack/plugin/security/cli/src/main/java/org/elasticsearch/xpack/security/cli/AutoConfigureNode.java#L800-L833",
+        "s0ba542d80d53": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/x-pack/plugin/security/cli/src/main/java/org/elasticsearch/xpack/security/cli/AutoConfigureNode.java#L888-L903",
+        "sa4fd281c6186": "https://github.com/elastic/elasticsearch/blob/9170df19cae1adb107b7b489b4d82dec66d7a337/distribution/docker/src/docker/config/elasticsearch.yml#L1-L2"
+      }
+    },
+    "os36": {
+      "name": "OpenSearch reference",
+      "basis": "3.6",
+      "sources": {
+        "s42d975e3cd92": "https://docs.opensearch.org/3.6/security/access-control/field-level-security/",
+        "sade7ff6b2bb3": "https://docs.opensearch.org/3.6/security/access-control/document-level-security/",
+        "sf0940d73ed6e": "https://docs.opensearch.org/3.6/tuning-your-cluster/availability-and-recovery/snapshots/snapshot-restore/"
+      }
+    },
+    "os31": {
+      "name": "OpenSearch S3 reference",
+      "basis": "3.1",
+      "sources": {
+        "s089decb3330d": "https://docs.opensearch.org/3.1/api-reference/snapshots/create-repository/"
+      }
+    },
+    "os38": {
+      "name": "OpenSearch S3 source",
+      "basis": "3.8.0",
+      "sources": {
+        "sc57180db39be": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-s3/src/main/java/org/opensearch/repositories/s3/S3Repository.java"
+      }
+    },
+    "gcs38": {
+      "name": "OpenSearch GCS source",
+      "basis": "3.8.0",
+      "sources": {
+        "s631e8e354e26": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStoragePlugin.java#L125-L144",
+        "s9ff434d5553c": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageRepository.java#L74-L84",
+        "s7e94d736aed9": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageBlobStore.java#L259-L266",
+        "s1f1e29ea0106": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageBlobStore.java#L289-L291",
+        "sfe65ec0f6f8c": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageBlobStore.java#L370-L373",
+        "s90d52029d8d8": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageRepository.java#L147-L150",
+        "sfa59a5382e57": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageService.java#L247-L285"
+      }
+    },
+    "azure38": {
+      "name": "OpenSearch Azure source",
+      "basis": "3.8.0",
+      "sources": {
+        "s85d096884518": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureRepositoryPlugin.java#L133-L153",
+        "sc2902fffc253": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureRepository.java#L75-L107",
+        "s22bd450a8a30": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureBlobStore.java#L351-L394",
+        "sa4a6997abb47": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureBlobContainer.java#L140-L157",
+        "s287622988f18": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureRepository.java#L185-L200",
+        "sdea961e1b3be": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureStorageService.java#L195-L239"
+      }
+    },
+    "corecrypto38": {
+      "name": "OpenSearch repository crypto source",
+      "basis": "3.8.0",
+      "sources": {
+        "sb8b00bcc45a2": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/action/admin/cluster/repositories/put/PutRepositoryRequest.java#L248-L271",
+        "s6599b9d988eb": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/action/admin/cluster/crypto/CryptoSettings.java#L54-L63",
+        "s72395c1b171c": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/repositories/blobstore/BlobStoreProvider.java#L44-L96",
+        "s85afe5ff10ee": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/repositories/blobstore/BlobStoreRepository.java#L1073-L1085",
+        "sa01a018a581d": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/common/blobstore/EncryptedBlobStore.java#L39-L51",
+        "s248fbcd97369": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/common/blobstore/EncryptedBlobStore.java#L60-L67",
+        "s0ed030669257": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/common/blobstore/EncryptedBlobContainer.java#L94-L110",
+        "s726bdb2f7cab": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/crypto/CryptoHandlerRegistry.java#L144-L167",
+        "s73ce68ed27f1": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/crypto-kms/src/main/java/org/opensearch/crypto/kms/CryptoKmsPlugin.java#L26-L27",
+        "sc99eb8d33be7": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-gcs/src/main/java/org/opensearch/repositories/gcs/GoogleCloudStorageRepository.java#L60",
+        "sef269e173cbc": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/plugins/repository-azure/src/main/java/org/opensearch/repositories/azure/AzureRepository.java#L72",
+        "s2ee18ff27a14": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/repositories/blobstore/MeteredBlobStoreRepository.java#L49",
+        "sb739f2d2b9bb": "https://github.com/opensearch-project/OpenSearch/blob/3.8.0/server/src/main/java/org/opensearch/repositories/blobstore/BlobStoreRepository.java#L1098"
+      }
+    },
+    "dash": {
+      "name": "OpenSearch Dashboards",
+      "basis": "3.8.0",
+      "sources": {
+        "sae1b7f23ca6c": "https://raw.githubusercontent.com/opensearch-project/OpenSearch-Dashboards/3.8.0/config/opensearch_dashboards.yml"
+      }
+    },
+    "dash36": {
+      "name": "Dashboards TLS reference",
+      "basis": "3.6",
+      "sources": {
+        "sea686fca5804": "https://docs.opensearch.org/3.6/install-and-configure/install-dashboards/tls/"
+      }
+    },
+    "es": {
+      "name": "Elasticsearch documentation",
+      "basis": "unknown",
+      "sources": {
+        "sad43b70af67a": "https://www.elastic.co/subscriptions",
+        "s64e4e307f36c": "https://www.elastic.co/docs/deploy-manage/security/self-auto-setup",
+        "se8bbf661f24e": "https://www.elastic.co/docs/reference/elasticsearch/command-line-tools/reset-password",
+        "sce3095052f8d": "https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/security-settings",
+        "s38b60fd8e2bf": "https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-elasticsearch-docker-configure",
+        "sc3d6362bc8f4": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/ldap",
+        "s0c10cfba4d6b": "https://www.elastic.co/docs/api/doc/elasticsearch/v8/operation/operation-security-put-role-mapping",
+        "s204396515260": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/anonymous-access",
+        "s0f65658e7273": "https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/networking-settings",
+        "s2882d7d6f2fc": "https://www.elastic.co/docs/deploy-manage/security/logging-configuration/enabling-audit-logs",
+        "s5603a653318d": "https://www.elastic.co/docs/reference/elasticsearch/configuration-reference/auding-settings",
+        "s4fb9bf780cf5": "https://www.elastic.co/pdf/subscriptions-2025-07-29.pdf",
+        "see6eaa520863": "https://www.elastic.co/docs/reference/elasticsearch/security-privileges",
+        "sfc6fef9020b3": "https://www.elastic.co/docs/reference/elasticsearch/elasticsearch-audit-events"
+      }
+    },
+    "images": {
+      "name": "Elasticsearch Docker library",
+      "basis": "8480a06d8ca03ca7da29a469fdbddb5f9f31df61",
+      "sources": {
+        "s09177781dc63": "https://github.com/docker-library/official-images/blob/8480a06d8ca03ca7da29a469fdbddb5f9f31df61/library/elasticsearch#L2-L19",
+        "sae45a2b7731f": "https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/config/elasticsearch.yml",
+        "sab290cdf87a1": "https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/config/elasticsearch.yml",
+        "s7088372053e9": "https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/config/elasticsearch.yml",
+        "s0c3512f7e923": "https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/Dockerfile#L123",
+        "s1683d032b409": "https://github.com/elastic/dockerfiles/blob/0208be14db8ebd2e40442d328e8f79921368c5a9/elasticsearch/Dockerfile#L38",
+        "s6c51d507efec": "https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/Dockerfile#L57",
+        "s5c4452cc7b82": "https://github.com/elastic/dockerfiles/blob/18bba4670aa9212cd0c5e8aeff5aa2f23d7f652a/elasticsearch/Dockerfile#L99",
+        "s849d2f17dbc8": "https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/Dockerfile#L57",
+        "s30233ea32bf6": "https://github.com/elastic/dockerfiles/blob/25fdea1109a231cedf9d1d3cf78bbb7fce488561/elasticsearch/Dockerfile#L99"
+      }
+    },
+    "os": {
+      "name": "OpenSearch documentation",
+      "basis": "unknown",
+      "sources": {
+        "s73e416ebf765": "https://docs.opensearch.org/latest/security/configuration/demo-configuration/",
+        "s4e3281cb3d23": "https://docs.opensearch.org/latest/security/configuration/tls/",
+        "s07ddf2781a70": "https://docs.opensearch.org/latest/security/access-control/users-roles/",
+        "s204396515260": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/anonymous-access",
+        "sc3d6362bc8f4": "https://www.elastic.co/docs/deploy-manage/users-roles/cluster-or-deployment-auth/ldap",
+        "s0e349fff0934": "https://docs.opensearch.org/latest/security/api/roles/create-role/",
+        "s4f63d2563816": "https://docs.opensearch.org/latest/security/api/users/create-user/",
+        "s1a9aa4907daf": "https://docs.opensearch.org/latest/security/api/role-mappings/create-role-mapping/",
+        "sfbdd4a41adf5": "https://docs.opensearch.org/latest/security/access-control/api-keys/",
+        "sa596b3a14984": "https://docs.opensearch.org/latest/security/api/api-keys/create/",
+        "s40051274ea31": "https://docs.opensearch.org/latest/security/configuration/security-admin/",
+        "sc921fd158473": "https://docs.opensearch.org/latest/security/configuration/configuration/",
+        "s4142fe7a4236": "https://docs.opensearch.org/latest/security/authentication-backends/basic-authc/",
+        "s3f64f7b4cf84": "https://docs.opensearch.org/latest/install-and-configure/configuring-opensearch/network-settings/",
+        "s2f39d5e48027": "https://docs.opensearch.org/latest/security/audit-logs/index/",
+        "seafbd3b9677e": "https://docs.opensearch.org/latest/security/api/audit/patch-audit-configuration/",
+        "s0d675c5ecd3c": "https://docs.opensearch.org/latest/security/api/audit/update-audit-configuration/",
+        "seafc6e5e5595": "https://docs.opensearch.org/latest/security/api/audit/get-audit-configuration/",
+        "s9ddd20a83871": "https://docs.opensearch.org/3.0/troubleshoot/#encryption-at-rest",
+        "sbd093eef861b": "https://docs.opensearch.org/latest/security/access-control/permissions/",
+        "s7d28cfa527a1": "https://docs.opensearch.org/latest/security/access-control/anonymous-authentication/",
+        "sbad13e007c8f": "https://docs.opensearch.org/latest/security/audit-logs/field-reference/"
+      }
+    },
+    "os-license-source": {
+      "name": "OpenSearch Security licence source",
+      "basis": "4ba3cc0e2ebec61b726b227fdf51e55f4a502182",
+      "sources": {
+        "s6e10cf9ec35a": "https://github.com/opensearch-project/security/blob/4ba3cc0e2ebec61b726b227fdf51e55f4a502182/LICENSE.txt"
+      }
+    },
+    "os-users-source": {
+      "name": "OpenSearch demo users source",
+      "basis": "03a224d16045a8f561e2d7d84b8765c95309524c",
+      "sources": {
+        "se8c473c01153": "https://github.com/opensearch-project/security/blob/03a224d16045a8f561e2d7d84b8765c95309524c/config/internal_users.yml"
+      }
+    },
+    "kb": {
+      "name": "Kibana reference",
+      "basis": "8.19",
+      "sources": {
+        "s0fe3c0d2e958": "https://www.elastic.co/guide/en/kibana/8.19/settings.html",
+        "sf71765842118": "https://www.elastic.co/guide/en/kibana/8.19/docker.html"
+      }
+    },
+    "kb8": {
+      "name": "Kibana source",
+      "basis": "8.19.22",
+      "sources": {
+        "sd77254a631b1": "https://github.com/elastic/kibana/blob/fd8e6f336cd7a18d0fd805de4608e1e38e0da163/config/kibana.yml#L4-L11",
+        "s14662915ed7e": "https://github.com/elastic/kibana/blob/fd8e6f336cd7a18d0fd805de4608e1e38e0da163/src/dev/build/tasks/os_packages/docker_generator/templates/kibana_yml.template.ts#L22-L26"
+      }
+    },
+    "kb9": {
+      "name": "Kibana source",
+      "basis": "9.5.4",
+      "sources": {
+        "sd0f70697a909": "https://github.com/elastic/kibana/blob/abf4eb613d64cdb3a6290671ce1cb67399677ab3/src/core/packages/http/server-internal/src/http_config.ts#L146-L155",
+        "s39aaa733de4b": "https://github.com/elastic/kibana/blob/abf4eb613d64cdb3a6290671ce1cb67399677ab3/src/dev/build/tasks/os_packages/docker_generator/templates/kibana_yml.template.ts#L22-L26"
+      }
+    },
+    "cloud": {
+      "name": "Cloud provider documentation",
+      "basis": "unknown",
+      "sources": {
+        "s710600aeb168": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html",
+        "sdc6a5af591ff": "https://docs.cloud.google.com/storage/docs/encryption",
+        "saeb8db497f20": "https://learn.microsoft.com/en-us/azure/storage/common/storage-service-encryption",
+        "se1e1c91f80b4": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html",
+        "se54783905d19": "https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html",
+        "sc53339f5429f": "https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html"
+      }
+    },
+    "host": {
+      "name": "Host inspection documentation",
+      "basis": "unknown",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html",
+        "s64522c42b5bc": "https://man7.org/linux/man-pages/man5/systemd.unit.5.html",
+        "s1b4e67e38127": "https://manpages.ubuntu.com/manpages/noble/man8/ss.8.html",
+        "s42b4720299f5": "https://man7.org/linux/man-pages/man8/findmnt.8.html",
+        "sd23c3d0f42a7": "https://man7.org/linux/man-pages/man8/lsblk.8.html",
+        "s252144371961": "https://man7.org/linux/man-pages/man8/cryptsetup-status.8.html",
+        "s9823c4e9efa4": "https://man7.org/linux/man-pages/man1/systemctl.1.html"
+      }
+    }
+  },
+  "claims": {
+    "es-tier": {"text": "Self-managed 8.x TLS, native users, RBAC, REST keys, anonymous controls and CORS are free Basic; LDAP/audit and FLS/DLS require Platinum/Enterprise, with current Platinum restricted to existing customers.", "components": ["es"], "sources": ["es:sad43b70af67a"], "status": "REASONED"},
+    "es-auto": {"text": "Eligible initial startup enables auth, HTTP/transport TLS and elastic password; redirected output, unwritable config or existing settings can skip setup, with stated discovery exceptions; packages require password reset.", "components": ["es"], "sources": ["es:s64e4e307f36c", "es:se8bbf661f24e"], "status": "REASONED"},
+    "es-tls": {"text": "Keep xpack.security.enabled and HTTP TLS enabled; repair CA trust/certificates instead of disabling protection.", "components": ["es"], "sources": ["es:sce3095052f8d"], "status": "REASONED"},
+    "es-bind": {"text": "network.host defaults `_local_` on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback.", "components": ["es8", "es9"], "sources": ["es8:sa56cdc9270ea", "es8:s46c7adfdc6c4", "es8:s8ca2413b2af3", "es9:s666c63ad2a02", "es9:s429c675c1092", "es9:sa27fc323d90c"], "status": "REASONED"},
+    "es-http-range": {"text": "HTTP defaults to an available port in 9200-9300, subject to effective host/bind/publish settings.", "components": ["es8", "es9"], "sources": ["es8:s59c2dd10f083", "es9:s8fded6a7640c"], "status": "REASONED"},
+    "es-transport-range": {"text": "Transport defaults to an available port in 9300-9399; inspect effective profile and actual listener ports.", "components": ["es8", "es9"], "sources": ["es8:s0310c5c2e42f", "es9:s1f0a06e68675"], "status": "REASONED"},
+    "es-auto-http": {"text": "Auto-configuration writes http.host=0.0.0.0 only when none of the three HTTP or three network address settings has a value, including enrollment.", "components": ["es8", "es9"], "sources": ["es8:s6e6cf4d739bd", "es9:scf100fafec80"], "status": "REASONED"},
+    "es-auto-transport": {"text": "Transport address guard respects existing settings; new-cluster wildcard is commented and enrollment activates it only for a discovered nonlocal, nonloopback publish address.", "components": ["es8", "es9"], "sources": ["es8:s6e6cf4d739bd", "es8:s70c493fe7770", "es9:scf100fafec80", "es9:s0ba542d80d53"], "status": "REASONED"},
+    "es-docker": {"text": "Pinned image map covers 8.19.22/9.4.6/9.5.3; shipped network.host=0.0.0.0 widens API and transport unless overridden. EXPOSE includes 9300, so avoid -P, host networking and untrusted peers.", "components": ["images", "es"], "sources": ["images:s09177781dc63", "images:sae45a2b7731f", "images:sab290cdf87a1", "images:s7088372053e9", "images:s0c3512f7e923", "images:s1683d032b409", "images:s6c51d507efec", "images:s5c4452cc7b82", "images:s849d2f17dbc8", "images:s30233ea32bf6", "es:s38b60fd8e2bf"], "status": "REASONED"},
+    "es-source-docker": {"text": "Source configurations at 8.19.22/9.5.4 also set network.host wildcard, making both auto-configuration address guards false.", "components": ["es8", "es9"], "sources": ["es8:s8d4c513fdf84", "es9:sa4fd281c6186"], "status": "REASONED"},
+    "es-role": {"text": "Give each app an index-read role and dedicated native user; manage_own_api_key permits self-issued keys without broader index access, and superuser is not an app role.", "components": ["es-api"], "sources": ["es-api:s088db4f93f33", "es-api:s0c10cfba4d6b", "es-api:sb82b2da8da5d"], "status": "REASONED"},
+    "credential-files": {"text": "Use protected 0600 header/request/response files and verified CA input; base64 Basic is not encryption and file input does not prevent file readers or tracing.", "components": ["host"], "sources": ["host:s2b2686afaf41"], "status": "REASONED"},
+    "es-key": {"text": "Explicit API-key role descriptors intersect creator permissions; omitted descriptors inherit a snapshot, omitted expiration never expires, and an API key cannot create another privileged key.", "components": ["es-api"], "sources": ["es-api:sbec1f2938348"], "status": "REASONED"},
+    "es-ldap": {"text": "Optional paid LDAP mapping binds the specific realm and group DN; native-user roles are assigned through the user API.", "components": ["es"], "sources": ["es:sc3d6362bc8f4", "es:s0c10cfba4d6b"], "status": "REASONED"},
+    "es-fls": {"text": "8.19 field_security.grant restricts concrete fields, not aliases; metadata remains accessible and omission grants all fields. Minimum guide scope 8.0 is not an introduction claim.", "components": ["es819"], "sources": ["es819:s805957cad810"], "status": "REASONED"},
+    "es-dls": {"text": "8.19 query restricts documents; omission removes DLS. Keep tenant readers read-only and remove unrestricted roles that combine to defeat restrictions.", "components": ["es819"], "sources": ["es819:s52adbc714b10", "es819:s15feb5b3e00c"], "status": "REASONED"},
+    "es-fls-limits": {"text": "DLS has aggregate/scoring inference channels and query/API restrictions including joins, lookups, percolate and date now; test actual queries and prefer separate indices for stronger isolation.", "components": ["es819"], "sources": ["es819:se332a9504a82"], "status": "REASONED"},
+    "es-key-review": {"text": "Review previously issued key permission snapshots separately after changing roles; role edits alone do not establish repaired key restrictions.", "components": ["es819"], "sources": ["es819:s15feb5b3e00c"], "status": "REASONED"},
+    "es-anonymous": {"text": "Remove anonymous.roles from every effective node configuration and restart; no roles disables anonymous access. A tested 401 alone cannot prove it is globally off.", "components": ["es"], "sources": ["es:s204396515260"], "status": "REASONED"},
+    "es-cors": {"text": "CORS defaults disabled; if needed configure exact origin, methods and headers, restart nodes and retain authorization.", "components": ["es"], "sources": ["es:s0f65658e7273"], "status": "REASONED"},
+    "es-audit": {"text": "Audit defaults disabled; enable on each 8.x node with restart and collect CLUSTERNAME_audit.json independently. Dynamic enablement documented for 9.5+ does not apply to 8.x.", "components": ["es"], "sources": ["es:s2882d7d6f2fc"], "status": "REASONED"},
+    "es-audit-body": {"text": "Request-body emission defaults false; keep it off and avoid event exclusions/ignore policies suppressing authentication_failed.", "components": ["es"], "sources": ["es:s5603a653318d"], "status": "REASONED"},
+    "os-tier": {"text": "OpenSearch Security is free Apache-2.0 with no paid security tier; keep authentication and TLS enabled.", "components": ["os-license-source"], "sources": ["os-license-source:s6e10cf9ec35a"], "status": "REASONED"},
+    "os-demo-users": {"text": "From 2.12 demo setup requires initial admin password but only changes admin; six other seeded users retain demo credentials until removed/replaced and applied to the live security index.", "components": ["os", "os-users-source"], "sources": ["os:s73e416ebf765", "os-users-source:se8c473c01153"], "status": "REASONED"},
+    "os-tls": {"text": "Replace demo certificates; REST TLS defaults false underneath demo setup and requires plugins.security.ssl.http.enabled=true with production certificates.", "components": ["os"], "sources": ["os:s4e3281cb3d23"], "status": "REASONED"},
+    "os-rbac": {"text": "Create a custom index-read role and internal user with explicit mapping; Security REST administration requires its own authorization and other mappings may add grants.", "components": ["os"], "sources": ["os:s07ddf2781a70", "os:s204396515260", "os:sc3d6362bc8f4", "os:s0e349fff0934", "os:s4f63d2563816", "os:s1a9aa4907daf"], "status": "REASONED"},
+    "os-api-key": {"text": "Native scoped keys require 3.7+ and security administrators; enable api_tokens and explicit lifetime/count limits, using index_pattern and duration_seconds rather than Elasticsearch fields.", "components": ["os"], "sources": ["os:sfbdd4a41adf5", "os:sa596b3a14984"], "status": "REASONED"},
+    "os-key-default": {"text": "Omitted token duration uses max_duration_seconds, documented default 7776000; example caps at 86400 with 100 tokens, and returned token is retrievable only once.", "components": ["os"], "sources": ["os:sa596b3a14984"], "status": "REASONED"},
+    "os-apply": {"text": "securityadmin applies local configuration to the live index; back up first, use file/type-limited upload, production CA/admin certificate and hostname verification because stale files overwrite live changes.", "components": ["os"], "sources": ["os:s40051274ea31"], "status": "REASONED"},
+    "os-fls": {"text": "3.6 FLS/DLS recipe uses JSON-string dls and visible tenant_id in fls; review all roles and inclusion/exclusion interactions, not Elasticsearch role-combination assumptions.", "components": ["os36"], "sources": ["os36:s42d975e3cd92", "os36:sade7ff6b2bb3"], "status": "REASONED"},
+    "os-dls": {"text": "dfm_empty_overrides_all affects unrestricted-role precedence; DLS does not constrain writes and adaptive filter-level DLS limits APIs/cross-cluster search. Tokens need independent restriction tests.", "components": ["os36"], "sources": ["os36:sade7ff6b2bb3"], "status": "REASONED"},
+    "os-anonymous": {"text": "Set live anonymous_auth_enabled=false while preserving authentication domains; update through securityadmin, not just local YAML.", "components": ["os"], "sources": ["os:sc921fd158473", "os:s4142fe7a4236"], "status": "REASONED"},
+    "os-cors": {"text": "CORS defaults false; exact-origin static settings go in opensearch.yml and require restart, independently of authentication.", "components": ["os"], "sources": ["os:s3f64f7b4cf84"], "status": "REASONED"},
+    "os-audit": {"text": "Auditing needs destination and enabled config; internal_opensearch stores daily audit indexes, while shipped enabled=true alone records nothing without storage type.", "components": ["os"], "sources": ["os:s2f39d5e48027"], "status": "REASONED"},
+    "os-audit-body": {"text": "Read live audit config, enable REST and disable request-body logging via admin-certificate PATCH; preserve defaults and do not suppress FAILED_LOGIN.", "components": ["os"], "sources": ["os:seafbd3b9677e", "os:s0d675c5ecd3c"], "status": "REASONED"},
+    "os-audit-headers": {"text": "exclude_sensitive_headers defaults true; readonly REST fields require complete audit-file application. Read back enabled, REST, body=false and headers=true separately.", "components": ["os"], "sources": ["os:seafc6e5e5595", "os:s0d675c5ecd3c"], "status": "REASONED"},
+    "storage": {"text": "Use OS/provider encryption below path.data, including logs/swap/local snapshots; path.data only selects a directory and encryption-at-rest support is not a product encryption switch.", "components": ["es819", "os"], "sources": ["es819:s03b37cd41154", "es819:s1ce03cd781c3", "os:s9ddd20a83871"], "status": "REASONED"},
+    "mount-enforcement": {"text": "RequiresMountsFor plus AssertPathIsMountPoint prevents ordinary-directory fallback with systemd; reload manager and verify encrypted device chain separately.", "components": ["host"], "sources": ["host:s64522c42b5bc"], "status": "REASONED"},
+    "snapshot-boundary": {"text": "Ordinary snapshots use free Basic/OpenSearch; remote repository encryption is independent of node disks and authorized server-side downloads are decrypted.", "components": ["es", "os31", "cloud"], "sources": ["es:s4fb9bf780cf5", "os31:s089decb3330d", "cloud:s710600aeb168"], "status": "REASONED"},
+    "cloud-defaults": {"text": "New AWS S3, GCS and Azure objects are encrypted server-side by default; assess historical objects and customer key ownership separately.", "components": ["cloud"], "sources": ["cloud:s710600aeb168", "cloud:sdc6a5af591ff", "cloud:saeb8db497f20"], "status": "REASONED"},
+    "es-s3": {"text": "8.19 server_side_encryption defaults false; true requests AES256 SSE-S3, not client encryption. Omit it when using bucket-default KMS and verify resulting metadata.", "components": ["es819"], "sources": ["es819:s3cac63e6ba14"], "status": "REASONED"},
+    "os-s3": {"text": "3.1 removed server_side_encryption; server_side_encryption_type accepts AES256/aws:kms/bucket_default. Default changed from bucket_default to AES256 in 3.8; explicitly select intended mode.", "components": ["os31", "os38"], "sources": ["os31:s089decb3330d", "os38:sc57180db39be"], "status": "REASONED"},
+    "os-s3-kms": {"text": "Explicit KMS repository mode uses server_side_encryption_kms_key_id ARN with object/KMS permissions; this is server-side encryption and settings are not Elasticsearch-compatible.", "components": ["os31", "cloud"], "sources": ["os31:s089decb3330d", "cloud:se1e1c91f80b4"], "status": "REASONED"},
+    "es-gcs-azure": {"text": "8.19 GCS/Azure setting lists document no client-side-encryption switch; configure provider key policy and access. GCS supplied keys remain server-side and Azure keys/SAS are authentication.", "components": ["es819"], "sources": ["es819:s28a1fe315963", "es819:s6279b842bc10"], "status": "REASONED"},
+    "os-gcs-azure": {"text": "Follow 3.6 plugin/credential workflow. This guide's review of OpenSearch 3.8.0 GCS and Azure plugin-specific settings, blob upload and client construction found no plugin-specific client-side-encryption setting; the core repository crypto_settings path wraps the non-server-side-encryption blob store in client-side EncryptedBlobStore when crypto metadata is supplied. The cited common provider and GCS/Azure createBlobStore methods show a path to both repository types; this guide's assessment is that end-to-end applicability and live encryption behaviour for either type remain unestablished. The path requires a registered key-provider plugin matching key_provider_type and a key_provider_name; the cited tree includes an aws-kms provider, while available providers in a deployment, minimum versions and later-release behaviour remain unestablished. This guide's advice: Configure required customer-managed encryption through provider policy and grant key access.", "components": ["os36", "gcs38", "azure38", "corecrypto38", "cloud"], "sources": ["os36:sf0940d73ed6e", "gcs38:s631e8e354e26", "gcs38:s9ff434d5553c", "gcs38:s7e94d736aed9", "gcs38:sfa59a5382e57", "azure38:s85d096884518", "azure38:sc2902fffc253", "azure38:s22bd450a8a30", "azure38:sdea961e1b3be", "gcs38:s1f1e29ea0106", "gcs38:sfe65ec0f6f8c", "gcs38:s90d52029d8d8", "azure38:sa4a6997abb47", "azure38:s287622988f18", "corecrypto38:sb8b00bcc45a2", "corecrypto38:s6599b9d988eb", "corecrypto38:s72395c1b171c", "corecrypto38:s85afe5ff10ee", "corecrypto38:sa01a018a581d", "corecrypto38:s248fbcd97369", "corecrypto38:s0ed030669257", "corecrypto38:s726bdb2f7cab", "corecrypto38:s73ce68ed27f1", "cloud:sdc6a5af591ff", "cloud:saeb8db497f20", "corecrypto38:sc99eb8d33be7", "corecrypto38:sef269e173cbc", "corecrypto38:s2ee18ff27a14", "corecrypto38:sb739f2d2b9bb"], "status": "REASONED"},
+    "snapshot-integrity": {"text": "Keep repositories private and keys recoverable; do not rewrite active repository files. Configuration backups are separate and security-state snapshots are sensitive.", "components": ["es819"], "sources": ["es819:sb98bd971e2f6", "es819:s93987af8201d"], "status": "REASONED"},
+    "kibana-default": {"text": "Kibana defaults HTTP localhost:5601 with server TLS disabled; 8.19.22/9.5.4 Docker templates explicitly use wildcard host, requiring override/publication review.", "components": ["kb", "kb8", "kb9"], "sources": ["kb:s0fe3c0d2e958", "kb8:sd77254a631b1", "kb8:s14662915ed7e", "kb9:sd0f70697a909", "kb9:s39aaa733de4b"], "status": "REASONED"},
+    "kibana-tls": {"text": "Free Basic 8.19 server.ssl certificate/key protects incoming UI traffic; elasticsearch.ssl CA/full verification protects the separate backend hop.", "components": ["kb"], "sources": ["kb:s0fe3c0d2e958"], "status": "REASONED"},
+    "dash-default": {"text": "Dashboards 3.8.0 sample defaults localhost:5601 with server TLS disabled; inspect installation/container overrides.", "components": ["dash"], "sources": ["dash:sae1b7f23ca6c"], "status": "REASONED"},
+    "dash-tls": {"text": "Dashboards server.ssl protects UI, cookie.secure restricts session cookie to HTTPS, and opensearch.ssl CA/full verification protects the backend hop; restart after changes.", "components": ["dash36"], "sources": ["dash36:sea686fca5804"], "status": "REASONED"},
+    "ui-network": {"text": "UI binding is independent of 9200/9300; loopback suits only a same-namespace proxy, while private access requires intended interface, matching certificates and network restrictions.", "components": ["kb", "dash36"], "sources": ["kb:sf71765842118", "dash36:sea686fca5804"], "status": "REASONED"},
+    "verify-rbac": {"text": "Known app-data/other-data documents distinguish broad access from scoped 200/403 for user and key; 401/404/errors are inconclusive and pre-3.7 OpenSearch uses the user only.", "components": ["es", "os"], "sources": ["es:see6eaa520863", "os:sbd093eef861b"], "status": "REASONED", "verify": [1]},
+    "verify-anonymous": {"text": "Require effective anonymous settings on every node plus a formerly anonymous-readable known document becoming 401 while admin still gets 200; endpoint-specific 401 alone is insufficient.", "components": ["es", "os"], "sources": ["es:s204396515260", "os:s7d28cfa527a1"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "Admin HTTPS must return 200/cluster JSON before interpreting plaintext; TLS listener must return no HTTP status, with DNS/timeouts/unreachable states inconclusive.", "components": ["es", "os"], "sources": ["es:sce3095052f8d", "os:s4e3281cb3d23"], "status": "REASONED", "verify": [1]},
+    "verify-cors": {"text": "Inspect preflight headers: no grant to untrusted origin, exact grant for trusted enabled origin; with CORS disabled neither is granted.", "components": ["es", "os"], "sources": ["es:s0f65658e7273", "os:s3f64f7b4cf84"], "status": "REASONED", "verify": [1]},
+    "verify-audit": {"text": "Fresh failed-authentication probe must correlate with new authentication_failed/FAILED_LOGIN in node and independent collector records; 401 alone proves no delivery.", "components": ["es", "os"], "sources": ["es:sfc6fef9020b3", "os:sbad13e007c8f"], "status": "REASONED", "verify": [1]},
+    "verify-audit-body": {"text": "Compare unique marker present with body logging enabled and absent from a new matching event when disabled; independently verify header exclusion and effective configuration.", "components": ["es", "os"], "sources": ["es:s5603a653318d", "os:sbad13e007c8f"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Locate actual running listeners/ports and inspect publication; intentional bridge-container wildcard differs from host-network exposure and no output alone is inconclusive.", "components": ["es8", "es9", "host"], "sources": ["es8:s59c2dd10f083", "es9:s1f0a06e68675", "host:s1b4e67e38127"], "status": "REASONED", "verify": [2]},
+    "verify-fls-dls": {"text": "Two-tenant fixture compares unrestricted and actual restricted credentials through search, GET, requested fields and aggregations, with allowed-field and administrator controls; no inference-proof claim.", "components": ["es819", "os36"], "sources": ["es819:s805957cad810", "es819:s52adbc714b10", "os36:s42d975e3cd92", "os36:sade7ff6b2bb3"], "status": "REASONED", "verify": [3]},
+    "verify-storage": {"text": "Data-path device chain must traverse intended encryption mapping; unrelated mapping or successful unlocked reads proves nothing, and provider volumes need their own metadata.", "components": ["host"], "sources": ["host:s42b4720299f5", "host:sd23c3d0f42a7", "host:s252144371961"], "status": "REASONED", "verify": [4]},
+    "verify-mount": {"text": "Isolated unavailable-mount fixture must fail startup for that reason without writes to the ordinary directory; restored encrypted mount must start successfully.", "components": ["host"], "sources": ["host:s64522c42b5bc", "host:s9823c4e9efa4"], "status": "REASONED", "verify": [5]},
+    "verify-snapshot": {"text": "Harmless explicit-index snapshot/restore must complete and preserve both fixtures without global/security state; timeouts need operation-state inspection before retry.", "components": ["es819", "os36"], "sources": ["es819:sb98bd971e2f6", "es819:s3e5630e4430d", "os36:sf0940d73ed6e"], "status": "REASONED", "verify": [3]},
+    "verify-object-key": {"text": "Inspect actual new/retained repository object mode/key; controlled object-read and KMS-only denial need provider evidence plus authorized controls. Repository verify proves neither encryption nor isolation.", "components": ["cloud"], "sources": ["cloud:se54783905d19", "cloud:sc53339f5429f", "cloud:se1e1c91f80b4"], "status": "REASONED", "verify": [6]},
+    "verify-ui": {"text": "Require expected CA-validated HTTPS and rejected plaintext UI after an exposed HTTP fixture; verify prohibited-network denial with authorized success and effective private binding.", "components": ["kb", "dash36", "host"], "sources": ["kb:s0fe3c0d2e958", "dash36:sea686fca5804", "host:s1b4e67e38127"], "status": "REASONED", "verify": [7, 8]},
+    "verify-ui-backend": {"text": "Browser TLS does not prove backend full verification or Dashboards Secure cookie; inspect both separately with effective settings and publication.", "components": ["kb", "dash36"], "sources": ["kb:s0fe3c0d2e958", "dash36:sea686fca5804"], "status": "REASONED", "verify": [7, 8]}
+  }
+}
+````
+<!-- version-basis:end -->

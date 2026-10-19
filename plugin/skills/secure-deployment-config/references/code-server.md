@@ -1,79 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-09-27",
-  "documentation_checked": "2026-09",
-  "body_sha256": "4dfd35a63a16c1e36dc1b89dd972dd12f78009c6ba4876f4a2ef920a7f18bfbe",
-  "components": {
-    "server": {
-      "name": "code-server",
-      "basis": "v4.137.0",
-      "sources": {
-        "sc5e7573dedcf": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/docs/guide.md",
-        "sbe2b1714f8d5": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/cli.ts",
-        "s5c5105b71096": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/http.ts",
-        "s1ccbd73ebb52": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/pathProxy.ts",
-        "s60678f2e26e9": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/domainProxy.ts",
-        "s99eaa753a770": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/docs/FAQ.md"
-      }
-    }
-  },
-  "claims": {
-    "ssh": {"text": "Vendor prefers SSH forwarding; bind the local 8080 forwarding listener to loopback and open the local browser URL.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED"},
-    "config": {"text": "Edit generated config.yaml and retain a supported credential; precreating it suppresses random-password generation and password auth without either credential fails startup.", "components": ["server"], "sources": ["server:s99eaa753a770", "server:sbe2b1714f8d5"], "status": "REASONED"},
-    "bind": {"text": "bind-addr 127.0.0.1:8080 keeps the editor private behind a proxy or tunnel.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:sbe2b1714f8d5"], "status": "REASONED"},
-    "auth-default": {"text": "auth defaults password; replace the generated value with a long random secret and protect config.yaml.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:sbe2b1714f8d5"], "status": "REASONED"},
-    "rate-limit": {"text": "Password attempts are limited to two per minute plus twelve per hour.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED"},
-    "credential-precedence": {"text": "PASSWORD/HASHED_PASSWORD override file credentials and hashed form wins; --password is not a supported CLI flag.", "components": ["server"], "sources": ["server:s99eaa753a770", "server:sbe2b1714f8d5"], "status": "REASONED"},
-    "config-precedence": {"text": "CLI flags override config; inspect --bind-addr, --config, CODE_SERVER_CONFIG and XDG_CONFIG_HOME for the effective launcher and file.", "components": ["server"], "sources": ["server:s99eaa753a770", "server:sbe2b1714f8d5"], "status": "REASONED"},
-    "tls-default": {"text": "cert defaults false; public access needs authenticated encryption, normally a reverse proxy with a trusted certificate.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s99eaa753a770", "server:sbe2b1714f8d5"], "status": "REASONED"},
-    "tls-native": {"text": "Bare --cert or cert:true generates ~/.local/share/code-server/self-signed.crt; --cert with --cert-key selects supplied material; retain certificate validation.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:sbe2b1714f8d5"], "status": "REASONED"},
-    "mfa": {"text": "Built-in login is single-factor; fronting MFA must cover every enabled path, subdomain and WebSocket.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096"], "status": "REASONED"},
-    "path-proxy": {"text": "/proxy/<port>/ strips its prefix; /absproxy/<port>/ retains it; both use code-server authentication and auth:none exposes them.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096", "server:s1ccbd73ebb52"], "status": "REASONED"},
-    "domain-proxy": {"text": "--proxy-domain exposes per-port subdomains using code-server authentication; apply fronting policy to each.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096", "server:s60678f2e26e9"], "status": "REASONED"},
-    "preflight": {"text": "--skip-auth-preflight allows unauthenticated preflight requests.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:sbe2b1714f8d5"], "status": "REASONED"},
-    "disable-proxy": {"text": "--disable-proxy turns off unneeded port forwarding.", "components": ["server"], "sources": ["server:sbe2b1714f8d5", "server:s5c5105b71096"], "status": "REASONED"},
-    "least-privilege": {"text": "Loopback limits inbound reach, not terminal/extension/proxied-service outbound access; minimize permissions and egress, including metadata/internal destinations.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096"], "status": "REASONED"},
-    "verify-origin": {"text": "ss inventories only this namespace; probe each public IPv4/IPv6 and port directly with intended TLS hostname; any HTTP response is reachability, and http=000 is inconclusive.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED", "verify": [1]},
-    "verify-editor": {"text": "At the same editor URL, anonymous requests must reach login/challenge and valid-session requests the editor; a proxy 401 alone or failed positive control proves nothing.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096"], "status": "REASONED", "verify": [1]},
-    "verify-mfa": {"text": "Password-only access must not open the editor while completing the second factor must; also confirm in a fresh browser.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # code-server: browser VS Code without giving away the machine
 
-<!-- version-basis:start -->
-**Version basis**
+Written against code-server v4.137.0. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 18 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- server: code-server (v4.137.0)
-
-Claims (full source mapping in the front matter):
-
-- ssh (REASONED; server): Vendor prefers SSH forwarding; bind the local 8080 forwarding listener to loopback and open the local browser URL.
-- config (REASONED; server): Edit generated config.yaml and retain a supported credential; precreating it suppresses random-password generation and password auth without either credential fails startup.
-- bind (REASONED; server): bind-addr 127.0.0.1:8080 keeps the editor private behind a proxy or tunnel.
-- auth-default (REASONED; server): auth defaults password; replace the generated value with a long random secret and protect config.yaml.
-- rate-limit (REASONED; server): Password attempts are limited to two per minute plus twelve per hour.
-- credential-precedence (REASONED; server): PASSWORD/HASHED_PASSWORD override file credentials and hashed form wins; --password is not a supported CLI flag.
-- config-precedence (REASONED; server): CLI flags override config; inspect --bind-addr, --config, CODE_SERVER_CONFIG and XDG_CONFIG_HOME for the effective launcher and file.
-- tls-default (REASONED; server): cert defaults false; public access needs authenticated encryption, normally a reverse proxy with a trusted certificate.
-- tls-native (REASONED; server): Bare --cert or cert:true generates ~/.local/share/code-server/self-signed.crt; --cert with --cert-key selects supplied material; retain certificate validation.
-- mfa (REASONED; server): Built-in login is single-factor; fronting MFA must cover every enabled path, subdomain and WebSocket.
-- path-proxy (REASONED; server): /proxy/&lt;port&gt;/ strips its prefix; /absproxy/&lt;port&gt;/ retains it; both use code-server authentication and auth:none exposes them.
-- domain-proxy (REASONED; server): --proxy-domain exposes per-port subdomains using code-server authentication; apply fronting policy to each.
-- preflight (REASONED; server): --skip-auth-preflight allows unauthenticated preflight requests.
-- disable-proxy (REASONED; server): --disable-proxy turns off unneeded port forwarding.
-- least-privilege (REASONED; server): Loopback limits inbound reach, not terminal/extension/proxied-service outbound access; minimize permissions and egress, including metadata/internal destinations.
-- verify-origin (REASONED; server): ss inventories only this namespace; probe each public IPv4/IPv6 and port directly with intended TLS hostname; any HTTP response is reachability, and http=000 is inconclusive.
-- verify-editor (REASONED; server): At the same editor URL, anonymous requests must reach login/challenge and valid-session requests the editor; a proxy 401 alone or failed positive control proves nothing.
-- verify-mfa (REASONED; server): Password-only access must not open the editor while completing the second factor must; also confirm in a fresh browser.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 code-server runs a terminal in the browser, so exposure equals remote code execution. Its own documentation is blunt: never expose it directly to the internet without authentication and encryption.
 
@@ -184,3 +113,100 @@ REASONED: preceding block; listener inventory, direct-origin isolation, paired e
 - code-server v4.137.0 HTTP controls (authentication, proxy auth, `--disable-proxy`): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/http.ts
 - code-server v4.137.0 path proxy (`/proxy`, `/absproxy` routing): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/pathProxy.ts
 - code-server v4.137.0 domain proxy (`--proxy-domain` subdomains): https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/domainProxy.ts
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/code-server.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- server: code-server (v4.137.0)
+
+Claims (full source mapping in the JSON block below):
+
+- ssh (REASONED; server): Vendor prefers SSH forwarding; bind the local 8080 forwarding listener to loopback and open the local browser URL.
+- config (REASONED; server): Edit generated config.yaml and retain a supported credential; precreating it suppresses random-password generation and password auth without either credential fails startup.
+- bind (REASONED; server): bind-addr 127.0.0.1:8080 keeps the editor private behind a proxy or tunnel.
+- auth-default (REASONED; server): auth defaults password; replace the generated value with a long random secret and protect config.yaml.
+- rate-limit (REASONED; server): Password attempts are limited to two per minute plus twelve per hour.
+- credential-precedence (REASONED; server): PASSWORD/HASHED_PASSWORD override file credentials and hashed form wins; --password is not a supported CLI flag.
+- config-precedence (REASONED; server): CLI flags override config; inspect --bind-addr, --config, CODE_SERVER_CONFIG and XDG_CONFIG_HOME for the effective launcher and file.
+- tls-default (REASONED; server): cert defaults false; public access needs authenticated encryption, normally a reverse proxy with a trusted certificate.
+- tls-native (REASONED; server): Bare --cert or cert:true generates ~/.local/share/code-server/self-signed.crt; --cert with --cert-key selects supplied material; retain certificate validation.
+- mfa (REASONED; server): Built-in login is single-factor; fronting MFA must cover every enabled path, subdomain and WebSocket.
+- path-proxy (REASONED; server): /proxy/&lt;port&gt;/ strips its prefix; /absproxy/&lt;port&gt;/ retains it; both use code-server authentication and auth:none exposes them.
+- domain-proxy (REASONED; server): --proxy-domain exposes per-port subdomains using code-server authentication; apply fronting policy to each.
+- preflight (REASONED; server): --skip-auth-preflight allows unauthenticated preflight requests.
+- disable-proxy (REASONED; server): --disable-proxy turns off unneeded port forwarding.
+- least-privilege (REASONED; server): Loopback limits inbound reach, not terminal/extension/proxied-service outbound access; minimize permissions and egress, including metadata/internal destinations.
+- verify-origin (REASONED; server): ss inventories only this namespace; probe each public IPv4/IPv6 and port directly with intended TLS hostname; any HTTP response is reachability, and http=000 is inconclusive.
+- verify-editor (REASONED; server): At the same editor URL, anonymous requests must reach login/challenge and valid-session requests the editor; a proxy 401 alone or failed positive control proves nothing.
+- verify-mfa (REASONED; server): Password-only access must not open the editor while completing the second factor must; also confirm in a fresh browser.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-09-27",
+  "documentation_checked": "2026-09",
+  "body_sha256": "4dfd35a63a16c1e36dc1b89dd972dd12f78009c6ba4876f4a2ef920a7f18bfbe",
+  "components": {
+    "server": {
+      "name": "code-server",
+      "basis": "v4.137.0",
+      "sources": {
+        "sc5e7573dedcf": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/docs/guide.md",
+        "sbe2b1714f8d5": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/cli.ts",
+        "s5c5105b71096": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/http.ts",
+        "s1ccbd73ebb52": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/pathProxy.ts",
+        "s60678f2e26e9": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/src/node/routes/domainProxy.ts",
+        "s99eaa753a770": "https://raw.githubusercontent.com/coder/code-server/v4.137.0/docs/FAQ.md"
+      }
+    }
+  },
+  "claims": {
+    "ssh": {"text": "Vendor prefers SSH forwarding; bind the local 8080 forwarding listener to loopback and open the local browser URL.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED"},
+    "config": {"text": "Edit generated config.yaml and retain a supported credential; precreating it suppresses random-password generation and password auth without either credential fails startup.", "components": ["server"], "sources": ["server:s99eaa753a770", "server:sbe2b1714f8d5"], "status": "REASONED"},
+    "bind": {"text": "bind-addr 127.0.0.1:8080 keeps the editor private behind a proxy or tunnel.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:sbe2b1714f8d5"], "status": "REASONED"},
+    "auth-default": {"text": "auth defaults password; replace the generated value with a long random secret and protect config.yaml.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:sbe2b1714f8d5"], "status": "REASONED"},
+    "rate-limit": {"text": "Password attempts are limited to two per minute plus twelve per hour.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED"},
+    "credential-precedence": {"text": "PASSWORD/HASHED_PASSWORD override file credentials and hashed form wins; --password is not a supported CLI flag.", "components": ["server"], "sources": ["server:s99eaa753a770", "server:sbe2b1714f8d5"], "status": "REASONED"},
+    "config-precedence": {"text": "CLI flags override config; inspect --bind-addr, --config, CODE_SERVER_CONFIG and XDG_CONFIG_HOME for the effective launcher and file.", "components": ["server"], "sources": ["server:s99eaa753a770", "server:sbe2b1714f8d5"], "status": "REASONED"},
+    "tls-default": {"text": "cert defaults false; public access needs authenticated encryption, normally a reverse proxy with a trusted certificate.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s99eaa753a770", "server:sbe2b1714f8d5"], "status": "REASONED"},
+    "tls-native": {"text": "Bare --cert or cert:true generates ~/.local/share/code-server/self-signed.crt; --cert with --cert-key selects supplied material; retain certificate validation.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:sbe2b1714f8d5"], "status": "REASONED"},
+    "mfa": {"text": "Built-in login is single-factor; fronting MFA must cover every enabled path, subdomain and WebSocket.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096"], "status": "REASONED"},
+    "path-proxy": {"text": "/proxy/<port>/ strips its prefix; /absproxy/<port>/ retains it; both use code-server authentication and auth:none exposes them.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096", "server:s1ccbd73ebb52"], "status": "REASONED"},
+    "domain-proxy": {"text": "--proxy-domain exposes per-port subdomains using code-server authentication; apply fronting policy to each.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096", "server:s60678f2e26e9"], "status": "REASONED"},
+    "preflight": {"text": "--skip-auth-preflight allows unauthenticated preflight requests.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:sbe2b1714f8d5"], "status": "REASONED"},
+    "disable-proxy": {"text": "--disable-proxy turns off unneeded port forwarding.", "components": ["server"], "sources": ["server:sbe2b1714f8d5", "server:s5c5105b71096"], "status": "REASONED"},
+    "least-privilege": {"text": "Loopback limits inbound reach, not terminal/extension/proxied-service outbound access; minimize permissions and egress, including metadata/internal destinations.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096"], "status": "REASONED"},
+    "verify-origin": {"text": "ss inventories only this namespace; probe each public IPv4/IPv6 and port directly with intended TLS hostname; any HTTP response is reachability, and http=000 is inconclusive.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED", "verify": [1]},
+    "verify-editor": {"text": "At the same editor URL, anonymous requests must reach login/challenge and valid-session requests the editor; a proxy 401 alone or failed positive control proves nothing.", "components": ["server"], "sources": ["server:sc5e7573dedcf", "server:s5c5105b71096"], "status": "REASONED", "verify": [1]},
+    "verify-mfa": {"text": "Password-only access must not open the editor while completing the second factor must; also confirm in a fresh browser.", "components": ["server"], "sources": ["server:sc5e7573dedcf"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->
