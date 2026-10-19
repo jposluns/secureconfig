@@ -18,6 +18,8 @@ jobs:
         with:
           persist-credentials: false
       - name: Protect URL underscores for Markdown extraction
+        # During the transition, escape URLs only in legacy version_basis front matter.
+        # Two-section JSON is fenced; its component URLs must also appear in Sources.
         # Escape quoted URLs only in the known version_basis JSON front matter,
         # where Markdown extraction can truncate underscores. Body URLs are deliberately
         # left alone; guides must use autolinks or explicit links for those citations.

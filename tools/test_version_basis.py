@@ -1603,5 +1603,199 @@ class VerifyGrammarTests(unittest.TestCase):
                 self.check_body(body)
 
 
+class TwoSectionTests(unittest.TestCase):
+    def legacy(self, body=BODY):
+        data = fixture()
+        data['body_sha256'] = vb.digest(body)
+        return vb.updated(document(data, body), 'fixture.md')
+
+    def test_round_trip_digest_endings_and_both_bundles(self):
+        for ending in ('', '\n', '\n\n', '\n \n'):
+            body = BODY.rstrip('\n') + ending
+            legacy = self.legacy(body)
+            current = vb.migrated(legacy, 'fixture.md')
+            data, full = vb.split(current)
+            self.assertEqual(vb.without_summary(full), body)
+            self.assertEqual(data, vb.split(legacy)[0])
+            self.assertEqual(data['body_sha256'], vb.digest(body))
+            self.assertEqual(vb.updated(current, 'fixture.md'), current)
+            vb.validate(data, full, 'fixture.md')
+            self.assertEqual(body_lines(current), current.splitlines())
+            self.assertTrue(current.startswith('# Fixture\n\nWritten against Product v1.0.'))
+            self.assertTrue(current.endswith(vb.END + '\n'))
+            self.assertIn('/main/fixture.md\nin full', current)
+            self.assertIn('compare the versions listed below', current)
+            self.assertEqual(current.count('Metadata reviewed'), 1)
+            self.assertIn('Claims (full source mapping in the JSON block below):', current)
+            self.assertEqual(vb.without_summary(current + '\n \t\n'), body)
+            with tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / 'fixture.md'
+                for text in (legacy, current):
+                    path.write_bytes(text.encode('utf-8'))
+                    result = subprocess.run([sys.executable, str(vb.ROOT / 'tools/version_basis.py'),
+                                             '--bundle', str(path)], capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stdout, vb.split(text)[1])
+
+    def test_header_counts_folding_merging_and_limits(self):
+        data = fixture()
+        self.assertIn('1 claim, all reasoned from cited sources.', vb.header(data))
+        data['claims']['other'] = dict(data['claims']['control'], status='DEMONSTRATED')
+        self.assertIn('2 claims: 1 demonstrated by a check that ran and 1 reasoned', vb.header(data))
+        data['claims']['control']['status'] = 'DEMONSTRATED'
+        self.assertIn('2 claims, all demonstrated by a check that ran.', vb.header(data))
+        def components(pairs):
+            data['components'] = {f'c{i}': dict(name=name, basis=basis, sources={SID: URL})
+                                  for i, (name, basis) in enumerate(pairs)}
+            return vb.versions_sentence(data)
+        self.assertEqual(components([('Product', 'v1'), ('Product', 'v2'), ('Product', 'v3'),
+                                     ('Snapshot', 'a' * 7), ('Docs', 'unknown')]),
+                         'Written against Product v1, v2, and v3; 1 further source is pinned '
+                         'to a commit and 1 carries no recorded version.')
+        self.assertIn('Product v1 and v2.', components([('Product', 'v1'), ('Product', 'v2')]))
+        self.assertIn('No release versions are recorded', components([('Docs', 'unknown'),
+                                                                     ('Pin', 'a' * 40)]))
+        self.assertEqual(components([('Notice', '2025')]), 'Written against Notice 2025.')
+        self.assertIn('&lt;&amp;&#124;&#96;&gt;', components([('<&|`>', 'v1')]))
+        sentence = components([(f'Product{i}', 'v1') for i in range(10)])
+        self.assertIn('plus 2 more recorded bases', sentence)
+        self.assertNotIn('Product8', sentence)
+        sentence = components([(f'Product{i}' + 'x' * 90, 'v1') for i in range(8)])
+        self.assertLessEqual(len(sentence), 400)
+        self.assertIn('plus 5 more recorded bases', sentence)
+        with self.assertRaisesRegex(ValueError, '400-character'):
+            components([('x' * 400, 'v1')])
+
+    def test_malformed_mixed_and_stale_sections(self):
+        current = vb.migrated(self.legacy(), 'fixture.md')
+        mutations = (
+            current + 'After END\n', current.replace(vb.END, vb.END + ' '),
+            current + vb.START, current.replace(vb.START, ''),
+            current.replace('## ' + vb.NOTE_TITLE, '## Verify'),
+            current.replace('```text', '```bash'), current.replace('````json', '```json'),
+            current.replace('\n````\n', '\n```\n'),
+            current.replace('**Version basis**', '### Other'),
+            current.replace('Read the secureconfig guide at', '## Verify'),
+            current.replace('**Version basis**', '<b>Other</b>'),
+            current.replace('**Version basis**', '```sh\necho hidden\n```'),
+            current.replace('"schema": 1,', '"schema": 1, "schema": 1,'),
+            current.replace('"schema": 1,', '"schema": NaN,'),
+            vb.front_matter(fixture()) + current,
+        )
+        for text in mutations:
+            with self.subTest(text=text[-120:]), self.assertRaises(ValueError):
+                vb.updated(text, 'fixture.md')
+        for text in (current.replace('Written against Product', 'Written against Other', 1),
+                     current.replace(vb.header(fixture()) + '\n\n', '', 1)):
+            with self.assertRaisesRegex(ValueError, 'generated header'):
+                vb.updated(text, 'fixture.md')
+        stale = current.replace('Requires authentication.', 'Wrong.', 1)
+        self.assertNotEqual(vb.updated(stale, 'fixture.md'), stale)
+        with patch.object(vb, 'front_matter', return_value='---\nversion_basis: {\n````\n}\n---\n'):
+            with self.assertRaisesRegex(ValueError, 'generated JSON contains a fence'):
+                vb.render(fixture(), 'fixture.md')
+
+    def test_migration_refuses_digest_change(self):
+        with self.assertRaisesRegex(ValueError, 'immediately follow the H1'):
+            vb.migrated(self.legacy(BODY.replace('# Fixture\n\n', '# Fixture\nIntro\n\n')),
+                        'fixture.md')
+        renderer = vb.two_section
+        def changed(data, body, guide):
+            return renderer(data, body + 'Extra prose.\n', guide)
+        with patch.object(vb, 'two_section', side_effect=changed):
+            with self.assertRaisesRegex(ValueError, 'migration changed digested body'):
+                vb.migrated(self.legacy(), 'fixture.md')
+        with self.assertRaisesRegex(ValueError, 'body changed'):
+            vb.migrated(self.legacy() + 'Unreviewed.\n', 'fixture.md')
+
+    def test_rebind_and_diagnostic_lines_in_both_layouts(self):
+        legacy = self.legacy()
+        for text in (legacy, vb.migrated(legacy, 'fixture.md')):
+            changed = text.replace('A documented control.', 'A reviewed control.')
+            rebound = vb.rebound(changed, 'fixture.md')
+            data, full = vb.split(changed)
+            expected = vb.digest(vb.without_summary(full))
+            self.assertEqual(rebound, changed.replace(data['body_sha256'], expected, 1))
+            self.assertEqual(vb.updated(rebound, 'fixture.md'), rebound)
+            bad = text.replace('- Product v1.0:', '- Product v1.0 <a href=x>bad</a>:')
+            line = next(i for i, value in enumerate(bad.split('\n'), 1) if value.startswith('- Product'))
+            with self.assertRaisesRegex(ValueError, f'Sources line {line}: raw HTML <a>'):
+                vb.rebound(bad, 'fixture.md')
+
+    def test_enrollment_and_cli_preflight(self):
+        legacy = self.legacy()
+        current = vb.migrated(legacy, 'fixture.md')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'tools').mkdir()
+            (root / 'tools/version_basis_guides.txt').write_text('fixture.md\nother.md\n')
+            (root / 'tools/version_basis_sources_baseline.txt').write_text('')
+            (root / 'CHANGELOG.md').write_text('## 2026-09-26\n')
+            first, second = root / 'fixture.md', root / 'other.md'
+            first.write_text(current)
+            second.write_text(legacy)
+            with patch.object(vb, 'ROOT', root):
+                self.assertEqual(vb.paths(), [first, second])
+                first.write_text(BODY)
+                with self.assertRaisesRegex(ValueError, 'missing version_basis'):
+                    vb.paths()
+                first.write_text(vb.front_matter(fixture()) + current)
+                with self.assertRaisesRegex(ValueError, 'both'):
+                    vb.paths()
+                first.write_text(legacy)
+                def run(*args):
+                    output = io.StringIO()
+                    with patch.object(sys, 'argv', ['version_basis.py', *args]), \
+                            contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+                        result = vb.main()
+                    return result, output.getvalue()
+                second.write_text(legacy + 'Changed body.\n')
+                self.assertEqual(run('--migrate', str(first), str(second))[0], 1)
+                self.assertEqual(first.read_text(), legacy)
+                second.write_text(legacy)
+                self.assertEqual(run('--migrate', str(first), str(first))[0], 1)
+                self.assertEqual(run('--migrate', str(root / 'missing.md'))[0], 1)
+                code, output = run('--migrate', str(first), str(second))
+                self.assertEqual(code, 0, output)
+                self.assertEqual(output.count('body bytes equal'), 2)
+                self.assertEqual(first.read_text(), current)
+                self.assertEqual(run('--check')[0], 0)
+                self.assertEqual(run('--migrate', str(first))[0], 1)
+                (root / 'extra.md').write_text(current)
+                with self.assertRaisesRegex(ValueError, 'pilot list differs'):
+                    vb.paths()
+
+    def test_shape_urls_and_verify_fingerprints(self):
+        from check_bare_urls import lexical_findings, parsed_findings
+        from check_guide_shape import find_sources, find_verify
+        from check_verify_marking import scan_units
+        parser = gate_parser(required=bool(os.environ.get('CI')))
+        if parser is None:
+            self.skipTest('pinned parser unavailable')
+        legacy = self.legacy()
+        current = vb.migrated(legacy, 'fixture.md', parser=parser)
+        old, old_errors = scan_units(legacy, enrolled=True, parser=parser)
+        new, new_errors = scan_units(current, enrolled=True, parser=parser)
+        self.assertEqual(old_errors, new_errors)
+        self.assertEqual([unit[1:] for unit in old], [unit[1:] for unit in new])
+        self.assertEqual(find_verify('fixture.md', current), [])
+        self.assertEqual(find_sources('fixture.md', current, datetime.date(2026, 10, 18)), [])
+        missing = current.replace('- Product v1.0: ' + URL, '- No citation', 1)
+        self.assertTrue(find_sources('fixture.md', missing, datetime.date(2026, 10, 18)))
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.md'
+            for text in (legacy, current):
+                # JSON URLs are opaque; an ordinary body occurrence is still checked.
+                text = text.replace('"schema": 1,', '"sample": "https://example.com/a__b", "schema": 1,')
+                path.write_text(text)
+                self.assertEqual(list(lexical_findings(path)), [])
+                self.assertEqual(list(parsed_findings(path, parser)), [])
+                text = text.replace('A documented control.', 'https://example.com/a__b')
+                path.write_text(text)
+                line = text.split('\n').index('https://example.com/a__b') + 1
+                for findings in (lexical_findings(path), parsed_findings(path, parser)):
+                    self.assertEqual(list(findings), [f'fixture.md:{line}: bare URL contains __: https://example.com/a__b'])
+
+
 if __name__ == '__main__':
     unittest.main()

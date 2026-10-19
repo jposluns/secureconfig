@@ -28,7 +28,7 @@ if [ "${1:-}" = "--list-inputs" ]; then
   exit 0
 fi
 
-# Each reference is a separate Markdown document: retain validated front matter.
+# Each reference is a whole validated guide, in either supported layout.
 python3 tools/version_basis.py --check
 
 rm -rf "$dest"

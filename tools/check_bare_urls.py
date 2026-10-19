@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _markdown import Fences, body_lines
 from _walk import walk_files
 from check_verify_marking import ParserUnavailable, code_spans, gate_parser, html_end
-from version_basis import split as split_front_matter
+from version_basis import split_front_matter
 
 ROOT = Path(__file__).resolve().parents[1]
 URL = re.compile(r"https?://[^\s<>\"'`\[\]]+", re.I)
