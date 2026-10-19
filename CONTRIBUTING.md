@@ -205,17 +205,17 @@ metadata, refusing any difference. It never rebinds. Rebuild both bundles and ru
 the same change as each migration batch. `--check` and `--write` preserve each guide's layout.
 
 For a two-section guide with its generated block immediately after the H1, run
-`python3 tools/version_basis.py --introduce GUIDE --intro 'The reviewed intro paragraph.'`. Intro paragraphs may be drafted by a
-worker; each is reviewed against its guide before it is applied.
+`python3 tools/version_basis.py --introduce GUIDE --intro 'The reviewed intro paragraph.'`.
+Intro paragraphs may be drafted by a worker; each is reviewed against its guide before it is
+applied.
 This accepts the historical form as well as a new top prompt without an intro. It validates
 the original guide, inserts the supplied paragraph, moves the prompt/header below it, shortens
 the EOF note and rebinds the digest. Before writing, it asserts that the new body equals the
 old body with only that paragraph and its two separator LFs inserted after the H1, that no
 other metadata changed, and that the result validates and renders identically. It refuses
 legacy front matter, an existing intro before a top prompt, and invalid or stale inputs.
-Review the intro for meaning; paragraph syntax cannot establish human authorship or accuracy.
-Rebuild both bundles and run the gates for each migration batch. This tooling change delivers
-no guide edits.
+Review the intro for meaning; paragraph syntax cannot establish its accuracy.
+Rebuild both bundles and run the gates for each migration batch.
 
 Schema 1 requires exactly these top-level fields:
 
