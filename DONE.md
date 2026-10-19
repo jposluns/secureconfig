@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.274 | `nodejs.md`: password: cite Argon2id recommendation and bcrypt library APIs. (M, M) | Done, #672. Pinned OWASP password guidance and Node package APIs, retaining the legacy bcrypt scope and labelling cost 12 as the guide example. |
+| 1.275 | `nodejs.md`: mfa: source the fronting identity layer beyond the already pinned otplib/qrcode examples. (M, M) | Done, #672. Cited Cloudflare Access independent MFA and policy precedence, retaining TOTP and requiring effective MFA enforcement and origin isolation without claiming a deployment test. |
 | 1.284 | `dotnet.md`: mfa: cite fronting-layer MFA enforcement. (M, M) | Done, #671. Cited Cloudflare Access independent MFA, effective-policy precedence and origin protection, preserving provider enforcement and labelling deployment limits. |
 | 1.276 | `python.md`: bind: cite platform bind mappings and their deployment scope, partial. (M, M) | Done, #670. Cited Render, Heroku and Fly listener scopes and TLS conditions plus Railway target ports, preserving advice and leaving Railway and Cedar source gaps in TODO.md under 1.276. |
 | 1.268 | `paas.md`: https-redirect and verify-redirect, partial. (M, M) | Done, #669. Cited platform redirect settings, statuses and header limits, retained the HEAD command and guide acceptance criterion, and kept unresolved evidence in TODO.md under 1.268. |
