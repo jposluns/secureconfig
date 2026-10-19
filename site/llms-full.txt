@@ -9,9 +9,31 @@
 
 # secureconfig
 
-Deployment exposure guides for AI-assisted projects: TLS, identity, MFA, secrets, and network controls for web apps, AI infrastructure, and the services behind them.
+Keep the world and its information more secure, one deployment at a time.
 
-Publicly reachable services built with AI assistance are routinely deployed on plain HTTP with no authentication. This repository holds short, generic, copy-ready guides that close that gap across the deployment surface: certificates and tunnels; human and machine identity, MFA, and secrets; web servers and proxies; language runtimes and frameworks; containers and Kubernetes; hosts, cloud firewalls, PaaS, and rented GPU clouds; databases, storage, and messaging; the AI stack itself (model servers, vector databases, MCP servers, agent and chat UIs, LLM observability); and the operational controls around a deployment (egress and metadata, exposed files, webhooks, and lifecycle from first run through teardown). The guides are written to be consumed by AI development assistants as well as by people: point your assistant at this repository and ask it to secure your project.
+Security guides your AI assistant can follow, verify, and be honest about.
+
+## What this is
+
+A library of short, generic, copy-ready guides covering the full deployment surface of a modern project: certificates and tunnels; human and machine identity, MFA, and secrets; web servers and proxies; language runtimes and frameworks; containers and Kubernetes; hosts, cloud firewalls, PaaS, and rented GPU clouds; databases, storage, and messaging; the AI stack itself (model servers, vector databases, MCP servers, agent and chat UIs, LLM observability); and the operational controls around a deployment, from first run through teardown. At the time of writing that is 102 guides across the 12 categories indexed below, plus [controls-reference.md](controls-reference.md) for any service that has no guide yet.
+
+## Why it matters
+
+Software now ships faster than its security configuration, and the gap lands on the deployment surface: services listening on plain HTTP, admin consoles with no login, AI tools exposed on their defaults. These guides close that gap, and they hold themselves to the standard they ask of you. Every configuration line must come from the vendor documentation cited in its guide. Verify steps declare what they rest on: DEMONSTRATED means the check ran against both the exposed and the fixed state, REASONED means it is derived from cited vendor behaviour and says so, and a reasoned step is never presented as verified. Where a tool has no native control, the guide says so plainly instead of inventing one. Most guides also carry machine-readable front matter recording the sources checked and, where known, the exact versions, and an automated gate suite under [tools/](tools/) enforces these conventions on every change.
+
+## Why point your AI at it
+
+An AI assistant will configure whatever it is asked to configure; this repository gives it the security steps to apply and a way to be honest about what it verified. The guides are written for machine consumption: stable raw URLs, a machine-readable index at [secureconfig.ai/llms.txt](https://secureconfig.ai/llms.txt), every guide in one file at [secureconfig.ai/llms-full.txt](https://secureconfig.ai/llms-full.txt), baseline rules an assistant can apply directly (next section), a decision guide mapping deployments to guides, and a verification checklist that requires reporting what could not be tested rather than asserting a pass.
+
+## The maintainer
+
+Jeff Posluns has spent more than 30 years in technology and security and wants to help keep the world and its information more secure. He built this library from that experience and uses his own AI tooling to keep expanding and updating it, with automated checks so it keeps its accuracy as it grows. Everything here is free and in the public domain.
+
+## Use it
+
+- With an AI assistant: tell it to secure your project using the guides at [github.com/jposluns/secureconfig](https://github.com/jposluns/secureconfig), or copy a ready-made task from [secureconfig.ai](https://secureconfig.ai); have it finish with the verification checklist below and report anything it could not test.
+- By hand: start with the decision guide below, apply every guide that fits, and run the verification checklist.
+- To contribute: open a GitHub issue or send a pull request (reaching Jeff any other way also works). To request a guide for an application with no guide yet, add a file to [requests/](requests/README.md) per its template, one application per pull request. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 The site at [secureconfig.ai](https://secureconfig.ai), served from [site/](site/) through Cloudflare Pages, is the short public pointer to these guides.
 
