@@ -858,7 +858,7 @@ Claims (full source mapping in the JSON block below):
 
 # Self-signed certificates
 
-Written against OpenSSL documentation (rolling) (no recorded version), Requests TLS documentation v2.32.3, Git ignore documentation v2.43.0, curl command documentation curl-8_12_1, Node.js extra CA certificates v22.19.0, RFC 9525 service identity RFC 9525, Debian ca-certificates trixie, and Ubuntu ca-certificates noble, plus 3 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 24 claims: 1 demonstrated by a check that ran and 23 reasoned from cited sources.
+Written against OpenSSL documentation (rolling) (no recorded version), Requests TLS documentation v2.32.3, Git ignore documentation v2.43.0, curl command documentation curl-8_12_1, Node.js extra CA certificates v22.19.0, Service identity RFC 9525, Debian ca-certificates trixie, and Ubuntu ca-certificates noble, plus 3 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 24 claims: 1 demonstrated by a check that ran and 23 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -1020,7 +1020,7 @@ Components (recorded basis):
 - git: Git ignore documentation (v2.43.0)
 - curl-source: curl command documentation (curl-8_12_1)
 - node: Node.js extra CA certificates (v22.19.0)
-- rfc9525: RFC 9525 service identity (RFC 9525)
+- rfc9525: Service identity (RFC 9525)
 - debian-ca: Debian ca-certificates (trixie)
 - ubuntu-ca: Ubuntu ca-certificates (noble)
 - rhel-ca: RHEL shared system certificates (RHEL 9)
@@ -1108,7 +1108,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "rfc9525": {
-      "name": "RFC 9525 service identity",
+      "name": "Service identity",
       "basis": "RFC 9525",
       "sources": {
         "s8dcb5fcc7802": "https://www.rfc-editor.org/rfc/rfc9525.html#section-2",
@@ -2835,7 +2835,7 @@ Claims (full source mapping in the JSON block below):
 
 # Multi-factor authentication (MFA)
 
-Written against TOTP standard (no recorded version), authentik source version/2026.8.3, Keycloak documentation 26.7.4, oauth2-proxy documentation v7.15.4, Caddy forward_auth minimum 2.5.1, google-authenticator-libpam source 1.11, and MySQL 8.0 multifactor authentication 8.0, plus 10 more recorded bases; 14 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 35 claims: 2 demonstrated by a check that ran and 33 reasoned from cited sources.
+Written against TOTP standard (no recorded version), authentik source version/2026.8.3, Keycloak documentation 26.7.4, oauth2-proxy documentation v7.15.4, Caddy forward_auth minimum 2.5.1, google-authenticator-libpam source 1.11, and MySQL multifactor authentication 8.0 and 8.4, plus 9 more recorded bases; 14 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 35 claims: 2 demonstrated by a check that ran and 33 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -3019,9 +3019,9 @@ Components (recorded basis):
 - google-workspace-docs: Google Workspace 2SV documentation (unknown)
 - supabase: Supabase Auth MFA (citation gap) (unknown)
 - access: Cloudflare Access MFA (citation gap) (unknown)
-- mysql: MySQL 8.0 multifactor authentication (8.0)
-- mysql-8-4: MySQL 8.4 multifactor authentication (8.4)
-- mysql-webauthn: MySQL 8.4 WebAuthn authentication (8.4)
+- mysql: MySQL multifactor authentication (8.0)
+- mysql-8-4: MySQL multifactor authentication (8.4)
+- mysql-webauthn: MySQL WebAuthn authentication (8.4)
 - entra-docs: Microsoft Entra documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
 - owasp-docs: OWASP cheat sheets (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
 - otp-source: pquerna/otp source (617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870)
@@ -3222,21 +3222,21 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "mysql": {
-      "name": "MySQL 8.0 multifactor authentication",
+      "name": "MySQL multifactor authentication",
       "basis": "8.0",
       "sources": {
         "sa937d1361fe1": "https://dev.mysql.com/doc/refman/8.0/en/multifactor-authentication.html"
       }
     },
     "mysql-8-4": {
-      "name": "MySQL 8.4 multifactor authentication",
+      "name": "MySQL multifactor authentication",
       "basis": "8.4",
       "sources": {
         "s56ada201b676": "https://dev.mysql.com/doc/refman/8.4/en/multifactor-authentication.html"
       }
     },
     "mysql-webauthn": {
-      "name": "MySQL 8.4 WebAuthn authentication",
+      "name": "MySQL WebAuthn authentication",
       "basis": "8.4",
       "sources": {
         "s807a77fa8872": "https://dev.mysql.com/doc/refman/8.4/en/webauthn-pluggable-authentication.html"
@@ -12924,7 +12924,7 @@ Claims (full source mapping in the JSON block below):
 
 # GitOps controllers: Argo CD and Flux
 
-Written against Argo CD v3.5.3 source (pinned to a commit), Flux OIDC introduction v2.9, Dex v2.45.1 source v2.45.1, Redis 8.2.3 source 8.2.3, and curl curl-8_14_1; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 50 claims, all reasoned from cited sources.
+Written against Argo CD v3.5.3 source (pinned to a commit), Flux OIDC introduction v2.9, Dex source v2.45.1, Redis source 8.2.3, and curl curl-8_14_1; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 50 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -13422,9 +13422,9 @@ Components (recorded basis):
 - flux-oidc: Flux OIDC introduction (v2.9)
 - argo-docs: Argo CD documentation (unknown)
 - flux: Flux documentation (unknown)
-- dex: Dex v2.45.1 source (v2.45.1)
+- dex: Dex source (v2.45.1)
 - redis-image: docker-library-redis v8.2.3 source (bcbc692165ce2241e194035041c5b5e01d2e1a5f)
-- redis-source: Redis 8.2.3 source (8.2.3)
+- redis-source: Redis source (8.2.3)
 - curl: curl (curl-8_14_1)
 - python: Python documentation (unknown)
 
@@ -13579,7 +13579,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "dex": {
-      "name": "Dex v2.45.1 source",
+      "name": "Dex source",
       "basis": "v2.45.1",
       "sources": {
         "s3b9512b79dea": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L151-L199",
@@ -13597,7 +13597,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "redis-source": {
-      "name": "Redis 8.2.3 source",
+      "name": "Redis source",
       "basis": "8.2.3",
       "sources": {
         "s667fc16bf18f": "https://github.com/redis/redis/blob/8.2.3/src/server.h#L142-L143",
@@ -18357,7 +18357,7 @@ Claims (full source mapping in the JSON block below):
 
 # Host baseline: SSH, firewall, updates
 
-Written against OpenSSH documentation (no recorded version), OpenSSH 8.2 server manual V_8_2_P1, OpenSSH 8.1 server manual V_8_1_P1, OpenSSH 9.9 source V_9_9_P2, DNF 4.14.0 4.14.0, cloud-init 26.2 26.2, cloud-init 20.1 20.1, and iproute2 ss manual v6.12.0, plus 1 more recorded basis; 9 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
+Written against OpenSSH documentation (no recorded version), OpenSSH 8.2 server manual V_8_2_P1, OpenSSH 8.1 server manual V_8_1_P1, OpenSSH 9.9 source V_9_9_P2, DNF 4.14.0, cloud-init 26.2 and 20.1, iproute2 ss manual v6.12.0, and BusyBox 1_36_1; 9 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -18574,7 +18574,7 @@ Components (recorded basis):
 - ubuntu-uu: Ubuntu noble unattended-upgrades source (0570be65234e2392d420308470d26920fa4cd21a)
 - ubuntu-apt: Ubuntu noble-updates apt source (835f914ef5657b923fbb8b357f134b00de24c6fd)
 - c9s-dnf: CentOS Stream 9 dnf packaging (3d5ca2af8635e0ef77219625f734d503b9900208)
-- dnf4: DNF 4.14.0 (4.14.0)
+- dnf4: DNF (4.14.0)
 - aws-ssm: AWS Session Manager (unknown)
 - gcp-iap: Google Cloud IAP (unknown)
 - azure-docs: Azure documentation snapshot (8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f)
@@ -18583,13 +18583,13 @@ Components (recorded basis):
 - crowdsec: CrowdSec (unknown)
 - totp: google-authenticator-libpam (unknown)
 - duo: Duo Unix (unknown)
-- cloudinit26: cloud-init 26.2 (26.2)
-- cloudinit20: cloud-init 20.1 (20.1)
+- cloudinit26: cloud-init (26.2)
+- cloudinit20: cloud-init (20.1)
 - docker: Docker Engine networking (4e9a5751518ed8223a8dcde53693badddd72604f)
 - iproute2: iproute2 ss manual (v6.12.0)
 - ubuntu-nc: Ubuntu noble netcat-openbsd source (c047f1a4572e796c8643fb7e5a719a9d960a677b)
 - c9s-nmap: CentOS Stream 9 nmap packaging (17c2b7795d821cd7fbe311cf3f885be3ea1f122f)
-- busybox: BusyBox 1.36.1 (1_36_1)
+- busybox: BusyBox (1_36_1)
 
 Claims (full source mapping in the JSON block below):
 
@@ -18716,7 +18716,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "dnf4": {
-      "name": "DNF 4.14.0",
+      "name": "DNF",
       "basis": "4.14.0",
       "sources": {
         "s97934a4740a2": "https://github.com/rpm-software-management/dnf/blob/4.14.0/etc/dnf/automatic.conf#L1-L22",
@@ -18785,7 +18785,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "cloudinit26": {
-      "name": "cloud-init 26.2",
+      "name": "cloud-init",
       "basis": "26.2",
       "sources": {
         "sad4ec0d2acc5": "https://github.com/canonical/cloud-init/blob/26.2/cloudinit/ssh_util.py#L548-L586",
@@ -18794,7 +18794,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "cloudinit20": {
-      "name": "cloud-init 20.1",
+      "name": "cloud-init",
       "basis": "20.1",
       "sources": {
         "s471abb6d2123": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L338-L348",
@@ -18842,7 +18842,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "busybox": {
-      "name": "BusyBox 1.36.1",
+      "name": "BusyBox",
       "basis": "1_36_1",
       "sources": {
         "s34bdee292f79": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93",
@@ -20611,7 +20611,7 @@ Components (recorded basis):
 - nist: NIST digital identity guidelines (SP 800-63B-4)
 - ubuntu-nc: Ubuntu noble netcat-openbsd source (c047f1a4572e796c8643fb7e5a719a9d960a677b)
 - c9s-nmap: CentOS Stream 9 nmap packaging (17c2b7795d821cd7fbe311cf3f885be3ea1f122f)
-- busybox: BusyBox 1.36.1 (1_36_1)
+- busybox: BusyBox (1_36_1)
 - docker-notes: Docker Engine release notes (4e9a5751518ed8223a8dcde53693badddd72604f)
 - webui: Open WebUI (0a7c15832fb30b1903753e83f81dc7d27e5b0944)
 - certbot-v230: Certbot user guide and source (v2.3.0)
@@ -20808,7 +20808,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "busybox": {
-      "name": "BusyBox 1.36.1",
+      "name": "BusyBox",
       "basis": "1_36_1",
       "sources": {
         "s34bdee292f79": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93",

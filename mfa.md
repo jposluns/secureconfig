@@ -1,6 +1,6 @@
 # Multi-factor authentication (MFA)
 
-Written against TOTP standard (no recorded version), authentik source version/2026.8.3, Keycloak documentation 26.7.4, oauth2-proxy documentation v7.15.4, Caddy forward_auth minimum 2.5.1, google-authenticator-libpam source 1.11, and MySQL 8.0 multifactor authentication 8.0, plus 10 more recorded bases; 14 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 35 claims: 2 demonstrated by a check that ran and 33 reasoned from cited sources.
+Written against TOTP standard (no recorded version), authentik source version/2026.8.3, Keycloak documentation 26.7.4, oauth2-proxy documentation v7.15.4, Caddy forward_auth minimum 2.5.1, google-authenticator-libpam source 1.11, and MySQL multifactor authentication 8.0 and 8.4, plus 9 more recorded bases; 14 further sources are pinned to a commit and 13 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 35 claims: 2 demonstrated by a check that ran and 33 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -184,9 +184,9 @@ Components (recorded basis):
 - google-workspace-docs: Google Workspace 2SV documentation (unknown)
 - supabase: Supabase Auth MFA (citation gap) (unknown)
 - access: Cloudflare Access MFA (citation gap) (unknown)
-- mysql: MySQL 8.0 multifactor authentication (8.0)
-- mysql-8-4: MySQL 8.4 multifactor authentication (8.4)
-- mysql-webauthn: MySQL 8.4 WebAuthn authentication (8.4)
+- mysql: MySQL multifactor authentication (8.0)
+- mysql-8-4: MySQL multifactor authentication (8.4)
+- mysql-webauthn: MySQL WebAuthn authentication (8.4)
 - entra-docs: Microsoft Entra documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
 - owasp-docs: OWASP cheat sheets (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
 - otp-source: pquerna/otp source (617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870)
@@ -387,21 +387,21 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "mysql": {
-      "name": "MySQL 8.0 multifactor authentication",
+      "name": "MySQL multifactor authentication",
       "basis": "8.0",
       "sources": {
         "sa937d1361fe1": "https://dev.mysql.com/doc/refman/8.0/en/multifactor-authentication.html"
       }
     },
     "mysql-8-4": {
-      "name": "MySQL 8.4 multifactor authentication",
+      "name": "MySQL multifactor authentication",
       "basis": "8.4",
       "sources": {
         "s56ada201b676": "https://dev.mysql.com/doc/refman/8.4/en/multifactor-authentication.html"
       }
     },
     "mysql-webauthn": {
-      "name": "MySQL 8.4 WebAuthn authentication",
+      "name": "MySQL WebAuthn authentication",
       "basis": "8.4",
       "sources": {
         "s807a77fa8872": "https://dev.mysql.com/doc/refman/8.4/en/webauthn-pluggable-authentication.html"

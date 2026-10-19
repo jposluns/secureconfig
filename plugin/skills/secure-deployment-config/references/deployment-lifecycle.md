@@ -197,7 +197,7 @@ Components (recorded basis):
 - nist: NIST digital identity guidelines (SP 800-63B-4)
 - ubuntu-nc: Ubuntu noble netcat-openbsd source (c047f1a4572e796c8643fb7e5a719a9d960a677b)
 - c9s-nmap: CentOS Stream 9 nmap packaging (17c2b7795d821cd7fbe311cf3f885be3ea1f122f)
-- busybox: BusyBox 1.36.1 (1_36_1)
+- busybox: BusyBox (1_36_1)
 - docker-notes: Docker Engine release notes (4e9a5751518ed8223a8dcde53693badddd72604f)
 - webui: Open WebUI (0a7c15832fb30b1903753e83f81dc7d27e5b0944)
 - certbot-v230: Certbot user guide and source (v2.3.0)
@@ -394,7 +394,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "busybox": {
-      "name": "BusyBox 1.36.1",
+      "name": "BusyBox",
       "basis": "1_36_1",
       "sources": {
         "s34bdee292f79": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93",
