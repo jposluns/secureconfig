@@ -643,6 +643,13 @@ heading_slugs() {
 import re, sys
 
 text = open(sys.argv[1], encoding="utf-8").read()
+sys.path.insert(0, "tools")
+from version_basis import PROMPT_ANCHOR, mask_top
+try:
+    if mask_top(text, sys.argv[1]) != text:
+        print(PROMPT_ANCHOR)
+except (ValueError, TypeError, KeyError):
+    pass  # Invalid generated content cannot supply the prompt anchor.
 text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
 
 in_fence = False
