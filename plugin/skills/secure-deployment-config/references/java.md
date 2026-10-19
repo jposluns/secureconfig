@@ -1,290 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-19",
-  "documentation_checked": "2026-09",
-  "body_sha256": "36c9bd4295812adf296b167facfb33dbb6f12a52a8193dc7d20ea8168cdf5b3f",
-  "components": {
-    "boot": {
-      "name": "Spring Boot documentation",
-      "basis": "unknown",
-      "sources": {
-        "s4f6aa9df744a": "https://docs.spring.io/spring-boot/how-to/webserver.html",
-        "s6d0dd8e90590": "https://docs.spring.io/spring-boot/reference/features/ssl.html",
-        "s1b86cf7d45f1": "https://docs.spring.io/spring-boot/reference/io/rest-client.html",
-        "s81ce68041084": "https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/web/server/Cookie.html",
-        "s75be5256a326": "https://docs.spring.io/spring-boot/reference/web/spring-security.html",
-        "sc88333e257f0": "https://docs.spring.io/spring-boot/reference/security/oauth2.html"
-      }
-    },
-    "boot-docs": {
-      "name": "Spring Boot documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "se7aed3f6650b": "https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/web/server/Ssl.html",
-        "s34f52429c110": "https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/ServerProperties.html",
-        "s6198bce672f6": "https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html",
-        "s973cb5a333ac": "https://docs.spring.io/spring-boot/3.5/reference/actuator/endpoints.html",
-        "s73890facf07c": "https://docs.spring.io/spring-boot/3.5/reference/actuator/monitoring.html",
-        "s8cf61ca65ae4": "https://docs.spring.io/spring-boot/3.5/reference/web/spring-security.html",
-        "se8918714c2c8": "https://docs.spring.io/spring-boot/3.5/reference/using/devtools.html",
-        "saea08b7576f4": "https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/ErrorProperties.IncludeAttribute.html",
-        "s6ce5733455c4": "https://docs.spring.io/spring-boot/3.5/reference/web/servlet.html",
-        "s3a681db376ce": "https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/client/RestClientSsl.html",
-        "s2845cade9c1d": "https://docs.spring.io/spring-boot/3.5/reference/io/rest-client.html",
-        "s61bf6b20e945": "https://docs.spring.io/spring-boot/4.1/api/java/org/springframework/boot/web/server/autoconfigure/ServerProperties.html",
-        "sc24ee7294b38": "https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html",
-        "s0511290ee7a9": "https://docs.spring.io/spring-boot/4.1/reference/actuator/endpoints.html",
-        "s033f98a55ba1": "https://docs.spring.io/spring-boot/4.1/reference/actuator/endpoints.html#actuator.endpoints.sanitization",
-        "s1246672710d1": "https://docs.spring.io/spring-boot/4.1/reference/actuator/monitoring.html",
-        "s88d377c93f63": "https://docs.spring.io/spring-boot/4.1/reference/using/devtools.html",
-        "s03b9d97c1a28": "https://docs.spring.io/spring-boot/4.1/reference/io/rest-client.html"
-      }
-    },
-    "boot41": {
-      "name": "Spring Boot",
-      "basis": "4.1.1",
-      "sources": {
-        "s8e261bdcd27a": "https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.1/module/spring-boot-restclient/src/main/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.java"
-      }
-    },
-    "boot40": {
-      "name": "Spring Boot starter migration",
-      "basis": "4.0",
-      "sources": {
-        "s08143a9162b2": "https://docs.spring.io/spring-boot/4.0/reference/using/build-systems.html",
-        "s0486713aa731": "https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide/e11f389f3671d1eb7fa346065410b5b1eab99c3c"
-      }
-    },
-    "security": {
-      "name": "Spring Security documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s55e8fcd2ff11": "https://docs.spring.io/spring-security/reference/servlet/oauth2/login/core.html",
-        "sae4824b03001": "https://docs.spring.io/spring-security/reference/servlet/getting-started.html",
-        "sd5aebfb9d1ed": "https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html",
-        "s23cf30cad42c": "https://docs.spring.io/spring-security/reference/servlet/exploits/http.html",
-        "s9471b4cfe0f6": "https://docs.spring.io/spring-security/reference/servlet/configuration/java.html",
-        "s8859c309d60a": "https://docs.spring.io/spring-security/reference/features/exploits/csrf.html",
-        "sf301a3d0645a": "https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html",
-        "s6fb344722a7c": "https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html"
-      }
-    },
-    "jdk": {
-      "name": "JDK keytool documentation",
-      "basis": "21",
-      "sources": {
-        "s8a504e61bc07": "https://docs.oracle.com/en/java/javase/21/docs/specs/man/keytool.html"
-      }
-    },
-    "framework": {
-      "name": "Spring Framework documentation",
-      "basis": "unknown",
-      "sources": {
-        "sc25b4ff29bc9": "https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/filter/ForwardedHeaderFilter.html"
-      }
-    },
-    "security65": {
-      "name": "Spring Security HSTS",
-      "basis": "6.5",
-      "sources": {
-        "s527bf5b95139": "https://docs.spring.io/spring-security/reference/6.5/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html"
-      }
-    },
-    "tomcat": {
-      "name": "Tomcat HTTP connector",
-      "basis": "10.1",
-      "sources": {
-        "s20a557a45f7a": "https://tomcat.apache.org/tomcat-10.1-doc/config/http.html"
-      }
-    },
-    "curl": {
-      "name": "curl minimum diagnostics version",
-      "basis": "7.75.0",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
-      }
-    },
-    "jdk21u": {
-      "name": "OpenJDK jdk21u javax.net.ssl sources",
-      "basis": "jdk-21.0.12.1-ga",
-      "sources": {
-        "s1379fba0b5e6": "https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/X509TrustManager.java#L31-L85",
-        "s0249b6cf0853": "https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/HostnameVerifier.java#L29-L55",
-        "sef5d534061ca": "https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/SSLContext.java#L296-L315",
-        "sd6ea702f8bb2": "https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/HttpsURLConnection.java#L212-L273",
-        "se315608f569f": "https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/HttpsURLConnection.java#L295-L371"
-      }
-    },
-    "entra-docs": {
-      "name": "Microsoft Entra documentation",
-      "basis": "231747abc59ae3d50c74e215c1cdd592eb980723",
-      "sources": {
-        "s2c2f323edbd0": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/conditional-access/policy-all-users-mfa-strength.md#L56-L57"
-      }
-    },
-    "cf-docs": {
-      "name": "Cloudflare documentation",
-      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
-      "sources": {
-        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24"
-      }
-    },
-    "authelia-source": {
-      "name": "Authelia source",
-      "basis": "v4.39.28",
-      "sources": {
-        "sfeb54a05c30d": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/introduction.md#L21-L31"
-      }
-    }
-  },
-  "claims": {
-    "tls": {"text": "Direct HTTPS on 8443 uses PEM certificate/key or PKCS12 and TLSv1.2/TLSv1.3; older releases must confirm PEM property support.", "components": ["boot", "boot-docs"], "sources": ["boot:s4f6aa9df744a", "boot-docs:se7aed3f6650b"], "status": "REASONED"},
-    "connector": {"text": "Properties configure one HTTP or HTTPS connector; add the port-80 redirect connector in code, or let the proxy redirect.", "components": ["boot"], "sources": ["boot:s4f6aa9df744a"], "status": "REASONED"},
-    "https-redirect": {"text": "Spring Security 6.5+ redirectToHttps redirects insecure requests; trusted forwarded headers determine secure status behind TLS termination.", "components": ["security", "security65"], "sources": ["security:s23cf30cad42c", "security65:s527bf5b95139"], "status": "REASONED"},
-    "hsts": {"text": "Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false.", "components": ["security65", "security"], "sources": ["security65:s527bf5b95139", "security:s6fb344722a7c"], "status": "REASONED"},
-    "proxy-bind": {"text": "Bind 127.0.0.1:8080 behind the TLS proxy.", "components": ["boot", "boot-docs"], "sources": ["boot:s4f6aa9df744a", "boot-docs:s34f52429c110", "boot-docs:s61bf6b20e945"], "status": "REASONED"},
-    "forwarding": {"text": "NATIVE delegates forwarded headers to the server, FRAMEWORK uses ForwardedHeaderFilter; outside supported cloud platforms the default is NONE.", "components": ["boot"], "sources": ["boot:s4f6aa9df744a"], "status": "REASONED"},
-    "proxy-trust": {"text": "Restrict Tomcat internal-proxies, strip inbound Forwarded/X-Forwarded-* at the edge and prevent direct listener bypass.", "components": ["boot", "framework"], "sources": ["boot:s4f6aa9df744a", "framework:sc25b4ff29bc9"], "status": "REASONED"},
-    "proxy-redirect": {"text": "Tomcat redirect-context-root=false preserves HTTPS redirects behind TLS termination.", "components": ["boot"], "sources": ["boot:s4f6aa9df744a"], "status": "REASONED"},
-    "server-import": {"text": "ServerProperties moves from boot.autoconfigure.web in Boot 3.5 to boot.web.server.autoconfigure in Boot 4.", "components": ["boot-docs"], "sources": ["boot-docs:s34f52429c110", "boot-docs:s61bf6b20e945"], "status": "REASONED"},
-    "default-web-auth": {"text": "With starter-security and default web configuration, require authentication except Actuator health; form login, Basic, CSRF and security headers are enabled.", "components": ["boot", "security", "boot-docs"], "sources": ["boot:s75be5256a326", "security:sae4824b03001", "boot-docs:s8cf61ca65ae4"], "status": "REASONED"},
-    "custom-chain": {"text": "Any custom SecurityFilterChain replaces Boot default web and Actuator rules; unmatched requests need a fallback chain or remain unprotected.", "components": ["boot-docs", "security"], "sources": ["boot-docs:s8cf61ca65ae4", "security:s9471b4cfe0f6"], "status": "REASONED"},
-    "default-user": {"text": "Separate default-user auto-configuration creates user with a normally logged generated password; a custom chain alone does not remove it. Production needs deliberate authentication.", "components": ["boot-docs"], "sources": ["boot-docs:s8cf61ca65ae4"], "status": "REASONED"},
-    "password": {"text": "Use DelegatingPasswordEncoder, bcrypt by default with {bcrypt}; BCrypt strength defaults to 10 and is tuned to about one second; Argon2 v5_8 defaults are an alternative.", "components": ["security"], "sources": ["security:sd5aebfb9d1ed"], "status": "REASONED"},
-    "cookies": {"text": "Set secure/http-only cookies, SameSite=lax and a 30m servlet session timeout.", "components": ["boot", "boot-docs"], "sources": ["boot:s81ce68041084", "boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
-    "login-limit": {"text": "Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts.", "components": ["security"], "sources": ["security:sae4824b03001", "security:sd5aebfb9d1ed"], "status": "REASONED"},
-    "oidc-starter": {"text": "Boot 3.5 uses starter-oauth2-client; Boot 4 uses starter-security-oauth2-client and deprecates the old name.", "components": ["boot40"], "sources": ["boot40:s08143a9162b2", "boot40:s0486713aa731"], "status": "REASONED"},
-    "oidc": {"text": "Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC.", "components": ["boot", "security"], "sources": ["boot:sc88333e257f0", "security:s55e8fcd2ff11"], "status": "REASONED"},
-    "mfa": {"text": "Enforce MFA at the identity provider or a fronting layer per linked guides; for example, an Entra Conditional Access policy can require an MFA authentication strength, Cloudflare Access independent MFA can enforce MFA without relying on the IdP, and Authelia supports TOTP, WebAuthn and Duo second factors. The cited pages do not establish this deployment's enforcement.", "components": ["security", "entra-docs", "cf-docs", "authelia-source"], "sources": ["security:s55e8fcd2ff11", "entra-docs:s2c2f323edbd0", "cf-docs:s7e793d13cf31", "authelia-source:sfeb54a05c30d"], "status": "REASONED"},
-    "csrf": {"text": "Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection.", "components": ["security"], "sources": ["security:s8859c309d60a"], "status": "REASONED"},
-    "session-fixation": {"text": "Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled.", "components": ["security"], "sources": ["security:sf301a3d0645a"], "status": "REASONED"},
-    "client-validation": {"text": "Do not install trust-all TrustManager or hostname verifiers; pinned jdk21u sources document X509TrustManager's check methods, HostnameVerifier.verify, SSLContext.init's trust-manager input, and HttpsURLConnection default setters reaching later instances while per-instance setters affect one object. The whole-JVM-client reading is this guide's assessment.", "components": ["boot", "jdk", "jdk21u"], "sources": ["boot:s6d0dd8e90590", "jdk:s8a504e61bc07", "jdk21u:s1379fba0b5e6", "jdk21u:s0249b6cf0853", "jdk21u:sef5d534061ca", "jdk21u:sd6ea702f8bb2", "jdk21u:se315608f569f"], "status": "REASONED"},
-    "client-ca": {"text": "Import an internal CA with keytool into cacerts and change its default changeit password, or configure and apply a named SSL bundle to the client.", "components": ["boot", "jdk"], "sources": ["boot:s6d0dd8e90590", "boot:s1b86cf7d45f1", "jdk:s8a504e61bc07"], "status": "REASONED"},
-    "client-import": {"text": "RestClientSsl and WebClientSsl imports differ between Boot 3.5.16 and 4.1.1; apply ssl.fromBundle to the selected client.", "components": ["boot-docs", "boot41"], "sources": ["boot-docs:s3a681db376ce", "boot41:s8e261bdcd27a", "boot-docs:s2845cade9c1d", "boot-docs:s03b9d97c1a28"], "status": "REASONED"},
-    "actuator-exposure": {"text": "Boot 3.5.16/4.1.1 default web exposure is health; use an explicit allowlist. Exposure, access and authorization are separate.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
-    "management-bind": {"text": "Management binds 127.0.0.1:8081 separately; a distinct management address requires a distinct port and no public proxy forwarding.", "components": ["boot-docs"], "sources": ["boot-docs:s73890facf07c", "boot-docs:s1246672710d1"], "status": "REASONED"},
-    "management-disable": {"text": "management.server.port=-1 disables management HTTP, not JMX exposure.", "components": ["boot-docs"], "sources": ["boot-docs:s73890facf07c", "boot-docs:s1246672710d1"], "status": "REASONED"},
-    "sanitize": {"text": "env/configprops show-values default to never; sanitization does not justify exposing metadata.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s033f98a55ba1"], "status": "REASONED"},
-    "metadata-endpoints": {"text": "beans, mappings and threaddump expose components, routes and thread stacks.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
-    "heapdump": {"text": "heapdump may expose secrets and consume resources; access defaults to none in specifically checked 3.5.16/4.1.1, and is explicitly disabled.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
-    "loggers": {"text": "loggers can read/change logging levels, increasing volume and possible information disclosure.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
-    "shutdown": {"text": "shutdown stops the application; access defaults to none and is explicitly disabled.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
-    "management-auth": {"text": "The first servlet chain requires ROLE_ENDPOINT_ADMIN for all exposed Actuator endpoints including health; the second authenticates application requests. Provision identities separately.", "components": ["boot-docs", "security"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9", "security:s9471b4cfe0f6"], "status": "REASONED"},
-    "endpoint-import": {"text": "EndpointRequest moves from boot.actuate.autoconfigure.security.servlet in Boot 3.5 to boot.security.autoconfigure.actuate.web.servlet in Boot 4.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
-    "error-message": {"text": "Error message inclusion defaults to never in checked releases; use server.error in Boot 3.5 and spring.web.error in Boot 4.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
-    "error-stack": {"text": "Stacktrace inclusion defaults to never in checked releases, using the version-appropriate error prefix.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
-    "error-binding": {"text": "Binding-error inclusion defaults to never in checked releases, using the version-appropriate error prefix.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
-    "error-exception": {"text": "Exception-class inclusion defaults to false in checked releases, using the version-appropriate error prefix.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
-    "error-policy": {"text": "on-param lets requesters request details; disabling whitelabel HTML alone does not protect JSON/custom/container errors.", "components": ["boot-docs"], "sources": ["boot-docs:saea08b7576f4", "boot-docs:s6ce5733455c4"], "status": "REASONED"},
-    "h2": {"text": "H2 console defaults disabled in checked releases; explicitly set spring.h2.console.enabled=false.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
-    "devtools": {"text": "Exclude production devtools; active development defaults enable H2 when components exist and set message/trace/binding errors to always.", "components": ["boot-docs"], "sources": ["boot-docs:se8918714c2c8", "boot-docs:s88d377c93f63"], "status": "REASONED"},
-    "multipart-file": {"text": "Servlet multipart max-file-size defaults to 1MB per file in checked releases.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
-    "multipart-request": {"text": "Servlet multipart max-request-size defaults to 10MB including parts and overhead in checked releases.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
-    "form-limit": {"text": "Tomcat max-http-form-post-size defaults to 2MB for form-to-parameter processing, not arbitrary request bodies.", "components": ["boot-docs", "tomcat"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "tomcat:s20a557a45f7a"], "status": "REASONED"},
-    "header-limit": {"text": "max-http-request-header-size defaults to 8KB; Tomcat counts request line and all header names/values together.", "components": ["boot-docs", "tomcat"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "tomcat:s20a557a45f7a"], "status": "REASONED"},
-    "json-limit": {"text": "These properties do not establish a universal JSON body limit; bound other bodies at the proxy/application and test the actual route and content type.", "components": ["boot-docs", "tomcat"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "tomcat:s20a557a45f7a"], "status": "REASONED"},
-    "verify-tls": {"text": "HTTPS must succeed without -k and show HSTS.", "components": ["boot", "security65", "security"], "sources": ["boot:s4f6aa9df744a", "security65:s527bf5b95139", "security:s6fb344722a7c"], "status": "REASONED", "verify": [1]},
-    "verify-auth": {"text": "Unauthenticated /api should return 401 or a 302 login redirect.", "components": ["boot-docs"], "sources": ["boot-docs:s8cf61ca65ae4"], "status": "REASONED", "verify": [1]},
-    "verify-bind": {"text": "Inspect every listener for loopback-only Java binding behind the proxy.", "components": ["boot-docs"], "sources": ["boot-docs:s34f52429c110", "boot-docs:s61bf6b20e945"], "status": "REASONED", "verify": [1]},
-    "verify-user": {"text": "Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account.", "components": ["boot-docs"], "sources": ["boot-docs:s8cf61ca65ae4"], "status": "REASONED", "verify": [1]},
-    "verify-public-management": {"text": "Public origin must serve no Actuator content to anonymous or administrator identities; health-only exposure leaves other endpoints unavailable even to administrators.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED", "verify": [2]},
-    "verify-management-auth": {"text": "On private 8081, anonymous health should get 401, non-admin 403 and admin a health response that may be 503; sensitive routes normally 404 after successful authentication.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED", "verify": [3]},
-    "verify-management-port": {"text": "Any HTTP response on external 8081 proves reachability; corroborate failure with socket inventory and successful intended-path access.", "components": ["boot-docs"], "sources": ["boot-docs:s73890facf07c", "boot-docs:s1246672710d1"], "status": "REASONED", "verify": [4]},
-    "verify-dangerous": {"text": "Inspect heapdump/shutdown access=none without invoking them; exposed behavior needs an isolated fixture.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
-    "verify-errors": {"text": "Controlled exception/binding markers appear with always/on-param but should disappear with production settings, including parameter requests; check JSON, HTML and custom responses after auth.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:saea08b7576f4", "boot-docs:s6ce5733455c4"], "status": "REASONED", "verify": [5]},
-    "verify-h2": {"text": "Enabled console can return content or redirect; disabled console normally yields 404 after app authorization. Login/401/403 alone do not prove absence.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:se8918714c2c8", "boot-docs:s88d377c93f63"], "status": "REASONED", "verify": [6]},
-    "verify-upload": {"text": "1024-byte file must succeed; 1048577-byte file must fail for size under the 1MB policy; both succeed with raised limits. Auth, CSRF, route and transport failures are inconclusive.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED", "verify": [7]},
-    "verify-credentials": {"text": "Use private mode-0600 header files via stdin, valid session/CSRF headers and curl 7.75.0+ diagnostics; transport errors do not prove secure configuration.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [2, 3, 4, 5, 6, 7]}
-  }
-}
----
 # Spring Boot: TLS and authentication
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Spring Boot 4.1.1, Spring Boot starter migration 4.0, Spring Security HSTS 6.5, JDK keytool documentation 21, Tomcat HTTP connector 10.1, curl minimum diagnostics version 7.75.0, OpenJDK jdk21u javax.net.ssl sources jdk-21.0.12.1-ga, and Authelia source v4.39.28; 2 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 57 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- boot: Spring Boot documentation (unknown)
-- boot-docs: Spring Boot documentation (rolling) (unknown)
-- boot41: Spring Boot (4.1.1)
-- boot40: Spring Boot starter migration (4.0)
-- security: Spring Security documentation (rolling) (unknown)
-- jdk: JDK keytool documentation (21)
-- framework: Spring Framework documentation (unknown)
-- security65: Spring Security HSTS (6.5)
-- tomcat: Tomcat HTTP connector (10.1)
-- curl: curl minimum diagnostics version (7.75.0)
-- jdk21u: OpenJDK jdk21u javax.net.ssl sources (jdk-21.0.12.1-ga)
-- entra-docs: Microsoft Entra documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
-- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
-- authelia-source: Authelia source (v4.39.28)
-
-Claims (full source mapping in the front matter):
-
-- tls (REASONED; boot, boot-docs): Direct HTTPS on 8443 uses PEM certificate/key or PKCS12 and TLSv1.2/TLSv1.3; older releases must confirm PEM property support.
-- connector (REASONED; boot): Properties configure one HTTP or HTTPS connector; add the port-80 redirect connector in code, or let the proxy redirect.
-- https-redirect (REASONED; security, security65): Spring Security 6.5+ redirectToHttps redirects insecure requests; trusted forwarded headers determine secure status behind TLS termination.
-- hsts (REASONED; security65, security): Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false.
-- proxy-bind (REASONED; boot, boot-docs): Bind 127.0.0.1:8080 behind the TLS proxy.
-- forwarding (REASONED; boot): NATIVE delegates forwarded headers to the server, FRAMEWORK uses ForwardedHeaderFilter; outside supported cloud platforms the default is NONE.
-- proxy-trust (REASONED; boot, framework): Restrict Tomcat internal-proxies, strip inbound Forwarded/X-Forwarded-* at the edge and prevent direct listener bypass.
-- proxy-redirect (REASONED; boot): Tomcat redirect-context-root=false preserves HTTPS redirects behind TLS termination.
-- server-import (REASONED; boot-docs): ServerProperties moves from boot.autoconfigure.web in Boot 3.5 to boot.web.server.autoconfigure in Boot 4.
-- default-web-auth (REASONED; boot, security, boot-docs): With starter-security and default web configuration, require authentication except Actuator health; form login, Basic, CSRF and security headers are enabled.
-- custom-chain (REASONED; boot-docs, security): Any custom SecurityFilterChain replaces Boot default web and Actuator rules; unmatched requests need a fallback chain or remain unprotected.
-- default-user (REASONED; boot-docs): Separate default-user auto-configuration creates user with a normally logged generated password; a custom chain alone does not remove it. Production needs deliberate authentication.
-- password (REASONED; security): Use DelegatingPasswordEncoder, bcrypt by default with {bcrypt}; BCrypt strength defaults to 10 and is tuned to about one second; Argon2 v5_8 defaults are an alternative.
-- cookies (REASONED; boot, boot-docs): Set secure/http-only cookies, SameSite=lax and a 30m servlet session timeout.
-- login-limit (REASONED; security): Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts.
-- oidc-starter (REASONED; boot40): Boot 3.5 uses starter-oauth2-client; Boot 4 uses starter-security-oauth2-client and deprecates the old name.
-- oidc (REASONED; boot, security): Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC.
-- mfa (REASONED; security, entra-docs, cf-docs, authelia-source): Enforce MFA at the identity provider or a fronting layer per linked guides; for example, an Entra Conditional Access policy can require an MFA authentication strength, Cloudflare Access independent MFA can enforce MFA without relying on the IdP, and Authelia supports TOTP, WebAuthn and Duo second factors. The cited pages do not establish this deployment's enforcement.
-- csrf (REASONED; security): Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection.
-- session-fixation (REASONED; security): Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled.
-- client-validation (REASONED; boot, jdk, jdk21u): Do not install trust-all TrustManager or hostname verifiers; pinned jdk21u sources document X509TrustManager's check methods, HostnameVerifier.verify, SSLContext.init's trust-manager input, and HttpsURLConnection default setters reaching later instances while per-instance setters affect one object. The whole-JVM-client reading is this guide's assessment.
-- client-ca (REASONED; boot, jdk): Import an internal CA with keytool into cacerts and change its default changeit password, or configure and apply a named SSL bundle to the client.
-- client-import (REASONED; boot-docs, boot41): RestClientSsl and WebClientSsl imports differ between Boot 3.5.16 and 4.1.1; apply ssl.fromBundle to the selected client.
-- actuator-exposure (REASONED; boot-docs): Boot 3.5.16/4.1.1 default web exposure is health; use an explicit allowlist. Exposure, access and authorization are separate.
-- management-bind (REASONED; boot-docs): Management binds 127.0.0.1:8081 separately; a distinct management address requires a distinct port and no public proxy forwarding.
-- management-disable (REASONED; boot-docs): management.server.port=-1 disables management HTTP, not JMX exposure.
-- sanitize (REASONED; boot-docs): env/configprops show-values default to never; sanitization does not justify exposing metadata.
-- metadata-endpoints (REASONED; boot-docs): beans, mappings and threaddump expose components, routes and thread stacks.
-- heapdump (REASONED; boot-docs): heapdump may expose secrets and consume resources; access defaults to none in specifically checked 3.5.16/4.1.1, and is explicitly disabled.
-- loggers (REASONED; boot-docs): loggers can read/change logging levels, increasing volume and possible information disclosure.
-- shutdown (REASONED; boot-docs): shutdown stops the application; access defaults to none and is explicitly disabled.
-- management-auth (REASONED; boot-docs, security): The first servlet chain requires ROLE_ENDPOINT_ADMIN for all exposed Actuator endpoints including health; the second authenticates application requests. Provision identities separately.
-- endpoint-import (REASONED; boot-docs): EndpointRequest moves from boot.actuate.autoconfigure.security.servlet in Boot 3.5 to boot.security.autoconfigure.actuate.web.servlet in Boot 4.
-- error-message (REASONED; boot-docs): Error message inclusion defaults to never in checked releases; use server.error in Boot 3.5 and spring.web.error in Boot 4.
-- error-stack (REASONED; boot-docs): Stacktrace inclusion defaults to never in checked releases, using the version-appropriate error prefix.
-- error-binding (REASONED; boot-docs): Binding-error inclusion defaults to never in checked releases, using the version-appropriate error prefix.
-- error-exception (REASONED; boot-docs): Exception-class inclusion defaults to false in checked releases, using the version-appropriate error prefix.
-- error-policy (REASONED; boot-docs): on-param lets requesters request details; disabling whitelabel HTML alone does not protect JSON/custom/container errors.
-- h2 (REASONED; boot-docs): H2 console defaults disabled in checked releases; explicitly set spring.h2.console.enabled=false.
-- devtools (REASONED; boot-docs): Exclude production devtools; active development defaults enable H2 when components exist and set message/trace/binding errors to always.
-- multipart-file (REASONED; boot-docs): Servlet multipart max-file-size defaults to 1MB per file in checked releases.
-- multipart-request (REASONED; boot-docs): Servlet multipart max-request-size defaults to 10MB including parts and overhead in checked releases.
-- form-limit (REASONED; boot-docs, tomcat): Tomcat max-http-form-post-size defaults to 2MB for form-to-parameter processing, not arbitrary request bodies.
-- header-limit (REASONED; boot-docs, tomcat): max-http-request-header-size defaults to 8KB; Tomcat counts request line and all header names/values together.
-- json-limit (REASONED; boot-docs, tomcat): These properties do not establish a universal JSON body limit; bound other bodies at the proxy/application and test the actual route and content type.
-- verify-tls (REASONED; boot, security65, security): HTTPS must succeed without -k and show HSTS.
-- verify-auth (REASONED; boot-docs): Unauthenticated /api should return 401 or a 302 login redirect.
-- verify-bind (REASONED; boot-docs): Inspect every listener for loopback-only Java binding behind the proxy.
-- verify-user (REASONED; boot-docs): Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account.
-- verify-public-management (REASONED; boot-docs): Public origin must serve no Actuator content to anonymous or administrator identities; health-only exposure leaves other endpoints unavailable even to administrators.
-- verify-management-auth (REASONED; boot-docs): On private 8081, anonymous health should get 401, non-admin 403 and admin a health response that may be 503; sensitive routes normally 404 after successful authentication.
-- verify-management-port (REASONED; boot-docs): Any HTTP response on external 8081 proves reachability; corroborate failure with socket inventory and successful intended-path access.
-- verify-dangerous (REASONED; boot-docs): Inspect heapdump/shutdown access=none without invoking them; exposed behavior needs an isolated fixture.
-- verify-errors (REASONED; boot-docs): Controlled exception/binding markers appear with always/on-param but should disappear with production settings, including parameter requests; check JSON, HTML and custom responses after auth.
-- verify-h2 (REASONED; boot-docs): Enabled console can return content or redirect; disabled console normally yields 404 after app authorization. Login/401/403 alone do not prove absence.
-- verify-upload (REASONED; boot-docs): 1024-byte file must succeed; 1048577-byte file must fail for size under the 1MB policy; both succeed with raised limits. Auth, CSRF, route and transport failures are inconclusive.
-- verify-credentials (REASONED; curl): Use private mode-0600 header files via stdin, valid session/CSRF headers and curl 7.75.0+ diagnostics; transport errors do not prove secure configuration.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Preferred production layout: bind the embedded server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). Spring Boot can also terminate TLS itself, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
@@ -700,3 +418,311 @@ The small upload must reach and succeed at the intended handler. With a delibera
 - Spring Security session fixation protection and changeSessionId: https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html
 - Apache Tomcat HTTP connector, form parsing and request-header limits: https://tomcat.apache.org/tomcat-10.1-doc/config/http.html
 - curl manual, header input, multipart files, protocol restrictions, and transfer diagnostics (curl 7.75.0 or newer for `exitcode` and `errormsg`): https://curl.se/docs/manpage.html
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/java.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- boot41: Spring Boot (4.1.1)
+- boot40: Spring Boot starter migration (4.0)
+- security65: Spring Security HSTS (6.5)
+- boot: Spring Boot documentation (unknown)
+- boot-docs: Spring Boot documentation (rolling) (unknown)
+- security: Spring Security documentation (rolling) (unknown)
+- framework: Spring Framework documentation (unknown)
+- jdk: JDK keytool documentation (21)
+- tomcat: Tomcat HTTP connector (10.1)
+- curl: curl minimum diagnostics version (7.75.0)
+- jdk21u: OpenJDK jdk21u javax.net.ssl sources (jdk-21.0.12.1-ga)
+- entra-docs: Microsoft Entra documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- authelia-source: Authelia source (v4.39.28)
+
+Claims (full source mapping in the JSON block below):
+
+- tls (REASONED; boot, boot-docs): Direct HTTPS on 8443 uses PEM certificate/key or PKCS12 and TLSv1.2/TLSv1.3; older releases must confirm PEM property support.
+- connector (REASONED; boot): Properties configure one HTTP or HTTPS connector; add the port-80 redirect connector in code, or let the proxy redirect.
+- https-redirect (REASONED; security, security65): Spring Security 6.5+ redirectToHttps redirects insecure requests; trusted forwarded headers determine secure status behind TLS termination.
+- hsts (REASONED; security65, security): Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false.
+- proxy-bind (REASONED; boot, boot-docs): Bind 127.0.0.1:8080 behind the TLS proxy.
+- forwarding (REASONED; boot): NATIVE delegates forwarded headers to the server, FRAMEWORK uses ForwardedHeaderFilter; outside supported cloud platforms the default is NONE.
+- proxy-trust (REASONED; boot, framework): Restrict Tomcat internal-proxies, strip inbound Forwarded/X-Forwarded-* at the edge and prevent direct listener bypass.
+- proxy-redirect (REASONED; boot): Tomcat redirect-context-root=false preserves HTTPS redirects behind TLS termination.
+- server-import (REASONED; boot-docs): ServerProperties moves from boot.autoconfigure.web in Boot 3.5 to boot.web.server.autoconfigure in Boot 4.
+- default-web-auth (REASONED; boot, security, boot-docs): With starter-security and default web configuration, require authentication except Actuator health; form login, Basic, CSRF and security headers are enabled.
+- custom-chain (REASONED; boot-docs, security): Any custom SecurityFilterChain replaces Boot default web and Actuator rules; unmatched requests need a fallback chain or remain unprotected.
+- default-user (REASONED; boot-docs): Separate default-user auto-configuration creates user with a normally logged generated password; a custom chain alone does not remove it. Production needs deliberate authentication.
+- password (REASONED; security): Use DelegatingPasswordEncoder, bcrypt by default with {bcrypt}; BCrypt strength defaults to 10 and is tuned to about one second; Argon2 v5_8 defaults are an alternative.
+- cookies (REASONED; boot, boot-docs): Set secure/http-only cookies, SameSite=lax and a 30m servlet session timeout.
+- login-limit (REASONED; security): Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts.
+- oidc-starter (REASONED; boot40): Boot 3.5 uses starter-oauth2-client; Boot 4 uses starter-security-oauth2-client and deprecates the old name.
+- oidc (REASONED; boot, security): Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC.
+- mfa (REASONED; security, entra-docs, cf-docs, authelia-source): Enforce MFA at the identity provider or a fronting layer per linked guides; for example, an Entra Conditional Access policy can require an MFA authentication strength, Cloudflare Access independent MFA can enforce MFA without relying on the IdP, and Authelia supports TOTP, WebAuthn and Duo second factors. The cited pages do not establish this deployment's enforcement.
+- csrf (REASONED; security): Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection.
+- session-fixation (REASONED; security): Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled.
+- client-validation (REASONED; boot, jdk, jdk21u): Do not install trust-all TrustManager or hostname verifiers; pinned jdk21u sources document X509TrustManager's check methods, HostnameVerifier.verify, SSLContext.init's trust-manager input, and HttpsURLConnection default setters reaching later instances while per-instance setters affect one object. The whole-JVM-client reading is this guide's assessment.
+- client-ca (REASONED; boot, jdk): Import an internal CA with keytool into cacerts and change its default changeit password, or configure and apply a named SSL bundle to the client.
+- client-import (REASONED; boot-docs, boot41): RestClientSsl and WebClientSsl imports differ between Boot 3.5.16 and 4.1.1; apply ssl.fromBundle to the selected client.
+- actuator-exposure (REASONED; boot-docs): Boot 3.5.16/4.1.1 default web exposure is health; use an explicit allowlist. Exposure, access and authorization are separate.
+- management-bind (REASONED; boot-docs): Management binds 127.0.0.1:8081 separately; a distinct management address requires a distinct port and no public proxy forwarding.
+- management-disable (REASONED; boot-docs): management.server.port=-1 disables management HTTP, not JMX exposure.
+- sanitize (REASONED; boot-docs): env/configprops show-values default to never; sanitization does not justify exposing metadata.
+- metadata-endpoints (REASONED; boot-docs): beans, mappings and threaddump expose components, routes and thread stacks.
+- heapdump (REASONED; boot-docs): heapdump may expose secrets and consume resources; access defaults to none in specifically checked 3.5.16/4.1.1, and is explicitly disabled.
+- loggers (REASONED; boot-docs): loggers can read/change logging levels, increasing volume and possible information disclosure.
+- shutdown (REASONED; boot-docs): shutdown stops the application; access defaults to none and is explicitly disabled.
+- management-auth (REASONED; boot-docs, security): The first servlet chain requires ROLE_ENDPOINT_ADMIN for all exposed Actuator endpoints including health; the second authenticates application requests. Provision identities separately.
+- endpoint-import (REASONED; boot-docs): EndpointRequest moves from boot.actuate.autoconfigure.security.servlet in Boot 3.5 to boot.security.autoconfigure.actuate.web.servlet in Boot 4.
+- error-message (REASONED; boot-docs): Error message inclusion defaults to never in checked releases; use server.error in Boot 3.5 and spring.web.error in Boot 4.
+- error-stack (REASONED; boot-docs): Stacktrace inclusion defaults to never in checked releases, using the version-appropriate error prefix.
+- error-binding (REASONED; boot-docs): Binding-error inclusion defaults to never in checked releases, using the version-appropriate error prefix.
+- error-exception (REASONED; boot-docs): Exception-class inclusion defaults to false in checked releases, using the version-appropriate error prefix.
+- error-policy (REASONED; boot-docs): on-param lets requesters request details; disabling whitelabel HTML alone does not protect JSON/custom/container errors.
+- h2 (REASONED; boot-docs): H2 console defaults disabled in checked releases; explicitly set spring.h2.console.enabled=false.
+- devtools (REASONED; boot-docs): Exclude production devtools; active development defaults enable H2 when components exist and set message/trace/binding errors to always.
+- multipart-file (REASONED; boot-docs): Servlet multipart max-file-size defaults to 1MB per file in checked releases.
+- multipart-request (REASONED; boot-docs): Servlet multipart max-request-size defaults to 10MB including parts and overhead in checked releases.
+- form-limit (REASONED; boot-docs, tomcat): Tomcat max-http-form-post-size defaults to 2MB for form-to-parameter processing, not arbitrary request bodies.
+- header-limit (REASONED; boot-docs, tomcat): max-http-request-header-size defaults to 8KB; Tomcat counts request line and all header names/values together.
+- json-limit (REASONED; boot-docs, tomcat): These properties do not establish a universal JSON body limit; bound other bodies at the proxy/application and test the actual route and content type.
+- verify-tls (REASONED; boot, security65, security): HTTPS must succeed without -k and show HSTS.
+- verify-auth (REASONED; boot-docs): Unauthenticated /api should return 401 or a 302 login redirect.
+- verify-bind (REASONED; boot-docs): Inspect every listener for loopback-only Java binding behind the proxy.
+- verify-user (REASONED; boot-docs): Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account.
+- verify-public-management (REASONED; boot-docs): Public origin must serve no Actuator content to anonymous or administrator identities; health-only exposure leaves other endpoints unavailable even to administrators.
+- verify-management-auth (REASONED; boot-docs): On private 8081, anonymous health should get 401, non-admin 403 and admin a health response that may be 503; sensitive routes normally 404 after successful authentication.
+- verify-management-port (REASONED; boot-docs): Any HTTP response on external 8081 proves reachability; corroborate failure with socket inventory and successful intended-path access.
+- verify-dangerous (REASONED; boot-docs): Inspect heapdump/shutdown access=none without invoking them; exposed behavior needs an isolated fixture.
+- verify-errors (REASONED; boot-docs): Controlled exception/binding markers appear with always/on-param but should disappear with production settings, including parameter requests; check JSON, HTML and custom responses after auth.
+- verify-h2 (REASONED; boot-docs): Enabled console can return content or redirect; disabled console normally yields 404 after app authorization. Login/401/403 alone do not prove absence.
+- verify-upload (REASONED; boot-docs): 1024-byte file must succeed; 1048577-byte file must fail for size under the 1MB policy; both succeed with raised limits. Auth, CSRF, route and transport failures are inconclusive.
+- verify-credentials (REASONED; curl): Use private mode-0600 header files via stdin, valid session/CSRF headers and curl 7.75.0+ diagnostics; transport errors do not prove secure configuration.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-19",
+  "documentation_checked": "2026-09",
+  "body_sha256": "36c9bd4295812adf296b167facfb33dbb6f12a52a8193dc7d20ea8168cdf5b3f",
+  "components": {
+    "boot41": {
+      "name": "Spring Boot",
+      "basis": "4.1.1",
+      "sources": {
+        "s8e261bdcd27a": "https://raw.githubusercontent.com/spring-projects/spring-boot/v4.1.1/module/spring-boot-restclient/src/main/java/org/springframework/boot/restclient/autoconfigure/RestClientSsl.java"
+      }
+    },
+    "boot40": {
+      "name": "Spring Boot starter migration",
+      "basis": "4.0",
+      "sources": {
+        "s08143a9162b2": "https://docs.spring.io/spring-boot/4.0/reference/using/build-systems.html",
+        "s0486713aa731": "https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide/e11f389f3671d1eb7fa346065410b5b1eab99c3c"
+      }
+    },
+    "security65": {
+      "name": "Spring Security HSTS",
+      "basis": "6.5",
+      "sources": {
+        "s527bf5b95139": "https://docs.spring.io/spring-security/reference/6.5/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html"
+      }
+    },
+    "boot": {
+      "name": "Spring Boot documentation",
+      "basis": "unknown",
+      "sources": {
+        "s4f6aa9df744a": "https://docs.spring.io/spring-boot/how-to/webserver.html",
+        "s6d0dd8e90590": "https://docs.spring.io/spring-boot/reference/features/ssl.html",
+        "s1b86cf7d45f1": "https://docs.spring.io/spring-boot/reference/io/rest-client.html",
+        "s81ce68041084": "https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/web/server/Cookie.html",
+        "s75be5256a326": "https://docs.spring.io/spring-boot/reference/web/spring-security.html",
+        "sc88333e257f0": "https://docs.spring.io/spring-boot/reference/security/oauth2.html"
+      }
+    },
+    "boot-docs": {
+      "name": "Spring Boot documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "se7aed3f6650b": "https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/web/server/Ssl.html",
+        "s34f52429c110": "https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/ServerProperties.html",
+        "s6198bce672f6": "https://docs.spring.io/spring-boot/3.5/appendix/application-properties/index.html",
+        "s973cb5a333ac": "https://docs.spring.io/spring-boot/3.5/reference/actuator/endpoints.html",
+        "s73890facf07c": "https://docs.spring.io/spring-boot/3.5/reference/actuator/monitoring.html",
+        "s8cf61ca65ae4": "https://docs.spring.io/spring-boot/3.5/reference/web/spring-security.html",
+        "se8918714c2c8": "https://docs.spring.io/spring-boot/3.5/reference/using/devtools.html",
+        "saea08b7576f4": "https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/ErrorProperties.IncludeAttribute.html",
+        "s6ce5733455c4": "https://docs.spring.io/spring-boot/3.5/reference/web/servlet.html",
+        "s3a681db376ce": "https://docs.spring.io/spring-boot/3.5/api/java/org/springframework/boot/autoconfigure/web/client/RestClientSsl.html",
+        "s2845cade9c1d": "https://docs.spring.io/spring-boot/3.5/reference/io/rest-client.html",
+        "s61bf6b20e945": "https://docs.spring.io/spring-boot/4.1/api/java/org/springframework/boot/web/server/autoconfigure/ServerProperties.html",
+        "sc24ee7294b38": "https://docs.spring.io/spring-boot/4.1/appendix/application-properties/index.html",
+        "s0511290ee7a9": "https://docs.spring.io/spring-boot/4.1/reference/actuator/endpoints.html",
+        "s033f98a55ba1": "https://docs.spring.io/spring-boot/4.1/reference/actuator/endpoints.html#actuator.endpoints.sanitization",
+        "s1246672710d1": "https://docs.spring.io/spring-boot/4.1/reference/actuator/monitoring.html",
+        "s88d377c93f63": "https://docs.spring.io/spring-boot/4.1/reference/using/devtools.html",
+        "s03b9d97c1a28": "https://docs.spring.io/spring-boot/4.1/reference/io/rest-client.html"
+      }
+    },
+    "security": {
+      "name": "Spring Security documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s55e8fcd2ff11": "https://docs.spring.io/spring-security/reference/servlet/oauth2/login/core.html",
+        "sae4824b03001": "https://docs.spring.io/spring-security/reference/servlet/getting-started.html",
+        "sd5aebfb9d1ed": "https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html",
+        "s23cf30cad42c": "https://docs.spring.io/spring-security/reference/servlet/exploits/http.html",
+        "s9471b4cfe0f6": "https://docs.spring.io/spring-security/reference/servlet/configuration/java.html",
+        "s8859c309d60a": "https://docs.spring.io/spring-security/reference/features/exploits/csrf.html",
+        "sf301a3d0645a": "https://docs.spring.io/spring-security/reference/servlet/authentication/session-management.html",
+        "s6fb344722a7c": "https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/web/header/writers/HstsHeaderWriter.html"
+      }
+    },
+    "framework": {
+      "name": "Spring Framework documentation",
+      "basis": "unknown",
+      "sources": {
+        "sc25b4ff29bc9": "https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/filter/ForwardedHeaderFilter.html"
+      }
+    },
+    "jdk": {
+      "name": "JDK keytool documentation",
+      "basis": "21",
+      "sources": {
+        "s8a504e61bc07": "https://docs.oracle.com/en/java/javase/21/docs/specs/man/keytool.html"
+      }
+    },
+    "tomcat": {
+      "name": "Tomcat HTTP connector",
+      "basis": "10.1",
+      "sources": {
+        "s20a557a45f7a": "https://tomcat.apache.org/tomcat-10.1-doc/config/http.html"
+      }
+    },
+    "curl": {
+      "name": "curl minimum diagnostics version",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    },
+    "jdk21u": {
+      "name": "OpenJDK jdk21u javax.net.ssl sources",
+      "basis": "jdk-21.0.12.1-ga",
+      "sources": {
+        "s1379fba0b5e6": "https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/X509TrustManager.java#L31-L85",
+        "s0249b6cf0853": "https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/HostnameVerifier.java#L29-L55",
+        "sef5d534061ca": "https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/SSLContext.java#L296-L315",
+        "sd6ea702f8bb2": "https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/HttpsURLConnection.java#L212-L273",
+        "se315608f569f": "https://github.com/openjdk/jdk21u/blob/jdk-21.0.12.1-ga/src/java.base/share/classes/javax/net/ssl/HttpsURLConnection.java#L295-L371"
+      }
+    },
+    "entra-docs": {
+      "name": "Microsoft Entra documentation",
+      "basis": "231747abc59ae3d50c74e215c1cdd592eb980723",
+      "sources": {
+        "s2c2f323edbd0": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/conditional-access/policy-all-users-mfa-strength.md#L56-L57"
+      }
+    },
+    "cf-docs": {
+      "name": "Cloudflare documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24"
+      }
+    },
+    "authelia-source": {
+      "name": "Authelia source",
+      "basis": "v4.39.28",
+      "sources": {
+        "sfeb54a05c30d": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/introduction.md#L21-L31"
+      }
+    }
+  },
+  "claims": {
+    "tls": {"text": "Direct HTTPS on 8443 uses PEM certificate/key or PKCS12 and TLSv1.2/TLSv1.3; older releases must confirm PEM property support.", "components": ["boot", "boot-docs"], "sources": ["boot:s4f6aa9df744a", "boot-docs:se7aed3f6650b"], "status": "REASONED"},
+    "connector": {"text": "Properties configure one HTTP or HTTPS connector; add the port-80 redirect connector in code, or let the proxy redirect.", "components": ["boot"], "sources": ["boot:s4f6aa9df744a"], "status": "REASONED"},
+    "https-redirect": {"text": "Spring Security 6.5+ redirectToHttps redirects insecure requests; trusted forwarded headers determine secure status behind TLS termination.", "components": ["security", "security65"], "sources": ["security:s23cf30cad42c", "security65:s527bf5b95139"], "status": "REASONED"},
+    "hsts": {"text": "Default HSTS writer runs only for secure requests; defaults are one year, includeSubDomains=true and preload=false.", "components": ["security65", "security"], "sources": ["security65:s527bf5b95139", "security:s6fb344722a7c"], "status": "REASONED"},
+    "proxy-bind": {"text": "Bind 127.0.0.1:8080 behind the TLS proxy.", "components": ["boot", "boot-docs"], "sources": ["boot:s4f6aa9df744a", "boot-docs:s34f52429c110", "boot-docs:s61bf6b20e945"], "status": "REASONED"},
+    "forwarding": {"text": "NATIVE delegates forwarded headers to the server, FRAMEWORK uses ForwardedHeaderFilter; outside supported cloud platforms the default is NONE.", "components": ["boot"], "sources": ["boot:s4f6aa9df744a"], "status": "REASONED"},
+    "proxy-trust": {"text": "Restrict Tomcat internal-proxies, strip inbound Forwarded/X-Forwarded-* at the edge and prevent direct listener bypass.", "components": ["boot", "framework"], "sources": ["boot:s4f6aa9df744a", "framework:sc25b4ff29bc9"], "status": "REASONED"},
+    "proxy-redirect": {"text": "Tomcat redirect-context-root=false preserves HTTPS redirects behind TLS termination.", "components": ["boot"], "sources": ["boot:s4f6aa9df744a"], "status": "REASONED"},
+    "server-import": {"text": "ServerProperties moves from boot.autoconfigure.web in Boot 3.5 to boot.web.server.autoconfigure in Boot 4.", "components": ["boot-docs"], "sources": ["boot-docs:s34f52429c110", "boot-docs:s61bf6b20e945"], "status": "REASONED"},
+    "default-web-auth": {"text": "With starter-security and default web configuration, require authentication except Actuator health; form login, Basic, CSRF and security headers are enabled.", "components": ["boot", "security", "boot-docs"], "sources": ["boot:s75be5256a326", "security:sae4824b03001", "boot-docs:s8cf61ca65ae4"], "status": "REASONED"},
+    "custom-chain": {"text": "Any custom SecurityFilterChain replaces Boot default web and Actuator rules; unmatched requests need a fallback chain or remain unprotected.", "components": ["boot-docs", "security"], "sources": ["boot-docs:s8cf61ca65ae4", "security:s9471b4cfe0f6"], "status": "REASONED"},
+    "default-user": {"text": "Separate default-user auto-configuration creates user with a normally logged generated password; a custom chain alone does not remove it. Production needs deliberate authentication.", "components": ["boot-docs"], "sources": ["boot-docs:s8cf61ca65ae4"], "status": "REASONED"},
+    "password": {"text": "Use DelegatingPasswordEncoder, bcrypt by default with {bcrypt}; BCrypt strength defaults to 10 and is tuned to about one second; Argon2 v5_8 defaults are an alternative.", "components": ["security"], "sources": ["security:sd5aebfb9d1ed"], "status": "REASONED"},
+    "cookies": {"text": "Set secure/http-only cookies, SameSite=lax and a 30m servlet session timeout.", "components": ["boot", "boot-docs"], "sources": ["boot:s81ce68041084", "boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
+    "login-limit": {"text": "Checked references document no built-in login limiter; limit at the proxy or count failures and lock local accounts.", "components": ["security"], "sources": ["security:sae4824b03001", "security:sd5aebfb9d1ed"], "status": "REASONED"},
+    "oidc-starter": {"text": "Boot 3.5 uses starter-oauth2-client; Boot 4 uses starter-security-oauth2-client and deprecates the old name.", "components": ["boot40"], "sources": ["boot40:s08143a9162b2", "boot40:s0486713aa731"], "status": "REASONED"},
+    "oidc": {"text": "Configure client ID, environment-supplied secret, issuer discovery and openid/profile/email scopes with oauth2Login; without openid the login is OAuth2, not OIDC.", "components": ["boot", "security"], "sources": ["boot:sc88333e257f0", "security:s55e8fcd2ff11"], "status": "REASONED"},
+    "mfa": {"text": "Enforce MFA at the identity provider or a fronting layer per linked guides; for example, an Entra Conditional Access policy can require an MFA authentication strength, Cloudflare Access independent MFA can enforce MFA without relying on the IdP, and Authelia supports TOTP, WebAuthn and Duo second factors. The cited pages do not establish this deployment's enforcement.", "components": ["security", "entra-docs", "cf-docs", "authelia-source"], "sources": ["security:s55e8fcd2ff11", "entra-docs:s2c2f323edbd0", "cf-docs:s7e793d13cf31", "authelia-source:sfeb54a05c30d"], "status": "REASONED"},
+    "csrf": {"text": "Statelessness does not remove CSRF risk for automatically attached browser cookies or Basic credentials; retain appropriate protection.", "components": ["security"], "sources": ["security:s8859c309d60a"], "status": "REASONED"},
+    "session-fixation": {"text": "Default fixation protection uses changeSessionId on Servlet 3.1+ containers; keep it enabled.", "components": ["security"], "sources": ["security:sf301a3d0645a"], "status": "REASONED"},
+    "client-validation": {"text": "Do not install trust-all TrustManager or hostname verifiers; pinned jdk21u sources document X509TrustManager's check methods, HostnameVerifier.verify, SSLContext.init's trust-manager input, and HttpsURLConnection default setters reaching later instances while per-instance setters affect one object. The whole-JVM-client reading is this guide's assessment.", "components": ["boot", "jdk", "jdk21u"], "sources": ["boot:s6d0dd8e90590", "jdk:s8a504e61bc07", "jdk21u:s1379fba0b5e6", "jdk21u:s0249b6cf0853", "jdk21u:sef5d534061ca", "jdk21u:sd6ea702f8bb2", "jdk21u:se315608f569f"], "status": "REASONED"},
+    "client-ca": {"text": "Import an internal CA with keytool into cacerts and change its default changeit password, or configure and apply a named SSL bundle to the client.", "components": ["boot", "jdk"], "sources": ["boot:s6d0dd8e90590", "boot:s1b86cf7d45f1", "jdk:s8a504e61bc07"], "status": "REASONED"},
+    "client-import": {"text": "RestClientSsl and WebClientSsl imports differ between Boot 3.5.16 and 4.1.1; apply ssl.fromBundle to the selected client.", "components": ["boot-docs", "boot41"], "sources": ["boot-docs:s3a681db376ce", "boot41:s8e261bdcd27a", "boot-docs:s2845cade9c1d", "boot-docs:s03b9d97c1a28"], "status": "REASONED"},
+    "actuator-exposure": {"text": "Boot 3.5.16/4.1.1 default web exposure is health; use an explicit allowlist. Exposure, access and authorization are separate.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
+    "management-bind": {"text": "Management binds 127.0.0.1:8081 separately; a distinct management address requires a distinct port and no public proxy forwarding.", "components": ["boot-docs"], "sources": ["boot-docs:s73890facf07c", "boot-docs:s1246672710d1"], "status": "REASONED"},
+    "management-disable": {"text": "management.server.port=-1 disables management HTTP, not JMX exposure.", "components": ["boot-docs"], "sources": ["boot-docs:s73890facf07c", "boot-docs:s1246672710d1"], "status": "REASONED"},
+    "sanitize": {"text": "env/configprops show-values default to never; sanitization does not justify exposing metadata.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s033f98a55ba1"], "status": "REASONED"},
+    "metadata-endpoints": {"text": "beans, mappings and threaddump expose components, routes and thread stacks.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
+    "heapdump": {"text": "heapdump may expose secrets and consume resources; access defaults to none in specifically checked 3.5.16/4.1.1, and is explicitly disabled.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
+    "loggers": {"text": "loggers can read/change logging levels, increasing volume and possible information disclosure.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
+    "shutdown": {"text": "shutdown stops the application; access defaults to none and is explicitly disabled.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
+    "management-auth": {"text": "The first servlet chain requires ROLE_ENDPOINT_ADMIN for all exposed Actuator endpoints including health; the second authenticates application requests. Provision identities separately.", "components": ["boot-docs", "security"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9", "security:s9471b4cfe0f6"], "status": "REASONED"},
+    "endpoint-import": {"text": "EndpointRequest moves from boot.actuate.autoconfigure.security.servlet in Boot 3.5 to boot.security.autoconfigure.actuate.web.servlet in Boot 4.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
+    "error-message": {"text": "Error message inclusion defaults to never in checked releases; use server.error in Boot 3.5 and spring.web.error in Boot 4.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
+    "error-stack": {"text": "Stacktrace inclusion defaults to never in checked releases, using the version-appropriate error prefix.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
+    "error-binding": {"text": "Binding-error inclusion defaults to never in checked releases, using the version-appropriate error prefix.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
+    "error-exception": {"text": "Exception-class inclusion defaults to false in checked releases, using the version-appropriate error prefix.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
+    "error-policy": {"text": "on-param lets requesters request details; disabling whitelabel HTML alone does not protect JSON/custom/container errors.", "components": ["boot-docs"], "sources": ["boot-docs:saea08b7576f4", "boot-docs:s6ce5733455c4"], "status": "REASONED"},
+    "h2": {"text": "H2 console defaults disabled in checked releases; explicitly set spring.h2.console.enabled=false.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
+    "devtools": {"text": "Exclude production devtools; active development defaults enable H2 when components exist and set message/trace/binding errors to always.", "components": ["boot-docs"], "sources": ["boot-docs:se8918714c2c8", "boot-docs:s88d377c93f63"], "status": "REASONED"},
+    "multipart-file": {"text": "Servlet multipart max-file-size defaults to 1MB per file in checked releases.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
+    "multipart-request": {"text": "Servlet multipart max-request-size defaults to 10MB including parts and overhead in checked releases.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED"},
+    "form-limit": {"text": "Tomcat max-http-form-post-size defaults to 2MB for form-to-parameter processing, not arbitrary request bodies.", "components": ["boot-docs", "tomcat"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "tomcat:s20a557a45f7a"], "status": "REASONED"},
+    "header-limit": {"text": "max-http-request-header-size defaults to 8KB; Tomcat counts request line and all header names/values together.", "components": ["boot-docs", "tomcat"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "tomcat:s20a557a45f7a"], "status": "REASONED"},
+    "json-limit": {"text": "These properties do not establish a universal JSON body limit; bound other bodies at the proxy/application and test the actual route and content type.", "components": ["boot-docs", "tomcat"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "tomcat:s20a557a45f7a"], "status": "REASONED"},
+    "verify-tls": {"text": "HTTPS must succeed without -k and show HSTS.", "components": ["boot", "security65", "security"], "sources": ["boot:s4f6aa9df744a", "security65:s527bf5b95139", "security:s6fb344722a7c"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "Unauthenticated /api should return 401 or a 302 login redirect.", "components": ["boot-docs"], "sources": ["boot-docs:s8cf61ca65ae4"], "status": "REASONED", "verify": [1]},
+    "verify-bind": {"text": "Inspect every listener for loopback-only Java binding behind the proxy.", "components": ["boot-docs"], "sources": ["boot-docs:s34f52429c110", "boot-docs:s61bf6b20e945"], "status": "REASONED", "verify": [1]},
+    "verify-user": {"text": "Positive generated-password log count records generation; zero is inconclusive because logging or a configured password can hide the default account.", "components": ["boot-docs"], "sources": ["boot-docs:s8cf61ca65ae4"], "status": "REASONED", "verify": [1]},
+    "verify-public-management": {"text": "Public origin must serve no Actuator content to anonymous or administrator identities; health-only exposure leaves other endpoints unavailable even to administrators.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED", "verify": [2]},
+    "verify-management-auth": {"text": "On private 8081, anonymous health should get 401, non-admin 403 and admin a health response that may be 503; sensitive routes normally 404 after successful authentication.", "components": ["boot-docs"], "sources": ["boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED", "verify": [3]},
+    "verify-management-port": {"text": "Any HTTP response on external 8081 proves reachability; corroborate failure with socket inventory and successful intended-path access.", "components": ["boot-docs"], "sources": ["boot-docs:s73890facf07c", "boot-docs:s1246672710d1"], "status": "REASONED", "verify": [4]},
+    "verify-dangerous": {"text": "Inspect heapdump/shutdown access=none without invoking them; exposed behavior needs an isolated fixture.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:s973cb5a333ac", "boot-docs:s0511290ee7a9"], "status": "REASONED"},
+    "verify-errors": {"text": "Controlled exception/binding markers appear with always/on-param but should disappear with production settings, including parameter requests; check JSON, HTML and custom responses after auth.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:saea08b7576f4", "boot-docs:s6ce5733455c4"], "status": "REASONED", "verify": [5]},
+    "verify-h2": {"text": "Enabled console can return content or redirect; disabled console normally yields 404 after app authorization. Login/401/403 alone do not prove absence.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38", "boot-docs:se8918714c2c8", "boot-docs:s88d377c93f63"], "status": "REASONED", "verify": [6]},
+    "verify-upload": {"text": "1024-byte file must succeed; 1048577-byte file must fail for size under the 1MB policy; both succeed with raised limits. Auth, CSRF, route and transport failures are inconclusive.", "components": ["boot-docs"], "sources": ["boot-docs:s6198bce672f6", "boot-docs:sc24ee7294b38"], "status": "REASONED", "verify": [7]},
+    "verify-credentials": {"text": "Use private mode-0600 header files via stdin, valid session/CSRF headers and curl 7.75.0+ diagnostics; transport errors do not prove secure configuration.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED", "verify": [2, 3, 4, 5, 6, 7]}
+  }
+}
+````
+<!-- version-basis:end -->

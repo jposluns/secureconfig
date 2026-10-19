@@ -1,6 +1,6 @@
 # Workflow and agent orchestrators: Prefect, Dagster, Airflow, Temporal, Flower, Argo
 
-Written against Prefect Basic Auth minimum 3.1.8, Prefect Blocks source 3.1.8, Dagster OSS 1.13.24, Apache Airflow 3.3.2, Apache Airflow historical configuration 2.11.0, Apache Airflow historical default 2.2.5, and Apache Airflow FAB provider source providers-fab/3.9.0, plus 11 more recorded bases; 1 further source is pinned to a commit and 7 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 62 claims: 3 demonstrated by a check that ran and 59 reasoned from cited sources.
+Written against Prefect Basic Auth minimum 3.1.8, Dagster OSS 1.13.24, Apache Airflow 3.3.2, Temporal Go SDK codec source v1.28.0, Flower v2.2.0, Argo Workflows v3.7.18 and v4.1.4, Prefect Blocks source 3.1.8, and Apache Airflow historical configuration 2.11.0, plus 10 more recorded bases; 1 further source is pinned to a commit and 7 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 62 claims: 3 demonstrated by a check that ran and 59 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -508,17 +508,17 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 Components (recorded basis):
 
 - prefect: Prefect Basic Auth minimum (3.1.8)
-- prefect-blocks: Prefect Blocks source (3.1.8)
 - dagster: Dagster OSS (1.13.24)
 - airflow: Apache Airflow (3.3.2)
-- airflow-two: Apache Airflow historical configuration (2.11.0)
-- airflow-old: Apache Airflow historical default (2.2.5)
-- fab-source: Apache Airflow FAB provider source (providers-fab/3.9.0)
-- airflow-crypto: Apache Airflow crypto source (3.3.2)
 - temporal-codec: Temporal Go SDK codec source (v1.28.0)
 - flower: Flower (v2.2.0)
 - argo-three: Argo Workflows (v3.7.18)
 - argo-four: Argo Workflows (v4.1.4)
+- prefect-blocks: Prefect Blocks source (3.1.8)
+- airflow-two: Apache Airflow historical configuration (2.11.0)
+- airflow-old: Apache Airflow historical default (2.2.5)
+- fab-source: Apache Airflow FAB provider source (providers-fab/3.9.0)
+- airflow-crypto: Apache Airflow crypto source (3.3.2)
 - argo-docs: Argo Workflows documentation (release-3.7)
 - prefect-source: Prefect server source (9e560c9b6df4e19a5109a66e66d461f9facb538d)
 - prefect-rolling: Prefect documentation (rolling) (unknown)
@@ -614,15 +614,6 @@ Claims (full source mapping in the JSON block below):
         "s12416d1a0d69": "https://github.com/PrefectHQ/prefect/releases/tag/3.1.8"
       }
     },
-    "prefect-blocks": {
-      "name": "Prefect Blocks source",
-      "basis": "3.1.8",
-      "sources": {
-        "s56081101d16a": "https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/server/api/block_documents.py#L47-L70",
-        "s1eae2c5f9f5e": "https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/server/api/block_documents.py#L101-L119",
-        "s46e69a2090c4": "https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/blocks/system.py#L154-L159"
-      }
-    },
     "dagster": {
       "name": "Dagster OSS",
       "basis": "1.13.24",
@@ -649,38 +640,6 @@ Claims (full source mapping in the JSON block below):
         "s705f1eb5de00": "https://raw.githubusercontent.com/apache/airflow/3.3.2/airflow-core/docs/howto/docker-compose/docker-compose.yaml",
         "sdfcfd543928c": "https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#secret-key",
         "s4ed64009ed8f": "https://airflow.apache.org/docs/apache-airflow/3.3.2/configurations-ref.html#expose-config"
-      }
-    },
-    "airflow-two": {
-      "name": "Apache Airflow historical configuration",
-      "basis": "2.11.0",
-      "sources": {
-        "sb97f3044e215": "https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#auth-backends",
-        "sabb71378ad74": "https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#secret-key",
-        "s6813801b7880": "https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#expose-config"
-      }
-    },
-    "airflow-old": {
-      "name": "Apache Airflow historical default",
-      "basis": "2.2.5",
-      "sources": {
-        "s4e72b1f51038": "https://airflow.apache.org/docs/apache-airflow/2.2.5/configurations-ref.html#auth-backend"
-      }
-    },
-    "fab-source": {
-      "name": "Apache Airflow FAB provider source",
-      "basis": "providers-fab/3.9.0",
-      "sources": {
-        "s3c94f0f7176a": "https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/src/airflow/providers/fab/auth_manager/fab_auth_manager.py#L327-L381",
-        "s5552a28ab9d8": "https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/pyproject.toml#L75-L81"
-      }
-    },
-    "airflow-crypto": {
-      "name": "Apache Airflow crypto source",
-      "basis": "3.3.2",
-      "sources": {
-        "sdeaf2f54c054": "https://github.com/apache/airflow/blob/3.3.2/airflow-core/src/airflow/models/crypto.py#L47-L68",
-        "s70ea7631e820": "https://github.com/apache/airflow/blob/3.3.2/airflow-core/src/airflow/models/crypto.py#L154-L173"
       }
     },
     "temporal-codec": {
@@ -756,6 +715,47 @@ Claims (full source mapping in the JSON block below):
         "s1b134f96428f": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/namespace-install/argo-server-rbac/argo-server-role.yaml#L1-L67",
         "s2418ee1aa49d": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/manifests/namespace-install/argo-server-rbac/argo-server-rolebinding.yaml#L1-L11",
         "se758d83aaf1f": "https://github.com/argoproj/argo-workflows/blob/v4.1.4/server/auth/gatekeeper.go#L133-L148"
+      }
+    },
+    "prefect-blocks": {
+      "name": "Prefect Blocks source",
+      "basis": "3.1.8",
+      "sources": {
+        "s56081101d16a": "https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/server/api/block_documents.py#L47-L70",
+        "s1eae2c5f9f5e": "https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/server/api/block_documents.py#L101-L119",
+        "s46e69a2090c4": "https://github.com/PrefectHQ/prefect/blob/3.1.8/src/prefect/blocks/system.py#L154-L159"
+      }
+    },
+    "airflow-two": {
+      "name": "Apache Airflow historical configuration",
+      "basis": "2.11.0",
+      "sources": {
+        "sb97f3044e215": "https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#auth-backends",
+        "sabb71378ad74": "https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#secret-key",
+        "s6813801b7880": "https://airflow.apache.org/docs/apache-airflow/2.11.0/configurations-ref.html#expose-config"
+      }
+    },
+    "airflow-old": {
+      "name": "Apache Airflow historical default",
+      "basis": "2.2.5",
+      "sources": {
+        "s4e72b1f51038": "https://airflow.apache.org/docs/apache-airflow/2.2.5/configurations-ref.html#auth-backend"
+      }
+    },
+    "fab-source": {
+      "name": "Apache Airflow FAB provider source",
+      "basis": "providers-fab/3.9.0",
+      "sources": {
+        "s3c94f0f7176a": "https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/src/airflow/providers/fab/auth_manager/fab_auth_manager.py#L327-L381",
+        "s5552a28ab9d8": "https://github.com/apache/airflow/blob/providers-fab/3.9.0/providers/fab/pyproject.toml#L75-L81"
+      }
+    },
+    "airflow-crypto": {
+      "name": "Apache Airflow crypto source",
+      "basis": "3.3.2",
+      "sources": {
+        "sdeaf2f54c054": "https://github.com/apache/airflow/blob/3.3.2/airflow-core/src/airflow/models/crypto.py#L47-L68",
+        "s70ea7631e820": "https://github.com/apache/airflow/blob/3.3.2/airflow-core/src/airflow/models/crypto.py#L154-L173"
       }
     },
     "argo-docs": {

@@ -1,108 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-05",
-  "documentation_checked": "2026-09",
-  "body_sha256": "68196b9fe19ade034159e73ed1774ab6f2d6104a1dcb9d80a79926f88c6fdd4b",
-  "components": {
-    "ts": {
-      "name": "Tailscale documentation",
-      "basis": "unknown",
-      "sources": {
-        "s8a8000573b13": "https://tailscale.com/kb/1242/tailscale-serve",
-        "sbe30f8121245": "https://tailscale.com/kb/1223/funnel",
-        "s42e5680f0b20": "https://tailscale.com/docs/reference/examples/acls",
-        "se0f0c1dd6af5": "https://tailscale.com/kb/1312/serve",
-        "se137a82d9873": "https://tailscale.com/docs/reference/syntax/policy-file#tests"
-      }
-    },
-    "cli": {
-      "name": "Tailscale CLI change",
-      "basis": "v1.52",
-      "sources": {
-        "s8a8000573b13": "https://tailscale.com/kb/1242/tailscale-serve"
-      }
-    },
-    "ss": {
-      "name": "ss",
-      "basis": "unknown",
-      "sources": {
-        "s8ff688d5d940": "https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html"
-      }
-    },
-    "curl": {
-      "name": "curl option documentation",
-      "basis": "7.75.0",
-      "sources": {
-        "sc2888bc2b75b": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L32-L36",
-        "sc6f836c27ed8": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L48-L51",
-        "sc4ff20756ddd": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L147-L149",
-        "see8bc6e3acb6": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/head.d#L7-L9",
-        "sb0b300176c5d": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/disable.d#L6-L8",
-        "s72e21eeff9a4": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/connect-timeout.d#L7-L10",
-        "s3b94eb9a9c12": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/max-time.d#L8-L12"
-      }
-    }
-  },
-  "claims": {
-    "serve": {"text": "tailscale serve --bg localhost:3000 proxies to the app for tailnet devices, subject to identity and tailnet policy.", "components": ["ts"], "sources": ["ts:s8a8000573b13"], "status": "REASONED"},
-    "policy-default": {"text": "New tailnets allow all devices, plus node-share recipients; remove allow-all before granting intended users, groups or tags access to the Serve port.", "components": ["ts"], "sources": ["ts:s42e5680f0b20"], "status": "REASONED"},
-    "policy-additive": {"text": "Rules are additive accepts; a narrower rule cannot revoke allow-all. Grants are preferred and ACLs remain supported.", "components": ["ts"], "sources": ["ts:s42e5680f0b20"], "status": "REASONED"},
-    "app-auth": {"text": "Tailnet reach is not app authorization; the app needs login or deliberate use of Serve identity headers.", "components": ["ts"], "sources": ["ts:se0f0c1dd6af5"], "status": "REASONED"},
-    "header-trust": {"text": "Loopback limits identity-header spoofing to local processes; trusting Serve headers requires trusting every process on that host.", "components": ["ts"], "sources": ["ts:se0f0c1dd6af5"], "status": "REASONED"},
-    "tagged": {"text": "Tagged devices carry no user identity; reject them or supply another authentication method.", "components": ["ts"], "sources": ["ts:se0f0c1dd6af5"], "status": "REASONED"},
-    "bind": {"text": "Serve does not change the app bind; use 127.0.0.1:3000 because a wildcard app still answers directly on LAN/VPC addresses.", "components": ["ts"], "sources": ["ts:s8a8000573b13", "ts:se0f0c1dd6af5"], "status": "REASONED"},
-    "serve-tls": {"text": "Serve automatically provisions HTTPS certificates for the machine's tailnet name.", "components": ["ts"], "sources": ["ts:s8a8000573b13"], "status": "REASONED"},
-    "background": {"text": "--bg persists Serve in the background; without it the share ends with the session.", "components": ["ts"], "sources": ["ts:s8a8000573b13"], "status": "REASONED"},
-    "funnel": {"text": "tailscale funnel 3000 publishes the service to the internet at its ts.net hostname with TLS.", "components": ["ts"], "sources": ["ts:sbe30f8121245"], "status": "REASONED"},
-    "funnel-auth": {"text": "Funnel adds no per-request authentication and its relay does not decrypt traffic; the app needs login and human MFA.", "components": ["ts"], "sources": ["ts:sbe30f8121245"], "status": "REASONED"},
-    "funnel-prerequisites": {"text": "Funnel requires tailnet HTTPS certificates, a funnel node attribute and MagicDNS.", "components": ["ts"], "sources": ["ts:sbe30f8121245"], "status": "REASONED"},
-    "syntax": {"text": "Serve/Funnel command syntax changed in v1.52; older clients need their own --help.", "components": ["cli"], "sources": ["cli:s8a8000573b13"], "status": "REASONED"},
-    "verify-bind": {"text": "ss sport=:3000 must show 127.0.0.1:3000, not IPv4 or IPv6 wildcard.", "components": ["ss", "ts"], "sources": ["ss:s8ff688d5d940", "ts:se0f0c1dd6af5"], "status": "REASONED", "verify": [1]},
-    "verify-direct": {"text": "Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding.", "components": ["ts", "curl"], "sources": ["ts:s8a8000573b13", "ts:se0f0c1dd6af5", "curl:sc2888bc2b75b", "curl:sc6f836c27ed8", "curl:sc4ff20756ddd", "curl:see8bc6e3acb6", "curl:sb0b300176c5d", "curl:s72e21eeff9a4", "curl:s3b94eb9a9c12"], "status": "REASONED", "verify": [2]},
-    "verify-allowed": {"text": "Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy.", "components": ["ts", "curl"], "sources": ["ts:s8a8000573b13", "ts:s42e5680f0b20", "curl:see8bc6e3acb6", "curl:sb0b300176c5d"], "status": "REASONED", "verify": [3]},
-    "verify-policy": {"text": "Policy tests must accept the intended identity and deny an excluded one; failed assertions reject the policy file.", "components": ["ts"], "sources": ["ts:se137a82d9873"], "status": "REASONED"},
-    "verify-public": {"text": "From a non-tailnet network Serve is unreachable and Funnel reachable; the funneled app must authenticate every request.", "components": ["ts"], "sources": ["ts:s8a8000573b13", "ts:sbe30f8121245"], "status": "REASONED"}
-  }
-}
----
 # Tailscale: serve and funnel
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Tailscale CLI change v1.52 and curl option documentation 7.75.0; 2 further sources carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 18 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- ts: Tailscale documentation (unknown)
-- cli: Tailscale CLI change (v1.52)
-- ss: ss (unknown)
-- curl: curl option documentation (7.75.0)
-
-Claims (full source mapping in the front matter):
-
-- serve (REASONED; ts): tailscale serve --bg localhost:3000 proxies to the app for tailnet devices, subject to identity and tailnet policy.
-- policy-default (REASONED; ts): New tailnets allow all devices, plus node-share recipients; remove allow-all before granting intended users, groups or tags access to the Serve port.
-- policy-additive (REASONED; ts): Rules are additive accepts; a narrower rule cannot revoke allow-all. Grants are preferred and ACLs remain supported.
-- app-auth (REASONED; ts): Tailnet reach is not app authorization; the app needs login or deliberate use of Serve identity headers.
-- header-trust (REASONED; ts): Loopback limits identity-header spoofing to local processes; trusting Serve headers requires trusting every process on that host.
-- tagged (REASONED; ts): Tagged devices carry no user identity; reject them or supply another authentication method.
-- bind (REASONED; ts): Serve does not change the app bind; use 127.0.0.1:3000 because a wildcard app still answers directly on LAN/VPC addresses.
-- serve-tls (REASONED; ts): Serve automatically provisions HTTPS certificates for the machine's tailnet name.
-- background (REASONED; ts): --bg persists Serve in the background; without it the share ends with the session.
-- funnel (REASONED; ts): tailscale funnel 3000 publishes the service to the internet at its ts.net hostname with TLS.
-- funnel-auth (REASONED; ts): Funnel adds no per-request authentication and its relay does not decrypt traffic; the app needs login and human MFA.
-- funnel-prerequisites (REASONED; ts): Funnel requires tailnet HTTPS certificates, a funnel node attribute and MagicDNS.
-- syntax (REASONED; cli): Serve/Funnel command syntax changed in v1.52; older clients need their own --help.
-- verify-bind (REASONED; ss, ts): ss sport=:3000 must show 127.0.0.1:3000, not IPv4 or IPv6 wildcard.
-- verify-direct (REASONED; ts, curl): Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding.
-- verify-allowed (REASONED; ts, curl): Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy.
-- verify-policy (REASONED; ts): Policy tests must accept the intended identity and deny an excluded one; failed assertions reject the policy file.
-- verify-public (REASONED; ts): From a non-tailnet network Serve is unreachable and Funnel reachable; the funneled app must authenticate every request.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Tailscale gives the same no-open-inbound-ports posture as [cloudflare.md](cloudflare.md), built on WireGuard with device identity as the access control. Two commands matter, and they differ in exactly one thing: who can reach the service.
 
@@ -189,3 +89,129 @@ REASONED: preceding block; Serve status, allowed access, policy assertions and p
 - curl 7.75.0 first-argument configuration disabling (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/disable.d#L6-L8
 - curl 7.75.0 connection timeout (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/connect-timeout.d#L7-L10
 - curl 7.75.0 total timeout (pinned tag curl-7_75_0, checked October 2026): https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/max-time.d#L8-L12
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/tailscale.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- cli: Tailscale CLI change (v1.52)
+- ts: Tailscale documentation (unknown)
+- ss: ss (unknown)
+- curl: curl option documentation (7.75.0)
+
+Claims (full source mapping in the JSON block below):
+
+- serve (REASONED; ts): tailscale serve --bg localhost:3000 proxies to the app for tailnet devices, subject to identity and tailnet policy.
+- policy-default (REASONED; ts): New tailnets allow all devices, plus node-share recipients; remove allow-all before granting intended users, groups or tags access to the Serve port.
+- policy-additive (REASONED; ts): Rules are additive accepts; a narrower rule cannot revoke allow-all. Grants are preferred and ACLs remain supported.
+- app-auth (REASONED; ts): Tailnet reach is not app authorization; the app needs login or deliberate use of Serve identity headers.
+- header-trust (REASONED; ts): Loopback limits identity-header spoofing to local processes; trusting Serve headers requires trusting every process on that host.
+- tagged (REASONED; ts): Tagged devices carry no user identity; reject them or supply another authentication method.
+- bind (REASONED; ts): Serve does not change the app bind; use 127.0.0.1:3000 because a wildcard app still answers directly on LAN/VPC addresses.
+- serve-tls (REASONED; ts): Serve automatically provisions HTTPS certificates for the machine's tailnet name.
+- background (REASONED; ts): --bg persists Serve in the background; without it the share ends with the session.
+- funnel (REASONED; ts): tailscale funnel 3000 publishes the service to the internet at its ts.net hostname with TLS.
+- funnel-auth (REASONED; ts): Funnel adds no per-request authentication and its relay does not decrypt traffic; the app needs login and human MFA.
+- funnel-prerequisites (REASONED; ts): Funnel requires tailnet HTTPS certificates, a funnel node attribute and MagicDNS.
+- syntax (REASONED; cli): Serve/Funnel command syntax changed in v1.52; older clients need their own --help.
+- verify-bind (REASONED; ss, ts): ss sport=:3000 must show 127.0.0.1:3000, not IPv4 or IPv6 wildcard.
+- verify-direct (REASONED; ts, curl): Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding.
+- verify-allowed (REASONED; ts, curl): Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy.
+- verify-policy (REASONED; ts): Policy tests must accept the intended identity and deny an excluded one; failed assertions reject the policy file.
+- verify-public (REASONED; ts): From a non-tailnet network Serve is unreachable and Funnel reachable; the funneled app must authenticate every request.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-05",
+  "documentation_checked": "2026-09",
+  "body_sha256": "68196b9fe19ade034159e73ed1774ab6f2d6104a1dcb9d80a79926f88c6fdd4b",
+  "components": {
+    "cli": {
+      "name": "Tailscale CLI change",
+      "basis": "v1.52",
+      "sources": {
+        "s8a8000573b13": "https://tailscale.com/kb/1242/tailscale-serve"
+      }
+    },
+    "ts": {
+      "name": "Tailscale documentation",
+      "basis": "unknown",
+      "sources": {
+        "s8a8000573b13": "https://tailscale.com/kb/1242/tailscale-serve",
+        "sbe30f8121245": "https://tailscale.com/kb/1223/funnel",
+        "s42e5680f0b20": "https://tailscale.com/docs/reference/examples/acls",
+        "se0f0c1dd6af5": "https://tailscale.com/kb/1312/serve",
+        "se137a82d9873": "https://tailscale.com/docs/reference/syntax/policy-file#tests"
+      }
+    },
+    "ss": {
+      "name": "ss",
+      "basis": "unknown",
+      "sources": {
+        "s8ff688d5d940": "https://manpages.ubuntu.com/manpages/noble/en/man8/ss.8.html"
+      }
+    },
+    "curl": {
+      "name": "curl option documentation",
+      "basis": "7.75.0",
+      "sources": {
+        "sc2888bc2b75b": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L32-L36",
+        "sc6f836c27ed8": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L48-L51",
+        "sc4ff20756ddd": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/write-out.d#L147-L149",
+        "see8bc6e3acb6": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/head.d#L7-L9",
+        "sb0b300176c5d": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/disable.d#L6-L8",
+        "s72e21eeff9a4": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/connect-timeout.d#L7-L10",
+        "s3b94eb9a9c12": "https://github.com/curl/curl/blob/curl-7_75_0/docs/cmdline-opts/max-time.d#L8-L12"
+      }
+    }
+  },
+  "claims": {
+    "serve": {"text": "tailscale serve --bg localhost:3000 proxies to the app for tailnet devices, subject to identity and tailnet policy.", "components": ["ts"], "sources": ["ts:s8a8000573b13"], "status": "REASONED"},
+    "policy-default": {"text": "New tailnets allow all devices, plus node-share recipients; remove allow-all before granting intended users, groups or tags access to the Serve port.", "components": ["ts"], "sources": ["ts:s42e5680f0b20"], "status": "REASONED"},
+    "policy-additive": {"text": "Rules are additive accepts; a narrower rule cannot revoke allow-all. Grants are preferred and ACLs remain supported.", "components": ["ts"], "sources": ["ts:s42e5680f0b20"], "status": "REASONED"},
+    "app-auth": {"text": "Tailnet reach is not app authorization; the app needs login or deliberate use of Serve identity headers.", "components": ["ts"], "sources": ["ts:se0f0c1dd6af5"], "status": "REASONED"},
+    "header-trust": {"text": "Loopback limits identity-header spoofing to local processes; trusting Serve headers requires trusting every process on that host.", "components": ["ts"], "sources": ["ts:se0f0c1dd6af5"], "status": "REASONED"},
+    "tagged": {"text": "Tagged devices carry no user identity; reject them or supply another authentication method.", "components": ["ts"], "sources": ["ts:se0f0c1dd6af5"], "status": "REASONED"},
+    "bind": {"text": "Serve does not change the app bind; use 127.0.0.1:3000 because a wildcard app still answers directly on LAN/VPC addresses.", "components": ["ts"], "sources": ["ts:s8a8000573b13", "ts:se0f0c1dd6af5"], "status": "REASONED"},
+    "serve-tls": {"text": "Serve automatically provisions HTTPS certificates for the machine's tailnet name.", "components": ["ts"], "sources": ["ts:s8a8000573b13"], "status": "REASONED"},
+    "background": {"text": "--bg persists Serve in the background; without it the share ends with the session.", "components": ["ts"], "sources": ["ts:s8a8000573b13"], "status": "REASONED"},
+    "funnel": {"text": "tailscale funnel 3000 publishes the service to the internet at its ts.net hostname with TLS.", "components": ["ts"], "sources": ["ts:sbe30f8121245"], "status": "REASONED"},
+    "funnel-auth": {"text": "Funnel adds no per-request authentication and its relay does not decrypt traffic; the app needs login and human MFA.", "components": ["ts"], "sources": ["ts:sbe30f8121245"], "status": "REASONED"},
+    "funnel-prerequisites": {"text": "Funnel requires tailnet HTTPS certificates, a funnel node attribute and MagicDNS.", "components": ["ts"], "sources": ["ts:sbe30f8121245"], "status": "REASONED"},
+    "syntax": {"text": "Serve/Funnel command syntax changed in v1.52; older clients need their own --help.", "components": ["cli"], "sources": ["cli:s8a8000573b13"], "status": "REASONED"},
+    "verify-bind": {"text": "ss sport=:3000 must show 127.0.0.1:3000, not IPv4 or IPv6 wildcard.", "components": ["ss", "ts"], "sources": ["ss:s8ff688d5d940", "ts:se0f0c1dd6af5"], "status": "REASONED", "verify": [1]},
+    "verify-direct": {"text": "Probe from outside the host on the LAN/VPC: any HTTP reply proves bypass; failure alone does not prove loopback binding.", "components": ["ts", "curl"], "sources": ["ts:s8a8000573b13", "ts:se0f0c1dd6af5", "curl:sc2888bc2b75b", "curl:sc6f836c27ed8", "curl:sc4ff20756ddd", "curl:see8bc6e3acb6", "curl:sb0b300176c5d", "curl:s72e21eeff9a4", "curl:s3b94eb9a9c12"], "status": "REASONED", "verify": [2]},
+    "verify-allowed": {"text": "Serve status and an allowed-device request check the intended path; success occurs under both allow-all and scoped policy.", "components": ["ts", "curl"], "sources": ["ts:s8a8000573b13", "ts:s42e5680f0b20", "curl:see8bc6e3acb6", "curl:sb0b300176c5d"], "status": "REASONED", "verify": [3]},
+    "verify-policy": {"text": "Policy tests must accept the intended identity and deny an excluded one; failed assertions reject the policy file.", "components": ["ts"], "sources": ["ts:se137a82d9873"], "status": "REASONED"},
+    "verify-public": {"text": "From a non-tailnet network Serve is unreachable and Funnel reachable; the funneled app must authenticate every request.", "components": ["ts"], "sources": ["ts:s8a8000573b13", "ts:sbe30f8121245"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->

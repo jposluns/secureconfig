@@ -1,244 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-19",
-  "documentation_checked": "2026-09",
-  "body_sha256": "7bda579ecc5f011cb380cd4ad0d43ab95afc524c80c5035ba4ca08afdef5b1b7",
-  "components": {
-    "http": {
-      "name": "Go net/http documentation",
-      "basis": "unknown",
-      "sources": {
-        "s75405f80decc": "https://pkg.go.dev/net/http",
-        "s6ab9e32b7795": "https://pkg.go.dev/net/http#Server"
-      }
-    },
-    "tls": {
-      "name": "Go crypto/tls documentation",
-      "basis": "unknown",
-      "sources": {
-        "se2152a9c28fc": "https://pkg.go.dev/crypto/tls"
-      }
-    },
-    "x509": {
-      "name": "Go certificate-store qualification",
-      "basis": "1.27",
-      "sources": {
-        "se65b937f9e1e": "https://pkg.go.dev/crypto/x509@go1.27.0"
-      }
-    },
-    "bcrypt": {
-      "name": "Go bcrypt documentation",
-      "basis": "unknown",
-      "sources": {
-        "s99bb1157593c": "https://pkg.go.dev/golang.org/x/crypto/bcrypt"
-      }
-    },
-    "argon": {
-      "name": "Go Argon2 documentation",
-      "basis": "unknown",
-      "sources": {
-        "s95fa46eac674": "https://pkg.go.dev/golang.org/x/crypto/argon2"
-      }
-    },
-    "rate": {
-      "name": "Go rate documentation",
-      "basis": "unknown",
-      "sources": {
-        "s5c3fdae5a0af": "https://pkg.go.dev/golang.org/x/time/rate"
-      }
-    },
-    "oidc": {
-      "name": "go-oidc documentation",
-      "basis": "v3",
-      "sources": {
-        "s60cc1d7a8fe6": "https://pkg.go.dev/github.com/coreos/go-oidc/v3/oidc"
-      }
-    },
-    "pprof": {
-      "name": "Go pprof documentation",
-      "basis": "unknown",
-      "sources": {
-        "s0246034dddd1": "https://pkg.go.dev/net/http/pprof"
-      }
-    },
-    "headers": {
-      "name": "Go header-count qualification",
-      "basis": "1.27",
-      "sources": {
-        "sa4a9473fc6f8": "https://pkg.go.dev/net/http@go1.27.0#MaxBytesReader"
-      }
-    },
-    "deadlines": {
-      "name": "Go per-request deadline minimum",
-      "basis": "1.20+",
-      "sources": {
-        "s251e0db38b90": "https://pkg.go.dev/net/http#ResponseController"
-      }
-    },
-    "expvar": {
-      "name": "Go expvar documentation",
-      "basis": "unknown",
-      "sources": {
-        "se49529035a0c": "https://pkg.go.dev/expvar"
-      }
-    },
-    "linux": {
-      "name": "Linux port-threshold documentation",
-      "basis": "unknown",
-      "sources": {
-        "s12e5a0911ec2": "https://docs.kernel.org/networking/ip-sysctl.html#ip-unprivileged-port-start"
-      }
-    },
-    "request": {
-      "name": "Go Request.Host source",
-      "basis": "1.27.0",
-      "sources": {
-        "sfdeabbeca746": "https://pkg.go.dev/net/http@go1.27.0#Request"
-      }
-    },
-    "otp": {
-      "name": "pquerna/otp",
-      "basis": "v1.5.0",
-      "sources": {
-        "scdd6f451714e": "https://github.com/pquerna/otp/blob/v1.5.0/README.md#L9"
-      }
-    },
-    "go-env": {
-      "name": "Go environment source",
-      "basis": "go1.27.0",
-      "sources": {
-        "s41d67ab4a28d": "https://github.com/golang/go/blob/go1.27.0/src/os/env.go#L98-L115"
-      }
-    },
-    "cf-docs": {
-      "name": "Cloudflare documentation",
-      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
-      "sources": {
-        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24",
-        "s6f6104362214": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85"
-      }
-    },
-    "authelia-source": {
-      "name": "Authelia source",
-      "basis": "v4.39.28",
-      "sources": {
-        "s38726e46de86": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/webauthn.md#L69-L75"
-      }
-    }
-  },
-  "claims": {
-    "tls": {"text": "Direct TLS listens on :443 using the leaf-plus-intermediates certificate and private key; ReadHeaderTimeout is 10 seconds.", "components": ["http", "tls"], "sources": ["http:s75405f80decc", "tls:se2152a9c28fc"], "status": "REASONED"},
-    "redirect": {"text": "Port :80 sends a 301 to https:// plus the fixed canonicalHost and an origin-form request path; empty or non-path RequestURI values fall back to /. Never build the destination from r.Host.", "components": ["http", "request"], "sources": ["http:s75405f80decc", "request:sfdeabbeca746"], "status": "REASONED"},
-    "tls-min": {"text": "crypto/tls defaults to TLS 1.2 minimum as of September 2026; explicitly set MinVersion=VersionTLS12.", "components": ["tls"], "sources": ["tls:se2152a9c28fc"], "status": "REASONED"},
-    "privilege": {"text": "Linux privileged-port threshold defaults to 1024 but is configurable per namespace; root or CAP_NET_BIND_SERVICE is needed below it in the usual configuration.", "components": ["linux"], "sources": ["linux:s12e5a0911ec2"], "status": "REASONED"},
-    "proxy": {"text": "Bind 127.0.0.1:8080 behind a TLS proxy; net/http has no proxy trust setting, so accept forwarded headers only from the isolated, overwriting proxy.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
-    "proxy-headers": {"text": "Set HSTS and other security headers at the proxy per the linked headers guide.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
-    "bcrypt": {"text": "Use bcrypt cost 12; DefaultCost is 10, inputs over 72 bytes are rejected and CompareHashAndPassword returns nil on match.", "components": ["bcrypt"], "sources": ["bcrypt:s99bb1157593c"], "status": "REASONED"},
-    "argon": {"text": "IDKey returns raw bytes; retain random salt and parameters. RFC 9106 choices are time=1/memory=2 GiB/threads=4 or time=3/memory=64 MiB/threads=4.", "components": ["argon"], "sources": ["argon:s95fa46eac674"], "status": "REASONED"},
-    "cookies": {"text": "Set session cookie Path=/, Secure, HttpOnly and SameSite=Lax.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
-    "login-limit": {"text": "A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits.", "components": ["rate"], "sources": ["rate:s5c3fdae5a0af"], "status": "REASONED"},
-    "tokens": {"text": "Guide advice: load tokens from the environment, never source literals, and generate them per authentication.md; generation stays delegated. Go go1.27.0 Getenv returns an empty string when unset or empty; use LookupEnv's boolean to distinguish them (false when unset, true when present).", "components": ["oidc", "go-env"], "sources": ["oidc:s60cc1d7a8fe6", "go-env:s41d67ab4a28d"], "status": "REASONED"},
-    "oidc": {"text": "NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
-    "mfa": {"text": "Guide advice: use app-level TOTP with pquerna/otp v1.5.0 or a fronting layer such as Cloudflare Access or Authelia; follow mfa.md. Configured Access policies or Authelia's MFA-required passkey flow can add a factor; the citations do not establish default MFA or deployed enforcement.", "components": ["oidc", "otp", "cf-docs", "authelia-source"], "sources": ["oidc:s60cc1d7a8fe6", "otp:scdd6f451714e", "cf-docs:s7e793d13cf31", "cf-docs:s6f6104362214", "authelia-source:s38726e46de86"], "status": "REASONED"},
-    "client-validation": {"text": "InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation.", "components": ["tls"], "sources": ["tls:se2152a9c28fc"], "status": "REASONED"},
-    "client-ca": {"text": "Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR.", "components": ["tls", "x509"], "sources": ["tls:se2152a9c28fc", "x509:se65b937f9e1e"], "status": "REASONED"},
-    "platform-ca": {"text": "Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set.", "components": ["x509"], "sources": ["x509:se65b937f9e1e"], "status": "REASONED"},
-    "pprof": {"text": "Importing pprof registers /debug/pprof/ on DefaultServeMux; profiles, traces, cmdline and forced GC can disclose data or exhaust resources.", "components": ["pprof"], "sources": ["pprof:s0246034dddd1"], "status": "REASONED"},
-    "expvar": {"text": "Importing expvar registers /debug/vars with cmdline and memstats on DefaultServeMux.", "components": ["expvar"], "sources": ["expvar:se49529035a0c"], "status": "REASONED"},
-    "diag-bind": {"text": "Imports do not start listeners; nil handlers serve DefaultServeMux. Give the app its own mux and diagnostics a separate 127.0.0.1:6060 mux, never public proxy routing.", "components": ["http", "pprof", "expvar"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1", "expvar:se49529035a0c"], "status": "REASONED"},
-    "body-limit": {"text": "Wrap the body with MaxBytesReader before decoding; the example 1 MiB policy requires explicit MaxBytesError handling to return 413.", "components": ["headers"], "sources": ["headers:sa4a9473fc6f8"], "status": "REASONED"},
-    "header-size": {"text": "MaxHeaderBytes defaults to 1 MiB for request line and headers, independently of body limits.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
-    "header-count": {"text": "Go 1.27 adds MaxHeaderValueCount with default 500; this is separate from body limits.", "components": ["headers"], "sources": ["headers:sa4a9473fc6f8"], "status": "REASONED"},
-    "read-timeout": {"text": "ReadTimeout bounds the whole request including body; example 30 seconds, zero or negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
-    "write-timeout": {"text": "WriteTimeout bounds writing; example 60 seconds, zero or negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
-    "header-timeout": {"text": "ReadHeaderTimeout bounds headers; example 10 seconds, zero falls back to ReadTimeout and negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
-    "idle-timeout": {"text": "IdleTimeout bounds keep-alive idle time; example 60 seconds, zero falls back to ReadTimeout and negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
-    "redirect-timeout": {"text": "Apply deadlines to the redirect server too; ListenAndServe sets none.", "components": ["http"], "sources": ["http:s75405f80decc", "http:s6ab9e32b7795"], "status": "REASONED"},
-    "request-deadlines": {"text": "For long uploads/streaming, use generous server budgets and Go 1.20+ ResponseController read/write deadlines, handling unsupported operations.", "components": ["deadlines"], "sources": ["deadlines:s251e0db38b90"], "status": "REASONED"},
-    "headers": {"text": "Install secure(mux) before response commit for nosniff and TLS-only HSTS max-age=63072000 with includeSubDomains.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
-    "http2": {"text": "HTTPS enables HTTP/2 automatically; Server.HTTP2 tunes it on current releases; retain maintained cipher/curve defaults.", "components": ["http", "tls"], "sources": ["http:s75405f80decc", "tls:se2152a9c28fc"], "status": "REASONED"},
-    "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED", "verify": [1]},
-    "verify-tls": {"text": "HTTPS must succeed without -k.", "components": ["http", "tls"], "sources": ["http:s75405f80decc", "tls:se2152a9c28fc"], "status": "REASONED", "verify": [1]},
-    "verify-auth": {"text": "The guide expects /api to return 401/403 without credentials; it records no valid-credential positive control.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED", "verify": [1]},
-    "verify-bind": {"text": "Inspect every listener for loopback-only application binding behind the proxy.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED", "verify": [1]},
-    "verify-diag-local": {"text": "A local 6060/debug/pprof/ response of 200 establishes local availability only.", "components": ["pprof"], "sources": ["pprof:s0246034dddd1"], "status": "REASONED", "verify": [1]},
-    "verify-diag-route": {"text": "The public application /debug/pprof/ route should return 404, never 200.", "components": ["http", "pprof"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1"], "status": "REASONED", "verify": [1]},
-    "verify-diag-external": {"text": "From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200.", "components": ["http", "pprof"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1"], "status": "REASONED", "verify": [2]},
-    "request-host": {"text": "Go 1.27.0 Request.Host is supplied by the client; a fixed canonical hostname plus an origin-form path prevents forged Host or crafted request targets from selecting the redirect destination.", "components": ["request"], "sources": ["request:sfdeabbeca746"], "status": "REASONED"}
-  }
-}
----
 # Go: TLS and authentication with net/http
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Go certificate-store qualification 1.27, Go header-count qualification 1.27, Go per-request deadline minimum 1.20+, Go Request.Host source 1.27.0, Go environment source go1.27.0, go-oidc documentation v3, pquerna/otp v1.5.0, and Authelia source v4.39.28; 1 further source is pinned to a commit and 8 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 38 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- http: Go net/http documentation (unknown)
-- tls: Go crypto/tls documentation (unknown)
-- x509: Go certificate-store qualification (1.27)
-- bcrypt: Go bcrypt documentation (unknown)
-- argon: Go Argon2 documentation (unknown)
-- rate: Go rate documentation (unknown)
-- oidc: go-oidc documentation (v3)
-- pprof: Go pprof documentation (unknown)
-- headers: Go header-count qualification (1.27)
-- deadlines: Go per-request deadline minimum (1.20+)
-- expvar: Go expvar documentation (unknown)
-- linux: Linux port-threshold documentation (unknown)
-- request: Go Request.Host source (1.27.0)
-- otp: pquerna/otp (v1.5.0)
-- go-env: Go environment source (go1.27.0)
-- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
-- authelia-source: Authelia source (v4.39.28)
-
-Claims (full source mapping in the front matter):
-
-- tls (REASONED; http, tls): Direct TLS listens on :443 using the leaf-plus-intermediates certificate and private key; ReadHeaderTimeout is 10 seconds.
-- redirect (REASONED; http, request): Port :80 sends a 301 to https:// plus the fixed canonicalHost and an origin-form request path; empty or non-path RequestURI values fall back to /. Never build the destination from r.Host.
-- tls-min (REASONED; tls): crypto/tls defaults to TLS 1.2 minimum as of September 2026; explicitly set MinVersion=VersionTLS12.
-- privilege (REASONED; linux): Linux privileged-port threshold defaults to 1024 but is configurable per namespace; root or CAP_NET_BIND_SERVICE is needed below it in the usual configuration.
-- proxy (REASONED; http): Bind 127.0.0.1:8080 behind a TLS proxy; net/http has no proxy trust setting, so accept forwarded headers only from the isolated, overwriting proxy.
-- proxy-headers (REASONED; http): Set HSTS and other security headers at the proxy per the linked headers guide.
-- bcrypt (REASONED; bcrypt): Use bcrypt cost 12; DefaultCost is 10, inputs over 72 bytes are rejected and CompareHashAndPassword returns nil on match.
-- argon (REASONED; argon): IDKey returns raw bytes; retain random salt and parameters. RFC 9106 choices are time=1/memory=2 GiB/threads=4 or time=3/memory=64 MiB/threads=4.
-- cookies (REASONED; http): Set session cookie Path=/, Secure, HttpOnly and SameSite=Lax.
-- login-limit (REASONED; rate): A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits.
-- tokens (REASONED; oidc, go-env): Guide advice: load tokens from the environment, never source literals, and generate them per authentication.md; generation stays delegated. Go go1.27.0 Getenv returns an empty string when unset or empty; use LookupEnv's boolean to distinguish them (false when unset, true when present).
-- oidc (REASONED; oidc): NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists.
-- mfa (REASONED; oidc, otp, cf-docs, authelia-source): Guide advice: use app-level TOTP with pquerna/otp v1.5.0 or a fronting layer such as Cloudflare Access or Authelia; follow mfa.md. Configured Access policies or Authelia's MFA-required passkey flow can add a factor; the citations do not establish default MFA or deployed enforcement.
-- client-validation (REASONED; tls): InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation.
-- client-ca (REASONED; tls, x509): Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR.
-- platform-ca (REASONED; x509): Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set.
-- pprof (REASONED; pprof): Importing pprof registers /debug/pprof/ on DefaultServeMux; profiles, traces, cmdline and forced GC can disclose data or exhaust resources.
-- expvar (REASONED; expvar): Importing expvar registers /debug/vars with cmdline and memstats on DefaultServeMux.
-- diag-bind (REASONED; http, pprof, expvar): Imports do not start listeners; nil handlers serve DefaultServeMux. Give the app its own mux and diagnostics a separate 127.0.0.1:6060 mux, never public proxy routing.
-- body-limit (REASONED; headers): Wrap the body with MaxBytesReader before decoding; the example 1 MiB policy requires explicit MaxBytesError handling to return 413.
-- header-size (REASONED; http): MaxHeaderBytes defaults to 1 MiB for request line and headers, independently of body limits.
-- header-count (REASONED; headers): Go 1.27 adds MaxHeaderValueCount with default 500; this is separate from body limits.
-- read-timeout (REASONED; http): ReadTimeout bounds the whole request including body; example 30 seconds, zero or negative disables it.
-- write-timeout (REASONED; http): WriteTimeout bounds writing; example 60 seconds, zero or negative disables it.
-- header-timeout (REASONED; http): ReadHeaderTimeout bounds headers; example 10 seconds, zero falls back to ReadTimeout and negative disables it.
-- idle-timeout (REASONED; http): IdleTimeout bounds keep-alive idle time; example 60 seconds, zero falls back to ReadTimeout and negative disables it.
-- redirect-timeout (REASONED; http): Apply deadlines to the redirect server too; ListenAndServe sets none.
-- request-deadlines (REASONED; deadlines): For long uploads/streaming, use generous server budgets and Go 1.20+ ResponseController read/write deadlines, handling unsupported operations.
-- headers (REASONED; http): Install secure(mux) before response commit for nosniff and TLS-only HSTS max-age=63072000 with includeSubDomains.
-- http2 (REASONED; http, tls): HTTPS enables HTTP/2 automatically; Server.HTTP2 tunes it on current releases; retain maintained cipher/curve defaults.
-- verify-redirect (REASONED; http): HTTP should return 301 with an HTTPS Location.
-- verify-tls (REASONED; http, tls): HTTPS must succeed without -k.
-- verify-auth (REASONED; http): The guide expects /api to return 401/403 without credentials; it records no valid-credential positive control.
-- verify-bind (REASONED; http): Inspect every listener for loopback-only application binding behind the proxy.
-- verify-diag-local (REASONED; pprof): A local 6060/debug/pprof/ response of 200 establishes local availability only.
-- verify-diag-route (REASONED; http, pprof): The public application /debug/pprof/ route should return 404, never 200.
-- verify-diag-external (REASONED; http, pprof): From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200.
-- request-host (REASONED; request): Go 1.27.0 Request.Host is supplied by the client; a fixed canonical hostname plus an origin-form path prevents forged Host or crafted request targets from selecting the redirect destination.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Preferred production layout: bind the Go server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). `net/http` can also terminate TLS itself, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
@@ -441,3 +205,265 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 - Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, independent MFA and TOTP/WebAuthn factors (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24
 - Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, MFA enforcement, policy precedence and organization-level prerequisite (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85
 - Authelia source `v4.39.28`, single-factor passkey login and password prompt when a request requires MFA (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/webauthn.md#L69-L75
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/go.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- x509: Go certificate-store qualification (1.27)
+- headers: Go header-count qualification (1.27)
+- deadlines: Go per-request deadline minimum (1.20+)
+- request: Go Request.Host source (1.27.0)
+- go-env: Go environment source (go1.27.0)
+- http: Go net/http documentation (unknown)
+- tls: Go crypto/tls documentation (unknown)
+- bcrypt: Go bcrypt documentation (unknown)
+- argon: Go Argon2 documentation (unknown)
+- rate: Go rate documentation (unknown)
+- pprof: Go pprof documentation (unknown)
+- expvar: Go expvar documentation (unknown)
+- oidc: go-oidc documentation (v3)
+- otp: pquerna/otp (v1.5.0)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- authelia-source: Authelia source (v4.39.28)
+- linux: Linux port-threshold documentation (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- tls (REASONED; http, tls): Direct TLS listens on :443 using the leaf-plus-intermediates certificate and private key; ReadHeaderTimeout is 10 seconds.
+- redirect (REASONED; http, request): Port :80 sends a 301 to https:// plus the fixed canonicalHost and an origin-form request path; empty or non-path RequestURI values fall back to /. Never build the destination from r.Host.
+- tls-min (REASONED; tls): crypto/tls defaults to TLS 1.2 minimum as of September 2026; explicitly set MinVersion=VersionTLS12.
+- privilege (REASONED; linux): Linux privileged-port threshold defaults to 1024 but is configurable per namespace; root or CAP_NET_BIND_SERVICE is needed below it in the usual configuration.
+- proxy (REASONED; http): Bind 127.0.0.1:8080 behind a TLS proxy; net/http has no proxy trust setting, so accept forwarded headers only from the isolated, overwriting proxy.
+- proxy-headers (REASONED; http): Set HSTS and other security headers at the proxy per the linked headers guide.
+- bcrypt (REASONED; bcrypt): Use bcrypt cost 12; DefaultCost is 10, inputs over 72 bytes are rejected and CompareHashAndPassword returns nil on match.
+- argon (REASONED; argon): IDKey returns raw bytes; retain random salt and parameters. RFC 9106 choices are time=1/memory=2 GiB/threads=4 or time=3/memory=64 MiB/threads=4.
+- cookies (REASONED; http): Set session cookie Path=/, Secure, HttpOnly and SameSite=Lax.
+- login-limit (REASONED; rate): A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits.
+- tokens (REASONED; oidc, go-env): Guide advice: load tokens from the environment, never source literals, and generate them per authentication.md; generation stays delegated. Go go1.27.0 Getenv returns an empty string when unset or empty; use LookupEnv's boolean to distinguish them (false when unset, true when present).
+- oidc (REASONED; oidc): NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists.
+- mfa (REASONED; oidc, otp, cf-docs, authelia-source): Guide advice: use app-level TOTP with pquerna/otp v1.5.0 or a fronting layer such as Cloudflare Access or Authelia; follow mfa.md. Configured Access policies or Authelia's MFA-required passkey flow can add a factor; the citations do not establish default MFA or deployed enforcement.
+- client-validation (REASONED; tls): InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation.
+- client-ca (REASONED; tls, x509): Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR.
+- platform-ca (REASONED; x509): Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set.
+- pprof (REASONED; pprof): Importing pprof registers /debug/pprof/ on DefaultServeMux; profiles, traces, cmdline and forced GC can disclose data or exhaust resources.
+- expvar (REASONED; expvar): Importing expvar registers /debug/vars with cmdline and memstats on DefaultServeMux.
+- diag-bind (REASONED; http, pprof, expvar): Imports do not start listeners; nil handlers serve DefaultServeMux. Give the app its own mux and diagnostics a separate 127.0.0.1:6060 mux, never public proxy routing.
+- body-limit (REASONED; headers): Wrap the body with MaxBytesReader before decoding; the example 1 MiB policy requires explicit MaxBytesError handling to return 413.
+- header-size (REASONED; http): MaxHeaderBytes defaults to 1 MiB for request line and headers, independently of body limits.
+- header-count (REASONED; headers): Go 1.27 adds MaxHeaderValueCount with default 500; this is separate from body limits.
+- read-timeout (REASONED; http): ReadTimeout bounds the whole request including body; example 30 seconds, zero or negative disables it.
+- write-timeout (REASONED; http): WriteTimeout bounds writing; example 60 seconds, zero or negative disables it.
+- header-timeout (REASONED; http): ReadHeaderTimeout bounds headers; example 10 seconds, zero falls back to ReadTimeout and negative disables it.
+- idle-timeout (REASONED; http): IdleTimeout bounds keep-alive idle time; example 60 seconds, zero falls back to ReadTimeout and negative disables it.
+- redirect-timeout (REASONED; http): Apply deadlines to the redirect server too; ListenAndServe sets none.
+- request-deadlines (REASONED; deadlines): For long uploads/streaming, use generous server budgets and Go 1.20+ ResponseController read/write deadlines, handling unsupported operations.
+- headers (REASONED; http): Install secure(mux) before response commit for nosniff and TLS-only HSTS max-age=63072000 with includeSubDomains.
+- http2 (REASONED; http, tls): HTTPS enables HTTP/2 automatically; Server.HTTP2 tunes it on current releases; retain maintained cipher/curve defaults.
+- verify-redirect (REASONED; http): HTTP should return 301 with an HTTPS Location.
+- verify-tls (REASONED; http, tls): HTTPS must succeed without -k.
+- verify-auth (REASONED; http): The guide expects /api to return 401/403 without credentials; it records no valid-credential positive control.
+- verify-bind (REASONED; http): Inspect every listener for loopback-only application binding behind the proxy.
+- verify-diag-local (REASONED; pprof): A local 6060/debug/pprof/ response of 200 establishes local availability only.
+- verify-diag-route (REASONED; http, pprof): The public application /debug/pprof/ route should return 404, never 200.
+- verify-diag-external (REASONED; http, pprof): From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200.
+- request-host (REASONED; request): Go 1.27.0 Request.Host is supplied by the client; a fixed canonical hostname plus an origin-form path prevents forged Host or crafted request targets from selecting the redirect destination.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-19",
+  "documentation_checked": "2026-09",
+  "body_sha256": "7bda579ecc5f011cb380cd4ad0d43ab95afc524c80c5035ba4ca08afdef5b1b7",
+  "components": {
+    "x509": {
+      "name": "Go certificate-store qualification",
+      "basis": "1.27",
+      "sources": {
+        "se65b937f9e1e": "https://pkg.go.dev/crypto/x509@go1.27.0"
+      }
+    },
+    "headers": {
+      "name": "Go header-count qualification",
+      "basis": "1.27",
+      "sources": {
+        "sa4a9473fc6f8": "https://pkg.go.dev/net/http@go1.27.0#MaxBytesReader"
+      }
+    },
+    "deadlines": {
+      "name": "Go per-request deadline minimum",
+      "basis": "1.20+",
+      "sources": {
+        "s251e0db38b90": "https://pkg.go.dev/net/http#ResponseController"
+      }
+    },
+    "request": {
+      "name": "Go Request.Host source",
+      "basis": "1.27.0",
+      "sources": {
+        "sfdeabbeca746": "https://pkg.go.dev/net/http@go1.27.0#Request"
+      }
+    },
+    "go-env": {
+      "name": "Go environment source",
+      "basis": "go1.27.0",
+      "sources": {
+        "s41d67ab4a28d": "https://github.com/golang/go/blob/go1.27.0/src/os/env.go#L98-L115"
+      }
+    },
+    "http": {
+      "name": "Go net/http documentation",
+      "basis": "unknown",
+      "sources": {
+        "s75405f80decc": "https://pkg.go.dev/net/http",
+        "s6ab9e32b7795": "https://pkg.go.dev/net/http#Server"
+      }
+    },
+    "tls": {
+      "name": "Go crypto/tls documentation",
+      "basis": "unknown",
+      "sources": {
+        "se2152a9c28fc": "https://pkg.go.dev/crypto/tls"
+      }
+    },
+    "bcrypt": {
+      "name": "Go bcrypt documentation",
+      "basis": "unknown",
+      "sources": {
+        "s99bb1157593c": "https://pkg.go.dev/golang.org/x/crypto/bcrypt"
+      }
+    },
+    "argon": {
+      "name": "Go Argon2 documentation",
+      "basis": "unknown",
+      "sources": {
+        "s95fa46eac674": "https://pkg.go.dev/golang.org/x/crypto/argon2"
+      }
+    },
+    "rate": {
+      "name": "Go rate documentation",
+      "basis": "unknown",
+      "sources": {
+        "s5c3fdae5a0af": "https://pkg.go.dev/golang.org/x/time/rate"
+      }
+    },
+    "pprof": {
+      "name": "Go pprof documentation",
+      "basis": "unknown",
+      "sources": {
+        "s0246034dddd1": "https://pkg.go.dev/net/http/pprof"
+      }
+    },
+    "expvar": {
+      "name": "Go expvar documentation",
+      "basis": "unknown",
+      "sources": {
+        "se49529035a0c": "https://pkg.go.dev/expvar"
+      }
+    },
+    "oidc": {
+      "name": "go-oidc documentation",
+      "basis": "v3",
+      "sources": {
+        "s60cc1d7a8fe6": "https://pkg.go.dev/github.com/coreos/go-oidc/v3/oidc"
+      }
+    },
+    "otp": {
+      "name": "pquerna/otp",
+      "basis": "v1.5.0",
+      "sources": {
+        "scdd6f451714e": "https://github.com/pquerna/otp/blob/v1.5.0/README.md#L9"
+      }
+    },
+    "cf-docs": {
+      "name": "Cloudflare documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24",
+        "s6f6104362214": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85"
+      }
+    },
+    "authelia-source": {
+      "name": "Authelia source",
+      "basis": "v4.39.28",
+      "sources": {
+        "s38726e46de86": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/webauthn.md#L69-L75"
+      }
+    },
+    "linux": {
+      "name": "Linux port-threshold documentation",
+      "basis": "unknown",
+      "sources": {
+        "s12e5a0911ec2": "https://docs.kernel.org/networking/ip-sysctl.html#ip-unprivileged-port-start"
+      }
+    }
+  },
+  "claims": {
+    "tls": {"text": "Direct TLS listens on :443 using the leaf-plus-intermediates certificate and private key; ReadHeaderTimeout is 10 seconds.", "components": ["http", "tls"], "sources": ["http:s75405f80decc", "tls:se2152a9c28fc"], "status": "REASONED"},
+    "redirect": {"text": "Port :80 sends a 301 to https:// plus the fixed canonicalHost and an origin-form request path; empty or non-path RequestURI values fall back to /. Never build the destination from r.Host.", "components": ["http", "request"], "sources": ["http:s75405f80decc", "request:sfdeabbeca746"], "status": "REASONED"},
+    "tls-min": {"text": "crypto/tls defaults to TLS 1.2 minimum as of September 2026; explicitly set MinVersion=VersionTLS12.", "components": ["tls"], "sources": ["tls:se2152a9c28fc"], "status": "REASONED"},
+    "privilege": {"text": "Linux privileged-port threshold defaults to 1024 but is configurable per namespace; root or CAP_NET_BIND_SERVICE is needed below it in the usual configuration.", "components": ["linux"], "sources": ["linux:s12e5a0911ec2"], "status": "REASONED"},
+    "proxy": {"text": "Bind 127.0.0.1:8080 behind a TLS proxy; net/http has no proxy trust setting, so accept forwarded headers only from the isolated, overwriting proxy.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
+    "proxy-headers": {"text": "Set HSTS and other security headers at the proxy per the linked headers guide.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
+    "bcrypt": {"text": "Use bcrypt cost 12; DefaultCost is 10, inputs over 72 bytes are rejected and CompareHashAndPassword returns nil on match.", "components": ["bcrypt"], "sources": ["bcrypt:s99bb1157593c"], "status": "REASONED"},
+    "argon": {"text": "IDKey returns raw bytes; retain random salt and parameters. RFC 9106 choices are time=1/memory=2 GiB/threads=4 or time=3/memory=64 MiB/threads=4.", "components": ["argon"], "sources": ["argon:s95fa46eac674"], "status": "REASONED"},
+    "cookies": {"text": "Set session cookie Path=/, Secure, HttpOnly and SameSite=Lax.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
+    "login-limit": {"text": "A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits.", "components": ["rate"], "sources": ["rate:s5c3fdae5a0af"], "status": "REASONED"},
+    "tokens": {"text": "Guide advice: load tokens from the environment, never source literals, and generate them per authentication.md; generation stays delegated. Go go1.27.0 Getenv returns an empty string when unset or empty; use LookupEnv's boolean to distinguish them (false when unset, true when present).", "components": ["oidc", "go-env"], "sources": ["oidc:s60cc1d7a8fe6", "go-env:s41d67ab4a28d"], "status": "REASONED"},
+    "oidc": {"text": "NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
+    "mfa": {"text": "Guide advice: use app-level TOTP with pquerna/otp v1.5.0 or a fronting layer such as Cloudflare Access or Authelia; follow mfa.md. Configured Access policies or Authelia's MFA-required passkey flow can add a factor; the citations do not establish default MFA or deployed enforcement.", "components": ["oidc", "otp", "cf-docs", "authelia-source"], "sources": ["oidc:s60cc1d7a8fe6", "otp:scdd6f451714e", "cf-docs:s7e793d13cf31", "cf-docs:s6f6104362214", "authelia-source:s38726e46de86"], "status": "REASONED"},
+    "client-validation": {"text": "InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation.", "components": ["tls"], "sources": ["tls:se2152a9c28fc"], "status": "REASONED"},
+    "client-ca": {"text": "Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR.", "components": ["tls", "x509"], "sources": ["tls:se2152a9c28fc", "x509:se65b937f9e1e"], "status": "REASONED"},
+    "platform-ca": {"text": "Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set.", "components": ["x509"], "sources": ["x509:se65b937f9e1e"], "status": "REASONED"},
+    "pprof": {"text": "Importing pprof registers /debug/pprof/ on DefaultServeMux; profiles, traces, cmdline and forced GC can disclose data or exhaust resources.", "components": ["pprof"], "sources": ["pprof:s0246034dddd1"], "status": "REASONED"},
+    "expvar": {"text": "Importing expvar registers /debug/vars with cmdline and memstats on DefaultServeMux.", "components": ["expvar"], "sources": ["expvar:se49529035a0c"], "status": "REASONED"},
+    "diag-bind": {"text": "Imports do not start listeners; nil handlers serve DefaultServeMux. Give the app its own mux and diagnostics a separate 127.0.0.1:6060 mux, never public proxy routing.", "components": ["http", "pprof", "expvar"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1", "expvar:se49529035a0c"], "status": "REASONED"},
+    "body-limit": {"text": "Wrap the body with MaxBytesReader before decoding; the example 1 MiB policy requires explicit MaxBytesError handling to return 413.", "components": ["headers"], "sources": ["headers:sa4a9473fc6f8"], "status": "REASONED"},
+    "header-size": {"text": "MaxHeaderBytes defaults to 1 MiB for request line and headers, independently of body limits.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
+    "header-count": {"text": "Go 1.27 adds MaxHeaderValueCount with default 500; this is separate from body limits.", "components": ["headers"], "sources": ["headers:sa4a9473fc6f8"], "status": "REASONED"},
+    "read-timeout": {"text": "ReadTimeout bounds the whole request including body; example 30 seconds, zero or negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
+    "write-timeout": {"text": "WriteTimeout bounds writing; example 60 seconds, zero or negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
+    "header-timeout": {"text": "ReadHeaderTimeout bounds headers; example 10 seconds, zero falls back to ReadTimeout and negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
+    "idle-timeout": {"text": "IdleTimeout bounds keep-alive idle time; example 60 seconds, zero falls back to ReadTimeout and negative disables it.", "components": ["http"], "sources": ["http:s6ab9e32b7795"], "status": "REASONED"},
+    "redirect-timeout": {"text": "Apply deadlines to the redirect server too; ListenAndServe sets none.", "components": ["http"], "sources": ["http:s75405f80decc", "http:s6ab9e32b7795"], "status": "REASONED"},
+    "request-deadlines": {"text": "For long uploads/streaming, use generous server budgets and Go 1.20+ ResponseController read/write deadlines, handling unsupported operations.", "components": ["deadlines"], "sources": ["deadlines:s251e0db38b90"], "status": "REASONED"},
+    "headers": {"text": "Install secure(mux) before response commit for nosniff and TLS-only HSTS max-age=63072000 with includeSubDomains.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
+    "http2": {"text": "HTTPS enables HTTP/2 automatically; Server.HTTP2 tunes it on current releases; retain maintained cipher/curve defaults.", "components": ["http", "tls"], "sources": ["http:s75405f80decc", "tls:se2152a9c28fc"], "status": "REASONED"},
+    "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "HTTPS must succeed without -k.", "components": ["http", "tls"], "sources": ["http:s75405f80decc", "tls:se2152a9c28fc"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "The guide expects /api to return 401/403 without credentials; it records no valid-credential positive control.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED", "verify": [1]},
+    "verify-bind": {"text": "Inspect every listener for loopback-only application binding behind the proxy.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED", "verify": [1]},
+    "verify-diag-local": {"text": "A local 6060/debug/pprof/ response of 200 establishes local availability only.", "components": ["pprof"], "sources": ["pprof:s0246034dddd1"], "status": "REASONED", "verify": [1]},
+    "verify-diag-route": {"text": "The public application /debug/pprof/ route should return 404, never 200.", "components": ["http", "pprof"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1"], "status": "REASONED", "verify": [1]},
+    "verify-diag-external": {"text": "From outside the server network, the actual public IP on 6060 must be unreachable; the guide expects refusal or timeout, never 200.", "components": ["http", "pprof"], "sources": ["http:s75405f80decc", "pprof:s0246034dddd1"], "status": "REASONED", "verify": [2]},
+    "request-host": {"text": "Go 1.27.0 Request.Host is supplied by the client; a fixed canonical hostname plus an origin-form path prevents forged Host or crafted request targets from selecting the redirect destination.", "components": ["request"], "sources": ["request:sfdeabbeca746"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->
