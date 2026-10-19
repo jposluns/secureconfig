@@ -1,242 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-09-27",
-  "documentation_checked": "2026-09",
-  "body_sha256": "49ea970f55cd616853fcf1e52aa83de8e57fb6b76cccb2b4b8664d7aecc8b0b7",
-  "components": {
-    "comfy": {
-      "name": "ComfyUI",
-      "basis": "v0.37.0",
-      "sources": {
-        "sbd178d58a098": "https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64"
-      }
-    },
-    "webui": {
-      "name": "AUTOMATIC1111",
-      "basis": "v1.10.1",
-      "sources": {
-        "s42a42cca605b": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113",
-        "s0195caed3cb9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L114-L139",
-        "sd5f3496b66aa": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L70-L90",
-        "s82803810022a": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L6",
-        "s914278bcbf70": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_cmd_options.py#L7-L15",
-        "s66a044b7666c": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L199-L205",
-        "sb59e633133f6": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L274-L284",
-        "s57d98254f09d": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L689-L690",
-        "s256946a60534": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/models.py#L221-L231",
-        "s5b2e23d1781d": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/paths_internal.py#L12-L13",
-        "sfa27f3a86456": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/launch_utils.py#L463-L464",
-        "sebe977aeb6f3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/sysinfo.py#L130-L148",
-        "sc9117bccdef5": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui.py#L1223-L1232",
-        "s370f032e0497": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L10-L16",
-        "saf69abeba189": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/requirements_versions.txt#L11",
-        "sf3f6d5cafad0": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_init.py#L17-L24",
-        "sbfd3d01539c3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui_loadsave.py#L14-L73",
-        "s7b714092036e": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L77-L78",
-        "s23a49b75b6a1": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L79-L82",
-        "s9a93a7fe8617": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L47",
-        "s72ec61fe38c9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L51"
-      }
-    },
-    "gradio": {
-      "name": "Gradio",
-      "basis": "3.41.2",
-      "sources": {
-        "s1bd30a313ec9": "https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/networking.py#L28",
-        "sf85e6083e02e": "https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L193-L305",
-        "s2ec1c2a1d665": "https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133",
-        "s6f6c16695b71": "https://github.com/gradio-app/gradio/blob/gradio%403.41.2/gradio/networking.py#L24-L27",
-        "s67ebd44760a7": "https://github.com/gradio-app/gradio/blob/gradio%403.41.2/gradio/networking.py#L133-L171"
-      }
-    },
-    "fooocus": {
-      "name": "Fooocus",
-      "basis": "v2.5.5",
-      "sources": {
-        "s38232435e83d": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301",
-        "s63ce6f5a8fa9": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/ldm_patched/modules/args_parser.py#L36",
-        "sca9aed72a579": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/args_manager.py#L43-L47",
-        "s456b2a263c88": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L13-L14",
-        "s2eb7ac87bb1f": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/webui.py#L1120-L1128",
-        "s35ce6e657cb8": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entry_with_update.py#L16-L46",
-        "s6157fae93872": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/Dockerfile#L17-L29",
-        "s5c792b662186": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entrypoint.sh#L33",
-        "s79380d927e3b": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker-compose.yml#L6-L11",
-        "s431336fa6375": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker.md#L19-L78",
-        "scb18d8c421f5": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/.dockerignore#L53",
-        "s170da4e26268": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L8-L16",
-        "s21eb28118a14": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L19-L34",
-        "sfcc14904297e": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L37-L41",
-        "s2ef62a4cd853": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L7-L9",
-        "sc90edaf29ac7": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/requirements_versions.txt#L13"
-      }
-    },
-    "engine": {
-      "name": "Docker Engine minimum loopback boundary",
-      "basis": "28.0",
-      "sources": {
-        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
-      }
-    },
-    "compose": {
-      "name": "Compose Specification",
-      "basis": "914ec15d1fa4",
-      "sources": {
-        "sfb1cd5e15347": "https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/05-services.md#L1816-L1832",
-        "s2d25c00e22f6": "https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/build.md#L21-L23",
-        "s16a4e1bb5e9f": "https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/build.md#L50-L62"
-      }
-    },
-    "compose-cli": {
-      "name": "Docker Compose source",
-      "basis": "v2.32.4",
-      "sources": {
-        "s0e2ca4d9b8c0": "https://github.com/docker/compose/blob/v2.32.4/cmd/compose/up.go#L147"
-      }
-    },
-    "curl": {
-      "name": "curl minimum write-out version",
-      "basis": "7.75.0",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
-      }
-    },
-    "linux": {
-      "name": "Linux permissions and tools",
-      "basis": "unknown",
-      "sources": {
-        "s31f41c54750c": "https://man7.org/linux/man-pages/man5/acl.5.html",
-        "s08902025e5f9": "https://man7.org/linux/man-pages/man1/getfacl.1.html"
-      }
-    },
-    "comfy-rolling": {
-      "name": "ComfyUI documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s8b2f213483c1": "https://docs.comfy.org/development/comfyui-server/startup-flags"
-      }
-    },
-    "comfy-registry-rolling": {
-      "name": "ComfyUI Registry documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "sb5912e72af4b": "https://docs.comfy.org/registry/standards"
-      }
-    },
-    "comfy-advisory": {
-      "name": "ComfyUI January 2025 security advisory",
-      "basis": "unknown",
-      "sources": {
-        "sfde3f2261e67": "https://blog.comfy.org/p/comfyui-2025-jan-security-update"
-      }
-    },
-    "invoke-rolling": {
-      "name": "InvokeAI documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s23a1a14da479": "https://invoke.ai/features/multi-user-mode/admin-guide/",
-        "s4c6175f3800d": "https://invoke.ai/features/multi-user-mode/api-guide/",
-        "sb0dc1b679ef2": "https://invoke.ai/configuration/invokeai-yaml/"
-      }
-    },
-    "comfy-manager-advisory": {
-      "name": "ComfyUI-Manager security advisory",
-      "basis": "unknown",
-      "sources": {
-        "s4ce66189c3c9": "https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7"
-      }
-    }
-  },
-  "claims": {
-    "comfy-bind": {"text": "Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login.", "components": ["comfy", "comfy-rolling"], "sources": ["comfy:sbd178d58a098", "comfy-rolling:s8b2f213483c1"], "status": "REASONED"},
-    "comfy-nodes": {"text": "ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment.", "components": ["comfy-advisory", "comfy-registry-rolling", "comfy-rolling"], "sources": ["comfy-advisory:sfde3f2261e67", "comfy-registry-rolling:sb5912e72af4b", "comfy-rolling:s8b2f213483c1"], "status": "REASONED"},
-    "fooocus-login": {"text": "Fooocus is unauthenticated by default and offers optional auth.json login; keep it off public interfaces.", "components": ["fooocus"], "sources": ["fooocus:s38232435e83d"], "status": "REASONED"},
-    "manager": {"text": "Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together.", "components": ["comfy-manager-advisory"], "sources": ["comfy-manager-advisory:s4ce66189c3c9"], "status": "REASONED"},
-    "node-flags": {"text": "--disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure.", "components": ["comfy-rolling"], "sources": ["comfy-rolling:s8b2f213483c1"], "status": "REASONED"},
-    "webui-auth": {"text": "UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy.", "components": ["webui"], "sources": ["webui:s42a42cca605b", "webui:s0195caed3cb9", "webui:sd5f3496b66aa", "webui:s66a044b7666c"], "status": "REASONED"},
-    "webui-flags": {"text": "--listen, --share relay and insecure extension access affect exposure. Without --port, Gradio searches from GRADIO_SERVER_PORT (7860 when unset) for up to GRADIO_NUM_PORTS ports (default 100); explicit --port 7860 pins the UI port.", "components": ["webui", "gradio"], "sources": ["webui:s7b714092036e", "webui:s23a49b75b6a1", "webui:saf69abeba189", "gradio:s6f6c16695b71", "gradio:s67ebd44760a7", "webui:s9a93a7fe8617", "webui:s72ec61fe38c9"], "status": "REASONED"},
-    "api-input": {"text": "API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth.", "components": ["webui"], "sources": ["webui:s82803810022a", "webui:s914278bcbf70", "webui:sb59e633133f6", "webui:sf3f6d5cafad0", "webui:sbfd3d01539c3"], "status": "REASONED"},
-    "api-leak": {"text": "cmd-flags reveals all options; API auth users can read API passwords, unauthenticated API can expose UI argv credentials.", "components": ["webui"], "sources": ["webui:sb59e633133f6", "webui:s57d98254f09d", "webui:s256946a60534"], "status": "REASONED"},
-    "argv": {"text": "COMMANDLINE_ARGS becomes argv; launcher prints credentials and local argv/environment readers may read them.", "components": ["webui"], "sources": ["webui:s914278bcbf70", "webui:s5b2e23d1781d", "webui:sfa27f3a86456"], "status": "REASONED"},
-    "file-create": {"text": "Create-once owner-only credential file uses hex password and clean-shell guards, refuses a default ACL or missing getfacl and checks mode 0600 after the write; directory races, backups and plaintext storage limit protection. Filesystem is unrecorded.", "components": ["webui", "linux"], "sources": ["webui:s0195caed3cb9", "linux:s31f41c54750c", "linux:s08902025e5f9"], "status": "REASONED"},
-    "file-launch": {"text": "Clear inherited launch/bind variables, validate regular non-symlink credential file, reject empty/malformed/duplicate entries and read failures. Shell/grep/awk versions are unrecorded.", "components": ["webui", "gradio"], "sources": ["webui:s0195caed3cb9", "gradio:s2ec1c2a1d665"], "status": "REASONED"},
-    "webui-bind": {"text": "Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback.", "components": ["webui", "gradio"], "sources": ["webui:s370f032e0497", "webui:saf69abeba189", "gradio:s1bd30a313ec9"], "status": "REASONED"},
-    "sysinfo": {"text": "Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix.", "components": ["webui", "gradio"], "sources": ["webui:sebe977aeb6f3", "webui:sc9117bccdef5", "gradio:sf85e6083e02e"], "status": "REASONED"},
-    "invoke-config": {"text": "Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login.", "components": ["invoke-rolling"], "sources": ["invoke-rolling:sb0dc1b679ef2"], "status": "REASONED"},
-    "invoke-login": {"text": "Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS.", "components": ["invoke-rolling"], "sources": ["invoke-rolling:s23a1a14da479"], "status": "REASONED"},
-    "fooocus-flags": {"text": "Loopback by default, bare --listen wildcard, --share public relay; auth.json supplies optional login.", "components": ["fooocus"], "sources": ["fooocus:s38232435e83d", "fooocus:s63ce6f5a8fa9"], "status": "REASONED"},
-    "fooocus-loader": {"text": "Isolated loader returns credentials only for valid data; unreadable raises PermissionError, malformed/empty returns none.", "components": ["fooocus"], "sources": ["fooocus:s21eb28118a14"], "status": "DEMONSTRATED", "evidence": "for a malformed file it printed `load_auth_data, e: ...` and returned no credentials; for an empty list (`[]`) it also returned none; and for a valid file it returned credentials."},
-    "fooocus-auth": {"text": "Relative auth.json location, pass/hash SHA-256 handling, permissions and expected fail-open for malformed/empty data; no live server test.", "components": ["fooocus"], "sources": ["fooocus:s2eb7ac87bb1f", "fooocus:s170da4e26268", "fooocus:s21eb28118a14", "fooocus:sfcc14904297e", "fooocus:s2ef62a4cd853"], "status": "REASONED"},
-    "fooocus-port": {"text": "Fooocus v2.5.5 pins Gradio 3.41.2; inherited port or occupied 7865 can move the UI; explicit --port makes Gradio try only that port.", "components": ["fooocus", "gradio"], "sources": ["fooocus:sca9aed72a579", "fooocus:s456b2a263c88", "gradio:s6f6c16695b71", "gradio:s67ebd44760a7", "fooocus:sc90edaf29ac7"], "status": "REASONED"},
-    "fooocus-pin": {"text": "entry_with_update updates the checkout; use launch.py from exact v2.5.5, with working-tree caveat.", "components": ["fooocus"], "sources": ["fooocus:s35ce6e657cb8"], "status": "REASONED"},
-    "container": {"text": "CMDARGS bare --listen plus wildcard publication exposes image; bridge uses internal wildcard and loopback publish, host networking needs loopback bind.", "components": ["fooocus", "engine"], "sources": ["fooocus:s6157fae93872", "fooocus:s5c792b662186", "fooocus:s79380d927e3b", "fooocus:s431336fa6375", "engine:s1e53417c513d"], "status": "REASONED"},
-    "image-build": {"text": "Build pinned source, not unchecked GHCR default; Compose build/image pull policy and --build determine selected/tagged image.", "components": ["fooocus", "compose", "compose-cli"], "sources": ["fooocus:s79380d927e3b", "fooocus:s431336fa6375", "compose:sfb1cd5e15347", "compose:s2d25c00e22f6", "compose:s16a4e1bb5e9f", "compose-cli:s0e2ca4d9b8c0"], "status": "REASONED"},
-    "auth-mount": {"text": "Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked.", "components": ["fooocus"], "sources": ["fooocus:s6157fae93872", "fooocus:scb18d8c421f5", "fooocus:s21eb28118a14"], "status": "REASONED"},
-    "argparse": {"text": "Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration.", "components": ["fooocus"], "sources": ["fooocus:s63ce6f5a8fa9"], "status": "DEMONSTRATED", "evidence": "returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`."},
-    "verify-network": {"text": "Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope.", "components": ["comfy", "webui", "fooocus", "engine", "curl", "invoke-rolling"], "sources": ["comfy:sbd178d58a098", "webui:s370f032e0497", "invoke-rolling:sb0dc1b679ef2", "fooocus:s63ce6f5a8fa9", "engine:s1e53417c513d", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-invoke": {"text": "Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available.", "components": ["invoke-rolling"], "sources": ["invoke-rolling:s23a1a14da479", "invoke-rolling:s4c6175f3800d"], "status": "REASONED", "verify": [1]},
-    "verify-proxy": {"text": "TLS/header and browser checks should require login before UI; no service/proxy listeners were run.", "components": ["fooocus", "comfy-rolling"], "sources": ["comfy-rolling:s8b2f213483c1", "fooocus:s38232435e83d"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # Image-generation UIs: ComfyUI, Stable Diffusion WebUI, InvokeAI, Fooocus
 
-<!-- version-basis:start -->
-**Version basis**
+Written against ComfyUI v0.37.0, AUTOMATIC1111 v1.10.1, Fooocus v2.5.5, Gradio 3.41.2, Docker Engine minimum loopback boundary 28.0, Docker Compose source v2.32.4, and curl minimum write-out version 7.75.0; 1 further source is pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 28 claims: 2 demonstrated by a check that ran and 26 reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- comfy: ComfyUI (v0.37.0)
-- webui: AUTOMATIC1111 (v1.10.1)
-- gradio: Gradio (3.41.2)
-- fooocus: Fooocus (v2.5.5)
-- engine: Docker Engine minimum loopback boundary (28.0)
-- compose: Compose Specification (914ec15d1fa4)
-- compose-cli: Docker Compose source (v2.32.4)
-- curl: curl minimum write-out version (7.75.0)
-- linux: Linux permissions and tools (unknown)
-- comfy-rolling: ComfyUI documentation (rolling) (unknown)
-- comfy-registry-rolling: ComfyUI Registry documentation (rolling) (unknown)
-- comfy-advisory: ComfyUI January 2025 security advisory (unknown)
-- invoke-rolling: InvokeAI documentation (rolling) (unknown)
-- comfy-manager-advisory: ComfyUI-Manager security advisory (unknown)
-
-Claims (full source mapping in the front matter):
-
-- comfy-bind (REASONED; comfy, comfy-rolling): Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login.
-- comfy-nodes (REASONED; comfy-advisory, comfy-registry-rolling, comfy-rolling): ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment.
-- fooocus-login (REASONED; fooocus): Fooocus is unauthenticated by default and offers optional auth.json login; keep it off public interfaces.
-- manager (REASONED; comfy-manager-advisory): Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together.
-- node-flags (REASONED; comfy-rolling): --disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure.
-- webui-auth (REASONED; webui): UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy.
-- webui-flags (REASONED; webui, gradio): --listen, --share relay and insecure extension access affect exposure. Without --port, Gradio searches from GRADIO_SERVER_PORT (7860 when unset) for up to GRADIO_NUM_PORTS ports (default 100); explicit --port 7860 pins the UI port.
-- api-input (REASONED; webui): API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth.
-- api-leak (REASONED; webui): cmd-flags reveals all options; API auth users can read API passwords, unauthenticated API can expose UI argv credentials.
-- argv (REASONED; webui): COMMANDLINE_ARGS becomes argv; launcher prints credentials and local argv/environment readers may read them.
-- file-create (REASONED; webui, linux): Create-once owner-only credential file uses hex password and clean-shell guards, refuses a default ACL or missing getfacl and checks mode 0600 after the write; directory races, backups and plaintext storage limit protection. Filesystem is unrecorded.
-- file-launch (REASONED; webui, gradio): Clear inherited launch/bind variables, validate regular non-symlink credential file, reject empty/malformed/duplicate entries and read failures. Shell/grep/awk versions are unrecorded.
-- webui-bind (REASONED; webui, gradio): Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback.
-- sysinfo (REASONED; webui, gradio): Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix.
-- invoke-config (REASONED; invoke-rolling): Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login.
-- invoke-login (REASONED; invoke-rolling): Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS.
-- fooocus-flags (REASONED; fooocus): Loopback by default, bare --listen wildcard, --share public relay; auth.json supplies optional login.
-- fooocus-loader (DEMONSTRATED; fooocus): Isolated loader returns credentials only for valid data; unreadable raises PermissionError, malformed/empty returns none.
-- fooocus-auth (REASONED; fooocus): Relative auth.json location, pass/hash SHA-256 handling, permissions and expected fail-open for malformed/empty data; no live server test.
-- fooocus-port (REASONED; fooocus, gradio): Fooocus v2.5.5 pins Gradio 3.41.2; inherited port or occupied 7865 can move the UI; explicit --port makes Gradio try only that port.
-- fooocus-pin (REASONED; fooocus): entry_with_update updates the checkout; use launch.py from exact v2.5.5, with working-tree caveat.
-- container (REASONED; fooocus, engine): CMDARGS bare --listen plus wildcard publication exposes image; bridge uses internal wildcard and loopback publish, host networking needs loopback bind.
-- image-build (REASONED; fooocus, compose, compose-cli): Build pinned source, not unchecked GHCR default; Compose build/image pull policy and --build determine selected/tagged image.
-- auth-mount (REASONED; fooocus): Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked.
-- argparse (DEMONSTRATED; fooocus): Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration.
-- verify-network (REASONED; comfy, webui, fooocus, engine, curl, invoke-rolling): Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope.
-- verify-invoke (REASONED; invoke-rolling): Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available.
-- verify-proxy (REASONED; fooocus, comfy-rolling): TLS/header and browser checks should require login before UI; no service/proxy listeners were run.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 None of these tools ships real authentication by default, and each accepts arbitrary Python through custom nodes or extensions. **Binding one to a public interface is host compromise, not just data exposure.** Keep every instance on loopback and reach it only through a tunnel or an authenticated TLS proxy: [fronting-auth.md](fronting-auth.md), [cloudflare.md](cloudflare.md), [tailscale.md](tailscale.md), or a reverse proxy per [nginx.md](nginx.md)/[caddy.md](caddy.md).
 
@@ -488,3 +254,263 @@ curl -q -g -sI https://imagegen.example.com/                # via the proxy: TLS
 - `docker compose up --build` ("Build images before starting containers"; pinned tag v2.32.4): https://github.com/docker/compose/blob/v2.32.4/cmd/compose/up.go#L147
 - Linux ACLs, acl(5): default ACL inheritance and how a default ACL takes the place of the umask for new files (man-pages; checked against the local acl 2.3.2 manual, October 2026): https://man7.org/linux/man-pages/man5/acl.5.html
 - getfacl(1): `-d` (default ACL), `-c` (omit the header) and `-p` (keep leading `/`) options (man-pages; checked against the local acl 2.3.2 manual, October 2026): https://man7.org/linux/man-pages/man1/getfacl.1.html
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/image-gen-uis.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- comfy: ComfyUI (v0.37.0)
+- comfy-rolling: ComfyUI documentation (rolling) (unknown)
+- comfy-registry-rolling: ComfyUI Registry documentation (rolling) (unknown)
+- comfy-advisory: ComfyUI January 2025 security advisory (unknown)
+- comfy-manager-advisory: ComfyUI-Manager security advisory (unknown)
+- webui: AUTOMATIC1111 (v1.10.1)
+- invoke-rolling: InvokeAI documentation (rolling) (unknown)
+- fooocus: Fooocus (v2.5.5)
+- gradio: Gradio (3.41.2)
+- engine: Docker Engine minimum loopback boundary (28.0)
+- compose: Compose Specification (914ec15d1fa4)
+- compose-cli: Docker Compose source (v2.32.4)
+- curl: curl minimum write-out version (7.75.0)
+- linux: Linux permissions and tools (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- comfy-bind (REASONED; comfy, comfy-rolling): Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login.
+- comfy-nodes (REASONED; comfy-advisory, comfy-registry-rolling, comfy-rolling): ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment.
+- fooocus-login (REASONED; fooocus): Fooocus is unauthenticated by default and offers optional auth.json login; keep it off public interfaces.
+- manager (REASONED; comfy-manager-advisory): Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together.
+- node-flags (REASONED; comfy-rolling): --disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure.
+- webui-auth (REASONED; webui): UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy.
+- webui-flags (REASONED; webui, gradio): --listen, --share relay and insecure extension access affect exposure. Without --port, Gradio searches from GRADIO_SERVER_PORT (7860 when unset) for up to GRADIO_NUM_PORTS ports (default 100); explicit --port 7860 pins the UI port.
+- api-input (REASONED; webui): API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth.
+- api-leak (REASONED; webui): cmd-flags reveals all options; API auth users can read API passwords, unauthenticated API can expose UI argv credentials.
+- argv (REASONED; webui): COMMANDLINE_ARGS becomes argv; launcher prints credentials and local argv/environment readers may read them.
+- file-create (REASONED; webui, linux): Create-once owner-only credential file uses hex password and clean-shell guards, refuses a default ACL or missing getfacl and checks mode 0600 after the write; directory races, backups and plaintext storage limit protection. Filesystem is unrecorded.
+- file-launch (REASONED; webui, gradio): Clear inherited launch/bind variables, validate regular non-symlink credential file, reject empty/malformed/duplicate entries and read failures. Shell/grep/awk versions are unrecorded.
+- webui-bind (REASONED; webui, gradio): Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback.
+- sysinfo (REASONED; webui, gradio): Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix.
+- invoke-config (REASONED; invoke-rolling): Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login.
+- invoke-login (REASONED; invoke-rolling): Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS.
+- fooocus-flags (REASONED; fooocus): Loopback by default, bare --listen wildcard, --share public relay; auth.json supplies optional login.
+- fooocus-loader (DEMONSTRATED; fooocus): Isolated loader returns credentials only for valid data; unreadable raises PermissionError, malformed/empty returns none.
+- fooocus-auth (REASONED; fooocus): Relative auth.json location, pass/hash SHA-256 handling, permissions and expected fail-open for malformed/empty data; no live server test.
+- fooocus-port (REASONED; fooocus, gradio): Fooocus v2.5.5 pins Gradio 3.41.2; inherited port or occupied 7865 can move the UI; explicit --port makes Gradio try only that port.
+- fooocus-pin (REASONED; fooocus): entry_with_update updates the checkout; use launch.py from exact v2.5.5, with working-tree caveat.
+- container (REASONED; fooocus, engine): CMDARGS bare --listen plus wildcard publication exposes image; bridge uses internal wildcard and loopback publish, host networking needs loopback bind.
+- image-build (REASONED; fooocus, compose, compose-cli): Build pinned source, not unchecked GHCR default; Compose build/image pull policy and --build determine selected/tagged image.
+- auth-mount (REASONED; fooocus): Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked.
+- argparse (DEMONSTRATED; fooocus): Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration.
+- verify-network (REASONED; comfy, webui, fooocus, engine, curl, invoke-rolling): Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope.
+- verify-invoke (REASONED; invoke-rolling): Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available.
+- verify-proxy (REASONED; fooocus, comfy-rolling): TLS/header and browser checks should require login before UI; no service/proxy listeners were run.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-09-27",
+  "documentation_checked": "2026-09",
+  "body_sha256": "49ea970f55cd616853fcf1e52aa83de8e57fb6b76cccb2b4b8664d7aecc8b0b7",
+  "components": {
+    "comfy": {
+      "name": "ComfyUI",
+      "basis": "v0.37.0",
+      "sources": {
+        "sbd178d58a098": "https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64"
+      }
+    },
+    "comfy-rolling": {
+      "name": "ComfyUI documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s8b2f213483c1": "https://docs.comfy.org/development/comfyui-server/startup-flags"
+      }
+    },
+    "comfy-registry-rolling": {
+      "name": "ComfyUI Registry documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "sb5912e72af4b": "https://docs.comfy.org/registry/standards"
+      }
+    },
+    "comfy-advisory": {
+      "name": "ComfyUI January 2025 security advisory",
+      "basis": "unknown",
+      "sources": {
+        "sfde3f2261e67": "https://blog.comfy.org/p/comfyui-2025-jan-security-update"
+      }
+    },
+    "comfy-manager-advisory": {
+      "name": "ComfyUI-Manager security advisory",
+      "basis": "unknown",
+      "sources": {
+        "s4ce66189c3c9": "https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7"
+      }
+    },
+    "webui": {
+      "name": "AUTOMATIC1111",
+      "basis": "v1.10.1",
+      "sources": {
+        "s42a42cca605b": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113",
+        "s0195caed3cb9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L114-L139",
+        "sd5f3496b66aa": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L70-L90",
+        "s82803810022a": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L6",
+        "s914278bcbf70": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_cmd_options.py#L7-L15",
+        "s66a044b7666c": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L199-L205",
+        "sb59e633133f6": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L274-L284",
+        "s57d98254f09d": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L689-L690",
+        "s256946a60534": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/models.py#L221-L231",
+        "s5b2e23d1781d": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/paths_internal.py#L12-L13",
+        "sfa27f3a86456": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/launch_utils.py#L463-L464",
+        "sebe977aeb6f3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/sysinfo.py#L130-L148",
+        "sc9117bccdef5": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui.py#L1223-L1232",
+        "s370f032e0497": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L10-L16",
+        "saf69abeba189": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/requirements_versions.txt#L11",
+        "sf3f6d5cafad0": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_init.py#L17-L24",
+        "sbfd3d01539c3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui_loadsave.py#L14-L73",
+        "s7b714092036e": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L77-L78",
+        "s23a49b75b6a1": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L79-L82",
+        "s9a93a7fe8617": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L47",
+        "s72ec61fe38c9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L51"
+      }
+    },
+    "invoke-rolling": {
+      "name": "InvokeAI documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s23a1a14da479": "https://invoke.ai/features/multi-user-mode/admin-guide/",
+        "s4c6175f3800d": "https://invoke.ai/features/multi-user-mode/api-guide/",
+        "sb0dc1b679ef2": "https://invoke.ai/configuration/invokeai-yaml/"
+      }
+    },
+    "fooocus": {
+      "name": "Fooocus",
+      "basis": "v2.5.5",
+      "sources": {
+        "s38232435e83d": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301",
+        "s63ce6f5a8fa9": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/ldm_patched/modules/args_parser.py#L36",
+        "sca9aed72a579": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/args_manager.py#L43-L47",
+        "s456b2a263c88": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L13-L14",
+        "s2eb7ac87bb1f": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/webui.py#L1120-L1128",
+        "s35ce6e657cb8": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entry_with_update.py#L16-L46",
+        "s6157fae93872": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/Dockerfile#L17-L29",
+        "s5c792b662186": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entrypoint.sh#L33",
+        "s79380d927e3b": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker-compose.yml#L6-L11",
+        "s431336fa6375": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker.md#L19-L78",
+        "scb18d8c421f5": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/.dockerignore#L53",
+        "s170da4e26268": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L8-L16",
+        "s21eb28118a14": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L19-L34",
+        "sfcc14904297e": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L37-L41",
+        "s2ef62a4cd853": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L7-L9",
+        "sc90edaf29ac7": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/requirements_versions.txt#L13"
+      }
+    },
+    "gradio": {
+      "name": "Gradio",
+      "basis": "3.41.2",
+      "sources": {
+        "s1bd30a313ec9": "https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/networking.py#L28",
+        "sf85e6083e02e": "https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L193-L305",
+        "s2ec1c2a1d665": "https://github.com/gradio-app/gradio/blob/gradio@3.41.2/gradio/routes.py#L128-L133",
+        "s6f6c16695b71": "https://github.com/gradio-app/gradio/blob/gradio%403.41.2/gradio/networking.py#L24-L27",
+        "s67ebd44760a7": "https://github.com/gradio-app/gradio/blob/gradio%403.41.2/gradio/networking.py#L133-L171"
+      }
+    },
+    "engine": {
+      "name": "Docker Engine minimum loopback boundary",
+      "basis": "28.0",
+      "sources": {
+        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
+      }
+    },
+    "compose": {
+      "name": "Compose Specification",
+      "basis": "914ec15d1fa4",
+      "sources": {
+        "sfb1cd5e15347": "https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/05-services.md#L1816-L1832",
+        "s2d25c00e22f6": "https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/build.md#L21-L23",
+        "s16a4e1bb5e9f": "https://github.com/compose-spec/compose-spec/blob/914ec15d1fa498969c0df5c1d672306db3256089/build.md#L50-L62"
+      }
+    },
+    "compose-cli": {
+      "name": "Docker Compose source",
+      "basis": "v2.32.4",
+      "sources": {
+        "s0e2ca4d9b8c0": "https://github.com/docker/compose/blob/v2.32.4/cmd/compose/up.go#L147"
+      }
+    },
+    "curl": {
+      "name": "curl minimum write-out version",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    },
+    "linux": {
+      "name": "Linux permissions and tools",
+      "basis": "unknown",
+      "sources": {
+        "s31f41c54750c": "https://man7.org/linux/man-pages/man5/acl.5.html",
+        "s08902025e5f9": "https://man7.org/linux/man-pages/man1/getfacl.1.html"
+      }
+    }
+  },
+  "claims": {
+    "comfy-bind": {"text": "Default loopback:8188, bare --listen binds IPv4/IPv6 wildcards; explicit bind/port and proxy login.", "components": ["comfy", "comfy-rolling"], "sources": ["comfy:sbd178d58a098", "comfy-rolling:s8b2f213483c1"], "status": "REASONED"},
+    "comfy-nodes": {"text": "ComfyUI has no built-in login; Python custom nodes run with server privileges. Trust nodes and apply container containment.", "components": ["comfy-advisory", "comfy-registry-rolling", "comfy-rolling"], "sources": ["comfy-advisory:sfde3f2261e67", "comfy-registry-rolling:sb5912e72af4b", "comfy-rolling:s8b2f213483c1"], "status": "REASONED"},
+    "fooocus-login": {"text": "Fooocus is unauthenticated by default and offers optional auth.json login; keep it off public interfaces.", "components": ["fooocus"], "sources": ["fooocus:s38232435e83d"], "status": "REASONED"},
+    "manager": {"text": "Manager RCE advisory requires ComfyUI at least v0.3.76 and Manager at least v3.38 together.", "components": ["comfy-manager-advisory"], "sources": ["comfy-manager-advisory:s4ce66189c3c9"], "status": "REASONED"},
+    "node-flags": {"text": "--disable-all-custom-nodes and --whitelist-custom-nodes limit loaded nodes, not network exposure.", "components": ["comfy-rolling"], "sources": ["comfy-rolling:s8b2f213483c1"], "status": "REASONED"},
+    "webui-auth": {"text": "UI auth file/list syntax, API-only auth, colon/comma parsing differences and plaintext HTTP require a TLS proxy.", "components": ["webui"], "sources": ["webui:s42a42cca605b", "webui:s0195caed3cb9", "webui:sd5f3496b66aa", "webui:s66a044b7666c"], "status": "REASONED"},
+    "webui-flags": {"text": "--listen, --share relay and insecure extension access affect exposure. Without --port, Gradio searches from GRADIO_SERVER_PORT (7860 when unset) for up to GRADIO_NUM_PORTS ports (default 100); explicit --port 7860 pins the UI port.", "components": ["webui", "gradio"], "sources": ["webui:s7b714092036e", "webui:s23a49b75b6a1", "webui:saf69abeba189", "gradio:s6f6c16695b71", "gradio:s67ebd44760a7", "webui:s9a93a7fe8617", "webui:s72ec61fe38c9"], "status": "REASONED"},
+    "api-input": {"text": "API credentials have no shipped stdin/file/environment/prompt input; settings and UI config do not populate api_auth.", "components": ["webui"], "sources": ["webui:s82803810022a", "webui:s914278bcbf70", "webui:sb59e633133f6", "webui:sf3f6d5cafad0", "webui:sbfd3d01539c3"], "status": "REASONED"},
+    "api-leak": {"text": "cmd-flags reveals all options; API auth users can read API passwords, unauthenticated API can expose UI argv credentials.", "components": ["webui"], "sources": ["webui:sb59e633133f6", "webui:s57d98254f09d", "webui:s256946a60534"], "status": "REASONED"},
+    "argv": {"text": "COMMANDLINE_ARGS becomes argv; launcher prints credentials and local argv/environment readers may read them.", "components": ["webui"], "sources": ["webui:s914278bcbf70", "webui:s5b2e23d1781d", "webui:sfa27f3a86456"], "status": "REASONED"},
+    "file-create": {"text": "Create-once owner-only credential file uses hex password and clean-shell guards, refuses a default ACL or missing getfacl and checks mode 0600 after the write; directory races, backups and plaintext storage limit protection. Filesystem is unrecorded.", "components": ["webui", "linux"], "sources": ["webui:s0195caed3cb9", "linux:s31f41c54750c", "linux:s08902025e5f9"], "status": "REASONED"},
+    "file-launch": {"text": "Clear inherited launch/bind variables, validate regular non-symlink credential file, reject empty/malformed/duplicate entries and read failures. Shell/grep/awk versions are unrecorded.", "components": ["webui", "gradio"], "sources": ["webui:s0195caed3cb9", "gradio:s2ec1c2a1d665"], "status": "REASONED"},
+    "webui-bind": {"text": "Explicit --server-name overrides Gradio environment-based bind; without it GRADIO_SERVER_NAME can replace loopback.", "components": ["webui", "gradio"], "sources": ["webui:s370f032e0497", "webui:saf69abeba189", "gradio:s1bd30a313ec9"], "status": "REASONED"},
+    "sysinfo": {"text": "Unredacted environment and incomplete argv redaction in unauthenticated sysinfo routes are source-reasoned; proxy must deny the prefix.", "components": ["webui", "gradio"], "sources": ["webui:sebe977aeb6f3", "webui:sc9117bccdef5", "gradio:sf85e6083e02e"], "status": "REASONED"},
+    "invoke-config": {"text": "Flat schema 4.0.2, host 127.0.0.1, port 9090 and INVOKEAI_HOST/PORT overrides; default single-user mode has no login.", "components": ["invoke-rolling"], "sources": ["invoke-rolling:sb0dc1b679ef2"], "status": "REASONED"},
+    "invoke-login": {"text": "Experimental multiuser login/JWT and strict password checks; changing the stored JWT secret then restarting logs users out. Ordinary restart logout is not established; keep loopback and TLS.", "components": ["invoke-rolling"], "sources": ["invoke-rolling:s23a1a14da479"], "status": "REASONED"},
+    "fooocus-flags": {"text": "Loopback by default, bare --listen wildcard, --share public relay; auth.json supplies optional login.", "components": ["fooocus"], "sources": ["fooocus:s38232435e83d", "fooocus:s63ce6f5a8fa9"], "status": "REASONED"},
+    "fooocus-loader": {"text": "Isolated loader returns credentials only for valid data; unreadable raises PermissionError, malformed/empty returns none.", "components": ["fooocus"], "sources": ["fooocus:s21eb28118a14"], "status": "DEMONSTRATED", "evidence": "for a malformed file it printed `load_auth_data, e: ...` and returned no credentials; for an empty list (`[]`) it also returned none; and for a valid file it returned credentials."},
+    "fooocus-auth": {"text": "Relative auth.json location, pass/hash SHA-256 handling, permissions and expected fail-open for malformed/empty data; no live server test.", "components": ["fooocus"], "sources": ["fooocus:s2eb7ac87bb1f", "fooocus:s170da4e26268", "fooocus:s21eb28118a14", "fooocus:sfcc14904297e", "fooocus:s2ef62a4cd853"], "status": "REASONED"},
+    "fooocus-port": {"text": "Fooocus v2.5.5 pins Gradio 3.41.2; inherited port or occupied 7865 can move the UI; explicit --port makes Gradio try only that port.", "components": ["fooocus", "gradio"], "sources": ["fooocus:sca9aed72a579", "fooocus:s456b2a263c88", "gradio:s6f6c16695b71", "gradio:s67ebd44760a7", "fooocus:sc90edaf29ac7"], "status": "REASONED"},
+    "fooocus-pin": {"text": "entry_with_update updates the checkout; use launch.py from exact v2.5.5, with working-tree caveat.", "components": ["fooocus"], "sources": ["fooocus:s35ce6e657cb8"], "status": "REASONED"},
+    "container": {"text": "CMDARGS bare --listen plus wildcard publication exposes image; bridge uses internal wildcard and loopback publish, host networking needs loopback bind.", "components": ["fooocus", "engine"], "sources": ["fooocus:s6157fae93872", "fooocus:s5c792b662186", "fooocus:s79380d927e3b", "fooocus:s431336fa6375", "engine:s1e53417c513d"], "status": "REASONED"},
+    "image-build": {"text": "Build pinned source, not unchecked GHCR default; Compose build/image pull policy and --build determine selected/tagged image.", "components": ["fooocus", "compose", "compose-cli"], "sources": ["fooocus:s79380d927e3b", "fooocus:s431336fa6375", "compose:sfb1cd5e15347", "compose:s2d25c00e22f6", "compose:s16a4e1bb5e9f", "compose-cli:s0e2ca4d9b8c0"], "status": "REASONED"},
+    "auth-mount": {"text": "Image excludes auth.json; mount read-only, use built image user UID and mode 0400; remapped/rootless ownership is unchecked.", "components": ["fooocus"], "sources": ["fooocus:s6157fae93872", "fooocus:scb18d8c421f5", "fooocus:s21eb28118a14"], "status": "REASONED"},
+    "argparse": {"text": "Isolated argparse definition yields loopback with no flag and wildcard for bare --listen; this is not a server demonstration.", "components": ["fooocus"], "sources": ["fooocus:s63ce6f5a8fa9"], "status": "DEMONSTRATED", "evidence": "returns `127.0.0.1` with no flag and `0.0.0.0` for a bare `--listen`."},
+    "verify-network": {"text": "Inventory every service and port, confirm loopback service is up, probe actual IPv4/IPv6; container PORTS or host-network ss have different scope.", "components": ["comfy", "webui", "fooocus", "engine", "curl", "invoke-rolling"], "sources": ["comfy:sbd178d58a098", "webui:s370f032e0497", "invoke-rolling:sb0dc1b679ef2", "fooocus:s63ce6f5a8fa9", "engine:s1e53417c513d", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-invoke": {"text": "Unauthenticated /api/v1/boards/ should answer in single-user mode and reject with 401 in multi-user mode; exposed status is unrecorded and no listener demonstration was available.", "components": ["invoke-rolling"], "sources": ["invoke-rolling:s23a1a14da479", "invoke-rolling:s4c6175f3800d"], "status": "REASONED", "verify": [1]},
+    "verify-proxy": {"text": "TLS/header and browser checks should require login before UI; no service/proxy listeners were run.", "components": ["fooocus", "comfy-rolling"], "sources": ["comfy-rolling:s8b2f213483c1", "fooocus:s38232435e83d"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->

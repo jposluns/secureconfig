@@ -1,198 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-09-26",
-  "documentation_checked": "2026-09",
-  "body_sha256": "2a5e3014404a2d45329664d113112b9a482ab9426c3c2c0da18d404541b2b3e6",
-  "components": {
-    "docs": {
-      "name": "LiteLLM documentation",
-      "basis": "unknown",
-      "sources": {
-        "s135f0dce83d9": "https://docs.litellm.ai/docs/proxy/virtual_keys",
-        "s66efd69f5587": "https://docs.litellm.ai/docs/proxy/master_key_rotations",
-        "sf9c1840fffc9": "https://docs.litellm.ai/docs/proxy/config_settings",
-        "sfe517a7be891": "https://docs.litellm.ai/docs/proxy/access_control",
-        "s038950d49558": "https://docs.litellm.ai/docs/proxy/key_auth_arch",
-        "seb5042b85a02": "https://docs.litellm.ai/docs/proxy/users",
-        "sdc6aeba6f388": "https://docs.litellm.ai/docs/proxy/team_budgets",
-        "s26fc2080e183": "https://docs.litellm.ai/docs/proxy/redis_requirements",
-        "sdbe6ab7362a0": "https://docs.litellm.ai/docs/proxy/cli",
-        "sc420b1851bf6": "https://docs.litellm.ai/docs/proxy/ip_address",
-        "sb980affae79d": "https://docs.litellm.ai/docs/proxy/ui",
-        "se991dc6f2424": "https://docs.litellm.ai/docs/proxy/security_best_practices",
-        "sb3839a335288": "https://docs.litellm.ai/docs/proxy/public_routes",
-        "sa6aaab9c250a": "https://docs.litellm.ai/docs/proxy/health",
-        "sf84e8bdc2a9c": "https://docs.litellm.ai/docs/proxy/prometheus",
-        "s629597256553": "https://docs.litellm.ai/docs/proxy/pass_through",
-        "s1fceb11a6977": "https://docs.litellm.ai/docs/proxy/logging"
-      }
-    },
-    "source": {
-      "name": "LiteLLM source",
-      "basis": "6ef7b86748118ceecd95271727c2fa167ce55fec",
-      "sources": {
-        "s7960d883e823": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/proxy_server.py",
-        "sbe6fa0b81017": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/user_api_key_auth.py",
-        "s6dca7e865d4f": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/_types.py",
-        "s801396dd889f": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/management_endpoints/key_management_endpoints.py",
-        "s6632dfcab93a": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/route_checks.py",
-        "scf988bc26d27": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/utils.py",
-        "s4dac61a60fa2": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/pass_through_endpoints/pass_through_endpoints.py",
-        "sd13121968bd0": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/management_endpoints/common_utils.py",
-        "s2260325bd6b8": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/route_llm_request.py",
-        "sc93fb1082e0c": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/main.py",
-        "s6ce39f96b246": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/spend_tracking/spend_tracking_utils.py"
-      }
-    },
-    "sso": {
-      "name": "LiteLLM SSO allowance",
-      "basis": "v1.76.0",
-      "sources": {
-        "s683431f972f9": "https://docs.litellm.ai/docs/proxy/admin_ui_sso"
-      }
-    },
-    "metrics": {
-      "name": "LiteLLM metrics default",
-      "basis": "v1.85.0",
-      "sources": {
-        "s7ae2561db315": "https://raw.githubusercontent.com/BerriAI/litellm/v1.85.0/litellm/__init__.py"
-      }
-    },
-    "cli": {
-      "name": "LiteLLM CLI",
-      "basis": "v1.102.1",
-      "sources": {
-        "s2c55655e39fd": "https://github.com/BerriAI/litellm/blob/v1.102.1/litellm/proxy/proxy_cli.py#L666-L667"
-      }
-    }
-  },
-  "claims": {
-    "master-file": {"text": "Keep operator-only master_key in protected config.yaml, not argv/exported environment; YAML wins over environment and remains plaintext at rest.", "components": ["docs"], "sources": ["docs:s135f0dce83d9", "docs:s66efd69f5587"], "status": "REASONED"},
-    "startup": {"text": "Current startup refuses missing, empty, whitespace-only or sk-1234 master keys; no first release is asserted.", "components": ["docs", "source"], "sources": ["docs:s66efd69f5587", "source:s7960d883e823"], "status": "REASONED"},
-    "env-override": {"text": "LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true independently allows weak/keyless startup; retain refusal in production.", "components": ["docs", "source"], "sources": ["docs:s66efd69f5587", "source:s7960d883e823"], "status": "REASONED"},
-    "yaml-override": {"text": "general_settings.dangerously_permit_weak_or_unset_master_key=true independently allows weak/keyless startup.", "components": ["docs", "source"], "sources": ["docs:s66efd69f5587", "source:s7960d883e823"], "status": "REASONED"},
-    "database": {"text": "Virtual-key generation requires PostgreSQL via DATABASE_URL or general_settings.database_url, even with model storage disabled.", "components": ["docs"], "sources": ["docs:s135f0dce83d9", "docs:sf9c1840fffc9"], "status": "REASONED"},
-    "virtual-keys": {"text": "Issue separate revocable application keys; default Authorization header is configurable via litellm_key_header_name.", "components": ["docs"], "sources": ["docs:s135f0dce83d9"], "status": "REASONED"},
-    "salt": {"text": "Stored virtual keys are hashed; database provider credentials are encrypted with LITELLM_SALT_KEY, falling back to master key; preserve the salt.", "components": ["docs"], "sources": ["docs:sf9c1840fffc9"], "status": "REASONED"},
-    "model-storage": {"text": "Leave store_model_in_db false unless required; protect database credentials, backups and plaintext configuration.", "components": ["docs"], "sources": ["docs:sf9c1840fffc9"], "status": "REASONED"},
-    "ownership": {"text": "Use non-admin owners with team membership; keys inherit owner authority and master keys bypass application restrictions.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:sbe6fa0b81017", "docs:sfe517a7be891"], "status": "REASONED", "verify": [2]},
-    "key-models": {"text": "Explicit key and team model lists intersect; models: [] means all models, not none.", "components": ["docs"], "sources": ["docs:s038950d49558"], "status": "REASONED", "verify": [2]},
-    "key-budget": {"text": "max_budget is USD and defaults null, with no key-level cap; budget_duration resets spend and does not expire the key.", "components": ["docs", "source"], "sources": ["docs:seb5042b85a02", "source:s6dca7e865d4f"], "status": "REASONED", "verify": [2]},
-    "expiry": {"text": "duration controls lifetime separately; compare finite-key success before expiry/refusal afterward against an unexpired control.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s6dca7e865d4f"], "status": "REASONED", "verify": [2]},
-    "rpm": {"text": "rpm_limit limits requests per minute; test its own window and successful under-limit control across workers.", "components": ["docs", "source"], "sources": ["docs:seb5042b85a02", "source:s6dca7e865d4f"], "status": "REASONED", "verify": [2]},
-    "tpm": {"text": "tpm_limit limits tokens per minute; RPM results do not demonstrate this limit.", "components": ["docs", "source"], "sources": ["docs:seb5042b85a02", "source:s6dca7e865d4f"], "status": "REASONED", "verify": [2]},
-    "parallel": {"text": "max_parallel_requests limits concurrent requests; overlap a bounded workload to distinguish it from rate limits.", "components": ["docs", "source"], "sources": ["docs:seb5042b85a02", "source:s6dca7e865d4f"], "status": "REASONED", "verify": [2]},
-    "soft-budget": {"text": "soft_budget triggers configured alerts without blocking spending.", "components": ["docs", "source"], "sources": ["docs:seb5042b85a02", "source:s6dca7e865d4f"], "status": "REASONED"},
-    "teams": {"text": "POST team/new and team/update set shared model/spend/throughput limits; attach every relevant key and add the intended owner with team/member_add.", "components": ["docs", "source"], "sources": ["docs:sdc6aeba6f388", "docs:seb5042b85a02", "source:s6dca7e865d4f"], "status": "REASONED", "verify": [2]},
-    "shared-state": {"text": "Multiple workers, even in one container, require shared Redis for limits/revocation; configure router Redis and proxy caching, not variables alone.", "components": ["docs"], "sources": ["docs:s26fc2080e183"], "status": "REASONED"},
-    "cache": {"text": "The shown Redis cache configuration also caches responses; absent content logs do not imply absent cached content.", "components": ["docs"], "sources": ["docs:s26fc2080e183", "docs:sf9c1840fffc9"], "status": "REASONED"},
-    "fail-closed": {"text": "fail_closed_budget_enforcement=true returns 503 when spend cannot be verified; restore dependencies and confirm permitted work.", "components": ["docs"], "sources": ["docs:seb5042b85a02"], "status": "REASONED", "verify": [2]},
-    "reservation": {"text": "Keep reservation enabled; batch/unestimable costs and delayed or concurrent charges mean budgets are not absolute provider-spend caps.", "components": ["docs"], "sources": ["docs:seb5042b85a02"], "status": "REASONED"},
-    "delete": {"text": "POST /key/delete permanently revokes the listed keys; removing application configuration is not revocation.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s801396dd889f"], "status": "REASONED", "verify": [2]},
-    "block": {"text": "POST /key/block suspends and /key/unblock restores; compare each operation on every worker with replacement-key positive controls.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s801396dd889f", "docs:s26fc2080e183"], "status": "REASONED", "verify": [2]},
-    "rotation": {"text": "In-place /key/regenerate is Enterprise-gated; otherwise generate restricted replacement, deploy/test it, then delete old key while retaining team budget.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s801396dd889f"], "status": "REASONED"},
-    "bind": {"text": "CLI defaults 0.0.0.0:4000; use --host 127.0.0.1 --port 4000 --config config.yaml behind TLS.", "components": ["docs", "cli"], "sources": ["docs:sdbe6ab7362a0", "cli:s2c55655e39fd"], "status": "REASONED", "verify": [1]},
-    "ip-filter": {"text": "allowed_ips is Enterprise; otherwise ingress filtering must be enforced independently.", "components": ["docs"], "sources": ["docs:sc420b1851bf6"], "status": "REASONED"},
-    "ui-login": {"text": "UI_USERNAME defaults admin; without UI_PASSWORD the UI accepts the master key; remove fallback with disable_env_credential_login after personal login works.", "components": ["docs"], "sources": ["docs:sb980affae79d"], "status": "REASONED", "verify": [2]},
-    "ui-cookie": {"text": "Set PROXY_BASE_URL to the actual HTTPS origin for Secure UI cookies and test in a fresh browser.", "components": ["docs"], "sources": ["docs:se991dc6f2424"], "status": "REASONED", "verify": [2]},
-    "ui-disable": {"text": "DISABLE_ADMIN_UI=true removes an unused UI; authorized inference must still work.", "components": ["docs"], "sources": ["docs:sb980affae79d"], "status": "REASONED", "verify": [2]},
-    "sso": {"text": "SSO is free for up to five users from v1.76.0; more require Enterprise and bootstrap credentials still need removal.", "components": ["sso"], "sources": ["sso:s683431f972f9"], "status": "REASONED"},
-    "mfa": {"text": "Human UI MFA belongs at the fronting identity layer.", "components": ["docs", "sso"], "sources": ["docs:se991dc6f2424", "sso:s683431f972f9"], "status": "REASONED"},
-    "routes": {"text": "allowed_routes admits named paths and slash descendants, not exact path/method pairs; narrow at ingress where required.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s6632dfcab93a"], "status": "REASONED"},
-    "admin-routes": {"text": "admin_only_routes uses exact matches, not /key/*; without Enterprise source logs an error and skips this additional check.", "components": ["docs", "source"], "sources": ["docs:sb3839a335288", "source:s6632dfcab93a"], "status": "REASONED", "verify": [2]},
-    "health-live": {"text": "Liveliness/liveness and readiness are unauthenticated; their success proves no inference authentication.", "components": ["docs"], "sources": ["docs:sa6aaab9c250a"], "status": "REASONED", "verify": [2]},
-    "health-paid": {"text": "/health is authenticated with key auth and runs potentially paid model probes; keep it private.", "components": ["docs"], "sources": ["docs:sa6aaab9c250a"], "status": "REASONED"},
-    "docs": {"text": "Docs are public by default; clear DOCS_URL/REDOC_URL/OPENAPI_URL and set NO_DOCS/NO_REDOC/NO_OPENAPI in actual startup environment; explicit URLs win.", "components": ["source", "docs"], "sources": ["source:scf988bc26d27", "docs:sf9c1840fffc9"], "status": "REASONED", "verify": [2]},
-    "metrics-proxy": {"text": "Proxy-port /metrics defaults authenticated, confirmed in v1.85.0; require_auth_for_metrics_endpoint=false reopens it.", "components": ["metrics", "docs"], "sources": ["metrics:s7ae2561db315", "docs:sf84e8bdc2a9c", "docs:sf9c1840fffc9"], "status": "REASONED", "verify": [2]},
-    "metrics-port": {"text": "PROMETHEUS_METRICS_PORT can create a separate unauthenticated listener; proxy-port auth does not cover it, so isolate collectors.", "components": ["docs"], "sources": ["docs:sf84e8bdc2a9c"], "status": "REASONED", "verify": [2]},
-    "passthrough-auth": {"text": "Docs call pass-through auth Enterprise, but pinned main attaches auth without a licence gate; verify the installed release.", "components": ["docs", "source"], "sources": ["docs:s629597256553", "source:s4dac61a60fa2"], "status": "REASONED"},
-    "passthrough-authorization": {"text": "Non-admin callers also need allowed_passthrough_routes metadata; allowed_routes alone is insufficient and normal metadata provisioning is Enterprise-gated.", "components": ["source"], "sources": ["source:s6632dfcab93a", "source:s6dca7e865d4f", "source:sd13121968bd0"], "status": "REASONED"},
-    "passthrough-policy": {"text": "Optional forwarder pins target, auth, GET-only, no subpaths and no wholesale incoming-header forwarding; omit unused forwarders.", "components": ["docs", "source"], "sources": ["docs:s629597256553", "source:s4dac61a60fa2"], "status": "REASONED", "verify": [2]},
-    "destinations": {"text": "Pin api_base/target and control who changes them; caller api_base/base_url overrides still need trusted validation and independent egress controls.", "components": ["source"], "sources": ["source:s2260325bd6b8", "source:sc93fb1082e0c"], "status": "REASONED", "verify": [2]},
-    "message-logging": {"text": "turn_off_message_logging suppresses content in supported integrations while retaining operational metadata; arbitrary callbacks need separate review.", "components": ["docs"], "sources": ["docs:s1fceb11a6977"], "status": "REASONED", "verify": [2]},
-    "spend-logging": {"text": "Either store_prompts_in_spend_logs or STORE_PROMPTS_IN_SPEND_LOGS enables payload storage; YAML false does not override environment true.", "components": ["source"], "sources": ["source:s6ce39f96b246"], "status": "REASONED", "verify": [2]},
-    "debug-logging": {"text": "Avoid detailed_debug and LITELLM_LOG=DEBUG; inspect process, error, callback and proxy logs with canaries and positive log controls.", "components": ["docs"], "sources": ["docs:sdbe6ab7362a0", "docs:sf9c1840fffc9", "docs:s1fceb11a6977"], "status": "REASONED", "verify": [2]},
-    "verify-auth": {"text": "Probe backend directly: absent/wrong keys must get 401 and valid key a model list; public proxy responses alone cannot prove backend auth.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:sbe6fa0b81017"], "status": "REASONED", "verify": [1]},
-    "verify-network": {"text": "Inspect every listener and actual external backend reachability; refusal must be attributable to the intended remote path, not DNS/local errors.", "components": ["docs", "cli"], "sources": ["docs:sdbe6ab7362a0", "cli:s2c55655e39fd"], "status": "REASONED", "verify": [1]},
-    "verify-spend": {"text": "Use bounded uncached provider calls; exhaust key and aggregate team budgets separately with successful controls and record overshoot.", "components": ["docs"], "sources": ["docs:seb5042b85a02", "docs:sdc6aeba6f388"], "status": "REASONED", "verify": [2]},
-    "verify-admin": {"text": "Application key must fail a valid management request that operator credentials complete; licensed/unlicensed admin-route cases are separate.", "components": ["docs", "source"], "sources": ["docs:sfe517a7be891", "source:s6632dfcab93a"], "status": "REASONED", "verify": [2]},
-    "verify-forwarding": {"text": "Require anonymous refusal and permitted authenticated GET; wrong method/subpath must not reach the controlled upstream.", "components": ["docs", "source"], "sources": ["docs:s629597256553", "source:s4dac61a60fa2"], "status": "REASONED", "verify": [2]},
-    "verify-egress": {"text": "Compare api_base and base_url overrides separately against a controlled sink; no contact plus working pinned destination establishes the intended boundary.", "components": ["source"], "sources": ["source:s2260325bd6b8", "source:sc93fb1082e0c"], "status": "REASONED", "verify": [2]}
-  }
-}
----
 # LiteLLM proxy: master key and virtual keys
 
-<!-- version-basis:start -->
-**Version basis**
+Written against LiteLLM SSO allowance v1.76.0, LiteLLM metrics default v1.85.0, and LiteLLM CLI v1.102.1; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 51 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- docs: LiteLLM documentation (unknown)
-- source: LiteLLM source (6ef7b86748118ceecd95271727c2fa167ce55fec)
-- sso: LiteLLM SSO allowance (v1.76.0)
-- metrics: LiteLLM metrics default (v1.85.0)
-- cli: LiteLLM CLI (v1.102.1)
-
-Claims (full source mapping in the front matter):
-
-- master-file (REASONED; docs): Keep operator-only master_key in protected config.yaml, not argv/exported environment; YAML wins over environment and remains plaintext at rest.
-- startup (REASONED; docs, source): Current startup refuses missing, empty, whitespace-only or sk-1234 master keys; no first release is asserted.
-- env-override (REASONED; docs, source): LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true independently allows weak/keyless startup; retain refusal in production.
-- yaml-override (REASONED; docs, source): general_settings.dangerously_permit_weak_or_unset_master_key=true independently allows weak/keyless startup.
-- database (REASONED; docs): Virtual-key generation requires PostgreSQL via DATABASE_URL or general_settings.database_url, even with model storage disabled.
-- virtual-keys (REASONED; docs): Issue separate revocable application keys; default Authorization header is configurable via litellm_key_header_name.
-- salt (REASONED; docs): Stored virtual keys are hashed; database provider credentials are encrypted with LITELLM_SALT_KEY, falling back to master key; preserve the salt.
-- model-storage (REASONED; docs): Leave store_model_in_db false unless required; protect database credentials, backups and plaintext configuration.
-- ownership (REASONED; docs, source): Use non-admin owners with team membership; keys inherit owner authority and master keys bypass application restrictions.
-- key-models (REASONED; docs): Explicit key and team model lists intersect; models: [] means all models, not none.
-- key-budget (REASONED; docs, source): max_budget is USD and defaults null, with no key-level cap; budget_duration resets spend and does not expire the key.
-- expiry (REASONED; docs, source): duration controls lifetime separately; compare finite-key success before expiry/refusal afterward against an unexpired control.
-- rpm (REASONED; docs, source): rpm_limit limits requests per minute; test its own window and successful under-limit control across workers.
-- tpm (REASONED; docs, source): tpm_limit limits tokens per minute; RPM results do not demonstrate this limit.
-- parallel (REASONED; docs, source): max_parallel_requests limits concurrent requests; overlap a bounded workload to distinguish it from rate limits.
-- soft-budget (REASONED; docs, source): soft_budget triggers configured alerts without blocking spending.
-- teams (REASONED; docs, source): POST team/new and team/update set shared model/spend/throughput limits; attach every relevant key and add the intended owner with team/member_add.
-- shared-state (REASONED; docs): Multiple workers, even in one container, require shared Redis for limits/revocation; configure router Redis and proxy caching, not variables alone.
-- cache (REASONED; docs): The shown Redis cache configuration also caches responses; absent content logs do not imply absent cached content.
-- fail-closed (REASONED; docs): fail_closed_budget_enforcement=true returns 503 when spend cannot be verified; restore dependencies and confirm permitted work.
-- reservation (REASONED; docs): Keep reservation enabled; batch/unestimable costs and delayed or concurrent charges mean budgets are not absolute provider-spend caps.
-- delete (REASONED; docs, source): POST /key/delete permanently revokes the listed keys; removing application configuration is not revocation.
-- block (REASONED; docs, source): POST /key/block suspends and /key/unblock restores; compare each operation on every worker with replacement-key positive controls.
-- rotation (REASONED; docs, source): In-place /key/regenerate is Enterprise-gated; otherwise generate restricted replacement, deploy/test it, then delete old key while retaining team budget.
-- bind (REASONED; docs, cli): CLI defaults 0.0.0.0:4000; use --host 127.0.0.1 --port 4000 --config config.yaml behind TLS.
-- ip-filter (REASONED; docs): allowed_ips is Enterprise; otherwise ingress filtering must be enforced independently.
-- ui-login (REASONED; docs): UI_USERNAME defaults admin; without UI_PASSWORD the UI accepts the master key; remove fallback with disable_env_credential_login after personal login works.
-- ui-cookie (REASONED; docs): Set PROXY_BASE_URL to the actual HTTPS origin for Secure UI cookies and test in a fresh browser.
-- ui-disable (REASONED; docs): DISABLE_ADMIN_UI=true removes an unused UI; authorized inference must still work.
-- sso (REASONED; sso): SSO is free for up to five users from v1.76.0; more require Enterprise and bootstrap credentials still need removal.
-- mfa (REASONED; docs, sso): Human UI MFA belongs at the fronting identity layer.
-- routes (REASONED; docs, source): allowed_routes admits named paths and slash descendants, not exact path/method pairs; narrow at ingress where required.
-- admin-routes (REASONED; docs, source): admin_only_routes uses exact matches, not /key/*; without Enterprise source logs an error and skips this additional check.
-- health-live (REASONED; docs): Liveliness/liveness and readiness are unauthenticated; their success proves no inference authentication.
-- health-paid (REASONED; docs): /health is authenticated with key auth and runs potentially paid model probes; keep it private.
-- docs (REASONED; source, docs): Docs are public by default; clear DOCS_URL/REDOC_URL/OPENAPI_URL and set NO_DOCS/NO_REDOC/NO_OPENAPI in actual startup environment; explicit URLs win.
-- metrics-proxy (REASONED; metrics, docs): Proxy-port /metrics defaults authenticated, confirmed in v1.85.0; require_auth_for_metrics_endpoint=false reopens it.
-- metrics-port (REASONED; docs): PROMETHEUS_METRICS_PORT can create a separate unauthenticated listener; proxy-port auth does not cover it, so isolate collectors.
-- passthrough-auth (REASONED; docs, source): Docs call pass-through auth Enterprise, but pinned main attaches auth without a licence gate; verify the installed release.
-- passthrough-authorization (REASONED; source): Non-admin callers also need allowed_passthrough_routes metadata; allowed_routes alone is insufficient and normal metadata provisioning is Enterprise-gated.
-- passthrough-policy (REASONED; docs, source): Optional forwarder pins target, auth, GET-only, no subpaths and no wholesale incoming-header forwarding; omit unused forwarders.
-- destinations (REASONED; source): Pin api_base/target and control who changes them; caller api_base/base_url overrides still need trusted validation and independent egress controls.
-- message-logging (REASONED; docs): turn_off_message_logging suppresses content in supported integrations while retaining operational metadata; arbitrary callbacks need separate review.
-- spend-logging (REASONED; source): Either store_prompts_in_spend_logs or STORE_PROMPTS_IN_SPEND_LOGS enables payload storage; YAML false does not override environment true.
-- debug-logging (REASONED; docs): Avoid detailed_debug and LITELLM_LOG=DEBUG; inspect process, error, callback and proxy logs with canaries and positive log controls.
-- verify-auth (REASONED; docs, source): Probe backend directly: absent/wrong keys must get 401 and valid key a model list; public proxy responses alone cannot prove backend auth.
-- verify-network (REASONED; docs, cli): Inspect every listener and actual external backend reachability; refusal must be attributable to the intended remote path, not DNS/local errors.
-- verify-spend (REASONED; docs): Use bounded uncached provider calls; exhaust key and aggregate team budgets separately with successful controls and record overshoot.
-- verify-admin (REASONED; docs, source): Application key must fail a valid management request that operator credentials complete; licensed/unlicensed admin-route cases are separate.
-- verify-forwarding (REASONED; docs, source): Require anonymous refusal and permitted authenticated GET; wrong method/subpath must not reach the controlled upstream.
-- verify-egress (REASONED; source): Compare api_base and base_url overrides separately against a controlled sink; no contact plus working pinned destination establishes the intended boundary.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 A LiteLLM proxy fronts paid model APIs, so an exposed, keyless instance spends your provider credits for whoever finds it. Authentication is built in and must be switched on before anything else.
 
@@ -632,3 +442,219 @@ The checks below remain REASONED from the cited LiteLLM documentation and pinned
 - [LiteLLM premium metadata fields: allowed_passthrough_routes](https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/_types.py).
 - [LiteLLM metadata setter: Enterprise licence enforcement](https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/management_endpoints/common_utils.py).
 - [LiteLLM proxy CLI `--host` default `0.0.0.0` (pinned tag v1.102.1)](https://github.com/BerriAI/litellm/blob/v1.102.1/litellm/proxy/proxy_cli.py#L666-L667)
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/litellm.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- docs: LiteLLM documentation (unknown)
+- source: LiteLLM source (6ef7b86748118ceecd95271727c2fa167ce55fec)
+- sso: LiteLLM SSO allowance (v1.76.0)
+- metrics: LiteLLM metrics default (v1.85.0)
+- cli: LiteLLM CLI (v1.102.1)
+
+Claims (full source mapping in the JSON block below):
+
+- master-file (REASONED; docs): Keep operator-only master_key in protected config.yaml, not argv/exported environment; YAML wins over environment and remains plaintext at rest.
+- startup (REASONED; docs, source): Current startup refuses missing, empty, whitespace-only or sk-1234 master keys; no first release is asserted.
+- env-override (REASONED; docs, source): LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true independently allows weak/keyless startup; retain refusal in production.
+- yaml-override (REASONED; docs, source): general_settings.dangerously_permit_weak_or_unset_master_key=true independently allows weak/keyless startup.
+- database (REASONED; docs): Virtual-key generation requires PostgreSQL via DATABASE_URL or general_settings.database_url, even with model storage disabled.
+- virtual-keys (REASONED; docs): Issue separate revocable application keys; default Authorization header is configurable via litellm_key_header_name.
+- salt (REASONED; docs): Stored virtual keys are hashed; database provider credentials are encrypted with LITELLM_SALT_KEY, falling back to master key; preserve the salt.
+- model-storage (REASONED; docs): Leave store_model_in_db false unless required; protect database credentials, backups and plaintext configuration.
+- ownership (REASONED; docs, source): Use non-admin owners with team membership; keys inherit owner authority and master keys bypass application restrictions.
+- key-models (REASONED; docs): Explicit key and team model lists intersect; models: [] means all models, not none.
+- key-budget (REASONED; docs, source): max_budget is USD and defaults null, with no key-level cap; budget_duration resets spend and does not expire the key.
+- expiry (REASONED; docs, source): duration controls lifetime separately; compare finite-key success before expiry/refusal afterward against an unexpired control.
+- rpm (REASONED; docs, source): rpm_limit limits requests per minute; test its own window and successful under-limit control across workers.
+- tpm (REASONED; docs, source): tpm_limit limits tokens per minute; RPM results do not demonstrate this limit.
+- parallel (REASONED; docs, source): max_parallel_requests limits concurrent requests; overlap a bounded workload to distinguish it from rate limits.
+- soft-budget (REASONED; docs, source): soft_budget triggers configured alerts without blocking spending.
+- teams (REASONED; docs, source): POST team/new and team/update set shared model/spend/throughput limits; attach every relevant key and add the intended owner with team/member_add.
+- shared-state (REASONED; docs): Multiple workers, even in one container, require shared Redis for limits/revocation; configure router Redis and proxy caching, not variables alone.
+- cache (REASONED; docs): The shown Redis cache configuration also caches responses; absent content logs do not imply absent cached content.
+- fail-closed (REASONED; docs): fail_closed_budget_enforcement=true returns 503 when spend cannot be verified; restore dependencies and confirm permitted work.
+- reservation (REASONED; docs): Keep reservation enabled; batch/unestimable costs and delayed or concurrent charges mean budgets are not absolute provider-spend caps.
+- delete (REASONED; docs, source): POST /key/delete permanently revokes the listed keys; removing application configuration is not revocation.
+- block (REASONED; docs, source): POST /key/block suspends and /key/unblock restores; compare each operation on every worker with replacement-key positive controls.
+- rotation (REASONED; docs, source): In-place /key/regenerate is Enterprise-gated; otherwise generate restricted replacement, deploy/test it, then delete old key while retaining team budget.
+- bind (REASONED; docs, cli): CLI defaults 0.0.0.0:4000; use --host 127.0.0.1 --port 4000 --config config.yaml behind TLS.
+- ip-filter (REASONED; docs): allowed_ips is Enterprise; otherwise ingress filtering must be enforced independently.
+- ui-login (REASONED; docs): UI_USERNAME defaults admin; without UI_PASSWORD the UI accepts the master key; remove fallback with disable_env_credential_login after personal login works.
+- ui-cookie (REASONED; docs): Set PROXY_BASE_URL to the actual HTTPS origin for Secure UI cookies and test in a fresh browser.
+- ui-disable (REASONED; docs): DISABLE_ADMIN_UI=true removes an unused UI; authorized inference must still work.
+- sso (REASONED; sso): SSO is free for up to five users from v1.76.0; more require Enterprise and bootstrap credentials still need removal.
+- mfa (REASONED; docs, sso): Human UI MFA belongs at the fronting identity layer.
+- routes (REASONED; docs, source): allowed_routes admits named paths and slash descendants, not exact path/method pairs; narrow at ingress where required.
+- admin-routes (REASONED; docs, source): admin_only_routes uses exact matches, not /key/*; without Enterprise source logs an error and skips this additional check.
+- health-live (REASONED; docs): Liveliness/liveness and readiness are unauthenticated; their success proves no inference authentication.
+- health-paid (REASONED; docs): /health is authenticated with key auth and runs potentially paid model probes; keep it private.
+- docs (REASONED; source, docs): Docs are public by default; clear DOCS_URL/REDOC_URL/OPENAPI_URL and set NO_DOCS/NO_REDOC/NO_OPENAPI in actual startup environment; explicit URLs win.
+- metrics-proxy (REASONED; metrics, docs): Proxy-port /metrics defaults authenticated, confirmed in v1.85.0; require_auth_for_metrics_endpoint=false reopens it.
+- metrics-port (REASONED; docs): PROMETHEUS_METRICS_PORT can create a separate unauthenticated listener; proxy-port auth does not cover it, so isolate collectors.
+- passthrough-auth (REASONED; docs, source): Docs call pass-through auth Enterprise, but pinned main attaches auth without a licence gate; verify the installed release.
+- passthrough-authorization (REASONED; source): Non-admin callers also need allowed_passthrough_routes metadata; allowed_routes alone is insufficient and normal metadata provisioning is Enterprise-gated.
+- passthrough-policy (REASONED; docs, source): Optional forwarder pins target, auth, GET-only, no subpaths and no wholesale incoming-header forwarding; omit unused forwarders.
+- destinations (REASONED; source): Pin api_base/target and control who changes them; caller api_base/base_url overrides still need trusted validation and independent egress controls.
+- message-logging (REASONED; docs): turn_off_message_logging suppresses content in supported integrations while retaining operational metadata; arbitrary callbacks need separate review.
+- spend-logging (REASONED; source): Either store_prompts_in_spend_logs or STORE_PROMPTS_IN_SPEND_LOGS enables payload storage; YAML false does not override environment true.
+- debug-logging (REASONED; docs): Avoid detailed_debug and LITELLM_LOG=DEBUG; inspect process, error, callback and proxy logs with canaries and positive log controls.
+- verify-auth (REASONED; docs, source): Probe backend directly: absent/wrong keys must get 401 and valid key a model list; public proxy responses alone cannot prove backend auth.
+- verify-network (REASONED; docs, cli): Inspect every listener and actual external backend reachability; refusal must be attributable to the intended remote path, not DNS/local errors.
+- verify-spend (REASONED; docs): Use bounded uncached provider calls; exhaust key and aggregate team budgets separately with successful controls and record overshoot.
+- verify-admin (REASONED; docs, source): Application key must fail a valid management request that operator credentials complete; licensed/unlicensed admin-route cases are separate.
+- verify-forwarding (REASONED; docs, source): Require anonymous refusal and permitted authenticated GET; wrong method/subpath must not reach the controlled upstream.
+- verify-egress (REASONED; source): Compare api_base and base_url overrides separately against a controlled sink; no contact plus working pinned destination establishes the intended boundary.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "2a5e3014404a2d45329664d113112b9a482ab9426c3c2c0da18d404541b2b3e6",
+  "components": {
+    "docs": {
+      "name": "LiteLLM documentation",
+      "basis": "unknown",
+      "sources": {
+        "s135f0dce83d9": "https://docs.litellm.ai/docs/proxy/virtual_keys",
+        "s66efd69f5587": "https://docs.litellm.ai/docs/proxy/master_key_rotations",
+        "sf9c1840fffc9": "https://docs.litellm.ai/docs/proxy/config_settings",
+        "sfe517a7be891": "https://docs.litellm.ai/docs/proxy/access_control",
+        "s038950d49558": "https://docs.litellm.ai/docs/proxy/key_auth_arch",
+        "seb5042b85a02": "https://docs.litellm.ai/docs/proxy/users",
+        "sdc6aeba6f388": "https://docs.litellm.ai/docs/proxy/team_budgets",
+        "s26fc2080e183": "https://docs.litellm.ai/docs/proxy/redis_requirements",
+        "sdbe6ab7362a0": "https://docs.litellm.ai/docs/proxy/cli",
+        "sc420b1851bf6": "https://docs.litellm.ai/docs/proxy/ip_address",
+        "sb980affae79d": "https://docs.litellm.ai/docs/proxy/ui",
+        "se991dc6f2424": "https://docs.litellm.ai/docs/proxy/security_best_practices",
+        "sb3839a335288": "https://docs.litellm.ai/docs/proxy/public_routes",
+        "sa6aaab9c250a": "https://docs.litellm.ai/docs/proxy/health",
+        "sf84e8bdc2a9c": "https://docs.litellm.ai/docs/proxy/prometheus",
+        "s629597256553": "https://docs.litellm.ai/docs/proxy/pass_through",
+        "s1fceb11a6977": "https://docs.litellm.ai/docs/proxy/logging"
+      }
+    },
+    "source": {
+      "name": "LiteLLM source",
+      "basis": "6ef7b86748118ceecd95271727c2fa167ce55fec",
+      "sources": {
+        "s7960d883e823": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/proxy_server.py",
+        "sbe6fa0b81017": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/user_api_key_auth.py",
+        "s6dca7e865d4f": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/_types.py",
+        "s801396dd889f": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/management_endpoints/key_management_endpoints.py",
+        "s6632dfcab93a": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/route_checks.py",
+        "scf988bc26d27": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/utils.py",
+        "s4dac61a60fa2": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/pass_through_endpoints/pass_through_endpoints.py",
+        "sd13121968bd0": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/management_endpoints/common_utils.py",
+        "s2260325bd6b8": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/route_llm_request.py",
+        "sc93fb1082e0c": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/main.py",
+        "s6ce39f96b246": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/spend_tracking/spend_tracking_utils.py"
+      }
+    },
+    "sso": {
+      "name": "LiteLLM SSO allowance",
+      "basis": "v1.76.0",
+      "sources": {
+        "s683431f972f9": "https://docs.litellm.ai/docs/proxy/admin_ui_sso"
+      }
+    },
+    "metrics": {
+      "name": "LiteLLM metrics default",
+      "basis": "v1.85.0",
+      "sources": {
+        "s7ae2561db315": "https://raw.githubusercontent.com/BerriAI/litellm/v1.85.0/litellm/__init__.py"
+      }
+    },
+    "cli": {
+      "name": "LiteLLM CLI",
+      "basis": "v1.102.1",
+      "sources": {
+        "s2c55655e39fd": "https://github.com/BerriAI/litellm/blob/v1.102.1/litellm/proxy/proxy_cli.py#L666-L667"
+      }
+    }
+  },
+  "claims": {
+    "master-file": {"text": "Keep operator-only master_key in protected config.yaml, not argv/exported environment; YAML wins over environment and remains plaintext at rest.", "components": ["docs"], "sources": ["docs:s135f0dce83d9", "docs:s66efd69f5587"], "status": "REASONED"},
+    "startup": {"text": "Current startup refuses missing, empty, whitespace-only or sk-1234 master keys; no first release is asserted.", "components": ["docs", "source"], "sources": ["docs:s66efd69f5587", "source:s7960d883e823"], "status": "REASONED"},
+    "env-override": {"text": "LITELLM_DANGEROUSLY_PERMIT_WEAK_OR_UNSET_MASTER_KEY=true independently allows weak/keyless startup; retain refusal in production.", "components": ["docs", "source"], "sources": ["docs:s66efd69f5587", "source:s7960d883e823"], "status": "REASONED"},
+    "yaml-override": {"text": "general_settings.dangerously_permit_weak_or_unset_master_key=true independently allows weak/keyless startup.", "components": ["docs", "source"], "sources": ["docs:s66efd69f5587", "source:s7960d883e823"], "status": "REASONED"},
+    "database": {"text": "Virtual-key generation requires PostgreSQL via DATABASE_URL or general_settings.database_url, even with model storage disabled.", "components": ["docs"], "sources": ["docs:s135f0dce83d9", "docs:sf9c1840fffc9"], "status": "REASONED"},
+    "virtual-keys": {"text": "Issue separate revocable application keys; default Authorization header is configurable via litellm_key_header_name.", "components": ["docs"], "sources": ["docs:s135f0dce83d9"], "status": "REASONED"},
+    "salt": {"text": "Stored virtual keys are hashed; database provider credentials are encrypted with LITELLM_SALT_KEY, falling back to master key; preserve the salt.", "components": ["docs"], "sources": ["docs:sf9c1840fffc9"], "status": "REASONED"},
+    "model-storage": {"text": "Leave store_model_in_db false unless required; protect database credentials, backups and plaintext configuration.", "components": ["docs"], "sources": ["docs:sf9c1840fffc9"], "status": "REASONED"},
+    "ownership": {"text": "Use non-admin owners with team membership; keys inherit owner authority and master keys bypass application restrictions.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:sbe6fa0b81017", "docs:sfe517a7be891"], "status": "REASONED", "verify": [2]},
+    "key-models": {"text": "Explicit key and team model lists intersect; models: [] means all models, not none.", "components": ["docs"], "sources": ["docs:s038950d49558"], "status": "REASONED", "verify": [2]},
+    "key-budget": {"text": "max_budget is USD and defaults null, with no key-level cap; budget_duration resets spend and does not expire the key.", "components": ["docs", "source"], "sources": ["docs:seb5042b85a02", "source:s6dca7e865d4f"], "status": "REASONED", "verify": [2]},
+    "expiry": {"text": "duration controls lifetime separately; compare finite-key success before expiry/refusal afterward against an unexpired control.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s6dca7e865d4f"], "status": "REASONED", "verify": [2]},
+    "rpm": {"text": "rpm_limit limits requests per minute; test its own window and successful under-limit control across workers.", "components": ["docs", "source"], "sources": ["docs:seb5042b85a02", "source:s6dca7e865d4f"], "status": "REASONED", "verify": [2]},
+    "tpm": {"text": "tpm_limit limits tokens per minute; RPM results do not demonstrate this limit.", "components": ["docs", "source"], "sources": ["docs:seb5042b85a02", "source:s6dca7e865d4f"], "status": "REASONED", "verify": [2]},
+    "parallel": {"text": "max_parallel_requests limits concurrent requests; overlap a bounded workload to distinguish it from rate limits.", "components": ["docs", "source"], "sources": ["docs:seb5042b85a02", "source:s6dca7e865d4f"], "status": "REASONED", "verify": [2]},
+    "soft-budget": {"text": "soft_budget triggers configured alerts without blocking spending.", "components": ["docs", "source"], "sources": ["docs:seb5042b85a02", "source:s6dca7e865d4f"], "status": "REASONED"},
+    "teams": {"text": "POST team/new and team/update set shared model/spend/throughput limits; attach every relevant key and add the intended owner with team/member_add.", "components": ["docs", "source"], "sources": ["docs:sdc6aeba6f388", "docs:seb5042b85a02", "source:s6dca7e865d4f"], "status": "REASONED", "verify": [2]},
+    "shared-state": {"text": "Multiple workers, even in one container, require shared Redis for limits/revocation; configure router Redis and proxy caching, not variables alone.", "components": ["docs"], "sources": ["docs:s26fc2080e183"], "status": "REASONED"},
+    "cache": {"text": "The shown Redis cache configuration also caches responses; absent content logs do not imply absent cached content.", "components": ["docs"], "sources": ["docs:s26fc2080e183", "docs:sf9c1840fffc9"], "status": "REASONED"},
+    "fail-closed": {"text": "fail_closed_budget_enforcement=true returns 503 when spend cannot be verified; restore dependencies and confirm permitted work.", "components": ["docs"], "sources": ["docs:seb5042b85a02"], "status": "REASONED", "verify": [2]},
+    "reservation": {"text": "Keep reservation enabled; batch/unestimable costs and delayed or concurrent charges mean budgets are not absolute provider-spend caps.", "components": ["docs"], "sources": ["docs:seb5042b85a02"], "status": "REASONED"},
+    "delete": {"text": "POST /key/delete permanently revokes the listed keys; removing application configuration is not revocation.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s801396dd889f"], "status": "REASONED", "verify": [2]},
+    "block": {"text": "POST /key/block suspends and /key/unblock restores; compare each operation on every worker with replacement-key positive controls.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s801396dd889f", "docs:s26fc2080e183"], "status": "REASONED", "verify": [2]},
+    "rotation": {"text": "In-place /key/regenerate is Enterprise-gated; otherwise generate restricted replacement, deploy/test it, then delete old key while retaining team budget.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s801396dd889f"], "status": "REASONED"},
+    "bind": {"text": "CLI defaults 0.0.0.0:4000; use --host 127.0.0.1 --port 4000 --config config.yaml behind TLS.", "components": ["docs", "cli"], "sources": ["docs:sdbe6ab7362a0", "cli:s2c55655e39fd"], "status": "REASONED", "verify": [1]},
+    "ip-filter": {"text": "allowed_ips is Enterprise; otherwise ingress filtering must be enforced independently.", "components": ["docs"], "sources": ["docs:sc420b1851bf6"], "status": "REASONED"},
+    "ui-login": {"text": "UI_USERNAME defaults admin; without UI_PASSWORD the UI accepts the master key; remove fallback with disable_env_credential_login after personal login works.", "components": ["docs"], "sources": ["docs:sb980affae79d"], "status": "REASONED", "verify": [2]},
+    "ui-cookie": {"text": "Set PROXY_BASE_URL to the actual HTTPS origin for Secure UI cookies and test in a fresh browser.", "components": ["docs"], "sources": ["docs:se991dc6f2424"], "status": "REASONED", "verify": [2]},
+    "ui-disable": {"text": "DISABLE_ADMIN_UI=true removes an unused UI; authorized inference must still work.", "components": ["docs"], "sources": ["docs:sb980affae79d"], "status": "REASONED", "verify": [2]},
+    "sso": {"text": "SSO is free for up to five users from v1.76.0; more require Enterprise and bootstrap credentials still need removal.", "components": ["sso"], "sources": ["sso:s683431f972f9"], "status": "REASONED"},
+    "mfa": {"text": "Human UI MFA belongs at the fronting identity layer.", "components": ["docs", "sso"], "sources": ["docs:se991dc6f2424", "sso:s683431f972f9"], "status": "REASONED"},
+    "routes": {"text": "allowed_routes admits named paths and slash descendants, not exact path/method pairs; narrow at ingress where required.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:s6632dfcab93a"], "status": "REASONED"},
+    "admin-routes": {"text": "admin_only_routes uses exact matches, not /key/*; without Enterprise source logs an error and skips this additional check.", "components": ["docs", "source"], "sources": ["docs:sb3839a335288", "source:s6632dfcab93a"], "status": "REASONED", "verify": [2]},
+    "health-live": {"text": "Liveliness/liveness and readiness are unauthenticated; their success proves no inference authentication.", "components": ["docs"], "sources": ["docs:sa6aaab9c250a"], "status": "REASONED", "verify": [2]},
+    "health-paid": {"text": "/health is authenticated with key auth and runs potentially paid model probes; keep it private.", "components": ["docs"], "sources": ["docs:sa6aaab9c250a"], "status": "REASONED"},
+    "docs": {"text": "Docs are public by default; clear DOCS_URL/REDOC_URL/OPENAPI_URL and set NO_DOCS/NO_REDOC/NO_OPENAPI in actual startup environment; explicit URLs win.", "components": ["source", "docs"], "sources": ["source:scf988bc26d27", "docs:sf9c1840fffc9"], "status": "REASONED", "verify": [2]},
+    "metrics-proxy": {"text": "Proxy-port /metrics defaults authenticated, confirmed in v1.85.0; require_auth_for_metrics_endpoint=false reopens it.", "components": ["metrics", "docs"], "sources": ["metrics:s7ae2561db315", "docs:sf84e8bdc2a9c", "docs:sf9c1840fffc9"], "status": "REASONED", "verify": [2]},
+    "metrics-port": {"text": "PROMETHEUS_METRICS_PORT can create a separate unauthenticated listener; proxy-port auth does not cover it, so isolate collectors.", "components": ["docs"], "sources": ["docs:sf84e8bdc2a9c"], "status": "REASONED", "verify": [2]},
+    "passthrough-auth": {"text": "Docs call pass-through auth Enterprise, but pinned main attaches auth without a licence gate; verify the installed release.", "components": ["docs", "source"], "sources": ["docs:s629597256553", "source:s4dac61a60fa2"], "status": "REASONED"},
+    "passthrough-authorization": {"text": "Non-admin callers also need allowed_passthrough_routes metadata; allowed_routes alone is insufficient and normal metadata provisioning is Enterprise-gated.", "components": ["source"], "sources": ["source:s6632dfcab93a", "source:s6dca7e865d4f", "source:sd13121968bd0"], "status": "REASONED"},
+    "passthrough-policy": {"text": "Optional forwarder pins target, auth, GET-only, no subpaths and no wholesale incoming-header forwarding; omit unused forwarders.", "components": ["docs", "source"], "sources": ["docs:s629597256553", "source:s4dac61a60fa2"], "status": "REASONED", "verify": [2]},
+    "destinations": {"text": "Pin api_base/target and control who changes them; caller api_base/base_url overrides still need trusted validation and independent egress controls.", "components": ["source"], "sources": ["source:s2260325bd6b8", "source:sc93fb1082e0c"], "status": "REASONED", "verify": [2]},
+    "message-logging": {"text": "turn_off_message_logging suppresses content in supported integrations while retaining operational metadata; arbitrary callbacks need separate review.", "components": ["docs"], "sources": ["docs:s1fceb11a6977"], "status": "REASONED", "verify": [2]},
+    "spend-logging": {"text": "Either store_prompts_in_spend_logs or STORE_PROMPTS_IN_SPEND_LOGS enables payload storage; YAML false does not override environment true.", "components": ["source"], "sources": ["source:s6ce39f96b246"], "status": "REASONED", "verify": [2]},
+    "debug-logging": {"text": "Avoid detailed_debug and LITELLM_LOG=DEBUG; inspect process, error, callback and proxy logs with canaries and positive log controls.", "components": ["docs"], "sources": ["docs:sdbe6ab7362a0", "docs:sf9c1840fffc9", "docs:s1fceb11a6977"], "status": "REASONED", "verify": [2]},
+    "verify-auth": {"text": "Probe backend directly: absent/wrong keys must get 401 and valid key a model list; public proxy responses alone cannot prove backend auth.", "components": ["docs", "source"], "sources": ["docs:s135f0dce83d9", "source:sbe6fa0b81017"], "status": "REASONED", "verify": [1]},
+    "verify-network": {"text": "Inspect every listener and actual external backend reachability; refusal must be attributable to the intended remote path, not DNS/local errors.", "components": ["docs", "cli"], "sources": ["docs:sdbe6ab7362a0", "cli:s2c55655e39fd"], "status": "REASONED", "verify": [1]},
+    "verify-spend": {"text": "Use bounded uncached provider calls; exhaust key and aggregate team budgets separately with successful controls and record overshoot.", "components": ["docs"], "sources": ["docs:seb5042b85a02", "docs:sdc6aeba6f388"], "status": "REASONED", "verify": [2]},
+    "verify-admin": {"text": "Application key must fail a valid management request that operator credentials complete; licensed/unlicensed admin-route cases are separate.", "components": ["docs", "source"], "sources": ["docs:sfe517a7be891", "source:s6632dfcab93a"], "status": "REASONED", "verify": [2]},
+    "verify-forwarding": {"text": "Require anonymous refusal and permitted authenticated GET; wrong method/subpath must not reach the controlled upstream.", "components": ["docs", "source"], "sources": ["docs:s629597256553", "source:s4dac61a60fa2"], "status": "REASONED", "verify": [2]},
+    "verify-egress": {"text": "Compare api_base and base_url overrides separately against a controlled sink; no contact plus working pinned destination establishes the intended boundary.", "components": ["source"], "sources": ["source:s2260325bd6b8", "source:sc93fb1082e0c"], "status": "REASONED", "verify": [2]}
+  }
+}
+````
+<!-- version-basis:end -->

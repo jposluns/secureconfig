@@ -1,222 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-05",
-  "documentation_checked": "2026-10",
-  "body_sha256": "73b1d3529e9fdfcd23efa56ade3bf305d2e5d39c8844da14cbcb843de2ef6dc9",
-  "components": {
-    "docs": {
-      "name": "Mosquitto documentation",
-      "basis": "unknown",
-      "sources": {
-        "s4d96861c4f39": "https://mosquitto.org/documentation/migrating-to-2-0/",
-        "s66b826cab3e9": "https://mosquitto.org/documentation/listeners/per-listener-settings/",
-        "sddca3657b9c1": "https://mosquitto.org/man/mosquitto_passwd-1.html",
-        "s9aa3260c5b79": "https://mosquitto.org/documentation/authentication-methods/",
-        "s1791866ca31b": "https://mosquitto.org/man/mosquitto-conf-5.html",
-        "s280527f289d0": "https://mosquitto.org/documentation/plugins/acl-file/",
-        "sd34bd50f5f0f": "https://mosquitto.org/man/mosquitto-8.html",
-        "s6711164e3e5f": "https://mosquitto.org/man/mosquitto_sub-1.html",
-        "s1476cea737a4": "https://mosquitto.org/man/mosquitto_pub-1.html"
-      }
-    },
-    "v20": {
-      "name": "Mosquitto",
-      "basis": "v2.0.22",
-      "sources": {
-        "se7823193963b": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/man/mosquitto.conf.5.xml",
-        "s10aff5e66af1": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/mosquitto.conf",
-        "s06316e74cf90": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/security_default.c",
-        "s0705841d4141": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/mosquitto.conf",
-        "s1f256b35dde7": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/conf.c",
-        "sa4ab07ef74c3": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/handle_publish.c",
-        "se4dab27858b2": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/lib/packet_mosq.c",
-        "s1172d84efc29": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/websockets.c",
-        "saf5cd7c6f12b": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/session_expiry.c",
-        "saff73f3b983e": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/handle_connect.c#L120-L133",
-        "sa116e59b51a4": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/security.c#L691-L693"
-      }
-    },
-    "library": {
-      "name": "Mosquitto image catalogue",
-      "basis": "920b00976e6e8335bab0a3fd293b95b6b2404ce3",
-      "sources": {
-        "s0d99329a59ae": "https://github.com/docker-library/official-images/blob/920b00976e6e8335bab0a3fd293b95b6b2404ce3/library/eclipse-mosquitto#L3-L13"
-      }
-    },
-    "image": {
-      "name": "Mosquitto image source",
-      "basis": "5b74cce8a4fe2a73b57df6c703bfde2cfd535d60",
-      "sources": {
-        "sdfa81718b7ff": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L30",
-        "s38217a9ac8cc": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L77-L80",
-        "see5ae9bc6aa9": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L99-L101",
-        "s90852e30653e": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/mosquitto.conf",
-        "s2653cf87d9d0": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/docker-entrypoint.sh",
-        "s48d123c4c6d9": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/README.md#L27-L28",
-        "s270129425e74": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/1.6-openssl/Dockerfile#L66",
-        "sd127367f6308": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.0-openssl/Dockerfile#L69"
-      }
-    },
-    "v21": {
-      "name": "Mosquitto",
-      "basis": "v2.1.2",
-      "sources": {
-        "s539d2574fc70": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/net.c#L815-L918",
-        "s7f6c7c2e6cff": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L449-L545",
-        "sca7b250a1900": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L160-L163",
-        "s9c9708acb8f8": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L224",
-        "sedb9b3beddce": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L251",
-        "s5fbac0184a26": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L336-L378",
-        "sd54804631b53": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/conf.c#L2001",
-        "sb292974b4326": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/listeners.c#L27-L42",
-        "s7d30df48bf91": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_basic_auth.c#L56-L113",
-        "sfe5a6152e92f": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_acl_check.c#L141-L201",
-        "s12077f64a53c": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/man/mosquitto.conf.5.xml#L1663-L1671",
-        "sfe6c64ab8f91": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/plugins/acl-file/acl_check.c",
-        "sd5c8a4af302f": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/conf.c",
-        "s2ad092f62c47": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/client/sub_client.c",
-        "s36fbdb22e941": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/websockets.c#L296-L324",
-        "s77ce3e259e2e": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/ChangeLog.txt#L14-L27",
-        "sccb5a918eab8": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_acl_check.c#L149-L151",
-        "sac794dfa8179": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/bridge_topic.c"
-      }
-    },
-    "v16": {
-      "name": "Mosquitto legacy",
-      "basis": "v1.6.15",
-      "sources": {
-        "scddf9e86ad6b": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/src/conf.c#L420-L468",
-        "seb5311de9f93": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/src/net.c#L605-L690",
-        "sbfaf2572ea61": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/man/mosquitto.conf.5.xml#L167-L185",
-        "s0d1a10094e93": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/mosquitto.conf"
-      }
-    },
-    "release-notes": {
-      "name": "Mosquitto release announcements",
-      "basis": "unknown",
-      "sources": {
-        "s0c9ec2d6b65b": "https://mosquitto.org/blog/2026/01/version-2-1-0-released/",
-        "s5529605a6416": "https://mosquitto.org/blog/2020/12/version-2-0-0-released/"
-      }
-    }
-  },
-  "claims": {
-    "loopback-default": {"text": "2.0+ without listeners binds loopback and permits anonymous clients; it is not authenticated.", "components": ["docs"], "sources": ["docs:s4d96861c4f39"], "status": "REASONED"},
-    "listener-default": {"text": "Explicit 2.0 listeners default to rejecting unauthenticated clients; an unspecified bind address is wildcard.", "components": ["docs", "v20"], "sources": ["docs:s4d96861c4f39", "v20:se7823193963b"], "status": "REASONED"},
-    "image21": {"text": "Recorded 2.1.2 Alpine tags ship anonymous MQTT 1883 and HTTP API/dashboard 9883; override configuration and restrict publication.", "components": ["library", "image"], "sources": ["library:s0d99329a59ae", "image:sdfa81718b7ff", "image:s38217a9ac8cc", "image:see5ae9bc6aa9", "image:s90852e30653e", "image:s2653cf87d9d0", "image:s48d123c4c6d9"], "status": "REASONED"},
-    "image-api": {"text": "2.1.2 HTTP API uses a dual-stack socket and exposes systree/listeners JSON and version text without shipped credentials/ACLs.", "components": ["v21"], "sources": ["v21:s539d2574fc70", "v21:s7f6c7c2e6cff", "v21:sca7b250a1900", "v21:s9c9708acb8f8", "v21:sedb9b3beddce", "v21:s5fbac0184a26", "v21:sd54804631b53", "v21:sb292974b4326", "v21:s7d30df48bf91", "v21:sfe5a6152e92f", "v21:s12077f64a53c"], "status": "REASONED"},
-    "image16": {"text": "Recorded 1.6.15 image tags ship commented upstream config: wildcard 1883 and anonymous access.", "components": ["image", "v16"], "sources": ["image:s270129425e74", "v16:scddf9e86ad6b", "v16:seb5311de9f93", "v16:sbfaf2572ea61", "v16:s0d1a10094e93"], "status": "REASONED"},
-    "image20": {"text": "Recorded 2.0.22 image tags ship commented upstream config and retain loopback-only defaults.", "components": ["image", "v20"], "sources": ["image:sd127367f6308", "v20:s10aff5e66af1"], "status": "REASONED"},
-    "deprecation": {"text": "File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0.", "components": ["docs", "release-notes"], "sources": ["release-notes:s0c9ec2d6b65b", "docs:s66b826cab3e9"], "status": "REASONED"},
-    "password-file": {"text": "Prompt for distinct device credentials; -c overwrites, and -D edits the file without terminating connections by itself.", "components": ["docs"], "sources": ["docs:sddca3657b9c1", "docs:s9aa3260c5b79"], "status": "REASONED"},
-    "reload": {"text": "Reload changed credentials/ACLs; manual says connections unaffected, but 2.0.22 rechecks credentials; confirm deployed termination.", "components": ["docs", "v20"], "sources": ["docs:s9aa3260c5b79", "v20:s06316e74cf90"], "status": "REASONED"},
-    "shared-policy": {"text": "per_listener_settings false shares authentication/ACL policy; flipping it is neither separation nor 2.1 migration.", "components": ["v20"], "sources": ["v20:s0705841d4141", "v20:se7823193963b"], "status": "REASONED"},
-    "tls": {"text": "8883 TLS needs CA/certificate/key; optional require_certificate adds machine possession, not human MFA.", "components": ["docs", "v20"], "sources": ["docs:s1791866ca31b", "v20:se7823193963b"], "status": "REASONED"},
-    "listener-apply": {"text": "Remove/firewall plaintext; confirm include_dir and restart for listener changes, which reload does not apply.", "components": ["docs"], "sources": ["docs:s1791866ca31b", "docs:s4d96861c4f39"], "status": "REASONED"},
-    "acl-default": {"text": "Password authentication alone leaves application topics unrestricted without an authorization mechanism.", "components": ["docs", "v20"], "sources": ["docs:s9aa3260c5b79", "v20:s06316e74cf90"], "status": "REASONED"},
-    "acl-users": {"text": "Unlisted access is denied; user means username; pre-user topic rules apply only to anonymous clients.", "components": ["docs", "v20"], "sources": ["docs:s280527f289d0", "v20:s06316e74cf90"], "status": "REASONED"},
-    "acl-patterns": {"text": "Patterns apply to all users; %u/%c must occupy a whole topic level; prefer authenticated usernames over chosen client IDs.", "components": ["docs"], "sources": ["docs:s280527f289d0"], "status": "REASONED"},
-    "sys": {"text": "deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it.", "components": ["docs", "release-notes"], "sources": ["release-notes:s5529605a6416", "docs:sd34bd50f5f0f"], "status": "REASONED"},
-    "subscription": {"text": "File ACLs filter message access, not SUBSCRIBE acceptance; accepted # alone is no bypass.", "components": ["v20", "v21"], "sources": ["v20:s06316e74cf90", "v21:sfe6c64ab8f91"], "status": "REASONED"},
-    "connection-default": {"text": "Per-listener max_connections defaults to -1, unlimited by this setting.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
-    "packet-default": {"text": "max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20.", "components": ["v20", "v21", "release-notes"], "sources": ["v20:s1f256b35dde7", "v21:sd5c8a4af302f", "release-notes:s0c9ec2d6b65b"], "status": "REASONED"},
-    "payload-default": {"text": "message_size_limit defaults to 0; payload rejection follows reception and completes QoS acknowledgements.", "components": ["v20"], "sources": ["v20:s0705841d4141", "v20:sa4ab07ef74c3"], "status": "REASONED"},
-    "inflight-default": {"text": "max_inflight_messages defaults to 20 per client for outgoing QoS 1/2; it is not a message-rate limit.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
-    "queue-default": {"text": "max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages.", "components": ["v20", "release-notes"], "sources": ["v20:s0705841d4141", "release-notes:s5529605a6416"], "status": "REASONED"},
-    "queue-bytes": {"text": "max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
-    "keepalive": {"text": "max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1.", "components": ["v20", "v21"], "sources": ["v20:s1f256b35dde7", "v21:sd5c8a4af302f", "v20:se7823193963b"], "status": "REASONED"},
-    "packet-boundary": {"text": "2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary.", "components": ["v20", "v21"], "sources": ["v20:se4dab27858b2", "v20:se7823193963b", "v20:s1172d84efc29", "v21:s36fbdb22e941"], "status": "REASONED"},
-    "global-limits": {"text": "2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions.", "components": ["docs", "v21", "release-notes"], "sources": ["docs:s1791866ca31b", "release-notes:s0c9ec2d6b65b", "v21:sd5c8a4af302f"], "status": "REASONED"},
-    "session-expiry": {"text": "2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap.", "components": ["v20"], "sources": ["v20:se7823193963b", "v20:saf5cd7c6f12b"], "status": "REASONED"},
-    "listener-policy": {"text": "2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope.", "components": ["v20"], "sources": ["v20:s1f256b35dde7", "v20:se7823193963b"], "status": "REASONED"},
-    "websockets": {"text": "Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing.", "components": ["v20", "v21"], "sources": ["v20:se7823193963b", "v20:s1172d84efc29", "v21:s77ce3e259e2e"], "status": "REASONED"},
-    "persistent-policy": {"text": "Listeners share topic/session namespaces; disconnected persistent clients retain their most recent listener's ACL policy.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
-    "client-id": {"text": "use_username_as_clientid is per-listener and needs restart; globally consistent usernames prevent cross-identity ID takeover, not same-user displacement.", "components": ["v20"], "sources": ["v20:se7823193963b", "v20:saff73f3b983e"], "status": "REASONED"},
-    "migration": {"text": "2.1 listener_allow_anonymous and plugin_load/plugin_use replace listener policy; attach password-file and ACL-file plugins explicitly.", "components": ["docs"], "sources": ["docs:s66b826cab3e9"], "status": "REASONED"},
-    "bridge-tls": {"text": "Port 8883 alone enables no bridge TLS; require CA/hostname verification, protected remote password and optional client certificate.", "components": ["v20"], "sources": ["v20:s0705841d4141", "v20:se7823193963b"], "status": "REASONED"},
-    "bridge-topics": {"text": "Bridge contexts bypass local ACLs and 2.1.2 accepts unmatched ingress topics; narrow routes/remote ACLs do not contain malicious upstream.", "components": ["v20", "v21"], "sources": ["v20:s0705841d4141", "v20:s06316e74cf90", "v21:sfe5a6152e92f", "v20:sa116e59b51a4", "v21:sccb5a918eab8", "v21:sac794dfa8179"], "status": "REASONED"},
-    "bridge-options": {"text": "try_private aids bridge handling, not auth; restart_timeout supplies backoff; notifications false suppresses default $SYS status writes.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
-    "runtime": {"text": "Dedicated runtime identity needs readable security files and writable protected state/log paths after the early 2.0 privilege drop.", "components": ["docs"], "sources": ["docs:s1791866ca31b", "docs:s4d96861c4f39"], "status": "REASONED"},
-    "persistence": {"text": "Persistence defaults false; persistence_location alone does not enable it; protect data, logs, secrets and backups.", "components": ["docs"], "sources": ["docs:s1791866ca31b"], "status": "REASONED"},
-    "client-config": {"text": "Verify uses protected 2.1 client -o files; 2.0 lacks -o and needs isolated default configurations.", "components": ["docs"], "sources": ["docs:s6711164e3e5f", "docs:s1476cea737a4"], "status": "REASONED"},
-    "verify-auth": {"text": "Authenticated CONNACK succeeds and anonymous CONNECT rejects; timeout exit 27, SUBACK and transport failures prove no authentication.", "components": ["docs", "v21"], "sources": ["docs:s6711164e3e5f", "docs:s9aa3260c5b79", "v21:s2ad092f62c47"], "status": "REASONED", "verify": [1]},
-    "verify-mtls": {"text": "Missing certificate must fail at TLS while trusted certificate succeeds; then separately test MQTT credentials.", "components": ["docs"], "sources": ["docs:s1791866ca31b", "docs:s6711164e3e5f"], "status": "REASONED", "verify": [1]},
-    "verify-network": {"text": "Inspect actual namespace and external IPv4/IPv6/NAT paths; removed plaintext/WebSocket endpoints must not answer.", "components": ["docs", "v20"], "sources": ["docs:s4d96861c4f39", "v20:se7823193963b"], "status": "REASONED", "verify": [2]},
-    "verify-delivery": {"text": "Require own telemetry, cross-device isolation and controller before/after markers around denied injection; inspect PUBACK and delivery.", "components": ["docs", "v20", "v21"], "sources": ["docs:s280527f289d0", "docs:s1476cea737a4", "v20:s06316e74cf90", "v21:sfe6c64ab8f91", "v20:sa4ab07ef74c3"], "status": "REASONED", "verify": [3, 4]},
-    "verify-sys": {"text": "Require exposed telemetry plus authorized marker control; fixed devices receive no $SYS messages.", "components": ["docs"], "sources": ["docs:sd34bd50f5f0f"], "status": "REASONED", "verify": [3]},
-    "verify-resources": {"text": "Separate packet allocation, payload, queue, inflight, keepalive, connection and session tests need matched healthy controls.", "components": ["v20", "v21"], "sources": ["v20:s1f256b35dde7", "v21:sd5c8a4af302f", "v20:se7823193963b", "v20:se4dab27858b2", "v20:sa4ab07ef74c3"], "status": "REASONED"},
-    "verify-bridges": {"text": "Test scoped delivery, TLS identity, remote ACLs and malicious-upstream containment independently; inspect runtime permissions and persistence.", "components": ["v20"], "sources": ["v20:s0705841d4141", "v20:s06316e74cf90"], "status": "REASONED"}
-  }
-}
----
 # Mosquitto (MQTT): no anonymous clients, TLS listener
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Mosquitto v2.0.22 and v2.1.2 and Mosquitto legacy v1.6.15; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 45 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- docs: Mosquitto documentation (unknown)
-- v20: Mosquitto (v2.0.22)
-- library: Mosquitto image catalogue (920b00976e6e8335bab0a3fd293b95b6b2404ce3)
-- image: Mosquitto image source (5b74cce8a4fe2a73b57df6c703bfde2cfd535d60)
-- v21: Mosquitto (v2.1.2)
-- v16: Mosquitto legacy (v1.6.15)
-- release-notes: Mosquitto release announcements (unknown)
-
-Claims (full source mapping in the front matter):
-
-- loopback-default (REASONED; docs): 2.0+ without listeners binds loopback and permits anonymous clients; it is not authenticated.
-- listener-default (REASONED; docs, v20): Explicit 2.0 listeners default to rejecting unauthenticated clients; an unspecified bind address is wildcard.
-- image21 (REASONED; library, image): Recorded 2.1.2 Alpine tags ship anonymous MQTT 1883 and HTTP API/dashboard 9883; override configuration and restrict publication.
-- image-api (REASONED; v21): 2.1.2 HTTP API uses a dual-stack socket and exposes systree/listeners JSON and version text without shipped credentials/ACLs.
-- image16 (REASONED; image, v16): Recorded 1.6.15 image tags ship commented upstream config: wildcard 1883 and anonymous access.
-- image20 (REASONED; image, v20): Recorded 2.0.22 image tags ship commented upstream config and retain loopback-only defaults.
-- deprecation (REASONED; docs, release-notes): File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0.
-- password-file (REASONED; docs): Prompt for distinct device credentials; -c overwrites, and -D edits the file without terminating connections by itself.
-- reload (REASONED; docs, v20): Reload changed credentials/ACLs; manual says connections unaffected, but 2.0.22 rechecks credentials; confirm deployed termination.
-- shared-policy (REASONED; v20): per_listener_settings false shares authentication/ACL policy; flipping it is neither separation nor 2.1 migration.
-- tls (REASONED; docs, v20): 8883 TLS needs CA/certificate/key; optional require_certificate adds machine possession, not human MFA.
-- listener-apply (REASONED; docs): Remove/firewall plaintext; confirm include_dir and restart for listener changes, which reload does not apply.
-- acl-default (REASONED; docs, v20): Password authentication alone leaves application topics unrestricted without an authorization mechanism.
-- acl-users (REASONED; docs, v20): Unlisted access is denied; user means username; pre-user topic rules apply only to anonymous clients.
-- acl-patterns (REASONED; docs): Patterns apply to all users; %u/%c must occupy a whole topic level; prefer authenticated usernames over chosen client IDs.
-- sys (REASONED; docs, release-notes): deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it.
-- subscription (REASONED; v20, v21): File ACLs filter message access, not SUBSCRIBE acceptance; accepted # alone is no bypass.
-- connection-default (REASONED; v20): Per-listener max_connections defaults to -1, unlimited by this setting.
-- packet-default (REASONED; v20, v21, release-notes): max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20.
-- payload-default (REASONED; v20): message_size_limit defaults to 0; payload rejection follows reception and completes QoS acknowledgements.
-- inflight-default (REASONED; v20): max_inflight_messages defaults to 20 per client for outgoing QoS 1/2; it is not a message-rate limit.
-- queue-default (REASONED; v20, release-notes): max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages.
-- queue-bytes (REASONED; v20): max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing.
-- keepalive (REASONED; v20, v21): max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1.
-- packet-boundary (REASONED; v20, v21): 2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary.
-- global-limits (REASONED; docs, v21, release-notes): 2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions.
-- session-expiry (REASONED; v20): 2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap.
-- listener-policy (REASONED; v20): 2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope.
-- websockets (REASONED; v20, v21): Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing.
-- persistent-policy (REASONED; v20): Listeners share topic/session namespaces; disconnected persistent clients retain their most recent listener's ACL policy.
-- client-id (REASONED; v20): use_username_as_clientid is per-listener and needs restart; globally consistent usernames prevent cross-identity ID takeover, not same-user displacement.
-- migration (REASONED; docs): 2.1 listener_allow_anonymous and plugin_load/plugin_use replace listener policy; attach password-file and ACL-file plugins explicitly.
-- bridge-tls (REASONED; v20): Port 8883 alone enables no bridge TLS; require CA/hostname verification, protected remote password and optional client certificate.
-- bridge-topics (REASONED; v20, v21): Bridge contexts bypass local ACLs and 2.1.2 accepts unmatched ingress topics; narrow routes/remote ACLs do not contain malicious upstream.
-- bridge-options (REASONED; v20): try_private aids bridge handling, not auth; restart_timeout supplies backoff; notifications false suppresses default $SYS status writes.
-- runtime (REASONED; docs): Dedicated runtime identity needs readable security files and writable protected state/log paths after the early 2.0 privilege drop.
-- persistence (REASONED; docs): Persistence defaults false; persistence_location alone does not enable it; protect data, logs, secrets and backups.
-- client-config (REASONED; docs): Verify uses protected 2.1 client -o files; 2.0 lacks -o and needs isolated default configurations.
-- verify-auth (REASONED; docs, v21): Authenticated CONNACK succeeds and anonymous CONNECT rejects; timeout exit 27, SUBACK and transport failures prove no authentication.
-- verify-mtls (REASONED; docs): Missing certificate must fail at TLS while trusted certificate succeeds; then separately test MQTT credentials.
-- verify-network (REASONED; docs, v20): Inspect actual namespace and external IPv4/IPv6/NAT paths; removed plaintext/WebSocket endpoints must not answer.
-- verify-delivery (REASONED; docs, v20, v21): Require own telemetry, cross-device isolation and controller before/after markers around denied injection; inspect PUBACK and delivery.
-- verify-sys (REASONED; docs): Require exposed telemetry plus authorized marker control; fixed devices receive no $SYS messages.
-- verify-resources (REASONED; v20, v21): Separate packet allocation, payload, queue, inflight, keepalive, connection and session tests need matched healthy controls.
-- verify-bridges (REASONED; v20): Test scoped delivery, TLS identity, remote ACLs and malicious-upstream containment independently; inspect runtime permissions and persistence.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 MQTT brokers back IoT and agent projects, and open brokers leak live telemetry and accept injected commands. Mosquitto's defaults are sane on version 2.0 and later (with a listener defined, anonymous access is off; without any listener it binds the loopback interface only); the job is to keep them sane while adding real listeners.
 
@@ -715,3 +501,243 @@ The explicit `$SYS/#` subscription should receive broker telemetry in the expose
 - Mosquitto authenticated duplicate client-ID displacement (pinned tag v2.0.22): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/handle_connect.c#L120-L133
 - Mosquitto local bridge contexts bypassing ACL checks (pinned tags v2.0.22 and v2.1.2): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/security.c#L691-L693, https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_acl_check.c#L149-L151
 - Mosquitto incoming topic remapping returning success after unmatched topics (pinned tag v2.1.2): https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/bridge_topic.c
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/mosquitto.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- docs: Mosquitto documentation (unknown)
+- v20: Mosquitto (v2.0.22)
+- library: Mosquitto image catalogue (920b00976e6e8335bab0a3fd293b95b6b2404ce3)
+- image: Mosquitto image source (5b74cce8a4fe2a73b57df6c703bfde2cfd535d60)
+- v21: Mosquitto (v2.1.2)
+- v16: Mosquitto legacy (v1.6.15)
+- release-notes: Mosquitto release announcements (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- loopback-default (REASONED; docs): 2.0+ without listeners binds loopback and permits anonymous clients; it is not authenticated.
+- listener-default (REASONED; docs, v20): Explicit 2.0 listeners default to rejecting unauthenticated clients; an unspecified bind address is wildcard.
+- image21 (REASONED; library, image): Recorded 2.1.2 Alpine tags ship anonymous MQTT 1883 and HTTP API/dashboard 9883; override configuration and restrict publication.
+- image-api (REASONED; v21): 2.1.2 HTTP API uses a dual-stack socket and exposes systree/listeners JSON and version text without shipped credentials/ACLs.
+- image16 (REASONED; image, v16): Recorded 1.6.15 image tags ship commented upstream config: wildcard 1883 and anonymous access.
+- image20 (REASONED; image, v20): Recorded 2.0.22 image tags ship commented upstream config and retain loopback-only defaults.
+- deprecation (REASONED; docs, release-notes): File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0.
+- password-file (REASONED; docs): Prompt for distinct device credentials; -c overwrites, and -D edits the file without terminating connections by itself.
+- reload (REASONED; docs, v20): Reload changed credentials/ACLs; manual says connections unaffected, but 2.0.22 rechecks credentials; confirm deployed termination.
+- shared-policy (REASONED; v20): per_listener_settings false shares authentication/ACL policy; flipping it is neither separation nor 2.1 migration.
+- tls (REASONED; docs, v20): 8883 TLS needs CA/certificate/key; optional require_certificate adds machine possession, not human MFA.
+- listener-apply (REASONED; docs): Remove/firewall plaintext; confirm include_dir and restart for listener changes, which reload does not apply.
+- acl-default (REASONED; docs, v20): Password authentication alone leaves application topics unrestricted without an authorization mechanism.
+- acl-users (REASONED; docs, v20): Unlisted access is denied; user means username; pre-user topic rules apply only to anonymous clients.
+- acl-patterns (REASONED; docs): Patterns apply to all users; %u/%c must occupy a whole topic level; prefer authenticated usernames over chosen client IDs.
+- sys (REASONED; docs, release-notes): deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it.
+- subscription (REASONED; v20, v21): File ACLs filter message access, not SUBSCRIBE acceptance; accepted # alone is no bypass.
+- connection-default (REASONED; v20): Per-listener max_connections defaults to -1, unlimited by this setting.
+- packet-default (REASONED; v20, v21, release-notes): max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20.
+- payload-default (REASONED; v20): message_size_limit defaults to 0; payload rejection follows reception and completes QoS acknowledgements.
+- inflight-default (REASONED; v20): max_inflight_messages defaults to 20 per client for outgoing QoS 1/2; it is not a message-rate limit.
+- queue-default (REASONED; v20, release-notes): max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages.
+- queue-bytes (REASONED; v20): max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing.
+- keepalive (REASONED; v20, v21): max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1.
+- packet-boundary (REASONED; v20, v21): 2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary.
+- global-limits (REASONED; docs, v21, release-notes): 2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions.
+- session-expiry (REASONED; v20): 2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap.
+- listener-policy (REASONED; v20): 2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope.
+- websockets (REASONED; v20, v21): Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing.
+- persistent-policy (REASONED; v20): Listeners share topic/session namespaces; disconnected persistent clients retain their most recent listener's ACL policy.
+- client-id (REASONED; v20): use_username_as_clientid is per-listener and needs restart; globally consistent usernames prevent cross-identity ID takeover, not same-user displacement.
+- migration (REASONED; docs): 2.1 listener_allow_anonymous and plugin_load/plugin_use replace listener policy; attach password-file and ACL-file plugins explicitly.
+- bridge-tls (REASONED; v20): Port 8883 alone enables no bridge TLS; require CA/hostname verification, protected remote password and optional client certificate.
+- bridge-topics (REASONED; v20, v21): Bridge contexts bypass local ACLs and 2.1.2 accepts unmatched ingress topics; narrow routes/remote ACLs do not contain malicious upstream.
+- bridge-options (REASONED; v20): try_private aids bridge handling, not auth; restart_timeout supplies backoff; notifications false suppresses default $SYS status writes.
+- runtime (REASONED; docs): Dedicated runtime identity needs readable security files and writable protected state/log paths after the early 2.0 privilege drop.
+- persistence (REASONED; docs): Persistence defaults false; persistence_location alone does not enable it; protect data, logs, secrets and backups.
+- client-config (REASONED; docs): Verify uses protected 2.1 client -o files; 2.0 lacks -o and needs isolated default configurations.
+- verify-auth (REASONED; docs, v21): Authenticated CONNACK succeeds and anonymous CONNECT rejects; timeout exit 27, SUBACK and transport failures prove no authentication.
+- verify-mtls (REASONED; docs): Missing certificate must fail at TLS while trusted certificate succeeds; then separately test MQTT credentials.
+- verify-network (REASONED; docs, v20): Inspect actual namespace and external IPv4/IPv6/NAT paths; removed plaintext/WebSocket endpoints must not answer.
+- verify-delivery (REASONED; docs, v20, v21): Require own telemetry, cross-device isolation and controller before/after markers around denied injection; inspect PUBACK and delivery.
+- verify-sys (REASONED; docs): Require exposed telemetry plus authorized marker control; fixed devices receive no $SYS messages.
+- verify-resources (REASONED; v20, v21): Separate packet allocation, payload, queue, inflight, keepalive, connection and session tests need matched healthy controls.
+- verify-bridges (REASONED; v20): Test scoped delivery, TLS identity, remote ACLs and malicious-upstream containment independently; inspect runtime permissions and persistence.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-05",
+  "documentation_checked": "2026-10",
+  "body_sha256": "73b1d3529e9fdfcd23efa56ade3bf305d2e5d39c8844da14cbcb843de2ef6dc9",
+  "components": {
+    "docs": {
+      "name": "Mosquitto documentation",
+      "basis": "unknown",
+      "sources": {
+        "s4d96861c4f39": "https://mosquitto.org/documentation/migrating-to-2-0/",
+        "s66b826cab3e9": "https://mosquitto.org/documentation/listeners/per-listener-settings/",
+        "sddca3657b9c1": "https://mosquitto.org/man/mosquitto_passwd-1.html",
+        "s9aa3260c5b79": "https://mosquitto.org/documentation/authentication-methods/",
+        "s1791866ca31b": "https://mosquitto.org/man/mosquitto-conf-5.html",
+        "s280527f289d0": "https://mosquitto.org/documentation/plugins/acl-file/",
+        "sd34bd50f5f0f": "https://mosquitto.org/man/mosquitto-8.html",
+        "s6711164e3e5f": "https://mosquitto.org/man/mosquitto_sub-1.html",
+        "s1476cea737a4": "https://mosquitto.org/man/mosquitto_pub-1.html"
+      }
+    },
+    "v20": {
+      "name": "Mosquitto",
+      "basis": "v2.0.22",
+      "sources": {
+        "se7823193963b": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/man/mosquitto.conf.5.xml",
+        "s10aff5e66af1": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/mosquitto.conf",
+        "s06316e74cf90": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/security_default.c",
+        "s0705841d4141": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/mosquitto.conf",
+        "s1f256b35dde7": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/conf.c",
+        "sa4ab07ef74c3": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/handle_publish.c",
+        "se4dab27858b2": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/lib/packet_mosq.c",
+        "s1172d84efc29": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/websockets.c",
+        "saf5cd7c6f12b": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/session_expiry.c",
+        "saff73f3b983e": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/handle_connect.c#L120-L133",
+        "sa116e59b51a4": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/security.c#L691-L693"
+      }
+    },
+    "library": {
+      "name": "Mosquitto image catalogue",
+      "basis": "920b00976e6e8335bab0a3fd293b95b6b2404ce3",
+      "sources": {
+        "s0d99329a59ae": "https://github.com/docker-library/official-images/blob/920b00976e6e8335bab0a3fd293b95b6b2404ce3/library/eclipse-mosquitto#L3-L13"
+      }
+    },
+    "image": {
+      "name": "Mosquitto image source",
+      "basis": "5b74cce8a4fe2a73b57df6c703bfde2cfd535d60",
+      "sources": {
+        "sdfa81718b7ff": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L30",
+        "s38217a9ac8cc": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L77-L80",
+        "see5ae9bc6aa9": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L99-L101",
+        "s90852e30653e": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/mosquitto.conf",
+        "s2653cf87d9d0": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/docker-entrypoint.sh",
+        "s48d123c4c6d9": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/README.md#L27-L28",
+        "s270129425e74": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/1.6-openssl/Dockerfile#L66",
+        "sd127367f6308": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.0-openssl/Dockerfile#L69"
+      }
+    },
+    "v21": {
+      "name": "Mosquitto",
+      "basis": "v2.1.2",
+      "sources": {
+        "s539d2574fc70": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/net.c#L815-L918",
+        "s7f6c7c2e6cff": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L449-L545",
+        "sca7b250a1900": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L160-L163",
+        "s9c9708acb8f8": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L224",
+        "sedb9b3beddce": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L251",
+        "s5fbac0184a26": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/http_api.c#L336-L378",
+        "sd54804631b53": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/conf.c#L2001",
+        "sb292974b4326": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/listeners.c#L27-L42",
+        "s7d30df48bf91": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_basic_auth.c#L56-L113",
+        "sfe5a6152e92f": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_acl_check.c#L141-L201",
+        "s12077f64a53c": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/man/mosquitto.conf.5.xml#L1663-L1671",
+        "sfe6c64ab8f91": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/plugins/acl-file/acl_check.c",
+        "sd5c8a4af302f": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/conf.c",
+        "s2ad092f62c47": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/client/sub_client.c",
+        "s36fbdb22e941": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/websockets.c#L296-L324",
+        "s77ce3e259e2e": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/ChangeLog.txt#L14-L27",
+        "sccb5a918eab8": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.1.2/src/plugin_acl_check.c#L149-L151",
+        "sac794dfa8179": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.1.2/src/bridge_topic.c"
+      }
+    },
+    "v16": {
+      "name": "Mosquitto legacy",
+      "basis": "v1.6.15",
+      "sources": {
+        "scddf9e86ad6b": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/src/conf.c#L420-L468",
+        "seb5311de9f93": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/src/net.c#L605-L690",
+        "sbfaf2572ea61": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/man/mosquitto.conf.5.xml#L167-L185",
+        "s0d1a10094e93": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/mosquitto.conf"
+      }
+    },
+    "release-notes": {
+      "name": "Mosquitto release announcements",
+      "basis": "unknown",
+      "sources": {
+        "s0c9ec2d6b65b": "https://mosquitto.org/blog/2026/01/version-2-1-0-released/",
+        "s5529605a6416": "https://mosquitto.org/blog/2020/12/version-2-0-0-released/"
+      }
+    }
+  },
+  "claims": {
+    "loopback-default": {"text": "2.0+ without listeners binds loopback and permits anonymous clients; it is not authenticated.", "components": ["docs"], "sources": ["docs:s4d96861c4f39"], "status": "REASONED"},
+    "listener-default": {"text": "Explicit 2.0 listeners default to rejecting unauthenticated clients; an unspecified bind address is wildcard.", "components": ["docs", "v20"], "sources": ["docs:s4d96861c4f39", "v20:se7823193963b"], "status": "REASONED"},
+    "image21": {"text": "Recorded 2.1.2 Alpine tags ship anonymous MQTT 1883 and HTTP API/dashboard 9883; override configuration and restrict publication.", "components": ["library", "image"], "sources": ["library:s0d99329a59ae", "image:sdfa81718b7ff", "image:s38217a9ac8cc", "image:see5ae9bc6aa9", "image:s90852e30653e", "image:s2653cf87d9d0", "image:s48d123c4c6d9"], "status": "REASONED"},
+    "image-api": {"text": "2.1.2 HTTP API uses a dual-stack socket and exposes systree/listeners JSON and version text without shipped credentials/ACLs.", "components": ["v21"], "sources": ["v21:s539d2574fc70", "v21:s7f6c7c2e6cff", "v21:sca7b250a1900", "v21:s9c9708acb8f8", "v21:sedb9b3beddce", "v21:s5fbac0184a26", "v21:sd54804631b53", "v21:sb292974b4326", "v21:s7d30df48bf91", "v21:sfe5a6152e92f", "v21:s12077f64a53c"], "status": "REASONED"},
+    "image16": {"text": "Recorded 1.6.15 image tags ship commented upstream config: wildcard 1883 and anonymous access.", "components": ["image", "v16"], "sources": ["image:s270129425e74", "v16:scddf9e86ad6b", "v16:seb5311de9f93", "v16:sbfaf2572ea61", "v16:s0d1a10094e93"], "status": "REASONED"},
+    "image20": {"text": "Recorded 2.0.22 image tags ship commented upstream config and retain loopback-only defaults.", "components": ["image", "v20"], "sources": ["image:sd127367f6308", "v20:s10aff5e66af1"], "status": "REASONED"},
+    "deprecation": {"text": "File-based examples target 2.0.22; password_file, acl_file and per_listener_settings are deprecated in 2.1, removal announced for 3.0.", "components": ["docs", "release-notes"], "sources": ["release-notes:s0c9ec2d6b65b", "docs:s66b826cab3e9"], "status": "REASONED"},
+    "password-file": {"text": "Prompt for distinct device credentials; -c overwrites, and -D edits the file without terminating connections by itself.", "components": ["docs"], "sources": ["docs:sddca3657b9c1", "docs:s9aa3260c5b79"], "status": "REASONED"},
+    "reload": {"text": "Reload changed credentials/ACLs; manual says connections unaffected, but 2.0.22 rechecks credentials; confirm deployed termination.", "components": ["docs", "v20"], "sources": ["docs:s9aa3260c5b79", "v20:s06316e74cf90"], "status": "REASONED"},
+    "shared-policy": {"text": "per_listener_settings false shares authentication/ACL policy; flipping it is neither separation nor 2.1 migration.", "components": ["v20"], "sources": ["v20:s0705841d4141", "v20:se7823193963b"], "status": "REASONED"},
+    "tls": {"text": "8883 TLS needs CA/certificate/key; optional require_certificate adds machine possession, not human MFA.", "components": ["docs", "v20"], "sources": ["docs:s1791866ca31b", "v20:se7823193963b"], "status": "REASONED"},
+    "listener-apply": {"text": "Remove/firewall plaintext; confirm include_dir and restart for listener changes, which reload does not apply.", "components": ["docs"], "sources": ["docs:s1791866ca31b", "docs:s4d96861c4f39"], "status": "REASONED"},
+    "acl-default": {"text": "Password authentication alone leaves application topics unrestricted without an authorization mechanism.", "components": ["docs", "v20"], "sources": ["docs:s9aa3260c5b79", "v20:s06316e74cf90"], "status": "REASONED"},
+    "acl-users": {"text": "Unlisted access is denied; user means username; pre-user topic rules apply only to anonymous clients.", "components": ["docs", "v20"], "sources": ["docs:s280527f289d0", "v20:s06316e74cf90"], "status": "REASONED"},
+    "acl-patterns": {"text": "Patterns apply to all users; %u/%c must occupy a whole topic level; prefer authenticated usernames over chosen client IDs.", "components": ["docs"], "sources": ["docs:s280527f289d0"], "status": "REASONED"},
+    "sys": {"text": "deny was added in 2.0; repeat $SYS denial per user and probe $SYS/# explicitly because # excludes it.", "components": ["docs", "release-notes"], "sources": ["release-notes:s5529605a6416", "docs:sd34bd50f5f0f"], "status": "REASONED"},
+    "subscription": {"text": "File ACLs filter message access, not SUBSCRIBE acceptance; accepted # alone is no bypass.", "components": ["v20", "v21"], "sources": ["v20:s06316e74cf90", "v21:sfe6c64ab8f91"], "status": "REASONED"},
+    "connection-default": {"text": "Per-listener max_connections defaults to -1, unlimited by this setting.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
+    "packet-default": {"text": "max_packet_size is unset in 2.0.22 and 2,000,000 bytes in 2.1; explicit 2.0.22 values must be at least 20.", "components": ["v20", "v21", "release-notes"], "sources": ["v20:s1f256b35dde7", "v21:sd5c8a4af302f", "release-notes:s0c9ec2d6b65b"], "status": "REASONED"},
+    "payload-default": {"text": "message_size_limit defaults to 0; payload rejection follows reception and completes QoS acknowledgements.", "components": ["v20"], "sources": ["v20:s0705841d4141", "v20:sa4ab07ef74c3"], "status": "REASONED"},
+    "inflight-default": {"text": "max_inflight_messages defaults to 20 per client for outgoing QoS 1/2; it is not a message-rate limit.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
+    "queue-default": {"text": "max_queued_messages defaults to 1000 in 2.x, 100 earlier; queue overflow can lose messages.", "components": ["v20", "release-notes"], "sources": ["v20:s0705841d4141", "release-notes:s5529605a6416"], "status": "REASONED"},
+    "queue-bytes": {"text": "max_queued_bytes defaults to 0; when both queue limits are set the first reached stops further queuing.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
+    "keepalive": {"text": "max_keepalive defaults to 0 in 2.0.22/2.1.2; positive limits override MQTT 5 and reject incompatible MQTT 3.1.1.", "components": ["v20", "v21"], "sources": ["v20:s1f256b35dde7", "v21:sd5c8a4af302f", "v20:se7823193963b"], "status": "REASONED"},
+    "packet-boundary": {"text": "2.0.22 TCP checks size before body allocation; 2.0.22/2.1.2 libwebsockets allocate without that check; require an independent boundary.", "components": ["v20", "v21"], "sources": ["v20:se4dab27858b2", "v20:se7823193963b", "v20:s1172d84efc29", "v21:s36fbdb22e941"], "status": "REASONED"},
+    "global-limits": {"text": "2.1 global_max_connections/global_max_clients default to -1; the latter also counts disconnected persistent sessions.", "components": ["docs", "v21", "release-notes"], "sources": ["docs:s1791866ca31b", "release-notes:s0c9ec2d6b65b", "v21:sd5c8a4af302f"], "status": "REASONED"},
+    "session-expiry": {"text": "2.0 persistent-session growth needs identity/client-ID limits; persistent_client_expiration is not a hard population cap.", "components": ["v20"], "sources": ["v20:se7823193963b", "v20:saf5cd7c6f12b"], "status": "REASONED"},
+    "listener-policy": {"text": "2.0 per-listener settings must precede listeners/security options; place each listener's auth, ACL and TLS in its scope.", "components": ["v20"], "sources": ["v20:s1f256b35dde7", "v20:se7823193963b"], "status": "REASONED"},
+    "websockets": {"text": "Local 9001 needs separate auth/ACL/TLS; 2.0.22 WebSockets connection cap is ineffective; 2.1.1 fix needs deployed-build testing.", "components": ["v20", "v21"], "sources": ["v20:se7823193963b", "v20:s1172d84efc29", "v21:s77ce3e259e2e"], "status": "REASONED"},
+    "persistent-policy": {"text": "Listeners share topic/session namespaces; disconnected persistent clients retain their most recent listener's ACL policy.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
+    "client-id": {"text": "use_username_as_clientid is per-listener and needs restart; globally consistent usernames prevent cross-identity ID takeover, not same-user displacement.", "components": ["v20"], "sources": ["v20:se7823193963b", "v20:saff73f3b983e"], "status": "REASONED"},
+    "migration": {"text": "2.1 listener_allow_anonymous and plugin_load/plugin_use replace listener policy; attach password-file and ACL-file plugins explicitly.", "components": ["docs"], "sources": ["docs:s66b826cab3e9"], "status": "REASONED"},
+    "bridge-tls": {"text": "Port 8883 alone enables no bridge TLS; require CA/hostname verification, protected remote password and optional client certificate.", "components": ["v20"], "sources": ["v20:s0705841d4141", "v20:se7823193963b"], "status": "REASONED"},
+    "bridge-topics": {"text": "Bridge contexts bypass local ACLs and 2.1.2 accepts unmatched ingress topics; narrow routes/remote ACLs do not contain malicious upstream.", "components": ["v20", "v21"], "sources": ["v20:s0705841d4141", "v20:s06316e74cf90", "v21:sfe5a6152e92f", "v20:sa116e59b51a4", "v21:sccb5a918eab8", "v21:sac794dfa8179"], "status": "REASONED"},
+    "bridge-options": {"text": "try_private aids bridge handling, not auth; restart_timeout supplies backoff; notifications false suppresses default $SYS status writes.", "components": ["v20"], "sources": ["v20:s0705841d4141"], "status": "REASONED"},
+    "runtime": {"text": "Dedicated runtime identity needs readable security files and writable protected state/log paths after the early 2.0 privilege drop.", "components": ["docs"], "sources": ["docs:s1791866ca31b", "docs:s4d96861c4f39"], "status": "REASONED"},
+    "persistence": {"text": "Persistence defaults false; persistence_location alone does not enable it; protect data, logs, secrets and backups.", "components": ["docs"], "sources": ["docs:s1791866ca31b"], "status": "REASONED"},
+    "client-config": {"text": "Verify uses protected 2.1 client -o files; 2.0 lacks -o and needs isolated default configurations.", "components": ["docs"], "sources": ["docs:s6711164e3e5f", "docs:s1476cea737a4"], "status": "REASONED"},
+    "verify-auth": {"text": "Authenticated CONNACK succeeds and anonymous CONNECT rejects; timeout exit 27, SUBACK and transport failures prove no authentication.", "components": ["docs", "v21"], "sources": ["docs:s6711164e3e5f", "docs:s9aa3260c5b79", "v21:s2ad092f62c47"], "status": "REASONED", "verify": [1]},
+    "verify-mtls": {"text": "Missing certificate must fail at TLS while trusted certificate succeeds; then separately test MQTT credentials.", "components": ["docs"], "sources": ["docs:s1791866ca31b", "docs:s6711164e3e5f"], "status": "REASONED", "verify": [1]},
+    "verify-network": {"text": "Inspect actual namespace and external IPv4/IPv6/NAT paths; removed plaintext/WebSocket endpoints must not answer.", "components": ["docs", "v20"], "sources": ["docs:s4d96861c4f39", "v20:se7823193963b"], "status": "REASONED", "verify": [2]},
+    "verify-delivery": {"text": "Require own telemetry, cross-device isolation and controller before/after markers around denied injection; inspect PUBACK and delivery.", "components": ["docs", "v20", "v21"], "sources": ["docs:s280527f289d0", "docs:s1476cea737a4", "v20:s06316e74cf90", "v21:sfe6c64ab8f91", "v20:sa4ab07ef74c3"], "status": "REASONED", "verify": [3, 4]},
+    "verify-sys": {"text": "Require exposed telemetry plus authorized marker control; fixed devices receive no $SYS messages.", "components": ["docs"], "sources": ["docs:sd34bd50f5f0f"], "status": "REASONED", "verify": [3]},
+    "verify-resources": {"text": "Separate packet allocation, payload, queue, inflight, keepalive, connection and session tests need matched healthy controls.", "components": ["v20", "v21"], "sources": ["v20:s1f256b35dde7", "v21:sd5c8a4af302f", "v20:se7823193963b", "v20:se4dab27858b2", "v20:sa4ab07ef74c3"], "status": "REASONED"},
+    "verify-bridges": {"text": "Test scoped delivery, TLS identity, remote ACLs and malicious-upstream containment independently; inspect runtime permissions and persistence.", "components": ["v20"], "sources": ["v20:s0705841d4141", "v20:s06316e74cf90"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->

@@ -1,164 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-17",
-  "documentation_checked": "2026-09",
-  "body_sha256": "7e61d3251d272d600eb84579980483338e378661f71af77fa39229aab130eb78",
-  "components": {
-    "mcp": {
-      "name": "MCP",
-      "basis": "2026-07-28",
-      "sources": {
-        "s34fabf499cb7": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization",
-        "s4b9b953ca683": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/security-considerations",
-        "s117c3edbfcd7": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/authorization-server-discovery",
-        "s5655f61af2a0": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration",
-        "s4903497743e8": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices"
-      }
-    },
-    "mcp-2025-06-18": {
-      "name": "MCP 2025-06-18 authorization",
-      "basis": "86f6e0c675afea9a8f233e09b6faf566b126086c",
-      "sources": {
-        "sf1432398aebf": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/86f6e0c675afea9a8f233e09b6faf566b126086c/docs/specification/2025-06-18/basic/authorization.mdx#L58-L59"
-      }
-    },
-    "mcp-2025-11-25": {
-      "name": "MCP 2025-11-25 authorization",
-      "basis": "86f6e0c675afea9a8f233e09b6faf566b126086c",
-      "sources": {
-        "s9d3e60a1183b": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/86f6e0c675afea9a8f233e09b6faf566b126086c/docs/specification/2025-11-25/basic/authorization.mdx#L198-L209"
-      }
-    },
-    "rfc": {
-      "name": "OAuth and HTTP RFCs",
-      "basis": "unknown",
-      "sources": {
-        "s93d8089abc7b": "https://www.rfc-editor.org/rfc/rfc9207.html#section-2.4",
-        "s232609abe426": "https://www.rfc-editor.org/rfc/rfc9700.html#section-4.2.4",
-        "sc1f199fd57ff": "https://www.rfc-editor.org/rfc/rfc8414.html#section-3.3",
-        "s612208d893d8": "https://www.rfc-editor.org/rfc/rfc9728.html#section-7.7",
-        "sb90ea9a3bb09": "https://www.rfc-editor.org/rfc/rfc9111.html#section-4.2",
-        "s5cb9d8ac9518": "https://www.rfc-editor.org/rfc/rfc8707.html",
-        "s45a67943085b": "https://www.rfc-editor.org/rfc/rfc7009.html#section-2"
-      }
-    },
-    "oauth": {
-      "name": "OAuth 2.1 draft",
-      "basis": "draft-ietf-oauth-v2-1-14",
-      "sources": {
-        "sd99e74137366": "https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-14#section-4.3"
-      }
-    },
-    "cimd": {
-      "name": "CIMD draft",
-      "basis": "draft-ietf-oauth-client-id-metadata-document-00",
-      "sources": {
-        "sc6ba78bdbb90": "https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-00"
-      }
-    },
-    "oidc": {
-      "name": "OpenID Connect",
-      "basis": "1.0 errata 2",
-      "sources": {
-        "s707464abc09b": "https://openid.net/specs/openid-connect-core-1_0-errata2.html#OfflineAccess",
-        "s06760d0c8dc0": "https://openid.net/specs/openid-connect-registration-1_0-errata2.html#ClientMetadata",
-        "sd8cd68f5f528": "https://openid.net/specs/openid-connect-discovery-1_0-errata2.html#ProviderConfigurationValidation"
-      }
-    },
-    "owasp": {
-      "name": "OWASP SSRF guidance",
-      "basis": "unknown",
-      "sources": {
-        "s7eb820e1e53b": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html"
-      }
-    }
-  },
-  "claims": {
-    "iss": {"text": "Compare received iss exactly with the transaction issuer before sending a code to any token endpoint; reject mismatches without normalization.", "components": ["mcp", "rfc"], "sources": ["mcp:s34fabf499cb7", "rfc:s93d8089abc7b"], "status": "REASONED"},
-    "iss-required": {"text": "If issuer-response support is advertised, missing iss is rejected; otherwise present iss is validated and absent iss still needs multi-AS mix-up protection.", "components": ["rfc"], "sources": ["rfc:s93d8089abc7b", "rfc:s232609abe426"], "status": "REASONED"},
-    "transaction": {"text": "Bind the validated expected issuer to the state/PKCE transaction; multi-AS clients MUST prevent mix-up attacks.", "components": ["rfc", "mcp"], "sources": ["rfc:s232609abe426", "mcp:s34fabf499cb7"], "status": "REASONED"},
-    "issuer": {"text": "Authorization metadata issuer must exactly equal the issuer used to construct discovery, including its path; reject the document before using endpoints.", "components": ["mcp", "rfc"], "sources": ["mcp:s117c3edbfcd7", "rfc:sc1f199fd57ff"], "status": "REASONED"},
-    "resource-metadata": {"text": "Validate protected-resource resource separately from authorization-server issuer; issuer equality is not SSRF protection.", "components": ["rfc"], "sources": ["rfc:s612208d893d8", "rfc:sc1f199fd57ff"], "status": "REASONED"},
-    "oidc-discovery": {"text": "Apply OpenID Connect Discovery section 4.3 issuer validation to OIDC discovery (this guide's instruction): returned issuer MUST be identical to the Issuer URL used as the well-known prefix and to the iss Claim in ID Tokens issued from this Issuer; on failure, operations requiring that information MUST be aborted and the information MUST NOT be used.", "components": ["oidc", "mcp"], "sources": ["oidc:s707464abc09b", "mcp:s117c3edbfcd7", "oidc:sd8cd68f5f528"], "status": "REASONED"},
-    "cimd": {"text": "CIMD client_id uses HTTPS with a path; document client_id must exactly match its URL.", "components": ["cimd"], "sources": ["cimd:sc6ba78bdbb90"], "status": "REASONED"},
-    "registration-order": {"text": "Clients SHOULD support CIMD and prefer available preregistration, then CIMD, then optional deprecated DCR.", "components": ["mcp"], "sources": ["mcp:s5655f61af2a0"], "status": "REASONED"},
-    "application-type": {"text": "DCR MUST specify appropriate application_type: native SHOULD cover desktop/mobile/CLI/localhost apps; web SHOULD cover remote browser apps.", "components": ["mcp"], "sources": ["mcp:s5655f61af2a0"], "status": "REASONED"},
-    "web-default": {"text": "Omitted application_type defaults to web; incompatible native redirects can be rejected under provider policy, without justification for weakening validation.", "components": ["oidc"], "sources": ["oidc:s06760d0c8dc0"], "status": "REASONED"},
-    "registration-history": {"text": "MCP 2025-06-18 said authorization servers and MCP clients SHOULD support DCR; MCP 2025-11-25 said clients supporting all options SHOULD use available pre-registration, then advertised CIMD, then supported DCR, then ask the user if no other option is available; carrying the revision label when citing that history is this guide's advice.", "components": ["mcp", "mcp-2025-06-18", "mcp-2025-11-25"], "sources": ["mcp:s5655f61af2a0", "mcp-2025-06-18:sf1432398aebf", "mcp-2025-11-25:s9d3e60a1183b"], "status": "REASONED"},
-    "refresh-confidential": {"text": "Keep refresh tokens confidential in transit/storage, including public clients; send only to issuing-server token/revocation endpoints over authenticated TLS.", "components": ["oauth", "rfc"], "sources": ["oauth:sd99e74137366", "rfc:s45a67943085b"], "status": "REASONED"},
-    "refresh-storage": {"text": "Keep refresh tokens out of logs, URLs, repositories and public metadata; use protected storage or native credential storage.", "components": ["oauth"], "sources": ["oauth:sd99e74137366"], "status": "REASONED"},
-    "refresh-request": {"text": "SHOULD include refresh_token grant type; MAY request advertised offline_access; MUST NOT assume refresh-token issuance.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7"], "status": "REASONED"},
-    "offline-access": {"text": "OIDC offline_access requires code-returning response_type and normally prompt=consent; another permitting condition can waive consent prompting.", "components": ["oidc"], "sources": ["oidc:s707464abc09b"], "status": "REASONED"},
-    "ssrf": {"text": "RFC 9728 recommends SSRF precautions; server-deployed MCP clients MUST mitigate every OAuth-related fetch.", "components": ["rfc", "mcp"], "sources": ["rfc:s612208d893d8", "mcp:s4903497743e8"], "status": "REASONED"},
-    "ssrf-destinations": {"text": "Use HTTPS destination controls blocking private/reserved, loopback, link-local and metadata addresses; configure necessary private exceptions explicitly.", "components": ["mcp", "rfc", "owasp"], "sources": ["mcp:s4903497743e8", "rfc:s612208d893d8", "owasp:s7eb820e1e53b"], "status": "REASONED"},
-    "ssrf-redirects": {"text": "Revalidate redirects and prevent DNS check/connect races with pinned resolution or controlled egress.", "components": ["mcp", "rfc", "owasp"], "sources": ["mcp:s4903497743e8", "rfc:s612208d893d8", "owasp:s7eb820e1e53b"], "status": "REASONED"},
-    "ssrf-allowlist": {"text": "Known-provider issuer/destination allowlists narrow exposure; dynamic clients still need runtime controls, beyond issuer equality.", "components": ["owasp", "rfc"], "sources": ["owasp:s7eb820e1e53b", "rfc:s612208d893d8"], "status": "REASONED"},
-    "pkce": {"text": "Require PKCE, S256 when capable, and refuse absent code_challenge_methods_supported.", "components": ["mcp"], "sources": ["mcp:s4b9b953ca683"], "status": "REASONED"},
-    "resource": {"text": "Send canonical resource URI in both authorization/token requests; replay protection also needs audience-bound issuance and server audience validation.", "components": ["mcp", "rfc"], "sources": ["mcp:s34fabf499cb7", "rfc:s5cb9d8ac9518"], "status": "REASONED"},
-    "https": {"text": "Use HTTPS authorization endpoints and localhost or HTTPS redirect URIs.", "components": ["mcp"], "sources": ["mcp:s4b9b953ca683"], "status": "REASONED"},
-    "token-url": {"text": "Access tokens go in Authorization, never URL queries; authorization codes use callback queries with PKCE/iss and referrer/log suppression.", "components": ["mcp", "oauth", "rfc"], "sources": ["mcp:s34fabf499cb7", "oauth:sd99e74137366", "rfc:s232609abe426"], "status": "REASONED"},
-    "verify-iss": {"text": "Restore the same fresh transaction before matched callbacks; control redeems code, mismatched iss must cause no token request, independently of state replay.", "components": ["rfc", "mcp"], "sources": ["rfc:s93d8089abc7b", "mcp:s34fabf499cb7", "rfc:s232609abe426"], "status": "REASONED"},
-    "verify-metadata": {"text": "Fresh uncached complete metadata pair differs only in issuer; prove test fetch, disable alternative discovery, and reject endpoints from mismatched metadata.", "components": ["rfc", "mcp"], "sources": ["rfc:sc1f199fd57ff", "rfc:sb90ea9a3bb09", "mcp:s4b9b953ca683"], "status": "REASONED"},
-    "verify-address": {"text": "Local classifier should print BLOCK for all five internal addresses; guide says it ran but records no observed output, so no demonstration is established.", "components": ["rfc", "mcp"], "sources": ["rfc:s612208d893d8", "mcp:s4903497743e8"], "status": "REASONED", "verify": [1]},
-    "verify-ssrf": {"text": "Trusted HTTPS public-address control must fetch; cleared-state private-address test must resolve and reject before connecting, with positive evidence beyond absent traffic.", "components": ["rfc", "mcp"], "sources": ["rfc:s612208d893d8", "rfc:sb90ea9a3bb09", "mcp:s4903497743e8"], "status": "REASONED"},
-    "verify-secrets": {"text": "Filename-only token scan distinguishes findings, clean and errors; grant_types alone does not match, empty quoted assignments may, and clean is a bounded heuristic.", "components": ["oauth"], "sources": ["oauth:sd99e74137366"], "status": "REASONED", "verify": [2]},
-    "verify-dcr": {"text": "Captured native DCR body must contain application_type native; omission/mismatch exits nonzero, correct value zero; illustrative JSON is not a live capture.", "components": ["mcp", "oidc"], "sources": ["mcp:s5655f61af2a0", "oidc:s06760d0c8dc0"], "status": "REASONED", "verify": [3]}
-  }
-}
----
 # MCP clients: authorizing to Model Context Protocol servers safely
 
-<!-- version-basis:start -->
-**Version basis**
+Written against MCP 2026-07-28, OAuth 2.1 draft draft-ietf-oauth-v2-1-14, CIMD draft draft-ietf-oauth-client-id-metadata-document-00, and OpenID Connect 1.0 errata 2; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 29 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- mcp: MCP (2026-07-28)
-- mcp-2025-06-18: MCP 2025-06-18 authorization (86f6e0c675afea9a8f233e09b6faf566b126086c)
-- mcp-2025-11-25: MCP 2025-11-25 authorization (86f6e0c675afea9a8f233e09b6faf566b126086c)
-- rfc: OAuth and HTTP RFCs (unknown)
-- oauth: OAuth 2.1 draft (draft-ietf-oauth-v2-1-14)
-- cimd: CIMD draft (draft-ietf-oauth-client-id-metadata-document-00)
-- oidc: OpenID Connect (1.0 errata 2)
-- owasp: OWASP SSRF guidance (unknown)
-
-Claims (full source mapping in the front matter):
-
-- iss (REASONED; mcp, rfc): Compare received iss exactly with the transaction issuer before sending a code to any token endpoint; reject mismatches without normalization.
-- iss-required (REASONED; rfc): If issuer-response support is advertised, missing iss is rejected; otherwise present iss is validated and absent iss still needs multi-AS mix-up protection.
-- transaction (REASONED; rfc, mcp): Bind the validated expected issuer to the state/PKCE transaction; multi-AS clients MUST prevent mix-up attacks.
-- issuer (REASONED; mcp, rfc): Authorization metadata issuer must exactly equal the issuer used to construct discovery, including its path; reject the document before using endpoints.
-- resource-metadata (REASONED; rfc): Validate protected-resource resource separately from authorization-server issuer; issuer equality is not SSRF protection.
-- oidc-discovery (REASONED; oidc, mcp): Apply OpenID Connect Discovery section 4.3 issuer validation to OIDC discovery (this guide's instruction): returned issuer MUST be identical to the Issuer URL used as the well-known prefix and to the iss Claim in ID Tokens issued from this Issuer; on failure, operations requiring that information MUST be aborted and the information MUST NOT be used.
-- cimd (REASONED; cimd): CIMD client_id uses HTTPS with a path; document client_id must exactly match its URL.
-- registration-order (REASONED; mcp): Clients SHOULD support CIMD and prefer available preregistration, then CIMD, then optional deprecated DCR.
-- application-type (REASONED; mcp): DCR MUST specify appropriate application_type: native SHOULD cover desktop/mobile/CLI/localhost apps; web SHOULD cover remote browser apps.
-- web-default (REASONED; oidc): Omitted application_type defaults to web; incompatible native redirects can be rejected under provider policy, without justification for weakening validation.
-- registration-history (REASONED; mcp, mcp-2025-06-18, mcp-2025-11-25): MCP 2025-06-18 said authorization servers and MCP clients SHOULD support DCR; MCP 2025-11-25 said clients supporting all options SHOULD use available pre-registration, then advertised CIMD, then supported DCR, then ask the user if no other option is available; carrying the revision label when citing that history is this guide's advice.
-- refresh-confidential (REASONED; oauth, rfc): Keep refresh tokens confidential in transit/storage, including public clients; send only to issuing-server token/revocation endpoints over authenticated TLS.
-- refresh-storage (REASONED; oauth): Keep refresh tokens out of logs, URLs, repositories and public metadata; use protected storage or native credential storage.
-- refresh-request (REASONED; mcp): SHOULD include refresh_token grant type; MAY request advertised offline_access; MUST NOT assume refresh-token issuance.
-- offline-access (REASONED; oidc): OIDC offline_access requires code-returning response_type and normally prompt=consent; another permitting condition can waive consent prompting.
-- ssrf (REASONED; rfc, mcp): RFC 9728 recommends SSRF precautions; server-deployed MCP clients MUST mitigate every OAuth-related fetch.
-- ssrf-destinations (REASONED; mcp, rfc, owasp): Use HTTPS destination controls blocking private/reserved, loopback, link-local and metadata addresses; configure necessary private exceptions explicitly.
-- ssrf-redirects (REASONED; mcp, rfc, owasp): Revalidate redirects and prevent DNS check/connect races with pinned resolution or controlled egress.
-- ssrf-allowlist (REASONED; owasp, rfc): Known-provider issuer/destination allowlists narrow exposure; dynamic clients still need runtime controls, beyond issuer equality.
-- pkce (REASONED; mcp): Require PKCE, S256 when capable, and refuse absent code_challenge_methods_supported.
-- resource (REASONED; mcp, rfc): Send canonical resource URI in both authorization/token requests; replay protection also needs audience-bound issuance and server audience validation.
-- https (REASONED; mcp): Use HTTPS authorization endpoints and localhost or HTTPS redirect URIs.
-- token-url (REASONED; mcp, oauth, rfc): Access tokens go in Authorization, never URL queries; authorization codes use callback queries with PKCE/iss and referrer/log suppression.
-- verify-iss (REASONED; rfc, mcp): Restore the same fresh transaction before matched callbacks; control redeems code, mismatched iss must cause no token request, independently of state replay.
-- verify-metadata (REASONED; rfc, mcp): Fresh uncached complete metadata pair differs only in issuer; prove test fetch, disable alternative discovery, and reject endpoints from mismatched metadata.
-- verify-address (REASONED; rfc, mcp): Local classifier should print BLOCK for all five internal addresses; guide says it ran but records no observed output, so no demonstration is established.
-- verify-ssrf (REASONED; rfc, mcp): Trusted HTTPS public-address control must fetch; cleared-state private-address test must resolve and reject before connecting, with positive evidence beyond absent traffic.
-- verify-secrets (REASONED; oauth): Filename-only token scan distinguishes findings, clean and errors; grant_types alone does not match, empty quoted assignments may, and clean is a bounded heuristic.
-- verify-dcr (REASONED; mcp, oidc): Captured native DCR body must contain application_type native; omission/mismatch exits nonzero, correct value zero; illustrative JSON is not a live capture.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 An MCP client authorizes to a remote server on a user's behalf, and a malicious or confused server can steer that authorization: it can name an attacker's authorization server, hand back a discovery document that points credentials the wrong way, or supply OAuth URLs that make the client reach inside its own network. The [mcp-servers.md](mcp-servers.md) guide covers the server operator's side and its fronting proxy; this guide covers the **client's** obligations under the MCP **2026-07-28** authorization flow, where a skipped check is not a style lapse but the difference between an authorization code reaching the honest token endpoint and reaching an attacker's. Everything here is a client-side control: it runs in the MCP client (a desktop app, a CLI, or a client deployed on a server), not in the server it talks to.
 
@@ -315,3 +159,185 @@ These checks are client-behaviour checks. Standing up a full malicious-authoriza
 - OpenID Connect Dynamic Client Registration 1.0 errata 2 section 2 (`application_type` default is `web`): https://openid.net/specs/openid-connect-registration-1_0-errata2.html#ClientMetadata
 - OpenID Connect Discovery 1.0 errata 2 section 4.3 (`issuer` identity, ID Token `iss`, abort and non-use on failure; checked October 2026): https://openid.net/specs/openid-connect-discovery-1_0-errata2.html#ProviderConfigurationValidation
 - OWASP Server Side Request Forgery Prevention Cheat Sheet (host allowlist, build the request yourself): https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/mcp-clients.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- mcp: MCP (2026-07-28)
+- mcp-2025-06-18: MCP 2025-06-18 authorization (86f6e0c675afea9a8f233e09b6faf566b126086c)
+- mcp-2025-11-25: MCP 2025-11-25 authorization (86f6e0c675afea9a8f233e09b6faf566b126086c)
+- rfc: OAuth and HTTP RFCs (unknown)
+- oauth: OAuth 2.1 draft (draft-ietf-oauth-v2-1-14)
+- cimd: CIMD draft (draft-ietf-oauth-client-id-metadata-document-00)
+- oidc: OpenID Connect (1.0 errata 2)
+- owasp: OWASP SSRF guidance (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- iss (REASONED; mcp, rfc): Compare received iss exactly with the transaction issuer before sending a code to any token endpoint; reject mismatches without normalization.
+- iss-required (REASONED; rfc): If issuer-response support is advertised, missing iss is rejected; otherwise present iss is validated and absent iss still needs multi-AS mix-up protection.
+- transaction (REASONED; rfc, mcp): Bind the validated expected issuer to the state/PKCE transaction; multi-AS clients MUST prevent mix-up attacks.
+- issuer (REASONED; mcp, rfc): Authorization metadata issuer must exactly equal the issuer used to construct discovery, including its path; reject the document before using endpoints.
+- resource-metadata (REASONED; rfc): Validate protected-resource resource separately from authorization-server issuer; issuer equality is not SSRF protection.
+- oidc-discovery (REASONED; oidc, mcp): Apply OpenID Connect Discovery section 4.3 issuer validation to OIDC discovery (this guide's instruction): returned issuer MUST be identical to the Issuer URL used as the well-known prefix and to the iss Claim in ID Tokens issued from this Issuer; on failure, operations requiring that information MUST be aborted and the information MUST NOT be used.
+- cimd (REASONED; cimd): CIMD client_id uses HTTPS with a path; document client_id must exactly match its URL.
+- registration-order (REASONED; mcp): Clients SHOULD support CIMD and prefer available preregistration, then CIMD, then optional deprecated DCR.
+- application-type (REASONED; mcp): DCR MUST specify appropriate application_type: native SHOULD cover desktop/mobile/CLI/localhost apps; web SHOULD cover remote browser apps.
+- web-default (REASONED; oidc): Omitted application_type defaults to web; incompatible native redirects can be rejected under provider policy, without justification for weakening validation.
+- registration-history (REASONED; mcp, mcp-2025-06-18, mcp-2025-11-25): MCP 2025-06-18 said authorization servers and MCP clients SHOULD support DCR; MCP 2025-11-25 said clients supporting all options SHOULD use available pre-registration, then advertised CIMD, then supported DCR, then ask the user if no other option is available; carrying the revision label when citing that history is this guide's advice.
+- refresh-confidential (REASONED; oauth, rfc): Keep refresh tokens confidential in transit/storage, including public clients; send only to issuing-server token/revocation endpoints over authenticated TLS.
+- refresh-storage (REASONED; oauth): Keep refresh tokens out of logs, URLs, repositories and public metadata; use protected storage or native credential storage.
+- refresh-request (REASONED; mcp): SHOULD include refresh_token grant type; MAY request advertised offline_access; MUST NOT assume refresh-token issuance.
+- offline-access (REASONED; oidc): OIDC offline_access requires code-returning response_type and normally prompt=consent; another permitting condition can waive consent prompting.
+- ssrf (REASONED; rfc, mcp): RFC 9728 recommends SSRF precautions; server-deployed MCP clients MUST mitigate every OAuth-related fetch.
+- ssrf-destinations (REASONED; mcp, rfc, owasp): Use HTTPS destination controls blocking private/reserved, loopback, link-local and metadata addresses; configure necessary private exceptions explicitly.
+- ssrf-redirects (REASONED; mcp, rfc, owasp): Revalidate redirects and prevent DNS check/connect races with pinned resolution or controlled egress.
+- ssrf-allowlist (REASONED; owasp, rfc): Known-provider issuer/destination allowlists narrow exposure; dynamic clients still need runtime controls, beyond issuer equality.
+- pkce (REASONED; mcp): Require PKCE, S256 when capable, and refuse absent code_challenge_methods_supported.
+- resource (REASONED; mcp, rfc): Send canonical resource URI in both authorization/token requests; replay protection also needs audience-bound issuance and server audience validation.
+- https (REASONED; mcp): Use HTTPS authorization endpoints and localhost or HTTPS redirect URIs.
+- token-url (REASONED; mcp, oauth, rfc): Access tokens go in Authorization, never URL queries; authorization codes use callback queries with PKCE/iss and referrer/log suppression.
+- verify-iss (REASONED; rfc, mcp): Restore the same fresh transaction before matched callbacks; control redeems code, mismatched iss must cause no token request, independently of state replay.
+- verify-metadata (REASONED; rfc, mcp): Fresh uncached complete metadata pair differs only in issuer; prove test fetch, disable alternative discovery, and reject endpoints from mismatched metadata.
+- verify-address (REASONED; rfc, mcp): Local classifier should print BLOCK for all five internal addresses; guide says it ran but records no observed output, so no demonstration is established.
+- verify-ssrf (REASONED; rfc, mcp): Trusted HTTPS public-address control must fetch; cleared-state private-address test must resolve and reject before connecting, with positive evidence beyond absent traffic.
+- verify-secrets (REASONED; oauth): Filename-only token scan distinguishes findings, clean and errors; grant_types alone does not match, empty quoted assignments may, and clean is a bounded heuristic.
+- verify-dcr (REASONED; mcp, oidc): Captured native DCR body must contain application_type native; omission/mismatch exits nonzero, correct value zero; illustrative JSON is not a live capture.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-17",
+  "documentation_checked": "2026-09",
+  "body_sha256": "7e61d3251d272d600eb84579980483338e378661f71af77fa39229aab130eb78",
+  "components": {
+    "mcp": {
+      "name": "MCP",
+      "basis": "2026-07-28",
+      "sources": {
+        "s34fabf499cb7": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization",
+        "s4b9b953ca683": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/security-considerations",
+        "s117c3edbfcd7": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/authorization-server-discovery",
+        "s5655f61af2a0": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration",
+        "s4903497743e8": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices"
+      }
+    },
+    "mcp-2025-06-18": {
+      "name": "MCP 2025-06-18 authorization",
+      "basis": "86f6e0c675afea9a8f233e09b6faf566b126086c",
+      "sources": {
+        "sf1432398aebf": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/86f6e0c675afea9a8f233e09b6faf566b126086c/docs/specification/2025-06-18/basic/authorization.mdx#L58-L59"
+      }
+    },
+    "mcp-2025-11-25": {
+      "name": "MCP 2025-11-25 authorization",
+      "basis": "86f6e0c675afea9a8f233e09b6faf566b126086c",
+      "sources": {
+        "s9d3e60a1183b": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/86f6e0c675afea9a8f233e09b6faf566b126086c/docs/specification/2025-11-25/basic/authorization.mdx#L198-L209"
+      }
+    },
+    "rfc": {
+      "name": "OAuth and HTTP RFCs",
+      "basis": "unknown",
+      "sources": {
+        "s93d8089abc7b": "https://www.rfc-editor.org/rfc/rfc9207.html#section-2.4",
+        "s232609abe426": "https://www.rfc-editor.org/rfc/rfc9700.html#section-4.2.4",
+        "sc1f199fd57ff": "https://www.rfc-editor.org/rfc/rfc8414.html#section-3.3",
+        "s612208d893d8": "https://www.rfc-editor.org/rfc/rfc9728.html#section-7.7",
+        "sb90ea9a3bb09": "https://www.rfc-editor.org/rfc/rfc9111.html#section-4.2",
+        "s5cb9d8ac9518": "https://www.rfc-editor.org/rfc/rfc8707.html",
+        "s45a67943085b": "https://www.rfc-editor.org/rfc/rfc7009.html#section-2"
+      }
+    },
+    "oauth": {
+      "name": "OAuth 2.1 draft",
+      "basis": "draft-ietf-oauth-v2-1-14",
+      "sources": {
+        "sd99e74137366": "https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-14#section-4.3"
+      }
+    },
+    "cimd": {
+      "name": "CIMD draft",
+      "basis": "draft-ietf-oauth-client-id-metadata-document-00",
+      "sources": {
+        "sc6ba78bdbb90": "https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-00"
+      }
+    },
+    "oidc": {
+      "name": "OpenID Connect",
+      "basis": "1.0 errata 2",
+      "sources": {
+        "s707464abc09b": "https://openid.net/specs/openid-connect-core-1_0-errata2.html#OfflineAccess",
+        "s06760d0c8dc0": "https://openid.net/specs/openid-connect-registration-1_0-errata2.html#ClientMetadata",
+        "sd8cd68f5f528": "https://openid.net/specs/openid-connect-discovery-1_0-errata2.html#ProviderConfigurationValidation"
+      }
+    },
+    "owasp": {
+      "name": "OWASP SSRF guidance",
+      "basis": "unknown",
+      "sources": {
+        "s7eb820e1e53b": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html"
+      }
+    }
+  },
+  "claims": {
+    "iss": {"text": "Compare received iss exactly with the transaction issuer before sending a code to any token endpoint; reject mismatches without normalization.", "components": ["mcp", "rfc"], "sources": ["mcp:s34fabf499cb7", "rfc:s93d8089abc7b"], "status": "REASONED"},
+    "iss-required": {"text": "If issuer-response support is advertised, missing iss is rejected; otherwise present iss is validated and absent iss still needs multi-AS mix-up protection.", "components": ["rfc"], "sources": ["rfc:s93d8089abc7b", "rfc:s232609abe426"], "status": "REASONED"},
+    "transaction": {"text": "Bind the validated expected issuer to the state/PKCE transaction; multi-AS clients MUST prevent mix-up attacks.", "components": ["rfc", "mcp"], "sources": ["rfc:s232609abe426", "mcp:s34fabf499cb7"], "status": "REASONED"},
+    "issuer": {"text": "Authorization metadata issuer must exactly equal the issuer used to construct discovery, including its path; reject the document before using endpoints.", "components": ["mcp", "rfc"], "sources": ["mcp:s117c3edbfcd7", "rfc:sc1f199fd57ff"], "status": "REASONED"},
+    "resource-metadata": {"text": "Validate protected-resource resource separately from authorization-server issuer; issuer equality is not SSRF protection.", "components": ["rfc"], "sources": ["rfc:s612208d893d8", "rfc:sc1f199fd57ff"], "status": "REASONED"},
+    "oidc-discovery": {"text": "Apply OpenID Connect Discovery section 4.3 issuer validation to OIDC discovery (this guide's instruction): returned issuer MUST be identical to the Issuer URL used as the well-known prefix and to the iss Claim in ID Tokens issued from this Issuer; on failure, operations requiring that information MUST be aborted and the information MUST NOT be used.", "components": ["oidc", "mcp"], "sources": ["oidc:s707464abc09b", "mcp:s117c3edbfcd7", "oidc:sd8cd68f5f528"], "status": "REASONED"},
+    "cimd": {"text": "CIMD client_id uses HTTPS with a path; document client_id must exactly match its URL.", "components": ["cimd"], "sources": ["cimd:sc6ba78bdbb90"], "status": "REASONED"},
+    "registration-order": {"text": "Clients SHOULD support CIMD and prefer available preregistration, then CIMD, then optional deprecated DCR.", "components": ["mcp"], "sources": ["mcp:s5655f61af2a0"], "status": "REASONED"},
+    "application-type": {"text": "DCR MUST specify appropriate application_type: native SHOULD cover desktop/mobile/CLI/localhost apps; web SHOULD cover remote browser apps.", "components": ["mcp"], "sources": ["mcp:s5655f61af2a0"], "status": "REASONED"},
+    "web-default": {"text": "Omitted application_type defaults to web; incompatible native redirects can be rejected under provider policy, without justification for weakening validation.", "components": ["oidc"], "sources": ["oidc:s06760d0c8dc0"], "status": "REASONED"},
+    "registration-history": {"text": "MCP 2025-06-18 said authorization servers and MCP clients SHOULD support DCR; MCP 2025-11-25 said clients supporting all options SHOULD use available pre-registration, then advertised CIMD, then supported DCR, then ask the user if no other option is available; carrying the revision label when citing that history is this guide's advice.", "components": ["mcp", "mcp-2025-06-18", "mcp-2025-11-25"], "sources": ["mcp:s5655f61af2a0", "mcp-2025-06-18:sf1432398aebf", "mcp-2025-11-25:s9d3e60a1183b"], "status": "REASONED"},
+    "refresh-confidential": {"text": "Keep refresh tokens confidential in transit/storage, including public clients; send only to issuing-server token/revocation endpoints over authenticated TLS.", "components": ["oauth", "rfc"], "sources": ["oauth:sd99e74137366", "rfc:s45a67943085b"], "status": "REASONED"},
+    "refresh-storage": {"text": "Keep refresh tokens out of logs, URLs, repositories and public metadata; use protected storage or native credential storage.", "components": ["oauth"], "sources": ["oauth:sd99e74137366"], "status": "REASONED"},
+    "refresh-request": {"text": "SHOULD include refresh_token grant type; MAY request advertised offline_access; MUST NOT assume refresh-token issuance.", "components": ["mcp"], "sources": ["mcp:s34fabf499cb7"], "status": "REASONED"},
+    "offline-access": {"text": "OIDC offline_access requires code-returning response_type and normally prompt=consent; another permitting condition can waive consent prompting.", "components": ["oidc"], "sources": ["oidc:s707464abc09b"], "status": "REASONED"},
+    "ssrf": {"text": "RFC 9728 recommends SSRF precautions; server-deployed MCP clients MUST mitigate every OAuth-related fetch.", "components": ["rfc", "mcp"], "sources": ["rfc:s612208d893d8", "mcp:s4903497743e8"], "status": "REASONED"},
+    "ssrf-destinations": {"text": "Use HTTPS destination controls blocking private/reserved, loopback, link-local and metadata addresses; configure necessary private exceptions explicitly.", "components": ["mcp", "rfc", "owasp"], "sources": ["mcp:s4903497743e8", "rfc:s612208d893d8", "owasp:s7eb820e1e53b"], "status": "REASONED"},
+    "ssrf-redirects": {"text": "Revalidate redirects and prevent DNS check/connect races with pinned resolution or controlled egress.", "components": ["mcp", "rfc", "owasp"], "sources": ["mcp:s4903497743e8", "rfc:s612208d893d8", "owasp:s7eb820e1e53b"], "status": "REASONED"},
+    "ssrf-allowlist": {"text": "Known-provider issuer/destination allowlists narrow exposure; dynamic clients still need runtime controls, beyond issuer equality.", "components": ["owasp", "rfc"], "sources": ["owasp:s7eb820e1e53b", "rfc:s612208d893d8"], "status": "REASONED"},
+    "pkce": {"text": "Require PKCE, S256 when capable, and refuse absent code_challenge_methods_supported.", "components": ["mcp"], "sources": ["mcp:s4b9b953ca683"], "status": "REASONED"},
+    "resource": {"text": "Send canonical resource URI in both authorization/token requests; replay protection also needs audience-bound issuance and server audience validation.", "components": ["mcp", "rfc"], "sources": ["mcp:s34fabf499cb7", "rfc:s5cb9d8ac9518"], "status": "REASONED"},
+    "https": {"text": "Use HTTPS authorization endpoints and localhost or HTTPS redirect URIs.", "components": ["mcp"], "sources": ["mcp:s4b9b953ca683"], "status": "REASONED"},
+    "token-url": {"text": "Access tokens go in Authorization, never URL queries; authorization codes use callback queries with PKCE/iss and referrer/log suppression.", "components": ["mcp", "oauth", "rfc"], "sources": ["mcp:s34fabf499cb7", "oauth:sd99e74137366", "rfc:s232609abe426"], "status": "REASONED"},
+    "verify-iss": {"text": "Restore the same fresh transaction before matched callbacks; control redeems code, mismatched iss must cause no token request, independently of state replay.", "components": ["rfc", "mcp"], "sources": ["rfc:s93d8089abc7b", "mcp:s34fabf499cb7", "rfc:s232609abe426"], "status": "REASONED"},
+    "verify-metadata": {"text": "Fresh uncached complete metadata pair differs only in issuer; prove test fetch, disable alternative discovery, and reject endpoints from mismatched metadata.", "components": ["rfc", "mcp"], "sources": ["rfc:sc1f199fd57ff", "rfc:sb90ea9a3bb09", "mcp:s4b9b953ca683"], "status": "REASONED"},
+    "verify-address": {"text": "Local classifier should print BLOCK for all five internal addresses; guide says it ran but records no observed output, so no demonstration is established.", "components": ["rfc", "mcp"], "sources": ["rfc:s612208d893d8", "mcp:s4903497743e8"], "status": "REASONED", "verify": [1]},
+    "verify-ssrf": {"text": "Trusted HTTPS public-address control must fetch; cleared-state private-address test must resolve and reject before connecting, with positive evidence beyond absent traffic.", "components": ["rfc", "mcp"], "sources": ["rfc:s612208d893d8", "rfc:sb90ea9a3bb09", "mcp:s4903497743e8"], "status": "REASONED"},
+    "verify-secrets": {"text": "Filename-only token scan distinguishes findings, clean and errors; grant_types alone does not match, empty quoted assignments may, and clean is a bounded heuristic.", "components": ["oauth"], "sources": ["oauth:sd99e74137366"], "status": "REASONED", "verify": [2]},
+    "verify-dcr": {"text": "Captured native DCR body must contain application_type native; omission/mismatch exits nonzero, correct value zero; illustrative JSON is not a live capture.", "components": ["mcp", "oidc"], "sources": ["mcp:s5655f61af2a0", "oidc:s06760d0c8dc0"], "status": "REASONED", "verify": [3]}
+  }
+}
+````
+<!-- version-basis:end -->
