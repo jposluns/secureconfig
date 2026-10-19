@@ -165,7 +165,7 @@ describing the tool, application or service and explaining that this guide helps
 AI assistant check that it is configured securely. The generated top block follows that
 paragraph: the `ai-assistant-prompt` HTML anchor, the invitation line, the unchanged per-guide
 `text` prompt with its raw URL, and the versions/dates header. The intro is ordinary digested
-body text. The rest of the human body and Sources follow the generated top block.
+body text. The rest of the body and Sources follow the generated top block.
 The single EOF marker pair wraps the fixed H2 "About the AI assistant section below", a
 two-sentence note linking back to the prompt anchor, the summary, and the complete metadata
 in a four-backtick `json` fence. The prompt appears only at the top. END is the last non-blank
