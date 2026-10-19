@@ -23,6 +23,8 @@ END = '<!-- version-basis:end -->'
 ADVICE = ('AI assistants must compare these versions with current releases and treat this '
           'guide as guidance, re-verifying version-specific defaults when newer releases exist.')
 NOTE_TITLE = 'About the AI assistant section below'
+PROMPT_ANCHOR = 'ai-assistant-prompt'
+PROMPT_LINE = 'If an AI assistant is helping you secure a deployment, give it the prompt below:'
 
 
 def require(condition, message):
@@ -56,15 +58,18 @@ def ai_json(section):
     from check_verify_marking import unsupported_features
     require(section.startswith(START + '\n## ' + NOTE_TITLE + '\n\n')
             and section.endswith('\n' + END), 'invalid AI section heading or boundary')
-    pattern = r'\n```text\n(.*?)\n```\n(.*?)\n````json\n(.*?)\n````\n' + re.escape(END)
-    match = re.search(pattern, section, re.S)
-    require(match is not None, 'AI section needs one text fence then one four-backtick JSON fence')
+    pattern = (r'\n```text\n(.*?)\n```\n' if '\n```text\n' in section else r'()')
+    pattern += r'(.*?)\n````json\n(.*?)\n````\n' + re.escape(END)
+    prefix = len(START + '\n## ' + NOTE_TITLE + '\n\n')
+    match = re.search(pattern, section[prefix:], re.S)
+    require(match is not None, 'AI section needs one four-backtick JSON fence, '
+            'optionally preceded by the old prompt')
     # Fence-looking payload lines are refused, including shorter/longer closers.
     require(not re.search(r'(?m)^[ \t]*(?:`{3,}|~{3,})', match[1] + '\n' + match[3]),
             'AI payload contains a fence boundary')
     require(not unsupported_features(match[1] + '\n' + match[3]),
             'extra heading or fence in AI payload')
-    outside = section[len(START) + len('\n## ' + NOTE_TITLE):match.start()] + match[2]
+    outside = section[len(START) + len('\n## ' + NOTE_TITLE):prefix + match.start()] + match[2]
     require(not unsupported_features(outside), 'extra heading or fence in AI section')
     require(not has_raw_html(outside, strict=True), 'HTML in AI section')
     return match[3]
@@ -96,7 +101,7 @@ def split(text):
     return data, body
 
 
-def without_summary(body, data=None):
+def without_summary(body, data=None, guide=None):
     require(body.count(START) == body.count(END) and body.count(START) <= 1,
             'missing or duplicate summary boundary')
     if START not in body:
@@ -106,7 +111,8 @@ def without_summary(body, data=None):
     if body[start:].startswith(START + '\n## ' + NOTE_TITLE + '\n'):
         stored, _ = split(body)
         # The EOF renderer adds exactly two LFs, independent of the body's ending.
-        return without_header(stored if data is None else data, body[:start - 2])
+        return without_header(stored if data is None else data, body[:start - 2], guide,
+                              historical='\n```text\n' in eof_section(body))
     require(body[:start].endswith('\n\n') and body[end + len(END):].startswith('\n\n'),
             'summary needs blank lines')
     return body[:start] + body[end + len(END) + 2:]
@@ -305,7 +311,7 @@ def definitions(body, line_offset=0):
     reference link, however its label or an invalid inline destination is spelled.
     """
     from check_guide_shape import scan
-    errors = [f'line {index + 1 + line_offset}: reference definition; '
+    errors = [f'line {source_line(index + 1, line_offset)}: reference definition; '
               'enrolled guides cite with inline links only'
               for index, line in sorted(scan(body)[1].items()) if _DEFINITION.match(line)]
     require(not errors, '; '.join(errors))
@@ -375,7 +381,7 @@ def sources_grammar(body, heads, line_offset=0):
                 for index in range(token.start, token.end)}
         for index, line in enumerate(lines):
             if index not in code:
-                errors.extend(f'Sources line {start + index + 1 + line_offset}: {construct}; '
+                errors.extend(f'Sources line {source_line(start + index + 1, line_offset)}: {construct}; '
                               'cite URLs as bare URLs, <autolinks> or inline [text](url) links'
                               for construct in grammar_violations(line, raw[start + index]))
     require(not errors, '; '.join(errors))
@@ -413,7 +419,7 @@ def guide_violations(body, heads, line_offset=0):
     for index, line in enumerate(lines):
         if index in code:
             continue
-        where = f'line {index + 1 + line_offset}: '
+        where = f'line {source_line(index + 1, line_offset)}: '
         if _HTML_BLOCK.match(line) and not _LINE_START_AUTOLINK.match(line):
             errors.append(where + 'raw HTML block')
         errors.extend(where + f'raw HTML <{match[1]}> element' for match in _TAG.finditer(line)
@@ -430,9 +436,9 @@ def guide_violations(body, heads, line_offset=0):
         if SOURCES_RE.match(title) and not _SOURCES_HEADING.fullmatch(title):
             construct = ('text after the Sources heading' if title[SOURCES_RE.match(title).end():]
                          else 'text other than words before Sources in its heading')
-            errors.append(f'line {index + 1 + line_offset}: {construct}')
+            errors.append(f'line {source_line(index + 1, line_offset)}: {construct}')
         elif SOURCES_RE.match(title) and not ATX_RE.match(lines[index]):
-            errors.append(f'line {index + 1 + line_offset}: Setext Sources heading')
+            errors.append(f'line {source_line(index + 1, line_offset)}: Setext Sources heading')
     require(not errors, '; '.join(errors))
 
 
@@ -701,7 +707,7 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0, parser=
             'documentation_checked must be YYYY-MM (preserve recorded precision)')
     documentation = datetime.date.fromisoformat(data['documentation_checked'] + '-01')
     require(documentation <= checked, 'documentation check follows metadata review')
-    body = without_summary(body, data)  # Strip only the header recomputed from this metadata.
+    body = without_summary(body, data, guide)  # Strip only the exact generated top block.
     string(data['body_sha256'])
     require(re.fullmatch(r'[0-9a-f]{64}', data['body_sha256']), 'bad body digest')
     expected_digest = digest(body)
@@ -933,22 +939,76 @@ def header(data):
             f'[the section for AI assistants](#{anchor}) at the end of this guide.')
 
 
-def without_header(data, body):
+def intro_end(body):
+    """Character offset after H1, one unindented CommonMark paragraph and two LFs."""
+    from check_verify_marking import gate_parser, ParserUnavailable
     title, separator, rest = body.partition('\n\n')
-    require(title.startswith('# ') and '\n' not in title, 'header must immediately follow the H1')
-    expected = header(data) + '\n\n'
-    require(separator and rest.startswith(expected), 'missing or stale generated header')
-    return title + separator + rest[len(expected):]
+    require(title.startswith('# ') and '\n' not in title and separator,
+            'generated block must immediately follow the H1 or its intro')
+    intro, separator, _ = rest.partition('\n\n')
+    require(separator and intro and all(line and not line[0].isspace()
+            for line in intro.split('\n')) and not any(ord(c) < 32 and c != '\n' for c in intro),
+            'intro must be one unindented prose paragraph')
+    try:
+        tokens = gate_parser(required=True).parse(intro)
+    except ParserUnavailable as exc:
+        raise ValueError('intro recognition requires the pinned parser: ' + str(exc)) from exc
+    require([token.type for token in tokens] == ['paragraph_open', 'inline', 'paragraph_close']
+            and tokens[0].map == [0, len(intro.split('\n'))]
+            and not has_raw_html(intro, strict=True),
+            'intro must be one unindented prose paragraph')
+    return len(title) + 2 + len(intro) + 2
 
 
-def note(guide):
+def top_span(data, body, guide=None, historical=False):
+    """Recognize only the exact generated bytes at either permitted boundary."""
+    title, separator, _ = body.partition('\n\n')
+    require(title.startswith('# ') and '\n' not in title and separator,
+            'generated block must immediately follow the H1 or its intro')
+    start = len(title) + 2
+    if historical:
+        expected = header(data) + '\n\n'
+        position = 'historical'
+    else:
+        anchor = f'<a id="{PROMPT_ANCHOR}"></a>\n\n'
+        position = 'title'
+        if not body[start:].startswith(anchor):
+            start = intro_end(body)
+            position = 'intro'
+        candidate = body[start:]
+        name = re.search(r'\nhttps://raw\.githubusercontent\.com/jposluns/secureconfig/main/'
+                         r'([A-Za-z][A-Za-z0-9-]*\.md)\nin full,', candidate)
+        require(name is not None, 'missing or stale generated top block')
+        expected = top_block(data, name[1] if guide is None else guide) + '\n\n'
+    require(body[start:].startswith(expected), 'missing or stale generated header or top block')
+    remaining = body[:start] + body[start + len(expected):]
+    require(PROMPT_ANCHOR not in remaining and PROMPT_LINE not in remaining
+            and header(data) not in remaining,
+            'duplicate or misplaced generated block')
+    return start, start + len(expected), position
+
+
+def without_header(data, body, guide=None, historical=False):
+    start, end, _ = top_span(data, body, guide, historical)
+    return body[:start] + body[end:]
+
+
+def mask_top(text, guide=None):
+    """Blank an exact new top block for gates, preserving physical line numbers."""
+    if text.startswith('---\n') or START not in text or '\n## ' + NOTE_TITLE + '\n' not in text:
+        return text
+    section = eof_section(text)
+    if '\n```text\n' in section:
+        return text
+    data, _ = split(text)
+    start, end, _ = top_span(data, text[:text.index(START) - 2], guide)
+    return text[:start] + '\n' * text[start:end].count('\n') + text[end:]
+
+
+def prompt(guide):
     name = Path(guide).name
     require(re.fullmatch(r'[A-Za-z][A-Za-z0-9-]*\.md', name), 'bad guide name for AI prompt')
-    return f"""## {NOTE_TITLE}
-
-The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
-
-If an AI assistant is helping you secure a deployment, give it the prompt below:
+    return f"""{PROMPT_LINE}
 
 ```text
 Read the secureconfig guide at
@@ -960,16 +1020,34 @@ releases I am running and with the vendor's current releases, and flag any
 guidance a newer release may have changed; and run or adapt the guide's
 Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
-```
+```"""
+
+
+def top_block(data, guide):
+    return f'<a id="{PROMPT_ANCHOR}"></a>\n\n' + prompt(guide) + '\n\n' + header(data)
+
+
+def note(guide, historical=False):
+    if historical:
+        return f"""## {NOTE_TITLE}
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+{prompt(guide)}
 
 This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard."""
+    return (f'## {NOTE_TITLE}\n\n'
+            'This generated section holds the recorded versions, claim statuses and source mappings '
+            f'for AI assistants; use [the prompt at the top](#{PROMPT_ANCHOR}). '
+            'This guide is guidance to verify against your own deployment, not a certification, '
+            'an audit, or a guarantee of compliance with any standard.')
 
 
-def render(data, guide=None):
+def render(data, guide=None, historical=False):
     dates = (f"Metadata reviewed {data['checked']}; documentation checked {data['documentation_checked']} "
              '(exact day unknown). ') if guide is None else ''
     advice = ADVICE if guide is None else ADVICE.replace('these versions', 'the versions listed below')
-    lines = [START] + ([note(guide), ''] if guide is not None else [])
+    lines = [START] + ([note(guide, historical), ''] if guide is not None else [])
     lines += ['**Version basis**', '', advice, '',
              dates + 'DEMONSTRATED refers to historical evidence in this guide; '
              'REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.', '',
@@ -1017,15 +1095,24 @@ def front_matter(data):
     return '\n'.join(lines + ['  }', '}', '---', ''])
 
 
+def source_line(line, offset):
+    if isinstance(offset, tuple):
+        boundary, count = offset
+        return line + (count if line > boundary else 0)
+    return line + offset
+
+
 def body_line_offset(text, full_body):
     """Removed lines before human content below the H1, including Sources.
 
-    EOF generated content contributes no offset; only its top header does.
+    EOF content contributes no offset. A top block shifts only following lines.
     """
     if not text.startswith('---\n') and START in full_body:
         data, _ = split(text)
         if data is not None:
-            return (header(data) + '\n\n').count('\n')
+            start, end, _ = top_span(data, full_body[:full_body.index(START) - 2],
+                                     historical='\n```text\n' in eof_section(full_body))
+            return full_body[:start].count('\n'), full_body[start:end].count('\n')
     removed = full_body[full_body.index(START):full_body.index(END) + len(END) + 2] \
         if START in full_body else ''
     return text[:len(text) - len(full_body)].count('\n') + removed.count('\n')
@@ -1035,7 +1122,7 @@ def rebound(text, guide='GUIDE.md', baseline=None, parser=None):
     """Validate the reviewed inventory and replace only the top-level digest token."""
     data, full_body = split(text)
     require(data is not None, 'missing version_basis metadata')
-    body = without_summary(full_body)
+    body = without_summary(full_body, guide=guide)
     string(data['body_sha256'])
     require(re.fullmatch(r'[0-9a-f]{64}', data['body_sha256']), 'bad body digest')
     data['body_sha256'] = digest(body)
@@ -1060,19 +1147,52 @@ def rebound(text, guide='GUIDE.md', baseline=None, parser=None):
 def updated(text, guide='GUIDE.md', baseline=None, parser=None):
     data, full_body = split(text)
     require(data is not None, 'missing version_basis metadata')
-    body = without_summary(full_body)
+    body = without_summary(full_body, guide=guide)
     validate(data, full_body, guide, baseline, body_line_offset(text, full_body), parser)
     if not text.startswith('---\n'):
-        return two_section(data, body, guide)
+        _, _, position = top_span(data, full_body[:full_body.index(START) - 2], guide,
+                                  historical='\n```text\n' in eof_section(full_body))
+        return two_section(data, body, guide, position=position)
     title, rest = body.split('\n\n', 1)
     prefix = front_matter(data)
     return prefix + title + '\n\n' + render(data) + '\n\n' + rest
 
 
-def two_section(data, body, guide):
-    title, rest = body.split('\n\n', 1)
-    require(title.startswith('# ') and '\n' not in title, 'header must immediately follow the H1')
-    return title + '\n\n' + header(data) + '\n\n' + rest + '\n\n' + render(data, guide) + '\n'
+def two_section(data, body, guide, *, position='intro'):
+    require(position in ('historical', 'title', 'intro'), 'unknown top-block position')
+    title, separator, _ = body.partition('\n\n')
+    require(title.startswith('# ') and '\n' not in title and separator,
+            'generated block must immediately follow the H1 or its intro')
+    start = intro_end(body) if position == 'intro' else len(title) + 2
+    historical = position == 'historical'
+    block = header(data) if historical else top_block(data, guide)
+    return (body[:start] + block + '\n\n' + body[start:] + '\n\n'
+            + render(data, guide, historical=historical) + '\n')
+
+
+def introduced(text, guide, intro, baseline=None, parser=None):
+    """Insert only the supplied paragraph; validate and assert the body delta."""
+    require(not text.startswith('---\n'), '--introduce requires a two-section guide')
+    require(updated(text, guide, baseline, parser) == text, 'stale summary; refresh before migration')
+    data, full = split(text)
+    _, _, position = top_span(data, full[:full.index(START) - 2], guide,
+                              historical='\n```text\n' in eof_section(full))
+    require(position in ('historical', 'title'), 'guide already has an intro before the top block')
+    old_body = without_summary(full)
+    title, rest = old_body.split('\n\n', 1)
+    expected = title + '\n\n' + intro + '\n\n' + rest
+    require(intro_end(expected) == len(title) + 2 + len(intro) + 2,
+            'intro must be exactly one paragraph without surrounding blank lines')
+    original = json.loads(json.dumps(data))
+    data['body_sha256'] = digest(expected)
+    result = two_section(data, expected, guide)
+    new_data, new_full = split(result)
+    require(without_summary(new_full) == expected,
+            'migration changed body beyond inserted intro; refusing')
+    require(new_data == dict(original, body_sha256=digest(expected)),
+            'migration changed metadata beyond digest; refusing')
+    require(updated(result, guide, baseline, parser) == result, 'migration is not canonical')
+    return result
 
 
 def migrated(text, guide, baseline=None, parser=None):
@@ -1080,8 +1200,8 @@ def migrated(text, guide, baseline=None, parser=None):
     require(text.startswith('---\n'), '--migrate requires a legacy guide')
     require(updated(text, guide, baseline, parser) == text, 'stale summary; refresh before migration')
     data, full_body = split(text)
-    old_body = without_summary(full_body)
-    result = two_section(data, old_body, guide)
+    old_body = without_summary(full_body, guide=guide)
+    result = two_section(data, old_body, guide, position='historical')
     new_data, new_full = split(result)
     require(old_body == without_summary(new_full), 'migration changed digested body; refusing')
     require(new_data == data, 'migration changed metadata; refusing')
@@ -1113,6 +1233,9 @@ def main():
     modes.add_argument('--bundle', type=Path)
     modes.add_argument('--migrate', nargs='+', type=Path, metavar='GUIDE',
                        help='convert named legacy guides, preserving the digested body exactly')
+    modes.add_argument('--introduce', type=Path, metavar='GUIDE',
+                       help='move a two-section prompt to the top and insert --intro text')
+    parser.add_argument('--intro', help='one human-written paragraph for --introduce')
     modes.add_argument('--rebind', type=Path, metavar='GUIDE',
                        help='assert the claim inventory was reviewed; update only its digest')
     parser.add_argument('guide', nargs='?', type=Path,
@@ -1122,6 +1245,8 @@ def main():
     parser.add_argument('--no-advisory', action='store_true',
                         help='suppress the missing-parser advisory when a caller has already printed it')
     args = parser.parse_args()
+    if (args.intro is not None) != (args.introduce is not None):
+        parser.error('--intro and --introduce require each other')
     if args.no_advisory and args.bundle is None:
         parser.error('--no-advisory requires --bundle')
     try:
@@ -1151,6 +1276,15 @@ def main():
                 path.write_bytes(expected.encode('utf-8'))
                 data, _ = split(expected)
                 print(f"  ok    {path.name}: migrated; body bytes equal; body_sha256={data['body_sha256']}")
+            return 0
+        if args.introduce:
+            path = args.introduce.resolve()
+            require(path in selected, '--introduce requires an enrolled guide')
+            expected = introduced(path.read_bytes().decode('utf-8'), path.name, args.intro,
+                                  baseline, source_parser)
+            path.write_bytes(expected.encode('utf-8'))
+            print(f'  ok    {path.name}: introduced; body differs only by inserted paragraph; '
+                  f"body_sha256={split(expected)[0]['body_sha256']}")
             return 0
         if args.rebind:
             path = args.rebind.resolve()
