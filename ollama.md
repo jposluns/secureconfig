@@ -1,292 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-09-27",
-  "documentation_checked": "2026-09",
-  "body_sha256": "9ab3957a42bab62de0ca660b5a70d60cd251fdd1dd5885385764804259ab0fe8",
-  "components": {
-    "ollama": {
-      "name": "Ollama",
-      "basis": "v0.34.2",
-      "sources": {
-        "s96f77aee8bdd": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go",
-        "sd146dc5d917d": "https://github.com/ollama/ollama/blob/v0.34.2/api/client.go",
-        "s7478dad099ab": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go",
-        "s9bf8940c3001": "https://github.com/ollama/ollama/blob/v0.34.2/main.go#L3-L13",
-        "s8f4e8b651967": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2469-L2475",
-        "sc16932a1056b": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2632-L2654",
-        "s3db39cecc705": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2377-L2654",
-        "s8a310972e31d": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2093-L2109",
-        "s5a188d13a009": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1987-L1992",
-        "s0b381e62597c": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2001-L2011",
-        "sa340a3deada2": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2052-L2057",
-        "sbf4266cc6ffa": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L3-L54",
-        "sce8e789d8d24": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1938-L2060",
-        "s4ded5c727f27": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L3-L60",
-        "sc0d5747ba398": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1",
-        "sbca403d10498": "https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx",
-        "s2abe15b73bce": "https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go",
-        "s8dc81acdfb10": "https://github.com/ollama/ollama/blob/v0.34.2/Dockerfile",
-        "s8379cd00dbf9": "https://github.com/ollama/ollama/blob/v0.34.2/docs/api.md",
-        "s01c0c71afa78": "https://github.com/ollama/ollama/blob/v0.34.2/server/create.go",
-        "s1ded6de8ebe0": "https://github.com/ollama/ollama/blob/v0.34.2/manifest/paths.go",
-        "s8b9d4257c3df": "https://github.com/ollama/ollama/blob/v0.34.2/server/images.go",
-        "s453c95c884da": "https://github.com/ollama/ollama/blob/v0.34.2/docs/linux.mdx",
-        "s52649b124738": "https://github.com/ollama/ollama/blob/v0.34.2/scripts/install.sh",
-        "s27e1a359c744": "https://github.com/ollama/ollama/blob/v0.34.2/server/sched.go",
-        "sfb778cd7de39": "https://github.com/ollama/ollama/blob/v0.34.2/api/types.go",
-        "s4112a1bdf03c": "https://github.com/ollama/ollama/blob/v0.34.2/docs/context-length.mdx",
-        "sa8c4675db386": "https://github.com/ollama/ollama/blob/v0.34.2/types/model/name.go",
-        "s14266d6e90ae": "https://github.com/ollama/ollama/blob/v0.34.2/docs/modelfile.mdx",
-        "sa89bd5d8e1f7": "https://github.com/ollama/ollama/blob/v0.34.2/server/inference_request_log.go"
-      }
-    },
-    "commit": {
-      "name": "Ollama release commit",
-      "basis": "dfabde4539e42ba1e1eab50a3a50b88aea7958a0",
-      "sources": {
-        "s673919ab300f": "https://github.com/ollama/ollama/commit/dfabde4539e42ba1e1eab50a3a50b88aea7958a0"
-      }
-    },
-    "docker": {
-      "name": "Docker Engine localhost boundary",
-      "basis": "28.0",
-      "sources": {
-        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
-      }
-    },
-    "systemd": {
-      "name": "systemd",
-      "basis": "v257",
-      "sources": {
-        "sd4c1aeb45417": "https://github.com/systemd/systemd/blob/v257/man/systemd.exec.xml"
-      }
-    },
-    "nginx": {
-      "name": "nginx",
-      "basis": "unknown",
-      "sources": {
-        "sf32ce2956917": "https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html",
-        "s40bdf1af1596": "https://nginx.org/en/docs/http/ngx_http_core_module.html",
-        "sf0bc2adae8cb": "https://nginx.org/en/docs/http/ngx_http_rewrite_module.html",
-        "sda4ba3fcedbe": "https://nginx.org/en/docs/http/ngx_http_ssl_module.html",
-        "sf3430c5a0b22": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html",
-        "sb3bee9429629": "https://nginx.org/en/docs/http/ngx_http_limit_req_module.html",
-        "sddc43aac8779": "https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html",
-        "sa28876996ece": "https://nginx.org/en/docs/switches.html"
-      }
-    },
-    "htpasswd": {
-      "name": "Apache htpasswd",
-      "basis": "unknown",
-      "sources": {
-        "scde9004bb967": "https://httpd.apache.org/docs/2.4/programs/htpasswd.html"
-      }
-    },
-    "owasp": {
-      "name": "OWASP password guidance",
-      "basis": "unknown",
-      "sources": {
-        "s49e8d76431d9": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
-      }
-    },
-    "caddy": {
-      "name": "Caddy",
-      "basis": "unknown",
-      "sources": {
-        "sbc2bd9599bd1": "https://caddyserver.com/docs/caddyfile/directives/basic_auth",
-        "s38b1b78ce980": "https://caddyserver.com/docs/caddyfile/matchers",
-        "s39d7d5ee55e2": "https://caddyserver.com/docs/caddyfile/directives/handle",
-        "s3865a73ccda3": "https://caddyserver.com/docs/caddyfile/directives/reverse_proxy",
-        "sc5832c7dc52f": "https://caddyserver.com/docs/command-line"
-      }
-    },
-    "cloudflare": {
-      "name": "Cloudflare",
-      "basis": "unknown",
-      "sources": {
-        "s4b65a8359a37": "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/configure-tunnels/origin-parameters/",
-        "s15ab6de85740": "https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/",
-        "sbd88e529ebf2": "https://developers.cloudflare.com/waf/rate-limiting-rules/"
-      }
-    },
-    "curl": {
-      "name": "curl",
-      "basis": "unknown",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
-      }
-    },
-    "ollama-rolling": {
-      "name": "Ollama documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "sf49fae5df9fd": "https://docs.ollama.com/api/authentication",
-        "s6c2961786919": "https://docs.ollama.com/api/tags",
-        "s528f69db04e0": "https://docs.ollama.com/api-reference/show-model-details"
-      }
-    }
-  },
-  "claims": {
-    "local-auth": {"text": "Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing.", "components": ["ollama", "ollama-rolling"], "sources": ["ollama-rolling:sf49fae5df9fd", "ollama:s96f77aee8bdd", "ollama:sd146dc5d917d"], "status": "REASONED"},
-    "local-tls": {"text": "Ollama serves plaintext; an https prefix in OLLAMA_HOST does not enable TLS.", "components": ["ollama"], "sources": ["ollama:s96f77aee8bdd", "ollama:s7478dad099ab"], "status": "REASONED"},
-    "host-bind": {"text": "Standalone default is 127.0.0.1:11434; set OLLAMA_HOST in the service and reload/restart systemd.", "components": ["ollama", "systemd"], "sources": ["ollama:sbca403d10498", "ollama:s2abe15b73bce", "systemd:sd4c1aeb45417"], "status": "REASONED"},
-    "container-bind": {"text": "Official image sets 0.0.0.0:11434 internally; bridge publication and container binding are separate.", "components": ["ollama", "docker"], "sources": ["ollama:s8dc81acdfb10", "docker:s1e53417c513d"], "status": "REASONED"},
-    "publication": {"text": "Use 127.0.0.1:11434:11434 with Engine 28.0+; earlier same-L2 access defeats this boundary; unpublished private networks are an alternative.", "components": ["docker"], "sources": ["docker:s1e53417c513d"], "status": "REASONED"},
-    "host-network": {"text": "Host networking ignores publication flags; override the image listener and restrict authorized peers.", "components": ["ollama", "docker"], "sources": ["ollama:s8dc81acdfb10", "docker:s1e53417c513d"], "status": "REASONED"},
-    "basic-auth": {"text": "nginx server-scope Basic auth protects permitted locations; denied paths/methods may reject before authentication.", "components": ["nginx"], "sources": ["nginx:sf32ce2956917", "nginx:s40bdf1af1596", "nginx:sf0bc2adae8cb"], "status": "REASONED"},
-    "password-hash": {"text": "Use prompted htpasswd -B -C 12; bare -B defaults to bcrypt cost 5, below the cited minimum 10.", "components": ["htpasswd", "owasp"], "sources": ["htpasswd:scde9004bb967", "owasp:s49e8d76431d9"], "status": "REASONED"},
-    "tls-proxy": {"text": "Publish authenticated TLS; encrypt the backend leg separately when proxy and Ollama are on different hosts.", "components": ["nginx"], "sources": ["nginx:sda4ba3fcedbe"], "status": "REASONED"},
-    "host-header": {"text": "Proxy Host localhost:11434 avoids loopback middleware hostname rejection; it is not authentication.", "components": ["ollama", "nginx"], "sources": ["ollama:s96f77aee8bdd", "nginx:sf3430c5a0b22"], "status": "REASONED"},
-    "idle-timeout": {"text": "proxy_read_timeout 300s limits gaps between reads, not total generation duration.", "components": ["nginx"], "sources": ["nginx:sf3430c5a0b22"], "status": "REASONED"},
-    "caddy-policy": {"text": "Caddy Basic auth, exact POST /api/chat matcher and fallback deny other paths; supply admission limits separately.", "components": ["caddy"], "sources": ["caddy:sbc2bd9599bd1", "caddy:s38b1b78ce980", "caddy:s39d7d5ee55e2", "caddy:s3865a73ccda3"], "status": "REASONED"},
-    "bearer-policy": {"text": "Exact nginx bearer comparison is a shared configuration secret without a constant-time guarantee; repeat it in every permitted location.", "components": ["nginx"], "sources": ["nginx:sf0bc2adae8cb"], "status": "REASONED"},
-    "mtls": {"text": "Dedicated client CA and ssl_verify_client require certificate lifecycle management; combine Basic auth only deliberately.", "components": ["nginx"], "sources": ["nginx:sda4ba3fcedbe"], "status": "REASONED"},
-    "access": {"text": "Access authenticates the tunnel; target a loopback policy proxy on 11435 to retain inference-only authorization.", "components": ["cloudflare", "nginx"], "sources": ["cloudflare:s4b65a8359a37", "cloudflare:s15ab6de85740", "nginx:s40bdf1af1596"], "status": "REASONED"},
-    "access-host": {"text": "originRequest.httpHostHeader and the final proxy retain localhost:11434; keep both local listeners private.", "components": ["cloudflare", "ollama"], "sources": ["cloudflare:s4b65a8359a37", "ollama:s96f77aee8bdd"], "status": "REASONED"},
-    "access-limits": {"text": "Access authentication supplies no inference budgets; retain proxy limits, optionally add WAF rate limits and trusted client-address handling.", "components": ["cloudflare", "nginx"], "sources": ["cloudflare:sbd88e529ebf2", "nginx:sb3bee9429629"], "status": "REASONED"},
-    "mfa": {"text": "Human MFA belongs at the fronting identity layer; machine service tokens are not a human MFA flow.", "components": ["cloudflare"], "sources": ["cloudflare:s15ab6de85740"], "status": "REASONED"},
-    "inference-policy": {"text": "Allow only exact required inference paths/methods; broad /api/ or /v1/ prefixes grant excessive authority.", "components": ["nginx", "ollama"], "sources": ["nginx:s40bdf1af1596", "nginx:sf0bc2adae8cb", "ollama:s96f77aee8bdd"], "status": "REASONED"},
-    "pull": {"text": "Keep POST /api/pull private: acquisition consumes storage and network capacity.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9"], "status": "REASONED"},
-    "push": {"text": "Keep POST /api/push private: export has separate upstream authorization.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9"], "status": "REASONED"},
-    "create": {"text": "Keep POST /api/create private: it creates/replaces definitions and processes uploaded model material.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9", "ollama:s01c0c71afa78"], "status": "REASONED"},
-    "copy": {"text": "Keep POST /api/copy private: it creates another model name.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9"], "status": "REASONED"},
-    "delete": {"text": "Keep DELETE /api/delete private: it removes models and associated data.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9"], "status": "REASONED"},
-    "blob-write": {"text": "Keep POST /api/blobs/:digest private: it uploads model-store bytes.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9"], "status": "REASONED"},
-    "blob-read": {"text": "Keep HEAD /api/blobs/:digest private: it reveals blob existence.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9"], "status": "REASONED"},
-    "other-routes": {"text": "Default denial excludes account, experimental web, desktop proxy and unused compatibility routes.", "components": ["ollama"], "sources": ["ollama:s96f77aee8bdd"], "status": "REASONED"},
-    "file-validation": {"text": "Create validates relative filenames and blob paths; arbitrary host-file access is not established at this pin.", "components": ["ollama"], "sources": ["ollama:s01c0c71afa78", "ollama:s1ded6de8ebe0"], "status": "REASONED"},
-    "transfer": {"text": "Management transfers are egress/disk-fill surfaces; insecure alters redirect protections, without demonstrating unrestricted SSRF.", "components": ["ollama", "commit"], "sources": ["ollama:s8b9d4257c3df", "commit:s673919ab300f"], "status": "REASONED"},
-    "origins": {"text": "OLLAMA_ORIGINS adds to built-in origins; removing wildcards is neither authentication nor an exclusive-origin policy.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce"], "status": "REASONED"},
-    "service-user": {"text": "Use a dedicated account and writable store; preserve GPU access and do not assume the container shares installer identity.", "components": ["ollama"], "sources": ["ollama:s453c95c884da", "ollama:s52649b124738"], "status": "REASONED"},
-    "store": {"text": "Proposed 0700 directories, 0600 files and UMask=0077 need existing-permission/ACL inspection; separate service configuration and proxy keys.", "components": ["ollama", "systemd"], "sources": ["ollama:s453c95c884da", "systemd:sd4c1aeb45417"], "status": "REASONED"},
-    "model-path": {"text": "OLLAMA_MODELS relocates models, not the entire service home or signing keys.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:s453c95c884da"], "status": "REASONED"},
-    "loaded-models": {"text": "Loaded-model capacity is automatic unless configured; the example selects one model, not a total memory cap.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:s27e1a359c744"], "status": "REASONED"},
-    "parallel": {"text": "OLLAMA_NUM_PARALLEL defaults to 1.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:s27e1a359c744"], "status": "REASONED"},
-    "queue": {"text": "OLLAMA_MAX_QUEUE defaults to 512; the example selects 16 without promising the seventeenth HTTP request is refused.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:s27e1a359c744"], "status": "REASONED"},
-    "keep-alive": {"text": "Keep-alive defaults to five minutes; one minute is the example, and requests can override it.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:sfb778cd7de39"], "status": "REASONED"},
-    "context": {"text": "Context defaults are VRAM-dependent 4K/32K/256K; implementation thresholds are roughly 23/47 GiB after overhead versus nominal 24/48 GiB.", "components": ["ollama"], "sources": ["ollama:s4112a1bdf03c", "ollama:s96f77aee8bdd"], "status": "REASONED"},
-    "rate": {"text": "Example nginx source-address rate is 2r/s, burst 4 nodelay, with 429 responses; trusted client-address handling matters behind proxies.", "components": ["nginx"], "sources": ["nginx:sb3bee9429629"], "status": "REASONED"},
-    "concurrency": {"text": "Example nginx server-name budget is four active requests with 429; it does not cap every idle/incomplete connection.", "components": ["nginx"], "sources": ["nginx:sddc43aac8779"], "status": "REASONED"},
-    "body-limit": {"text": "Example body cap is 1 MiB; a larger valid fixture should get 413 without upstream work.", "components": ["nginx"], "sources": ["nginx:s40bdf1af1596"], "status": "REASONED", "verify": [3]},
-    "parameters": {"text": "Gateway must validate model, num_ctx, num_predict and keep_alive; defaults/path allowlists do not enforce JSON ceilings.", "components": ["ollama"], "sources": ["ollama:sbca403d10498", "ollama:sfb778cd7de39"], "status": "REASONED", "verify": [3]},
-    "registry-names": {"text": "Fully qualified registry names are supported; unqualified names select Ollama's registry and omitted tags select latest.", "components": ["ollama"], "sources": ["ollama:sa8c4675db386"], "status": "REASONED"},
-    "provenance": {"text": "Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust.", "components": ["ollama", "ollama-rolling"], "sources": ["ollama-rolling:s6c2961786919", "ollama:sa8c4675db386"], "status": "REASONED", "verify": [3]},
-    "local-import": {"text": "CLI imports reviewed local GGUF through a Modelfile; artifact SHA-256 and manifest digest are different identifiers.", "components": ["ollama"], "sources": ["ollama:s14266d6e90ae", "ollama:s7478dad099ab"], "status": "REASONED", "verify": [3]},
-    "registry-egress": {"text": "Restrict acquisition/export to administrators and constrain egress; compare approved and controlled disallowed transfers.", "components": ["ollama"], "sources": ["ollama:s8b9d4257c3df"], "status": "REASONED", "verify": [3]},
-    "cloud": {"text": "OLLAMA_NO_CLOUD=1 disables cloud models and web search after restart; it is not a no-network switch.", "components": ["ollama"], "sources": ["ollama:sbca403d10498"], "status": "REASONED", "verify": [3]},
-    "remotes": {"text": "OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce"], "status": "REASONED"},
-    "diagnostics": {"text": "Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts.", "components": ["ollama", "ollama-rolling"], "sources": ["ollama:s96f77aee8bdd", "ollama-rolling:s528f69db04e0"], "status": "REASONED", "verify": [3]},
-    "request-logs": {"text": "Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:sa89bd5d8e1f7"], "status": "REASONED", "verify": [3]},
-    "profiling": {"text": "No metrics route was found in the main router; this guide's review of first-party v0.34.2 Go source found no net/http/pprof import or explicit profiling registration. Dependencies were not reviewed; shipped-binary pprof availability remains unestablished and cannot be inferred from debug settings.", "components": ["ollama"], "sources": ["ollama:s96f77aee8bdd", "ollama:s9bf8940c3001", "ollama:s8f4e8b651967", "ollama:sc16932a1056b", "ollama:s3db39cecc705", "ollama:s8a310972e31d", "ollama:s5a188d13a009", "ollama:s0b381e62597c", "ollama:sa340a3deada2", "ollama:sbf4266cc6ffa", "ollama:sce8e789d8d24", "ollama:s4ded5c727f27", "ollama:sc0d5747ba398"], "status": "REASONED", "verify": [3]},
-    "verify-inventory": {"text": "Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation.", "components": ["ollama", "docker", "systemd"], "sources": ["ollama:s453c95c884da", "docker:s1e53417c513d", "systemd:sd4c1aeb45417"], "status": "REASONED", "verify": [1]},
-    "verify-bypass": {"text": "HTTP means direct 11434 answered; fixed refusal needs the real remote path plus successful proxy inference; local errors are inconclusive.", "components": ["ollama", "curl"], "sources": ["ollama:sbca403d10498", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
-    "verify-auth": {"text": "Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient.", "components": ["nginx", "ollama", "curl"], "sources": ["nginx:sf32ce2956917", "ollama:s96f77aee8bdd", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [3]},
-    "verify-tls": {"text": "Correct trust/hostname succeeds; wrong trust/hostname and missing/untrusted mTLS certificates must fail before inference.", "components": ["nginx", "curl"], "sources": ["nginx:sda4ba3fcedbe", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [3]},
-    "verify-management": {"text": "Public management must be denied without upstream mutation; private admin operations and public chat supply positive controls.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9", "ollama:s96f77aee8bdd", "ollama:s01c0c71afa78"], "status": "REASONED", "verify": [3]},
-    "verify-tags": {"text": "Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test.", "components": ["nginx", "ollama-rolling"], "sources": ["ollama-rolling:s6c2961786919", "nginx:s40bdf1af1596"], "status": "REASONED", "verify": [3]},
-    "verify-origins": {"text": "Compare unwanted, required and built-in origins with actual browser calls; POST-only proxy preflight refusals differ by variant.", "components": ["ollama", "nginx", "caddy"], "sources": ["ollama:s2abe15b73bce", "nginx:s40bdf1af1596", "nginx:sf0bc2adae8cb", "caddy:s38b1b78ce980"], "status": "REASONED", "verify": [3]},
-    "verify-rate": {"text": "Eight bounded requests test admission with limiter/upstream evidence and recovery; the burst alone does not demonstrate both limiters.", "components": ["nginx"], "sources": ["nginx:sb3bee9429629", "nginx:sddc43aac8779"], "status": "REASONED", "verify": [4]},
-    "verify-concurrency": {"text": "Hold four accepted requests active within the rate budget, reject another, then confirm a freed slot accepts work.", "components": ["nginx"], "sources": ["nginx:sddc43aac8779"], "status": "REASONED", "verify": [3]},
-    "verify-scheduler": {"text": "Compare loading/eviction, keep-alive expiry and actual queue occupancy; public limits can prevent exercising the private queue.", "components": ["ollama"], "sources": ["ollama:s27e1a359c744", "ollama:s2abe15b73bce"], "status": "REASONED", "verify": [3]},
-    "verify-cloud": {"text": "Authorized cloud chat works before disablement and refuses afterward while local chat succeeds; invalid credentials/models are inconclusive.", "components": ["ollama"], "sources": ["ollama:sbca403d10498"], "status": "REASONED", "verify": [3]},
-    "verify-captures": {"text": "Compare completed canary requests with logging enabled/disabled in the actual temporary namespace; deny public diagnostics while private controls work.", "components": ["ollama"], "sources": ["ollama:sa89bd5d8e1f7", "ollama:s96f77aee8bdd"], "status": "REASONED", "verify": [3]},
-    "proxy-parsing": {"text": "nginx -t and caddy validate check configuration acceptance only; native parsing was not demonstrated here.", "components": ["nginx", "caddy"], "sources": ["nginx:sa28876996ece", "caddy:sc5832c7dc52f"], "status": "REASONED"},
-    "curl-version": {"text": "Displayed exitcode and errormsg write-out variables need curl 7.75.0 or later; no tested curl release is recorded.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED"}
-  }
-}
----
 # Ollama: it has no built-in authentication or TLS
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Ollama v0.34.2, Docker Engine localhost boundary 28.0, and systemd v257; 1 further source is pinned to a commit and 7 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 65 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- ollama: Ollama (v0.34.2)
-- commit: Ollama release commit (dfabde4539e42ba1e1eab50a3a50b88aea7958a0)
-- docker: Docker Engine localhost boundary (28.0)
-- systemd: systemd (v257)
-- nginx: nginx (unknown)
-- htpasswd: Apache htpasswd (unknown)
-- owasp: OWASP password guidance (unknown)
-- caddy: Caddy (unknown)
-- cloudflare: Cloudflare (unknown)
-- curl: curl (unknown)
-- ollama-rolling: Ollama documentation (rolling) (unknown)
-
-Claims (full source mapping in the front matter):
-
-- local-auth (REASONED; ollama, ollama-rolling): Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing.
-- local-tls (REASONED; ollama): Ollama serves plaintext; an https prefix in OLLAMA_HOST does not enable TLS.
-- host-bind (REASONED; ollama, systemd): Standalone default is 127.0.0.1:11434; set OLLAMA_HOST in the service and reload/restart systemd.
-- container-bind (REASONED; ollama, docker): Official image sets 0.0.0.0:11434 internally; bridge publication and container binding are separate.
-- publication (REASONED; docker): Use 127.0.0.1:11434:11434 with Engine 28.0+; earlier same-L2 access defeats this boundary; unpublished private networks are an alternative.
-- host-network (REASONED; ollama, docker): Host networking ignores publication flags; override the image listener and restrict authorized peers.
-- basic-auth (REASONED; nginx): nginx server-scope Basic auth protects permitted locations; denied paths/methods may reject before authentication.
-- password-hash (REASONED; htpasswd, owasp): Use prompted htpasswd -B -C 12; bare -B defaults to bcrypt cost 5, below the cited minimum 10.
-- tls-proxy (REASONED; nginx): Publish authenticated TLS; encrypt the backend leg separately when proxy and Ollama are on different hosts.
-- host-header (REASONED; ollama, nginx): Proxy Host localhost:11434 avoids loopback middleware hostname rejection; it is not authentication.
-- idle-timeout (REASONED; nginx): proxy_read_timeout 300s limits gaps between reads, not total generation duration.
-- caddy-policy (REASONED; caddy): Caddy Basic auth, exact POST /api/chat matcher and fallback deny other paths; supply admission limits separately.
-- bearer-policy (REASONED; nginx): Exact nginx bearer comparison is a shared configuration secret without a constant-time guarantee; repeat it in every permitted location.
-- mtls (REASONED; nginx): Dedicated client CA and ssl_verify_client require certificate lifecycle management; combine Basic auth only deliberately.
-- access (REASONED; cloudflare, nginx): Access authenticates the tunnel; target a loopback policy proxy on 11435 to retain inference-only authorization.
-- access-host (REASONED; cloudflare, ollama): originRequest.httpHostHeader and the final proxy retain localhost:11434; keep both local listeners private.
-- access-limits (REASONED; cloudflare, nginx): Access authentication supplies no inference budgets; retain proxy limits, optionally add WAF rate limits and trusted client-address handling.
-- mfa (REASONED; cloudflare): Human MFA belongs at the fronting identity layer; machine service tokens are not a human MFA flow.
-- inference-policy (REASONED; nginx, ollama): Allow only exact required inference paths/methods; broad /api/ or /v1/ prefixes grant excessive authority.
-- pull (REASONED; ollama): Keep POST /api/pull private: acquisition consumes storage and network capacity.
-- push (REASONED; ollama): Keep POST /api/push private: export has separate upstream authorization.
-- create (REASONED; ollama): Keep POST /api/create private: it creates/replaces definitions and processes uploaded model material.
-- copy (REASONED; ollama): Keep POST /api/copy private: it creates another model name.
-- delete (REASONED; ollama): Keep DELETE /api/delete private: it removes models and associated data.
-- blob-write (REASONED; ollama): Keep POST /api/blobs/:digest private: it uploads model-store bytes.
-- blob-read (REASONED; ollama): Keep HEAD /api/blobs/:digest private: it reveals blob existence.
-- other-routes (REASONED; ollama): Default denial excludes account, experimental web, desktop proxy and unused compatibility routes.
-- file-validation (REASONED; ollama): Create validates relative filenames and blob paths; arbitrary host-file access is not established at this pin.
-- transfer (REASONED; ollama, commit): Management transfers are egress/disk-fill surfaces; insecure alters redirect protections, without demonstrating unrestricted SSRF.
-- origins (REASONED; ollama): OLLAMA_ORIGINS adds to built-in origins; removing wildcards is neither authentication nor an exclusive-origin policy.
-- service-user (REASONED; ollama): Use a dedicated account and writable store; preserve GPU access and do not assume the container shares installer identity.
-- store (REASONED; ollama, systemd): Proposed 0700 directories, 0600 files and UMask=0077 need existing-permission/ACL inspection; separate service configuration and proxy keys.
-- model-path (REASONED; ollama): OLLAMA_MODELS relocates models, not the entire service home or signing keys.
-- loaded-models (REASONED; ollama): Loaded-model capacity is automatic unless configured; the example selects one model, not a total memory cap.
-- parallel (REASONED; ollama): OLLAMA_NUM_PARALLEL defaults to 1.
-- queue (REASONED; ollama): OLLAMA_MAX_QUEUE defaults to 512; the example selects 16 without promising the seventeenth HTTP request is refused.
-- keep-alive (REASONED; ollama): Keep-alive defaults to five minutes; one minute is the example, and requests can override it.
-- context (REASONED; ollama): Context defaults are VRAM-dependent 4K/32K/256K; implementation thresholds are roughly 23/47 GiB after overhead versus nominal 24/48 GiB.
-- rate (REASONED; nginx): Example nginx source-address rate is 2r/s, burst 4 nodelay, with 429 responses; trusted client-address handling matters behind proxies.
-- concurrency (REASONED; nginx): Example nginx server-name budget is four active requests with 429; it does not cap every idle/incomplete connection.
-- body-limit (REASONED; nginx): Example body cap is 1 MiB; a larger valid fixture should get 413 without upstream work.
-- parameters (REASONED; ollama): Gateway must validate model, num_ctx, num_predict and keep_alive; defaults/path allowlists do not enforce JSON ceilings.
-- registry-names (REASONED; ollama): Fully qualified registry names are supported; unqualified names select Ollama's registry and omitted tags select latest.
-- provenance (REASONED; ollama, ollama-rolling): Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust.
-- local-import (REASONED; ollama): CLI imports reviewed local GGUF through a Modelfile; artifact SHA-256 and manifest digest are different identifiers.
-- registry-egress (REASONED; ollama): Restrict acquisition/export to administrators and constrain egress; compare approved and controlled disallowed transfers.
-- cloud (REASONED; ollama): OLLAMA_NO_CLOUD=1 disables cloud models and web search after restart; it is not a no-network switch.
-- remotes (REASONED; ollama): OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist.
-- diagnostics (REASONED; ollama, ollama-rolling): Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts.
-- request-logs (REASONED; ollama): Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup.
-- profiling (REASONED; ollama): No metrics route was found in the main router; this guide's review of first-party v0.34.2 Go source found no net/http/pprof import or explicit profiling registration. Dependencies were not reviewed; shipped-binary pprof availability remains unestablished and cannot be inferred from debug settings.
-- verify-inventory (REASONED; ollama, docker, systemd): Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation.
-- verify-bypass (REASONED; ollama, curl): HTTP means direct 11434 answered; fixed refusal needs the real remote path plus successful proxy inference; local errors are inconclusive.
-- verify-auth (REASONED; nginx, ollama, curl): Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient.
-- verify-tls (REASONED; nginx, curl): Correct trust/hostname succeeds; wrong trust/hostname and missing/untrusted mTLS certificates must fail before inference.
-- verify-management (REASONED; ollama): Public management must be denied without upstream mutation; private admin operations and public chat supply positive controls.
-- verify-tags (REASONED; nginx, ollama-rolling): Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test.
-- verify-origins (REASONED; ollama, nginx, caddy): Compare unwanted, required and built-in origins with actual browser calls; POST-only proxy preflight refusals differ by variant.
-- verify-rate (REASONED; nginx): Eight bounded requests test admission with limiter/upstream evidence and recovery; the burst alone does not demonstrate both limiters.
-- verify-concurrency (REASONED; nginx): Hold four accepted requests active within the rate budget, reject another, then confirm a freed slot accepts work.
-- verify-scheduler (REASONED; ollama): Compare loading/eviction, keep-alive expiry and actual queue occupancy; public limits can prevent exercising the private queue.
-- verify-cloud (REASONED; ollama): Authorized cloud chat works before disablement and refuses afterward while local chat succeeds; invalid credentials/models are inconclusive.
-- verify-captures (REASONED; ollama): Compare completed canary requests with logging enabled/disabled in the actual temporary namespace; deny public diagnostics while private controls work.
-- proxy-parsing (REASONED; nginx, caddy): nginx -t and caddy validate check configuration acceptance only; native parsing was not demonstrated here.
-- curl-version (REASONED; curl): Displayed exitcode and errormsg write-out variables need curl 7.75.0 or later; no tested curl release is recorded.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Ollama's local HTTP API has **no native inbound authentication and no TLS**. A reachable listener gives callers inference and management capabilities, including model acquisition, replacement, export, and deletion. Model metadata may disclose templates and system prompts. Cloud credentials can also authorize upstream use. These capabilities do not establish arbitrary access to every host file. The security boundary for remote access is an authenticating proxy or tunnel, with a policy that separates inference from administration. See the [authentication reference](https://docs.ollama.com/api/authentication) and [server implementation](https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go).
 
@@ -1130,3 +846,313 @@ These commands validate configuration acceptance; they do not prove authenticati
 - Cloudflare Access service tokens: https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/
 - Cloudflare WAF rate-limiting rules: https://developers.cloudflare.com/waf/rate-limiting-rules/
 - curl configuration input, timeouts, and write-out variables: https://curl.se/docs/manpage.html
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/ollama.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- ollama: Ollama (v0.34.2)
+- commit: Ollama release commit (dfabde4539e42ba1e1eab50a3a50b88aea7958a0)
+- ollama-rolling: Ollama documentation (rolling) (unknown)
+- docker: Docker Engine localhost boundary (28.0)
+- systemd: systemd (v257)
+- nginx: nginx (unknown)
+- htpasswd: Apache htpasswd (unknown)
+- caddy: Caddy (unknown)
+- cloudflare: Cloudflare (unknown)
+- owasp: OWASP password guidance (unknown)
+- curl: curl (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- local-auth (REASONED; ollama, ollama-rolling): Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing.
+- local-tls (REASONED; ollama): Ollama serves plaintext; an https prefix in OLLAMA_HOST does not enable TLS.
+- host-bind (REASONED; ollama, systemd): Standalone default is 127.0.0.1:11434; set OLLAMA_HOST in the service and reload/restart systemd.
+- container-bind (REASONED; ollama, docker): Official image sets 0.0.0.0:11434 internally; bridge publication and container binding are separate.
+- publication (REASONED; docker): Use 127.0.0.1:11434:11434 with Engine 28.0+; earlier same-L2 access defeats this boundary; unpublished private networks are an alternative.
+- host-network (REASONED; ollama, docker): Host networking ignores publication flags; override the image listener and restrict authorized peers.
+- basic-auth (REASONED; nginx): nginx server-scope Basic auth protects permitted locations; denied paths/methods may reject before authentication.
+- password-hash (REASONED; htpasswd, owasp): Use prompted htpasswd -B -C 12; bare -B defaults to bcrypt cost 5, below the cited minimum 10.
+- tls-proxy (REASONED; nginx): Publish authenticated TLS; encrypt the backend leg separately when proxy and Ollama are on different hosts.
+- host-header (REASONED; ollama, nginx): Proxy Host localhost:11434 avoids loopback middleware hostname rejection; it is not authentication.
+- idle-timeout (REASONED; nginx): proxy_read_timeout 300s limits gaps between reads, not total generation duration.
+- caddy-policy (REASONED; caddy): Caddy Basic auth, exact POST /api/chat matcher and fallback deny other paths; supply admission limits separately.
+- bearer-policy (REASONED; nginx): Exact nginx bearer comparison is a shared configuration secret without a constant-time guarantee; repeat it in every permitted location.
+- mtls (REASONED; nginx): Dedicated client CA and ssl_verify_client require certificate lifecycle management; combine Basic auth only deliberately.
+- access (REASONED; cloudflare, nginx): Access authenticates the tunnel; target a loopback policy proxy on 11435 to retain inference-only authorization.
+- access-host (REASONED; cloudflare, ollama): originRequest.httpHostHeader and the final proxy retain localhost:11434; keep both local listeners private.
+- access-limits (REASONED; cloudflare, nginx): Access authentication supplies no inference budgets; retain proxy limits, optionally add WAF rate limits and trusted client-address handling.
+- mfa (REASONED; cloudflare): Human MFA belongs at the fronting identity layer; machine service tokens are not a human MFA flow.
+- inference-policy (REASONED; nginx, ollama): Allow only exact required inference paths/methods; broad /api/ or /v1/ prefixes grant excessive authority.
+- pull (REASONED; ollama): Keep POST /api/pull private: acquisition consumes storage and network capacity.
+- push (REASONED; ollama): Keep POST /api/push private: export has separate upstream authorization.
+- create (REASONED; ollama): Keep POST /api/create private: it creates/replaces definitions and processes uploaded model material.
+- copy (REASONED; ollama): Keep POST /api/copy private: it creates another model name.
+- delete (REASONED; ollama): Keep DELETE /api/delete private: it removes models and associated data.
+- blob-write (REASONED; ollama): Keep POST /api/blobs/:digest private: it uploads model-store bytes.
+- blob-read (REASONED; ollama): Keep HEAD /api/blobs/:digest private: it reveals blob existence.
+- other-routes (REASONED; ollama): Default denial excludes account, experimental web, desktop proxy and unused compatibility routes.
+- file-validation (REASONED; ollama): Create validates relative filenames and blob paths; arbitrary host-file access is not established at this pin.
+- transfer (REASONED; ollama, commit): Management transfers are egress/disk-fill surfaces; insecure alters redirect protections, without demonstrating unrestricted SSRF.
+- origins (REASONED; ollama): OLLAMA_ORIGINS adds to built-in origins; removing wildcards is neither authentication nor an exclusive-origin policy.
+- service-user (REASONED; ollama): Use a dedicated account and writable store; preserve GPU access and do not assume the container shares installer identity.
+- store (REASONED; ollama, systemd): Proposed 0700 directories, 0600 files and UMask=0077 need existing-permission/ACL inspection; separate service configuration and proxy keys.
+- model-path (REASONED; ollama): OLLAMA_MODELS relocates models, not the entire service home or signing keys.
+- loaded-models (REASONED; ollama): Loaded-model capacity is automatic unless configured; the example selects one model, not a total memory cap.
+- parallel (REASONED; ollama): OLLAMA_NUM_PARALLEL defaults to 1.
+- queue (REASONED; ollama): OLLAMA_MAX_QUEUE defaults to 512; the example selects 16 without promising the seventeenth HTTP request is refused.
+- keep-alive (REASONED; ollama): Keep-alive defaults to five minutes; one minute is the example, and requests can override it.
+- context (REASONED; ollama): Context defaults are VRAM-dependent 4K/32K/256K; implementation thresholds are roughly 23/47 GiB after overhead versus nominal 24/48 GiB.
+- rate (REASONED; nginx): Example nginx source-address rate is 2r/s, burst 4 nodelay, with 429 responses; trusted client-address handling matters behind proxies.
+- concurrency (REASONED; nginx): Example nginx server-name budget is four active requests with 429; it does not cap every idle/incomplete connection.
+- body-limit (REASONED; nginx): Example body cap is 1 MiB; a larger valid fixture should get 413 without upstream work.
+- parameters (REASONED; ollama): Gateway must validate model, num_ctx, num_predict and keep_alive; defaults/path allowlists do not enforce JSON ceilings.
+- registry-names (REASONED; ollama): Fully qualified registry names are supported; unqualified names select Ollama's registry and omitted tags select latest.
+- provenance (REASONED; ollama, ollama-rolling): Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust.
+- local-import (REASONED; ollama): CLI imports reviewed local GGUF through a Modelfile; artifact SHA-256 and manifest digest are different identifiers.
+- registry-egress (REASONED; ollama): Restrict acquisition/export to administrators and constrain egress; compare approved and controlled disallowed transfers.
+- cloud (REASONED; ollama): OLLAMA_NO_CLOUD=1 disables cloud models and web search after restart; it is not a no-network switch.
+- remotes (REASONED; ollama): OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist.
+- diagnostics (REASONED; ollama, ollama-rolling): Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts.
+- request-logs (REASONED; ollama): Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup.
+- profiling (REASONED; ollama): No metrics route was found in the main router; this guide's review of first-party v0.34.2 Go source found no net/http/pprof import or explicit profiling registration. Dependencies were not reviewed; shipped-binary pprof availability remains unestablished and cannot be inferred from debug settings.
+- verify-inventory (REASONED; ollama, docker, systemd): Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation.
+- verify-bypass (REASONED; ollama, curl): HTTP means direct 11434 answered; fixed refusal needs the real remote path plus successful proxy inference; local errors are inconclusive.
+- verify-auth (REASONED; nginx, ollama, curl): Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient.
+- verify-tls (REASONED; nginx, curl): Correct trust/hostname succeeds; wrong trust/hostname and missing/untrusted mTLS certificates must fail before inference.
+- verify-management (REASONED; ollama): Public management must be denied without upstream mutation; private admin operations and public chat supply positive controls.
+- verify-tags (REASONED; nginx, ollama-rolling): Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test.
+- verify-origins (REASONED; ollama, nginx, caddy): Compare unwanted, required and built-in origins with actual browser calls; POST-only proxy preflight refusals differ by variant.
+- verify-rate (REASONED; nginx): Eight bounded requests test admission with limiter/upstream evidence and recovery; the burst alone does not demonstrate both limiters.
+- verify-concurrency (REASONED; nginx): Hold four accepted requests active within the rate budget, reject another, then confirm a freed slot accepts work.
+- verify-scheduler (REASONED; ollama): Compare loading/eviction, keep-alive expiry and actual queue occupancy; public limits can prevent exercising the private queue.
+- verify-cloud (REASONED; ollama): Authorized cloud chat works before disablement and refuses afterward while local chat succeeds; invalid credentials/models are inconclusive.
+- verify-captures (REASONED; ollama): Compare completed canary requests with logging enabled/disabled in the actual temporary namespace; deny public diagnostics while private controls work.
+- proxy-parsing (REASONED; nginx, caddy): nginx -t and caddy validate check configuration acceptance only; native parsing was not demonstrated here.
+- curl-version (REASONED; curl): Displayed exitcode and errormsg write-out variables need curl 7.75.0 or later; no tested curl release is recorded.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-09-27",
+  "documentation_checked": "2026-09",
+  "body_sha256": "9ab3957a42bab62de0ca660b5a70d60cd251fdd1dd5885385764804259ab0fe8",
+  "components": {
+    "ollama": {
+      "name": "Ollama",
+      "basis": "v0.34.2",
+      "sources": {
+        "s96f77aee8bdd": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go",
+        "sd146dc5d917d": "https://github.com/ollama/ollama/blob/v0.34.2/api/client.go",
+        "s7478dad099ab": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go",
+        "s9bf8940c3001": "https://github.com/ollama/ollama/blob/v0.34.2/main.go#L3-L13",
+        "s8f4e8b651967": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2469-L2475",
+        "sc16932a1056b": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2632-L2654",
+        "s3db39cecc705": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2377-L2654",
+        "s8a310972e31d": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L2093-L2109",
+        "s5a188d13a009": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1987-L1992",
+        "s0b381e62597c": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2001-L2011",
+        "sa340a3deada2": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L2052-L2057",
+        "sbf4266cc6ffa": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L3-L54",
+        "sce8e789d8d24": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1938-L2060",
+        "s4ded5c727f27": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go#L3-L60",
+        "sc0d5747ba398": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go#L1",
+        "sbca403d10498": "https://github.com/ollama/ollama/blob/v0.34.2/docs/faq.mdx",
+        "s2abe15b73bce": "https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go",
+        "s8dc81acdfb10": "https://github.com/ollama/ollama/blob/v0.34.2/Dockerfile",
+        "s8379cd00dbf9": "https://github.com/ollama/ollama/blob/v0.34.2/docs/api.md",
+        "s01c0c71afa78": "https://github.com/ollama/ollama/blob/v0.34.2/server/create.go",
+        "s1ded6de8ebe0": "https://github.com/ollama/ollama/blob/v0.34.2/manifest/paths.go",
+        "s8b9d4257c3df": "https://github.com/ollama/ollama/blob/v0.34.2/server/images.go",
+        "s453c95c884da": "https://github.com/ollama/ollama/blob/v0.34.2/docs/linux.mdx",
+        "s52649b124738": "https://github.com/ollama/ollama/blob/v0.34.2/scripts/install.sh",
+        "s27e1a359c744": "https://github.com/ollama/ollama/blob/v0.34.2/server/sched.go",
+        "sfb778cd7de39": "https://github.com/ollama/ollama/blob/v0.34.2/api/types.go",
+        "s4112a1bdf03c": "https://github.com/ollama/ollama/blob/v0.34.2/docs/context-length.mdx",
+        "sa8c4675db386": "https://github.com/ollama/ollama/blob/v0.34.2/types/model/name.go",
+        "s14266d6e90ae": "https://github.com/ollama/ollama/blob/v0.34.2/docs/modelfile.mdx",
+        "sa89bd5d8e1f7": "https://github.com/ollama/ollama/blob/v0.34.2/server/inference_request_log.go"
+      }
+    },
+    "commit": {
+      "name": "Ollama release commit",
+      "basis": "dfabde4539e42ba1e1eab50a3a50b88aea7958a0",
+      "sources": {
+        "s673919ab300f": "https://github.com/ollama/ollama/commit/dfabde4539e42ba1e1eab50a3a50b88aea7958a0"
+      }
+    },
+    "ollama-rolling": {
+      "name": "Ollama documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "sf49fae5df9fd": "https://docs.ollama.com/api/authentication",
+        "s6c2961786919": "https://docs.ollama.com/api/tags",
+        "s528f69db04e0": "https://docs.ollama.com/api-reference/show-model-details"
+      }
+    },
+    "docker": {
+      "name": "Docker Engine localhost boundary",
+      "basis": "28.0",
+      "sources": {
+        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
+      }
+    },
+    "systemd": {
+      "name": "systemd",
+      "basis": "v257",
+      "sources": {
+        "sd4c1aeb45417": "https://github.com/systemd/systemd/blob/v257/man/systemd.exec.xml"
+      }
+    },
+    "nginx": {
+      "name": "nginx",
+      "basis": "unknown",
+      "sources": {
+        "sf32ce2956917": "https://nginx.org/en/docs/http/ngx_http_auth_basic_module.html",
+        "s40bdf1af1596": "https://nginx.org/en/docs/http/ngx_http_core_module.html",
+        "sf0bc2adae8cb": "https://nginx.org/en/docs/http/ngx_http_rewrite_module.html",
+        "sda4ba3fcedbe": "https://nginx.org/en/docs/http/ngx_http_ssl_module.html",
+        "sf3430c5a0b22": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html",
+        "sb3bee9429629": "https://nginx.org/en/docs/http/ngx_http_limit_req_module.html",
+        "sddc43aac8779": "https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html",
+        "sa28876996ece": "https://nginx.org/en/docs/switches.html"
+      }
+    },
+    "htpasswd": {
+      "name": "Apache htpasswd",
+      "basis": "unknown",
+      "sources": {
+        "scde9004bb967": "https://httpd.apache.org/docs/2.4/programs/htpasswd.html"
+      }
+    },
+    "caddy": {
+      "name": "Caddy",
+      "basis": "unknown",
+      "sources": {
+        "sbc2bd9599bd1": "https://caddyserver.com/docs/caddyfile/directives/basic_auth",
+        "s38b1b78ce980": "https://caddyserver.com/docs/caddyfile/matchers",
+        "s39d7d5ee55e2": "https://caddyserver.com/docs/caddyfile/directives/handle",
+        "s3865a73ccda3": "https://caddyserver.com/docs/caddyfile/directives/reverse_proxy",
+        "sc5832c7dc52f": "https://caddyserver.com/docs/command-line"
+      }
+    },
+    "cloudflare": {
+      "name": "Cloudflare",
+      "basis": "unknown",
+      "sources": {
+        "s4b65a8359a37": "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/configure-tunnels/origin-parameters/",
+        "s15ab6de85740": "https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/",
+        "sbd88e529ebf2": "https://developers.cloudflare.com/waf/rate-limiting-rules/"
+      }
+    },
+    "owasp": {
+      "name": "OWASP password guidance",
+      "basis": "unknown",
+      "sources": {
+        "s49e8d76431d9": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
+      }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "unknown",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    }
+  },
+  "claims": {
+    "local-auth": {"text": "Local API has no inbound authentication; cloud keys and OLLAMA_AUTH concern upstream signing.", "components": ["ollama", "ollama-rolling"], "sources": ["ollama-rolling:sf49fae5df9fd", "ollama:s96f77aee8bdd", "ollama:sd146dc5d917d"], "status": "REASONED"},
+    "local-tls": {"text": "Ollama serves plaintext; an https prefix in OLLAMA_HOST does not enable TLS.", "components": ["ollama"], "sources": ["ollama:s96f77aee8bdd", "ollama:s7478dad099ab"], "status": "REASONED"},
+    "host-bind": {"text": "Standalone default is 127.0.0.1:11434; set OLLAMA_HOST in the service and reload/restart systemd.", "components": ["ollama", "systemd"], "sources": ["ollama:sbca403d10498", "ollama:s2abe15b73bce", "systemd:sd4c1aeb45417"], "status": "REASONED"},
+    "container-bind": {"text": "Official image sets 0.0.0.0:11434 internally; bridge publication and container binding are separate.", "components": ["ollama", "docker"], "sources": ["ollama:s8dc81acdfb10", "docker:s1e53417c513d"], "status": "REASONED"},
+    "publication": {"text": "Use 127.0.0.1:11434:11434 with Engine 28.0+; earlier same-L2 access defeats this boundary; unpublished private networks are an alternative.", "components": ["docker"], "sources": ["docker:s1e53417c513d"], "status": "REASONED"},
+    "host-network": {"text": "Host networking ignores publication flags; override the image listener and restrict authorized peers.", "components": ["ollama", "docker"], "sources": ["ollama:s8dc81acdfb10", "docker:s1e53417c513d"], "status": "REASONED"},
+    "basic-auth": {"text": "nginx server-scope Basic auth protects permitted locations; denied paths/methods may reject before authentication.", "components": ["nginx"], "sources": ["nginx:sf32ce2956917", "nginx:s40bdf1af1596", "nginx:sf0bc2adae8cb"], "status": "REASONED"},
+    "password-hash": {"text": "Use prompted htpasswd -B -C 12; bare -B defaults to bcrypt cost 5, below the cited minimum 10.", "components": ["htpasswd", "owasp"], "sources": ["htpasswd:scde9004bb967", "owasp:s49e8d76431d9"], "status": "REASONED"},
+    "tls-proxy": {"text": "Publish authenticated TLS; encrypt the backend leg separately when proxy and Ollama are on different hosts.", "components": ["nginx"], "sources": ["nginx:sda4ba3fcedbe"], "status": "REASONED"},
+    "host-header": {"text": "Proxy Host localhost:11434 avoids loopback middleware hostname rejection; it is not authentication.", "components": ["ollama", "nginx"], "sources": ["ollama:s96f77aee8bdd", "nginx:sf3430c5a0b22"], "status": "REASONED"},
+    "idle-timeout": {"text": "proxy_read_timeout 300s limits gaps between reads, not total generation duration.", "components": ["nginx"], "sources": ["nginx:sf3430c5a0b22"], "status": "REASONED"},
+    "caddy-policy": {"text": "Caddy Basic auth, exact POST /api/chat matcher and fallback deny other paths; supply admission limits separately.", "components": ["caddy"], "sources": ["caddy:sbc2bd9599bd1", "caddy:s38b1b78ce980", "caddy:s39d7d5ee55e2", "caddy:s3865a73ccda3"], "status": "REASONED"},
+    "bearer-policy": {"text": "Exact nginx bearer comparison is a shared configuration secret without a constant-time guarantee; repeat it in every permitted location.", "components": ["nginx"], "sources": ["nginx:sf0bc2adae8cb"], "status": "REASONED"},
+    "mtls": {"text": "Dedicated client CA and ssl_verify_client require certificate lifecycle management; combine Basic auth only deliberately.", "components": ["nginx"], "sources": ["nginx:sda4ba3fcedbe"], "status": "REASONED"},
+    "access": {"text": "Access authenticates the tunnel; target a loopback policy proxy on 11435 to retain inference-only authorization.", "components": ["cloudflare", "nginx"], "sources": ["cloudflare:s4b65a8359a37", "cloudflare:s15ab6de85740", "nginx:s40bdf1af1596"], "status": "REASONED"},
+    "access-host": {"text": "originRequest.httpHostHeader and the final proxy retain localhost:11434; keep both local listeners private.", "components": ["cloudflare", "ollama"], "sources": ["cloudflare:s4b65a8359a37", "ollama:s96f77aee8bdd"], "status": "REASONED"},
+    "access-limits": {"text": "Access authentication supplies no inference budgets; retain proxy limits, optionally add WAF rate limits and trusted client-address handling.", "components": ["cloudflare", "nginx"], "sources": ["cloudflare:sbd88e529ebf2", "nginx:sb3bee9429629"], "status": "REASONED"},
+    "mfa": {"text": "Human MFA belongs at the fronting identity layer; machine service tokens are not a human MFA flow.", "components": ["cloudflare"], "sources": ["cloudflare:s15ab6de85740"], "status": "REASONED"},
+    "inference-policy": {"text": "Allow only exact required inference paths/methods; broad /api/ or /v1/ prefixes grant excessive authority.", "components": ["nginx", "ollama"], "sources": ["nginx:s40bdf1af1596", "nginx:sf0bc2adae8cb", "ollama:s96f77aee8bdd"], "status": "REASONED"},
+    "pull": {"text": "Keep POST /api/pull private: acquisition consumes storage and network capacity.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9"], "status": "REASONED"},
+    "push": {"text": "Keep POST /api/push private: export has separate upstream authorization.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9"], "status": "REASONED"},
+    "create": {"text": "Keep POST /api/create private: it creates/replaces definitions and processes uploaded model material.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9", "ollama:s01c0c71afa78"], "status": "REASONED"},
+    "copy": {"text": "Keep POST /api/copy private: it creates another model name.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9"], "status": "REASONED"},
+    "delete": {"text": "Keep DELETE /api/delete private: it removes models and associated data.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9"], "status": "REASONED"},
+    "blob-write": {"text": "Keep POST /api/blobs/:digest private: it uploads model-store bytes.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9"], "status": "REASONED"},
+    "blob-read": {"text": "Keep HEAD /api/blobs/:digest private: it reveals blob existence.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9"], "status": "REASONED"},
+    "other-routes": {"text": "Default denial excludes account, experimental web, desktop proxy and unused compatibility routes.", "components": ["ollama"], "sources": ["ollama:s96f77aee8bdd"], "status": "REASONED"},
+    "file-validation": {"text": "Create validates relative filenames and blob paths; arbitrary host-file access is not established at this pin.", "components": ["ollama"], "sources": ["ollama:s01c0c71afa78", "ollama:s1ded6de8ebe0"], "status": "REASONED"},
+    "transfer": {"text": "Management transfers are egress/disk-fill surfaces; insecure alters redirect protections, without demonstrating unrestricted SSRF.", "components": ["ollama", "commit"], "sources": ["ollama:s8b9d4257c3df", "commit:s673919ab300f"], "status": "REASONED"},
+    "origins": {"text": "OLLAMA_ORIGINS adds to built-in origins; removing wildcards is neither authentication nor an exclusive-origin policy.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce"], "status": "REASONED"},
+    "service-user": {"text": "Use a dedicated account and writable store; preserve GPU access and do not assume the container shares installer identity.", "components": ["ollama"], "sources": ["ollama:s453c95c884da", "ollama:s52649b124738"], "status": "REASONED"},
+    "store": {"text": "Proposed 0700 directories, 0600 files and UMask=0077 need existing-permission/ACL inspection; separate service configuration and proxy keys.", "components": ["ollama", "systemd"], "sources": ["ollama:s453c95c884da", "systemd:sd4c1aeb45417"], "status": "REASONED"},
+    "model-path": {"text": "OLLAMA_MODELS relocates models, not the entire service home or signing keys.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:s453c95c884da"], "status": "REASONED"},
+    "loaded-models": {"text": "Loaded-model capacity is automatic unless configured; the example selects one model, not a total memory cap.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:s27e1a359c744"], "status": "REASONED"},
+    "parallel": {"text": "OLLAMA_NUM_PARALLEL defaults to 1.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:s27e1a359c744"], "status": "REASONED"},
+    "queue": {"text": "OLLAMA_MAX_QUEUE defaults to 512; the example selects 16 without promising the seventeenth HTTP request is refused.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:s27e1a359c744"], "status": "REASONED"},
+    "keep-alive": {"text": "Keep-alive defaults to five minutes; one minute is the example, and requests can override it.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:sfb778cd7de39"], "status": "REASONED"},
+    "context": {"text": "Context defaults are VRAM-dependent 4K/32K/256K; implementation thresholds are roughly 23/47 GiB after overhead versus nominal 24/48 GiB.", "components": ["ollama"], "sources": ["ollama:s4112a1bdf03c", "ollama:s96f77aee8bdd"], "status": "REASONED"},
+    "rate": {"text": "Example nginx source-address rate is 2r/s, burst 4 nodelay, with 429 responses; trusted client-address handling matters behind proxies.", "components": ["nginx"], "sources": ["nginx:sb3bee9429629"], "status": "REASONED"},
+    "concurrency": {"text": "Example nginx server-name budget is four active requests with 429; it does not cap every idle/incomplete connection.", "components": ["nginx"], "sources": ["nginx:sddc43aac8779"], "status": "REASONED"},
+    "body-limit": {"text": "Example body cap is 1 MiB; a larger valid fixture should get 413 without upstream work.", "components": ["nginx"], "sources": ["nginx:s40bdf1af1596"], "status": "REASONED", "verify": [3]},
+    "parameters": {"text": "Gateway must validate model, num_ctx, num_predict and keep_alive; defaults/path allowlists do not enforce JSON ceilings.", "components": ["ollama"], "sources": ["ollama:sbca403d10498", "ollama:sfb778cd7de39"], "status": "REASONED", "verify": [3]},
+    "registry-names": {"text": "Fully qualified registry names are supported; unqualified names select Ollama's registry and omitted tags select latest.", "components": ["ollama"], "sources": ["ollama:sa8c4675db386"], "status": "REASONED"},
+    "provenance": {"text": "Compare deployed tags digests with independent approval; mutable tags/digest equality do not establish publisher trust.", "components": ["ollama", "ollama-rolling"], "sources": ["ollama-rolling:s6c2961786919", "ollama:sa8c4675db386"], "status": "REASONED", "verify": [3]},
+    "local-import": {"text": "CLI imports reviewed local GGUF through a Modelfile; artifact SHA-256 and manifest digest are different identifiers.", "components": ["ollama"], "sources": ["ollama:s14266d6e90ae", "ollama:s7478dad099ab"], "status": "REASONED", "verify": [3]},
+    "registry-egress": {"text": "Restrict acquisition/export to administrators and constrain egress; compare approved and controlled disallowed transfers.", "components": ["ollama"], "sources": ["ollama:s8b9d4257c3df"], "status": "REASONED", "verify": [3]},
+    "cloud": {"text": "OLLAMA_NO_CLOUD=1 disables cloud models and web search after restart; it is not a no-network switch.", "components": ["ollama"], "sources": ["ollama:sbca403d10498"], "status": "REASONED", "verify": [3]},
+    "remotes": {"text": "OLLAMA_REMOTES selects remote-model hosts, not a registry allowlist.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce"], "status": "REASONED"},
+    "diagnostics": {"text": "Keep root, version, status, tags, ps and show private; model details can disclose templates/system prompts.", "components": ["ollama", "ollama-rolling"], "sources": ["ollama:s96f77aee8bdd", "ollama-rolling:s528f69db04e0"], "status": "REASONED", "verify": [3]},
+    "request-logs": {"text": "Disable OLLAMA_DEBUG and OLLAMA_DEBUG_LOG_REQUESTS; existing request captures/replay scripts need separate cleanup.", "components": ["ollama"], "sources": ["ollama:s2abe15b73bce", "ollama:sa89bd5d8e1f7"], "status": "REASONED", "verify": [3]},
+    "profiling": {"text": "No metrics route was found in the main router; this guide's review of first-party v0.34.2 Go source found no net/http/pprof import or explicit profiling registration. Dependencies were not reviewed; shipped-binary pprof availability remains unestablished and cannot be inferred from debug settings.", "components": ["ollama"], "sources": ["ollama:s96f77aee8bdd", "ollama:s9bf8940c3001", "ollama:s8f4e8b651967", "ollama:sc16932a1056b", "ollama:s3db39cecc705", "ollama:s8a310972e31d", "ollama:s5a188d13a009", "ollama:s0b381e62597c", "ollama:sa340a3deada2", "ollama:sbf4266cc6ffa", "ollama:sce8e789d8d24", "ollama:s4ded5c727f27", "ollama:sc0d5747ba398"], "status": "REASONED", "verify": [3]},
+    "verify-inventory": {"text": "Inspect namespaces, publication, identity, store and ACLs; local ss output alone does not establish isolation.", "components": ["ollama", "docker", "systemd"], "sources": ["ollama:s453c95c884da", "docker:s1e53417c513d", "systemd:sd4c1aeb45417"], "status": "REASONED", "verify": [1]},
+    "verify-bypass": {"text": "HTTP means direct 11434 answered; fixed refusal needs the real remote path plus successful proxy inference; local errors are inconclusive.", "components": ["ollama", "curl"], "sources": ["ollama:sbca403d10498", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]},
+    "verify-auth": {"text": "Absent/wrong credentials must refuse while correct credentials complete chat; streamed 200 alone is insufficient.", "components": ["nginx", "ollama", "curl"], "sources": ["nginx:sf32ce2956917", "ollama:s96f77aee8bdd", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [3]},
+    "verify-tls": {"text": "Correct trust/hostname succeeds; wrong trust/hostname and missing/untrusted mTLS certificates must fail before inference.", "components": ["nginx", "curl"], "sources": ["nginx:sda4ba3fcedbe", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [3]},
+    "verify-management": {"text": "Public management must be denied without upstream mutation; private admin operations and public chat supply positive controls.", "components": ["ollama"], "sources": ["ollama:s8379cd00dbf9", "ollama:s96f77aee8bdd", "ollama:s01c0c71afa78"], "status": "REASONED", "verify": [3]},
+    "verify-tags": {"text": "Public tags may return 404 with valid credentials; private tags should return model JSON; public 404 is not an authentication test.", "components": ["nginx", "ollama-rolling"], "sources": ["ollama-rolling:s6c2961786919", "nginx:s40bdf1af1596"], "status": "REASONED", "verify": [3]},
+    "verify-origins": {"text": "Compare unwanted, required and built-in origins with actual browser calls; POST-only proxy preflight refusals differ by variant.", "components": ["ollama", "nginx", "caddy"], "sources": ["ollama:s2abe15b73bce", "nginx:s40bdf1af1596", "nginx:sf0bc2adae8cb", "caddy:s38b1b78ce980"], "status": "REASONED", "verify": [3]},
+    "verify-rate": {"text": "Eight bounded requests test admission with limiter/upstream evidence and recovery; the burst alone does not demonstrate both limiters.", "components": ["nginx"], "sources": ["nginx:sb3bee9429629", "nginx:sddc43aac8779"], "status": "REASONED", "verify": [4]},
+    "verify-concurrency": {"text": "Hold four accepted requests active within the rate budget, reject another, then confirm a freed slot accepts work.", "components": ["nginx"], "sources": ["nginx:sddc43aac8779"], "status": "REASONED", "verify": [3]},
+    "verify-scheduler": {"text": "Compare loading/eviction, keep-alive expiry and actual queue occupancy; public limits can prevent exercising the private queue.", "components": ["ollama"], "sources": ["ollama:s27e1a359c744", "ollama:s2abe15b73bce"], "status": "REASONED", "verify": [3]},
+    "verify-cloud": {"text": "Authorized cloud chat works before disablement and refuses afterward while local chat succeeds; invalid credentials/models are inconclusive.", "components": ["ollama"], "sources": ["ollama:sbca403d10498"], "status": "REASONED", "verify": [3]},
+    "verify-captures": {"text": "Compare completed canary requests with logging enabled/disabled in the actual temporary namespace; deny public diagnostics while private controls work.", "components": ["ollama"], "sources": ["ollama:sa89bd5d8e1f7", "ollama:s96f77aee8bdd"], "status": "REASONED", "verify": [3]},
+    "proxy-parsing": {"text": "nginx -t and caddy validate check configuration acceptance only; native parsing was not demonstrated here.", "components": ["nginx", "caddy"], "sources": ["nginx:sa28876996ece", "caddy:sc5832c7dc52f"], "status": "REASONED"},
+    "curl-version": {"text": "Displayed exitcode and errormsg write-out variables need curl 7.75.0 or later; no tested curl release is recorded.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->

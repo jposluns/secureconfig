@@ -156,8 +156,8 @@ The legacy summary follows the H1. Both summaries list each component once as
 metadata order. Claim text preserves balanced, equal-length backtick code spans verbatim unless
 the pinned markdown-it-py parser finds raw HTML in the rendered claim; the whole claim, code spans
 included, is then escaped as before. Outside preserved spans, claim text retains the existing HTML,
-pipe and backtick escaping, and unmatched backticks remain escaped. A claim containing a literal `<`
-needs the pinned parser for this check. Component fields and the plain header retain their existing
+pipe and backtick escaping, and unmatched backticks remain escaped. A rendered claim candidate
+that still contains a literal `<` needs the pinned parser for this check. Component fields and the plain header retain their existing
 escaping.
 
 The two-section layout has no front matter. Its H1 is followed by a generated plain-Markdown

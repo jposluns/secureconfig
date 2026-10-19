@@ -1,188 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-15",
-  "documentation_checked": "2026-09",
-  "body_sha256": "77879497a23f39f20a85c1fcdb98885f433f831eaa2ed19d973079a8799d182c",
-  "components": {
-    "docs": {
-      "name": "memcached documentation",
-      "basis": "unknown",
-      "sources": {
-        "sb2bb8731440a": "https://docs.memcached.org/serverguide/configuring/",
-        "s75df2663dea3": "https://memcached.org/",
-        "sf2153ed1541e": "https://github.com/memcached/memcached/wiki/ConfiguringServer",
-        "s9b5a9f424414": "https://docs.memcached.org/advisories/ddos/",
-        "sed14f4319d19": "https://github.com/memcached/memcached/wiki/SASLHowto",
-        "s3b05fd21e910": "https://docs.memcached.org/protocols/binarysasl/",
-        "s31b3834d23a2": "https://docs.memcached.org/protocols/",
-        "s57f57201fc31": "https://docs.memcached.org/features/tls/",
-        "sc0c6532a1ef5": "https://docs.memcached.org/protocols/basic/"
-      }
-    },
-    "openssl": {
-      "name": "OpenSSL CLI",
-      "basis": "3.0",
-      "sources": {
-        "s00aaf106164f": "https://docs.openssl.org/3.0/man1/openssl-s_client/",
-        "s8a7380c7371d": "https://docs.openssl.org/3.0/man1/openssl-verification-options/"
-      }
-    },
-    "stable": {
-      "name": "memcached source",
-      "basis": "1.6.45",
-      "sources": {
-        "s05c72b35637d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1",
-        "s1310cfc0315d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c",
-        "sceaaea90ec60": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c",
-        "sd40dab94f516": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_text.c"
-      }
-    },
-    "protocol": {
-      "name": "memcached protocol source",
-      "basis": "7278bdee96329915bbc87731ba005095453f5c2f",
-      "sources": {
-        "s625682583be8": "https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt"
-      }
-    },
-    "reload": {
-      "name": "memcached TLS design",
-      "basis": "4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969",
-      "sources": {
-        "s839f028f2a46": "https://raw.githubusercontent.com/memcached/memcached/4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969/doc/tls.txt"
-      }
-    },
-    "ascii": {
-      "name": "memcached ASCII authentication release notes",
-      "basis": "unknown",
-      "sources": {
-        "sdcc562ed68f7": "https://docs.memcached.org/releasenotes/releasenotes1515/"
-      }
-    },
-    "watch": {
-      "name": "memcached watch-control release notes",
-      "basis": "unknown",
-      "sources": {
-        "sa3593ecebdce": "https://github.com/memcached/memcached/wiki/ReleaseNotes1521"
-      }
-    },
-    "security": {
-      "name": "memcached security release notes",
-      "basis": "unknown",
-      "sources": {
-        "se456e52d21c6": "https://github.com/memcached/memcached/wiki/ReleaseNotes1642"
-      }
-    },
-    "release-notes-source": {
-      "name": "memcached release notes revision",
-      "basis": "780e280d1a7f98f2981ffeb357ef0c9b182a9844",
-      "sources": {
-        "s0a46fce08585": "https://github.com/memcached/memcached/wiki/ReleaseNotes1645/780e280d1a7f98f2981ffeb357ef0c9b182a9844"
-      }
-    }
-  },
-  "claims": {
-    "default": {"text": "Stock memcached has no authentication and binds INADDR_ANY on TCP11211; isolate it from the internet and untrusted users.", "components": ["docs", "stable"], "sources": ["docs:sb2bb8731440a", "stable:s05c72b35637d"], "status": "REASONED"},
-    "releases": {"text": "Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases.", "components": ["security", "docs", "release-notes-source"], "sources": ["release-notes-source:s0a46fce08585", "security:se456e52d21c6", "docs:s75df2663dea3"], "status": "REASONED"},
-    "bind": {"text": "Use loopback or an intended private address with firewall restrictions; repeated -l/address-specific ports can add listeners that require inspection.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:sf2153ed1541e"], "status": "REASONED"},
-    "ports": {"text": "Set -p 11211 -U 0 explicitly; zero disables the corresponding transport and changing TCP port provides no access control.", "components": ["stable"], "sources": ["stable:s05c72b35637d"], "status": "REASONED"},
-    "udp-default": {"text": "UDP defaults disabled since 1.5.6; keep -U 0 against inherited settings and reflection/amplification exposure.", "components": ["docs"], "sources": ["docs:s9b5a9f424414"], "status": "REASONED"},
-    "account": {"text": "Run a dedicated unprivileged account; -u changes identity only when launched as root and does not create the account.", "components": ["stable"], "sources": ["stable:s05c72b35637d"], "status": "REASONED"},
-    "syscalls": {"text": "Optional drop_privileges adds build/platform-dependent syscall restrictions, defaults disabled and needs deployment testing.", "components": ["stable"], "sources": ["stable:s1310cfc0315d"], "status": "REASONED"},
-    "connections": {"text": "-c bounds connections, not request rate; upstream default 1024, example 256 with operational headroom.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:sf2153ed1541e"], "status": "REASONED"},
-    "memory": {"text": "-m budgets item memory, not total process memory; upstream default 64 MB, example 256 with extra process overhead.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:sf2153ed1541e"], "status": "REASONED"},
-    "idle": {"text": "Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15.", "components": ["stable", "ascii"], "sources": ["stable:s1310cfc0315d", "ascii:sdcc562ed68f7"], "status": "REASONED"},
-    "sasl-build": {"text": "SASL support dates from 1.4.3 and requires --enable-sasl, advertised -S and compatible Cyrus mechanism/client; SASL PLAIN needs TLS.", "components": ["docs"], "sources": ["docs:sed14f4319d19", "docs:s3b05fd21e910"], "status": "REASONED"},
-    "sasl-secrets": {"text": "saslpasswd2 prompts; protect the Cyrus password database for the service account. SASL authenticates without encryption and does not justify public exposure.", "components": ["docs"], "sources": ["docs:s3b05fd21e910"], "status": "REASONED"},
-    "sasl-protocol": {"text": "-S gates binary protected operations but permits VERSION/negotiation; ASCII per-listener overrides or negotiation bypass SASL, so test every listener.", "components": ["stable"], "sources": ["stable:sceaaea90ec60"], "status": "REASONED"},
-    "ascii-auth": {"text": "Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization.", "components": ["docs", "protocol", "ascii"], "sources": ["docs:s31b3834d23a2", "protocol:s625682583be8", "ascii:sdcc562ed68f7"], "status": "REASONED"},
-    "ascii-limits": {"text": "-Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup.", "components": ["ascii", "stable"], "sources": ["ascii:sdcc562ed68f7", "stable:s1310cfc0315d"], "status": "REASONED"},
-    "tls": {"text": "TLS dates from 1.5.13, needs --enable-tls/OpenSSL1.1.1+ and compatible clients; default off, runtime -Z uses PEM chain/key extended options.", "components": ["docs"], "sources": ["docs:s57f57201fc31"], "status": "REASONED"},
-    "mtls": {"text": "ssl_verify_mode defaults 0/no required client cert; mode 2 with ssl_ca_cert requires certificates, adding machine possession, not human MFA.", "components": ["docs"], "sources": ["docs:s57f57201fc31"], "status": "REASONED"},
-    "notls": {"text": "A notls loopback listener bypasses TLS but does not remove -S binary requirements; do not add plaintext merely for text administration.", "components": ["docs", "stable"], "sources": ["docs:s57f57201fc31", "stable:sceaaea90ec60"], "status": "REASONED"},
-    "reload": {"text": "Text refresh_certs/settings do not apply directly to -S; 1.6.45 SIGHUP reloads configured paths and authenticated binary STAT inspects settings; existing sessions persist.", "components": ["reload", "stable"], "sources": ["reload:s839f028f2a46", "stable:s1310cfc0315d", "stable:sceaaea90ec60"], "status": "REASONED"},
-    "flush": {"text": "-F blocks cache-wide invalidation but preserves ordinary writes/deletes; rejected flush increments cmd_flush, so inspect response and retained item.", "components": ["stable", "protocol"], "sources": ["stable:s05c72b35637d", "stable:sceaaea90ec60", "protocol:s625682583be8"], "status": "REASONED"},
-    "shutdown": {"text": "Leave -A absent to keep ASCII shutdown disabled; inspect inherited arguments.", "components": ["stable", "protocol"], "sources": ["stable:s05c72b35637d", "protocol:s625682583be8"], "status": "REASONED"},
-    "dump": {"text": "1.6.45 -X blocks cachedump, stats detail and crawler meta/mgdump; ordinary statistics and known-key reads remain available.", "components": ["stable"], "sources": ["stable:sd40dab94f516"], "status": "REASONED"},
-    "watch": {"text": "-W blocks watch and dates from 1.5.21; preserve network/authentication protection for other remaining capabilities.", "components": ["watch", "stable"], "sources": ["watch:sa3593ecebdce", "stable:sd40dab94f516"], "status": "REASONED"},
-    "crawler": {"text": "no_lru_crawler is not an authorization boundary; protocol commands can re-enable the background crawler.", "components": ["protocol"], "sources": ["protocol:s625682583be8"], "status": "REASONED"},
-    "verify-inventory": {"text": "Check executable/build capabilities, process account and every TCP/UDP/publication listener; pair intended listeners with allowed-client protected operations.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:s9b5a9f424414"], "status": "REASONED", "verify": [1]},
-    "verify-budgets": {"text": "Effective example maxconns/maxbytes are 256/268435456 versus upstream 1024/67108864; verify disabled UDP/shutdown/flush/dump and matched SET/GET, not workload capacity.", "components": ["stable"], "sources": ["stable:s1310cfc0315d"], "status": "REASONED", "verify": [1, 3]},
-    "verify-isolation": {"text": "Disallowed observer must lose TCP11211 while allowed observer still completes a protected request; timeout alone is inconclusive without target/listener/firewall evidence.", "components": ["docs"], "sources": ["docs:sb2bb8731440a"], "status": "REASONED", "verify": [2]},
-    "verify-text": {"text": "Loopback plaintext stats/settings end with END only in the applicable text configuration; SASL/TLS/private-bind failures prove none of those controls independently.", "components": ["protocol", "stable"], "sources": ["protocol:s625682583be8", "stable:sceaaea90ec60"], "status": "REASONED", "verify": [3]},
-    "verify-tls": {"text": "Plaintext cannot complete TLS; fixed endpoint must verify CA and IP/DNS identity and support application operations; chain-only trust is insufficient.", "components": ["docs", "openssl"], "sources": ["docs:s57f57201fc31", "openssl:s8a7380c7371d"], "status": "REASONED", "verify": [4]},
-    "verify-mtls": {"text": "Under verify mode 2, only a valid client certificate completes the application request; server Verification: OK can precede client rejection.", "components": ["docs"], "sources": ["docs:s57f57201fc31"], "status": "REASONED", "verify": [4]},
-    "verify-reload": {"text": "After replacing material and SIGHUP, new connections must present the new certificate and complete an application request; errors or old certificates fail.", "components": ["reload", "stable"], "sources": ["reload:s839f028f2a46", "stable:s1310cfc0315d"], "status": "REASONED", "verify": [4]},
-    "verify-flush": {"text": "Disposable text/binary comparisons change flush success and lost item to explicit refusal and retained item; initial SET/GET and ordinary operations stay usable.", "components": ["stable", "docs"], "sources": ["stable:sd40dab94f516", "stable:sceaaea90ec60", "docs:sc0c6532a1ef5"], "status": "REASONED", "verify": [5]},
-    "verify-dump": {"text": "Populated disposable fixtures must change dump acceptance to explicit refusal; empty dumps, crawler problems and protocol failures do not prove -X.", "components": ["stable", "protocol"], "sources": ["stable:sd40dab94f516", "protocol:s625682583be8"], "status": "REASONED", "verify": [5]},
-    "verify-watch": {"text": "Exposed watch acceptance must become explicit refusal; watcher timeout alone does not demonstrate -W.", "components": ["stable"], "sources": ["stable:sd40dab94f516"], "status": "REASONED", "verify": [5]},
-    "verify-shutdown": {"text": "Disposable -A baseline stops; fixed state refuses shutdown while the same process answers statistics; disable restart masking and never use a live cache.", "components": ["protocol", "stable"], "sources": ["protocol:s625682583be8", "stable:sd40dab94f516"], "status": "REASONED", "verify": [5]},
-    "verify-auth": {"text": "Fresh no-auth/wrong-password protected GETs must fail while correct SASL or ASCII token login returns a known item; binary SASL auth-required status is 0x20.", "components": ["docs", "stable", "protocol"], "sources": ["docs:s3b05fd21e910", "stable:sceaaea90ec60", "protocol:s625682583be8"], "status": "REASONED"},
-    "local-guards": {"text": "Historical shell/scanner checks and invalid-input rejection exercised guards and instrumented dispatch, not memcached startup or service behavior.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:s57f57201fc31"], "status": "DEMONSTRATED", "evidence": "Each of the five guarded blocks rejected six invalid values and two incomplete-assignment cases under `bash -u`; valid inputs reached instrumented probes."}
-  }
-}
----
 # Memcached: bind privately; authentication and TLS are optional builds
 
-<!-- version-basis:start -->
-**Version basis**
+Written against memcached source 1.6.45 and OpenSSL CLI 3.0; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-15; documentation checked September 2026. The guide records 37 claims: 1 demonstrated by a check that ran and 36 reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- docs: memcached documentation (unknown)
-- openssl: OpenSSL CLI (3.0)
-- stable: memcached source (1.6.45)
-- protocol: memcached protocol source (7278bdee96329915bbc87731ba005095453f5c2f)
-- reload: memcached TLS design (4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969)
-- ascii: memcached ASCII authentication release notes (unknown)
-- watch: memcached watch-control release notes (unknown)
-- security: memcached security release notes (unknown)
-- release-notes-source: memcached release notes revision (780e280d1a7f98f2981ffeb357ef0c9b182a9844)
-
-Claims (full source mapping in the front matter):
-
-- default (REASONED; docs, stable): Stock memcached has no authentication and binds INADDR_ANY on TCP11211; isolate it from the internet and untrusted users.
-- releases (REASONED; security, docs, release-notes-source): Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases.
-- bind (REASONED; stable, docs): Use loopback or an intended private address with firewall restrictions; repeated -l/address-specific ports can add listeners that require inspection.
-- ports (REASONED; stable): Set -p 11211 -U 0 explicitly; zero disables the corresponding transport and changing TCP port provides no access control.
-- udp-default (REASONED; docs): UDP defaults disabled since 1.5.6; keep -U 0 against inherited settings and reflection/amplification exposure.
-- account (REASONED; stable): Run a dedicated unprivileged account; -u changes identity only when launched as root and does not create the account.
-- syscalls (REASONED; stable): Optional drop_privileges adds build/platform-dependent syscall restrictions, defaults disabled and needs deployment testing.
-- connections (REASONED; stable, docs): -c bounds connections, not request rate; upstream default 1024, example 256 with operational headroom.
-- memory (REASONED; stable, docs): -m budgets item memory, not total process memory; upstream default 64 MB, example 256 with extra process overhead.
-- idle (REASONED; stable, ascii): Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15.
-- sasl-build (REASONED; docs): SASL support dates from 1.4.3 and requires --enable-sasl, advertised -S and compatible Cyrus mechanism/client; SASL PLAIN needs TLS.
-- sasl-secrets (REASONED; docs): saslpasswd2 prompts; protect the Cyrus password database for the service account. SASL authenticates without encryption and does not justify public exposure.
-- sasl-protocol (REASONED; stable): -S gates binary protected operations but permits VERSION/negotiation; ASCII per-listener overrides or negotiation bypass SASL, so test every listener.
-- ascii-auth (REASONED; docs, protocol, ascii): Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization.
-- ascii-limits (REASONED; ascii, stable): -Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup.
-- tls (REASONED; docs): TLS dates from 1.5.13, needs --enable-tls/OpenSSL1.1.1+ and compatible clients; default off, runtime -Z uses PEM chain/key extended options.
-- mtls (REASONED; docs): ssl_verify_mode defaults 0/no required client cert; mode 2 with ssl_ca_cert requires certificates, adding machine possession, not human MFA.
-- notls (REASONED; docs, stable): A notls loopback listener bypasses TLS but does not remove -S binary requirements; do not add plaintext merely for text administration.
-- reload (REASONED; reload, stable): Text refresh_certs/settings do not apply directly to -S; 1.6.45 SIGHUP reloads configured paths and authenticated binary STAT inspects settings; existing sessions persist.
-- flush (REASONED; stable, protocol): -F blocks cache-wide invalidation but preserves ordinary writes/deletes; rejected flush increments cmd_flush, so inspect response and retained item.
-- shutdown (REASONED; stable, protocol): Leave -A absent to keep ASCII shutdown disabled; inspect inherited arguments.
-- dump (REASONED; stable): 1.6.45 -X blocks cachedump, stats detail and crawler meta/mgdump; ordinary statistics and known-key reads remain available.
-- watch (REASONED; watch, stable): -W blocks watch and dates from 1.5.21; preserve network/authentication protection for other remaining capabilities.
-- crawler (REASONED; protocol): no_lru_crawler is not an authorization boundary; protocol commands can re-enable the background crawler.
-- verify-inventory (REASONED; stable, docs): Check executable/build capabilities, process account and every TCP/UDP/publication listener; pair intended listeners with allowed-client protected operations.
-- verify-budgets (REASONED; stable): Effective example maxconns/maxbytes are 256/268435456 versus upstream 1024/67108864; verify disabled UDP/shutdown/flush/dump and matched SET/GET, not workload capacity.
-- verify-isolation (REASONED; docs): Disallowed observer must lose TCP11211 while allowed observer still completes a protected request; timeout alone is inconclusive without target/listener/firewall evidence.
-- verify-text (REASONED; protocol, stable): Loopback plaintext stats/settings end with END only in the applicable text configuration; SASL/TLS/private-bind failures prove none of those controls independently.
-- verify-tls (REASONED; docs, openssl): Plaintext cannot complete TLS; fixed endpoint must verify CA and IP/DNS identity and support application operations; chain-only trust is insufficient.
-- verify-mtls (REASONED; docs): Under verify mode 2, only a valid client certificate completes the application request; server Verification: OK can precede client rejection.
-- verify-reload (REASONED; reload, stable): After replacing material and SIGHUP, new connections must present the new certificate and complete an application request; errors or old certificates fail.
-- verify-flush (REASONED; stable, docs): Disposable text/binary comparisons change flush success and lost item to explicit refusal and retained item; initial SET/GET and ordinary operations stay usable.
-- verify-dump (REASONED; stable, protocol): Populated disposable fixtures must change dump acceptance to explicit refusal; empty dumps, crawler problems and protocol failures do not prove -X.
-- verify-watch (REASONED; stable): Exposed watch acceptance must become explicit refusal; watcher timeout alone does not demonstrate -W.
-- verify-shutdown (REASONED; protocol, stable): Disposable -A baseline stops; fixed state refuses shutdown while the same process answers statistics; disable restart masking and never use a live cache.
-- verify-auth (REASONED; docs, stable, protocol): Fresh no-auth/wrong-password protected GETs must fail while correct SASL or ASCII token login returns a known item; binary SASL auth-required status is 0x20.
-- local-guards (DEMONSTRATED; stable, docs): Historical shell/scanner checks and invalid-input rejection exercised guards and instrumented dispatch, not memcached startup or service behavior.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Memcached has no authentication by default, and its `-l` option defaults to `INADDR_ANY`, so a stock start listens on every interface on TCP 11211 and serves any client that connects. The project's own wording: memcached "does not spend much, if any, effort in ensuring its defensibility from random internet connections", so it "must not" be exposed to the internet or to untrusted users. The practical control is network isolation; SASL and TLS exist, but each needs a build compiled with that feature. SASL adds no encryption; SASL PLAIN credentials need TLS. See the [server configuration documentation](https://docs.memcached.org/serverguide/configuring/) and [SASL documentation](https://docs.memcached.org/protocols/binarysasl/).
 
@@ -536,3 +356,209 @@ For a binary SASL deployment, also repeat SET, GET, FLUSH, and GET through the a
 - memcached TLS design and certificate reload: https://raw.githubusercontent.com/memcached/memcached/4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969/doc/tls.txt
 - memcached basic text command semantics: https://docs.memcached.org/protocols/basic/
 - memcached binary requests and responses: https://docs.memcached.org/protocols/binary/
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/memcached.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- docs: memcached documentation (unknown)
+- stable: memcached source (1.6.45)
+- protocol: memcached protocol source (7278bdee96329915bbc87731ba005095453f5c2f)
+- reload: memcached TLS design (4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969)
+- openssl: OpenSSL CLI (3.0)
+- ascii: memcached ASCII authentication release notes (unknown)
+- watch: memcached watch-control release notes (unknown)
+- security: memcached security release notes (unknown)
+- release-notes-source: memcached release notes revision (780e280d1a7f98f2981ffeb357ef0c9b182a9844)
+
+Claims (full source mapping in the JSON block below):
+
+- default (REASONED; docs, stable): Stock memcached has no authentication and binds INADDR_ANY on TCP11211; isolate it from the internet and untrusted users.
+- releases (REASONED; security, docs, release-notes-source): Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases.
+- bind (REASONED; stable, docs): Use loopback or an intended private address with firewall restrictions; repeated -l/address-specific ports can add listeners that require inspection.
+- ports (REASONED; stable): Set -p 11211 -U 0 explicitly; zero disables the corresponding transport and changing TCP port provides no access control.
+- udp-default (REASONED; docs): UDP defaults disabled since 1.5.6; keep -U 0 against inherited settings and reflection/amplification exposure.
+- account (REASONED; stable): Run a dedicated unprivileged account; -u changes identity only when launched as root and does not create the account.
+- syscalls (REASONED; stable): Optional drop_privileges adds build/platform-dependent syscall restrictions, defaults disabled and needs deployment testing.
+- connections (REASONED; stable, docs): -c bounds connections, not request rate; upstream default 1024, example 256 with operational headroom.
+- memory (REASONED; stable, docs): -m budgets item memory, not total process memory; upstream default 64 MB, example 256 with extra process overhead.
+- idle (REASONED; stable, ascii): Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15.
+- sasl-build (REASONED; docs): SASL support dates from 1.4.3 and requires --enable-sasl, advertised -S and compatible Cyrus mechanism/client; SASL PLAIN needs TLS.
+- sasl-secrets (REASONED; docs): saslpasswd2 prompts; protect the Cyrus password database for the service account. SASL authenticates without encryption and does not justify public exposure.
+- sasl-protocol (REASONED; stable): -S gates binary protected operations but permits VERSION/negotiation; ASCII per-listener overrides or negotiation bypass SASL, so test every listener.
+- ascii-auth (REASONED; docs, protocol, ascii): Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization.
+- ascii-limits (REASONED; ascii, stable): -Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup.
+- tls (REASONED; docs): TLS dates from 1.5.13, needs --enable-tls/OpenSSL1.1.1+ and compatible clients; default off, runtime -Z uses PEM chain/key extended options.
+- mtls (REASONED; docs): ssl_verify_mode defaults 0/no required client cert; mode 2 with ssl_ca_cert requires certificates, adding machine possession, not human MFA.
+- notls (REASONED; docs, stable): A notls loopback listener bypasses TLS but does not remove -S binary requirements; do not add plaintext merely for text administration.
+- reload (REASONED; reload, stable): Text refresh_certs/settings do not apply directly to -S; 1.6.45 SIGHUP reloads configured paths and authenticated binary STAT inspects settings; existing sessions persist.
+- flush (REASONED; stable, protocol): -F blocks cache-wide invalidation but preserves ordinary writes/deletes; rejected flush increments cmd_flush, so inspect response and retained item.
+- shutdown (REASONED; stable, protocol): Leave -A absent to keep ASCII shutdown disabled; inspect inherited arguments.
+- dump (REASONED; stable): 1.6.45 -X blocks cachedump, stats detail and crawler meta/mgdump; ordinary statistics and known-key reads remain available.
+- watch (REASONED; watch, stable): -W blocks watch and dates from 1.5.21; preserve network/authentication protection for other remaining capabilities.
+- crawler (REASONED; protocol): no_lru_crawler is not an authorization boundary; protocol commands can re-enable the background crawler.
+- verify-inventory (REASONED; stable, docs): Check executable/build capabilities, process account and every TCP/UDP/publication listener; pair intended listeners with allowed-client protected operations.
+- verify-budgets (REASONED; stable): Effective example maxconns/maxbytes are 256/268435456 versus upstream 1024/67108864; verify disabled UDP/shutdown/flush/dump and matched SET/GET, not workload capacity.
+- verify-isolation (REASONED; docs): Disallowed observer must lose TCP11211 while allowed observer still completes a protected request; timeout alone is inconclusive without target/listener/firewall evidence.
+- verify-text (REASONED; protocol, stable): Loopback plaintext stats/settings end with END only in the applicable text configuration; SASL/TLS/private-bind failures prove none of those controls independently.
+- verify-tls (REASONED; docs, openssl): Plaintext cannot complete TLS; fixed endpoint must verify CA and IP/DNS identity and support application operations; chain-only trust is insufficient.
+- verify-mtls (REASONED; docs): Under verify mode 2, only a valid client certificate completes the application request; server Verification: OK can precede client rejection.
+- verify-reload (REASONED; reload, stable): After replacing material and SIGHUP, new connections must present the new certificate and complete an application request; errors or old certificates fail.
+- verify-flush (REASONED; stable, docs): Disposable text/binary comparisons change flush success and lost item to explicit refusal and retained item; initial SET/GET and ordinary operations stay usable.
+- verify-dump (REASONED; stable, protocol): Populated disposable fixtures must change dump acceptance to explicit refusal; empty dumps, crawler problems and protocol failures do not prove -X.
+- verify-watch (REASONED; stable): Exposed watch acceptance must become explicit refusal; watcher timeout alone does not demonstrate -W.
+- verify-shutdown (REASONED; protocol, stable): Disposable -A baseline stops; fixed state refuses shutdown while the same process answers statistics; disable restart masking and never use a live cache.
+- verify-auth (REASONED; docs, stable, protocol): Fresh no-auth/wrong-password protected GETs must fail while correct SASL or ASCII token login returns a known item; binary SASL auth-required status is 0x20.
+- local-guards (DEMONSTRATED; stable, docs): Historical shell/scanner checks and invalid-input rejection exercised guards and instrumented dispatch, not memcached startup or service behavior.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-15",
+  "documentation_checked": "2026-09",
+  "body_sha256": "77879497a23f39f20a85c1fcdb98885f433f831eaa2ed19d973079a8799d182c",
+  "components": {
+    "docs": {
+      "name": "memcached documentation",
+      "basis": "unknown",
+      "sources": {
+        "sb2bb8731440a": "https://docs.memcached.org/serverguide/configuring/",
+        "s75df2663dea3": "https://memcached.org/",
+        "sf2153ed1541e": "https://github.com/memcached/memcached/wiki/ConfiguringServer",
+        "s9b5a9f424414": "https://docs.memcached.org/advisories/ddos/",
+        "sed14f4319d19": "https://github.com/memcached/memcached/wiki/SASLHowto",
+        "s3b05fd21e910": "https://docs.memcached.org/protocols/binarysasl/",
+        "s31b3834d23a2": "https://docs.memcached.org/protocols/",
+        "s57f57201fc31": "https://docs.memcached.org/features/tls/",
+        "sc0c6532a1ef5": "https://docs.memcached.org/protocols/basic/"
+      }
+    },
+    "stable": {
+      "name": "memcached source",
+      "basis": "1.6.45",
+      "sources": {
+        "s05c72b35637d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1",
+        "s1310cfc0315d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c",
+        "sceaaea90ec60": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c",
+        "sd40dab94f516": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_text.c"
+      }
+    },
+    "protocol": {
+      "name": "memcached protocol source",
+      "basis": "7278bdee96329915bbc87731ba005095453f5c2f",
+      "sources": {
+        "s625682583be8": "https://raw.githubusercontent.com/memcached/memcached/7278bdee96329915bbc87731ba005095453f5c2f/doc/protocol.txt"
+      }
+    },
+    "reload": {
+      "name": "memcached TLS design",
+      "basis": "4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969",
+      "sources": {
+        "s839f028f2a46": "https://raw.githubusercontent.com/memcached/memcached/4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969/doc/tls.txt"
+      }
+    },
+    "openssl": {
+      "name": "OpenSSL CLI",
+      "basis": "3.0",
+      "sources": {
+        "s00aaf106164f": "https://docs.openssl.org/3.0/man1/openssl-s_client/",
+        "s8a7380c7371d": "https://docs.openssl.org/3.0/man1/openssl-verification-options/"
+      }
+    },
+    "ascii": {
+      "name": "memcached ASCII authentication release notes",
+      "basis": "unknown",
+      "sources": {
+        "sdcc562ed68f7": "https://docs.memcached.org/releasenotes/releasenotes1515/"
+      }
+    },
+    "watch": {
+      "name": "memcached watch-control release notes",
+      "basis": "unknown",
+      "sources": {
+        "sa3593ecebdce": "https://github.com/memcached/memcached/wiki/ReleaseNotes1521"
+      }
+    },
+    "security": {
+      "name": "memcached security release notes",
+      "basis": "unknown",
+      "sources": {
+        "se456e52d21c6": "https://github.com/memcached/memcached/wiki/ReleaseNotes1642"
+      }
+    },
+    "release-notes-source": {
+      "name": "memcached release notes revision",
+      "basis": "780e280d1a7f98f2981ffeb357ef0c9b182a9844",
+      "sources": {
+        "s0a46fce08585": "https://github.com/memcached/memcached/wiki/ReleaseNotes1645/780e280d1a7f98f2981ffeb357ef0c9b182a9844"
+      }
+    }
+  },
+  "claims": {
+    "default": {"text": "Stock memcached has no authentication and binds INADDR_ANY on TCP11211; isolate it from the internet and untrusted users.", "components": ["docs", "stable"], "sources": ["docs:sb2bb8731440a", "stable:s05c72b35637d"], "status": "REASONED"},
+    "releases": {"text": "Recorded current stable is 1.6.45 with further fixes after security-focused 1.6.42; check backports and canary upgrades, not feature-minimum releases.", "components": ["security", "docs", "release-notes-source"], "sources": ["release-notes-source:s0a46fce08585", "security:se456e52d21c6", "docs:s75df2663dea3"], "status": "REASONED"},
+    "bind": {"text": "Use loopback or an intended private address with firewall restrictions; repeated -l/address-specific ports can add listeners that require inspection.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:sf2153ed1541e"], "status": "REASONED"},
+    "ports": {"text": "Set -p 11211 -U 0 explicitly; zero disables the corresponding transport and changing TCP port provides no access control.", "components": ["stable"], "sources": ["stable:s05c72b35637d"], "status": "REASONED"},
+    "udp-default": {"text": "UDP defaults disabled since 1.5.6; keep -U 0 against inherited settings and reflection/amplification exposure.", "components": ["docs"], "sources": ["docs:s9b5a9f424414"], "status": "REASONED"},
+    "account": {"text": "Run a dedicated unprivileged account; -u changes identity only when launched as root and does not create the account.", "components": ["stable"], "sources": ["stable:s05c72b35637d"], "status": "REASONED"},
+    "syscalls": {"text": "Optional drop_privileges adds build/platform-dependent syscall restrictions, defaults disabled and needs deployment testing.", "components": ["stable"], "sources": ["stable:s1310cfc0315d"], "status": "REASONED"},
+    "connections": {"text": "-c bounds connections, not request rate; upstream default 1024, example 256 with operational headroom.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:sf2153ed1541e"], "status": "REASONED"},
+    "memory": {"text": "-m budgets item memory, not total process memory; upstream default 64 MB, example 256 with extra process overhead.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:sf2153ed1541e"], "status": "REASONED"},
+    "idle": {"text": "Optional idle_timeout defaults zero/no timeout in 1.6.45; choose pool-compatible values; binary handling was fixed in 1.5.15.", "components": ["stable", "ascii"], "sources": ["stable:s1310cfc0315d", "ascii:sdcc562ed68f7"], "status": "REASONED"},
+    "sasl-build": {"text": "SASL support dates from 1.4.3 and requires --enable-sasl, advertised -S and compatible Cyrus mechanism/client; SASL PLAIN needs TLS.", "components": ["docs"], "sources": ["docs:sed14f4319d19", "docs:s3b05fd21e910"], "status": "REASONED"},
+    "sasl-secrets": {"text": "saslpasswd2 prompts; protect the Cyrus password database for the service account. SASL authenticates without encryption and does not justify public exposure.", "components": ["docs"], "sources": ["docs:s3b05fd21e910"], "status": "REASONED"},
+    "sasl-protocol": {"text": "-S gates binary protected operations but permits VERSION/negotiation; ASCII per-listener overrides or negotiation bypass SASL, so test every listener.", "components": ["stable"], "sources": ["stable:sceaaea90ec60"], "status": "REASONED"},
+    "ascii-auth": {"text": "Deprecated binary protocol has an alternative: -Y service-only username:password file and a client fake-SET token exchange over TLS, without per-user authorization.", "components": ["docs", "protocol", "ascii"], "sources": ["docs:s31b3834d23a2", "protocol:s625682583be8", "ascii:sdcc562ed68f7"], "status": "REASONED"},
+    "ascii-limits": {"text": "-Y remains experimental in 1.6.45, needs no SASL dependency, excludes binary operation and rejects nonzero UDP at startup.", "components": ["ascii", "stable"], "sources": ["ascii:sdcc562ed68f7", "stable:s1310cfc0315d"], "status": "REASONED"},
+    "tls": {"text": "TLS dates from 1.5.13, needs --enable-tls/OpenSSL1.1.1+ and compatible clients; default off, runtime -Z uses PEM chain/key extended options.", "components": ["docs"], "sources": ["docs:s57f57201fc31"], "status": "REASONED"},
+    "mtls": {"text": "ssl_verify_mode defaults 0/no required client cert; mode 2 with ssl_ca_cert requires certificates, adding machine possession, not human MFA.", "components": ["docs"], "sources": ["docs:s57f57201fc31"], "status": "REASONED"},
+    "notls": {"text": "A notls loopback listener bypasses TLS but does not remove -S binary requirements; do not add plaintext merely for text administration.", "components": ["docs", "stable"], "sources": ["docs:s57f57201fc31", "stable:sceaaea90ec60"], "status": "REASONED"},
+    "reload": {"text": "Text refresh_certs/settings do not apply directly to -S; 1.6.45 SIGHUP reloads configured paths and authenticated binary STAT inspects settings; existing sessions persist.", "components": ["reload", "stable"], "sources": ["reload:s839f028f2a46", "stable:s1310cfc0315d", "stable:sceaaea90ec60"], "status": "REASONED"},
+    "flush": {"text": "-F blocks cache-wide invalidation but preserves ordinary writes/deletes; rejected flush increments cmd_flush, so inspect response and retained item.", "components": ["stable", "protocol"], "sources": ["stable:s05c72b35637d", "stable:sceaaea90ec60", "protocol:s625682583be8"], "status": "REASONED"},
+    "shutdown": {"text": "Leave -A absent to keep ASCII shutdown disabled; inspect inherited arguments.", "components": ["stable", "protocol"], "sources": ["stable:s05c72b35637d", "protocol:s625682583be8"], "status": "REASONED"},
+    "dump": {"text": "1.6.45 -X blocks cachedump, stats detail and crawler meta/mgdump; ordinary statistics and known-key reads remain available.", "components": ["stable"], "sources": ["stable:sd40dab94f516"], "status": "REASONED"},
+    "watch": {"text": "-W blocks watch and dates from 1.5.21; preserve network/authentication protection for other remaining capabilities.", "components": ["watch", "stable"], "sources": ["watch:sa3593ecebdce", "stable:sd40dab94f516"], "status": "REASONED"},
+    "crawler": {"text": "no_lru_crawler is not an authorization boundary; protocol commands can re-enable the background crawler.", "components": ["protocol"], "sources": ["protocol:s625682583be8"], "status": "REASONED"},
+    "verify-inventory": {"text": "Check executable/build capabilities, process account and every TCP/UDP/publication listener; pair intended listeners with allowed-client protected operations.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:s9b5a9f424414"], "status": "REASONED", "verify": [1]},
+    "verify-budgets": {"text": "Effective example maxconns/maxbytes are 256/268435456 versus upstream 1024/67108864; verify disabled UDP/shutdown/flush/dump and matched SET/GET, not workload capacity.", "components": ["stable"], "sources": ["stable:s1310cfc0315d"], "status": "REASONED", "verify": [1, 3]},
+    "verify-isolation": {"text": "Disallowed observer must lose TCP11211 while allowed observer still completes a protected request; timeout alone is inconclusive without target/listener/firewall evidence.", "components": ["docs"], "sources": ["docs:sb2bb8731440a"], "status": "REASONED", "verify": [2]},
+    "verify-text": {"text": "Loopback plaintext stats/settings end with END only in the applicable text configuration; SASL/TLS/private-bind failures prove none of those controls independently.", "components": ["protocol", "stable"], "sources": ["protocol:s625682583be8", "stable:sceaaea90ec60"], "status": "REASONED", "verify": [3]},
+    "verify-tls": {"text": "Plaintext cannot complete TLS; fixed endpoint must verify CA and IP/DNS identity and support application operations; chain-only trust is insufficient.", "components": ["docs", "openssl"], "sources": ["docs:s57f57201fc31", "openssl:s8a7380c7371d"], "status": "REASONED", "verify": [4]},
+    "verify-mtls": {"text": "Under verify mode 2, only a valid client certificate completes the application request; server Verification: OK can precede client rejection.", "components": ["docs"], "sources": ["docs:s57f57201fc31"], "status": "REASONED", "verify": [4]},
+    "verify-reload": {"text": "After replacing material and SIGHUP, new connections must present the new certificate and complete an application request; errors or old certificates fail.", "components": ["reload", "stable"], "sources": ["reload:s839f028f2a46", "stable:s1310cfc0315d"], "status": "REASONED", "verify": [4]},
+    "verify-flush": {"text": "Disposable text/binary comparisons change flush success and lost item to explicit refusal and retained item; initial SET/GET and ordinary operations stay usable.", "components": ["stable", "docs"], "sources": ["stable:sd40dab94f516", "stable:sceaaea90ec60", "docs:sc0c6532a1ef5"], "status": "REASONED", "verify": [5]},
+    "verify-dump": {"text": "Populated disposable fixtures must change dump acceptance to explicit refusal; empty dumps, crawler problems and protocol failures do not prove -X.", "components": ["stable", "protocol"], "sources": ["stable:sd40dab94f516", "protocol:s625682583be8"], "status": "REASONED", "verify": [5]},
+    "verify-watch": {"text": "Exposed watch acceptance must become explicit refusal; watcher timeout alone does not demonstrate -W.", "components": ["stable"], "sources": ["stable:sd40dab94f516"], "status": "REASONED", "verify": [5]},
+    "verify-shutdown": {"text": "Disposable -A baseline stops; fixed state refuses shutdown while the same process answers statistics; disable restart masking and never use a live cache.", "components": ["protocol", "stable"], "sources": ["protocol:s625682583be8", "stable:sd40dab94f516"], "status": "REASONED", "verify": [5]},
+    "verify-auth": {"text": "Fresh no-auth/wrong-password protected GETs must fail while correct SASL or ASCII token login returns a known item; binary SASL auth-required status is 0x20.", "components": ["docs", "stable", "protocol"], "sources": ["docs:s3b05fd21e910", "stable:sceaaea90ec60", "protocol:s625682583be8"], "status": "REASONED"},
+    "local-guards": {"text": "Historical shell/scanner checks and invalid-input rejection exercised guards and instrumented dispatch, not memcached startup or service behavior.", "components": ["stable", "docs"], "sources": ["stable:s05c72b35637d", "docs:s57f57201fc31"], "status": "DEMONSTRATED", "evidence": "Each of the five guarded blocks rejected six invalid values and two incomplete-assignment cases under `bash -u`; valid inputs reached instrumented probes."}
+  }
+}
+````
+<!-- version-basis:end -->
