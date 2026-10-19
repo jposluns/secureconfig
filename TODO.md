@@ -20,7 +20,7 @@ control on something commonly exposed, **M** a real gap with a workaround, **L**
 internal. Effort is **XS** minutes, **S** under an hour, **M** a session, **L** several sessions,
 **XL** a project.
 
-Next ids: **1.315**, **2.48**, **3.44**, **4.12**.
+Next ids: **1.317**, **2.48**, **3.44**, **4.12**.
 
 Retired without ever naming an item, and never to be issued: **2.21** to **2.23** and **4.3** to **4.4**, assigned in error on 2026-09-13 when the band number was used in place of the series.
 
@@ -53,10 +53,10 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | --- | --- | --- |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
 | 1.264 | `gpu-clouds.md`: account-security sources for RunPod, Vast.ai, Lambda and Modal remain uncited. (M, M) | `[gap]` |
-| 1.266 | `paas.md`: remaining managed-tls/listener-port evidence: establish Fly automatic certificate renewal, Railway TLS termination component and listener address/injected-port contract, Heroku Cedar listener address, Vercel Functions listener/port contract, and resolve the ACM Private Spaces wildcard contradiction. (M, M) | `[gap]` |
+| 1.266 | `paas.md`: remaining managed-tls/listener-port evidence: establish Fly automatic certificate renewal, Heroku Cedar listener address, Vercel Functions listener/port contract, and resolve the ACM Private Spaces wildcard contradiction. (M, M) | `[gap]` |
 | 1.268 | `paas.md`: remaining https-redirect/verify-redirect evidence: establish Render's redirect status, Railway's HEAD redirect behaviour and POST status, and Heroku's redirect policy, configuration/application responsibility and status; cited header descriptions do not establish sanitization. (M, M) | `[gap]` |
-| 1.273 | `nodejs.md`: bind, remaining source gaps: establish Railway's listener address, injected port and TLS termination location, and Heroku Cedar's listener address. (M, M) | `[gap]` |
-| 1.276 | `python.md`: bind, remaining source gaps: establish Railway's listener address, injected port and TLS termination location, and Heroku Cedar's listener address. (M, M) | `[gap]` |
+| 1.273 | `nodejs.md`: bind, remaining source gaps: establish Heroku Cedar's listener address. (M, M) | `[gap]` |
+| 1.276 | `python.md`: bind, remaining source gaps: establish Heroku Cedar's listener address. (M, M) | `[gap]` |
 | 1.283 | `agent-builders.md`: debug-remedy, remaining UI gap: establish which roles hold the `plugin.plugin_preferences` workspace permission key and where the console renders the plugin-permission control; the console UI read/write data path, paired payload and choices are cited. (M, M) | `[gap]` |
 | 1.290 | `firebase-supabase.md`: local-guards: establish the unrecorded bash and other tool/parser versions for the historical authoring guard and syntax runs; the ShellCheck v0.11.0 release is cited, but does not attest to the historical host binary. (M, M) | `[gap]` |
 | 1.291 | `pocketbase.md`: source-limits, remaining dependency gap: trace how utopia-php/database matches requester roles against stored collection/document permissions (including documentSecurity) for document reads and what the disabled default authorization status bypasses; the Appwrite-repository call sites, PocketBase CLI wrapper and `--dev` default are cited. (M, M) | `[gap]` |
@@ -77,6 +77,8 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.310 | `oidc-integration.md`: github-org-mfa: establish whether a member without 2FA fails the application membership check before treating GitHub organization membership as proof of MFA. (M, M) | `[gap]` |
 | 1.311 | `ai-infra-services.md`: onyx-auth-type: establish the stated v4.5 removal boundary beyond the pinned v4.3.13 and v4.4.0 snapshots and tag-name identity. (M, M) | `[gap]` |
 | 1.312 | `vector-databases.md`: source or narrow the hosted-console MFA arrangements for Pinecone, Qdrant Cloud, Weaviate Cloud and Zilliz that the cited pages do not establish. (M, M) | `[gap]` |
+| 1.315 | `nodejs.md`, `python.md` and `paas.md`: source the Heroku Fir Private Spaces IPv6-default statement, IPv4-only bind warning and IPv6/dual-stack listener recommendation; the cited Generations article has not yet been checked against these statements. (M, S) | `[gap]` |
+| 1.316 | `paas.md`: source the statement that adding custom domains requires a verified Heroku account; the cited custom-domains article has not yet been checked against this statement. (M, S) | `[gap]` |
 | 1.314 | `docker.md`: workload: label keeping `.env` in `.gitignore` as this guide's advice and add untracking an already tracked `.env`; consider advising rotation of any secret ever committed, since untracking does not remove it from history. (M, S) | `[gap]` |
 | 2.28 | `gitops-controllers.md`: Complete the remaining source audit of image tag-to-build mapping (Redis, Dex), the application-controller bind address, repo-server service method authorization, Dex API method authorization, whether Redis overwrites its password in argv, and RBAC server-side wiring. (M, M) | `[gap]` |
 | 2.29 | `self-hosted-ci-runners.md`: offline inspection outcomes are recorded in the guide. Remaining: verify and cite a pinned vendor source for the `[runners.docker]` `pid_mode` TOML key, corroborated only in rolling GitLab Runner source. (M, M) | `[gap]` |
