@@ -1,239 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-18",
-  "documentation_checked": "2026-09",
-  "body_sha256": "b18fa573603cc363b4b9a26befe41a59dbd25f823b758cb35b55f1a7d28a6b93",
-  "components": {
-    "node": {
-      "name": "Node.js documentation",
-      "basis": "unknown",
-      "sources": {
-        "s87db42190978": "https://nodejs.org/api/https.html",
-        "sdb035b84e308": "https://nodejs.org/api/http.html"
-      }
-    },
-    "linux-ip": {
-      "name": "Linux man-pages ip(7)",
-      "basis": "6.19",
-      "sources": {
-        "s612fed1df1ed": "https://man7.org/linux/man-pages/man7/ip.7.html"
-      }
-    },
-    "linux-capabilities": {
-      "name": "Linux man-pages capabilities(7)",
-      "basis": "6.19",
-      "sources": {
-        "s3c3a13034c04": "https://man7.org/linux/man-pages/man7/capabilities.7.html"
-      }
-    },
-    "express": {
-      "name": "Express proxy documentation",
-      "basis": "unknown",
-      "sources": {
-        "s2acbdbd05858": "https://expressjs.com/en/guide/behind-proxies.html"
-      }
-    },
-    "session": {
-      "name": "express-session documentation",
-      "basis": "unknown",
-      "sources": {
-        "safd9f9d15304": "https://expressjs.com/en/resources/middleware/session/"
-      }
-    },
-    "helmet": {
-      "name": "Helmet documentation",
-      "basis": "unknown",
-      "sources": {
-        "sc1865315478e": "https://helmet.js.org/"
-      }
-    },
-    "rate": {
-      "name": "express-rate-limit minimum",
-      "basis": "v8",
-      "sources": {
-        "s303dcc57a0df": "https://express-rate-limit.mintlify.app/reference/changelog"
-      }
-    },
-    "otplib": {
-      "name": "otplib",
-      "basis": "v12.0.1",
-      "sources": {
-        "sdb2cd721be64": "https://github.com/yeojz/otplib/blob/v12.0.1/README.md#L371-L372"
-      }
-    },
-    "qrcode": {
-      "name": "qrcode",
-      "basis": "v1.5.4",
-      "sources": {
-        "sc505636608da": "https://github.com/soldair/node-qrcode/blob/v1.5.4/README.md#L125-L129"
-      }
-    },
-    "node-v24": {
-      "name": "Node.js API documentation",
-      "basis": "v24.22.0",
-      "sources": {
-        "s670c858d43f0": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/process.md#L1563-L1581",
-        "s2f3ecf558ce7": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/crypto.md#L6678-L6717",
-        "s7fbb99765dc4": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3568-L3588",
-        "sbfee17929443": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3940-L3944",
-        "s684a71cf8b6e": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1786-L1789",
-        "sea85e903cce0": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L70-L103",
-        "sd0e5679b6277": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L458-L472",
-        "sd9044fe58c3e": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L533-L549"
-      }
-    },
-    "render": {
-      "name": "Render documentation",
-      "basis": "unknown",
-      "sources": {
-        "s1820ac471b6c": "https://render.com/docs/web-services"
-      }
-    },
-    "heroku": {
-      "name": "Heroku documentation",
-      "basis": "unknown",
-      "sources": {
-        "s370d4beec29a": "https://devcenter.heroku.com/articles/runtime-principles",
-        "s211f5fe76042": "https://devcenter.heroku.com/articles/generations",
-        "s0c5bf300cef4": "https://devcenter.heroku.com/articles/http-routing"
-      }
-    },
-    "fly-pinned": {
-      "name": "Fly.io pinned documentation",
-      "basis": "2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9",
-      "sources": {
-        "s62fec91543a1": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42",
-        "s61c1e50d2c11": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92",
-        "s254c8c8a5edd": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97",
-        "s32999aa4c58c": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176"
-      }
-    },
-    "railway": {
-      "name": "Railway documentation",
-      "basis": "72354493198302677fb6be6c692dd75c64cae2c6",
-      "sources": {
-        "sac1383056b65": "https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146"
-      }
-    },
-    "owasp": {
-      "name": "OWASP password storage cheat sheet",
-      "basis": "commit 72865b1e",
-      "sources": {
-        "s790d2fc1475e": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L11",
-        "s4531e65b6502": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13",
-        "sad2af32bee2f": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L136-L138"
-      }
-    },
-    "bcrypt": {
-      "name": "node.bcrypt.js",
-      "basis": "v6.0.0",
-      "sources": {
-        "se94486b19d69": "https://github.com/kelektiv/node.bcrypt.js/blob/v6.0.0/README.md#L104",
-        "s228d1e5e8827": "https://github.com/kelektiv/node.bcrypt.js/blob/v6.0.0/README.md#L148-L181",
-        "s60f2c824a85c": "https://github.com/kelektiv/node.bcrypt.js/blob/v6.0.0/README.md#L248-L262",
-        "s55a49cad0981": "https://github.com/kelektiv/node.bcrypt.js/blob/v6.0.0/README.md#L268"
-      }
-    },
-    "argon2": {
-      "name": "node-argon2",
-      "basis": "v0.45.1",
-      "sources": {
-        "s76b67b13ea1b": "https://github.com/ranisalt/node-argon2/blob/v0.45.1/README.md#L12-L13"
-      }
-    },
-    "cf-docs": {
-      "name": "Cloudflare documentation",
-      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
-      "sources": {
-        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24",
-        "sdcac732541da": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81",
-        "sfddb92e438ca": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16",
-        "s7cafe1b17afd": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54"
-      }
-    }
-  },
-  "claims": {
-    "tls": {"text": "Direct HTTPS uses a certificate plus chain and private key on all-interface 443.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
-    "redirect": {"text": "All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED"},
-    "bind": {"text": "This guide advises 127.0.0.1 for a same-host proxy, no extra managed listeners and app auth; plain HTTP needs protected TLS ingress, absent on Fly without handlers. Listener rules vary by deployment (Heroku recommends IPv6/dual-stack for Fir Private Spaces); Railway address/injected port, Cedar address and Railway TLS termination location remain uncited.", "components": ["node", "express", "render", "heroku", "fly-pinned", "railway"], "sources": ["node:s87db42190978", "express:s2acbdbd05858", "render:s1820ac471b6c", "heroku:s370d4beec29a", "heroku:s211f5fe76042", "heroku:s0c5bf300cef4", "fly-pinned:s62fec91543a1", "fly-pinned:s61c1e50d2c11", "fly-pinned:s254c8c8a5edd", "fly-pinned:s32999aa4c58c", "railway:sac1383056b65"], "status": "REASONED"},
-    "privilege": {"text": "On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout.", "components": ["node", "linux-ip", "linux-capabilities"], "sources": ["node:s87db42190978", "linux-ip:s612fed1df1ed", "linux-capabilities:s3c3a13034c04"], "status": "REASONED"},
-    "proxy": {"text": "Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.", "components": ["express"], "sources": ["express:s2acbdbd05858"], "status": "REASONED"},
-    "headers": {"text": "Install helmet() for security headers including HSTS.", "components": ["helmet"], "sources": ["helmet:sc1865315478e"], "status": "REASONED"},
-    "password": {"text": "Guide advice: prefer Argon2id for new apps (argon2 v0.45.1 supports it); retain bcrypt only for legacy systems without Argon2/scrypt, with its 72-byte limit and example cost 12 (OWASP minimum 10). bcrypt v6.0.0 hash/compare return Promises without callbacks when supported; numeric hash cost generates a salt and means 2^cost iterations.", "components": ["session", "owasp", "bcrypt", "argon2"], "sources": ["session:safd9f9d15304", "owasp:s790d2fc1475e", "owasp:s4531e65b6502", "owasp:sad2af32bee2f", "bcrypt:se94486b19d69", "bcrypt:s228d1e5e8827", "bcrypt:s60f2c824a85c", "bcrypt:s55a49cad0981", "argon2:s76b67b13ea1b"], "status": "REASONED"},
-    "session-secret": {"text": "Load a long random SESSION_SECRET from the environment.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
-    "session-save": {"text": "Set resave=false and saveUninitialized=false.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
-    "cookies": {"text": "Set Secure, HttpOnly, SameSite=lax and an eight-hour cookie maxAge in milliseconds.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
-    "store": {"text": "Default MemoryStore is development-only, leaks memory and cannot scale past one process; supply a production store.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
-    "expiry": {"text": "No cookie maximum age is set by default; set cookie.maxAge.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
-    "login-limit": {"text": "Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls.", "components": ["rate"], "sources": ["rate:s303dcc57a0df"], "status": "REASONED"},
-    "tokens": {"text": "This guide advises loading API keys and tokens from process.env, never from source literals, and comparing self-checked secret values with crypto.timingSafeEqual using equal-byte-length byte inputs; process.env exposes the user environment, while timingSafeEqual's input requirements and surrounding-code limit are documented.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:s670c858d43f0", "node-v24:s2f3ecf558ce7"], "status": "REASONED"},
-    "mfa": {"text": "Add otplib/qrcode TOTP or require Cloudflare Access independent MFA in the effective policy (policy > application > organization). This guide requires an origin unreachable around Access and testing enforcement; cited pages do not establish a deployed policy or origin isolation.", "components": ["session", "otplib", "qrcode", "cf-docs"], "sources": ["session:safd9f9d15304", "otplib:sdb2cd721be64", "qrcode:sc505636608da", "cf-docs:s7e793d13cf31", "cf-docs:sdcac732541da", "cf-docs:sfddb92e438ca", "cf-docs:s7cafe1b17afd"], "status": "REASONED"},
-    "tls-validation": {"text": "This guide advises never setting NODE_TLS_REJECT_UNAUTHORIZED=0 for the Node.js process's TLS connections or rejectUnauthorized=false for a client TLS connection or an HTTPS agent whose requests use it; Node.js documents the TLS validation effects, and the agent reach is this guide's assessment of the documented options flow.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:sbfee17929443", "node-v24:s684a71cf8b6e", "node-v24:sea85e903cce0", "node-v24:sd0e5679b6277", "node-v24:sd9044fe58c3e"], "status": "REASONED"},
-    "client-ca": {"text": "This guide advises setting NODE_EXTRA_CA_CERTS to a PEM file before launching Node.js for an internal CA or self-signed server; it extends well-known roots, is read only at launch, and is ignored when Node.js runs as setuid root or with Linux file capabilities; neither it nor the well-known roots is used by a TLS or HTTPS client or server given an explicit ca option.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:s7fbb99765dc4"], "status": "REASONED"},
-    "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED", "verify": [1]},
-    "verify-tls": {"text": "HTTPS must succeed without -k and show Helmet headers.", "components": ["node", "helmet"], "sources": ["node:s87db42190978", "helmet:sc1865315478e"], "status": "REASONED", "verify": [1]},
-    "verify-auth": {"text": "A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED", "verify": [1]},
-    "verify-bind": {"text": "Inspect every listener for loopback behind a same-host proxy or the managed platform address and port.", "components": ["node", "express"], "sources": ["node:s87db42190978", "express:s2acbdbd05858"], "status": "REASONED", "verify": [1]},
-    "verify-proxy": {"text": "Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust.", "components": ["express"], "sources": ["express:s2acbdbd05858"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # Node.js and Express: TLS and authentication
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Node.js API documentation v24.22.0, express-rate-limit minimum v8, otplib v12.0.1, qrcode v1.5.4, node.bcrypt.js v6.0.0, node-argon2 v0.45.1, Linux man-pages ip(7) 6.19, and Linux man-pages capabilities(7) 6.19, plus 1 more recorded basis; 3 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- node: Node.js documentation (unknown)
-- linux-ip: Linux man-pages ip(7) (6.19)
-- linux-capabilities: Linux man-pages capabilities(7) (6.19)
-- express: Express proxy documentation (unknown)
-- session: express-session documentation (unknown)
-- helmet: Helmet documentation (unknown)
-- rate: express-rate-limit minimum (v8)
-- otplib: otplib (v12.0.1)
-- qrcode: qrcode (v1.5.4)
-- node-v24: Node.js API documentation (v24.22.0)
-- render: Render documentation (unknown)
-- heroku: Heroku documentation (unknown)
-- fly-pinned: Fly.io pinned documentation (2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9)
-- railway: Railway documentation (72354493198302677fb6be6c692dd75c64cae2c6)
-- owasp: OWASP password storage cheat sheet (commit 72865b1e)
-- bcrypt: node.bcrypt.js (v6.0.0)
-- argon2: node-argon2 (v0.45.1)
-- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
-
-Claims (full source mapping in the front matter):
-
-- tls (REASONED; node): Direct HTTPS uses a certificate plus chain and private key on all-interface 443.
-- redirect (REASONED; node): All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.
-- bind (REASONED; node, express, render, heroku, fly-pinned, railway): This guide advises 127.0.0.1 for a same-host proxy, no extra managed listeners and app auth; plain HTTP needs protected TLS ingress, absent on Fly without handlers. Listener rules vary by deployment (Heroku recommends IPv6/dual-stack for Fir Private Spaces); Railway address/injected port, Cedar address and Railway TLS termination location remain uncited.
-- privilege (REASONED; node, linux-ip, linux-capabilities): On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout.
-- proxy (REASONED; express): Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.
-- headers (REASONED; helmet): Install helmet() for security headers including HSTS.
-- password (REASONED; session, owasp, bcrypt, argon2): Guide advice: prefer Argon2id for new apps (argon2 v0.45.1 supports it); retain bcrypt only for legacy systems without Argon2/scrypt, with its 72-byte limit and example cost 12 (OWASP minimum 10). bcrypt v6.0.0 hash/compare return Promises without callbacks when supported; numeric hash cost generates a salt and means 2^cost iterations.
-- session-secret (REASONED; session): Load a long random SESSION_SECRET from the environment.
-- session-save (REASONED; session): Set resave=false and saveUninitialized=false.
-- cookies (REASONED; session): Set Secure, HttpOnly, SameSite=lax and an eight-hour cookie maxAge in milliseconds.
-- store (REASONED; session): Default MemoryStore is development-only, leaks memory and cannot scale past one process; supply a production store.
-- expiry (REASONED; session): No cookie maximum age is set by default; set cookie.maxAge.
-- login-limit (REASONED; rate): Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls.
-- tokens (REASONED; node, node-v24): This guide advises loading API keys and tokens from process.env, never from source literals, and comparing self-checked secret values with crypto.timingSafeEqual using equal-byte-length byte inputs; process.env exposes the user environment, while timingSafeEqual's input requirements and surrounding-code limit are documented.
-- mfa (REASONED; session, otplib, qrcode, cf-docs): Add otplib/qrcode TOTP or require Cloudflare Access independent MFA in the effective policy (policy &gt; application &gt; organization). This guide requires an origin unreachable around Access and testing enforcement; cited pages do not establish a deployed policy or origin isolation.
-- tls-validation (REASONED; node, node-v24): This guide advises never setting NODE_TLS_REJECT_UNAUTHORIZED=0 for the Node.js process's TLS connections or rejectUnauthorized=false for a client TLS connection or an HTTPS agent whose requests use it; Node.js documents the TLS validation effects, and the agent reach is this guide's assessment of the documented options flow.
-- client-ca (REASONED; node, node-v24): This guide advises setting NODE_EXTRA_CA_CERTS to a PEM file before launching Node.js for an internal CA or self-signed server; it extends well-known roots, is read only at launch, and is ignored when Node.js runs as setuid root or with Linux file capabilities; neither it nor the well-known roots is used by a TLS or HTTPS client or server given an explicit ca option.
-- verify-redirect (REASONED; node): HTTP should return 301 with an HTTPS Location.
-- verify-tls (REASONED; node, helmet): HTTPS must succeed without -k and show Helmet headers.
-- verify-auth (REASONED; session): A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial.
-- verify-bind (REASONED; node, express): Inspect every listener for loopback behind a same-host proxy or the managed platform address and port.
-- verify-proxy (REASONED; express): Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 This guide's preferred production layout: bind the Node app to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). For managed HTTP ingress, this guide advises using the deployment's required listener rather than `127.0.0.1`; TLS termination depends on the platform and configuration, as detailed in section 1 ([paas.md](paas.md)). Node can also terminate TLS itself, shown below. Get a certificate per [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
@@ -420,3 +189,260 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 - Cloudflare documentation MFA requirements and precedence (c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81
 - Cloudflare documentation self-hosted authentication layer (c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16
 - Cloudflare documentation origin connection and protection (c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/nodejs.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- node-v24: Node.js API documentation (v24.22.0)
+- node: Node.js documentation (unknown)
+- express: Express proxy documentation (unknown)
+- session: express-session documentation (unknown)
+- helmet: Helmet documentation (unknown)
+- rate: express-rate-limit minimum (v8)
+- otplib: otplib (v12.0.1)
+- qrcode: qrcode (v1.5.4)
+- render: Render documentation (unknown)
+- heroku: Heroku documentation (unknown)
+- fly-pinned: Fly.io pinned documentation (2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9)
+- railway: Railway documentation (72354493198302677fb6be6c692dd75c64cae2c6)
+- bcrypt: node.bcrypt.js (v6.0.0)
+- argon2: node-argon2 (v0.45.1)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- linux-ip: Linux man-pages ip(7) (6.19)
+- linux-capabilities: Linux man-pages capabilities(7) (6.19)
+- owasp: OWASP password storage cheat sheet (commit 72865b1e)
+
+Claims (full source mapping in the JSON block below):
+
+- tls (REASONED; node): Direct HTTPS uses a certificate plus chain and private key on all-interface 443.
+- redirect (REASONED; node): All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.
+- bind (REASONED; node, express, render, heroku, fly-pinned, railway): This guide advises 127.0.0.1 for a same-host proxy, no extra managed listeners and app auth; plain HTTP needs protected TLS ingress, absent on Fly without handlers. Listener rules vary by deployment (Heroku recommends IPv6/dual-stack for Fir Private Spaces); Railway address/injected port, Cedar address and Railway TLS termination location remain uncited.
+- privilege (REASONED; node, linux-ip, linux-capabilities): On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout.
+- proxy (REASONED; express): Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.
+- headers (REASONED; helmet): Install helmet() for security headers including HSTS.
+- password (REASONED; session, owasp, bcrypt, argon2): Guide advice: prefer Argon2id for new apps (argon2 v0.45.1 supports it); retain bcrypt only for legacy systems without Argon2/scrypt, with its 72-byte limit and example cost 12 (OWASP minimum 10). bcrypt v6.0.0 hash/compare return Promises without callbacks when supported; numeric hash cost generates a salt and means 2^cost iterations.
+- session-secret (REASONED; session): Load a long random SESSION_SECRET from the environment.
+- session-save (REASONED; session): Set resave=false and saveUninitialized=false.
+- cookies (REASONED; session): Set Secure, HttpOnly, SameSite=lax and an eight-hour cookie maxAge in milliseconds.
+- store (REASONED; session): Default MemoryStore is development-only, leaks memory and cannot scale past one process; supply a production store.
+- expiry (REASONED; session): No cookie maximum age is set by default; set cookie.maxAge.
+- login-limit (REASONED; rate): Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls.
+- tokens (REASONED; node, node-v24): This guide advises loading API keys and tokens from process.env, never from source literals, and comparing self-checked secret values with crypto.timingSafeEqual using equal-byte-length byte inputs; process.env exposes the user environment, while timingSafeEqual's input requirements and surrounding-code limit are documented.
+- mfa (REASONED; session, otplib, qrcode, cf-docs): Add otplib/qrcode TOTP or require Cloudflare Access independent MFA in the effective policy (policy &gt; application &gt; organization). This guide requires an origin unreachable around Access and testing enforcement; cited pages do not establish a deployed policy or origin isolation.
+- tls-validation (REASONED; node, node-v24): This guide advises never setting NODE_TLS_REJECT_UNAUTHORIZED=0 for the Node.js process's TLS connections or rejectUnauthorized=false for a client TLS connection or an HTTPS agent whose requests use it; Node.js documents the TLS validation effects, and the agent reach is this guide's assessment of the documented options flow.
+- client-ca (REASONED; node, node-v24): This guide advises setting NODE_EXTRA_CA_CERTS to a PEM file before launching Node.js for an internal CA or self-signed server; it extends well-known roots, is read only at launch, and is ignored when Node.js runs as setuid root or with Linux file capabilities; neither it nor the well-known roots is used by a TLS or HTTPS client or server given an explicit ca option.
+- verify-redirect (REASONED; node): HTTP should return 301 with an HTTPS Location.
+- verify-tls (REASONED; node, helmet): HTTPS must succeed without -k and show Helmet headers.
+- verify-auth (REASONED; session): A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial.
+- verify-bind (REASONED; node, express): Inspect every listener for loopback behind a same-host proxy or the managed platform address and port.
+- verify-proxy (REASONED; express): Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-18",
+  "documentation_checked": "2026-09",
+  "body_sha256": "b18fa573603cc363b4b9a26befe41a59dbd25f823b758cb35b55f1a7d28a6b93",
+  "components": {
+    "node-v24": {
+      "name": "Node.js API documentation",
+      "basis": "v24.22.0",
+      "sources": {
+        "s670c858d43f0": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/process.md#L1563-L1581",
+        "s2f3ecf558ce7": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/crypto.md#L6678-L6717",
+        "s7fbb99765dc4": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3568-L3588",
+        "sbfee17929443": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3940-L3944",
+        "s684a71cf8b6e": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1786-L1789",
+        "sea85e903cce0": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L70-L103",
+        "sd0e5679b6277": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L458-L472",
+        "sd9044fe58c3e": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/https.md#L533-L549"
+      }
+    },
+    "node": {
+      "name": "Node.js documentation",
+      "basis": "unknown",
+      "sources": {
+        "s87db42190978": "https://nodejs.org/api/https.html",
+        "sdb035b84e308": "https://nodejs.org/api/http.html"
+      }
+    },
+    "express": {
+      "name": "Express proxy documentation",
+      "basis": "unknown",
+      "sources": {
+        "s2acbdbd05858": "https://expressjs.com/en/guide/behind-proxies.html"
+      }
+    },
+    "session": {
+      "name": "express-session documentation",
+      "basis": "unknown",
+      "sources": {
+        "safd9f9d15304": "https://expressjs.com/en/resources/middleware/session/"
+      }
+    },
+    "helmet": {
+      "name": "Helmet documentation",
+      "basis": "unknown",
+      "sources": {
+        "sc1865315478e": "https://helmet.js.org/"
+      }
+    },
+    "rate": {
+      "name": "express-rate-limit minimum",
+      "basis": "v8",
+      "sources": {
+        "s303dcc57a0df": "https://express-rate-limit.mintlify.app/reference/changelog"
+      }
+    },
+    "otplib": {
+      "name": "otplib",
+      "basis": "v12.0.1",
+      "sources": {
+        "sdb2cd721be64": "https://github.com/yeojz/otplib/blob/v12.0.1/README.md#L371-L372"
+      }
+    },
+    "qrcode": {
+      "name": "qrcode",
+      "basis": "v1.5.4",
+      "sources": {
+        "sc505636608da": "https://github.com/soldair/node-qrcode/blob/v1.5.4/README.md#L125-L129"
+      }
+    },
+    "render": {
+      "name": "Render documentation",
+      "basis": "unknown",
+      "sources": {
+        "s1820ac471b6c": "https://render.com/docs/web-services"
+      }
+    },
+    "heroku": {
+      "name": "Heroku documentation",
+      "basis": "unknown",
+      "sources": {
+        "s370d4beec29a": "https://devcenter.heroku.com/articles/runtime-principles",
+        "s211f5fe76042": "https://devcenter.heroku.com/articles/generations",
+        "s0c5bf300cef4": "https://devcenter.heroku.com/articles/http-routing"
+      }
+    },
+    "fly-pinned": {
+      "name": "Fly.io pinned documentation",
+      "basis": "2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9",
+      "sources": {
+        "s62fec91543a1": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42",
+        "s61c1e50d2c11": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92",
+        "s254c8c8a5edd": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97",
+        "s32999aa4c58c": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176"
+      }
+    },
+    "railway": {
+      "name": "Railway documentation",
+      "basis": "72354493198302677fb6be6c692dd75c64cae2c6",
+      "sources": {
+        "sac1383056b65": "https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146"
+      }
+    },
+    "bcrypt": {
+      "name": "node.bcrypt.js",
+      "basis": "v6.0.0",
+      "sources": {
+        "se94486b19d69": "https://github.com/kelektiv/node.bcrypt.js/blob/v6.0.0/README.md#L104",
+        "s228d1e5e8827": "https://github.com/kelektiv/node.bcrypt.js/blob/v6.0.0/README.md#L148-L181",
+        "s60f2c824a85c": "https://github.com/kelektiv/node.bcrypt.js/blob/v6.0.0/README.md#L248-L262",
+        "s55a49cad0981": "https://github.com/kelektiv/node.bcrypt.js/blob/v6.0.0/README.md#L268"
+      }
+    },
+    "argon2": {
+      "name": "node-argon2",
+      "basis": "v0.45.1",
+      "sources": {
+        "s76b67b13ea1b": "https://github.com/ranisalt/node-argon2/blob/v0.45.1/README.md#L12-L13"
+      }
+    },
+    "cf-docs": {
+      "name": "Cloudflare documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24",
+        "sdcac732541da": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81",
+        "sfddb92e438ca": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16",
+        "s7cafe1b17afd": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54"
+      }
+    },
+    "linux-ip": {
+      "name": "Linux man-pages ip(7)",
+      "basis": "6.19",
+      "sources": {
+        "s612fed1df1ed": "https://man7.org/linux/man-pages/man7/ip.7.html"
+      }
+    },
+    "linux-capabilities": {
+      "name": "Linux man-pages capabilities(7)",
+      "basis": "6.19",
+      "sources": {
+        "s3c3a13034c04": "https://man7.org/linux/man-pages/man7/capabilities.7.html"
+      }
+    },
+    "owasp": {
+      "name": "OWASP password storage cheat sheet",
+      "basis": "commit 72865b1e",
+      "sources": {
+        "s790d2fc1475e": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L11",
+        "s4531e65b6502": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13",
+        "sad2af32bee2f": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L136-L138"
+      }
+    }
+  },
+  "claims": {
+    "tls": {"text": "Direct HTTPS uses a certificate plus chain and private key on all-interface 443.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
+    "redirect": {"text": "All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED"},
+    "bind": {"text": "This guide advises 127.0.0.1 for a same-host proxy, no extra managed listeners and app auth; plain HTTP needs protected TLS ingress, absent on Fly without handlers. Listener rules vary by deployment (Heroku recommends IPv6/dual-stack for Fir Private Spaces); Railway address/injected port, Cedar address and Railway TLS termination location remain uncited.", "components": ["node", "express", "render", "heroku", "fly-pinned", "railway"], "sources": ["node:s87db42190978", "express:s2acbdbd05858", "render:s1820ac471b6c", "heroku:s370d4beec29a", "heroku:s211f5fe76042", "heroku:s0c5bf300cef4", "fly-pinned:s62fec91543a1", "fly-pinned:s61c1e50d2c11", "fly-pinned:s254c8c8a5edd", "fly-pinned:s32999aa4c58c", "railway:sac1383056b65"], "status": "REASONED"},
+    "privilege": {"text": "On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout.", "components": ["node", "linux-ip", "linux-capabilities"], "sources": ["node:s87db42190978", "linux-ip:s612fed1df1ed", "linux-capabilities:s3c3a13034c04"], "status": "REASONED"},
+    "proxy": {"text": "Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.", "components": ["express"], "sources": ["express:s2acbdbd05858"], "status": "REASONED"},
+    "headers": {"text": "Install helmet() for security headers including HSTS.", "components": ["helmet"], "sources": ["helmet:sc1865315478e"], "status": "REASONED"},
+    "password": {"text": "Guide advice: prefer Argon2id for new apps (argon2 v0.45.1 supports it); retain bcrypt only for legacy systems without Argon2/scrypt, with its 72-byte limit and example cost 12 (OWASP minimum 10). bcrypt v6.0.0 hash/compare return Promises without callbacks when supported; numeric hash cost generates a salt and means 2^cost iterations.", "components": ["session", "owasp", "bcrypt", "argon2"], "sources": ["session:safd9f9d15304", "owasp:s790d2fc1475e", "owasp:s4531e65b6502", "owasp:sad2af32bee2f", "bcrypt:se94486b19d69", "bcrypt:s228d1e5e8827", "bcrypt:s60f2c824a85c", "bcrypt:s55a49cad0981", "argon2:s76b67b13ea1b"], "status": "REASONED"},
+    "session-secret": {"text": "Load a long random SESSION_SECRET from the environment.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "session-save": {"text": "Set resave=false and saveUninitialized=false.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "cookies": {"text": "Set Secure, HttpOnly, SameSite=lax and an eight-hour cookie maxAge in milliseconds.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "store": {"text": "Default MemoryStore is development-only, leaks memory and cannot scale past one process; supply a production store.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "expiry": {"text": "No cookie maximum age is set by default; set cookie.maxAge.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED"},
+    "login-limit": {"text": "Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls.", "components": ["rate"], "sources": ["rate:s303dcc57a0df"], "status": "REASONED"},
+    "tokens": {"text": "This guide advises loading API keys and tokens from process.env, never from source literals, and comparing self-checked secret values with crypto.timingSafeEqual using equal-byte-length byte inputs; process.env exposes the user environment, while timingSafeEqual's input requirements and surrounding-code limit are documented.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:s670c858d43f0", "node-v24:s2f3ecf558ce7"], "status": "REASONED"},
+    "mfa": {"text": "Add otplib/qrcode TOTP or require Cloudflare Access independent MFA in the effective policy (policy > application > organization). This guide requires an origin unreachable around Access and testing enforcement; cited pages do not establish a deployed policy or origin isolation.", "components": ["session", "otplib", "qrcode", "cf-docs"], "sources": ["session:safd9f9d15304", "otplib:sdb2cd721be64", "qrcode:sc505636608da", "cf-docs:s7e793d13cf31", "cf-docs:sdcac732541da", "cf-docs:sfddb92e438ca", "cf-docs:s7cafe1b17afd"], "status": "REASONED"},
+    "tls-validation": {"text": "This guide advises never setting NODE_TLS_REJECT_UNAUTHORIZED=0 for the Node.js process's TLS connections or rejectUnauthorized=false for a client TLS connection or an HTTPS agent whose requests use it; Node.js documents the TLS validation effects, and the agent reach is this guide's assessment of the documented options flow.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:sbfee17929443", "node-v24:s684a71cf8b6e", "node-v24:sea85e903cce0", "node-v24:sd0e5679b6277", "node-v24:sd9044fe58c3e"], "status": "REASONED"},
+    "client-ca": {"text": "This guide advises setting NODE_EXTRA_CA_CERTS to a PEM file before launching Node.js for an internal CA or self-signed server; it extends well-known roots, is read only at launch, and is ignored when Node.js runs as setuid root or with Linux file capabilities; neither it nor the well-known roots is used by a TLS or HTTPS client or server given an explicit ca option.", "components": ["node", "node-v24"], "sources": ["node:s87db42190978", "node-v24:s7fbb99765dc4"], "status": "REASONED"},
+    "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "HTTPS must succeed without -k and show Helmet headers.", "components": ["node", "helmet"], "sources": ["node:s87db42190978", "helmet:sc1865315478e"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "A real protected route denies anonymous requests with 401/403 and accepts a valid session with 200; either app or fronting auth may enforce the denial.", "components": ["session"], "sources": ["session:safd9f9d15304"], "status": "REASONED", "verify": [1]},
+    "verify-bind": {"text": "Inspect every listener for loopback behind a same-host proxy or the managed platform address and port.", "components": ["node", "express"], "sources": ["node:s87db42190978", "express:s2acbdbd05858"], "status": "REASONED", "verify": [1]},
+    "verify-proxy": {"text": "Temporary /whoami must not echo forged X-Forwarded-For; this checks req.ip only and an overwriting proxy can mask excessive trust.", "components": ["express"], "sources": ["express:s2acbdbd05858"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->

@@ -1,289 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-05",
-  "documentation_checked": "2026-09",
-  "body_sha256": "e99f0fcc1524b98e1393a25a36ea06a29235918c450bb6ed4e012584b2ed41c9",
-  "components": {
-    "docker-build": {
-      "name": "Docker build and image history documentation",
-      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
-      "sources": {
-        "sd8afa286c173": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/variables.md#L17-L52",
-        "s07e00829f121": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22",
-        "s6283b172a5c6": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118"
-      }
-    },
-    "bash": {
-      "name": "GNU Bash reference manual",
-      "basis": "bash-5.3",
-      "sources": {
-        "sb38bf74a89b0": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5629",
-        "s8c59508bd4c8": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5917",
-        "s04ec4ba49971": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6000",
-        "se62fd3ad4fc3": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6122",
-        "s2df39d2c9c1c": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6194",
-        "s8447036b2114": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5161",
-        "s3255eca7e496": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4852",
-        "s93dcf5ba0a87": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4740",
-        "s8016d1aecfca": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5929",
-        "sf6c6f542c26c": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6062"
-      }
-    },
-    "grep": {
-      "name": "GNU grep",
-      "basis": "unknown",
-      "sources": {
-        "s33689bc366bf": "https://www.gnu.org/software/grep/manual/html_node/File-and-Directory-Selection.html",
-        "s2c1251092e66": "https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html",
-        "sea43e82b0753": "https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html",
-        "sbd30b628a5b8": "https://www.gnu.org/software/grep/manual/html_node/grep-Programs.html"
-      }
-    },
-    "owasp": {
-      "name": "OWASP secret handling",
-      "basis": "unknown",
-      "sources": {
-        "s26a987a1053b": "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html",
-        "s4564d1912a87": "https://genai.owasp.org/llmrisk/llm072025-system-prompt-leakage/"
-      }
-    },
-    "gitleaks": {
-      "name": "gitleaks command minimum",
-      "basis": "8.19+",
-      "sources": {
-        "s18cdf0069eb9": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md"
-      }
-    },
-    "trufflehog": {
-      "name": "TruffleHog",
-      "basis": "unknown",
-      "sources": {
-        "s5450689a9bb8": "https://github.com/trufflesecurity/trufflehog"
-      }
-    },
-    "sops": {
-      "name": "SOPS",
-      "basis": "unknown",
-      "sources": {
-        "s78c5bb528dc4": "https://github.com/getsops/sops"
-      }
-    },
-    "age": {
-      "name": "age",
-      "basis": "unknown",
-      "sources": {
-        "sca8b0d211739": "https://github.com/FiloSottile/age"
-      }
-    },
-    "git-filter-repo": {
-      "name": "git-filter-repo",
-      "basis": "unknown",
-      "sources": {
-        "s95bf8a949d5e": "https://github.com/newren/git-filter-repo"
-      }
-    },
-    "proc": {
-      "name": "Linux procfs",
-      "basis": "unknown",
-      "sources": {
-        "s801d5f1ee88d": "https://man7.org/linux/man-pages/man5/proc_pid_cmdline.5.html"
-      }
-    },
-    "docker": {
-      "name": "Docker login",
-      "basis": "unknown",
-      "sources": {
-        "sf8243a183d67": "https://docs.docker.com/reference/cli/docker/login/"
-      }
-    },
-    "terraform": {
-      "name": "Terraform",
-      "basis": "unknown",
-      "sources": {
-        "s8efa1a4bb953": "https://developer.hashicorp.com/terraform/language/manage-sensitive-data"
-      }
-    },
-    "kubernetes": {
-      "name": "Kubernetes kubeconfig",
-      "basis": "unknown",
-      "sources": {
-        "se41a53ea6778": "https://kubernetes.io/docs/reference/config-api/kubeconfig.v1/"
-      }
-    },
-    "gh": {
-      "name": "GitHub CLI",
-      "basis": "unknown",
-      "sources": {
-        "sf0b01ee9b3e1": "https://cli.github.com/manual/gh_auth_login"
-      }
-    },
-    "apache": {
-      "name": "htpasswd",
-      "basis": "unknown",
-      "sources": {
-        "scde9004bb967": "https://httpd.apache.org/docs/2.4/programs/htpasswd.html"
-      }
-    },
-    "postgres": {
-      "name": "PostgreSQL password file",
-      "basis": "unknown",
-      "sources": {
-        "s198d4780d9a4": "https://www.postgresql.org/docs/current/libpq-pgpass.html"
-      }
-    },
-    "curl": {
-      "name": "curl netrc",
-      "basis": "unknown",
-      "sources": {
-        "s3a0a54039912": "https://everything.curl.dev/usingcurl/netrc.html"
-      }
-    },
-    "next": {
-      "name": "Next.js",
-      "basis": "unknown",
-      "sources": {
-        "s964651d4eed4": "https://nextjs.org/docs/app/guides/environment-variables"
-      }
-    },
-    "git-ignore": {
-      "name": "Git ignore patterns",
-      "basis": "2.42.0",
-      "sources": {
-        "s90ce7c8605d9": "https://git-scm.com/docs/gitignore/2.42.0"
-      }
-    },
-    "openssl-rand": {
-      "name": "OpenSSL random bytes",
-      "basis": "3.0",
-      "sources": {
-        "s11d11381b080": "https://docs.openssl.org/3.0/man1/openssl-rand/"
-      }
-    },
-    "python-secrets": {
-      "name": "Python secrets",
-      "basis": "3.13",
-      "sources": {
-        "sd2e8196eaa96": "https://docs.python.org/3.13/library/secrets.html#secrets.token_urlsafe"
-      }
-    },
-    "vite-env": {
-      "name": "Vite environment variables",
-      "basis": "6",
-      "sources": {
-        "sba07c9b57bd9": "https://v6.vite.dev/guide/env-and-mode"
-      }
-    },
-    "aws-store": {
-      "name": "AWS Secrets Manager overview",
-      "basis": "unknown",
-      "sources": {
-        "s81b41c17ad57": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
-      }
-    },
-    "google-store": {
-      "name": "Google Cloud Secret Manager overview",
-      "basis": "unknown",
-      "sources": {
-        "scd27be211781": "https://docs.cloud.google.com/secret-manager/docs/overview"
-      }
-    },
-    "azure-store": {
-      "name": "Azure Key Vault overview",
-      "basis": "unknown",
-      "sources": {
-        "seb86b29f4951": "https://learn.microsoft.com/en-us/azure/key-vault/general/overview"
-      }
-    }
-  },
-  "claims": {
-    "gitignore": {"text": "Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.", "components": ["owasp", "next", "git-ignore"], "sources": ["owasp:s26a987a1053b", "next:s964651d4eed4", "git-ignore:s90ce7c8605d9"], "status": "REASONED"},
-    "runtime-storage": {"text": "Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value.", "components": ["owasp", "docker-build", "aws-store", "google-store", "azure-store"], "sources": ["owasp:s26a987a1053b", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s6283b172a5c6", "aws-store:s81b41c17ad57", "google-store:scd27be211781", "azure-store:seb86b29f4951"], "status": "REASONED"},
-    "random": {"text": "Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.", "components": ["owasp", "openssl-rand", "python-secrets"], "sources": ["owasp:s26a987a1053b", "openssl-rand:s11d11381b080", "python-secrets:sd2e8196eaa96"], "status": "REASONED"},
-    "scanners": {"text": "Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:s18cdf0069eb9", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
-    "argv": {"text": "Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.", "components": ["proc", "apache"], "sources": ["proc:s801d5f1ee88d", "apache:scde9004bb967"], "status": "REASONED"},
-    "stdin": {"text": "Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.", "components": ["apache", "docker", "gh"], "sources": ["apache:scde9004bb967", "docker:sf8243a183d67", "gh:sf0b01ee9b3e1"], "status": "REASONED"},
-    "credential-files": {"text": "Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass.", "components": ["postgres", "curl"], "sources": ["postgres:s198d4780d9a4", "curl:s3a0a54039912"], "status": "REASONED"},
-    "shell-input": {"text": "As this guide's assessment, hidden read input avoids history; as this guide's advice, tracing must be off around expansion. The clean-Bash login block clears inherited TOKEN attributes, turns tracing, allexport and errexit off, enables pipefail, and removes TOKEN on exit.", "components": ["bash", "docker", "proc"], "sources": ["bash:sb38bf74a89b0", "bash:s8c59508bd4c8", "bash:s04ec4ba49971", "bash:se62fd3ad4fc3", "bash:s2df39d2c9c1c", "bash:s8447036b2114", "bash:s3255eca7e496", "bash:s93dcf5ba0a87", "bash:s8016d1aecfca", "bash:sf6c6f542c26c", "docker:sf8243a183d67", "proc:s801d5f1ee88d"], "status": "REASONED"},
-    "shell-limits": {"text": "As this guide's assessment under the stated clean-Bash assumptions, the prompted token stays out of argv and environment; same-account/root memory access and earlier exports remain outside this protection.", "components": ["bash", "proc", "docker"], "sources": ["bash:sb38bf74a89b0", "bash:s8c59508bd4c8", "bash:s04ec4ba49971", "bash:se62fd3ad4fc3", "bash:s2df39d2c9c1c", "bash:s8447036b2114", "bash:s3255eca7e496", "bash:s93dcf5ba0a87", "bash:s8016d1aecfca", "bash:sf6c6f542c26c", "proc:s801d5f1ee88d", "docker:sf8243a183d67"], "status": "REASONED"},
-    "argv-review": {"text": "A ps/grep snapshot misses unlabelled secrets and short-lived processes; review secret-input paths instead of treating a clean snapshot as proof.", "components": ["proc"], "sources": ["proc:s801d5f1ee88d"], "status": "REASONED"},
-    "ci-store": {"text": "Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
-    "prompt-secrets": {"text": "Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b", "owasp:s4564d1912a87"], "status": "REASONED"},
-    "business-rules": {"text": "Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it.", "components": ["owasp", "next", "vite-env"], "sources": ["owasp:s26a987a1053b", "owasp:s4564d1912a87", "next:s964651d4eed4", "vite-env:sba07c9b57bd9"], "status": "REASONED"},
-    "terraform-state": {"text": "Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and `*.tfstate.*` including backups and workspace copies.", "components": ["terraform"], "sources": ["terraform:s8efa1a4bb953"], "status": "REASONED"},
-    "kubeconfig": {"text": "Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control.", "components": ["kubernetes"], "sources": ["kubernetes:se41a53ea6778"], "status": "REASONED"},
-    "docker-store": {"text": "Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets.", "components": ["docker", "owasp"], "sources": ["docker:sf8243a183d67", "owasp:s26a987a1053b"], "status": "REASONED"},
-    "leak-rotation": {"text": "Revoke and replace a leaked credential before cleanup; deletion cannot undo public repository, chat, log or paste exposure.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
-    "history-cleanup": {"text": "History rewriting with git-filter-repo is hygiene after rotation, not containment or unpublishing.", "components": ["git-filter-repo", "owasp"], "sources": ["git-filter-repo:s95bf8a949d5e", "owasp:s26a987a1053b"], "status": "REASONED"},
-    "leak-audit": {"text": "Review provider logs for use of the leaked credential during its exposure window.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
-    "encrypted-git": {"text": "SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository.", "components": ["sops", "age"], "sources": ["sops:s78c5bb528dc4", "age:sca8b0d211739"], "status": "REASONED"},
-    "verify-scan": {"text": "gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate.", "components": ["gitleaks"], "sources": ["gitleaks:s18cdf0069eb9"], "status": "REASONED", "verify": [1]},
-    "verify-patterns": {"text": "Supplementary grep prints filenames only, when null binary data is discovered assumes unprocessed input does not match, skips excluded trees; as this guide's advice, a non-zero exit caused by a read error is a failed check; as this guide's assessment, empty output is not proof of no secret. GNU grep documents -E as extended regular expression syntax.", "components": ["grep", "owasp"], "sources": ["grep:s33689bc366bf", "grep:s2c1251092e66", "grep:sea43e82b0753", "grep:sbd30b628a5b8", "owasp:s26a987a1053b"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # Secrets: keeping keys out of repositories
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Git ignore patterns 2.42.0, gitleaks command minimum 8.19+, OpenSSL random bytes 3.0, Python secrets 3.13, Vite environment variables 6, and GNU Bash reference manual bash-5.3; 1 further source is pinned to a commit and 18 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- docker-build: Docker build and image history documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
-- bash: GNU Bash reference manual (bash-5.3)
-- grep: GNU grep (unknown)
-- owasp: OWASP secret handling (unknown)
-- gitleaks: gitleaks command minimum (8.19+)
-- trufflehog: TruffleHog (unknown)
-- sops: SOPS (unknown)
-- age: age (unknown)
-- git-filter-repo: git-filter-repo (unknown)
-- proc: Linux procfs (unknown)
-- docker: Docker login (unknown)
-- terraform: Terraform (unknown)
-- kubernetes: Kubernetes kubeconfig (unknown)
-- gh: GitHub CLI (unknown)
-- apache: htpasswd (unknown)
-- postgres: PostgreSQL password file (unknown)
-- curl: curl netrc (unknown)
-- next: Next.js (unknown)
-- git-ignore: Git ignore patterns (2.42.0)
-- openssl-rand: OpenSSL random bytes (3.0)
-- python-secrets: Python secrets (3.13)
-- vite-env: Vite environment variables (6)
-- aws-store: AWS Secrets Manager overview (unknown)
-- google-store: Google Cloud Secret Manager overview (unknown)
-- azure-store: Azure Key Vault overview (unknown)
-
-Claims (full source mapping in the front matter):
-
-- gitignore (REASONED; owasp, next, git-ignore): Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.
-- runtime-storage (REASONED; owasp, docker-build, aws-store, google-store, azure-store): Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value.
-- random (REASONED; owasp, openssl-rand, python-secrets): Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.
-- scanners (REASONED; gitleaks, trufflehog): Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.
-- argv (REASONED; proc, apache): Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.
-- stdin (REASONED; apache, docker, gh): Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.
-- credential-files (REASONED; postgres, curl): Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass.
-- shell-input (REASONED; bash, docker, proc): As this guide's assessment, hidden read input avoids history; as this guide's advice, tracing must be off around expansion. The clean-Bash login block clears inherited TOKEN attributes, turns tracing, allexport and errexit off, enables pipefail, and removes TOKEN on exit.
-- shell-limits (REASONED; bash, proc, docker): As this guide's assessment under the stated clean-Bash assumptions, the prompted token stays out of argv and environment; same-account/root memory access and earlier exports remain outside this protection.
-- argv-review (REASONED; proc): A ps/grep snapshot misses unlabelled secrets and short-lived processes; review secret-input paths instead of treating a clean snapshot as proof.
-- ci-store (REASONED; owasp): Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts.
-- prompt-secrets (REASONED; owasp): Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model.
-- business-rules (REASONED; owasp, next, vite-env): Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it.
-- terraform-state (REASONED; terraform): Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and `*.tfstate.*` including backups and workspace copies.
-- kubeconfig (REASONED; kubernetes): Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control.
-- docker-store (REASONED; docker, owasp): Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets.
-- leak-rotation (REASONED; owasp): Revoke and replace a leaked credential before cleanup; deletion cannot undo public repository, chat, log or paste exposure.
-- history-cleanup (REASONED; git-filter-repo, owasp): History rewriting with git-filter-repo is hygiene after rotation, not containment or unpublishing.
-- leak-audit (REASONED; owasp): Review provider logs for use of the leaked credential during its exposure window.
-- encrypted-git (REASONED; sops, age): SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository.
-- verify-scan (REASONED; gitleaks): gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate.
-- verify-patterns (REASONED; grep, owasp): Supplementary grep prints filenames only, when null binary data is discovered assumes unprocessed input does not match, skips excluded trees; as this guide's advice, a non-zero exit caused by a read error is a failed check; as this guide's assessment, empty output is not proof of no secret. GNU grep documents -E as extended regular expression syntax.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Leaked API keys and credentials in public repositories are the most common security incident in AI-assisted projects, and scanners harvest fresh commits within minutes. [authentication.md](authentication.md) states the baseline; this guide covers the handling.
 
@@ -380,3 +99,310 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 - GNU grep general output control (`-l`; rolling) (checked October 2026): https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html
 - GNU grep Programs (`-E` selects extended regular expressions; rolling) (checked October 2026): https://www.gnu.org/software/grep/manual/html_node/grep-Programs.html
 - GNU grep exit status (0 match, 1 no match, 2 error; rolling) (checked October 2026): https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/secrets.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- git-ignore: Git ignore patterns (2.42.0)
+- gitleaks: gitleaks command minimum (8.19+)
+- trufflehog: TruffleHog (unknown)
+- sops: SOPS (unknown)
+- age: age (unknown)
+- git-filter-repo: git-filter-repo (unknown)
+- openssl-rand: OpenSSL random bytes (3.0)
+- python-secrets: Python secrets (3.13)
+- docker-build: Docker build and image history documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- proc: Linux procfs (unknown)
+- docker: Docker login (unknown)
+- terraform: Terraform (unknown)
+- kubernetes: Kubernetes kubeconfig (unknown)
+- gh: GitHub CLI (unknown)
+- apache: htpasswd (unknown)
+- postgres: PostgreSQL password file (unknown)
+- curl: curl netrc (unknown)
+- next: Next.js (unknown)
+- vite-env: Vite environment variables (6)
+- aws-store: AWS Secrets Manager overview (unknown)
+- google-store: Google Cloud Secret Manager overview (unknown)
+- azure-store: Azure Key Vault overview (unknown)
+- bash: GNU Bash reference manual (bash-5.3)
+- grep: GNU grep (unknown)
+- owasp: OWASP secret handling (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- gitignore (REASONED; owasp, next, git-ignore): Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.
+- runtime-storage (REASONED; owasp, docker-build, aws-store, google-store, azure-store): Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value.
+- random (REASONED; owasp, openssl-rand, python-secrets): Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.
+- scanners (REASONED; gitleaks, trufflehog): Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.
+- argv (REASONED; proc, apache): Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.
+- stdin (REASONED; apache, docker, gh): Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.
+- credential-files (REASONED; postgres, curl): Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass.
+- shell-input (REASONED; bash, docker, proc): As this guide's assessment, hidden read input avoids history; as this guide's advice, tracing must be off around expansion. The clean-Bash login block clears inherited TOKEN attributes, turns tracing, allexport and errexit off, enables pipefail, and removes TOKEN on exit.
+- shell-limits (REASONED; bash, proc, docker): As this guide's assessment under the stated clean-Bash assumptions, the prompted token stays out of argv and environment; same-account/root memory access and earlier exports remain outside this protection.
+- argv-review (REASONED; proc): A ps/grep snapshot misses unlabelled secrets and short-lived processes; review secret-input paths instead of treating a clean snapshot as proof.
+- ci-store (REASONED; owasp): Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts.
+- prompt-secrets (REASONED; owasp): Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model.
+- business-rules (REASONED; owasp, next, vite-env): Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it.
+- terraform-state (REASONED; terraform): Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and `*.tfstate.*` including backups and workspace copies.
+- kubeconfig (REASONED; kubernetes): Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control.
+- docker-store (REASONED; docker, owasp): Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets.
+- leak-rotation (REASONED; owasp): Revoke and replace a leaked credential before cleanup; deletion cannot undo public repository, chat, log or paste exposure.
+- history-cleanup (REASONED; git-filter-repo, owasp): History rewriting with git-filter-repo is hygiene after rotation, not containment or unpublishing.
+- leak-audit (REASONED; owasp): Review provider logs for use of the leaked credential during its exposure window.
+- encrypted-git (REASONED; sops, age): SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository.
+- verify-scan (REASONED; gitleaks): gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate.
+- verify-patterns (REASONED; grep, owasp): Supplementary grep prints filenames only, when null binary data is discovered assumes unprocessed input does not match, skips excluded trees; as this guide's advice, a non-zero exit caused by a read error is a failed check; as this guide's assessment, empty output is not proof of no secret. GNU grep documents -E as extended regular expression syntax.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-05",
+  "documentation_checked": "2026-09",
+  "body_sha256": "e99f0fcc1524b98e1393a25a36ea06a29235918c450bb6ed4e012584b2ed41c9",
+  "components": {
+    "git-ignore": {
+      "name": "Git ignore patterns",
+      "basis": "2.42.0",
+      "sources": {
+        "s90ce7c8605d9": "https://git-scm.com/docs/gitignore/2.42.0"
+      }
+    },
+    "gitleaks": {
+      "name": "gitleaks command minimum",
+      "basis": "8.19+",
+      "sources": {
+        "s18cdf0069eb9": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md"
+      }
+    },
+    "trufflehog": {
+      "name": "TruffleHog",
+      "basis": "unknown",
+      "sources": {
+        "s5450689a9bb8": "https://github.com/trufflesecurity/trufflehog"
+      }
+    },
+    "sops": {
+      "name": "SOPS",
+      "basis": "unknown",
+      "sources": {
+        "s78c5bb528dc4": "https://github.com/getsops/sops"
+      }
+    },
+    "age": {
+      "name": "age",
+      "basis": "unknown",
+      "sources": {
+        "sca8b0d211739": "https://github.com/FiloSottile/age"
+      }
+    },
+    "git-filter-repo": {
+      "name": "git-filter-repo",
+      "basis": "unknown",
+      "sources": {
+        "s95bf8a949d5e": "https://github.com/newren/git-filter-repo"
+      }
+    },
+    "openssl-rand": {
+      "name": "OpenSSL random bytes",
+      "basis": "3.0",
+      "sources": {
+        "s11d11381b080": "https://docs.openssl.org/3.0/man1/openssl-rand/"
+      }
+    },
+    "python-secrets": {
+      "name": "Python secrets",
+      "basis": "3.13",
+      "sources": {
+        "sd2e8196eaa96": "https://docs.python.org/3.13/library/secrets.html#secrets.token_urlsafe"
+      }
+    },
+    "docker-build": {
+      "name": "Docker build and image history documentation",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "sd8afa286c173": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/variables.md#L17-L52",
+        "s07e00829f121": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/build/building/secrets.md#L13-L22",
+        "s6283b172a5c6": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_image_history.yaml#L1-L118"
+      }
+    },
+    "proc": {
+      "name": "Linux procfs",
+      "basis": "unknown",
+      "sources": {
+        "s801d5f1ee88d": "https://man7.org/linux/man-pages/man5/proc_pid_cmdline.5.html"
+      }
+    },
+    "docker": {
+      "name": "Docker login",
+      "basis": "unknown",
+      "sources": {
+        "sf8243a183d67": "https://docs.docker.com/reference/cli/docker/login/"
+      }
+    },
+    "terraform": {
+      "name": "Terraform",
+      "basis": "unknown",
+      "sources": {
+        "s8efa1a4bb953": "https://developer.hashicorp.com/terraform/language/manage-sensitive-data"
+      }
+    },
+    "kubernetes": {
+      "name": "Kubernetes kubeconfig",
+      "basis": "unknown",
+      "sources": {
+        "se41a53ea6778": "https://kubernetes.io/docs/reference/config-api/kubeconfig.v1/"
+      }
+    },
+    "gh": {
+      "name": "GitHub CLI",
+      "basis": "unknown",
+      "sources": {
+        "sf0b01ee9b3e1": "https://cli.github.com/manual/gh_auth_login"
+      }
+    },
+    "apache": {
+      "name": "htpasswd",
+      "basis": "unknown",
+      "sources": {
+        "scde9004bb967": "https://httpd.apache.org/docs/2.4/programs/htpasswd.html"
+      }
+    },
+    "postgres": {
+      "name": "PostgreSQL password file",
+      "basis": "unknown",
+      "sources": {
+        "s198d4780d9a4": "https://www.postgresql.org/docs/current/libpq-pgpass.html"
+      }
+    },
+    "curl": {
+      "name": "curl netrc",
+      "basis": "unknown",
+      "sources": {
+        "s3a0a54039912": "https://everything.curl.dev/usingcurl/netrc.html"
+      }
+    },
+    "next": {
+      "name": "Next.js",
+      "basis": "unknown",
+      "sources": {
+        "s964651d4eed4": "https://nextjs.org/docs/app/guides/environment-variables"
+      }
+    },
+    "vite-env": {
+      "name": "Vite environment variables",
+      "basis": "6",
+      "sources": {
+        "sba07c9b57bd9": "https://v6.vite.dev/guide/env-and-mode"
+      }
+    },
+    "aws-store": {
+      "name": "AWS Secrets Manager overview",
+      "basis": "unknown",
+      "sources": {
+        "s81b41c17ad57": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html"
+      }
+    },
+    "google-store": {
+      "name": "Google Cloud Secret Manager overview",
+      "basis": "unknown",
+      "sources": {
+        "scd27be211781": "https://docs.cloud.google.com/secret-manager/docs/overview"
+      }
+    },
+    "azure-store": {
+      "name": "Azure Key Vault overview",
+      "basis": "unknown",
+      "sources": {
+        "seb86b29f4951": "https://learn.microsoft.com/en-us/azure/key-vault/general/overview"
+      }
+    },
+    "bash": {
+      "name": "GNU Bash reference manual",
+      "basis": "bash-5.3",
+      "sources": {
+        "sb38bf74a89b0": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5629",
+        "s8c59508bd4c8": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5917",
+        "s04ec4ba49971": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6000",
+        "se62fd3ad4fc3": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6122",
+        "s2df39d2c9c1c": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6194",
+        "s8447036b2114": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5161",
+        "s3255eca7e496": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4852",
+        "s93dcf5ba0a87": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4740",
+        "s8016d1aecfca": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5929",
+        "sf6c6f542c26c": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6062"
+      }
+    },
+    "grep": {
+      "name": "GNU grep",
+      "basis": "unknown",
+      "sources": {
+        "s33689bc366bf": "https://www.gnu.org/software/grep/manual/html_node/File-and-Directory-Selection.html",
+        "s2c1251092e66": "https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html",
+        "sea43e82b0753": "https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html",
+        "sbd30b628a5b8": "https://www.gnu.org/software/grep/manual/html_node/grep-Programs.html"
+      }
+    },
+    "owasp": {
+      "name": "OWASP secret handling",
+      "basis": "unknown",
+      "sources": {
+        "s26a987a1053b": "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html",
+        "s4564d1912a87": "https://genai.owasp.org/llmrisk/llm072025-system-prompt-leakage/"
+      }
+    }
+  },
+  "claims": {
+    "gitignore": {"text": "Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.", "components": ["owasp", "next", "git-ignore"], "sources": ["owasp:s26a987a1053b", "next:s964651d4eed4", "git-ignore:s90ce7c8605d9"], "status": "REASONED"},
+    "runtime-storage": {"text": "Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value.", "components": ["owasp", "docker-build", "aws-store", "google-store", "azure-store"], "sources": ["owasp:s26a987a1053b", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s6283b172a5c6", "aws-store:s81b41c17ad57", "google-store:scd27be211781", "azure-store:seb86b29f4951"], "status": "REASONED"},
+    "random": {"text": "Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.", "components": ["owasp", "openssl-rand", "python-secrets"], "sources": ["owasp:s26a987a1053b", "openssl-rand:s11d11381b080", "python-secrets:sd2e8196eaa96"], "status": "REASONED"},
+    "scanners": {"text": "Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:s18cdf0069eb9", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
+    "argv": {"text": "Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.", "components": ["proc", "apache"], "sources": ["proc:s801d5f1ee88d", "apache:scde9004bb967"], "status": "REASONED"},
+    "stdin": {"text": "Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.", "components": ["apache", "docker", "gh"], "sources": ["apache:scde9004bb967", "docker:sf8243a183d67", "gh:sf0b01ee9b3e1"], "status": "REASONED"},
+    "credential-files": {"text": "Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass.", "components": ["postgres", "curl"], "sources": ["postgres:s198d4780d9a4", "curl:s3a0a54039912"], "status": "REASONED"},
+    "shell-input": {"text": "As this guide's assessment, hidden read input avoids history; as this guide's advice, tracing must be off around expansion. The clean-Bash login block clears inherited TOKEN attributes, turns tracing, allexport and errexit off, enables pipefail, and removes TOKEN on exit.", "components": ["bash", "docker", "proc"], "sources": ["bash:sb38bf74a89b0", "bash:s8c59508bd4c8", "bash:s04ec4ba49971", "bash:se62fd3ad4fc3", "bash:s2df39d2c9c1c", "bash:s8447036b2114", "bash:s3255eca7e496", "bash:s93dcf5ba0a87", "bash:s8016d1aecfca", "bash:sf6c6f542c26c", "docker:sf8243a183d67", "proc:s801d5f1ee88d"], "status": "REASONED"},
+    "shell-limits": {"text": "As this guide's assessment under the stated clean-Bash assumptions, the prompted token stays out of argv and environment; same-account/root memory access and earlier exports remain outside this protection.", "components": ["bash", "proc", "docker"], "sources": ["bash:sb38bf74a89b0", "bash:s8c59508bd4c8", "bash:s04ec4ba49971", "bash:se62fd3ad4fc3", "bash:s2df39d2c9c1c", "bash:s8447036b2114", "bash:s3255eca7e496", "bash:s93dcf5ba0a87", "bash:s8016d1aecfca", "bash:sf6c6f542c26c", "proc:s801d5f1ee88d", "docker:sf8243a183d67"], "status": "REASONED"},
+    "argv-review": {"text": "A ps/grep snapshot misses unlabelled secrets and short-lived processes; review secret-input paths instead of treating a clean snapshot as proof.", "components": ["proc"], "sources": ["proc:s801d5f1ee88d"], "status": "REASONED"},
+    "ci-store": {"text": "Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
+    "prompt-secrets": {"text": "Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b", "owasp:s4564d1912a87"], "status": "REASONED"},
+    "business-rules": {"text": "Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it.", "components": ["owasp", "next", "vite-env"], "sources": ["owasp:s26a987a1053b", "owasp:s4564d1912a87", "next:s964651d4eed4", "vite-env:sba07c9b57bd9"], "status": "REASONED"},
+    "terraform-state": {"text": "Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and `*.tfstate.*` including backups and workspace copies.", "components": ["terraform"], "sources": ["terraform:s8efa1a4bb953"], "status": "REASONED"},
+    "kubeconfig": {"text": "Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control.", "components": ["kubernetes"], "sources": ["kubernetes:se41a53ea6778"], "status": "REASONED"},
+    "docker-store": {"text": "Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets.", "components": ["docker", "owasp"], "sources": ["docker:sf8243a183d67", "owasp:s26a987a1053b"], "status": "REASONED"},
+    "leak-rotation": {"text": "Revoke and replace a leaked credential before cleanup; deletion cannot undo public repository, chat, log or paste exposure.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
+    "history-cleanup": {"text": "History rewriting with git-filter-repo is hygiene after rotation, not containment or unpublishing.", "components": ["git-filter-repo", "owasp"], "sources": ["git-filter-repo:s95bf8a949d5e", "owasp:s26a987a1053b"], "status": "REASONED"},
+    "leak-audit": {"text": "Review provider logs for use of the leaked credential during its exposure window.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
+    "encrypted-git": {"text": "SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository.", "components": ["sops", "age"], "sources": ["sops:s78c5bb528dc4", "age:sca8b0d211739"], "status": "REASONED"},
+    "verify-scan": {"text": "gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate.", "components": ["gitleaks"], "sources": ["gitleaks:s18cdf0069eb9"], "status": "REASONED", "verify": [1]},
+    "verify-patterns": {"text": "Supplementary grep prints filenames only, when null binary data is discovered assumes unprocessed input does not match, skips excluded trees; as this guide's advice, a non-zero exit caused by a read error is a failed check; as this guide's assessment, empty output is not proof of no secret. GNU grep documents -E as extended regular expression syntax.", "components": ["grep", "owasp"], "sources": ["grep:s33689bc366bf", "grep:s2c1251092e66", "grep:sea43e82b0753", "grep:sbd30b628a5b8", "owasp:s26a987a1053b"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->

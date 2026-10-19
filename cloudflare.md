@@ -1,166 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-18",
-  "documentation_checked": "2026-09",
-  "body_sha256": "eca2add64675c85f694803587620b4e632452030396face003b2191c88a687e6",
-  "components": {
-    "cf": {
-      "name": "Cloudflare Zero Trust",
-      "basis": "unknown",
-      "sources": {
-        "s536e61cfd1d0": "https://developers.cloudflare.com/cloudflare-one/",
-        "s160a7accb558": "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/",
-        "s58da5534d71a": "https://github.com/cloudflare/cloudflared",
-        "sbe2ecd154061": "https://developers.cloudflare.com/ssl/origin-configuration/authenticated-origin-pull/",
-        "s9f78b2ad819b": "https://www.cloudflare.com/ips/",
-        "sdb4569bc3e0d": "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/local-management/as-a-service/linux/",
-        "s5bd93ae868e6": "https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/",
-        "s15ab6de85740": "https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/",
-        "sd043afad3d8a": "https://developers.cloudflare.com/tunnel/reference/tunnel-tokens/",
-        "s8d2f573a9d81": "https://www.cloudflare.com/plans/zero-trust-services/"
-      }
-    },
-    "token-file": {
-      "name": "cloudflared token-file minimum",
-      "basis": "2025.4.0",
-      "sources": {
-        "sde222f01d112": "https://developers.cloudflare.com/tunnel/reference/run-parameters/#token-file"
-      }
-    },
-    "installer": {
-      "name": "cloudflared service installer",
-      "basis": "2026.9.3",
-      "sources": {
-        "sbe50314c5b92": "https://github.com/cloudflare/cloudflared/blob/2026.9.3/cmd/cloudflared/common_service.go"
-      }
-    },
-    "curl": {
-      "name": "curl manual",
-      "basis": "unknown",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
-      }
-    },
-    "curl-opts": {
-      "name": "curl command-line options",
-      "basis": "curl-8_23_0",
-      "sources": {
-        "s528fcc47043d": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/cacert.md#L19-L24",
-        "sce3838e7adf1": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/connect-to.md#L17-L22",
-        "s9665b1ea8cc7": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/header.md#L23-L40",
-        "s508454c45cf1": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/noproxy.md#L18-L23",
-        "s511177850f9e": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/globoff.md#L17-L22"
-      }
-    },
-    "cf-docs": {
-      "name": "Cloudflare documentation",
-      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
-      "sources": {
-        "sc4628a1320d3": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json.mdx#L154-L157",
-        "sa102d58fd878": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L51-L67",
-        "sf8ae935ddb55": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/ssl/origin-configuration/ssl-modes/full-strict.mdx#L29-L33",
-        "s4a635dc9bd32": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/ssl/origin-ca-pause-error.mdx#L8",
-        "s253af0f0386c": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L31-L49",
-        "s64e79c014e9a": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L89-L95",
-        "s78f4d7c15ff5": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/ssl/origin-configuration/authenticated-origin-pull/index.mdx#L16-L26",
-        "sd114b2a04351": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/tunnel/get-started/quick-tunnels/index.mdx#L13-L42"
-      }
-    },
-    "cloudflared-readme": {
-      "name": "cloudflared README",
-      "basis": "2026.9.3",
-      "sources": {
-        "s64bea39fdaff": "https://github.com/cloudflare/cloudflared/blob/2026.9.3/README.md#L50-L52"
-      }
-    }
-  },
-  "claims": {
-    "outbound": {"text": "cloudflared opens an outbound-only encrypted tunnel; edge HTTPS needs no inbound firewall ports.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s160a7accb558"], "status": "REASONED"},
-    "prerequisites": {"text": "Cloudflare DNS domain and Zero Trust organization required; check current plan limits, including the free plan's, with Cloudflare; the fetched plans page did not state a user limit, and this guide does not establish one.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s160a7accb558", "cf:s8d2f573a9d81"], "status": "REASONED"},
-    "remote": {"text": "Copy the dashboard tunnel token to a protected file and configure the OS service to use it; publish the hostname route to http://localhost:3000 only after Access is in place.", "components": ["cf", "token-file"], "sources": ["cf:s160a7accb558", "cf:sd043afad3d8a", "token-file:sde222f01d112"], "status": "REASONED"},
-    "publish-order": {"text": "Create Access before publishing the route, or keep the app stopped; routing alone exposes it without login and a stopped origin still has public DNS.", "components": ["cf"], "sources": ["cf:s160a7accb558", "cf:s536e61cfd1d0"], "status": "REASONED"},
-    "tls-hops": {"text": "Edge terminates TLS, the tunnel is encrypted, and HTTP to localhost:3000 stays on the host.", "components": ["cf"], "sources": ["cf:s160a7accb558"], "status": "REASONED"},
-    "local": {"text": "Locally managed login/create/route dns, tunnel UUID and credentials-file configure app ingress followed by http_status:404.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:sdb4569bc3e0d"], "status": "REASONED"},
-    "service": {"text": "Run by tunnel name or install with an explicit --config under sudo, whose HOME is /root.", "components": ["cf"], "sources": ["cf:sdb4569bc3e0d"], "status": "REASONED"},
-    "secrets": {"text": "Tunnel credentials JSON and tokens allow service publication on the hostname; keep them out of repositories.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s160a7accb558", "cf:sdb4569bc3e0d"], "status": "REASONED"},
-    "access": {"text": "Self-hosted Access application plus Allow policy limits login to listed emails or domains.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s5bd93ae868e6"], "status": "REASONED"},
-    "otp": {"text": "One-time PIN proves mailbox control; SSO can inherit IdP MFA.", "components": ["cf"], "sources": ["cf:s5bd93ae868e6"], "status": "REASONED"},
-    "mfa-bypass": {"text": "When PIN and an IdP coexist, either can be chosen; remove PIN or enforce Access MFA across methods for sensitive apps.", "components": ["cf"], "sources": ["cf:s5bd93ae868e6", "cf:s536e61cfd1d0"], "status": "REASONED"},
-    "service-token": {"text": "Machine access needs a service token and Service Auth policy. Read the secret at a hidden prompt in a fresh trusted Bash shell, keep it unexported in a subshell, and pipe Client-Id and Client-Secret headers to curl --header @-; this avoids argv/history exposure but not access by the account owner or root.", "components": ["cf", "curl"], "sources": ["cf:s15ab6de85740", "curl:s2b2686afaf41"], "status": "REASONED"},
-    "loopback": {"text": "Bind the same-host app to 127.0.0.1 so direct public requests cannot bypass Access.", "components": ["cf"], "sources": ["cf:s160a7accb558"], "status": "REASONED"},
-    "jwt": {"text": "Validate Cf-Access-Jwt-Assertion signature, issuer and application audience; origin reachability, SSRF and another route can bypass the front door.", "components": ["cf", "cf-docs"], "sources": ["cf:s536e61cfd1d0", "cf-docs:sc4628a1320d3"], "status": "REASONED"},
-    "route-coverage": {"text": "Every added tunnel hostname/path needs an Access application and policy, including coverage by a wildcard application.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0"], "status": "REASONED"},
-    "quick": {"text": "Quick trycloudflare.com tunnels without --allowed-mail let anyone with the URL access the service; Cloudflare describes them as temporary and for testing and development, not production.", "components": ["cf", "cf-docs", "cloudflared-readme"], "sources": ["cf:s536e61cfd1d0", "cf:s58da5534d71a", "cf-docs:sd114b2a04351", "cloudflared-readme:s64bea39fdaff"], "status": "REASONED"},
-    "remote-origin": {"text": "A remote origin needs HTTPS and a firewall allowing only the cloudflared host; TLS alone does not restrict callers.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s160a7accb558"], "status": "REASONED"},
-    "origin-ca": {"text": "Use originRequest.caPool for a self-signed origin; noTLSVerify discards server authentication.", "components": ["cf", "cf-docs"], "sources": ["cf:s536e61cfd1d0", "cf-docs:sa102d58fd878"], "status": "REASONED"},
-    "full-strict": {"text": "Full (strict) with an Origin CA certificate authenticates the origin to Cloudflare, not callers; browsers do not trust that certificate directly.", "components": ["cf", "cf-docs"], "sources": ["cf:sbe2ecd154061", "cf-docs:sf8ae935ddb55", "cf-docs:s4a635dc9bd32"], "status": "REASONED"},
-    "aop": {"text": "AOP requires origin-side client-certificate enforcement; nginx uses ssl_verify_client on and ssl_client_certificate.", "components": ["cf"], "sources": ["cf:sbe2ecd154061"], "status": "REASONED"},
-    "aop-zone": {"text": "Global AOP proves only Cloudflare network membership; prefer a zone certificate and its issuing CA, removing shared-CA trust.", "components": ["cf"], "sources": ["cf:sbe2ecd154061"], "status": "REASONED"},
-    "origin-ports": {"text": "For a no-tunnel origin, restrict 443 to Cloudflare IP ranges and close 80 or redirect only to the canonical HTTPS host without app content; the listed Sources do not prescribe a redirect code, and mTLS cannot authenticate plaintext HTTP.", "components": ["cf"], "sources": ["cf:sbe2ecd154061", "cf:s9f78b2ad819b"], "status": "REASONED"},
-    "verify-login": {"text": "Private browsing must show Access login; anonymous HEAD must redirect to the team's cloudflareaccess.com login, never app content.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s5bd93ae868e6"], "status": "REASONED"},
-    "verify-token": {"text": "On a route known to serve application content with HTTP 200, send the hidden-prompt service token through curl --header @- and expect http=200 location=. Login redirects, denials and transport errors fail; compare anonymous denial because token success alone does not prove Access enforcement. The probe discards the body, so 200 alone cannot identify content.", "components": ["cf", "curl"], "sources": ["cf:s15ab6de85740", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-policy": {"text": "Inspect loopback binding and effective inbound policy, including existing allows and container NAT; permitted sources depend on topology.", "components": ["cf"], "sources": ["cf:s160a7accb558", "cf:sbe2ecd154061", "cf:s9f78b2ad819b"], "status": "REASONED"},
-    "verify-origin": {"text": "From another host, probe the actual origin port (HTTP 3000 in the same-host example or HTTPS for a remote origin): an explicit refusal from the confirmed origin address while the allowed-vantage control (tunnel-host loopback, or the `cloudflared` host to a remote origin using the effective HTTP Host separately from the certificate name) returns the app's status, not 000, together with an effective inbound-policy check supports isolation; those controls do not confirm the probed public address; no reply and TLS trust or hostname errors are inconclusive (including when combined trust cannot be reproduced), and any HTTP reply from the confirmed origin address directly on the app's port exposes bypass; an HTTP reply from an unconfirmed address only shows something answers there and requires address-mapping confirmation before calling this origin exposed, never fixed (this guide's assessment of probe outcomes).", "components": ["cf", "curl", "cf-docs", "curl-opts"], "sources": ["cf:s160a7accb558", "curl:s2b2686afaf41", "cf-docs:s253af0f0386c", "curl-opts:s528fcc47043d", "curl-opts:sce3838e7adf1", "cf-docs:sa102d58fd878", "curl-opts:s9665b1ea8cc7", "cf-docs:s64e79c014e9a"], "status": "REASONED", "verify": [2, 3]},
-    "verify-aop": {"text": "Trust the origin server CA when probing 443 directly: missing-client-certificate refusal indicates AOP only from an independently confirmed origin address; a refusal or reply from an unconfirmed address shows only that something answers there and requires address-mapping confirmation before calling this origin fixed or exposed; the service-token GET does not confirm the probed public address; a firewall drop is inconclusive in this probe, even if the service-token GET answers; the effective inbound policy establishes isolation, while app 401/403 shows app authorization only from the confirmed origin address (this guide's assessment of probe outcomes).", "components": ["cf", "cf-docs", "curl", "curl-opts"], "sources": ["cf:sbe2ecd154061", "curl:s2b2686afaf41", "cf-docs:s4a635dc9bd32", "curl-opts:s508454c45cf1", "curl-opts:s511177850f9e", "cf-docs:s78f4d7c15ff5"], "status": "REASONED"},
-    "verify-http": {"text": "Probe a known app route and virtual host on no-tunnel origin port 80 from outside: either an explicit refusal from the confirmed origin address or only a redirect from that confirmed address to the canonical HTTPS host without app content supports the fixed state when the service-token GET on that route answers with its success status; that GET does not confirm the probed public address; app content from that confirmed address over HTTP shows exposure, while app content from an unconfirmed address only shows that something answers there and requires address-mapping confirmation before calling this origin exposed; no reply is inconclusive. The listed Sources do not prescribe a redirect code (this guide's assessment of probe outcomes).", "components": ["cf", "curl"], "sources": ["cf:sbe2ecd154061", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [4]},
-    "token-file": {"text": "cloudflared 2025.4.0 or later supports tunnel run --token-file /absolute/path/to/token; restrict the file to the service account with mode 0600 on Linux/macOS or a restricted Windows ACL.", "components": ["token-file", "cf"], "sources": ["token-file:sde222f01d112", "cf:sd043afad3d8a"], "status": "REASONED"},
-    "token-install-argv": {"text": "Avoid cloudflared service install <TOKEN>: the token is exposed on the installer argv, even though the cited 2026.9.3 installer runs the service with --token-file.", "components": ["installer", "token-file"], "sources": ["installer:sbe50314c5b92", "token-file:sde222f01d112"], "status": "REASONED"}
-  }
-}
----
 # Cloudflare Tunnel and Zero Trust Access
 
-<!-- version-basis:start -->
-**Version basis**
+Written against cloudflared token-file minimum 2025.4.0, cloudflared service installer 2026.9.3, cloudflared README 2026.9.3, and curl command-line options curl-8_23_0; 1 further source is pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 30 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- cf: Cloudflare Zero Trust (unknown)
-- token-file: cloudflared token-file minimum (2025.4.0)
-- installer: cloudflared service installer (2026.9.3)
-- curl: curl manual (unknown)
-- curl-opts: curl command-line options (curl-8_23_0)
-- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
-- cloudflared-readme: cloudflared README (2026.9.3)
-
-Claims (full source mapping in the front matter):
-
-- outbound (REASONED; cf): cloudflared opens an outbound-only encrypted tunnel; edge HTTPS needs no inbound firewall ports.
-- prerequisites (REASONED; cf): Cloudflare DNS domain and Zero Trust organization required; check current plan limits, including the free plan's, with Cloudflare; the fetched plans page did not state a user limit, and this guide does not establish one.
-- remote (REASONED; cf, token-file): Copy the dashboard tunnel token to a protected file and configure the OS service to use it; publish the hostname route to http://localhost:3000 only after Access is in place.
-- publish-order (REASONED; cf): Create Access before publishing the route, or keep the app stopped; routing alone exposes it without login and a stopped origin still has public DNS.
-- tls-hops (REASONED; cf): Edge terminates TLS, the tunnel is encrypted, and HTTP to localhost:3000 stays on the host.
-- local (REASONED; cf): Locally managed login/create/route dns, tunnel UUID and credentials-file configure app ingress followed by http_status:404.
-- service (REASONED; cf): Run by tunnel name or install with an explicit --config under sudo, whose HOME is /root.
-- secrets (REASONED; cf): Tunnel credentials JSON and tokens allow service publication on the hostname; keep them out of repositories.
-- access (REASONED; cf): Self-hosted Access application plus Allow policy limits login to listed emails or domains.
-- otp (REASONED; cf): One-time PIN proves mailbox control; SSO can inherit IdP MFA.
-- mfa-bypass (REASONED; cf): When PIN and an IdP coexist, either can be chosen; remove PIN or enforce Access MFA across methods for sensitive apps.
-- service-token (REASONED; cf, curl): Machine access needs a service token and Service Auth policy. Read the secret at a hidden prompt in a fresh trusted Bash shell, keep it unexported in a subshell, and pipe Client-Id and Client-Secret headers to curl --header @-; this avoids argv/history exposure but not access by the account owner or root.
-- loopback (REASONED; cf): Bind the same-host app to 127.0.0.1 so direct public requests cannot bypass Access.
-- jwt (REASONED; cf, cf-docs): Validate Cf-Access-Jwt-Assertion signature, issuer and application audience; origin reachability, SSRF and another route can bypass the front door.
-- route-coverage (REASONED; cf): Every added tunnel hostname/path needs an Access application and policy, including coverage by a wildcard application.
-- quick (REASONED; cf, cf-docs, cloudflared-readme): Quick trycloudflare.com tunnels without --allowed-mail let anyone with the URL access the service; Cloudflare describes them as temporary and for testing and development, not production.
-- remote-origin (REASONED; cf): A remote origin needs HTTPS and a firewall allowing only the cloudflared host; TLS alone does not restrict callers.
-- origin-ca (REASONED; cf, cf-docs): Use originRequest.caPool for a self-signed origin; noTLSVerify discards server authentication.
-- full-strict (REASONED; cf, cf-docs): Full (strict) with an Origin CA certificate authenticates the origin to Cloudflare, not callers; browsers do not trust that certificate directly.
-- aop (REASONED; cf): AOP requires origin-side client-certificate enforcement; nginx uses ssl_verify_client on and ssl_client_certificate.
-- aop-zone (REASONED; cf): Global AOP proves only Cloudflare network membership; prefer a zone certificate and its issuing CA, removing shared-CA trust.
-- origin-ports (REASONED; cf): For a no-tunnel origin, restrict 443 to Cloudflare IP ranges and close 80 or redirect only to the canonical HTTPS host without app content; the listed Sources do not prescribe a redirect code, and mTLS cannot authenticate plaintext HTTP.
-- verify-login (REASONED; cf): Private browsing must show Access login; anonymous HEAD must redirect to the team's cloudflareaccess.com login, never app content.
-- verify-token (REASONED; cf, curl): On a route known to serve application content with HTTP 200, send the hidden-prompt service token through curl --header @- and expect http=200 location=. Login redirects, denials and transport errors fail; compare anonymous denial because token success alone does not prove Access enforcement. The probe discards the body, so 200 alone cannot identify content.
-- verify-policy (REASONED; cf): Inspect loopback binding and effective inbound policy, including existing allows and container NAT; permitted sources depend on topology.
-- verify-origin (REASONED; cf, curl, cf-docs, curl-opts): From another host, probe the actual origin port (HTTP 3000 in the same-host example or HTTPS for a remote origin): an explicit refusal from the confirmed origin address while the allowed-vantage control (tunnel-host loopback, or the `cloudflared` host to a remote origin using the effective HTTP Host separately from the certificate name) returns the app's status, not 000, together with an effective inbound-policy check supports isolation; those controls do not confirm the probed public address; no reply and TLS trust or hostname errors are inconclusive (including when combined trust cannot be reproduced), and any HTTP reply from the confirmed origin address directly on the app's port exposes bypass; an HTTP reply from an unconfirmed address only shows something answers there and requires address-mapping confirmation before calling this origin exposed, never fixed (this guide's assessment of probe outcomes).
-- verify-aop (REASONED; cf, cf-docs, curl, curl-opts): Trust the origin server CA when probing 443 directly: missing-client-certificate refusal indicates AOP only from an independently confirmed origin address; a refusal or reply from an unconfirmed address shows only that something answers there and requires address-mapping confirmation before calling this origin fixed or exposed; the service-token GET does not confirm the probed public address; a firewall drop is inconclusive in this probe, even if the service-token GET answers; the effective inbound policy establishes isolation, while app 401/403 shows app authorization only from the confirmed origin address (this guide's assessment of probe outcomes).
-- verify-http (REASONED; cf, curl): Probe a known app route and virtual host on no-tunnel origin port 80 from outside: either an explicit refusal from the confirmed origin address or only a redirect from that confirmed address to the canonical HTTPS host without app content supports the fixed state when the service-token GET on that route answers with its success status; that GET does not confirm the probed public address; app content from that confirmed address over HTTP shows exposure, while app content from an unconfirmed address only shows that something answers there and requires address-mapping confirmation before calling this origin exposed; no reply is inconclusive. The listed Sources do not prescribe a redirect code (this guide's assessment of probe outcomes).
-- token-file (REASONED; token-file, cf): cloudflared 2025.4.0 or later supports tunnel run --token-file /absolute/path/to/token; restrict the file to the service account with mode 0600 on Linux/macOS or a restricted Windows ACL.
-- token-install-argv (REASONED; installer, token-file): Avoid cloudflared service install &lt;TOKEN&gt;: the token is exposed on the installer argv, even though the cited 2026.9.3 installer runs the service with --token-file.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 This is the recommended path when the host cannot or should not accept inbound connections: home labs, NATed machines, cloud VMs you want to keep closed, and any project without its own TLS setup. `cloudflared` opens an outbound-only tunnel to Cloudflare's edge, the edge serves your hostname over HTTPS with a Cloudflare-managed certificate, and Cloudflare Access places authentication (SSO or emailed one-time PIN) in front of the app without any application changes. No inbound firewall ports are opened at all.
 
@@ -413,3 +255,187 @@ REASONED: following block; port-80 HTTP virtual-host route probe; local marking 
 - curl noproxy (pinned, checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/noproxy.md#L18-L23
 - curl globoff (pinned, checked October 2026): https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/globoff.md#L17-L22
 - Cloudflare Authenticated Origin Pulls and tunnel incompatibility (pinned, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/ssl/origin-configuration/authenticated-origin-pull/index.mdx#L16-L26
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/cloudflare.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- token-file: cloudflared token-file minimum (2025.4.0)
+- installer: cloudflared service installer (2026.9.3)
+- cloudflared-readme: cloudflared README (2026.9.3)
+- cf: Cloudflare Zero Trust (unknown)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- curl: curl manual (unknown)
+- curl-opts: curl command-line options (curl-8_23_0)
+
+Claims (full source mapping in the JSON block below):
+
+- outbound (REASONED; cf): cloudflared opens an outbound-only encrypted tunnel; edge HTTPS needs no inbound firewall ports.
+- prerequisites (REASONED; cf): Cloudflare DNS domain and Zero Trust organization required; check current plan limits, including the free plan's, with Cloudflare; the fetched plans page did not state a user limit, and this guide does not establish one.
+- remote (REASONED; cf, token-file): Copy the dashboard tunnel token to a protected file and configure the OS service to use it; publish the hostname route to http://localhost:3000 only after Access is in place.
+- publish-order (REASONED; cf): Create Access before publishing the route, or keep the app stopped; routing alone exposes it without login and a stopped origin still has public DNS.
+- tls-hops (REASONED; cf): Edge terminates TLS, the tunnel is encrypted, and HTTP to localhost:3000 stays on the host.
+- local (REASONED; cf): Locally managed login/create/route dns, tunnel UUID and credentials-file configure app ingress followed by http_status:404.
+- service (REASONED; cf): Run by tunnel name or install with an explicit --config under sudo, whose HOME is /root.
+- secrets (REASONED; cf): Tunnel credentials JSON and tokens allow service publication on the hostname; keep them out of repositories.
+- access (REASONED; cf): Self-hosted Access application plus Allow policy limits login to listed emails or domains.
+- otp (REASONED; cf): One-time PIN proves mailbox control; SSO can inherit IdP MFA.
+- mfa-bypass (REASONED; cf): When PIN and an IdP coexist, either can be chosen; remove PIN or enforce Access MFA across methods for sensitive apps.
+- service-token (REASONED; cf, curl): Machine access needs a service token and Service Auth policy. Read the secret at a hidden prompt in a fresh trusted Bash shell, keep it unexported in a subshell, and pipe Client-Id and Client-Secret headers to curl --header @-; this avoids argv/history exposure but not access by the account owner or root.
+- loopback (REASONED; cf): Bind the same-host app to 127.0.0.1 so direct public requests cannot bypass Access.
+- jwt (REASONED; cf, cf-docs): Validate Cf-Access-Jwt-Assertion signature, issuer and application audience; origin reachability, SSRF and another route can bypass the front door.
+- route-coverage (REASONED; cf): Every added tunnel hostname/path needs an Access application and policy, including coverage by a wildcard application.
+- quick (REASONED; cf, cf-docs, cloudflared-readme): Quick trycloudflare.com tunnels without --allowed-mail let anyone with the URL access the service; Cloudflare describes them as temporary and for testing and development, not production.
+- remote-origin (REASONED; cf): A remote origin needs HTTPS and a firewall allowing only the cloudflared host; TLS alone does not restrict callers.
+- origin-ca (REASONED; cf, cf-docs): Use originRequest.caPool for a self-signed origin; noTLSVerify discards server authentication.
+- full-strict (REASONED; cf, cf-docs): Full (strict) with an Origin CA certificate authenticates the origin to Cloudflare, not callers; browsers do not trust that certificate directly.
+- aop (REASONED; cf): AOP requires origin-side client-certificate enforcement; nginx uses ssl_verify_client on and ssl_client_certificate.
+- aop-zone (REASONED; cf): Global AOP proves only Cloudflare network membership; prefer a zone certificate and its issuing CA, removing shared-CA trust.
+- origin-ports (REASONED; cf): For a no-tunnel origin, restrict 443 to Cloudflare IP ranges and close 80 or redirect only to the canonical HTTPS host without app content; the listed Sources do not prescribe a redirect code, and mTLS cannot authenticate plaintext HTTP.
+- verify-login (REASONED; cf): Private browsing must show Access login; anonymous HEAD must redirect to the team's cloudflareaccess.com login, never app content.
+- verify-token (REASONED; cf, curl): On a route known to serve application content with HTTP 200, send the hidden-prompt service token through curl --header @- and expect http=200 location=. Login redirects, denials and transport errors fail; compare anonymous denial because token success alone does not prove Access enforcement. The probe discards the body, so 200 alone cannot identify content.
+- verify-policy (REASONED; cf): Inspect loopback binding and effective inbound policy, including existing allows and container NAT; permitted sources depend on topology.
+- verify-origin (REASONED; cf, curl, cf-docs, curl-opts): From another host, probe the actual origin port (HTTP 3000 in the same-host example or HTTPS for a remote origin): an explicit refusal from the confirmed origin address while the allowed-vantage control (tunnel-host loopback, or the `cloudflared` host to a remote origin using the effective HTTP Host separately from the certificate name) returns the app's status, not 000, together with an effective inbound-policy check supports isolation; those controls do not confirm the probed public address; no reply and TLS trust or hostname errors are inconclusive (including when combined trust cannot be reproduced), and any HTTP reply from the confirmed origin address directly on the app's port exposes bypass; an HTTP reply from an unconfirmed address only shows something answers there and requires address-mapping confirmation before calling this origin exposed, never fixed (this guide's assessment of probe outcomes).
+- verify-aop (REASONED; cf, cf-docs, curl, curl-opts): Trust the origin server CA when probing 443 directly: missing-client-certificate refusal indicates AOP only from an independently confirmed origin address; a refusal or reply from an unconfirmed address shows only that something answers there and requires address-mapping confirmation before calling this origin fixed or exposed; the service-token GET does not confirm the probed public address; a firewall drop is inconclusive in this probe, even if the service-token GET answers; the effective inbound policy establishes isolation, while app 401/403 shows app authorization only from the confirmed origin address (this guide's assessment of probe outcomes).
+- verify-http (REASONED; cf, curl): Probe a known app route and virtual host on no-tunnel origin port 80 from outside: either an explicit refusal from the confirmed origin address or only a redirect from that confirmed address to the canonical HTTPS host without app content supports the fixed state when the service-token GET on that route answers with its success status; that GET does not confirm the probed public address; app content from that confirmed address over HTTP shows exposure, while app content from an unconfirmed address only shows that something answers there and requires address-mapping confirmation before calling this origin exposed; no reply is inconclusive. The listed Sources do not prescribe a redirect code (this guide's assessment of probe outcomes).
+- token-file (REASONED; token-file, cf): cloudflared 2025.4.0 or later supports tunnel run --token-file /absolute/path/to/token; restrict the file to the service account with mode 0600 on Linux/macOS or a restricted Windows ACL.
+- token-install-argv (REASONED; installer, token-file): Avoid cloudflared service install &lt;TOKEN&gt;: the token is exposed on the installer argv, even though the cited 2026.9.3 installer runs the service with --token-file.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-18",
+  "documentation_checked": "2026-09",
+  "body_sha256": "eca2add64675c85f694803587620b4e632452030396face003b2191c88a687e6",
+  "components": {
+    "token-file": {
+      "name": "cloudflared token-file minimum",
+      "basis": "2025.4.0",
+      "sources": {
+        "sde222f01d112": "https://developers.cloudflare.com/tunnel/reference/run-parameters/#token-file"
+      }
+    },
+    "installer": {
+      "name": "cloudflared service installer",
+      "basis": "2026.9.3",
+      "sources": {
+        "sbe50314c5b92": "https://github.com/cloudflare/cloudflared/blob/2026.9.3/cmd/cloudflared/common_service.go"
+      }
+    },
+    "cloudflared-readme": {
+      "name": "cloudflared README",
+      "basis": "2026.9.3",
+      "sources": {
+        "s64bea39fdaff": "https://github.com/cloudflare/cloudflared/blob/2026.9.3/README.md#L50-L52"
+      }
+    },
+    "cf": {
+      "name": "Cloudflare Zero Trust",
+      "basis": "unknown",
+      "sources": {
+        "s536e61cfd1d0": "https://developers.cloudflare.com/cloudflare-one/",
+        "s160a7accb558": "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/",
+        "s58da5534d71a": "https://github.com/cloudflare/cloudflared",
+        "sbe2ecd154061": "https://developers.cloudflare.com/ssl/origin-configuration/authenticated-origin-pull/",
+        "s9f78b2ad819b": "https://www.cloudflare.com/ips/",
+        "sdb4569bc3e0d": "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/local-management/as-a-service/linux/",
+        "s5bd93ae868e6": "https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/",
+        "s15ab6de85740": "https://developers.cloudflare.com/cloudflare-one/access-controls/service-credentials/service-tokens/",
+        "sd043afad3d8a": "https://developers.cloudflare.com/tunnel/reference/tunnel-tokens/",
+        "s8d2f573a9d81": "https://www.cloudflare.com/plans/zero-trust-services/"
+      }
+    },
+    "cf-docs": {
+      "name": "Cloudflare documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "sc4628a1320d3": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json.mdx#L154-L157",
+        "sa102d58fd878": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L51-L67",
+        "sf8ae935ddb55": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/ssl/origin-configuration/ssl-modes/full-strict.mdx#L29-L33",
+        "s4a635dc9bd32": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/ssl/origin-ca-pause-error.mdx#L8",
+        "s253af0f0386c": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L31-L49",
+        "s64e79c014e9a": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L89-L95",
+        "s78f4d7c15ff5": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/ssl/origin-configuration/authenticated-origin-pull/index.mdx#L16-L26",
+        "sd114b2a04351": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/tunnel/get-started/quick-tunnels/index.mdx#L13-L42"
+      }
+    },
+    "curl": {
+      "name": "curl manual",
+      "basis": "unknown",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    },
+    "curl-opts": {
+      "name": "curl command-line options",
+      "basis": "curl-8_23_0",
+      "sources": {
+        "s528fcc47043d": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/cacert.md#L19-L24",
+        "sce3838e7adf1": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/connect-to.md#L17-L22",
+        "s9665b1ea8cc7": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/header.md#L23-L40",
+        "s508454c45cf1": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/noproxy.md#L18-L23",
+        "s511177850f9e": "https://github.com/curl/curl/blob/curl-8_23_0/docs/cmdline-opts/globoff.md#L17-L22"
+      }
+    }
+  },
+  "claims": {
+    "outbound": {"text": "cloudflared opens an outbound-only encrypted tunnel; edge HTTPS needs no inbound firewall ports.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s160a7accb558"], "status": "REASONED"},
+    "prerequisites": {"text": "Cloudflare DNS domain and Zero Trust organization required; check current plan limits, including the free plan's, with Cloudflare; the fetched plans page did not state a user limit, and this guide does not establish one.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s160a7accb558", "cf:s8d2f573a9d81"], "status": "REASONED"},
+    "remote": {"text": "Copy the dashboard tunnel token to a protected file and configure the OS service to use it; publish the hostname route to http://localhost:3000 only after Access is in place.", "components": ["cf", "token-file"], "sources": ["cf:s160a7accb558", "cf:sd043afad3d8a", "token-file:sde222f01d112"], "status": "REASONED"},
+    "publish-order": {"text": "Create Access before publishing the route, or keep the app stopped; routing alone exposes it without login and a stopped origin still has public DNS.", "components": ["cf"], "sources": ["cf:s160a7accb558", "cf:s536e61cfd1d0"], "status": "REASONED"},
+    "tls-hops": {"text": "Edge terminates TLS, the tunnel is encrypted, and HTTP to localhost:3000 stays on the host.", "components": ["cf"], "sources": ["cf:s160a7accb558"], "status": "REASONED"},
+    "local": {"text": "Locally managed login/create/route dns, tunnel UUID and credentials-file configure app ingress followed by http_status:404.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:sdb4569bc3e0d"], "status": "REASONED"},
+    "service": {"text": "Run by tunnel name or install with an explicit --config under sudo, whose HOME is /root.", "components": ["cf"], "sources": ["cf:sdb4569bc3e0d"], "status": "REASONED"},
+    "secrets": {"text": "Tunnel credentials JSON and tokens allow service publication on the hostname; keep them out of repositories.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s160a7accb558", "cf:sdb4569bc3e0d"], "status": "REASONED"},
+    "access": {"text": "Self-hosted Access application plus Allow policy limits login to listed emails or domains.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s5bd93ae868e6"], "status": "REASONED"},
+    "otp": {"text": "One-time PIN proves mailbox control; SSO can inherit IdP MFA.", "components": ["cf"], "sources": ["cf:s5bd93ae868e6"], "status": "REASONED"},
+    "mfa-bypass": {"text": "When PIN and an IdP coexist, either can be chosen; remove PIN or enforce Access MFA across methods for sensitive apps.", "components": ["cf"], "sources": ["cf:s5bd93ae868e6", "cf:s536e61cfd1d0"], "status": "REASONED"},
+    "service-token": {"text": "Machine access needs a service token and Service Auth policy. Read the secret at a hidden prompt in a fresh trusted Bash shell, keep it unexported in a subshell, and pipe Client-Id and Client-Secret headers to curl --header @-; this avoids argv/history exposure but not access by the account owner or root.", "components": ["cf", "curl"], "sources": ["cf:s15ab6de85740", "curl:s2b2686afaf41"], "status": "REASONED"},
+    "loopback": {"text": "Bind the same-host app to 127.0.0.1 so direct public requests cannot bypass Access.", "components": ["cf"], "sources": ["cf:s160a7accb558"], "status": "REASONED"},
+    "jwt": {"text": "Validate Cf-Access-Jwt-Assertion signature, issuer and application audience; origin reachability, SSRF and another route can bypass the front door.", "components": ["cf", "cf-docs"], "sources": ["cf:s536e61cfd1d0", "cf-docs:sc4628a1320d3"], "status": "REASONED"},
+    "route-coverage": {"text": "Every added tunnel hostname/path needs an Access application and policy, including coverage by a wildcard application.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0"], "status": "REASONED"},
+    "quick": {"text": "Quick trycloudflare.com tunnels without --allowed-mail let anyone with the URL access the service; Cloudflare describes them as temporary and for testing and development, not production.", "components": ["cf", "cf-docs", "cloudflared-readme"], "sources": ["cf:s536e61cfd1d0", "cf:s58da5534d71a", "cf-docs:sd114b2a04351", "cloudflared-readme:s64bea39fdaff"], "status": "REASONED"},
+    "remote-origin": {"text": "A remote origin needs HTTPS and a firewall allowing only the cloudflared host; TLS alone does not restrict callers.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s160a7accb558"], "status": "REASONED"},
+    "origin-ca": {"text": "Use originRequest.caPool for a self-signed origin; noTLSVerify discards server authentication.", "components": ["cf", "cf-docs"], "sources": ["cf:s536e61cfd1d0", "cf-docs:sa102d58fd878"], "status": "REASONED"},
+    "full-strict": {"text": "Full (strict) with an Origin CA certificate authenticates the origin to Cloudflare, not callers; browsers do not trust that certificate directly.", "components": ["cf", "cf-docs"], "sources": ["cf:sbe2ecd154061", "cf-docs:sf8ae935ddb55", "cf-docs:s4a635dc9bd32"], "status": "REASONED"},
+    "aop": {"text": "AOP requires origin-side client-certificate enforcement; nginx uses ssl_verify_client on and ssl_client_certificate.", "components": ["cf"], "sources": ["cf:sbe2ecd154061"], "status": "REASONED"},
+    "aop-zone": {"text": "Global AOP proves only Cloudflare network membership; prefer a zone certificate and its issuing CA, removing shared-CA trust.", "components": ["cf"], "sources": ["cf:sbe2ecd154061"], "status": "REASONED"},
+    "origin-ports": {"text": "For a no-tunnel origin, restrict 443 to Cloudflare IP ranges and close 80 or redirect only to the canonical HTTPS host without app content; the listed Sources do not prescribe a redirect code, and mTLS cannot authenticate plaintext HTTP.", "components": ["cf"], "sources": ["cf:sbe2ecd154061", "cf:s9f78b2ad819b"], "status": "REASONED"},
+    "verify-login": {"text": "Private browsing must show Access login; anonymous HEAD must redirect to the team's cloudflareaccess.com login, never app content.", "components": ["cf"], "sources": ["cf:s536e61cfd1d0", "cf:s5bd93ae868e6"], "status": "REASONED"},
+    "verify-token": {"text": "On a route known to serve application content with HTTP 200, send the hidden-prompt service token through curl --header @- and expect http=200 location=. Login redirects, denials and transport errors fail; compare anonymous denial because token success alone does not prove Access enforcement. The probe discards the body, so 200 alone cannot identify content.", "components": ["cf", "curl"], "sources": ["cf:s15ab6de85740", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-policy": {"text": "Inspect loopback binding and effective inbound policy, including existing allows and container NAT; permitted sources depend on topology.", "components": ["cf"], "sources": ["cf:s160a7accb558", "cf:sbe2ecd154061", "cf:s9f78b2ad819b"], "status": "REASONED"},
+    "verify-origin": {"text": "From another host, probe the actual origin port (HTTP 3000 in the same-host example or HTTPS for a remote origin): an explicit refusal from the confirmed origin address while the allowed-vantage control (tunnel-host loopback, or the `cloudflared` host to a remote origin using the effective HTTP Host separately from the certificate name) returns the app's status, not 000, together with an effective inbound-policy check supports isolation; those controls do not confirm the probed public address; no reply and TLS trust or hostname errors are inconclusive (including when combined trust cannot be reproduced), and any HTTP reply from the confirmed origin address directly on the app's port exposes bypass; an HTTP reply from an unconfirmed address only shows something answers there and requires address-mapping confirmation before calling this origin exposed, never fixed (this guide's assessment of probe outcomes).", "components": ["cf", "curl", "cf-docs", "curl-opts"], "sources": ["cf:s160a7accb558", "curl:s2b2686afaf41", "cf-docs:s253af0f0386c", "curl-opts:s528fcc47043d", "curl-opts:sce3838e7adf1", "cf-docs:sa102d58fd878", "curl-opts:s9665b1ea8cc7", "cf-docs:s64e79c014e9a"], "status": "REASONED", "verify": [2, 3]},
+    "verify-aop": {"text": "Trust the origin server CA when probing 443 directly: missing-client-certificate refusal indicates AOP only from an independently confirmed origin address; a refusal or reply from an unconfirmed address shows only that something answers there and requires address-mapping confirmation before calling this origin fixed or exposed; the service-token GET does not confirm the probed public address; a firewall drop is inconclusive in this probe, even if the service-token GET answers; the effective inbound policy establishes isolation, while app 401/403 shows app authorization only from the confirmed origin address (this guide's assessment of probe outcomes).", "components": ["cf", "cf-docs", "curl", "curl-opts"], "sources": ["cf:sbe2ecd154061", "curl:s2b2686afaf41", "cf-docs:s4a635dc9bd32", "curl-opts:s508454c45cf1", "curl-opts:s511177850f9e", "cf-docs:s78f4d7c15ff5"], "status": "REASONED"},
+    "verify-http": {"text": "Probe a known app route and virtual host on no-tunnel origin port 80 from outside: either an explicit refusal from the confirmed origin address or only a redirect from that confirmed address to the canonical HTTPS host without app content supports the fixed state when the service-token GET on that route answers with its success status; that GET does not confirm the probed public address; app content from that confirmed address over HTTP shows exposure, while app content from an unconfirmed address only shows that something answers there and requires address-mapping confirmation before calling this origin exposed; no reply is inconclusive. The listed Sources do not prescribe a redirect code (this guide's assessment of probe outcomes).", "components": ["cf", "curl"], "sources": ["cf:sbe2ecd154061", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [4]},
+    "token-file": {"text": "cloudflared 2025.4.0 or later supports tunnel run --token-file /absolute/path/to/token; restrict the file to the service account with mode 0600 on Linux/macOS or a restricted Windows ACL.", "components": ["token-file", "cf"], "sources": ["token-file:sde222f01d112", "cf:sd043afad3d8a"], "status": "REASONED"},
+    "token-install-argv": {"text": "Avoid cloudflared service install <TOKEN>: the token is exposed on the installer argv, even though the cited 2026.9.3 installer runs the service with --token-file.", "components": ["installer", "token-file"], "sources": ["installer:sbe50314c5b92", "token-file:sde222f01d112"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->
