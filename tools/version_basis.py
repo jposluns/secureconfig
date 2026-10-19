@@ -1235,7 +1235,7 @@ def main():
                        help='convert named legacy guides, preserving the digested body exactly')
     modes.add_argument('--introduce', type=Path, metavar='GUIDE',
                        help='move a two-section prompt to the top and insert --intro text')
-    parser.add_argument('--intro', help='one human-written paragraph for --introduce')
+    parser.add_argument('--intro', help='the reviewed intro paragraph for --introduce')
     modes.add_argument('--rebind', type=Path, metavar='GUIDE',
                        help='assert the claim inventory was reviewed; update only its digest')
     parser.add_argument('guide', nargs='?', type=Path,

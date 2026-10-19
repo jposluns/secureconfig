@@ -205,7 +205,8 @@ metadata, refusing any difference. It never rebinds. Rebuild both bundles and ru
 the same change as each migration batch. `--check` and `--write` preserve each guide's layout.
 
 For a two-section guide with its generated block immediately after the H1, run
-`python3 tools/version_basis.py --introduce GUIDE --intro 'One human-written paragraph.'`.
+`python3 tools/version_basis.py --introduce GUIDE --intro 'The reviewed intro paragraph.'`. Intro paragraphs may be drafted by a
+worker; each is reviewed against its guide before it is applied.
 This accepts the historical form as well as a new top prompt without an intro. It validates
 the original guide, inserts the supplied paragraph, moves the prompt/header below it, shortens
 the EOF note and rebinds the digest. Before writing, it asserts that the new body equals the
