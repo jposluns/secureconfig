@@ -207,17 +207,17 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- ollama: Ollama, v0.34.2
-- commit: Ollama release commit, dfabde4539e42ba1e1eab50a3a50b88aea7958a0
-- docker: Docker Engine localhost boundary, 28.0
-- systemd: systemd, v257
-- nginx: nginx, unknown
-- htpasswd: Apache htpasswd, unknown
-- owasp: OWASP password guidance, unknown
-- caddy: Caddy, unknown
-- cloudflare: Cloudflare, unknown
-- curl: curl, unknown
-- ollama-rolling: Ollama documentation (rolling), unknown
+- ollama: Ollama (v0.34.2)
+- commit: Ollama release commit (dfabde4539e42ba1e1eab50a3a50b88aea7958a0)
+- docker: Docker Engine localhost boundary (28.0)
+- systemd: systemd (v257)
+- nginx: nginx (unknown)
+- htpasswd: Apache htpasswd (unknown)
+- owasp: OWASP password guidance (unknown)
+- caddy: Caddy (unknown)
+- cloudflare: Cloudflare (unknown)
+- curl: curl (unknown)
+- ollama-rolling: Ollama documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 

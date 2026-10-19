@@ -393,50 +393,50 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- totp: TOTP standard, unknown
-- hotp: HOTP standard, unknown
-- uri: Authenticator key URI format, unknown
-- webauthn: WebAuthn standard, unknown
-- authelia: Authelia proxy support, unknown
-- caddy-min: Caddy forward_auth minimum, 2.5.1
-- duo: Duo editions, unknown
-- duo-push-policy: Duo Verified Push policy, unknown
-- ssh-pam: SSH and PAM MFA (citation gap), unknown
-- google-authenticator-libpam-source: google-authenticator-libpam source, 1.11
-- google-authenticator-libpam-packages: google-authenticator-libpam package records, unknown
-- duo-proxy-docs: Duo Authentication Proxy documentation, unknown
-- google-workspace-docs: Google Workspace 2SV documentation, unknown
-- supabase: Supabase Auth MFA (citation gap), unknown
-- access: Cloudflare Access MFA (citation gap), unknown
-- mysql: MySQL 8.0 multifactor authentication, 8.0
-- mysql-8-4: MySQL 8.4 multifactor authentication, 8.4
-- mysql-webauthn: MySQL 8.4 WebAuthn authentication, 8.4
-- authentik-source: authentik source, version/2026.8.3
-- keycloak-source: Keycloak documentation, 26.7.4
-- oauth2-proxy-source: oauth2-proxy documentation, v7.15.4
-- entra-docs: Microsoft Entra documentation, 231747abc59ae3d50c74e215c1cdd592eb980723
-- owasp-docs: OWASP cheat sheets, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
-- otp-source: pquerna/otp source, 617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870
-- nist: NIST digital identity guidelines, SP 800-63B-4
-- authelia-source: Authelia source, v4.39.28
-- pyotp-source: PyOTP source, cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1
-- python-qrcode-source: Python qrcode source, f92c007498d796e4825638b7d50c14ea51e5457a
-- django-otp-source: django-otp source, 88cf4970423b11f29d6840311f53378d007a3d63
-- otplib-source: otplib source, c5c11be2a50fd864b587854bff6d97c5f8aa9c84
-- node-qrcode-source: Node qrcode source, 3848ed2c17de5bcdead487417dbf14c5dd017f8d
-- openssh-source: OpenSSH portable source, V_9_9_P2
-- duo-unix-source: Duo Unix source, 91e3c987f256afdb166b26be777cef6e1ab2af11
-- auth0-docs: Auth0 archived documentation, 5258d17ede3eea0ed0e330d15f8921a542564f68
-- auth0-rolling: Auth0 MFA documentation, unknown
-- cognito-api-source: Amazon Cognito API source, 2ba0e39015ddf9c91c6c378f8a4fb79dcb4353da
-- clerk-docs: Clerk documentation, 26ef3ace7508d46d6242c377e830a7791b0a2fdb
-- supabase-docs: Supabase documentation, 10c7379c970ae4d2f30f3158194061cf5ffb8fc5
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- webauthn-python: py_webauthn source, v3.0.1
-- webauthn-node: SimpleWebAuthn source, v14.0.3
-- webauthn-go: go-webauthn source, v0.18.2
-- git-docs: Git documentation, v2.56.0
-- grep-docs: GNU grep documentation, v3.12
+- totp: TOTP standard (unknown)
+- hotp: HOTP standard (unknown)
+- uri: Authenticator key URI format (unknown)
+- webauthn: WebAuthn standard (unknown)
+- authelia: Authelia proxy support (unknown)
+- caddy-min: Caddy forward_auth minimum (2.5.1)
+- duo: Duo editions (unknown)
+- duo-push-policy: Duo Verified Push policy (unknown)
+- ssh-pam: SSH and PAM MFA (citation gap) (unknown)
+- google-authenticator-libpam-source: google-authenticator-libpam source (1.11)
+- google-authenticator-libpam-packages: google-authenticator-libpam package records (unknown)
+- duo-proxy-docs: Duo Authentication Proxy documentation (unknown)
+- google-workspace-docs: Google Workspace 2SV documentation (unknown)
+- supabase: Supabase Auth MFA (citation gap) (unknown)
+- access: Cloudflare Access MFA (citation gap) (unknown)
+- mysql: MySQL 8.0 multifactor authentication (8.0)
+- mysql-8-4: MySQL 8.4 multifactor authentication (8.4)
+- mysql-webauthn: MySQL 8.4 WebAuthn authentication (8.4)
+- authentik-source: authentik source (version/2026.8.3)
+- keycloak-source: Keycloak documentation (26.7.4)
+- oauth2-proxy-source: oauth2-proxy documentation (v7.15.4)
+- entra-docs: Microsoft Entra documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
+- owasp-docs: OWASP cheat sheets (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
+- otp-source: pquerna/otp source (617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870)
+- nist: NIST digital identity guidelines (SP 800-63B-4)
+- authelia-source: Authelia source (v4.39.28)
+- pyotp-source: PyOTP source (cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1)
+- python-qrcode-source: Python qrcode source (f92c007498d796e4825638b7d50c14ea51e5457a)
+- django-otp-source: django-otp source (88cf4970423b11f29d6840311f53378d007a3d63)
+- otplib-source: otplib source (c5c11be2a50fd864b587854bff6d97c5f8aa9c84)
+- node-qrcode-source: Node qrcode source (3848ed2c17de5bcdead487417dbf14c5dd017f8d)
+- openssh-source: OpenSSH portable source (V_9_9_P2)
+- duo-unix-source: Duo Unix source (91e3c987f256afdb166b26be777cef6e1ab2af11)
+- auth0-docs: Auth0 archived documentation (5258d17ede3eea0ed0e330d15f8921a542564f68)
+- auth0-rolling: Auth0 MFA documentation (unknown)
+- cognito-api-source: Amazon Cognito API source (2ba0e39015ddf9c91c6c378f8a4fb79dcb4353da)
+- clerk-docs: Clerk documentation (26ef3ace7508d46d6242c377e830a7791b0a2fdb)
+- supabase-docs: Supabase documentation (10c7379c970ae4d2f30f3158194061cf5ffb8fc5)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- webauthn-python: py_webauthn source (v3.0.1)
+- webauthn-node: SimpleWebAuthn source (v14.0.3)
+- webauthn-go: go-webauthn source (v0.18.2)
+- git-docs: Git documentation (v2.56.0)
+- grep-docs: GNU grep documentation (v3.12)
 
 Claims (full source mapping in the front matter):
 

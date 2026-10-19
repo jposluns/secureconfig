@@ -66,7 +66,7 @@ def ai_json(section):
             'extra heading or fence in AI payload')
     outside = section[len(START) + len('\n## ' + NOTE_TITLE):match.start()] + match[2]
     require(not unsupported_features(outside), 'extra heading or fence in AI section')
-    require(not re.search(r'<[A-Za-z/!?]', outside), 'HTML in AI section')
+    require(not has_raw_html(outside, strict=True), 'HTML in AI section')
     return match[3]
 
 
@@ -796,6 +796,71 @@ def cell(value):
     return html.escape(value, quote=False).replace('|', '&#124;').replace('`', '&#96;')
 
 
+def has_raw_html(value, strict=False):
+    """Check actual Markdown tokens, including nested inline tokens, fail closed."""
+    if '<' not in value:
+        return False
+    from check_verify_marking import gate_parser, ParserUnavailable
+    try:
+        parser = gate_parser(required=True)
+    except ParserUnavailable as exc:
+        raise ValueError('HTML safety requires the pinned parser: ' + str(exc)) from exc
+    if strict:
+        parser.options['inline_definitions'] = True
+    # Claims follow a fixed list-item prefix, so block parsing could wrongly
+    # hide reference-definition-shaped text that renders inline in that context.
+    pending = list(parser.parse(value) if strict else parser.parseInline(value))
+    while pending:
+        token = pending.pop()
+        if token.type in ('html_inline', 'html_block'):
+            return True
+        if strict and token.type == 'definition':
+            raw = '\n'.join(value.split('\n')[token.map[0]:token.map[1]])
+            if re.search(r'<[A-Za-z/!?]', raw):
+                return True
+        pending.extend(token.children or [])
+    if strict:
+        # Retain the base guard's conservative syntax ban, exempting only spans
+        # consumed as code by the parser, never backticks in link destinations.
+        from markdown_it.rules_inline import backtick, image
+        for line in value.split('\n'):
+            spans, offsets = [], [0]
+            def record_code(state, silent):
+                start, count = state.pos, len(state.tokens)
+                matched = backtick(state, silent)
+                if (not silent and len(state.tokens) > count
+                        and state.tokens[-1].type == 'code_inline'):
+                    spans.append((offsets[-1] + start, offsets[-1] + state.pos))
+                return matched
+            def record_image(state, silent):
+                # Image labels are parsed in a fresh state starting after "![".
+                offsets.append(offsets[-1] + state.pos + 2)
+                try:
+                    return image(state, silent)
+                finally:
+                    offsets.pop()
+            parser.inline.ruler.at('backticks', record_code)
+            parser.inline.ruler.at('image', record_image)
+            parser.parseInline(line)
+            for start, end in reversed(spans):
+                line = line[:start] + ' ' * (end - start) + line[end:]
+            if re.search(r'<[A-Za-z/!?]', line):
+                return True
+    return False
+
+
+def claim_text(value):
+    """Preserve candidate code spans only when the parser finds no raw HTML."""
+    from check_verify_marking import code_spans
+    parts, position = [], 0
+    for start, end, _ in code_spans(value):
+        parts.extend((cell(value[position:start]), value[start:end]))
+        position = end
+    parts.append(cell(value[position:]))
+    rendered = ''.join(parts)
+    return cell(value) if has_raw_html(rendered) else rendered
+
+
 def joined(values):
     if len(values) < 3:
         return ' and '.join(values)
@@ -906,13 +971,13 @@ def render(data, guide=None):
              'REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.', '',
              'Components (recorded basis):', '']
     for name, component in data['components'].items():
-        lines.append(f"- {name}: {cell(component['name'])}, {cell(component['basis'])}")
+        lines.append(f"- {name}: {cell(component['name'])} ({cell(component['basis'])})")
     mapping = 'front matter' if guide is None else 'JSON block below'
     lines.extend(['', f'Claims (full source mapping in the {mapping}):', ''])
     for name, claim in data['claims'].items():
         # The fixed prefix keeps single-line text from opening Markdown blocks.
         refs = ', '.join(claim['components'])
-        lines.append(f"- {name} ({claim['status']}; {refs}): {cell(claim['text'])}")
+        lines.append(f"- {name} ({claim['status']}; {refs}): {claim_text(claim['text'])}")
     if guide is not None:
         raw = front_matter(data).removeprefix('---\nversion_basis: ').removesuffix('\n---\n')
         require(not re.search(r'(?m)^[ \t]*(?:`{3,}|~{3,})', raw),

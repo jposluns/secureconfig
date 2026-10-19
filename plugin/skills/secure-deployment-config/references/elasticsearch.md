@@ -274,7 +274,7 @@ version_basis: {
     "es-tier": {"text": "Self-managed 8.x TLS, native users, RBAC, REST keys, anonymous controls and CORS are free Basic; LDAP/audit and FLS/DLS require Platinum/Enterprise, with current Platinum restricted to existing customers.", "components": ["es"], "sources": ["es:sad43b70af67a"], "status": "REASONED"},
     "es-auto": {"text": "Eligible initial startup enables auth, HTTP/transport TLS and elastic password; redirected output, unwritable config or existing settings can skip setup, with stated discovery exceptions; packages require password reset.", "components": ["es"], "sources": ["es:s64e4e307f36c", "es:se8bbf661f24e"], "status": "REASONED"},
     "es-tls": {"text": "Keep xpack.security.enabled and HTTP TLS enabled; repair CA trust/certificates instead of disabling protection.", "components": ["es"], "sources": ["es:sce3095052f8d"], "status": "REASONED"},
-    "es-bind": {"text": "network.host defaults _local_ on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback.", "components": ["es8", "es9"], "sources": ["es8:sa56cdc9270ea", "es8:s46c7adfdc6c4", "es8:s8ca2413b2af3", "es9:s666c63ad2a02", "es9:s429c675c1092", "es9:sa27fc323d90c"], "status": "REASONED"},
+    "es-bind": {"text": "network.host defaults `_local_` on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback.", "components": ["es8", "es9"], "sources": ["es8:sa56cdc9270ea", "es8:s46c7adfdc6c4", "es8:s8ca2413b2af3", "es9:s666c63ad2a02", "es9:s429c675c1092", "es9:sa27fc323d90c"], "status": "REASONED"},
     "es-http-range": {"text": "HTTP defaults to an available port in 9200-9300, subject to effective host/bind/publish settings.", "components": ["es8", "es9"], "sources": ["es8:s59c2dd10f083", "es9:s8fded6a7640c"], "status": "REASONED"},
     "es-transport-range": {"text": "Transport defaults to an available port in 9300-9399; inspect effective profile and actual listener ports.", "components": ["es8", "es9"], "sources": ["es8:s0310c5c2e42f", "es9:s1f0a06e68675"], "status": "REASONED"},
     "es-auto-http": {"text": "Auto-configuration writes http.host=0.0.0.0 only when none of the three HTTP or three network address settings has a value, including enrollment.", "components": ["es8", "es9"], "sources": ["es8:s6e6cf4d739bd", "es9:scf100fafec80"], "status": "REASONED"},
@@ -350,35 +350,35 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- es: Elasticsearch documentation, unknown
-- es-api: Elasticsearch API, 8.x
-- es819: Elasticsearch reference, 8.19
-- es8: Elasticsearch listener source, 8.19.22
-- es9: Elasticsearch listener source, 9.5.4
-- images: Elasticsearch Docker library, 8480a06d8ca03ca7da29a469fdbddb5f9f31df61
-- os: OpenSearch documentation, unknown
-- os36: OpenSearch reference, 3.6
-- os31: OpenSearch S3 reference, 3.1
-- os38: OpenSearch S3 source, 3.8.0
-- gcs38: OpenSearch GCS source, 3.8.0
-- azure38: OpenSearch Azure source, 3.8.0
-- corecrypto38: OpenSearch repository crypto source, 3.8.0
-- kb: Kibana reference, 8.19
-- kb8: Kibana source, 8.19.22
-- kb9: Kibana source, 9.5.4
-- dash: OpenSearch Dashboards, 3.8.0
-- dash36: Dashboards TLS reference, 3.6
-- cloud: Cloud provider documentation, unknown
-- host: Host inspection documentation, unknown
-- os-license-source: OpenSearch Security licence source, 4ba3cc0e2ebec61b726b227fdf51e55f4a502182
-- os-users-source: OpenSearch demo users source, 03a224d16045a8f561e2d7d84b8765c95309524c
+- es: Elasticsearch documentation (unknown)
+- es-api: Elasticsearch API (8.x)
+- es819: Elasticsearch reference (8.19)
+- es8: Elasticsearch listener source (8.19.22)
+- es9: Elasticsearch listener source (9.5.4)
+- images: Elasticsearch Docker library (8480a06d8ca03ca7da29a469fdbddb5f9f31df61)
+- os: OpenSearch documentation (unknown)
+- os36: OpenSearch reference (3.6)
+- os31: OpenSearch S3 reference (3.1)
+- os38: OpenSearch S3 source (3.8.0)
+- gcs38: OpenSearch GCS source (3.8.0)
+- azure38: OpenSearch Azure source (3.8.0)
+- corecrypto38: OpenSearch repository crypto source (3.8.0)
+- kb: Kibana reference (8.19)
+- kb8: Kibana source (8.19.22)
+- kb9: Kibana source (9.5.4)
+- dash: OpenSearch Dashboards (3.8.0)
+- dash36: Dashboards TLS reference (3.6)
+- cloud: Cloud provider documentation (unknown)
+- host: Host inspection documentation (unknown)
+- os-license-source: OpenSearch Security licence source (4ba3cc0e2ebec61b726b227fdf51e55f4a502182)
+- os-users-source: OpenSearch demo users source (03a224d16045a8f561e2d7d84b8765c95309524c)
 
 Claims (full source mapping in the front matter):
 
 - es-tier (REASONED; es): Self-managed 8.x TLS, native users, RBAC, REST keys, anonymous controls and CORS are free Basic; LDAP/audit and FLS/DLS require Platinum/Enterprise, with current Platinum restricted to existing customers.
 - es-auto (REASONED; es): Eligible initial startup enables auth, HTTP/transport TLS and elastic password; redirected output, unwritable config or existing settings can skip setup, with stated discovery exceptions; packages require password reset.
 - es-tls (REASONED; es): Keep xpack.security.enabled and HTTP TLS enabled; repair CA trust/certificates instead of disabling protection.
-- es-bind (REASONED; es8, es9): network.host defaults _local_ on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback.
+- es-bind (REASONED; es8, es9): network.host defaults `_local_` on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback.
 - es-http-range (REASONED; es8, es9): HTTP defaults to an available port in 9200-9300, subject to effective host/bind/publish settings.
 - es-transport-range (REASONED; es8, es9): Transport defaults to an available port in 9300-9399; inspect effective profile and actual listener ports.
 - es-auto-http (REASONED; es8, es9): Auto-configuration writes http.host=0.0.0.0 only when none of the three HTTP or three network address settings has a value, including enrollment.

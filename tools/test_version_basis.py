@@ -93,7 +93,7 @@ class VersionBasisTests(unittest.TestCase):
             '(exact day unknown). DEMONSTRATED refers to historical evidence in this guide; '
             'REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.',
             '', 'Components (recorded basis):', '',
-            f'- product: Product, {sha}', '- aux: Aux &lt;&amp;&#124;&#96;&gt;, unknown',
+            f'- product: Product ({sha})', '- aux: Aux &lt;&amp;&#124;&#96;&gt; (unknown)',
             '', 'Claims (full source mapping in the front matter):', '',
             '- control (REASONED; aux, product): Requires authentication.',
             '- another (DEMONSTRATED; aux, product): Observed control.', vb.END]))
@@ -103,7 +103,7 @@ class VersionBasisTests(unittest.TestCase):
         self.assertEqual(vb.without_summary(full_body), body)
         self.assertEqual(vb.updated(rendered), rendered)
         data['components']['product']['basis'] = '<&|`>'
-        self.assertIn('- product: Product, &lt;&amp;&#124;&#96;&gt;', vb.render(data))
+        self.assertIn('- product: Product (&lt;&amp;&#124;&#96;&gt;)', vb.render(data))
 
     def test_claim_text_preserves_cell_output_and_list_structure(self):
         try:
@@ -115,7 +115,7 @@ class VersionBasisTests(unittest.TestCase):
         for text in ('- item', '+ item', '* item', '# heading', '> quote', '1. item',
                      '1) item', '---', '~~~', '**bold** _emphasis_',
                      '[link](https://example.com)', '![image](https://example.com)',
-                     r'\*literal\* &amp; <b> | `code`', 'word\u2028- item'):
+                     r'\*literal\* &amp; <b> | `unbalanced', 'word\u2028- item'):
             with self.subTest(text=text):
                 data = fixture()
                 data['claims']['control']['text'] = text
@@ -128,6 +128,115 @@ class VersionBasisTests(unittest.TestCase):
                                   'inline', 'paragraph_close', 'list_item_close', 'bullet_list_close'])
                 self.assertEqual(line, '- control (REASONED; product): ' + vb.cell(text))
                 self.assertEqual(vb.split(rendered)[0], data)
+
+    def test_claim_code_spans_in_both_layouts(self):
+        try:
+            parser = gate_parser(required=True)
+        except ParserUnavailable as exc:
+            if os.environ.get('CI'):
+                raise
+            self.skipTest(str(exc))
+        cases = (
+            ('image-root-grants', '`*.*`', '`*.*`', ['*.*']),
+            ('verify-maria-roles', '`*.*`', '`*.*`', ['*.*']),
+            ('monitor-acl', '`__sentinel__:hello`', '`__sentinel__:hello`', ['__sentinel__:hello']),
+            ('es-bind', '`_local_`', '`_local_`', ['_local_']),
+            ('terraform-state', '`*.tfstate.*`', '`*.tfstate.*`', ['*.tfstate.*']),
+            ('unbalanced', '`open', '&#96;open', []),
+            ('mismatched', '``open`', '&#96;&#96;open&#96;', []),
+            ('inner-backtick', '``a`b``', '``a`b``', ['a`b']),
+            ('adjacent', '[`x`]|<&', '[`x`]&#124;&lt;&amp;', ['x']),
+            ('literal-content', '`<b>&|[x]`', '`<b>&|[x]`', ['<b>&|[x]']),
+            ('escaped', r'\`open', r'\&#96;open', []),
+            ('mixed', '`x` and ``y`z`` & `open', '`x` and ``y`z`` &amp; &#96;open', ['x', 'y`z']),
+        )
+        for name, text, expected, code in cases:
+            for two_section in (False, True):
+                with self.subTest(name=name, two_section=two_section):
+                    data = fixture()
+                    data['claims']['control']['text'] = text
+                    legacy = vb.updated(document(data), 'fixture.md')
+                    rendered = vb.migrated(legacy, 'fixture.md') if two_section else legacy
+                    line = next(line for line in rendered.split('\n')
+                                if line.startswith('- control ('))
+                    self.assertEqual(line, '- control (REASONED; product): ' + expected)
+                    tokens = parser.parse(line)
+                    self.assertEqual([token.type for token in tokens],
+                                     ['bullet_list_open', 'list_item_open', 'paragraph_open',
+                                      'inline', 'paragraph_close', 'list_item_close', 'bullet_list_close'])
+                    children = tokens[3].children
+                    self.assertEqual([child.content for child in children if child.type == 'code_inline'], code)
+                    self.assertTrue(all(child.type in ('text', 'code_inline') for child in children))
+                    self.assertEqual(vb.split(rendered)[0], data)
+                    self.assertEqual(vb.without_summary(vb.split(rendered)[1]), BODY)
+                    self.assertEqual(vb.updated(rendered, 'fixture.md'), rendered)
+
+    def test_claim_html_safety_in_both_layouts(self):
+        parser = gate_parser(required=True)
+        cases = (
+            '[x](/`foo) <b>evil</b> `',
+            '[x](/foo "`title") <b>evil</b> `',
+            '<https://example.com/`foo> <b>evil</b> `',
+            '![x](/`foo) <b>evil</b> `',
+            '[outer [x]](/`foo) <b>evil</b> `',
+            '`safe`<b>evil</b>',
+            '[x](/`foo) <!-- evil --> `',
+            '[x](/`foo) <div>evil</div> `',
+            '[x]: /url "[x](/`foo) <b>evil</b> `"',
+        )
+        def html_tokens(tokens):
+            return [token for token in tokens if token.type in ('html_inline', 'html_block')] + [
+                child for token in tokens for child in html_tokens(token.children or [])]
+        for text in cases:
+            for two_section in (False, True):
+                with self.subTest(text=text, two_section=two_section):
+                    data = fixture()
+                    data['claims']['control']['text'] = text
+                    legacy = vb.updated(document(data), 'fixture.md')
+                    rendered = vb.migrated(legacy, 'fixture.md') if two_section else legacy
+                    line = next(line for line in rendered.split('\n')
+                                if line.startswith('- control ('))
+                    self.assertEqual(html_tokens(parser.parse(line)), [])
+                    self.assertEqual(vb.split(rendered)[0], data)
+                    self.assertEqual(vb.without_summary(vb.split(rendered)[1]), BODY)
+                    self.assertEqual(vb.updated(rendered, 'fixture.md'), rendered)
+                    end = rendered if two_section else vb.migrated(rendered, 'fixture.md')
+                    poisoned = end.replace(line, '- control (REASONED; product): ' + text)
+                    with self.assertRaisesRegex(ValueError, 'HTML in AI section'):
+                        vb.split(poisoned)
+        self.assertEqual(vb.claim_text(cases[0]), vb.cell(cases[0]))
+        self.assertEqual(vb.claim_text(cases[5]), '`safe`&lt;b&gt;evil&lt;/b&gt;')
+        with self.assertRaisesRegex(ValueError, 'HTML in AI section'):
+            vb.split(end.replace(line, '<div>evil</div>'))
+        with self.assertRaisesRegex(ValueError, 'HTML in AI section'):
+            vb.split(end.replace(line, '[x]: /foo "`title <b `"'))
+        for raw in ('[x](/`foo) <b `', '[x](/foo "`title") <b `',
+                    '<https://example.com/`foo> <b `', '![x](/`foo) <b `'):
+            with self.subTest(raw=raw), self.assertRaisesRegex(ValueError, 'HTML in AI section'):
+                vb.split(end.replace(line, '- control (REASONED; product): ' + raw))
+        for text in ('[`<b>`](/foo)', '![`<b>`](/foo)',
+                     '![outer ![`<b>`](/inner)](/outer)'):
+            with self.subTest(code_label=text):
+                data = fixture()
+                data['claims']['control']['text'] = text
+                self.assertEqual(vb.claim_text(text), text)
+                vb.migrated(vb.updated(document(data), 'fixture.md'), 'fixture.md')
+        with patch('check_verify_marking.gate_parser', side_effect=ParserUnavailable('absent')):
+            with self.assertRaisesRegex(ValueError, 'HTML safety requires the pinned parser'):
+                vb.claim_text(cases[0])
+            with self.assertRaisesRegex(ValueError, 'HTML safety requires the pinned parser'):
+                vb.split(poisoned)
+
+    def test_component_parentheses_and_plain_header(self):
+        data = fixture()
+        data['components']['product'].update(name='Product, `edition`', basis='v1, `v2`')
+        expected = '- product: Product, &#96;edition&#96; (v1, &#96;v2&#96;)'
+        for guide in (None, 'fixture.md'):
+            self.assertIn(expected, vb.render(data, guide).split('\n'))
+        self.assertEqual(vb.versions_sentence(data),
+                         'Written against Product, &#96;edition&#96; v1, &#96;v2&#96;.')
+        self.assertNotIn('`', vb.header(data))
+        self.assertLessEqual(len(vb.versions_sentence(data)), 400)
 
     def test_normal_string_fields(self):
         data = fixture()
@@ -1677,6 +1786,7 @@ class TwoSectionTests(unittest.TestCase):
             current.replace('**Version basis**', '### Other'),
             current.replace('Read the secureconfig guide at', '## Verify'),
             current.replace('**Version basis**', '<b>Other</b>'),
+            current.replace('**Version basis**', '`open\n\n<b>Other</b>\n\nclose`'),
             current.replace('**Version basis**', '```sh\necho hidden\n```'),
             current.replace('"schema": 1,', '"schema": 1, "schema": 1,'),
             current.replace('"schema": 1,', '"schema": NaN,'),

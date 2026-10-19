@@ -168,19 +168,19 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 
 Components (recorded basis):
 
-- chromium: Chromium, 154.0.8037.57
-- cdp: Chrome DevTools Protocol, unknown
-- chrome-change: Chrome remote-debugging announcement, unknown
-- selenium: Selenium Grid, unknown
-- selenium-docker: Selenium Docker images, aafe4d6136f3bb5afcd9b7cb691c624516d06e1b
-- browserless: browserless, unknown
-- playwright: Playwright, unknown
-- browserless-token-default: browserless (open source), 2.56.7
-- browserless-file-fix: browserless Playwright file-protocol fix, 2.51.0
-- browserless-docs: browserless documentation (rolling), unknown
-- playwright-source: Playwright source, v1.58.2
-- curl-docs: curl documentation, curl-8_14_1
-- cve-record-source: CVE-2026-92811 record snapshot, b0b0976792a7c9d6d66ee553050c21cb088a0659
+- chromium: Chromium (154.0.8037.57)
+- cdp: Chrome DevTools Protocol (unknown)
+- chrome-change: Chrome remote-debugging announcement (unknown)
+- selenium: Selenium Grid (unknown)
+- selenium-docker: Selenium Docker images (aafe4d6136f3bb5afcd9b7cb691c624516d06e1b)
+- browserless: browserless (unknown)
+- playwright: Playwright (unknown)
+- browserless-token-default: browserless (open source) (2.56.7)
+- browserless-file-fix: browserless Playwright file-protocol fix (2.51.0)
+- browserless-docs: browserless documentation (rolling) (unknown)
+- playwright-source: Playwright source (v1.58.2)
+- curl-docs: curl documentation (curl-8_14_1)
+- cve-record-source: CVE-2026-92811 record snapshot (b0b0976792a7c9d6d66ee553050c21cb088a0659)
 
 Claims (full source mapping in the front matter):
 

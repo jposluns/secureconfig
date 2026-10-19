@@ -153,17 +153,17 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 
 Components (recorded basis):
 
-- streamlit: Streamlit, 1.64.0
-- google-oidc: Google OpenID Connect documentation, rolling documentation, checked 2026-10-15
-- ssrf: OWASP SSRF guidance, unknown
-- curl: curl minimum write-out version, 7.75.0
-- authlib: Authlib minimum, 1.3.2
-- httpx: httpx minimum, 0.24.1
-- streamlit-rolling: Streamlit documentation (rolling), unknown
-- release-notes: Streamlit release notes, unknown
-- caddy: Caddy, v2.11.4
-- oauth2-proxy: oauth2-proxy, v7.15.4
-- keycloak: Keycloak, 26.7.4
+- streamlit: Streamlit (1.64.0)
+- google-oidc: Google OpenID Connect documentation (rolling documentation, checked 2026-10-15)
+- ssrf: OWASP SSRF guidance (unknown)
+- curl: curl minimum write-out version (7.75.0)
+- authlib: Authlib minimum (1.3.2)
+- httpx: httpx minimum (0.24.1)
+- streamlit-rolling: Streamlit documentation (rolling) (unknown)
+- release-notes: Streamlit release notes (unknown)
+- caddy: Caddy (v2.11.4)
+- oauth2-proxy: oauth2-proxy (v7.15.4)
+- keycloak: Keycloak (26.7.4)
 
 Claims (full source mapping in the front matter):
 

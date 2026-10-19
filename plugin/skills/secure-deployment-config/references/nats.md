@@ -206,14 +206,14 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- server: NATS Server, v2.14.7
-- commit: NATS baseline commit, 8d8b69a8c46a46a150eabb7f312607c4d9c58faf
-- library: NATS image catalogue, dcd3db677d8919c3a42d369bd48a6f1c234b3ae8
-- image: NATS image source, 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5
-- image-server: NATS image listener source, v2.15.0
-- go: Go socket source, go1.26.8
-- cli: natscli, v0.4.0
-- server-docs: NATS Server documentation (rolling), unknown
+- server: NATS Server (v2.14.7)
+- commit: NATS baseline commit (8d8b69a8c46a46a150eabb7f312607c4d9c58faf)
+- library: NATS image catalogue (dcd3db677d8919c3a42d369bd48a6f1c234b3ae8)
+- image: NATS image source (0e72748d3cb553ccdb8c2da7c75ec3b767be51a5)
+- image-server: NATS image listener source (v2.15.0)
+- go: Go socket source (go1.26.8)
+- cli: natscli (v0.4.0)
+- server-docs: NATS Server documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 

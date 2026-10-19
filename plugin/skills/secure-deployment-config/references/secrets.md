@@ -210,7 +210,7 @@ version_basis: {
     "ci-store": {"text": "Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
     "prompt-secrets": {"text": "Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b", "owasp:s4564d1912a87"], "status": "REASONED"},
     "business-rules": {"text": "Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it.", "components": ["owasp", "next", "vite-env"], "sources": ["owasp:s26a987a1053b", "owasp:s4564d1912a87", "next:s964651d4eed4", "vite-env:sba07c9b57bd9"], "status": "REASONED"},
-    "terraform-state": {"text": "Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and *.tfstate.* including backups and workspace copies.", "components": ["terraform"], "sources": ["terraform:s8efa1a4bb953"], "status": "REASONED"},
+    "terraform-state": {"text": "Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and `*.tfstate.*` including backups and workspace copies.", "components": ["terraform"], "sources": ["terraform:s8efa1a4bb953"], "status": "REASONED"},
     "kubeconfig": {"text": "Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control.", "components": ["kubernetes"], "sources": ["kubernetes:se41a53ea6778"], "status": "REASONED"},
     "docker-store": {"text": "Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets.", "components": ["docker", "owasp"], "sources": ["docker:sf8243a183d67", "owasp:s26a987a1053b"], "status": "REASONED"},
     "leak-rotation": {"text": "Revoke and replace a leaked credential before cleanup; deletion cannot undo public repository, chat, log or paste exposure.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
@@ -233,31 +233,31 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docker-build: Docker build and image history documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- bash: GNU Bash reference manual, bash-5.3
-- grep: GNU grep, unknown
-- owasp: OWASP secret handling, unknown
-- gitleaks: gitleaks command minimum, 8.19+
-- trufflehog: TruffleHog, unknown
-- sops: SOPS, unknown
-- age: age, unknown
-- git-filter-repo: git-filter-repo, unknown
-- proc: Linux procfs, unknown
-- docker: Docker login, unknown
-- terraform: Terraform, unknown
-- kubernetes: Kubernetes kubeconfig, unknown
-- gh: GitHub CLI, unknown
-- apache: htpasswd, unknown
-- postgres: PostgreSQL password file, unknown
-- curl: curl netrc, unknown
-- next: Next.js, unknown
-- git-ignore: Git ignore patterns, 2.42.0
-- openssl-rand: OpenSSL random bytes, 3.0
-- python-secrets: Python secrets, 3.13
-- vite-env: Vite environment variables, 6
-- aws-store: AWS Secrets Manager overview, unknown
-- google-store: Google Cloud Secret Manager overview, unknown
-- azure-store: Azure Key Vault overview, unknown
+- docker-build: Docker build and image history documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- bash: GNU Bash reference manual (bash-5.3)
+- grep: GNU grep (unknown)
+- owasp: OWASP secret handling (unknown)
+- gitleaks: gitleaks command minimum (8.19+)
+- trufflehog: TruffleHog (unknown)
+- sops: SOPS (unknown)
+- age: age (unknown)
+- git-filter-repo: git-filter-repo (unknown)
+- proc: Linux procfs (unknown)
+- docker: Docker login (unknown)
+- terraform: Terraform (unknown)
+- kubernetes: Kubernetes kubeconfig (unknown)
+- gh: GitHub CLI (unknown)
+- apache: htpasswd (unknown)
+- postgres: PostgreSQL password file (unknown)
+- curl: curl netrc (unknown)
+- next: Next.js (unknown)
+- git-ignore: Git ignore patterns (2.42.0)
+- openssl-rand: OpenSSL random bytes (3.0)
+- python-secrets: Python secrets (3.13)
+- vite-env: Vite environment variables (6)
+- aws-store: AWS Secrets Manager overview (unknown)
+- google-store: Google Cloud Secret Manager overview (unknown)
+- azure-store: Azure Key Vault overview (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -274,7 +274,7 @@ Claims (full source mapping in the front matter):
 - ci-store (REASONED; owasp): Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts.
 - prompt-secrets (REASONED; owasp): Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model.
 - business-rules (REASONED; owasp, next, vite-env): Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it.
-- terraform-state (REASONED; terraform): Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and *.tfstate.* including backups and workspace copies.
+- terraform-state (REASONED; terraform): Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and `*.tfstate.*` including backups and workspace copies.
 - kubeconfig (REASONED; kubernetes): Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control.
 - docker-store (REASONED; docker, owasp): Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets.
 - leak-rotation (REASONED; owasp): Revoke and replace a leaked credential before cleanup; deletion cannot undo public repository, chat, log or paste exposure.

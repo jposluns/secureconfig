@@ -165,22 +165,22 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- spf: SPF, RFC 7208
-- dkim: DKIM, RFC 6376
-- crypto: DKIM cryptography, RFC 8301
-- dmarc: DMARC, RFC 9989
-- aggregate: DMARC aggregate reporting, RFC 9990
-- failure: DMARC failure reporting, RFC 9991
-- submission: Submission TLS, RFC 8314
-- roles: SMTP submission roles, RFC 6409
-- relay: SMTP relay controls, RFC 2505
-- sts: MTA-STS, RFC 8461
-- rpt: TLS-RPT, RFC 8460
-- results: Authentication-Results, RFC 8601
-- bimi: BIMI documentation, unknown
-- submission-update: Submission TLS update, RFC 8997
-- bind: BIND dig manual, 9.18.39
-- openssl: OpenSSL command documentation, 3.0
+- spf: SPF (RFC 7208)
+- dkim: DKIM (RFC 6376)
+- crypto: DKIM cryptography (RFC 8301)
+- dmarc: DMARC (RFC 9989)
+- aggregate: DMARC aggregate reporting (RFC 9990)
+- failure: DMARC failure reporting (RFC 9991)
+- submission: Submission TLS (RFC 8314)
+- roles: SMTP submission roles (RFC 6409)
+- relay: SMTP relay controls (RFC 2505)
+- sts: MTA-STS (RFC 8461)
+- rpt: TLS-RPT (RFC 8460)
+- results: Authentication-Results (RFC 8601)
+- bimi: BIMI documentation (unknown)
+- submission-update: Submission TLS update (RFC 8997)
+- bind: BIND dig manual (9.18.39)
+- openssl: OpenSSL command documentation (3.0)
 
 Claims (full source mapping in the front matter):
 

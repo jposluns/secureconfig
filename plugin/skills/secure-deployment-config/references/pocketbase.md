@@ -176,12 +176,12 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- pb: PocketBase, v0.40.4
-- appwrite: Appwrite, 2.2.0
-- pb-docs: PocketBase documentation (rolling), unknown
-- appwrite-docs: Appwrite documentation (rolling), unknown
-- curl: curl, curl-8_14_1
-- utopia-php-database: utopia-php/database, 7.3.9
+- pb: PocketBase (v0.40.4)
+- appwrite: Appwrite (2.2.0)
+- pb-docs: PocketBase documentation (rolling) (unknown)
+- appwrite-docs: Appwrite documentation (rolling) (unknown)
+- curl: curl (curl-8_14_1)
+- utopia-php-database: utopia-php/database (7.3.9)
 
 Claims (full source mapping in the front matter):
 

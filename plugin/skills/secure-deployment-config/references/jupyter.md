@@ -215,22 +215,22 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- server: Jupyter Server, 2.18.0
-- startup: Jupyter Server startup source, 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b
-- port: Jupyter Server port source, c5c452c3d5f3060557e57caaadce8f2fffc1c417
-- identity: Jupyter Server identity source, 3df9a70b8aea53557ad04510a63c95ce9d4c3abc
-- handlers: Jupyter Server handler source, 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca
-- kernels: Jupyter Server kernel source, c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac
-- hub: JupyterHub, 5.5.2
-- proxy: configurable-http-proxy, 5.3.0
-- native: NativeAuthenticator, 1.3.0
-- client: jupyter_client, 8.6.3
-- lab: JupyterLab documentation, unknown
-- tornado: Tornado documentation, unknown
-- curl: curl documentation, unknown
-- server-docs: Jupyter Server documentation (rolling), unknown
-- notebook-docs: Notebook documentation (rolling), unknown
-- hub-docs: JupyterHub documentation (rolling), unknown
+- server: Jupyter Server (2.18.0)
+- startup: Jupyter Server startup source (9a4d6eea2b16815a493b11fffe0b51b1fe55a81b)
+- port: Jupyter Server port source (c5c452c3d5f3060557e57caaadce8f2fffc1c417)
+- identity: Jupyter Server identity source (3df9a70b8aea53557ad04510a63c95ce9d4c3abc)
+- handlers: Jupyter Server handler source (00d45c80eeb0f50f191b236ee47cc1d82a7db9ca)
+- kernels: Jupyter Server kernel source (c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac)
+- hub: JupyterHub (5.5.2)
+- proxy: configurable-http-proxy (5.3.0)
+- native: NativeAuthenticator (1.3.0)
+- client: jupyter_client (8.6.3)
+- lab: JupyterLab documentation (unknown)
+- tornado: Tornado documentation (unknown)
+- curl: curl documentation (unknown)
+- server-docs: Jupyter Server documentation (rolling) (unknown)
+- notebook-docs: Notebook documentation (rolling) (unknown)
+- hub-docs: JupyterHub documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 

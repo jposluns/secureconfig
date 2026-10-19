@@ -183,20 +183,20 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- adapter: SvelteKit adapter-node, @sveltejs/adapter-node@5.5.7
-- svelte: SvelteKit documentation, unknown
-- svelte-kit-pin: SvelteKit routing and hooks documentation, @sveltejs/kit@2.70.3
-- h3-pin: h3 request and Node adapter source at release commit, 1.15.3
-- node-http: Node HTTP documentation, v22.22.1
-- nuxt-lock: Nuxt lockfile, v4.0.0
-- nuxt: Nuxt documentation, 4.x
-- vite-pin: Vite bind source, v8.3.1
-- vite: Vite documentation, unknown
-- grep: GNU grep, unknown
-- nuxt-output: Nuxt output source, v4.0.0
-- nitro-output: Nitro output defaults, 2.12.0
-- nitro-node: nitropack 2.12.0 source, 65e514d873da1d1d9edd4d9576d48d90b13e0fac
-- nitro-output-docs: Nitro documentation (rolling), unknown
+- adapter: SvelteKit adapter-node (@sveltejs/adapter-node@5.5.7)
+- svelte: SvelteKit documentation (unknown)
+- svelte-kit-pin: SvelteKit routing and hooks documentation (@sveltejs/kit@2.70.3)
+- h3-pin: h3 request and Node adapter source at release commit (1.15.3)
+- node-http: Node HTTP documentation (v22.22.1)
+- nuxt-lock: Nuxt lockfile (v4.0.0)
+- nuxt: Nuxt documentation (4.x)
+- vite-pin: Vite bind source (v8.3.1)
+- vite: Vite documentation (unknown)
+- grep: GNU grep (unknown)
+- nuxt-output: Nuxt output source (v4.0.0)
+- nitro-output: Nitro output defaults (2.12.0)
+- nitro-node: nitropack 2.12.0 source (65e514d873da1d1d9edd4d9576d48d90b13e0fac)
+- nitro-output-docs: Nitro documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -207,8 +207,8 @@ Claims (full source mapping in the front matter):
 - csrf-trust (REASONED; svelte): csrf.trustedOrigins defaults empty; list specific form origins, with wildcard trust discouraged.
 - svelte-public (REASONED; svelte): PUBLIC_ via env.publicPrefix exposes static public env values at build; keep secrets out.
 - svelte-private (REASONED; svelte): Private env modules, .server.js and lib/server are server-only; client import chains, including dynamic imports, fail builds.
-- svelte-routes (REASONED; svelte, svelte-kit-pin): Pinned load docs and the SvelteKit client and server paths show layout &#96;load&#96; does not run on every request and layout/page &#96;load&#96; run concurrently unless a child calls &#96;await parent()&#96;; routing docs say &#96;+layout&#96; has no effect on &#96;+server.js&#96;; form-actions docs and page dispatch show actions are exported from &#96;+page.server.js&#96; and run before page loads. Guide advice: do not rely on a layout guard to protect a sibling page load, form action or directly reached endpoint; check the session before protected work in each.
-- svelte-handle (REASONED; svelte, svelte-kit-pin, adapter): Pinned hooks docs describe &#96;handle&#96; for SvelteKit server requests, including prerendering; runtime source calls it after checks that can reject requests before the hook and lets it return before &#96;resolve&#96;. In adapter-node 5.5.7, client assets and already prerendered pages are served before SSR, so they do not reach &#96;handle&#96; through that adapter. For client-initiated remote function requests, runtime source takes the calling-page path and search from request headers and resolves &#96;route&#96; and &#96;params&#96; from that path; pinned remote-functions docs describe the same fields on &#96;RequestEvent&#96; inside remote functions, and both docs warn never to use these request-derived fields to authorize data access. Guide advice: use &#96;handle&#96; to block unauthorized SvelteKit requests that reach it; a redirect-only or &#96;event.locals&#96;-only hook leaves directly reached endpoints and form actions open unless they check the session; do not rely on calling-page fields alone, and authorize each specific resource where served because a session check alone does not authorize it.
+- svelte-routes (REASONED; svelte, svelte-kit-pin): Pinned load docs and the SvelteKit client and server paths show layout `load` does not run on every request and layout/page `load` run concurrently unless a child calls `await parent()`; routing docs say `+layout` has no effect on `+server.js`; form-actions docs and page dispatch show actions are exported from `+page.server.js` and run before page loads. Guide advice: do not rely on a layout guard to protect a sibling page load, form action or directly reached endpoint; check the session before protected work in each.
+- svelte-handle (REASONED; svelte, svelte-kit-pin, adapter): Pinned hooks docs describe `handle` for SvelteKit server requests, including prerendering; runtime source calls it after checks that can reject requests before the hook and lets it return before `resolve`. In adapter-node 5.5.7, client assets and already prerendered pages are served before SSR, so they do not reach `handle` through that adapter. For client-initiated remote function requests, runtime source takes the calling-page path and search from request headers and resolves `route` and `params` from that path; pinned remote-functions docs describe the same fields on `RequestEvent` inside remote functions, and both docs warn never to use these request-derived fields to authorize data access. Guide advice: use `handle` to block unauthorized SvelteKit requests that reach it; a redirect-only or `event.locals`-only hook leaves directly reached endpoints and form actions open unless they check the session; do not rely on calling-page fields alone, and authorize each specific resource where served because a session check alone does not authorize it.
 - nuxt-handlers (REASONED; nuxt): Nuxt auto-registers server/api, server/routes and middleware; middleware runs first, but context.auth alone enforces nothing. Throw/end requests or check each handler.
 - nuxt-auth (REASONED; nuxt): Nuxt ships no built-in authentication; enforce access server-side, not with client redirects.
 - nuxt-private (REASONED; nuxt): Direct runtimeConfig keys are server-only with NUXT_ overrides; rendering or passing to useState can disclose them.

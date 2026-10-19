@@ -62,10 +62,10 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- protocol: MDN CORS documentation, unknown
-- express: Express cors middleware, unknown
-- fastapi: FastAPI CORSMiddleware, unknown
-- fetch: Fetch Standard credentials, unknown
+- protocol: MDN CORS documentation (unknown)
+- express: Express cors middleware (unknown)
+- fastapi: FastAPI CORSMiddleware (unknown)
+- fetch: Fetch Standard credentials (unknown)
 
 Claims (full source mapping in the front matter):
 

@@ -172,19 +172,19 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- le: Let's Encrypt documentation, unknown
-- certbot: Certbot documentation, unknown
-- reconfigure: Certbot reconfigure minimum, 2.3.0
-- zerossl: ZeroSSL, unknown
-- acme: acme.sh, unknown
-- caddy: Caddy automatic HTTPS, v2.11.4
-- certmagic: certmagic ACME implementation, v0.25.3
-- traefik: Traefik ACME documentation, v3.5
-- openssl-cli: OpenSSL certificate commands, 3.0
-- curl-source: curl command documentation, curl-8_12_1
-- certbot-v230: Certbot user guide and source, v2.3.0
-- certbot-dns-cloudflare-v230: Certbot Cloudflare DNS plugin, v2.3.0
-- cloudflare-origin-ca: Cloudflare Origin CA documentation, checked October 2026
+- le: Let's Encrypt documentation (unknown)
+- certbot: Certbot documentation (unknown)
+- reconfigure: Certbot reconfigure minimum (2.3.0)
+- zerossl: ZeroSSL (unknown)
+- acme: acme.sh (unknown)
+- caddy: Caddy automatic HTTPS (v2.11.4)
+- certmagic: certmagic ACME implementation (v0.25.3)
+- traefik: Traefik ACME documentation (v3.5)
+- openssl-cli: OpenSSL certificate commands (3.0)
+- curl-source: curl command documentation (curl-8_12_1)
+- certbot-v230: Certbot user guide and source (v2.3.0)
+- certbot-dns-cloudflare-v230: Certbot Cloudflare DNS plugin (v2.3.0)
+- cloudflare-origin-ca: Cloudflare Origin CA documentation (checked October 2026)
 
 Claims (full source mapping in the front matter):
 

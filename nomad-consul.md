@@ -96,8 +96,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- nomad: Nomad Community Edition, 2.0.7
-- consul: Consul Community Edition, 2.0.4
+- nomad: Nomad Community Edition (2.0.7)
+- consul: Consul Community Edition (2.0.4)
 
 Claims (full source mapping in the front matter):
 

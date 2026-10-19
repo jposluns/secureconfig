@@ -155,17 +155,17 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- admin: Caddy admin source, v2.11.4
-- tags: Official image tag map, d82ca5102fa6735be29d5e1fc6ce03af77eb091e
-- images: Caddy Docker source, fba2853501d36e8a72f946ac8cb7ff64d07e48f2
-- dist: Default Caddyfile source, 33ae08ff08d168572df2956ed14fbc4949880d94
-- docker-network: Docker networking documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- docs-rolling: Caddy documentation (rolling), unknown
-- letsencrypt-notice: Let's Encrypt expiration-email notice, 2025
-- service: caddyserver/dist service unit, 33ae08ff08d168572df2956ed14fbc4949880d94
-- systemd: systemd manual, v262
-- cloudflare: Cloudflare docs, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- ratelimit-source: caddy-ratelimit source, 5625512f24f6f59d6f64fb3aafe5eecff0b286db
+- admin: Caddy admin source (v2.11.4)
+- tags: Official image tag map (d82ca5102fa6735be29d5e1fc6ce03af77eb091e)
+- images: Caddy Docker source (fba2853501d36e8a72f946ac8cb7ff64d07e48f2)
+- dist: Default Caddyfile source (33ae08ff08d168572df2956ed14fbc4949880d94)
+- docker-network: Docker networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- docs-rolling: Caddy documentation (rolling) (unknown)
+- letsencrypt-notice: Let's Encrypt expiration-email notice (2025)
+- service: caddyserver/dist service unit (33ae08ff08d168572df2956ed14fbc4949880d94)
+- systemd: systemd manual (v262)
+- cloudflare: Cloudflare docs (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- ratelimit-source: caddy-ratelimit source (5625512f24f6f59d6f64fb3aafe5eecff0b286db)
 
 Claims (full source mapping in the front matter):
 
@@ -179,7 +179,7 @@ Claims (full source mapping in the front matter):
 - basic (REASONED; docs-rolling): basic_auth uses hashed passwords from caddy hash-password; it was named basicauth before v2.8.0 and remains single-factor.
 - path-auth (REASONED; docs-rolling): Protect /admin and /admin/* together: path matches are exact and multiple paths are OR'ed.
 - mfa (REASONED; docs-rolling, cloudflare): forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it.
-- access-origin (REASONED; docs-rolling, cloudflare): Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's &#96;access&#96; setting has &#96;cloudflared&#96; do. Caddy still answers directly on 443.
+- access-origin (REASONED; docs-rolling, cloudflare): Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's `access` setting has `cloudflared` do. Caddy still answers directly on 443.
 - body-limit (REASONED; docs-rolling): Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public.
 - rate-limit (REASONED; docs-rolling, ratelimit-source): The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer.
 - admin-bind (REASONED; admin, docs-rolling): The admin API defaults to localhost:2019 as of v2.11.4; never publish it or reverse-proxy to it.

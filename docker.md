@@ -261,32 +261,32 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docker-build: Docker build and image history documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- engine: Docker Engine networking, unknown
-- engine-pinned: Docker Engine networking documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- moby-unit: Moby Docker service unit, v28.3.3
-- systemd-unit: systemd unit ordering, v262
-- boundary: Docker Engine minimum boundary, 28.0
-- compose: Compose networking, unknown
-- git-ignore: Git ignore rules, v2.49.0
-- docker-workload: Docker workload documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- reload: Docker firewalld reload fix, 28.3.3
-- reload-advisory: Docker firewalld reload advisory, unknown
-- postgresql: PostgreSQL, 17
-- caddy-image: Caddy image, fba2853501d36e8a72f946ac8cb7ff64d07e48f2
-- caddy: Caddy, v2.11.4
-- nginx-auth: nginx authentication source, release-1.26.3
-- traefik-auth: Traefik authentication source, v3.5.0
-- cloudflare-access: Cloudflare Access documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- authelia-proxy: Authelia proxy integration, v4.39.28
-- aws-firewall: AWS security group rules, unknown
-- gcp-firewall: Google Cloud VPC firewall rules, unknown
-- azure-firewall: Azure network security group rules, unknown
-- cloudflared-image: cloudflared container image, 2026.9.3
-- cloudflare-tunnel: Cloudflare Tunnel documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- compose-pinned: Docker Compose networking documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- tailscale-entry: Tailscale entry documentation, unknown
-- self-signed-entry: OpenSSL documentation (rolling), unknown
+- docker-build: Docker build and image history documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- engine: Docker Engine networking (unknown)
+- engine-pinned: Docker Engine networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- moby-unit: Moby Docker service unit (v28.3.3)
+- systemd-unit: systemd unit ordering (v262)
+- boundary: Docker Engine minimum boundary (28.0)
+- compose: Compose networking (unknown)
+- git-ignore: Git ignore rules (v2.49.0)
+- docker-workload: Docker workload documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- reload: Docker firewalld reload fix (28.3.3)
+- reload-advisory: Docker firewalld reload advisory (unknown)
+- postgresql: PostgreSQL (17)
+- caddy-image: Caddy image (fba2853501d36e8a72f946ac8cb7ff64d07e48f2)
+- caddy: Caddy (v2.11.4)
+- nginx-auth: nginx authentication source (release-1.26.3)
+- traefik-auth: Traefik authentication source (v3.5.0)
+- cloudflare-access: Cloudflare Access documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- authelia-proxy: Authelia proxy integration (v4.39.28)
+- aws-firewall: AWS security group rules (unknown)
+- gcp-firewall: Google Cloud VPC firewall rules (unknown)
+- azure-firewall: Azure network security group rules (unknown)
+- cloudflared-image: cloudflared container image (2026.9.3)
+- cloudflare-tunnel: Cloudflare Tunnel documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- compose-pinned: Docker Compose networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- tailscale-entry: Tailscale entry documentation (unknown)
+- self-signed-entry: OpenSSL documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -300,7 +300,7 @@ Claims (full source mapping in the front matter):
 - upstream (REASONED; engine, aws-firewall, gcp-firewall, azure-firewall): Use an upstream security group or network ACL for routable publications and boot-time protection. AWS security groups, Google Cloud VPC firewall rules and Azure NSGs have rolling sources; network-ACL configuration and boot-time independence remain this guide's assessment.
 - docker-user (REASONED; engine): On the iptables backend, DOCKER-USER precedes Docker accepts; the nftables backend has no such chain. Match NEW traffic from outside the allowed subnet.
 - dnat (REASONED; engine): DOCKER-USER sees post-DNAT container destinations; conntrack original destination port and ORIGINAL direction scope a published service.
-- ipv6 (REASONED; engine, engine-pinned): As this guide's reasoning, native IPv6 forwarding needs ip6tables; Docker documents IPv6-to-IPv4 userland-proxy mapping when no host IP is given, the bridge is IPv4-only and &#96;--userland-proxy=true&#96; (the default), and places DOCKER-USER in FORWARD. As this guide's reasoning, the proxy path terminates on host INPUT and bypasses DOCKER-USER.
+- ipv6 (REASONED; engine, engine-pinned): As this guide's reasoning, native IPv6 forwarding needs ip6tables; Docker documents IPv6-to-IPv4 userland-proxy mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default), and places DOCKER-USER in FORWARD. As this guide's reasoning, the proxy path terminates on host INPUT and bypasses DOCKER-USER.
 - proxy-path (REASONED; engine, engine-pinned): Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. Docker documents the explicit-address option and conditional userland-proxy mapping; the INPUT restriction and probes are this guide's reasoning and advice.
 - persistence (REASONED; engine, engine-pinned, moby-unit, systemd-unit): As this guide's advice, persist only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves. Moby identifies docker.service and systemd documents After= ordering; as this guide's assessment, rule non-persistence, the boot-time gap, what iptables-persistent captures and its potential to break container networking have no direct source here.
 - tls (REASONED; compose, caddy-image, caddy): Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates.

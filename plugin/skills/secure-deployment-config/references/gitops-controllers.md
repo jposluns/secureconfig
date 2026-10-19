@@ -206,15 +206,15 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- argo: Argo CD v3.5.3 source, c9c369efcc5b2a0bd720803f8d14a1c3eaddf579
-- dex: Dex v2.45.1 source, v2.45.1
-- redis-image: docker-library-redis v8.2.3 source, bcbc692165ce2241e194035041c5b5e01d2e1a5f
-- redis-source: Redis 8.2.3 source, 8.2.3
-- argo-docs: Argo CD documentation, unknown
-- curl: curl, curl-8_14_1
-- flux: Flux documentation, unknown
-- flux-oidc: Flux OIDC introduction, v2.9
-- python: Python documentation, unknown
+- argo: Argo CD v3.5.3 source (c9c369efcc5b2a0bd720803f8d14a1c3eaddf579)
+- dex: Dex v2.45.1 source (v2.45.1)
+- redis-image: docker-library-redis v8.2.3 source (bcbc692165ce2241e194035041c5b5e01d2e1a5f)
+- redis-source: Redis 8.2.3 source (8.2.3)
+- argo-docs: Argo CD documentation (unknown)
+- curl: curl (curl-8_14_1)
+- flux: Flux documentation (unknown)
+- flux-oidc: Flux OIDC introduction (v2.9)
+- python: Python documentation (unknown)
 
 Claims (full source mapping in the front matter):
 

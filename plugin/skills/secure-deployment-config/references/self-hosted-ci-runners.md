@@ -115,12 +115,12 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- github: GitHub Actions documentation, unknown
-- github-api: GitHub REST API, 2026-03-10
-- gitlab: GitLab rolling documentation, unknown
-- python: Python tomllib minimum, 3.11
-- docker: Docker Engine documentation, unknown
-- aws: AWS EC2 documentation, unknown
+- github: GitHub Actions documentation (unknown)
+- github-api: GitHub REST API (2026-03-10)
+- gitlab: GitLab rolling documentation (unknown)
+- python: Python tomllib minimum (3.11)
+- docker: Docker Engine documentation (unknown)
+- aws: AWS EC2 documentation (unknown)
 
 Claims (full source mapping in the front matter):
 

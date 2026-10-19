@@ -110,12 +110,12 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: Supabase documentation, unknown
-- env: Supabase environment source, eabe06be5b36cf57f2b158bd5093b396606bf801
-- compose: Supabase Compose source, e693f206f5050b0004a86e12e533bb75ba2a9c76
-- compose-env: Supabase Compose source at environment commit, eabe06be5b36cf57f2b158bd5093b396606bf801
-- kong: Supabase Kong configuration source, eabe06be5b36cf57f2b158bd5093b396606bf801
-- curl: curl, curl-8_14_1
+- docs: Supabase documentation (unknown)
+- env: Supabase environment source (eabe06be5b36cf57f2b158bd5093b396606bf801)
+- compose: Supabase Compose source (e693f206f5050b0004a86e12e533bb75ba2a9c76)
+- compose-env: Supabase Compose source at environment commit (eabe06be5b36cf57f2b158bd5093b396606bf801)
+- kong: Supabase Kong configuration source (eabe06be5b36cf57f2b158bd5093b396606bf801)
+- curl: curl (curl-8_14_1)
 
 Claims (full source mapping in the front matter):
 

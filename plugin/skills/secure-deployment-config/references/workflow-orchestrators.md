@@ -353,33 +353,33 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 
 Components (recorded basis):
 
-- prefect: Prefect Basic Auth minimum, 3.1.8
-- prefect-source: Prefect server source, 9e560c9b6df4e19a5109a66e66d461f9facb538d
-- dagster: Dagster OSS, 1.13.24
-- airflow: Apache Airflow, 3.3.2
-- airflow-two: Apache Airflow historical configuration, 2.11.0
-- airflow-old: Apache Airflow historical default, 2.2.5
-- flower: Flower, v2.2.0
-- tornado: Tornado, v6.5.10
-- linux: Linux permissions and tools, unknown
-- systemd: systemd, v257
-- fhs: Filesystem Hierarchy Standard, 3.0
-- docker: Moby Docker, docker-v29.8.1
-- argo-three: Argo Workflows, v3.7.18
-- argo-four: Argo Workflows, v4.1.4
-- argo-docs: Argo Workflows documentation, release-3.7
-- iproute2: iproute2 ss manual, v6.15.0
-- network-namespaces: Linux network namespaces manual, man-pages-5.13
-- prefect-rolling: Prefect documentation (rolling), unknown
-- dagster-rolling: Dagster documentation (rolling), unknown
-- airflow-rolling: Apache Airflow documentation (rolling), unknown
-- temporal-rolling: Temporal documentation (rolling), unknown
-- flower-rolling: Flower documentation (rolling), unknown
-- prefect-blocks: Prefect Blocks source, 3.1.8
-- fab-source: Apache Airflow FAB provider source, providers-fab/3.9.0
-- airflow-crypto: Apache Airflow crypto source, 3.3.2
-- temporal-codec: Temporal Go SDK codec source, v1.28.0
-- fab-rolling: Apache Airflow FAB provider documentation (rolling), unknown
+- prefect: Prefect Basic Auth minimum (3.1.8)
+- prefect-source: Prefect server source (9e560c9b6df4e19a5109a66e66d461f9facb538d)
+- dagster: Dagster OSS (1.13.24)
+- airflow: Apache Airflow (3.3.2)
+- airflow-two: Apache Airflow historical configuration (2.11.0)
+- airflow-old: Apache Airflow historical default (2.2.5)
+- flower: Flower (v2.2.0)
+- tornado: Tornado (v6.5.10)
+- linux: Linux permissions and tools (unknown)
+- systemd: systemd (v257)
+- fhs: Filesystem Hierarchy Standard (3.0)
+- docker: Moby Docker (docker-v29.8.1)
+- argo-three: Argo Workflows (v3.7.18)
+- argo-four: Argo Workflows (v4.1.4)
+- argo-docs: Argo Workflows documentation (release-3.7)
+- iproute2: iproute2 ss manual (v6.15.0)
+- network-namespaces: Linux network namespaces manual (man-pages-5.13)
+- prefect-rolling: Prefect documentation (rolling) (unknown)
+- dagster-rolling: Dagster documentation (rolling) (unknown)
+- airflow-rolling: Apache Airflow documentation (rolling) (unknown)
+- temporal-rolling: Temporal documentation (rolling) (unknown)
+- flower-rolling: Flower documentation (rolling) (unknown)
+- prefect-blocks: Prefect Blocks source (3.1.8)
+- fab-source: Apache Airflow FAB provider source (providers-fab/3.9.0)
+- airflow-crypto: Apache Airflow crypto source (3.3.2)
+- temporal-codec: Temporal Go SDK codec source (v1.28.0)
+- fab-rolling: Apache Airflow FAB provider documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 

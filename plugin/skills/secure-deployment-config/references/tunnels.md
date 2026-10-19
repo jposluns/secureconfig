@@ -165,17 +165,17 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- frp: frp documentation, unknown
-- frps: frps source, v0.71.0
-- tls-min: frp TLS default minimum, v0.50.0
-- wg: WireGuard, unknown
-- nft: nftables, unknown
-- ssh: OpenSSH, unknown
-- autossh-source: autossh source, 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476
-- ufw-docs: Ubuntu Noble ufw manual, unknown
-- iproute2-docs: iproute2 manuals, v6.12.0
-- linux-source: Linux source, v6.8
-- ufw-source: Ubuntu Noble ufw source, 4992be7722389108d5f2ebb5ca221b228f0c68b1
+- frp: frp documentation (unknown)
+- frps: frps source (v0.71.0)
+- tls-min: frp TLS default minimum (v0.50.0)
+- wg: WireGuard (unknown)
+- nft: nftables (unknown)
+- ssh: OpenSSH (unknown)
+- autossh-source: autossh source (90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476)
+- ufw-docs: Ubuntu Noble ufw manual (unknown)
+- iproute2-docs: iproute2 manuals (v6.12.0)
+- linux-source: Linux source (v6.8)
+- ufw-source: Ubuntu Noble ufw source (4992be7722389108d5f2ebb5ca221b228f0c68b1)
 
 Claims (full source mapping in the front matter):
 

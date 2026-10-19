@@ -156,19 +156,19 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- anything: AnythingLLM documentation, unknown
-- lobe: LobeHub, v2.2.16
-- docker: Docker CLI, v27.5.1
-- compose: Docker Compose, v2.32.4
-- compose-go: compose-go, v2.4.7
-- moby: Moby, v27.5.1
-- chainlit: Chainlit documentation, unknown
-- python: Python documentation, unknown
-- owasp: OWASP password guidance, unknown
-- openhands: OpenHands documentation, unknown
-- curl: curl minimum write-out version, 7.75.0
-- linux: Linux permissions and tools, unknown
-- lobe-docs: LobeHub documentation (rolling), unknown
+- anything: AnythingLLM documentation (unknown)
+- lobe: LobeHub (v2.2.16)
+- docker: Docker CLI (v27.5.1)
+- compose: Docker Compose (v2.32.4)
+- compose-go: compose-go (v2.4.7)
+- moby: Moby (v27.5.1)
+- chainlit: Chainlit documentation (unknown)
+- python: Python documentation (unknown)
+- owasp: OWASP password guidance (unknown)
+- openhands: OpenHands documentation (unknown)
+- curl: curl minimum write-out version (7.75.0)
+- linux: Linux permissions and tools (unknown)
+- lobe-docs: LobeHub documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 

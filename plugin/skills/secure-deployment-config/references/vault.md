@@ -155,13 +155,13 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: Vault documentation, unknown
-- run: Vault loopback run, 2.1.1
-- ha: Vault handler source, v1.21.0
-- forward: Vault forwarding source, v1.20.0
-- curl: curl minimum write-out version, 7.75.0
-- jwt-min: Vault JWT audience minimum, 1.17
-- wrap-history: Vault historical wrapping qualification, 0.8
+- docs: Vault documentation (unknown)
+- run: Vault loopback run (2.1.1)
+- ha: Vault handler source (v1.21.0)
+- forward: Vault forwarding source (v1.20.0)
+- curl: curl minimum write-out version (7.75.0)
+- jwt-min: Vault JWT audience minimum (1.17)
+- wrap-history: Vault historical wrapping qualification (0.8)
 
 Claims (full source mapping in the front matter):
 

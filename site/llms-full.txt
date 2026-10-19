@@ -470,19 +470,19 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- le: Let's Encrypt documentation, unknown
-- certbot: Certbot documentation, unknown
-- reconfigure: Certbot reconfigure minimum, 2.3.0
-- zerossl: ZeroSSL, unknown
-- acme: acme.sh, unknown
-- caddy: Caddy automatic HTTPS, v2.11.4
-- certmagic: certmagic ACME implementation, v0.25.3
-- traefik: Traefik ACME documentation, v3.5
-- openssl-cli: OpenSSL certificate commands, 3.0
-- curl-source: curl command documentation, curl-8_12_1
-- certbot-v230: Certbot user guide and source, v2.3.0
-- certbot-dns-cloudflare-v230: Certbot Cloudflare DNS plugin, v2.3.0
-- cloudflare-origin-ca: Cloudflare Origin CA documentation, checked October 2026
+- le: Let's Encrypt documentation (unknown)
+- certbot: Certbot documentation (unknown)
+- reconfigure: Certbot reconfigure minimum (2.3.0)
+- zerossl: ZeroSSL (unknown)
+- acme: acme.sh (unknown)
+- caddy: Caddy automatic HTTPS (v2.11.4)
+- certmagic: certmagic ACME implementation (v0.25.3)
+- traefik: Traefik ACME documentation (v3.5)
+- openssl-cli: OpenSSL certificate commands (3.0)
+- curl-source: curl command documentation (curl-8_12_1)
+- certbot-v230: Certbot user guide and source (v2.3.0)
+- certbot-dns-cloudflare-v230: Certbot Cloudflare DNS plugin (v2.3.0)
+- cloudflare-origin-ca: Cloudflare Origin CA documentation (checked October 2026)
 
 Claims (full source mapping in the front matter):
 
@@ -678,18 +678,18 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- openssl: OpenSSL documentation (rolling), unknown
-- mkcert: mkcert, unknown
-- requests: Requests TLS documentation, v2.32.3
-- git: Git ignore documentation, v2.43.0
-- curl-source: curl command documentation, curl-8_12_1
-- node: Node.js extra CA certificates, v22.19.0
-- rfc9525: RFC 9525 service identity, RFC 9525
-- debian-ca: Debian ca-certificates, trixie
-- ubuntu-ca: Ubuntu ca-certificates, noble
-- rhel-ca: RHEL shared system certificates, RHEL 9
-- coreutils: GNU coreutils file permissions, v9.7
-- node-v24: Node.js API documentation, v24.22.0
+- openssl: OpenSSL documentation (rolling) (unknown)
+- mkcert: mkcert (unknown)
+- requests: Requests TLS documentation (v2.32.3)
+- git: Git ignore documentation (v2.43.0)
+- curl-source: curl command documentation (curl-8_12_1)
+- node: Node.js extra CA certificates (v22.19.0)
+- rfc9525: RFC 9525 service identity (RFC 9525)
+- debian-ca: Debian ca-certificates (trixie)
+- ubuntu-ca: Ubuntu ca-certificates (noble)
+- rhel-ca: RHEL shared system certificates (RHEL 9)
+- coreutils: GNU coreutils file permissions (v9.7)
+- node-v24: Node.js API documentation (v24.22.0)
 
 Claims (full source mapping in the front matter):
 
@@ -856,13 +856,13 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- cf: Cloudflare Zero Trust, unknown
-- token-file: cloudflared token-file minimum, 2025.4.0
-- installer: cloudflared service installer, 2026.9.3
-- curl: curl manual, unknown
-- curl-opts: curl command-line options, curl-8_23_0
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- cloudflared-readme: cloudflared README, 2026.9.3
+- cf: Cloudflare Zero Trust (unknown)
+- token-file: cloudflared token-file minimum (2025.4.0)
+- installer: cloudflared service installer (2026.9.3)
+- curl: curl manual (unknown)
+- curl-opts: curl command-line options (curl-8_23_0)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- cloudflared-readme: cloudflared README (2026.9.3)
 
 Claims (full source mapping in the front matter):
 
@@ -891,7 +891,7 @@ Claims (full source mapping in the front matter):
 - verify-login (REASONED; cf): Private browsing must show Access login; anonymous HEAD must redirect to the team's cloudflareaccess.com login, never app content.
 - verify-token (REASONED; cf, curl): On a route known to serve application content with HTTP 200, send the hidden-prompt service token through curl --header @- and expect http=200 location=. Login redirects, denials and transport errors fail; compare anonymous denial because token success alone does not prove Access enforcement. The probe discards the body, so 200 alone cannot identify content.
 - verify-policy (REASONED; cf): Inspect loopback binding and effective inbound policy, including existing allows and container NAT; permitted sources depend on topology.
-- verify-origin (REASONED; cf, curl, cf-docs, curl-opts): From another host, probe the actual origin port (HTTP 3000 in the same-host example or HTTPS for a remote origin): an explicit refusal from the confirmed origin address while the allowed-vantage control (tunnel-host loopback, or the &#96;cloudflared&#96; host to a remote origin using the effective HTTP Host separately from the certificate name) returns the app's status, not 000, together with an effective inbound-policy check supports isolation; those controls do not confirm the probed public address; no reply and TLS trust or hostname errors are inconclusive (including when combined trust cannot be reproduced), and any HTTP reply from the confirmed origin address directly on the app's port exposes bypass; an HTTP reply from an unconfirmed address only shows something answers there and requires address-mapping confirmation before calling this origin exposed, never fixed (this guide's assessment of probe outcomes).
+- verify-origin (REASONED; cf, curl, cf-docs, curl-opts): From another host, probe the actual origin port (HTTP 3000 in the same-host example or HTTPS for a remote origin): an explicit refusal from the confirmed origin address while the allowed-vantage control (tunnel-host loopback, or the `cloudflared` host to a remote origin using the effective HTTP Host separately from the certificate name) returns the app's status, not 000, together with an effective inbound-policy check supports isolation; those controls do not confirm the probed public address; no reply and TLS trust or hostname errors are inconclusive (including when combined trust cannot be reproduced), and any HTTP reply from the confirmed origin address directly on the app's port exposes bypass; an HTTP reply from an unconfirmed address only shows something answers there and requires address-mapping confirmation before calling this origin exposed, never fixed (this guide's assessment of probe outcomes).
 - verify-aop (REASONED; cf, cf-docs, curl, curl-opts): Trust the origin server CA when probing 443 directly: missing-client-certificate refusal indicates AOP only from an independently confirmed origin address; a refusal or reply from an unconfirmed address shows only that something answers there and requires address-mapping confirmation before calling this origin fixed or exposed; the service-token GET does not confirm the probed public address; a firewall drop is inconclusive in this probe, even if the service-token GET answers; the effective inbound policy establishes isolation, while app 401/403 shows app authorization only from the confirmed origin address (this guide's assessment of probe outcomes).
 - verify-http (REASONED; cf, curl): Probe a known app route and virtual host on no-tunnel origin port 80 from outside: either an explicit refusal from the confirmed origin address or only a redirect from that confirmed address to the canonical HTTPS host without app content supports the fixed state when the service-token GET on that route answers with its success status; that GET does not confirm the probed public address; app content from that confirmed address over HTTP shows exposure, while app content from an unconfirmed address only shows that something answers there and requires address-mapping confirmation before calling this origin exposed; no reply is inconclusive. The listed Sources do not prescribe a redirect code (this guide's assessment of probe outcomes).
 - token-file (REASONED; token-file, cf): cloudflared 2025.4.0 or later supports tunnel run --token-file /absolute/path/to/token; restrict the file to the service account with mode 0600 on Linux/macOS or a restricted Windows ACL.
@@ -1165,10 +1165,10 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- ts: Tailscale documentation, unknown
-- cli: Tailscale CLI change, v1.52
-- ss: ss, unknown
-- curl: curl option documentation, 7.75.0
+- ts: Tailscale documentation (unknown)
+- cli: Tailscale CLI change (v1.52)
+- ss: ss (unknown)
+- curl: curl option documentation (7.75.0)
 
 Claims (full source mapping in the front matter):
 
@@ -1293,17 +1293,17 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- frp: frp documentation, unknown
-- frps: frps source, v0.71.0
-- tls-min: frp TLS default minimum, v0.50.0
-- wg: WireGuard, unknown
-- nft: nftables, unknown
-- ssh: OpenSSH, unknown
-- autossh-source: autossh source, 90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476
-- ufw-docs: Ubuntu Noble ufw manual, unknown
-- iproute2-docs: iproute2 manuals, v6.12.0
-- linux-source: Linux source, v6.8
-- ufw-source: Ubuntu Noble ufw source, 4992be7722389108d5f2ebb5ca221b228f0c68b1
+- frp: frp documentation (unknown)
+- frps: frps source (v0.71.0)
+- tls-min: frp TLS default minimum (v0.50.0)
+- wg: WireGuard (unknown)
+- nft: nftables (unknown)
+- ssh: OpenSSH (unknown)
+- autossh-source: autossh source (90a8c2f0129f6fe19ec26c7d0fdbab4bb468f476)
+- ufw-docs: Ubuntu Noble ufw manual (unknown)
+- iproute2-docs: iproute2 manuals (v6.12.0)
+- linux-source: Linux source (v6.8)
+- ufw-source: Ubuntu Noble ufw source (4992be7722389108d5f2ebb5ca221b228f0c68b1)
 
 Claims (full source mapping in the front matter):
 
@@ -1520,36 +1520,36 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- owasp: OWASP authentication and password storage, unknown
-- owasp-p1: OWASP authorization, secrets and session guidance, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
-- oauth: OAuth security BCP, RFC 9700
-- oidc: OpenID Connect Core, 1.0
-- nist: NIST password guidance, SP 800-63B-4
-- htpasswd: Apache htpasswd, unknown
-- bcrypt: Python bcrypt rejection threshold, 5.0.0
-- bcrypt-source: Python bcrypt changelog, 2b4ba9ac84df972e8e81311d09559af8dc82ef33
-- openssl: OpenSSL rand, 3.5
-- python: Python secrets, 3.13
-- gitleaks-source: Gitleaks scanning modes, b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b
-- git: Git ignore rules, v2.49.0
-- owasp-docs: OWASP security guidance, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
-- api-security: OWASP API Security, 2023
-- google-oidc: Google OpenID Connect, unknown
-- entra-multitenant: Microsoft Entra multitenant token validation, 49b84e07023770128d83039c07eafb84ff1de1df
-- cloudflare-access: Cloudflare Access and origin configuration, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- fail2ban-jail: fail2ban, 1.1.1
-- grpc-status: gRPC, v1.84.0
-- websocket-rfc: WebSocket RFC, RFC 6455
-- sse-spec: WHATWG server-sent events, unknown
-- stripe-webhooks: stripe-node, v18.5.0
-- git-log: Git, v2.56.0
-- gitleaks-p3: Gitleaks, v8.30.1
-- entra-docs: Microsoft Entra revocation model, 231747abc59ae3d50c74e215c1cdd592eb980723
-- oauth2-proxy: OAuth2 Proxy, v7.15.4
-- authelia: Authelia, v4.39.28
-- oauth-revocation: OAuth 2.0 Token Revocation RFC, unknown
-- google-iap: Google Identity-Aware Proxy, unknown
-- aws-alb: AWS Application Load Balancer authentication, unknown
+- owasp: OWASP authentication and password storage (unknown)
+- owasp-p1: OWASP authorization, secrets and session guidance (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
+- oauth: OAuth security BCP (RFC 9700)
+- oidc: OpenID Connect Core (1.0)
+- nist: NIST password guidance (SP 800-63B-4)
+- htpasswd: Apache htpasswd (unknown)
+- bcrypt: Python bcrypt rejection threshold (5.0.0)
+- bcrypt-source: Python bcrypt changelog (2b4ba9ac84df972e8e81311d09559af8dc82ef33)
+- openssl: OpenSSL rand (3.5)
+- python: Python secrets (3.13)
+- gitleaks-source: Gitleaks scanning modes (b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b)
+- git: Git ignore rules (v2.49.0)
+- owasp-docs: OWASP security guidance (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
+- api-security: OWASP API Security (2023)
+- google-oidc: Google OpenID Connect (unknown)
+- entra-multitenant: Microsoft Entra multitenant token validation (49b84e07023770128d83039c07eafb84ff1de1df)
+- cloudflare-access: Cloudflare Access and origin configuration (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- fail2ban-jail: fail2ban (1.1.1)
+- grpc-status: gRPC (v1.84.0)
+- websocket-rfc: WebSocket RFC (RFC 6455)
+- sse-spec: WHATWG server-sent events (unknown)
+- stripe-webhooks: stripe-node (v18.5.0)
+- git-log: Git (v2.56.0)
+- gitleaks-p3: Gitleaks (v8.30.1)
+- entra-docs: Microsoft Entra revocation model (231747abc59ae3d50c74e215c1cdd592eb980723)
+- oauth2-proxy: OAuth2 Proxy (v7.15.4)
+- authelia: Authelia (v4.39.28)
+- oauth-revocation: OAuth 2.0 Token Revocation RFC (unknown)
+- google-iap: Google Identity-Aware Proxy (unknown)
+- aws-alb: AWS Application Load Balancer authentication (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -1601,7 +1601,7 @@ Claims (full source mapping in the front matter):
 - verify-default-accounts (REASONED; owasp): Check that the user store has no admin, test or demo account with a known or empty password. This is the guide's recommendation; the OWASP Authentication Cheat Sheet does not list these account names (checked at commit 72865b1e).
 - verify-wrong-tenant (REASONED; oidc, entra-multitenant): Expect a wrong-tenant token to be rejected in an application negative test after issuer and tid validation and the application tenant allowlist. Microsoft documents the validation rules; this guide recommends the allowlist and test, and no deployed rejection was observed.
 - verify-cross-user (REASONED; owasp, owasp-p1): Verify that user A cannot read user B's resources. OWASP describes horizontal privilege escalation and object-specific access checks.
-- verify-origin-isolation (REASONED; owasp, cloudflare-access, oauth2-proxy, authelia, google-iap, aws-alb): Expect the origin to be unreachable except through its fronting layer in a deployment negative test. Cloudflare describes Access policy enforcement, JWT validation and Tunnel access checks, and says a publicly routable origin needs its IP protected by other methods. OAuth2 Proxy documents upstream identity headers and warns that when &#96;--reverse-proxy&#96; is enabled and &#96;--trusted-proxy-ip&#96; is unset, a client that can reach OAuth2 Proxy directly may be able to spoof forwarded headers. Authelia uses session cookies to authorize protected websites. Google IAP says a bypassing attacker can forge unsigned identity headers; its signed-header how-to says to verify the JWT header, payload and signature to secure an app with the IAP JWT, and calls signed headers secondary security; AWS ALB requires verification of its signed claims header and signer ARN. These sources support the guide's origin-isolation test expectation but do not establish that a particular origin is unreachable.
+- verify-origin-isolation (REASONED; owasp, cloudflare-access, oauth2-proxy, authelia, google-iap, aws-alb): Expect the origin to be unreachable except through its fronting layer in a deployment negative test. Cloudflare describes Access policy enforcement, JWT validation and Tunnel access checks, and says a publicly routable origin needs its IP protected by other methods. OAuth2 Proxy documents upstream identity headers and warns that when `--reverse-proxy` is enabled and `--trusted-proxy-ip` is unset, a client that can reach OAuth2 Proxy directly may be able to spoof forwarded headers. Authelia uses session cookies to authorize protected websites. Google IAP says a bypassing attacker can forge unsigned identity headers; its signed-header how-to says to verify the JWT header, payload and signature to secure an app with the IAP JWT, and calls signed headers secondary security; AWS ALB requires verification of its signed claims header and signer ARN. These sources support the guide's origin-isolation test expectation but do not establish that a particular origin is unreachable.
 <!-- version-basis:end -->
 
 TLS without authentication leaves a service open to the whole internet over an encrypted channel. These rules apply to every service in this repository's guides. Each rule is a requirement unless it is marked `should` or phrased as a preference.
@@ -1728,50 +1728,50 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- totp: TOTP standard, unknown
-- hotp: HOTP standard, unknown
-- uri: Authenticator key URI format, unknown
-- webauthn: WebAuthn standard, unknown
-- authelia: Authelia proxy support, unknown
-- caddy-min: Caddy forward_auth minimum, 2.5.1
-- duo: Duo editions, unknown
-- duo-push-policy: Duo Verified Push policy, unknown
-- ssh-pam: SSH and PAM MFA (citation gap), unknown
-- google-authenticator-libpam-source: google-authenticator-libpam source, 1.11
-- google-authenticator-libpam-packages: google-authenticator-libpam package records, unknown
-- duo-proxy-docs: Duo Authentication Proxy documentation, unknown
-- google-workspace-docs: Google Workspace 2SV documentation, unknown
-- supabase: Supabase Auth MFA (citation gap), unknown
-- access: Cloudflare Access MFA (citation gap), unknown
-- mysql: MySQL 8.0 multifactor authentication, 8.0
-- mysql-8-4: MySQL 8.4 multifactor authentication, 8.4
-- mysql-webauthn: MySQL 8.4 WebAuthn authentication, 8.4
-- authentik-source: authentik source, version/2026.8.3
-- keycloak-source: Keycloak documentation, 26.7.4
-- oauth2-proxy-source: oauth2-proxy documentation, v7.15.4
-- entra-docs: Microsoft Entra documentation, 231747abc59ae3d50c74e215c1cdd592eb980723
-- owasp-docs: OWASP cheat sheets, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
-- otp-source: pquerna/otp source, 617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870
-- nist: NIST digital identity guidelines, SP 800-63B-4
-- authelia-source: Authelia source, v4.39.28
-- pyotp-source: PyOTP source, cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1
-- python-qrcode-source: Python qrcode source, f92c007498d796e4825638b7d50c14ea51e5457a
-- django-otp-source: django-otp source, 88cf4970423b11f29d6840311f53378d007a3d63
-- otplib-source: otplib source, c5c11be2a50fd864b587854bff6d97c5f8aa9c84
-- node-qrcode-source: Node qrcode source, 3848ed2c17de5bcdead487417dbf14c5dd017f8d
-- openssh-source: OpenSSH portable source, V_9_9_P2
-- duo-unix-source: Duo Unix source, 91e3c987f256afdb166b26be777cef6e1ab2af11
-- auth0-docs: Auth0 archived documentation, 5258d17ede3eea0ed0e330d15f8921a542564f68
-- auth0-rolling: Auth0 MFA documentation, unknown
-- cognito-api-source: Amazon Cognito API source, 2ba0e39015ddf9c91c6c378f8a4fb79dcb4353da
-- clerk-docs: Clerk documentation, 26ef3ace7508d46d6242c377e830a7791b0a2fdb
-- supabase-docs: Supabase documentation, 10c7379c970ae4d2f30f3158194061cf5ffb8fc5
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- webauthn-python: py_webauthn source, v3.0.1
-- webauthn-node: SimpleWebAuthn source, v14.0.3
-- webauthn-go: go-webauthn source, v0.18.2
-- git-docs: Git documentation, v2.56.0
-- grep-docs: GNU grep documentation, v3.12
+- totp: TOTP standard (unknown)
+- hotp: HOTP standard (unknown)
+- uri: Authenticator key URI format (unknown)
+- webauthn: WebAuthn standard (unknown)
+- authelia: Authelia proxy support (unknown)
+- caddy-min: Caddy forward_auth minimum (2.5.1)
+- duo: Duo editions (unknown)
+- duo-push-policy: Duo Verified Push policy (unknown)
+- ssh-pam: SSH and PAM MFA (citation gap) (unknown)
+- google-authenticator-libpam-source: google-authenticator-libpam source (1.11)
+- google-authenticator-libpam-packages: google-authenticator-libpam package records (unknown)
+- duo-proxy-docs: Duo Authentication Proxy documentation (unknown)
+- google-workspace-docs: Google Workspace 2SV documentation (unknown)
+- supabase: Supabase Auth MFA (citation gap) (unknown)
+- access: Cloudflare Access MFA (citation gap) (unknown)
+- mysql: MySQL 8.0 multifactor authentication (8.0)
+- mysql-8-4: MySQL 8.4 multifactor authentication (8.4)
+- mysql-webauthn: MySQL 8.4 WebAuthn authentication (8.4)
+- authentik-source: authentik source (version/2026.8.3)
+- keycloak-source: Keycloak documentation (26.7.4)
+- oauth2-proxy-source: oauth2-proxy documentation (v7.15.4)
+- entra-docs: Microsoft Entra documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
+- owasp-docs: OWASP cheat sheets (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
+- otp-source: pquerna/otp source (617f8d5f3f518bae0f5c3ec14a17ca19f2a6f870)
+- nist: NIST digital identity guidelines (SP 800-63B-4)
+- authelia-source: Authelia source (v4.39.28)
+- pyotp-source: PyOTP source (cc156832fa9f3d5af7fb9e4e6b86b29dfc5b69f1)
+- python-qrcode-source: Python qrcode source (f92c007498d796e4825638b7d50c14ea51e5457a)
+- django-otp-source: django-otp source (88cf4970423b11f29d6840311f53378d007a3d63)
+- otplib-source: otplib source (c5c11be2a50fd864b587854bff6d97c5f8aa9c84)
+- node-qrcode-source: Node qrcode source (3848ed2c17de5bcdead487417dbf14c5dd017f8d)
+- openssh-source: OpenSSH portable source (V_9_9_P2)
+- duo-unix-source: Duo Unix source (91e3c987f256afdb166b26be777cef6e1ab2af11)
+- auth0-docs: Auth0 archived documentation (5258d17ede3eea0ed0e330d15f8921a542564f68)
+- auth0-rolling: Auth0 MFA documentation (unknown)
+- cognito-api-source: Amazon Cognito API source (2ba0e39015ddf9c91c6c378f8a4fb79dcb4353da)
+- clerk-docs: Clerk documentation (26ef3ace7508d46d6242c377e830a7791b0a2fdb)
+- supabase-docs: Supabase documentation (10c7379c970ae4d2f30f3158194061cf5ffb8fc5)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- webauthn-python: py_webauthn source (v3.0.1)
+- webauthn-node: SimpleWebAuthn source (v14.0.3)
+- webauthn-go: go-webauthn source (v0.18.2)
+- git-docs: Git documentation (v2.56.0)
+- grep-docs: GNU grep documentation (v3.12)
 
 Claims (full source mapping in the front matter):
 
@@ -1959,31 +1959,31 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docker-build: Docker build and image history documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- bash: GNU Bash reference manual, bash-5.3
-- grep: GNU grep, unknown
-- owasp: OWASP secret handling, unknown
-- gitleaks: gitleaks command minimum, 8.19+
-- trufflehog: TruffleHog, unknown
-- sops: SOPS, unknown
-- age: age, unknown
-- git-filter-repo: git-filter-repo, unknown
-- proc: Linux procfs, unknown
-- docker: Docker login, unknown
-- terraform: Terraform, unknown
-- kubernetes: Kubernetes kubeconfig, unknown
-- gh: GitHub CLI, unknown
-- apache: htpasswd, unknown
-- postgres: PostgreSQL password file, unknown
-- curl: curl netrc, unknown
-- next: Next.js, unknown
-- git-ignore: Git ignore patterns, 2.42.0
-- openssl-rand: OpenSSL random bytes, 3.0
-- python-secrets: Python secrets, 3.13
-- vite-env: Vite environment variables, 6
-- aws-store: AWS Secrets Manager overview, unknown
-- google-store: Google Cloud Secret Manager overview, unknown
-- azure-store: Azure Key Vault overview, unknown
+- docker-build: Docker build and image history documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- bash: GNU Bash reference manual (bash-5.3)
+- grep: GNU grep (unknown)
+- owasp: OWASP secret handling (unknown)
+- gitleaks: gitleaks command minimum (8.19+)
+- trufflehog: TruffleHog (unknown)
+- sops: SOPS (unknown)
+- age: age (unknown)
+- git-filter-repo: git-filter-repo (unknown)
+- proc: Linux procfs (unknown)
+- docker: Docker login (unknown)
+- terraform: Terraform (unknown)
+- kubernetes: Kubernetes kubeconfig (unknown)
+- gh: GitHub CLI (unknown)
+- apache: htpasswd (unknown)
+- postgres: PostgreSQL password file (unknown)
+- curl: curl netrc (unknown)
+- next: Next.js (unknown)
+- git-ignore: Git ignore patterns (2.42.0)
+- openssl-rand: OpenSSL random bytes (3.0)
+- python-secrets: Python secrets (3.13)
+- vite-env: Vite environment variables (6)
+- aws-store: AWS Secrets Manager overview (unknown)
+- google-store: Google Cloud Secret Manager overview (unknown)
+- azure-store: Azure Key Vault overview (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -2000,7 +2000,7 @@ Claims (full source mapping in the front matter):
 - ci-store (REASONED; owasp): Scope CI/CD platform secrets to the jobs needing them; never echo them into logs or artefacts.
 - prompt-secrets (REASONED; owasp): Keep credentials out of all model prompts and customer data outside unapproved services; system prompts are disclosable and authorization belongs outside the model.
 - business-rules (REASONED; owasp, next, vite-env): Keep confidential business logic out of public repositories, browser-shipped code and public LLM prompts; public environment prefixes and source maps can expose it.
-- terraform-state (REASONED; terraform): Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and *.tfstate.* including backups and workspace copies.
+- terraform-state (REASONED; terraform): Default local Terraform state is plaintext and may contain sensitive values; ignore *.tfstate and `*.tfstate.*` including backups and workspace copies.
 - kubeconfig (REASONED; kubernetes): Kubeconfig can embed a base64 client-key-data private key or bearer token; exclude credential-bearing files and copies from version control.
 - docker-store (REASONED; docker, owasp): Docker stores logins in its credential store or base64-encoded config.json; encoding is not encryption and scanners can miss encoded or unpatterned secrets.
 - leak-rotation (REASONED; owasp): Revoke and replace a leaked credential before cleanup; deletion cannot undo public repository, chat, log or paste exposure.
@@ -2122,13 +2122,13 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: Vault documentation, unknown
-- run: Vault loopback run, 2.1.1
-- ha: Vault handler source, v1.21.0
-- forward: Vault forwarding source, v1.20.0
-- curl: curl minimum write-out version, 7.75.0
-- jwt-min: Vault JWT audience minimum, 1.17
-- wrap-history: Vault historical wrapping qualification, 0.8
+- docs: Vault documentation (unknown)
+- run: Vault loopback run (2.1.1)
+- ha: Vault handler source (v1.21.0)
+- forward: Vault forwarding source (v1.20.0)
+- curl: curl minimum write-out version (7.75.0)
+- jwt-min: Vault JWT audience minimum (1.17)
+- wrap-history: Vault historical wrapping qualification (0.8)
 
 Claims (full source mapping in the front matter):
 
@@ -3324,36 +3324,36 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- entra: Microsoft Entra documentation, unknown
-- google: Google Cloud Identity pricing, unknown
-- google-docs: Google 2-Step Verification and prompts documentation, unknown
-- okta: Okta pricing, unknown
-- firebase: Firebase documentation, unknown
-- auth0: Auth0 documentation, unknown
-- cognito: Amazon Cognito pricing, unknown
-- clerk: Clerk pricing, unknown
-- workos: WorkOS pricing, unknown
-- supabase: Supabase pricing, unknown
-- github: GitHub OAuth apps, unknown
-- aws-identity: AWS IAM Identity Center and ALB, unknown
-- duo: Duo documentation, unknown
-- authelia-source: Authelia, v4.39.28
-- supabase-docs: Supabase MFA documentation, 10c7379c970ae4d2f30f3158194061cf5ffb8fc5
-- okta-docs: Okta Verify documentation, a4f65eea34b89af7f2f543e43a74a0dfbc709cd0
-- oauth2-proxy: oauth2-proxy, v7.15.4
-- zitadel-source: Zitadel documentation, ab3b44cd743709649e46f7708da2f6a6a70bc227
-- authentik-source: authentik source, version/2026.8.3
-- keycloak-source: Keycloak documentation, 26.7.4
-- ory-kratos: Ory Kratos, v26.2.0
-- ory-hydra: Ory Hydra, v26.2.0
-- google-oidc-docs: Google OpenID Connect documentation, unknown
-- okta-passkey-docs: Okta passkey documentation, a4f65eea34b89af7f2f543e43a74a0dfbc709cd0
-- supabase-rls-docs: Supabase RLS documentation, 10c7379c970ae4d2f30f3158194061cf5ffb8fc5
-- auth0-mfa-source: Auth0 archived MFA documentation, 5258d17ede3eea0ed0e330d15f8921a542564f68
-- entra-conditional: Microsoft Entra Conditional Access documentation, 231747abc59ae3d50c74e215c1cdd592eb980723
-- entra-allowlist: Microsoft Entra token and application access documentation, 231747abc59ae3d50c74e215c1cdd592eb980723
-- github-docs: GitHub Actions documentation, cb051611377a0d2904411e6157154e9b4953d870
-- entra-docs: Microsoft Authenticator documentation, 231747abc59ae3d50c74e215c1cdd592eb980723
+- entra: Microsoft Entra documentation (unknown)
+- google: Google Cloud Identity pricing (unknown)
+- google-docs: Google 2-Step Verification and prompts documentation (unknown)
+- okta: Okta pricing (unknown)
+- firebase: Firebase documentation (unknown)
+- auth0: Auth0 documentation (unknown)
+- cognito: Amazon Cognito pricing (unknown)
+- clerk: Clerk pricing (unknown)
+- workos: WorkOS pricing (unknown)
+- supabase: Supabase pricing (unknown)
+- github: GitHub OAuth apps (unknown)
+- aws-identity: AWS IAM Identity Center and ALB (unknown)
+- duo: Duo documentation (unknown)
+- authelia-source: Authelia (v4.39.28)
+- supabase-docs: Supabase MFA documentation (10c7379c970ae4d2f30f3158194061cf5ffb8fc5)
+- okta-docs: Okta Verify documentation (a4f65eea34b89af7f2f543e43a74a0dfbc709cd0)
+- oauth2-proxy: oauth2-proxy (v7.15.4)
+- zitadel-source: Zitadel documentation (ab3b44cd743709649e46f7708da2f6a6a70bc227)
+- authentik-source: authentik source (version/2026.8.3)
+- keycloak-source: Keycloak documentation (26.7.4)
+- ory-kratos: Ory Kratos (v26.2.0)
+- ory-hydra: Ory Hydra (v26.2.0)
+- google-oidc-docs: Google OpenID Connect documentation (unknown)
+- okta-passkey-docs: Okta passkey documentation (a4f65eea34b89af7f2f543e43a74a0dfbc709cd0)
+- supabase-rls-docs: Supabase RLS documentation (10c7379c970ae4d2f30f3158194061cf5ffb8fc5)
+- auth0-mfa-source: Auth0 archived MFA documentation (5258d17ede3eea0ed0e330d15f8921a542564f68)
+- entra-conditional: Microsoft Entra Conditional Access documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
+- entra-allowlist: Microsoft Entra token and application access documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
+- github-docs: GitHub Actions documentation (cb051611377a0d2904411e6157154e9b4953d870)
+- entra-docs: Microsoft Authenticator documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
 
 Claims (full source mapping in the front matter):
 
@@ -3542,15 +3542,15 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- keycloak: Keycloak documentation, unknown
-- curl: curl documentation, curl-8_23_0
-- keycloak-admin-cli: Keycloak Admin CLI, 26.7.4
-- authentik: authentik source, version/2026.8.3
-- authentik-docs: authentik operational documentation, unknown
-- redis-removal: authentik Redis removal, 2025.10
-- docker-engine: Docker Engine security documentation, unknown
-- nginx: nginx documentation, unknown
-- keycloak-2674: Keycloak source, 26.7.4
+- keycloak: Keycloak documentation (unknown)
+- curl: curl documentation (curl-8_23_0)
+- keycloak-admin-cli: Keycloak Admin CLI (26.7.4)
+- authentik: authentik source (version/2026.8.3)
+- authentik-docs: authentik operational documentation (unknown)
+- redis-removal: authentik Redis removal (2025.10)
+- docker-engine: Docker Engine security documentation (unknown)
+- nginx: nginx documentation (unknown)
+- keycloak-2674: Keycloak source (26.7.4)
 
 Claims (full source mapping in the front matter):
 
@@ -3977,22 +3977,22 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- oauth: OAuth security BCP and PKCE, unknown
-- core: OpenID Connect Core, 1.0
-- discovery: OpenID Connect Discovery, 1.0
-- logout: OpenID Connect RP-Initiated Logout, 1.0
-- google: Google identity documentation, unknown
-- entra: Microsoft Entra documentation, unknown
-- github-2fa: GitHub organization two-factor authentication policy, cb051611377a0d2904411e6157154e9b4953d870
-- github: GitHub OAuth and REST documentation, unknown
-- okta: Okta documentation, unknown
-- openid-client: openid-client, unknown
-- authjs: Auth.js, unknown
-- authlib: Authlib, unknown
-- go-oidc: go-oidc, unknown
-- secret-rfc: RFC 6749 client authentication, unknown
-- docker-build: Docker build documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- owasp-docs: OWASP Cheat Sheet Series, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
+- oauth: OAuth security BCP and PKCE (unknown)
+- core: OpenID Connect Core (1.0)
+- discovery: OpenID Connect Discovery (1.0)
+- logout: OpenID Connect RP-Initiated Logout (1.0)
+- google: Google identity documentation (unknown)
+- entra: Microsoft Entra documentation (unknown)
+- github-2fa: GitHub organization two-factor authentication policy (cb051611377a0d2904411e6157154e9b4953d870)
+- github: GitHub OAuth and REST documentation (unknown)
+- okta: Okta documentation (unknown)
+- openid-client: openid-client (unknown)
+- authjs: Auth.js (unknown)
+- authlib: Authlib (unknown)
+- go-oidc: go-oidc (unknown)
+- secret-rfc: RFC 6749 client authentication (unknown)
+- docker-build: Docker build documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- owasp-docs: OWASP Cheat Sheet Series (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
 
 Claims (full source mapping in the front matter):
 
@@ -4181,14 +4181,14 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- aws: AWS ALB, unknown
-- iap: Google Cloud IAP, unknown
-- azure: Azure authentication, unknown
-- cf: Cloudflare Access, unknown
-- ngrok: ngrok, unknown
-- vercel: Vercel, unknown
-- curl: curl minimum write-out version, 7.75.0
-- vercel-announcement: Vercel production-protection announcement, 2026-09-09
+- aws: AWS ALB (unknown)
+- iap: Google Cloud IAP (unknown)
+- azure: Azure authentication (unknown)
+- cf: Cloudflare Access (unknown)
+- ngrok: ngrok (unknown)
+- vercel: Vercel (unknown)
+- curl: curl minimum write-out version (7.75.0)
+- vercel-announcement: Vercel production-protection announcement (2026-09-09)
 
 Claims (full source mapping in the front matter):
 
@@ -4412,39 +4412,39 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docker-build: Docker build and image history documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- oauth: OAuth client credentials, unknown
-- bearer: Bearer token guidance, unknown
-- jwt: JWT access-token profile, unknown
-- python: Python hmac, unknown
-- node: Node.js crypto, unknown
-- entra: Entra External ID, unknown
-- github: GitHub Actions OIDC, unknown
-- aws: AWS IAM and credential action, unknown
-- google: Google Cloud federation and auth action, unknown
-- azure: Azure federation and login, unknown
-- spiffe: SPIFFE and SPIRE, unknown
-- pki: Certificate revocation, unknown
-- nginx-mtls: nginx mTLS, release-1.28.0
-- apache-mtls: Apache mTLS, 2.4
-- postgres-mtls: PostgreSQL client certificates, 17
-- mysql-mtls: MySQL client certificates, 8.4
-- redis-mtls: Redis TLS client authentication, 7.4.2
-- rabbitmq-mtls: RabbitMQ TLS client authentication, 3.13
-- mosquitto-mtls: Mosquitto TLS client authentication, v2.0.21
-- gitleaks: Gitleaks scan commands, v8.19.0
-- vault: HashiCorp Vault, v1.20.0
-- infisical: Infisical, v0.165.16
-- doppler-cli: Doppler CLI, 3.76.6
-- owasp-password: OWASP Password Storage Cheat Sheet, 1a78ae3e443cef156e947f87e892efbcc62876ee
-- owasp-secrets: OWASP Secrets Management Cheat Sheet, 1a78ae3e443cef156e947f87e892efbcc62876ee
-- aws-store: AWS Secrets Manager overview, unknown
-- google-store: Google Cloud Secret Manager overview, unknown
-- azure-store: Azure Key Vault overview, unknown
-- openbao-release: OpenBao README, v2.7.1
-- openbao-site: OpenBao website, unknown
-- onepassword: 1Password Secrets Automation, unknown
-- bitwarden: Bitwarden Secrets Manager, unknown
+- docker-build: Docker build and image history documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- oauth: OAuth client credentials (unknown)
+- bearer: Bearer token guidance (unknown)
+- jwt: JWT access-token profile (unknown)
+- python: Python hmac (unknown)
+- node: Node.js crypto (unknown)
+- entra: Entra External ID (unknown)
+- github: GitHub Actions OIDC (unknown)
+- aws: AWS IAM and credential action (unknown)
+- google: Google Cloud federation and auth action (unknown)
+- azure: Azure federation and login (unknown)
+- spiffe: SPIFFE and SPIRE (unknown)
+- pki: Certificate revocation (unknown)
+- nginx-mtls: nginx mTLS (release-1.28.0)
+- apache-mtls: Apache mTLS (2.4)
+- postgres-mtls: PostgreSQL client certificates (17)
+- mysql-mtls: MySQL client certificates (8.4)
+- redis-mtls: Redis TLS client authentication (7.4.2)
+- rabbitmq-mtls: RabbitMQ TLS client authentication (3.13)
+- mosquitto-mtls: Mosquitto TLS client authentication (v2.0.21)
+- gitleaks: Gitleaks scan commands (v8.19.0)
+- vault: HashiCorp Vault (v1.20.0)
+- infisical: Infisical (v0.165.16)
+- doppler-cli: Doppler CLI (3.76.6)
+- owasp-password: OWASP Password Storage Cheat Sheet (1a78ae3e443cef156e947f87e892efbcc62876ee)
+- owasp-secrets: OWASP Secrets Management Cheat Sheet (1a78ae3e443cef156e947f87e892efbcc62876ee)
+- aws-store: AWS Secrets Manager overview (unknown)
+- google-store: Google Cloud Secret Manager overview (unknown)
+- azure-store: Azure Key Vault overview (unknown)
+- openbao-release: OpenBao README (v2.7.1)
+- openbao-site: OpenBao website (unknown)
+- onepassword: 1Password Secrets Automation (unknown)
+- bitwarden: Bitwarden Secrets Manager (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -4604,15 +4604,15 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- oauth: oauth2-proxy, v7.15.4
-- authelia: Authelia, v4.39.28
-- traefik: Traefik, unknown
-- go: Go net.Listen, unknown
-- pomerium: Pomerium, unknown
-- curl: curl minimum write-out version, 7.75.0
-- oauth-rolling: oauth2-proxy documentation (rolling), unknown
-- authelia-rolling: Authelia documentation (rolling), unknown
-- pomerium-docs: Pomerium policy documentation, 691714e2f0ae74fab47412275e8b64b68acdc0d3
+- oauth: oauth2-proxy (v7.15.4)
+- authelia: Authelia (v4.39.28)
+- traefik: Traefik (unknown)
+- go: Go net.Listen (unknown)
+- pomerium: Pomerium (unknown)
+- curl: curl minimum write-out version (7.75.0)
+- oauth-rolling: oauth2-proxy documentation (rolling) (unknown)
+- authelia-rolling: Authelia documentation (rolling) (unknown)
+- pomerium-docs: Pomerium policy documentation (691714e2f0ae74fab47412275e8b64b68acdc0d3)
 
 Claims (full source mapping in the front matter):
 
@@ -4851,20 +4851,20 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- apache: Apache HTTP Server, 2.4
-- policy: Mozilla TLS policy, unknown
-- tls-min: Apache TLSv1.3 minimum, 2.4.36+
-- sni-min: Apache per-vhost protocol minimum, 2.4.42+
-- openssl: OpenSSL qualification, 1.1.1+
-- chain-min: Apache chain-file minimum, 2.4.8
-- certbot: Certbot Apache installation, v2.3.0
-- debian-packaging: Debian apache2 packaging, 2.4.69-1
-- fedora-packaging: Fedora f44 httpd packaging, commit 6df70d39
-- htpasswd: httpd htpasswd, 2.4.69
-- owasp: OWASP password storage cheat sheet, commit 72865b1e
-- authelia: Authelia proxy support, v4.39.28
-- cloudflare-access: Cloudflare Access documentation, commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- openidc: mod_auth_openidc, v2.4.20.3
+- apache: Apache HTTP Server (2.4)
+- policy: Mozilla TLS policy (unknown)
+- tls-min: Apache TLSv1.3 minimum (2.4.36+)
+- sni-min: Apache per-vhost protocol minimum (2.4.42+)
+- openssl: OpenSSL qualification (1.1.1+)
+- chain-min: Apache chain-file minimum (2.4.8)
+- certbot: Certbot Apache installation (v2.3.0)
+- debian-packaging: Debian apache2 packaging (2.4.69-1)
+- fedora-packaging: Fedora f44 httpd packaging (commit 6df70d39)
+- htpasswd: httpd htpasswd (2.4.69)
+- owasp: OWASP password storage cheat sheet (commit 72865b1e)
+- authelia: Authelia proxy support (v4.39.28)
+- cloudflare-access: Cloudflare Access documentation (commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- openidc: mod_auth_openidc (v2.4.20.3)
 
 Claims (full source mapping in the front matter):
 
@@ -5062,17 +5062,17 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- ng: nginx documentation, unknown
-- policy: Mozilla TLS policy, unknown
-- certbot: Certbot nginx configurator, v2.3.0
-- hsts: HSTS specification, RFC 6797
-- nginx-source: nginx source, release-1.26.3
-- authelia: Authelia nginx integration, v4.39.28
-- oauth2-proxy: oauth2-proxy nginx integration, v7.15.4
-- cloudflare-access: Cloudflare Access web applications, unknown
-- httpd: Apache httpd source, 2.4.69
-- debian-apache2: Debian apache2 packaging, 2.4.69-1
-- owasp: OWASP Password Storage Cheat Sheet, commit 72865b1e
+- ng: nginx documentation (unknown)
+- policy: Mozilla TLS policy (unknown)
+- certbot: Certbot nginx configurator (v2.3.0)
+- hsts: HSTS specification (RFC 6797)
+- nginx-source: nginx source (release-1.26.3)
+- authelia: Authelia nginx integration (v4.39.28)
+- oauth2-proxy: oauth2-proxy nginx integration (v7.15.4)
+- cloudflare-access: Cloudflare Access web applications (unknown)
+- httpd: Apache httpd source (2.4.69)
+- debian-apache2: Debian apache2 packaging (2.4.69-1)
+- owasp: OWASP Password Storage Cheat Sheet (commit 72865b1e)
 
 Claims (full source mapping in the front matter):
 
@@ -5352,20 +5352,20 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- tls: lighttpd TLS minimum, 1.4.56
-- key: lighttpd separate-key minimum, 1.4.53
-- redirect: lighttpd redirect default transition, 1.4.75
-- docs: lighttpd documentation, unknown
-- modules-source: lighttpd module loader source, 1.4.75
-- authn-source: lighttpd file authentication source, 1.4.75
-- htpasswd-tool: Apache htpasswd manual, 2.4
-- debian-package: Debian apache2-utils package, trixie
-- authelia: Authelia proxy support, v4.39.28
-- cloudflare-access: Cloudflare Access documentation, commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- fedora-package: Fedora httpd-tools package, unknown
-- lighttpd-verify-source: lighttpd verify source, 1.4.75
-- systemd-reload: systemd reload manual, v262
-- apache-vhosts: Apache virtual-host source, 2.4.69
+- tls: lighttpd TLS minimum (1.4.56)
+- key: lighttpd separate-key minimum (1.4.53)
+- redirect: lighttpd redirect default transition (1.4.75)
+- docs: lighttpd documentation (unknown)
+- modules-source: lighttpd module loader source (1.4.75)
+- authn-source: lighttpd file authentication source (1.4.75)
+- htpasswd-tool: Apache htpasswd manual (2.4)
+- debian-package: Debian apache2-utils package (trixie)
+- authelia: Authelia proxy support (v4.39.28)
+- cloudflare-access: Cloudflare Access documentation (commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- fedora-package: Fedora httpd-tools package (unknown)
+- lighttpd-verify-source: lighttpd verify source (1.4.75)
+- systemd-reload: systemd reload manual (v262)
+- apache-vhosts: Apache virtual-host source (2.4.69)
 
 Claims (full source mapping in the front matter):
 
@@ -5547,17 +5547,17 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- admin: Caddy admin source, v2.11.4
-- tags: Official image tag map, d82ca5102fa6735be29d5e1fc6ce03af77eb091e
-- images: Caddy Docker source, fba2853501d36e8a72f946ac8cb7ff64d07e48f2
-- dist: Default Caddyfile source, 33ae08ff08d168572df2956ed14fbc4949880d94
-- docker-network: Docker networking documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- docs-rolling: Caddy documentation (rolling), unknown
-- letsencrypt-notice: Let's Encrypt expiration-email notice, 2025
-- service: caddyserver/dist service unit, 33ae08ff08d168572df2956ed14fbc4949880d94
-- systemd: systemd manual, v262
-- cloudflare: Cloudflare docs, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- ratelimit-source: caddy-ratelimit source, 5625512f24f6f59d6f64fb3aafe5eecff0b286db
+- admin: Caddy admin source (v2.11.4)
+- tags: Official image tag map (d82ca5102fa6735be29d5e1fc6ce03af77eb091e)
+- images: Caddy Docker source (fba2853501d36e8a72f946ac8cb7ff64d07e48f2)
+- dist: Default Caddyfile source (33ae08ff08d168572df2956ed14fbc4949880d94)
+- docker-network: Docker networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- docs-rolling: Caddy documentation (rolling) (unknown)
+- letsencrypt-notice: Let's Encrypt expiration-email notice (2025)
+- service: caddyserver/dist service unit (33ae08ff08d168572df2956ed14fbc4949880d94)
+- systemd: systemd manual (v262)
+- cloudflare: Cloudflare docs (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- ratelimit-source: caddy-ratelimit source (5625512f24f6f59d6f64fb3aafe5eecff0b286db)
 
 Claims (full source mapping in the front matter):
 
@@ -5571,7 +5571,7 @@ Claims (full source mapping in the front matter):
 - basic (REASONED; docs-rolling): basic_auth uses hashed passwords from caddy hash-password; it was named basicauth before v2.8.0 and remains single-factor.
 - path-auth (REASONED; docs-rolling): Protect /admin and /admin/* together: path matches are exact and multiple paths are OR'ed.
 - mfa (REASONED; docs-rolling, cloudflare): forward_auth (Caddy 2.5+) can delegate human authentication to Authelia; Cloudflare Access is a proposed layer that enforces MFA when its governing Access setting (policy over application over organization) requires it.
-- access-origin (REASONED; docs-rolling, cloudflare): Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's &#96;access&#96; setting has &#96;cloudflared&#96; do. Caddy still answers directly on 443.
+- access-origin (REASONED; docs-rolling, cloudflare): Cloudflare Access can require MFA when configured; the guide reasons that direct origin ingress can bypass Access, so restrict it; validate the Access JWT at the origin, which a tunnel's `access` setting has `cloudflared` do. Caddy still answers directly on 443.
 - body-limit (REASONED; docs-rolling): Add request_body max_size 10MB inside the existing authenticated site; replacing the site without basic_auth makes it public.
 - rate-limit (REASONED; docs-rolling, ratelimit-source): The standard build has no rate_limit directive; use a compiled community caddy-ratelimit module or an upstream layer.
 - admin-bind (REASONED; admin, docs-rolling): The admin API defaults to localhost:2019 as of v2.11.4; never publish it or reverse-proxy to it.
@@ -5805,12 +5805,12 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- haproxy: HAProxy, 3.0
-- hsts: HAProxy http-after-response minimum, 2.2+
-- docs: Supporting documentation, unknown
-- openssl-cli: OpenSSL password command, 3.0
-- certbot-source: Certbot deploy hook documentation, v2.3.0
-- cloudflare-source: Cloudflare Access MFA documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
+- haproxy: HAProxy (3.0)
+- hsts: HAProxy http-after-response minimum (2.2+)
+- docs: Supporting documentation (unknown)
+- openssl-cli: OpenSSL password command (3.0)
+- certbot-source: Certbot deploy hook documentation (v2.3.0)
+- cloudflare-source: Cloudflare Access MFA documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
 
 Claims (full source mapping in the front matter):
 
@@ -6098,17 +6098,17 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- traefik-docs: Traefik documentation (rolling), unknown
-- docker: Traefik Docker provider, unknown
-- swarm: Traefik Swarm provider, unknown
-- middleware: Traefik middleware documentation, unknown
-- curl: curl write-out minimum, 7.75.0
-- traefik-v3: Traefik v3 documentation, v3.5
-- traefik-source: Traefik ACME storage source, v3.5.0
-- httpd-source: Apache httpd htpasswd source, 2.4.69
-- owasp-source: OWASP Password Storage Cheat Sheet, 72865b1e3b5754246a101778dc00b37f9c233373
-- cloudflare-source: Cloudflare Access MFA documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- traefik-basicauth-source: Traefik BasicAuth source, v3.5.0
+- traefik-docs: Traefik documentation (rolling) (unknown)
+- docker: Traefik Docker provider (unknown)
+- swarm: Traefik Swarm provider (unknown)
+- middleware: Traefik middleware documentation (unknown)
+- curl: curl write-out minimum (7.75.0)
+- traefik-v3: Traefik v3 documentation (v3.5)
+- traefik-source: Traefik ACME storage source (v3.5.0)
+- httpd-source: Apache httpd htpasswd source (2.4.69)
+- owasp-source: OWASP Password Storage Cheat Sheet (72865b1e3b5754246a101778dc00b37f9c233373)
+- cloudflare-source: Cloudflare Access MFA documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- traefik-basicauth-source: Traefik BasicAuth source (v3.5.0)
 
 Claims (full source mapping in the front matter):
 
@@ -6409,24 +6409,24 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- node: Node.js documentation, unknown
-- linux-ip: Linux man-pages ip(7), 6.19
-- linux-capabilities: Linux man-pages capabilities(7), 6.19
-- express: Express proxy documentation, unknown
-- session: express-session documentation, unknown
-- helmet: Helmet documentation, unknown
-- rate: express-rate-limit minimum, v8
-- otplib: otplib, v12.0.1
-- qrcode: qrcode, v1.5.4
-- node-v24: Node.js API documentation, v24.22.0
-- render: Render documentation, unknown
-- heroku: Heroku documentation, unknown
-- fly-pinned: Fly.io pinned documentation, 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9
-- railway: Railway documentation, 72354493198302677fb6be6c692dd75c64cae2c6
-- owasp: OWASP password storage cheat sheet, commit 72865b1e
-- bcrypt: node.bcrypt.js, v6.0.0
-- argon2: node-argon2, v0.45.1
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
+- node: Node.js documentation (unknown)
+- linux-ip: Linux man-pages ip(7) (6.19)
+- linux-capabilities: Linux man-pages capabilities(7) (6.19)
+- express: Express proxy documentation (unknown)
+- session: express-session documentation (unknown)
+- helmet: Helmet documentation (unknown)
+- rate: express-rate-limit minimum (v8)
+- otplib: otplib (v12.0.1)
+- qrcode: qrcode (v1.5.4)
+- node-v24: Node.js API documentation (v24.22.0)
+- render: Render documentation (unknown)
+- heroku: Heroku documentation (unknown)
+- fly-pinned: Fly.io pinned documentation (2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9)
+- railway: Railway documentation (72354493198302677fb6be6c692dd75c64cae2c6)
+- owasp: OWASP password storage cheat sheet (commit 72865b1e)
+- bcrypt: node.bcrypt.js (v6.0.0)
+- argon2: node-argon2 (v0.45.1)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
 
 Claims (full source mapping in the front matter):
 
@@ -6655,31 +6655,31 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- python: Python http.server documentation, 3.14.4
-- gunicorn: Gunicorn documentation, unknown
-- uvicorn: Uvicorn source, 5ac6265a01ff6dcadb0e4250152c3deaf8a168a9
-- django: Django documentation, 6.1
-- argon: argon2-cffi documentation, unknown
-- werkzeug: Werkzeug documentation, unknown
-- fastapi: FastAPI documentation, unknown
-- oidc-stub: FastAPI OpenIdConnect source, 31bbb380748ccead62fc0f42dbf4273f11dadccf
-- python-pin: Python http.server source, v3.14.4
-- stdlib-docs: Python standard library documentation, 3.14
-- pyotp: PyOTP, v2.9.0
-- qrcode: qrcode, v8.2
-- django-otp: django-otp, 1.6.1
-- requests: Requests, v2.32.3
-- slowapi: slowapi source, v0.1.10
-- httpx: HTTPX source and documentation, 0.28.1
-- cpython-ssl: CPython ssl source and documentation, v3.14.8
-- openssl: OpenSSL documentation, openssl-4.0.3
-- render: Render documentation, unknown
-- heroku: Heroku documentation, unknown
-- fly-pinned: Fly.io pinned documentation, 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9
-- railway: Railway documentation, 72354493198302677fb6be6c692dd75c64cae2c6
-- argon-api: argon2-cffi API example, 25.1.0
-- bcrypt-api: Python bcrypt API example, 2b4ba9ac84df972e8e81311d09559af8dc82ef33
-- cpython-secrets: CPython secrets documentation and source, v3.14.8
+- python: Python http.server documentation (3.14.4)
+- gunicorn: Gunicorn documentation (unknown)
+- uvicorn: Uvicorn source (5ac6265a01ff6dcadb0e4250152c3deaf8a168a9)
+- django: Django documentation (6.1)
+- argon: argon2-cffi documentation (unknown)
+- werkzeug: Werkzeug documentation (unknown)
+- fastapi: FastAPI documentation (unknown)
+- oidc-stub: FastAPI OpenIdConnect source (31bbb380748ccead62fc0f42dbf4273f11dadccf)
+- python-pin: Python http.server source (v3.14.4)
+- stdlib-docs: Python standard library documentation (3.14)
+- pyotp: PyOTP (v2.9.0)
+- qrcode: qrcode (v8.2)
+- django-otp: django-otp (1.6.1)
+- requests: Requests (v2.32.3)
+- slowapi: slowapi source (v0.1.10)
+- httpx: HTTPX source and documentation (0.28.1)
+- cpython-ssl: CPython ssl source and documentation (v3.14.8)
+- openssl: OpenSSL documentation (openssl-4.0.3)
+- render: Render documentation (unknown)
+- heroku: Heroku documentation (unknown)
+- fly-pinned: Fly.io pinned documentation (2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9)
+- railway: Railway documentation (72354493198302677fb6be6c692dd75c64cae2c6)
+- argon-api: argon2-cffi API example (25.1.0)
+- bcrypt-api: Python bcrypt API example (2b4ba9ac84df972e8e81311d09559af8dc82ef33)
+- cpython-secrets: CPython secrets documentation and source (v3.14.8)
 
 Claims (full source mapping in the front matter):
 
@@ -6886,32 +6886,32 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docker-build: Docker build and image history documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- engine: Docker Engine networking, unknown
-- engine-pinned: Docker Engine networking documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- moby-unit: Moby Docker service unit, v28.3.3
-- systemd-unit: systemd unit ordering, v262
-- boundary: Docker Engine minimum boundary, 28.0
-- compose: Compose networking, unknown
-- git-ignore: Git ignore rules, v2.49.0
-- docker-workload: Docker workload documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- reload: Docker firewalld reload fix, 28.3.3
-- reload-advisory: Docker firewalld reload advisory, unknown
-- postgresql: PostgreSQL, 17
-- caddy-image: Caddy image, fba2853501d36e8a72f946ac8cb7ff64d07e48f2
-- caddy: Caddy, v2.11.4
-- nginx-auth: nginx authentication source, release-1.26.3
-- traefik-auth: Traefik authentication source, v3.5.0
-- cloudflare-access: Cloudflare Access documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- authelia-proxy: Authelia proxy integration, v4.39.28
-- aws-firewall: AWS security group rules, unknown
-- gcp-firewall: Google Cloud VPC firewall rules, unknown
-- azure-firewall: Azure network security group rules, unknown
-- cloudflared-image: cloudflared container image, 2026.9.3
-- cloudflare-tunnel: Cloudflare Tunnel documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- compose-pinned: Docker Compose networking documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- tailscale-entry: Tailscale entry documentation, unknown
-- self-signed-entry: OpenSSL documentation (rolling), unknown
+- docker-build: Docker build and image history documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- engine: Docker Engine networking (unknown)
+- engine-pinned: Docker Engine networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- moby-unit: Moby Docker service unit (v28.3.3)
+- systemd-unit: systemd unit ordering (v262)
+- boundary: Docker Engine minimum boundary (28.0)
+- compose: Compose networking (unknown)
+- git-ignore: Git ignore rules (v2.49.0)
+- docker-workload: Docker workload documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- reload: Docker firewalld reload fix (28.3.3)
+- reload-advisory: Docker firewalld reload advisory (unknown)
+- postgresql: PostgreSQL (17)
+- caddy-image: Caddy image (fba2853501d36e8a72f946ac8cb7ff64d07e48f2)
+- caddy: Caddy (v2.11.4)
+- nginx-auth: nginx authentication source (release-1.26.3)
+- traefik-auth: Traefik authentication source (v3.5.0)
+- cloudflare-access: Cloudflare Access documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- authelia-proxy: Authelia proxy integration (v4.39.28)
+- aws-firewall: AWS security group rules (unknown)
+- gcp-firewall: Google Cloud VPC firewall rules (unknown)
+- azure-firewall: Azure network security group rules (unknown)
+- cloudflared-image: cloudflared container image (2026.9.3)
+- cloudflare-tunnel: Cloudflare Tunnel documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- compose-pinned: Docker Compose networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- tailscale-entry: Tailscale entry documentation (unknown)
+- self-signed-entry: OpenSSL documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -6925,7 +6925,7 @@ Claims (full source mapping in the front matter):
 - upstream (REASONED; engine, aws-firewall, gcp-firewall, azure-firewall): Use an upstream security group or network ACL for routable publications and boot-time protection. AWS security groups, Google Cloud VPC firewall rules and Azure NSGs have rolling sources; network-ACL configuration and boot-time independence remain this guide's assessment.
 - docker-user (REASONED; engine): On the iptables backend, DOCKER-USER precedes Docker accepts; the nftables backend has no such chain. Match NEW traffic from outside the allowed subnet.
 - dnat (REASONED; engine): DOCKER-USER sees post-DNAT container destinations; conntrack original destination port and ORIGINAL direction scope a published service.
-- ipv6 (REASONED; engine, engine-pinned): As this guide's reasoning, native IPv6 forwarding needs ip6tables; Docker documents IPv6-to-IPv4 userland-proxy mapping when no host IP is given, the bridge is IPv4-only and &#96;--userland-proxy=true&#96; (the default), and places DOCKER-USER in FORWARD. As this guide's reasoning, the proxy path terminates on host INPUT and bypasses DOCKER-USER.
+- ipv6 (REASONED; engine, engine-pinned): As this guide's reasoning, native IPv6 forwarding needs ip6tables; Docker documents IPv6-to-IPv4 userland-proxy mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default), and places DOCKER-USER in FORWARD. As this guide's reasoning, the proxy path terminates on host INPUT and bypasses DOCKER-USER.
 - proxy-path (REASONED; engine, engine-pinned): Close the userland-proxy path with an explicit publish address, disabled userland proxy or IPv6 INPUT restrictions; test both address families and sources. Docker documents the explicit-address option and conditional userland-proxy mapping; the INPUT restriction and probes are this guide's reasoning and advice.
 - persistence (REASONED; engine, engine-pinned, moby-unit, systemd-unit): As this guide's advice, persist only DOCKER-USER rules after Docker startup, avoiding blanket dynamic-chain saves. Moby identifies docker.service and systemd documents After= ordering; as this guide's assessment, rule non-persistence, the boot-time gap, what iptables-persistent captures and its potential to break container networking have no direct source here.
 - tls (REASONED; compose, caddy-image, caddy): Example caddy:2 publishes 80:80 and 443:443, mounts Caddyfile read-only and persists data/config, proxying app:3000 with automatic certificates.
@@ -7110,23 +7110,23 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- kubernetes: Kubernetes documentation, unknown
-- kubelet: Kubernetes kubelet/kubeadm source, v1.37.1
-- envoy: Envoy Gateway, v1.9.1
-- gateway: Gateway API documentation, unknown
-- cert-manager: cert-manager Gateway support minimum, 1.15
-- apache: Apache htpasswd documentation, unknown
-- authelia: Authelia documentation, unknown
-- eks: Amazon EKS documentation, unknown
-- eks-ami: Amazon EKS AMI bootstrap, 6caf8311a3c6a8da71ac7e5e83f9c2e06287039a
-- gke: GKE documentation, unknown
-- gke-min: GKE new-cluster read-only-port boundary, 1.32
-- aks: AKS documentation, unknown
-- curl: curl documentation, unknown
-- nmap: Nmap documentation, unknown
-- traefik: Traefik documentation, unknown
-- cilium: Cilium documentation, unknown
-- envoy-rolling: Envoy Gateway documentation (rolling), unknown
+- kubernetes: Kubernetes documentation (unknown)
+- kubelet: Kubernetes kubelet/kubeadm source (v1.37.1)
+- envoy: Envoy Gateway (v1.9.1)
+- gateway: Gateway API documentation (unknown)
+- cert-manager: cert-manager Gateway support minimum (1.15)
+- apache: Apache htpasswd documentation (unknown)
+- authelia: Authelia documentation (unknown)
+- eks: Amazon EKS documentation (unknown)
+- eks-ami: Amazon EKS AMI bootstrap (6caf8311a3c6a8da71ac7e5e83f9c2e06287039a)
+- gke: GKE documentation (unknown)
+- gke-min: GKE new-cluster read-only-port boundary (1.32)
+- aks: AKS documentation (unknown)
+- curl: curl documentation (unknown)
+- nmap: Nmap documentation (unknown)
+- traefik: Traefik documentation (unknown)
+- cilium: Cilium documentation (unknown)
+- envoy-rolling: Envoy Gateway documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -7618,15 +7618,15 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- argo: Argo CD v3.5.3 source, c9c369efcc5b2a0bd720803f8d14a1c3eaddf579
-- dex: Dex v2.45.1 source, v2.45.1
-- redis-image: docker-library-redis v8.2.3 source, bcbc692165ce2241e194035041c5b5e01d2e1a5f
-- redis-source: Redis 8.2.3 source, 8.2.3
-- argo-docs: Argo CD documentation, unknown
-- curl: curl, curl-8_14_1
-- flux: Flux documentation, unknown
-- flux-oidc: Flux OIDC introduction, v2.9
-- python: Python documentation, unknown
+- argo: Argo CD v3.5.3 source (c9c369efcc5b2a0bd720803f8d14a1c3eaddf579)
+- dex: Dex v2.45.1 source (v2.45.1)
+- redis-image: docker-library-redis v8.2.3 source (bcbc692165ce2241e194035041c5b5e01d2e1a5f)
+- redis-source: Redis 8.2.3 source (8.2.3)
+- argo-docs: Argo CD documentation (unknown)
+- curl: curl (curl-8_14_1)
+- flux: Flux documentation (unknown)
+- flux-oidc: Flux OIDC introduction (v2.9)
+- python: Python documentation (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -8157,12 +8157,12 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- github: GitHub Actions documentation, unknown
-- github-api: GitHub REST API, 2026-03-10
-- gitlab: GitLab rolling documentation, unknown
-- python: Python tomllib minimum, 3.11
-- docker: Docker Engine documentation, unknown
-- aws: AWS EC2 documentation, unknown
+- github: GitHub Actions documentation (unknown)
+- github-api: GitHub REST API (2026-03-10)
+- gitlab: GitLab rolling documentation (unknown)
+- python: Python tomllib minimum (3.11)
+- docker: Docker Engine documentation (unknown)
+- aws: AWS EC2 documentation (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -8491,20 +8491,20 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- adapter: SvelteKit adapter-node, @sveltejs/adapter-node@5.5.7
-- svelte: SvelteKit documentation, unknown
-- svelte-kit-pin: SvelteKit routing and hooks documentation, @sveltejs/kit@2.70.3
-- h3-pin: h3 request and Node adapter source at release commit, 1.15.3
-- node-http: Node HTTP documentation, v22.22.1
-- nuxt-lock: Nuxt lockfile, v4.0.0
-- nuxt: Nuxt documentation, 4.x
-- vite-pin: Vite bind source, v8.3.1
-- vite: Vite documentation, unknown
-- grep: GNU grep, unknown
-- nuxt-output: Nuxt output source, v4.0.0
-- nitro-output: Nitro output defaults, 2.12.0
-- nitro-node: nitropack 2.12.0 source, 65e514d873da1d1d9edd4d9576d48d90b13e0fac
-- nitro-output-docs: Nitro documentation (rolling), unknown
+- adapter: SvelteKit adapter-node (@sveltejs/adapter-node@5.5.7)
+- svelte: SvelteKit documentation (unknown)
+- svelte-kit-pin: SvelteKit routing and hooks documentation (@sveltejs/kit@2.70.3)
+- h3-pin: h3 request and Node adapter source at release commit (1.15.3)
+- node-http: Node HTTP documentation (v22.22.1)
+- nuxt-lock: Nuxt lockfile (v4.0.0)
+- nuxt: Nuxt documentation (4.x)
+- vite-pin: Vite bind source (v8.3.1)
+- vite: Vite documentation (unknown)
+- grep: GNU grep (unknown)
+- nuxt-output: Nuxt output source (v4.0.0)
+- nitro-output: Nitro output defaults (2.12.0)
+- nitro-node: nitropack 2.12.0 source (65e514d873da1d1d9edd4d9576d48d90b13e0fac)
+- nitro-output-docs: Nitro documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -8515,8 +8515,8 @@ Claims (full source mapping in the front matter):
 - csrf-trust (REASONED; svelte): csrf.trustedOrigins defaults empty; list specific form origins, with wildcard trust discouraged.
 - svelte-public (REASONED; svelte): PUBLIC_ via env.publicPrefix exposes static public env values at build; keep secrets out.
 - svelte-private (REASONED; svelte): Private env modules, .server.js and lib/server are server-only; client import chains, including dynamic imports, fail builds.
-- svelte-routes (REASONED; svelte, svelte-kit-pin): Pinned load docs and the SvelteKit client and server paths show layout &#96;load&#96; does not run on every request and layout/page &#96;load&#96; run concurrently unless a child calls &#96;await parent()&#96;; routing docs say &#96;+layout&#96; has no effect on &#96;+server.js&#96;; form-actions docs and page dispatch show actions are exported from &#96;+page.server.js&#96; and run before page loads. Guide advice: do not rely on a layout guard to protect a sibling page load, form action or directly reached endpoint; check the session before protected work in each.
-- svelte-handle (REASONED; svelte, svelte-kit-pin, adapter): Pinned hooks docs describe &#96;handle&#96; for SvelteKit server requests, including prerendering; runtime source calls it after checks that can reject requests before the hook and lets it return before &#96;resolve&#96;. In adapter-node 5.5.7, client assets and already prerendered pages are served before SSR, so they do not reach &#96;handle&#96; through that adapter. For client-initiated remote function requests, runtime source takes the calling-page path and search from request headers and resolves &#96;route&#96; and &#96;params&#96; from that path; pinned remote-functions docs describe the same fields on &#96;RequestEvent&#96; inside remote functions, and both docs warn never to use these request-derived fields to authorize data access. Guide advice: use &#96;handle&#96; to block unauthorized SvelteKit requests that reach it; a redirect-only or &#96;event.locals&#96;-only hook leaves directly reached endpoints and form actions open unless they check the session; do not rely on calling-page fields alone, and authorize each specific resource where served because a session check alone does not authorize it.
+- svelte-routes (REASONED; svelte, svelte-kit-pin): Pinned load docs and the SvelteKit client and server paths show layout `load` does not run on every request and layout/page `load` run concurrently unless a child calls `await parent()`; routing docs say `+layout` has no effect on `+server.js`; form-actions docs and page dispatch show actions are exported from `+page.server.js` and run before page loads. Guide advice: do not rely on a layout guard to protect a sibling page load, form action or directly reached endpoint; check the session before protected work in each.
+- svelte-handle (REASONED; svelte, svelte-kit-pin, adapter): Pinned hooks docs describe `handle` for SvelteKit server requests, including prerendering; runtime source calls it after checks that can reject requests before the hook and lets it return before `resolve`. In adapter-node 5.5.7, client assets and already prerendered pages are served before SSR, so they do not reach `handle` through that adapter. For client-initiated remote function requests, runtime source takes the calling-page path and search from request headers and resolves `route` and `params` from that path; pinned remote-functions docs describe the same fields on `RequestEvent` inside remote functions, and both docs warn never to use these request-derived fields to authorize data access. Guide advice: use `handle` to block unauthorized SvelteKit requests that reach it; a redirect-only or `event.locals`-only hook leaves directly reached endpoints and form actions open unless they check the session; do not rely on calling-page fields alone, and authorize each specific resource where served because a session check alone does not authorize it.
 - nuxt-handlers (REASONED; nuxt): Nuxt auto-registers server/api, server/routes and middleware; middleware runs first, but context.auth alone enforces nothing. Throw/end requests or check each handler.
 - nuxt-auth (REASONED; nuxt): Nuxt ships no built-in authentication; enforce access server-side, not with client redirects.
 - nuxt-private (REASONED; nuxt): Direct runtimeConfig keys are server-only with NUXT_ overrides; rendering or passing to useState can disclose them.
@@ -8708,16 +8708,16 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docker: Docker documentation, unknown
-- docker-daemon: Docker daemon security documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- compose-2324: Docker Compose source and reference, v2.32.4
-- procfs-619: Linux process status and capabilities manuals, man-pages-6.19
-- kubernetes-website: Kubernetes process namespace documentation, 47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8
-- kubernetes: Kubernetes documentation, unknown
-- kubernetes-134: Kubernetes Pod Security Admission, 1.34
-- kubectl-134: kubectl source, v1.34.0
-- rfc7396: JSON Merge Patch, RFC 7396
-- busybox-1361: BusyBox source, 1_36_1
+- docker: Docker documentation (unknown)
+- docker-daemon: Docker daemon security documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- compose-2324: Docker Compose source and reference (v2.32.4)
+- procfs-619: Linux process status and capabilities manuals (man-pages-6.19)
+- kubernetes-website: Kubernetes process namespace documentation (47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8)
+- kubernetes: Kubernetes documentation (unknown)
+- kubernetes-134: Kubernetes Pod Security Admission (1.34)
+- kubectl-134: kubectl source (v1.34.0)
+- rfc7396: JSON Merge Patch (RFC 7396)
+- busybox-1361: BusyBox source (1_36_1)
 
 Claims (full source mapping in the front matter):
 
@@ -8950,15 +8950,15 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- next: Next.js documentation, unknown
-- next-pin: Next.js listener source, v16.3.6
-- node: Node.js listener source, v22.22.1
-- commander: Commander, 12.1.0
-- authjs: Auth.js, unknown
-- better: Better Auth, unknown
-- vercel: Vercel documentation, unknown
-- curl: curl, unknown
-- grep: GNU grep, unknown
+- next: Next.js documentation (unknown)
+- next-pin: Next.js listener source (v16.3.6)
+- node: Node.js listener source (v22.22.1)
+- commander: Commander (12.1.0)
+- authjs: Auth.js (unknown)
+- better: Better Auth (unknown)
+- vercel: Vercel documentation (unknown)
+- curl: curl (unknown)
+- grep: GNU grep (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -9251,23 +9251,23 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- http: Go net/http documentation, unknown
-- tls: Go crypto/tls documentation, unknown
-- x509: Go certificate-store qualification, 1.27
-- bcrypt: Go bcrypt documentation, unknown
-- argon: Go Argon2 documentation, unknown
-- rate: Go rate documentation, unknown
-- oidc: go-oidc documentation, v3
-- pprof: Go pprof documentation, unknown
-- headers: Go header-count qualification, 1.27
-- deadlines: Go per-request deadline minimum, 1.20+
-- expvar: Go expvar documentation, unknown
-- linux: Linux port-threshold documentation, unknown
-- request: Go Request.Host source, 1.27.0
-- otp: pquerna/otp, v1.5.0
-- go-env: Go environment source, go1.27.0
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- authelia-source: Authelia source, v4.39.28
+- http: Go net/http documentation (unknown)
+- tls: Go crypto/tls documentation (unknown)
+- x509: Go certificate-store qualification (1.27)
+- bcrypt: Go bcrypt documentation (unknown)
+- argon: Go Argon2 documentation (unknown)
+- rate: Go rate documentation (unknown)
+- oidc: go-oidc documentation (v3)
+- pprof: Go pprof documentation (unknown)
+- headers: Go header-count qualification (1.27)
+- deadlines: Go per-request deadline minimum (1.20+)
+- expvar: Go expvar documentation (unknown)
+- linux: Linux port-threshold documentation (unknown)
+- request: Go Request.Host source (1.27.0)
+- otp: pquerna/otp (v1.5.0)
+- go-env: Go environment source (go1.27.0)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- authelia-source: Authelia source (v4.39.28)
 
 Claims (full source mapping in the front matter):
 
@@ -9528,18 +9528,18 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: ASP.NET Core documentation, .NET 10
-- rate-min: ASP.NET Core rate-limiter minimum, .NET 7
-- net10: ASP.NET Core, .NET 10
-- source: ASP.NET Core source, v10.0.0
-- proxy-fix: ASP.NET Core proxy hardening, 8.0.17
-- runtime: NET runtime source, v10.0.0
-- openssl: OpenSSL documentation, 3.0
-- precedence: WebApplicationBuilder precedence, .NET 7
-- iis: IIS documentation, IIS 10
-- iis-rolling: IIS documentation (rolling), unknown
-- dotnet-rolling: .NET documentation (rolling), unknown
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
+- docs: ASP.NET Core documentation (.NET 10)
+- rate-min: ASP.NET Core rate-limiter minimum (.NET 7)
+- net10: ASP.NET Core (.NET 10)
+- source: ASP.NET Core source (v10.0.0)
+- proxy-fix: ASP.NET Core proxy hardening (8.0.17)
+- runtime: NET runtime source (v10.0.0)
+- openssl: OpenSSL documentation (3.0)
+- precedence: WebApplicationBuilder precedence (.NET 7)
+- iis: IIS documentation (IIS 10)
+- iis-rolling: IIS documentation (rolling) (unknown)
+- dotnet-rolling: .NET documentation (rolling) (unknown)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
 
 Claims (full source mapping in the front matter):
 
@@ -10084,20 +10084,20 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- boot: Spring Boot documentation, unknown
-- boot-docs: Spring Boot documentation (rolling), unknown
-- boot41: Spring Boot, 4.1.1
-- boot40: Spring Boot starter migration, 4.0
-- security: Spring Security documentation (rolling), unknown
-- jdk: JDK keytool documentation, 21
-- framework: Spring Framework documentation, unknown
-- security65: Spring Security HSTS, 6.5
-- tomcat: Tomcat HTTP connector, 10.1
-- curl: curl minimum diagnostics version, 7.75.0
-- jdk21u: OpenJDK jdk21u javax.net.ssl sources, jdk-21.0.12.1-ga
-- entra-docs: Microsoft Entra documentation, 231747abc59ae3d50c74e215c1cdd592eb980723
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- authelia-source: Authelia source, v4.39.28
+- boot: Spring Boot documentation (unknown)
+- boot-docs: Spring Boot documentation (rolling) (unknown)
+- boot41: Spring Boot (4.1.1)
+- boot40: Spring Boot starter migration (4.0)
+- security: Spring Security documentation (rolling) (unknown)
+- jdk: JDK keytool documentation (21)
+- framework: Spring Framework documentation (unknown)
+- security65: Spring Security HSTS (6.5)
+- tomcat: Tomcat HTTP connector (10.1)
+- curl: curl minimum diagnostics version (7.75.0)
+- jdk21u: OpenJDK jdk21u javax.net.ssl sources (jdk-21.0.12.1-ga)
+- entra-docs: Microsoft Entra documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- authelia-source: Authelia source (v4.39.28)
 
 Claims (full source mapping in the front matter):
 
@@ -10590,14 +10590,14 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- php: PHP documentation, unknown
-- curl: curl manual, 7.75.0
-- php8: PHP native configuration, 8.x
-- template84: PHP production template, 8.4
-- template83: PHP production template, 8.3
-- laravel: Laravel, 12.x
-- debugbar: Laravel Debugbar, unknown
-- fail2ban: fail2ban, 1.1.1
+- php: PHP documentation (unknown)
+- curl: curl manual (7.75.0)
+- php8: PHP native configuration (8.x)
+- template84: PHP production template (8.4)
+- template83: PHP production template (8.3)
+- laravel: Laravel (12.x)
+- debugbar: Laravel Debugbar (unknown)
+- fail2ban: fail2ban (1.1.1)
 
 Claims (full source mapping in the front matter):
 
@@ -11024,17 +11024,17 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- puma-readme: Puma README, aef89221e4d729c3133c723844382331ba3bbbd9
-- puma-dsl: Puma DSL, d70de8b4e926f1f5fa0269dc46cdfadf52562628
-- puma: Puma defaults, v8.0.2
-- rails: Rails documentation, unknown
-- assume: Action Pack, 7.1
-- credentials: Rails credentials source, e4cd6ae6f1f0a847958b3aa846c9fd8a3014922a
-- rack: Rack::Attack, unknown
-- sidekiq: Sidekiq Web, unknown
-- net-http: Net::HTTP source, 39cf5f648a9e5e25312909a2dc26681edaa2402c
-- openssl-ruby: Ruby OpenSSL source, a77ed4b9908e179cea8f018f7e245535301746a8
-- openssl: OpenSSL documentation, unknown
+- puma-readme: Puma README (aef89221e4d729c3133c723844382331ba3bbbd9)
+- puma-dsl: Puma DSL (d70de8b4e926f1f5fa0269dc46cdfadf52562628)
+- puma: Puma defaults (v8.0.2)
+- rails: Rails documentation (unknown)
+- assume: Action Pack (7.1)
+- credentials: Rails credentials source (e4cd6ae6f1f0a847958b3aa846c9fd8a3014922a)
+- rack: Rack::Attack (unknown)
+- sidekiq: Sidekiq Web (unknown)
+- net-http: Net::HTTP source (39cf5f648a9e5e25312909a2dc26681edaa2402c)
+- openssl-ruby: Ruby OpenSSL source (a77ed4b9908e179cea8f018f7e245535301746a8)
+- openssl: OpenSSL documentation (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -11207,33 +11207,33 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- ssh: OpenSSH documentation, unknown
-- ufw: UFW documentation, unknown
-- aws-ssm: AWS Session Manager, unknown
-- gcp-iap: Google Cloud IAP, unknown
-- azure-docs: Azure documentation snapshot, 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f
-- tailscale-docs: Tailscale documentation, unknown
-- firewalld: firewalld documentation, unknown
-- fail2ban: fail2ban, unknown
-- crowdsec: CrowdSec, unknown
-- totp: google-authenticator-libpam, unknown
-- duo: Duo Unix, unknown
-- openssh82: OpenSSH 8.2 server manual, V_8_2_P1
-- openssh81: OpenSSH 8.1 server manual, V_8_1_P1
-- openssh99: OpenSSH 9.9 source, V_9_9_P2
-- ubuntu-focal: Ubuntu focal OpenSSH source, 1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc
-- rhel-c9s: CentOS Stream 9 OpenSSH packaging, 0b69a3828606595828fc3b878a7c70652303ad67
-- cloudinit26: cloud-init 26.2, 26.2
-- cloudinit20: cloud-init 20.1, 20.1
-- docker: Docker Engine networking, 4e9a5751518ed8223a8dcde53693badddd72604f
-- ubuntu-uu: Ubuntu noble unattended-upgrades source, 0570be65234e2392d420308470d26920fa4cd21a
-- ubuntu-apt: Ubuntu noble-updates apt source, 835f914ef5657b923fbb8b357f134b00de24c6fd
-- c9s-dnf: CentOS Stream 9 dnf packaging, 3d5ca2af8635e0ef77219625f734d503b9900208
-- dnf4: DNF 4.14.0, 4.14.0
-- iproute2: iproute2 ss manual, v6.12.0
-- ubuntu-nc: Ubuntu noble netcat-openbsd source, c047f1a4572e796c8643fb7e5a719a9d960a677b
-- c9s-nmap: CentOS Stream 9 nmap packaging, 17c2b7795d821cd7fbe311cf3f885be3ea1f122f
-- busybox: BusyBox 1.36.1, 1_36_1
+- ssh: OpenSSH documentation (unknown)
+- ufw: UFW documentation (unknown)
+- aws-ssm: AWS Session Manager (unknown)
+- gcp-iap: Google Cloud IAP (unknown)
+- azure-docs: Azure documentation snapshot (8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f)
+- tailscale-docs: Tailscale documentation (unknown)
+- firewalld: firewalld documentation (unknown)
+- fail2ban: fail2ban (unknown)
+- crowdsec: CrowdSec (unknown)
+- totp: google-authenticator-libpam (unknown)
+- duo: Duo Unix (unknown)
+- openssh82: OpenSSH 8.2 server manual (V_8_2_P1)
+- openssh81: OpenSSH 8.1 server manual (V_8_1_P1)
+- openssh99: OpenSSH 9.9 source (V_9_9_P2)
+- ubuntu-focal: Ubuntu focal OpenSSH source (1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc)
+- rhel-c9s: CentOS Stream 9 OpenSSH packaging (0b69a3828606595828fc3b878a7c70652303ad67)
+- cloudinit26: cloud-init 26.2 (26.2)
+- cloudinit20: cloud-init 20.1 (20.1)
+- docker: Docker Engine networking (4e9a5751518ed8223a8dcde53693badddd72604f)
+- ubuntu-uu: Ubuntu noble unattended-upgrades source (0570be65234e2392d420308470d26920fa4cd21a)
+- ubuntu-apt: Ubuntu noble-updates apt source (835f914ef5657b923fbb8b357f134b00de24c6fd)
+- c9s-dnf: CentOS Stream 9 dnf packaging (3d5ca2af8635e0ef77219625f734d503b9900208)
+- dnf4: DNF 4.14.0 (4.14.0)
+- iproute2: iproute2 ss manual (v6.12.0)
+- ubuntu-nc: Ubuntu noble netcat-openbsd source (c047f1a4572e796c8643fb7e5a719a9d960a677b)
+- c9s-nmap: CentOS Stream 9 nmap packaging (17c2b7795d821cd7fbe311cf3f885be3ea1f122f)
+- busybox: BusyBox 1.36.1 (1_36_1)
 
 Claims (full source mapping in the front matter):
 
@@ -11448,12 +11448,12 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- aws: AWS security groups and CLI, unknown
-- gcp: Google Cloud firewall and CLI, unknown
-- docker-docs: Docker Engine networking documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- azure: Azure NSG and CLI, unknown
-- azure-docs: Azure documentation snapshot, 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f
-- tailscale-docs: Tailscale documentation, unknown
+- aws: AWS security groups and CLI (unknown)
+- gcp: Google Cloud firewall and CLI (unknown)
+- docker-docs: Docker Engine networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- azure: Azure NSG and CLI (unknown)
+- azure-docs: Azure documentation snapshot (8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f)
+- tailscale-docs: Tailscale documentation (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -11610,19 +11610,19 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- render: Render documentation, unknown
-- fly: Fly.io documentation, unknown
-- vercel: Vercel documentation, unknown
-- spaces: Hugging Face Spaces documentation, unknown
-- nextjs: Next.js environment variables, 15
-- express: Express request protocol, 5.x
-- django: Django proxy security setting, 6.1
-- mysql-client: MySQL client connection options, 8.4
-- spaces-pinned: Hugging Face Hub documentation, 6fb324369143cb76a723c88a592010514ac1095a
-- heroku: Heroku documentation, unknown
-- fly-pinned: Fly.io pinned documentation, 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9
-- railway: Railway documentation, 72354493198302677fb6be6c692dd75c64cae2c6
-- nextjs-pinned: Next.js pinned documentation, v16.4.2
+- render: Render documentation (unknown)
+- fly: Fly.io documentation (unknown)
+- vercel: Vercel documentation (unknown)
+- spaces: Hugging Face Spaces documentation (unknown)
+- nextjs: Next.js environment variables (15)
+- express: Express request protocol (5.x)
+- django: Django proxy security setting (6.1)
+- mysql-client: MySQL client connection options (8.4)
+- spaces-pinned: Hugging Face Hub documentation (6fb324369143cb76a723c88a592010514ac1095a)
+- heroku: Heroku documentation (unknown)
+- fly-pinned: Fly.io pinned documentation (2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9)
+- railway: Railway documentation (72354493198302677fb6be6c692dd75c64cae2c6)
+- nextjs-pinned: Next.js pinned documentation (v16.4.2)
 
 Claims (full source mapping in the front matter):
 
@@ -11788,16 +11788,16 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- aws: AWS metadata and networking, unknown
-- gcp: Google Cloud metadata and firewall, unknown
-- azure: Azure IMDS API, 2025-04-07
-- kubernetes: Kubernetes NetworkPolicy, unknown
-- docker: Docker network create, unknown
-- curl: curl documentation, unknown
-- azure-nsg: Azure network security groups, 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f
-- azure-outbound: Azure outbound access, unknown
-- iptables: iptables owner match, v1.8.13
-- nftables: nftables packet filtering, v1.1.7
+- aws: AWS metadata and networking (unknown)
+- gcp: Google Cloud metadata and firewall (unknown)
+- azure: Azure IMDS API (2025-04-07)
+- kubernetes: Kubernetes NetworkPolicy (unknown)
+- docker: Docker network create (unknown)
+- curl: curl documentation (unknown)
+- azure-nsg: Azure network security groups (8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f)
+- azure-outbound: Azure outbound access (unknown)
+- iptables: iptables owner match (v1.8.13)
+- nftables: nftables packet filtering (v1.1.7)
 
 Claims (full source mapping in the front matter):
 
@@ -12072,16 +12072,16 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- runpod: RunPod documentation, unknown
-- vast: Vast.ai documentation, unknown
-- vast-image: Vast.ai base image, 00064421641881c1f83ff58c55f13cbc10cbea4d
-- lambda: Lambda Public Cloud documentation, unknown
-- modal: Modal proxy authentication, unknown
-- jupyter: Jupyter Server security, unknown
-- jupyter-contents: Jupyter Server contents authentication, v2.18.0
-- iproute2: iproute2 ss manual, v6.12.0
-- network-namespaces: Linux network namespaces manual, man-pages-5.13
-- ollama: Ollama, v0.34.2
+- runpod: RunPod documentation (unknown)
+- vast: Vast.ai documentation (unknown)
+- vast-image: Vast.ai base image (00064421641881c1f83ff58c55f13cbc10cbea4d)
+- lambda: Lambda Public Cloud documentation (unknown)
+- modal: Modal proxy authentication (unknown)
+- jupyter: Jupyter Server security (unknown)
+- jupyter-contents: Jupyter Server contents authentication (v2.18.0)
+- iproute2: iproute2 ss manual (v6.12.0)
+- network-namespaces: Linux network namespaces manual (man-pages-5.13)
+- ollama: Ollama (v0.34.2)
 
 Claims (full source mapping in the front matter):
 
@@ -12275,31 +12275,31 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- nmap: Nmap documentation, unknown
-- shodan: Shodan, unknown
-- censys: Censys, unknown
-- vercel: Vercel Deployment Protection, unknown
-- access: Cloudflare Access policies, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- dns: BIND dig documentation, 9.18.39
-- openssl: OpenSSL command documentation, 3.0
-- openbsd-nc: OpenBSD nc manual, 7.6
-- owasp-takeover: OWASP subdomain takeover prevention, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
-- wstg: OWASP Web Security Testing Guide, v4.2
-- dns-rfcs: DNS caching RFCs, unknown
-- owasp-docs: OWASP security guidance, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
-- entra-docs: Microsoft Entra revocation model, 231747abc59ae3d50c74e215c1cdd592eb980723
-- cloudflare-access: Cloudflare Access and origin configuration, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- oauth2-proxy: OAuth2 Proxy, v7.15.4
-- authelia: Authelia, v4.39.28
-- oauth-revocation: OAuth 2.0 Token Revocation RFC, unknown
-- nist: NIST digital identity guidelines, SP 800-63B-4
-- ubuntu-nc: Ubuntu noble netcat-openbsd source, c047f1a4572e796c8643fb7e5a719a9d960a677b
-- c9s-nmap: CentOS Stream 9 nmap packaging, 17c2b7795d821cd7fbe311cf3f885be3ea1f122f
-- busybox: BusyBox 1.36.1, 1_36_1
-- docker-notes: Docker Engine release notes, 4e9a5751518ed8223a8dcde53693badddd72604f
-- webui: Open WebUI, 0a7c15832fb30b1903753e83f81dc7d27e5b0944
-- certbot-v230: Certbot user guide and source, v2.3.0
-- le: Let's Encrypt documentation, unknown
+- nmap: Nmap documentation (unknown)
+- shodan: Shodan (unknown)
+- censys: Censys (unknown)
+- vercel: Vercel Deployment Protection (unknown)
+- access: Cloudflare Access policies (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- dns: BIND dig documentation (9.18.39)
+- openssl: OpenSSL command documentation (3.0)
+- openbsd-nc: OpenBSD nc manual (7.6)
+- owasp-takeover: OWASP subdomain takeover prevention (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
+- wstg: OWASP Web Security Testing Guide (v4.2)
+- dns-rfcs: DNS caching RFCs (unknown)
+- owasp-docs: OWASP security guidance (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
+- entra-docs: Microsoft Entra revocation model (231747abc59ae3d50c74e215c1cdd592eb980723)
+- cloudflare-access: Cloudflare Access and origin configuration (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- oauth2-proxy: OAuth2 Proxy (v7.15.4)
+- authelia: Authelia (v4.39.28)
+- oauth-revocation: OAuth 2.0 Token Revocation RFC (unknown)
+- nist: NIST digital identity guidelines (SP 800-63B-4)
+- ubuntu-nc: Ubuntu noble netcat-openbsd source (c047f1a4572e796c8643fb7e5a719a9d960a677b)
+- c9s-nmap: CentOS Stream 9 nmap packaging (17c2b7795d821cd7fbe311cf3f885be3ea1f122f)
+- busybox: BusyBox 1.36.1 (1_36_1)
+- docker-notes: Docker Engine release notes (4e9a5751518ed8223a8dcde53693badddd72604f)
+- webui: Open WebUI (0a7c15832fb30b1903753e83f81dc7d27e5b0944)
+- certbot-v230: Certbot user guide and source (v2.3.0)
+- le: Let's Encrypt documentation (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -12485,15 +12485,15 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: PostgreSQL documentation, unknown
-- docker: PostgreSQL image source, d588a44673ea9d123c1acb1a6924de10a27fc315
-- init: PostgreSQL initdb source, REL_17_11
-- pg12: PostgreSQL TLS minimum, 12
-- pg14: PostgreSQL SCRAM default, 14
-- pg15: PostgreSQL schema defaults, 15
-- pg16: PostgreSQL membership and require_auth, 16
-- pg18: PostgreSQL MD5 and logging changes, 18
-- audit: pgAudit source, dedd42ec3fe880bf581dd578c0df87ed4ad246cd
+- docs: PostgreSQL documentation (unknown)
+- docker: PostgreSQL image source (d588a44673ea9d123c1acb1a6924de10a27fc315)
+- init: PostgreSQL initdb source (REL_17_11)
+- pg12: PostgreSQL TLS minimum (12)
+- pg14: PostgreSQL SCRAM default (14)
+- pg15: PostgreSQL schema defaults (15)
+- pg16: PostgreSQL membership and require_auth (16)
+- pg18: PostgreSQL MD5 and logging changes (18)
+- audit: pgAudit source (dedd42ec3fe880bf581dd578c0df87ed4ad246cd)
 
 Claims (full source mapping in the front matter):
 
@@ -13207,14 +13207,14 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- pgb: PgBouncer documentation, unknown
-- pgb-bind: PgBouncer listener source, pgbouncer_1_26_0
-- pgb-source: PgBouncer source and fixes, 1.25.2
-- pgpool: Pgpool-II documentation, unknown
-- pgpool-source: Pgpool-II backend handshake, 4.7.2
-- postgres: PostgreSQL documentation, unknown
-- ldap-min: PgBouncer LDAP minimum, 1.25.0
-- expiry-fix: PgBouncer password-expiry fix, 1.24.1
+- pgb: PgBouncer documentation (unknown)
+- pgb-bind: PgBouncer listener source (pgbouncer_1_26_0)
+- pgb-source: PgBouncer source and fixes (1.25.2)
+- pgpool: Pgpool-II documentation (unknown)
+- pgpool-source: Pgpool-II backend handshake (4.7.2)
+- postgres: PostgreSQL documentation (unknown)
+- ldap-min: PgBouncer LDAP minimum (1.25.0)
+- expiry-fix: PgBouncer password-expiry fix (1.24.1)
 
 Claims (full source mapping in the front matter):
 
@@ -13670,15 +13670,15 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- mysql: MySQL reference, 8.4
-- mysql8: MySQL reference, 8.0
-- mysql9: MySQL reference, 9.7
-- mysql26: MySQL reference, 26.7
-- maria: MariaDB documentation, unknown
-- image: MySQL image source, 2f988f198f35d25b1454fa2504a0e4c348100549
-- package: MySQL Docker package, mysql-8.4.9
-- mimage: MariaDB image source, 1a4c8e99f7816c8d97df11eee52098522dc770cf
-- mpackage: MariaDB package source, mariadb-11.8.9
+- mysql: MySQL reference (8.4)
+- mysql8: MySQL reference (8.0)
+- mysql9: MySQL reference (9.7)
+- mysql26: MySQL reference (26.7)
+- maria: MariaDB documentation (unknown)
+- image: MySQL image source (2f988f198f35d25b1454fa2504a0e4c348100549)
+- package: MySQL Docker package (mysql-8.4.9)
+- mimage: MariaDB image source (1a4c8e99f7816c8d97df11eee52098522dc770cf)
+- mpackage: MariaDB package source (mariadb-11.8.9)
 
 Claims (full source mapping in the front matter):
 
@@ -13693,7 +13693,7 @@ Claims (full source mapping in the front matter):
 - mimage-listeners (REASONED; mimage, mpackage): Pinned MariaDB 10.6-13.1 Ubuntu images comment out bind-address; UBI leaves it commented, enabling IPv4 wildcard and IPv6 where available.
 - skip-networking (REASONED; package, mysql, maria): skip_networking stops TCP listeners, including MySQL X; mounted options and mysqlx=OFF can restrict image exposure.
 - image-root (REASONED; image, mimage): New-directory initialization defaults root host to %, accepting _FILE; empty files suppress remote root unless MariaDB's preferred variable supplies a value.
-- image-root-grants (REASONED; image, mimage): A nonempty non-localhost root host gets ALL on *.* WITH GRANT OPTION; MariaDB also grants PROXY. Prefer localhost and private publication.
+- image-root-grants (REASONED; image, mimage): A nonempty non-localhost root host gets ALL on `*.*` WITH GRANT OPTION; MariaDB also grants PROXY. Prefer localhost and private publication.
 - image-empty-password (REASONED; image, mimage): Initialization needs a password/hash, random password or empty-password opt-in; any nonempty opt-in, even no, can create passwordless remote root.
 - account-tls (REASONED; mysql, maria): REQUIRE SSL or X509 independently constrains existing accounts; match the source address seen by the server and avoid deprecated MySQL host wildcards.
 - runtime (REASONED; mysql, maria): Use separate table-scoped runtime accounts and migration administrators; MySQL caching_sha2_password and MariaDB ed25519 examples require compatible clients.
@@ -13726,7 +13726,7 @@ Claims (full source mapping in the front matter):
 - verify-listeners (REASONED; mysql): Inspect all classic/X listeners and nondefault ports; fixed interfaces retain permitted-client success. A stopped service is not proof of restriction.
 - socket-activation (REASONED; maria): MariaDB systemd socket activation can bypass bind_address selection; configure the socket unit or disable activation and inspect listeners.
 - verify-roles (REASONED; mysql): MySQL SHOW GRANTS omits mandatory roles and unexpanded role privileges; combine mandatory/explicit roles with USING and test SET ROLE ALL.
-- verify-maria-roles (REASONED; maria): MariaDB requires recursive role inspection and each role activated separately; PUBLIC applies independently, and USAGE ON *.* grants no data privileges.
+- verify-maria-roles (REASONED; maria): MariaDB requires recursive role inspection and each role activated separately; PUBLIC applies independently, and USAGE ON `*.*` grants no data privileges.
 - verify-grants (REASONED; mysql, maria): Existing orders read stays allowed while private_probe changes from success under broad grants to privilege denial; test each available role.
 - verify-cleanup (REASONED; mysql, maria): Before/after inventories must remove unintended anonymous, remote-root and test grants while preserving administrative and runtime positive controls.
 - verify-local (REASONED; mysql, maria): Disable LOCAL separately at client and server, keeping the other side enabled; a readable fixture loads in the exposed state, is refused fixed, and ordinary insertion succeeds.
@@ -14496,12 +14496,12 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docker: Official MongoDB Docker images, 0a29f3374c7fa7c38cfe280363b754f898e0a5eb
-- bind: MongoDB bind source, r8.0.32
-- docs: MongoDB documentation, unknown
-- shell: mongosh documentation, unknown
-- v8: MongoDB documentation, 8.0
-- bash: Bash documentation, unknown
+- docker: Official MongoDB Docker images (0a29f3374c7fa7c38cfe280363b754f898e0a5eb)
+- bind: MongoDB bind source (r8.0.32)
+- docs: MongoDB documentation (unknown)
+- shell: mongosh documentation (unknown)
+- v8: MongoDB documentation (8.0)
+- bash: Bash documentation (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -15329,20 +15329,20 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: Redis documentation, unknown
-- r60: Redis configuration, 6.0.20
-- r62: Redis configuration, 6.2.14
-- r620: Redis configuration, 6.2.0
-- r70: Redis configuration, 7.0.15
-- r82: Redis configuration, 8.2.1
-- r86: Redis configuration, 8.6.0
-- ha: Redis HA source, 8.10.1
-- image: Redis image source, 584feaab6cd12a77866c121beff1bb16ff239486
-- image8: Redis image tag, v8.10.2
-- r74: Redis compiled defaults, 7.4.8
-- r8102: Redis compiled defaults, 8.10.2
-- valkey: Valkey documentation, unknown
-- release-notes: Redis release notes, unknown
+- docs: Redis documentation (unknown)
+- r60: Redis configuration (6.0.20)
+- r62: Redis configuration (6.2.14)
+- r620: Redis configuration (6.2.0)
+- r70: Redis configuration (7.0.15)
+- r82: Redis configuration (8.2.1)
+- r86: Redis configuration (8.6.0)
+- ha: Redis HA source (8.10.1)
+- image: Redis image source (584feaab6cd12a77866c121beff1bb16ff239486)
+- image8: Redis image tag (v8.10.2)
+- r74: Redis compiled defaults (7.4.8)
+- r8102: Redis compiled defaults (8.10.2)
+- valkey: Valkey documentation (unknown)
+- release-notes: Redis release notes (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -15383,7 +15383,7 @@ Claims (full source mapping in the front matter):
 - sentinel-auth (REASONED; docs, ha): Password-only Sentinel auth applies throughout 6.0+; ACLs require 6.2+. Provision separate peer/admin and narrow discovery identities; do not combine the two arrangements.
 - sentinel-announcement (REASONED; ha): Private bind and network policy restrict Sentinel; announce-ip/port only publish discovery information. Password-only peers share a distinct Sentinel password.
 - monitor-auth (REASONED; ha): Sentinel monitored-server credentials start unset and differ from peer credentials; provision every potential primary/replica.
-- monitor-acl (REASONED; docs, ha): Monitored-server ACLs require 6.0+, channel isolation 6.2+; the 8.10.1-reviewed operational policy permits only __sentinel__:hello publication/subscription.
+- monitor-acl (REASONED; docs, ha): Monitored-server ACLs require 6.0+, channel isolation 6.2+; the 8.10.1-reviewed operational policy permits only `__sentinel__:hello` publication/subscription.
 - cluster-bus (REASONED; docs): Opt-in cluster adds a binary bus, normally data port+10000 (16379); data RESP AUTH is not a bus gate. Restrict node and client paths separately.
 - cluster-announcement (REASONED; ha): 8.10.1 cluster-port selects the bus listener; announce fields are not firewalls. TLS offset uses tls-port; binds and remapped advertisements must agree.
 - ha-tls (REASONED; docs, ha): Client TLS does not enable outgoing replication or cluster TLS; tls-replication and tls-cluster default disabled and must be configured separately.
@@ -16241,35 +16241,35 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- es: Elasticsearch documentation, unknown
-- es-api: Elasticsearch API, 8.x
-- es819: Elasticsearch reference, 8.19
-- es8: Elasticsearch listener source, 8.19.22
-- es9: Elasticsearch listener source, 9.5.4
-- images: Elasticsearch Docker library, 8480a06d8ca03ca7da29a469fdbddb5f9f31df61
-- os: OpenSearch documentation, unknown
-- os36: OpenSearch reference, 3.6
-- os31: OpenSearch S3 reference, 3.1
-- os38: OpenSearch S3 source, 3.8.0
-- gcs38: OpenSearch GCS source, 3.8.0
-- azure38: OpenSearch Azure source, 3.8.0
-- corecrypto38: OpenSearch repository crypto source, 3.8.0
-- kb: Kibana reference, 8.19
-- kb8: Kibana source, 8.19.22
-- kb9: Kibana source, 9.5.4
-- dash: OpenSearch Dashboards, 3.8.0
-- dash36: Dashboards TLS reference, 3.6
-- cloud: Cloud provider documentation, unknown
-- host: Host inspection documentation, unknown
-- os-license-source: OpenSearch Security licence source, 4ba3cc0e2ebec61b726b227fdf51e55f4a502182
-- os-users-source: OpenSearch demo users source, 03a224d16045a8f561e2d7d84b8765c95309524c
+- es: Elasticsearch documentation (unknown)
+- es-api: Elasticsearch API (8.x)
+- es819: Elasticsearch reference (8.19)
+- es8: Elasticsearch listener source (8.19.22)
+- es9: Elasticsearch listener source (9.5.4)
+- images: Elasticsearch Docker library (8480a06d8ca03ca7da29a469fdbddb5f9f31df61)
+- os: OpenSearch documentation (unknown)
+- os36: OpenSearch reference (3.6)
+- os31: OpenSearch S3 reference (3.1)
+- os38: OpenSearch S3 source (3.8.0)
+- gcs38: OpenSearch GCS source (3.8.0)
+- azure38: OpenSearch Azure source (3.8.0)
+- corecrypto38: OpenSearch repository crypto source (3.8.0)
+- kb: Kibana reference (8.19)
+- kb8: Kibana source (8.19.22)
+- kb9: Kibana source (9.5.4)
+- dash: OpenSearch Dashboards (3.8.0)
+- dash36: Dashboards TLS reference (3.6)
+- cloud: Cloud provider documentation (unknown)
+- host: Host inspection documentation (unknown)
+- os-license-source: OpenSearch Security licence source (4ba3cc0e2ebec61b726b227fdf51e55f4a502182)
+- os-users-source: OpenSearch demo users source (03a224d16045a8f561e2d7d84b8765c95309524c)
 
 Claims (full source mapping in the front matter):
 
 - es-tier (REASONED; es): Self-managed 8.x TLS, native users, RBAC, REST keys, anonymous controls and CORS are free Basic; LDAP/audit and FLS/DLS require Platinum/Enterprise, with current Platinum restricted to existing customers.
 - es-auto (REASONED; es): Eligible initial startup enables auth, HTTP/transport TLS and elastic password; redirected output, unwritable config or existing settings can skip setup, with stated discovery exceptions; packages require password reset.
 - es-tls (REASONED; es): Keep xpack.security.enabled and HTTP TLS enabled; repair CA trust/certificates instead of disabling protection.
-- es-bind (REASONED; es8, es9): network.host defaults _local_ on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback.
+- es-bind (REASONED; es8, es9): network.host defaults `_local_` on up interfaces across available families; family-specific tokens and HTTP/profile bind overrides apply before network fallback.
 - es-http-range (REASONED; es8, es9): HTTP defaults to an available port in 9200-9300, subject to effective host/bind/publish settings.
 - es-transport-range (REASONED; es8, es9): Transport defaults to an available port in 9300-9399; inspect effective profile and actual listener ports.
 - es-auto-http (REASONED; es8, es9): Auto-configuration writes http.host=0.0.0.0 only when none of the three HTTP or three network address settings has a value, including enrollment.
@@ -17352,9 +17352,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- aistor: AIStor documentation, unknown
-- console: MinIO console source, f0b91e5504663c4672da451877857b57c3345295
-- aws: AWS signature-condition semantics, unknown
+- aistor: AIStor documentation (unknown)
+- console: MinIO console source (f0b91e5504663c4672da451877857b57c3345295)
+- aws: AWS signature-condition semantics (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -17963,15 +17963,15 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: RabbitMQ documentation, unknown
-- source: RabbitMQ source, v4.3.6
-- image: RabbitMQ image source, 76efb370838e36e4b120e252e75cf0dac70a7d55
-- admin: rabbitmqadmin, v2
-- otp: Erlang/OTP distribution, 27
-- topic-min: RabbitMQ topic authorization introduction, 3.7.0
-- curl: curl documentation, unknown
-- pika: Pika documentation, unknown
-- management-source: RabbitMQ management documentation source, db23826ebaa810b3cdd525fd290125d65f6c3005
+- docs: RabbitMQ documentation (unknown)
+- source: RabbitMQ source (v4.3.6)
+- image: RabbitMQ image source (76efb370838e36e4b120e252e75cf0dac70a7d55)
+- admin: rabbitmqadmin (v2)
+- otp: Erlang/OTP distribution (27)
+- topic-min: RabbitMQ topic authorization introduction (3.7.0)
+- curl: curl documentation (unknown)
+- pika: Pika documentation (unknown)
+- management-source: RabbitMQ management documentation source (db23826ebaa810b3cdd525fd290125d65f6c3005)
 
 Claims (full source mapping in the front matter):
 
@@ -18665,13 +18665,13 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: Mosquitto documentation, unknown
-- v20: Mosquitto, v2.0.22
-- library: Mosquitto image catalogue, 920b00976e6e8335bab0a3fd293b95b6b2404ce3
-- image: Mosquitto image source, 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60
-- v21: Mosquitto, v2.1.2
-- v16: Mosquitto legacy, v1.6.15
-- release-notes: Mosquitto release announcements, unknown
+- docs: Mosquitto documentation (unknown)
+- v20: Mosquitto (v2.0.22)
+- library: Mosquitto image catalogue (920b00976e6e8335bab0a3fd293b95b6b2404ce3)
+- image: Mosquitto image source (5b74cce8a4fe2a73b57df6c703bfde2cfd535d60)
+- v21: Mosquitto (v2.1.2)
+- v16: Mosquitto legacy (v1.6.15)
+- release-notes: Mosquitto release announcements (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -19235,13 +19235,13 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- default: Kafka listener default, 4.3.1
-- docs: Kafka documentation, 4.3
-- kafka-design: Apache Kafka issue tracker and KIPs, unknown
-- source: Kafka source, 4.3.0
-- legacy: Kafka legacy authorization, 3.9
-- redpanda: Redpanda documentation, unknown
-- openssl: OpenSSL documentation, 3.5
+- default: Kafka listener default (4.3.1)
+- docs: Kafka documentation (4.3)
+- kafka-design: Apache Kafka issue tracker and KIPs (unknown)
+- source: Kafka source (4.3.0)
+- legacy: Kafka legacy authorization (3.9)
+- redpanda: Redpanda documentation (unknown)
+- openssl: OpenSSL documentation (3.5)
 
 Claims (full source mapping in the front matter):
 
@@ -20169,14 +20169,14 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: ClickHouse documentation, unknown
-- config: ClickHouse server config source, 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6
-- docker: ClickHouse Docker source, 9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6
-- users: ClickHouse users source, b40982f9416bb4bc2d423d7e75ec384e79494b99
-- totp: ClickHouse TOTP release announcement, unknown
-- sources: ClickHouse privilege registry, 37c6c8c9bfc1de323e9a27711c5649352364bcba
-- curl: curl documentation, unknown
-- roles: ClickHouse role source, 1163c482760fb0204e40f8fb5d81ffa1272bc9ea
+- docs: ClickHouse documentation (unknown)
+- config: ClickHouse server config source (9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6)
+- docker: ClickHouse Docker source (9363bf26fecd0984e6e4e5a3c5ba2a4aba01cda6)
+- users: ClickHouse users source (b40982f9416bb4bc2d423d7e75ec384e79494b99)
+- totp: ClickHouse TOTP release announcement (unknown)
+- sources: ClickHouse privilege registry (37c6c8c9bfc1de323e9a27711c5649352364bcba)
+- curl: curl documentation (unknown)
+- roles: ClickHouse role source (1163c482760fb0204e40f8fb5d81ffa1272bc9ea)
 
 Claims (full source mapping in the front matter):
 
@@ -20929,27 +20929,27 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: Neo4j documentation, unknown
-- cluster: Neo4j Enterprise, 5.26
-- docker: Neo4j Docker entrypoint, 5359427c4f51d0d51cce5b048757a2c21e6f377e
-- openssl: OpenSSL, 3
-- tls: TLS RFC 8446, unknown
-- timeout: timeout, unknown
-- apoc: APOC documentation, unknown
-- ssrf: Neo4j SSRF guidance, unknown
-- neo5: Packaged Neo4j, 5
-- password-min: Neo4j password setting minimum, 5.3
-- load-min: Neo4j LOAD minimum, 5.13
-- cidr-min: Neo4j CIDR LOAD minimum, 5.16
-- shell-history: Cypher Shell history minimum, 2025.08
-- shell-timeout: Cypher Shell timeout minimum, 2025.12
-- driver-history: Neo4j server timeout exception, 4.2 through 5.2
-- errors5: Neo4j 5 error-obfuscation minimum, 5.26.21
-- errors-current: Neo4j current error-obfuscation minimum, 2026.01.3
-- http-deprecated: Neo4j HTTP API deprecation, 5.26
-- query-min: Neo4j Query API minimum, 5.19
-- query-default: Neo4j Query API default minimum, 5.25
-- cypher: Cypher UDF deprecation, 25
+- docs: Neo4j documentation (unknown)
+- cluster: Neo4j Enterprise (5.26)
+- docker: Neo4j Docker entrypoint (5359427c4f51d0d51cce5b048757a2c21e6f377e)
+- openssl: OpenSSL (3)
+- tls: TLS RFC 8446 (unknown)
+- timeout: timeout (unknown)
+- apoc: APOC documentation (unknown)
+- ssrf: Neo4j SSRF guidance (unknown)
+- neo5: Packaged Neo4j (5)
+- password-min: Neo4j password setting minimum (5.3)
+- load-min: Neo4j LOAD minimum (5.13)
+- cidr-min: Neo4j CIDR LOAD minimum (5.16)
+- shell-history: Cypher Shell history minimum (2025.08)
+- shell-timeout: Cypher Shell timeout minimum (2025.12)
+- driver-history: Neo4j server timeout exception (4.2 through 5.2)
+- errors5: Neo4j 5 error-obfuscation minimum (5.26.21)
+- errors-current: Neo4j current error-obfuscation minimum (2026.01.3)
+- http-deprecated: Neo4j HTTP API deprecation (5.26)
+- query-min: Neo4j Query API minimum (5.19)
+- query-default: Neo4j Query API default minimum (5.25)
+- cypher: Cypher UDF deprecation (25)
 
 Claims (full source mapping in the front matter):
 
@@ -21722,15 +21722,15 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: memcached documentation, unknown
-- openssl: OpenSSL CLI, 3.0
-- stable: memcached source, 1.6.45
-- protocol: memcached protocol source, 7278bdee96329915bbc87731ba005095453f5c2f
-- reload: memcached TLS design, 4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969
-- ascii: memcached ASCII authentication release notes, unknown
-- watch: memcached watch-control release notes, unknown
-- security: memcached security release notes, unknown
-- release-notes-source: memcached release notes revision, 780e280d1a7f98f2981ffeb357ef0c9b182a9844
+- docs: memcached documentation (unknown)
+- openssl: OpenSSL CLI (3.0)
+- stable: memcached source (1.6.45)
+- protocol: memcached protocol source (7278bdee96329915bbc87731ba005095453f5c2f)
+- reload: memcached TLS design (4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969)
+- ascii: memcached ASCII authentication release notes (unknown)
+- watch: memcached watch-control release notes (unknown)
+- security: memcached security release notes (unknown)
+- release-notes-source: memcached release notes revision (780e280d1a7f98f2981ffeb357ef0c9b182a9844)
 
 Claims (full source mapping in the front matter):
 
@@ -22141,11 +22141,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- s3: Amazon S3 documentation, unknown
-- r2: Cloudflare R2 documentation, unknown
-- gcs: Google Cloud Storage documentation, unknown
-- azure: Azure Blob documentation, unknown
-- supabase: Supabase Storage documentation, unknown
+- s3: Amazon S3 documentation (unknown)
+- r2: Cloudflare R2 documentation (unknown)
+- gcs: Google Cloud Storage documentation (unknown)
+- azure: Azure Blob documentation (unknown)
+- supabase: Supabase Storage documentation (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -22899,14 +22899,14 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- server: NATS Server, v2.14.7
-- commit: NATS baseline commit, 8d8b69a8c46a46a150eabb7f312607c4d9c58faf
-- library: NATS image catalogue, dcd3db677d8919c3a42d369bd48a6f1c234b3ae8
-- image: NATS image source, 0e72748d3cb553ccdb8c2da7c75ec3b767be51a5
-- image-server: NATS image listener source, v2.15.0
-- go: Go socket source, go1.26.8
-- cli: natscli, v0.4.0
-- server-docs: NATS Server documentation (rolling), unknown
+- server: NATS Server (v2.14.7)
+- commit: NATS baseline commit (8d8b69a8c46a46a150eabb7f312607c4d9c58faf)
+- library: NATS image catalogue (dcd3db677d8919c3a42d369bd48a6f1c234b3ae8)
+- image: NATS image source (0e72748d3cb553ccdb8c2da7c75ec3b767be51a5)
+- image-server: NATS image listener source (v2.15.0)
+- go: Go socket source (go1.26.8)
+- cli: natscli (v0.4.0)
+- server-docs: NATS Server documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -24164,17 +24164,17 @@ Metadata reviewed 2026-10-12; documentation checked 2026-10 (exact day unknown).
 
 Components (recorded basis):
 
-- meili: Meilisearch release reference, v1.53.2
-- typesense: Typesense, 30.2
-- curl: curl minimum, 7.75.0
-- nc: OpenBSD-compatible netcat, unknown
-- meili-docs: Meilisearch documentation (rolling), unknown
-- typesense-docs: Typesense documentation (rolling), unknown
-- meili-advisory: Meilisearch SSRF advisory, unknown
-- caddy: Caddy, v2.11.4
-- git-grep: Git grep manual, 2.55.0
-- git-rev-list: Git rev-list manual, 2.56.0
-- git: Git manual, 2.56.0
+- meili: Meilisearch release reference (v1.53.2)
+- typesense: Typesense (30.2)
+- curl: curl minimum (7.75.0)
+- nc: OpenBSD-compatible netcat (unknown)
+- meili-docs: Meilisearch documentation (rolling) (unknown)
+- typesense-docs: Typesense documentation (rolling) (unknown)
+- meili-advisory: Meilisearch SSRF advisory (unknown)
+- caddy: Caddy (v2.11.4)
+- git-grep: Git grep manual (2.55.0)
+- git-rev-list: Git rev-list manual (2.56.0)
+- git: Git manual (2.56.0)
 
 Claims (full source mapping in the front matter):
 
@@ -24469,21 +24469,21 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- see: SQLite Encryption Extension, unknown
-- cipher: SQLCipher, unknown
-- turso: Turso documentation, unknown
-- litestream: Litestream documentation, unknown
-- mcp: Litestream MCP minimum, v0.5.0
-- litefs: LiteFS source, v0.5.14
-- litefs-docs: LiteFS documentation, unknown
-- go: Go library documentation, unknown
-- docker: Docker documentation, unknown
-- sqlite-rolling: SQLite documentation (rolling), unknown
-- git: Git documentation, v2.56.0
-- coreutils: GNU Coreutils stat manual, v9.7
-- bash: GNU Bash reference manual, bash-5.3
-- curl: curl, curl-8_14_1
-- grep-docs: GNU grep documentation, v3.12
+- see: SQLite Encryption Extension (unknown)
+- cipher: SQLCipher (unknown)
+- turso: Turso documentation (unknown)
+- litestream: Litestream documentation (unknown)
+- mcp: Litestream MCP minimum (v0.5.0)
+- litefs: LiteFS source (v0.5.14)
+- litefs-docs: LiteFS documentation (unknown)
+- go: Go library documentation (unknown)
+- docker: Docker documentation (unknown)
+- sqlite-rolling: SQLite documentation (rolling) (unknown)
+- git: Git documentation (v2.56.0)
+- coreutils: GNU Coreutils stat manual (v9.7)
+- bash: GNU Bash reference manual (bash-5.3)
+- curl: curl (curl-8_14_1)
+- grep-docs: GNU grep documentation (v3.12)
 
 Claims (full source mapping in the front matter):
 
@@ -24808,27 +24808,27 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- ds-container: Datasette container generator, caf238aac86ebe370959b25384d6e05f6a1e2359
-- ds-cloud: Datasette Cloud Run publisher, e889403d3bbe143854262682161c98a57bdb6594
-- fly: Datasette Fly publishing plugin, unknown
-- passwords: datasette-auth-passwords, 1.1.1
-- github-auth: datasette-auth-github, unknown
-- write: datasette-write, 0.4
-- web: sqlite-web package, 0.8.1
-- web-source: sqlite-web implementation, 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2
-- web-tag-source: sqlite-web tagged implementation, 0.8.1
-- web-image: sqlite-web Dockerfile, 7f6658b012a789f0b9418cad543e7798ce850130
-- sqlite: SQLite documentation, unknown
-- docker: Docker localhost-publication boundary, 28.0.0
-- cloudrun: Cloud Run documentation, unknown
-- nginx: nginx documentation, unknown
-- iap: Google IAP documentation, unknown
-- access: Cloudflare Access documentation, unknown
-- tailscale: Tailscale documentation, unknown
-- curl: curl minimum write-out version, 7.75.0
-- ss: ss documentation, unknown
-- datasette-docs: Datasette documentation (rolling), unknown
-- caddy-docs: Caddy documentation (rolling), unknown
+- ds-container: Datasette container generator (caf238aac86ebe370959b25384d6e05f6a1e2359)
+- ds-cloud: Datasette Cloud Run publisher (e889403d3bbe143854262682161c98a57bdb6594)
+- fly: Datasette Fly publishing plugin (unknown)
+- passwords: datasette-auth-passwords (1.1.1)
+- github-auth: datasette-auth-github (unknown)
+- write: datasette-write (0.4)
+- web: sqlite-web package (0.8.1)
+- web-source: sqlite-web implementation (825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2)
+- web-tag-source: sqlite-web tagged implementation (0.8.1)
+- web-image: sqlite-web Dockerfile (7f6658b012a789f0b9418cad543e7798ce850130)
+- sqlite: SQLite documentation (unknown)
+- docker: Docker localhost-publication boundary (28.0.0)
+- cloudrun: Cloud Run documentation (unknown)
+- nginx: nginx documentation (unknown)
+- iap: Google IAP documentation (unknown)
+- access: Cloudflare Access documentation (unknown)
+- tailscale: Tailscale documentation (unknown)
+- curl: curl minimum write-out version (7.75.0)
+- ss: ss documentation (unknown)
+- datasette-docs: Datasette documentation (rolling) (unknown)
+- caddy-docs: Caddy documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -25179,15 +25179,15 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: SurrealDB documentation (rolling), unknown
-- pinned: SurrealDB CLI and image, v3.2.4
-- defaults: SurrealDB 2.0 release announcement, unknown
-- audience: SurrealDB native AUDIENCE minimum, 3.3
-- bash: GNU Bash reference manual, bash-5.3
-- procfs: Linux procfs manual, man-pages-6.19
-- ptrace: Linux ptrace manual, man-pages-6.19
-- scope-old: SurrealDB SCOPE deprecation, 2.x
-- scope-removed: SurrealDB SCOPE removal, 3.0
+- docs: SurrealDB documentation (rolling) (unknown)
+- pinned: SurrealDB CLI and image (v3.2.4)
+- defaults: SurrealDB 2.0 release announcement (unknown)
+- audience: SurrealDB native AUDIENCE minimum (3.3)
+- bash: GNU Bash reference manual (bash-5.3)
+- procfs: Linux procfs manual (man-pages-6.19)
+- ptrace: Linux ptrace manual (man-pages-6.19)
+- scope-old: SurrealDB SCOPE deprecation (2.x)
+- scope-removed: SurrealDB SCOPE removal (3.0)
 
 Claims (full source mapping in the front matter):
 
@@ -25423,16 +25423,16 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- influx2: InfluxDB OSS, 2.x
-- influx1: InfluxDB OSS, 1.x
-- single: VictoriaMetrics single-node, v1.152.0
-- cluster: VictoriaMetrics cluster, v1.152.0-cluster
-- rpc: VictoriaMetrics cluster source, e4b1d55683f0da20410dc765787bd4e9b5afa0da
-- proxy: VictoriaMetrics security/vmauth documentation, unknown
-- quest: QuestDB documentation, unknown
-- single-commit: VictoriaMetrics single-node source commit, 540b91da031aa8b7d53d3784693bb451e2be980a
-- image: VictoriaMetrics shipped Compose image, v1.151.0
-- enterprise: QuestDB Enterprise qualification, 4.0.0
+- influx2: InfluxDB OSS (2.x)
+- influx1: InfluxDB OSS (1.x)
+- single: VictoriaMetrics single-node (v1.152.0)
+- cluster: VictoriaMetrics cluster (v1.152.0-cluster)
+- rpc: VictoriaMetrics cluster source (e4b1d55683f0da20410dc765787bd4e9b5afa0da)
+- proxy: VictoriaMetrics security/vmauth documentation (unknown)
+- quest: QuestDB documentation (unknown)
+- single-commit: VictoriaMetrics single-node source commit (540b91da031aa8b7d53d3784693bb451e2be980a)
+- image: VictoriaMetrics shipped Compose image (v1.151.0)
+- enterprise: QuestDB Enterprise qualification (4.0.0)
 
 Claims (full source mapping in the front matter):
 
@@ -25704,22 +25704,22 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- server: Jupyter Server, 2.18.0
-- startup: Jupyter Server startup source, 9a4d6eea2b16815a493b11fffe0b51b1fe55a81b
-- port: Jupyter Server port source, c5c452c3d5f3060557e57caaadce8f2fffc1c417
-- identity: Jupyter Server identity source, 3df9a70b8aea53557ad04510a63c95ce9d4c3abc
-- handlers: Jupyter Server handler source, 00d45c80eeb0f50f191b236ee47cc1d82a7db9ca
-- kernels: Jupyter Server kernel source, c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac
-- hub: JupyterHub, 5.5.2
-- proxy: configurable-http-proxy, 5.3.0
-- native: NativeAuthenticator, 1.3.0
-- client: jupyter_client, 8.6.3
-- lab: JupyterLab documentation, unknown
-- tornado: Tornado documentation, unknown
-- curl: curl documentation, unknown
-- server-docs: Jupyter Server documentation (rolling), unknown
-- notebook-docs: Notebook documentation (rolling), unknown
-- hub-docs: JupyterHub documentation (rolling), unknown
+- server: Jupyter Server (2.18.0)
+- startup: Jupyter Server startup source (9a4d6eea2b16815a493b11fffe0b51b1fe55a81b)
+- port: Jupyter Server port source (c5c452c3d5f3060557e57caaadce8f2fffc1c417)
+- identity: Jupyter Server identity source (3df9a70b8aea53557ad04510a63c95ce9d4c3abc)
+- handlers: Jupyter Server handler source (00d45c80eeb0f50f191b236ee47cc1d82a7db9ca)
+- kernels: Jupyter Server kernel source (c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac)
+- hub: JupyterHub (5.5.2)
+- proxy: configurable-http-proxy (5.3.0)
+- native: NativeAuthenticator (1.3.0)
+- client: jupyter_client (8.6.3)
+- lab: JupyterLab documentation (unknown)
+- tornado: Tornado documentation (unknown)
+- curl: curl documentation (unknown)
+- server-docs: Jupyter Server documentation (rolling) (unknown)
+- notebook-docs: Notebook documentation (rolling) (unknown)
+- hub-docs: JupyterHub documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -26343,17 +26343,17 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- ollama: Ollama, v0.34.2
-- commit: Ollama release commit, dfabde4539e42ba1e1eab50a3a50b88aea7958a0
-- docker: Docker Engine localhost boundary, 28.0
-- systemd: systemd, v257
-- nginx: nginx, unknown
-- htpasswd: Apache htpasswd, unknown
-- owasp: OWASP password guidance, unknown
-- caddy: Caddy, unknown
-- cloudflare: Cloudflare, unknown
-- curl: curl, unknown
-- ollama-rolling: Ollama documentation (rolling), unknown
+- ollama: Ollama (v0.34.2)
+- commit: Ollama release commit (dfabde4539e42ba1e1eab50a3a50b88aea7958a0)
+- docker: Docker Engine localhost boundary (28.0)
+- systemd: systemd (v257)
+- nginx: nginx (unknown)
+- htpasswd: Apache htpasswd (unknown)
+- owasp: OWASP password guidance (unknown)
+- caddy: Caddy (unknown)
+- cloudflare: Cloudflare (unknown)
+- curl: curl (unknown)
+- ollama-rolling: Ollama documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -27282,9 +27282,9 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- webui: Open WebUI, 0a7c15832fb30b1903753e83f81dc7d27e5b0944
-- docker: Docker Engine localhost boundary, 28.0.0
-- webui-docs: Open WebUI documentation (rolling), unknown
+- webui: Open WebUI (0a7c15832fb30b1903753e83f81dc7d27e5b0944)
+- docker: Docker Engine localhost boundary (28.0.0)
+- webui-docs: Open WebUI documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -27741,11 +27741,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: LiteLLM documentation, unknown
-- source: LiteLLM source, 6ef7b86748118ceecd95271727c2fa167ce55fec
-- sso: LiteLLM SSO allowance, v1.76.0
-- metrics: LiteLLM metrics default, v1.85.0
-- cli: LiteLLM CLI, v1.102.1
+- docs: LiteLLM documentation (unknown)
+- source: LiteLLM source (6ef7b86748118ceecd95271727c2fa167ce55fec)
+- sso: LiteLLM SSO allowance (v1.76.0)
+- metrics: LiteLLM metrics default (v1.85.0)
+- cli: LiteLLM CLI (v1.102.1)
 
 Claims (full source mapping in the front matter):
 
@@ -28256,22 +28256,22 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- llama: llama.cpp, e0dff58475bc9ed68eedcb265ee998f2fcabb3b1
-- vllm: vLLM, v0.30.0
-- vllm-a: vLLM source, dee37d89115db4c94a820a79a78a7828e141c910
-- vllm-b: vLLM second source, 8c1557a79c539ffe82d004d2a0c8d7b5e71159ce
-- tgi: TGI launcher/image, v3.3.7
-- tgi-router: TGI router, 24ee40d143d8d046039f12f76940a85886cbe152
-- tgi-docs: TGI documentation, unknown
-- sglang: SGLang, v0.5.20
-- triton: Triton source, 546a78766fb112128aa0b10a70c55f4f39c3b1df
-- lmstudio: LM Studio documentation, unknown
-- webui: text-generation-webui source, c022565b1257a9c7d9a5128c8b4c03587559cf08
-- webui-api: text-generation-webui API source, 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f
-- webui-docs: text-generation-webui API documentation, ceade2eb1ba3f84518076270df2240b6bbb01da0
-- curl: curl minimum write-out version, 7.75.0
-- sglang-rolling: SGLang documentation (rolling), unknown
-- triton-rolling: Triton documentation (rolling), unknown
+- llama: llama.cpp (e0dff58475bc9ed68eedcb265ee998f2fcabb3b1)
+- vllm: vLLM (v0.30.0)
+- vllm-a: vLLM source (dee37d89115db4c94a820a79a78a7828e141c910)
+- vllm-b: vLLM second source (8c1557a79c539ffe82d004d2a0c8d7b5e71159ce)
+- tgi: TGI launcher/image (v3.3.7)
+- tgi-router: TGI router (24ee40d143d8d046039f12f76940a85886cbe152)
+- tgi-docs: TGI documentation (unknown)
+- sglang: SGLang (v0.5.20)
+- triton: Triton source (546a78766fb112128aa0b10a70c55f4f39c3b1df)
+- lmstudio: LM Studio documentation (unknown)
+- webui: text-generation-webui source (c022565b1257a9c7d9a5128c8b4c03587559cf08)
+- webui-api: text-generation-webui API source (619a2b8ee4b7e48541a9be5c07e04cd31b91b44f)
+- webui-docs: text-generation-webui API documentation (ceade2eb1ba3f84518076270df2240b6bbb01da0)
+- curl: curl minimum write-out version (7.75.0)
+- sglang-rolling: SGLang documentation (rolling) (unknown)
+- triton-rolling: Triton documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -28887,11 +28887,11 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- gradio: Gradio, 6.28.0
-- fixes: Gradio historical fixes, 6.16.0
-- multipart: Gradio historical fixes, 6.20.0
-- advisory: Gradio security advisories, unknown
-- gradio-rolling: Gradio documentation (rolling), unknown
+- gradio: Gradio (6.28.0)
+- fixes: Gradio historical fixes (6.16.0)
+- multipart: Gradio historical fixes (6.20.0)
+- advisory: Gradio security advisories (unknown)
+- gradio-rolling: Gradio documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -29285,17 +29285,17 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 
 Components (recorded basis):
 
-- streamlit: Streamlit, 1.64.0
-- google-oidc: Google OpenID Connect documentation, rolling documentation, checked 2026-10-15
-- ssrf: OWASP SSRF guidance, unknown
-- curl: curl minimum write-out version, 7.75.0
-- authlib: Authlib minimum, 1.3.2
-- httpx: httpx minimum, 0.24.1
-- streamlit-rolling: Streamlit documentation (rolling), unknown
-- release-notes: Streamlit release notes, unknown
-- caddy: Caddy, v2.11.4
-- oauth2-proxy: oauth2-proxy, v7.15.4
-- keycloak: Keycloak, 26.7.4
+- streamlit: Streamlit (1.64.0)
+- google-oidc: Google OpenID Connect documentation (rolling documentation, checked 2026-10-15)
+- ssrf: OWASP SSRF guidance (unknown)
+- curl: curl minimum write-out version (7.75.0)
+- authlib: Authlib minimum (1.3.2)
+- httpx: httpx minimum (0.24.1)
+- streamlit-rolling: Streamlit documentation (rolling) (unknown)
+- release-notes: Streamlit release notes (unknown)
+- caddy: Caddy (v2.11.4)
+- oauth2-proxy: oauth2-proxy (v7.15.4)
+- keycloak: Keycloak (26.7.4)
 
 Claims (full source mapping in the front matter):
 
@@ -29558,14 +29558,14 @@ Metadata reviewed 2026-10-17; documentation checked 2026-10 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: n8n documentation, unknown
-- server: n8n listener source, n8n@2.40.6
-- runtime: n8n runtime source, n8n@2.40.6
-- policy: n8n environment policy minimum, 2.18.0
-- ssrf: n8n SSRF filter minimum, 2.12.0
-- v2-default: n8n 2.0 default exclusion source, n8n@2.0.0
-- v1-default: n8n 1.x default exclusion source, n8n@1.123.85
-- v2-docs: n8n 2.0 breaking changes, unknown
+- docs: n8n documentation (unknown)
+- server: n8n listener source (n8n@2.40.6)
+- runtime: n8n runtime source (n8n@2.40.6)
+- policy: n8n environment policy minimum (2.18.0)
+- ssrf: n8n SSRF filter minimum (2.12.0)
+- v2-default: n8n 2.0 default exclusion source (n8n@2.0.0)
+- v1-default: n8n 1.x default exclusion source (n8n@1.123.85)
+- v2-docs: n8n 2.0 breaking changes (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -29737,7 +29737,7 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- server: code-server, v4.137.0
+- server: code-server (v4.137.0)
 
 Claims (full source mapping in the front matter):
 
@@ -29886,11 +29886,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- sentry: Sentry and self-hosted distribution, 26.8.0
-- sentry-docs: Sentry documentation, unknown
-- glitchtip: GlitchTip documentation, unknown
-- glitchtip-mfa: GlitchTip MFA announcement, unknown
-- glitchtip-backend: GlitchTip backend, v6.2.6
+- sentry: Sentry and self-hosted distribution (26.8.0)
+- sentry-docs: Sentry documentation (unknown)
+- glitchtip: GlitchTip documentation (unknown)
+- glitchtip-mfa: GlitchTip MFA announcement (unknown)
+- glitchtip-backend: GlitchTip backend (v6.2.6)
 
 Claims (full source mapping in the front matter):
 
@@ -30056,29 +30056,29 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- q: Qdrant source, v1.19.1
-- qd: Qdrant security documentation, unknown
-- w: Weaviate source, v1.39.6
-- wd: Weaviate documentation, unknown
-- m2: Milvus, v2.6.24
-- m3: Milvus, v3.0.2
-- chroma: Chroma source, 1.5.9
-- pc: Pinecone organization documentation, unknown
-- qc: Qdrant Cloud documentation, unknown
-- cd: Chroma migration documentation, v1.0.0
-- pg: PostgreSQL documentation, unknown
-- docker: Docker documentation, unknown
-- k8s: Kubernetes documentation, unknown
-- grpc2: grpc-go (Milvus v2.6.24 go.mod), v1.82.1
-- grpc3: grpc-go (Milvus v3.0.2 go.mod), v1.82.2
-- ml: memberlist (Weaviate v1.39.6 go.mod), v0.5.4
-- goflags: go-flags, v1.6.1
-- gostd2: Go standard library, go1.25.8
-- gostd3: Go standard library, go1.26.6
-- curl-docs: curl documentation (rolling), unknown
-- milvus-helm: Milvus Helm chart, 5.0.30
-- milvus-operator: Milvus Operator, v1.3.11
-- pgvector-source: pgvector source, v0.8.2
+- q: Qdrant source (v1.19.1)
+- qd: Qdrant security documentation (unknown)
+- w: Weaviate source (v1.39.6)
+- wd: Weaviate documentation (unknown)
+- m2: Milvus (v2.6.24)
+- m3: Milvus (v3.0.2)
+- chroma: Chroma source (1.5.9)
+- pc: Pinecone organization documentation (unknown)
+- qc: Qdrant Cloud documentation (unknown)
+- cd: Chroma migration documentation (v1.0.0)
+- pg: PostgreSQL documentation (unknown)
+- docker: Docker documentation (unknown)
+- k8s: Kubernetes documentation (unknown)
+- grpc2: grpc-go (Milvus v2.6.24 go.mod) (v1.82.1)
+- grpc3: grpc-go (Milvus v3.0.2 go.mod) (v1.82.2)
+- ml: memberlist (Weaviate v1.39.6 go.mod) (v0.5.4)
+- goflags: go-flags (v1.6.1)
+- gostd2: Go standard library (go1.25.8)
+- gostd3: Go standard library (go1.26.6)
+- curl-docs: curl documentation (rolling) (unknown)
+- milvus-helm: Milvus Helm chart (5.0.30)
+- milvus-operator: Milvus Operator (v1.3.11)
+- pgvector-source: pgvector source (v0.8.2)
 
 Claims (full source mapping in the front matter):
 
@@ -30424,12 +30424,12 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- mcp: MCP, 2026-07-28
-- legacy: MCP legacy, 2025-11-25
-- azure: Azure App Service, unknown
-- nginx: nginx, unknown
-- caddy: Caddy, unknown
-- curl: curl minimum, 7.75.0
+- mcp: MCP (2026-07-28)
+- legacy: MCP legacy (2025-11-25)
+- azure: Azure App Service (unknown)
+- nginx: nginx (unknown)
+- caddy: Caddy (unknown)
+- curl: curl minimum (7.75.0)
 
 Claims (full source mapping in the front matter):
 
@@ -30754,14 +30754,14 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- mcp: MCP, 2026-07-28
-- mcp-2025-06-18: MCP 2025-06-18 authorization, 86f6e0c675afea9a8f233e09b6faf566b126086c
-- mcp-2025-11-25: MCP 2025-11-25 authorization, 86f6e0c675afea9a8f233e09b6faf566b126086c
-- rfc: OAuth and HTTP RFCs, unknown
-- oauth: OAuth 2.1 draft, draft-ietf-oauth-v2-1-14
-- cimd: CIMD draft, draft-ietf-oauth-client-id-metadata-document-00
-- oidc: OpenID Connect, 1.0 errata 2
-- owasp: OWASP SSRF guidance, unknown
+- mcp: MCP (2026-07-28)
+- mcp-2025-06-18: MCP 2025-06-18 authorization (86f6e0c675afea9a8f233e09b6faf566b126086c)
+- mcp-2025-11-25: MCP 2025-11-25 authorization (86f6e0c675afea9a8f233e09b6faf566b126086c)
+- rfc: OAuth and HTTP RFCs (unknown)
+- oauth: OAuth 2.1 draft (draft-ietf-oauth-v2-1-14)
+- cimd: CIMD draft (draft-ietf-oauth-client-id-metadata-document-00)
+- oidc: OpenID Connect (1.0 errata 2)
+- owasp: OWASP SSRF guidance (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -30967,19 +30967,19 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- ray: Ray pinned source, ray-2.58.0
-- docs: Ray documentation, unknown
-- token-min: Ray token authentication introduction, 2.52.0
-- redis-history: Ray Redis history announcement, unknown
-- docker: Docker publishing documentation, unknown
-- kuberay-auth: KubeRay authentication documentation, unknown
-- kuberay: KubeRay chart, v1.7.0
-- kubernetes: Kubernetes security contexts, unknown
-- python: CPython WSGI server, v3.11.0
-- curl: curl minimum write-out version, 7.75.0
-- docker-release: Docker Engine release notes, 4e9a5751518ed8223a8dcde53693badddd72604f
-- kuberay-auth-source: KubeRay authentication source, v1.6.0
-- kuberay-auth-prior: KubeRay prior RayCluster types, v1.5.0
+- ray: Ray pinned source (ray-2.58.0)
+- docs: Ray documentation (unknown)
+- token-min: Ray token authentication introduction (2.52.0)
+- redis-history: Ray Redis history announcement (unknown)
+- docker: Docker publishing documentation (unknown)
+- kuberay-auth: KubeRay authentication documentation (unknown)
+- kuberay: KubeRay chart (v1.7.0)
+- kubernetes: Kubernetes security contexts (unknown)
+- python: CPython WSGI server (v3.11.0)
+- curl: curl minimum write-out version (7.75.0)
+- docker-release: Docker Engine release notes (4e9a5751518ed8223a8dcde53693badddd72604f)
+- kuberay-auth-source: KubeRay authentication source (v1.6.0)
+- kuberay-auth-prior: KubeRay prior RayCluster types (v1.5.0)
 
 Claims (full source mapping in the front matter):
 
@@ -31342,17 +31342,17 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: MLflow documentation, unknown
-- source: MLflow pinned source, v3.16.1
-- middleware-min: MLflow security middleware minimum, 3.5.0
-- docker: Docker Engine loopback publication minimum, 28.0.0
-- curl: curl minimum write-out version, 7.75.0
-- nginx: nginx proxy implementation, release-1.28.0
-- caddy: Caddy reverse proxy parser, v2.11.4
-- iproute2: iproute2 ss manual, v6.12.0
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- oauth2-proxy-source: oauth2-proxy documentation, v7.15.4
-- authelia-source: Authelia source, v4.39.28
+- docs: MLflow documentation (unknown)
+- source: MLflow pinned source (v3.16.1)
+- middleware-min: MLflow security middleware minimum (3.5.0)
+- docker: Docker Engine loopback publication minimum (28.0.0)
+- curl: curl minimum write-out version (7.75.0)
+- nginx: nginx proxy implementation (release-1.28.0)
+- caddy: Caddy reverse proxy parser (v2.11.4)
+- iproute2: iproute2 ss manual (v6.12.0)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- oauth2-proxy-source: oauth2-proxy documentation (v7.15.4)
+- authelia-source: Authelia source (v4.39.28)
 
 Claims (full source mapping in the front matter):
 
@@ -31600,27 +31600,27 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- dify: Dify documentation, unknown
-- dify-console: Dify console/config source, d39d9ddb7430522e0c828c6953afdf773ba6e675
-- dify-compose: Dify Compose source, 8387590ace4a094de812b7847fc6a4c3a27cd52b
-- docker: Docker, unknown
-- docker-merge: Docker Compose merge source, 31d174d090fd7111ca2199ed54a3978e0d4ac74d
-- compose-243: Docker Compose go.mod, v2.24.3
-- compose-244: Docker Compose release source, v2.24.4
-- compose-go-rc2: compose-go loader, v2.0.0-rc.2
-- compose-go-rc3: compose-go reset loader, v2.0.0-rc.3
-- certbot: Dify certbot source, 4c1ad40f8e8a6ee58a958330558f2178b7e47fa7
-- flowise: Flowise documentation, unknown
-- flowise-auth: Flowise account minimum, v3.0.1
-- flowise-compose: Flowise Compose, 4ea391204a499fb6d19747104502362295b4dde3
-- langflow-1126: Langflow settings source, v1.12.6
-- langflow-compose: Langflow Compose, c6dbca308dc85526d5cecb31211821ec4f5e1d05
-- librechat-compose: LibreChat Compose, 1596df724a840f894831fc74f21de8d8df72fcb1
-- langflow: Langflow documentation, unknown
-- librechat: LibreChat documentation, unknown
-- librechat-mfa: LibreChat changelog, v0.7.7
-- daemon: Dify plugin daemon, 0.6.10
-- daemon-source: Dify plugin daemon source, 1310a18b2f6bc6f18768a0a6265484830891433c
+- dify: Dify documentation (unknown)
+- dify-console: Dify console/config source (d39d9ddb7430522e0c828c6953afdf773ba6e675)
+- dify-compose: Dify Compose source (8387590ace4a094de812b7847fc6a4c3a27cd52b)
+- docker: Docker (unknown)
+- docker-merge: Docker Compose merge source (31d174d090fd7111ca2199ed54a3978e0d4ac74d)
+- compose-243: Docker Compose go.mod (v2.24.3)
+- compose-244: Docker Compose release source (v2.24.4)
+- compose-go-rc2: compose-go loader (v2.0.0-rc.2)
+- compose-go-rc3: compose-go reset loader (v2.0.0-rc.3)
+- certbot: Dify certbot source (4c1ad40f8e8a6ee58a958330558f2178b7e47fa7)
+- flowise: Flowise documentation (unknown)
+- flowise-auth: Flowise account minimum (v3.0.1)
+- flowise-compose: Flowise Compose (4ea391204a499fb6d19747104502362295b4dde3)
+- langflow-1126: Langflow settings source (v1.12.6)
+- langflow-compose: Langflow Compose (c6dbca308dc85526d5cecb31211821ec4f5e1d05)
+- librechat-compose: LibreChat Compose (1596df724a840f894831fc74f21de8d8df72fcb1)
+- langflow: Langflow documentation (unknown)
+- librechat: LibreChat documentation (unknown)
+- librechat-mfa: LibreChat changelog (v0.7.7)
+- daemon: Dify plugin daemon (0.6.10)
+- daemon-source: Dify plugin daemon source (1310a18b2f6bc6f18768a0a6265484830891433c)
 
 Claims (full source mapping in the front matter):
 
@@ -31974,23 +31974,23 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- searx: SearxNG documentation, unknown
-- localai: LocalAI documentation, unknown
-- tei-docs: TEI documentation, unknown
-- tei: TEI HTTP source, v1.9.0
-- langserve: LangServe source, 27e57afeda13007a7f4e007c5d1f5e8489963aa4
-- mem0: Mem0 documentation, unknown
-- mem0-source: Mem0 server source, c7ee362aff94a369af70f13f2b4f853f6793ff4c
-- onyx: Onyx documentation, unknown
-- onyx-compose: Onyx Compose, a0370f232ba4e4625131fae518b86e5530e98ec5
-- docker: Docker, unknown
-- grep: GNU grep, 3.12
-- curl: curl documentation, unknown
-- searx-source: SearxNG source, d4ce87c23431f607162fc5c39ce52c538d64588f
-- onyx-data: Onyx data model, 15ead4ca364e654d40dac842ee9d0bb9e0fe5471
-- tei-grpc: TEI gRPC source, 1bb59202500e5f69dd8be63dd1604f7625124fbe
-- onyx-v43: Onyx v4.3 source, v4.3.13
-- onyx-v44: Onyx v4.4 source, v4.4.0
+- searx: SearxNG documentation (unknown)
+- localai: LocalAI documentation (unknown)
+- tei-docs: TEI documentation (unknown)
+- tei: TEI HTTP source (v1.9.0)
+- langserve: LangServe source (27e57afeda13007a7f4e007c5d1f5e8489963aa4)
+- mem0: Mem0 documentation (unknown)
+- mem0-source: Mem0 server source (c7ee362aff94a369af70f13f2b4f853f6793ff4c)
+- onyx: Onyx documentation (unknown)
+- onyx-compose: Onyx Compose (a0370f232ba4e4625131fae518b86e5530e98ec5)
+- docker: Docker (unknown)
+- grep: GNU grep (3.12)
+- curl: curl documentation (unknown)
+- searx-source: SearxNG source (d4ce87c23431f607162fc5c39ce52c538d64588f)
+- onyx-data: Onyx data model (15ead4ca364e654d40dac842ee9d0bb9e0fe5471)
+- tei-grpc: TEI gRPC source (1bb59202500e5f69dd8be63dd1604f7625124fbe)
+- onyx-v43: Onyx v4.3 source (v4.3.13)
+- onyx-v44: Onyx v4.4 source (v4.4.0)
 
 Claims (full source mapping in the front matter):
 
@@ -32544,15 +32544,15 @@ Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- livekit: LiveKit, v1.13.7
-- livekit-protocol: LiveKit protocol, a4f4b5c0c23f167d0c07de1e1d7652125882e73c
-- livekit-docs: LiveKit documentation, unknown
-- lk: livekit-cli, v2.18.2
-- coturn: coturn, 4.18.0
-- dtls: coturn DTLS opt-in introduction, 4.17.0
-- curl: curl minimum write-out version, 7.75.0
-- openssl-cli: OpenSSL CLI, 3.0
-- openssl-dgst: OpenSSL dgst, 3.5
+- livekit: LiveKit (v1.13.7)
+- livekit-protocol: LiveKit protocol (a4f4b5c0c23f167d0c07de1e1d7652125882e73c)
+- livekit-docs: LiveKit documentation (unknown)
+- lk: livekit-cli (v2.18.2)
+- coturn: coturn (4.18.0)
+- dtls: coturn DTLS opt-in introduction (4.17.0)
+- curl: curl minimum write-out version (7.75.0)
+- openssl-cli: OpenSSL CLI (3.0)
+- openssl-dgst: OpenSSL dgst (3.5)
 
 Claims (full source mapping in the front matter):
 
@@ -32947,20 +32947,20 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- comfy: ComfyUI, v0.37.0
-- webui: AUTOMATIC1111, v1.10.1
-- gradio: Gradio, 3.41.2
-- fooocus: Fooocus, v2.5.5
-- engine: Docker Engine minimum loopback boundary, 28.0
-- compose: Compose Specification, 914ec15d1fa4
-- compose-cli: Docker Compose source, v2.32.4
-- curl: curl minimum write-out version, 7.75.0
-- linux: Linux permissions and tools, unknown
-- comfy-rolling: ComfyUI documentation (rolling), unknown
-- comfy-registry-rolling: ComfyUI Registry documentation (rolling), unknown
-- comfy-advisory: ComfyUI January 2025 security advisory, unknown
-- invoke-rolling: InvokeAI documentation (rolling), unknown
-- comfy-manager-advisory: ComfyUI-Manager security advisory, unknown
+- comfy: ComfyUI (v0.37.0)
+- webui: AUTOMATIC1111 (v1.10.1)
+- gradio: Gradio (3.41.2)
+- fooocus: Fooocus (v2.5.5)
+- engine: Docker Engine minimum loopback boundary (28.0)
+- compose: Compose Specification (914ec15d1fa4)
+- compose-cli: Docker Compose source (v2.32.4)
+- curl: curl minimum write-out version (7.75.0)
+- linux: Linux permissions and tools (unknown)
+- comfy-rolling: ComfyUI documentation (rolling) (unknown)
+- comfy-registry-rolling: ComfyUI Registry documentation (rolling) (unknown)
+- comfy-advisory: ComfyUI January 2025 security advisory (unknown)
+- invoke-rolling: InvokeAI documentation (rolling) (unknown)
+- comfy-manager-advisory: ComfyUI-Manager security advisory (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -33260,19 +33260,19 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- anything: AnythingLLM documentation, unknown
-- lobe: LobeHub, v2.2.16
-- docker: Docker CLI, v27.5.1
-- compose: Docker Compose, v2.32.4
-- compose-go: compose-go, v2.4.7
-- moby: Moby, v27.5.1
-- chainlit: Chainlit documentation, unknown
-- python: Python documentation, unknown
-- owasp: OWASP password guidance, unknown
-- openhands: OpenHands documentation, unknown
-- curl: curl minimum write-out version, 7.75.0
-- linux: Linux permissions and tools, unknown
-- lobe-docs: LobeHub documentation (rolling), unknown
+- anything: AnythingLLM documentation (unknown)
+- lobe: LobeHub (v2.2.16)
+- docker: Docker CLI (v27.5.1)
+- compose: Docker Compose (v2.32.4)
+- compose-go: compose-go (v2.4.7)
+- moby: Moby (v27.5.1)
+- chainlit: Chainlit documentation (unknown)
+- python: Python documentation (unknown)
+- owasp: OWASP password guidance (unknown)
+- openhands: OpenHands documentation (unknown)
+- curl: curl minimum write-out version (7.75.0)
+- linux: Linux permissions and tools (unknown)
+- lobe-docs: LobeHub documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -33542,24 +33542,24 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- langfuse: Langfuse documentation, unknown
-- lf-session: Langfuse session source, 24c949d8dd5617219a8415f80e4c65ad611ff05c
-- lf-compose: Langfuse Compose, 0dd0a7fbe2feb300b8776f02b3684eeee3fbceab
-- phoenix: Phoenix documentation, unknown
-- phoenix-tls-min: Phoenix TLS announcement, unknown
-- phoenix-tls: Phoenix TLS source, 080959576563900038688ddf01f3bee110005df5
-- helicone: Helicone documentation, unknown
-- helicone-compose: Helicone Compose, b12ebaccb824ab9778757ca197ff302d97fda421
-- otel: OpenTelemetry Collector, v0.161.0
-- otel-dist: Collector distributions, v0.161.0
-- otel-docs: Collector security guidance, unknown
-- basicauth: Collector Basic auth extension, 1c897ba9c67afc3c9e218b5cd05a6de49435f4de
-- bearertokenauth: Collector bearer token auth extension, 1c897ba9c67afc3c9e218b5cd05a6de49435f4de
-- phoenix-auth: Phoenix gRPC auth source, f11c885c063f1c9b6146693cda401c5d645d8294
-- pprof: Collector pprof source, 443567a6a00d7cff8cae1432a6fef655d8698e94
-- health: Collector health source, d922ffb299c6b9be026f97dd7d6a5f0f507efdeb
-- curl: curl minimum, 7.75.0
-- phoenix-bind: Phoenix listener source, arize-phoenix-v20.16.0
+- langfuse: Langfuse documentation (unknown)
+- lf-session: Langfuse session source (24c949d8dd5617219a8415f80e4c65ad611ff05c)
+- lf-compose: Langfuse Compose (0dd0a7fbe2feb300b8776f02b3684eeee3fbceab)
+- phoenix: Phoenix documentation (unknown)
+- phoenix-tls-min: Phoenix TLS announcement (unknown)
+- phoenix-tls: Phoenix TLS source (080959576563900038688ddf01f3bee110005df5)
+- helicone: Helicone documentation (unknown)
+- helicone-compose: Helicone Compose (b12ebaccb824ab9778757ca197ff302d97fda421)
+- otel: OpenTelemetry Collector (v0.161.0)
+- otel-dist: Collector distributions (v0.161.0)
+- otel-docs: Collector security guidance (unknown)
+- basicauth: Collector Basic auth extension (1c897ba9c67afc3c9e218b5cd05a6de49435f4de)
+- bearertokenauth: Collector bearer token auth extension (1c897ba9c67afc3c9e218b5cd05a6de49435f4de)
+- phoenix-auth: Phoenix gRPC auth source (f11c885c063f1c9b6146693cda401c5d645d8294)
+- pprof: Collector pprof source (443567a6a00d7cff8cae1432a6fef655d8698e94)
+- health: Collector health source (d922ffb299c6b9be026f97dd7d6a5f0f507efdeb)
+- curl: curl minimum (7.75.0)
+- phoenix-bind: Phoenix listener source (arize-phoenix-v20.16.0)
 
 Claims (full source mapping in the front matter):
 
@@ -34002,33 +34002,33 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 
 Components (recorded basis):
 
-- prefect: Prefect Basic Auth minimum, 3.1.8
-- prefect-source: Prefect server source, 9e560c9b6df4e19a5109a66e66d461f9facb538d
-- dagster: Dagster OSS, 1.13.24
-- airflow: Apache Airflow, 3.3.2
-- airflow-two: Apache Airflow historical configuration, 2.11.0
-- airflow-old: Apache Airflow historical default, 2.2.5
-- flower: Flower, v2.2.0
-- tornado: Tornado, v6.5.10
-- linux: Linux permissions and tools, unknown
-- systemd: systemd, v257
-- fhs: Filesystem Hierarchy Standard, 3.0
-- docker: Moby Docker, docker-v29.8.1
-- argo-three: Argo Workflows, v3.7.18
-- argo-four: Argo Workflows, v4.1.4
-- argo-docs: Argo Workflows documentation, release-3.7
-- iproute2: iproute2 ss manual, v6.15.0
-- network-namespaces: Linux network namespaces manual, man-pages-5.13
-- prefect-rolling: Prefect documentation (rolling), unknown
-- dagster-rolling: Dagster documentation (rolling), unknown
-- airflow-rolling: Apache Airflow documentation (rolling), unknown
-- temporal-rolling: Temporal documentation (rolling), unknown
-- flower-rolling: Flower documentation (rolling), unknown
-- prefect-blocks: Prefect Blocks source, 3.1.8
-- fab-source: Apache Airflow FAB provider source, providers-fab/3.9.0
-- airflow-crypto: Apache Airflow crypto source, 3.3.2
-- temporal-codec: Temporal Go SDK codec source, v1.28.0
-- fab-rolling: Apache Airflow FAB provider documentation (rolling), unknown
+- prefect: Prefect Basic Auth minimum (3.1.8)
+- prefect-source: Prefect server source (9e560c9b6df4e19a5109a66e66d461f9facb538d)
+- dagster: Dagster OSS (1.13.24)
+- airflow: Apache Airflow (3.3.2)
+- airflow-two: Apache Airflow historical configuration (2.11.0)
+- airflow-old: Apache Airflow historical default (2.2.5)
+- flower: Flower (v2.2.0)
+- tornado: Tornado (v6.5.10)
+- linux: Linux permissions and tools (unknown)
+- systemd: systemd (v257)
+- fhs: Filesystem Hierarchy Standard (3.0)
+- docker: Moby Docker (docker-v29.8.1)
+- argo-three: Argo Workflows (v3.7.18)
+- argo-four: Argo Workflows (v4.1.4)
+- argo-docs: Argo Workflows documentation (release-3.7)
+- iproute2: iproute2 ss manual (v6.15.0)
+- network-namespaces: Linux network namespaces manual (man-pages-5.13)
+- prefect-rolling: Prefect documentation (rolling) (unknown)
+- dagster-rolling: Dagster documentation (rolling) (unknown)
+- airflow-rolling: Apache Airflow documentation (rolling) (unknown)
+- temporal-rolling: Temporal documentation (rolling) (unknown)
+- flower-rolling: Flower documentation (rolling) (unknown)
+- prefect-blocks: Prefect Blocks source (3.1.8)
+- fab-source: Apache Airflow FAB provider source (providers-fab/3.9.0)
+- airflow-crypto: Apache Airflow crypto source (3.3.2)
+- temporal-codec: Temporal Go SDK codec source (v1.28.0)
+- fab-rolling: Apache Airflow FAB provider documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -34584,21 +34584,21 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- mongo: mongo-express, unknown
-- grafana: Grafana docs, unknown
-- prometheus: Prometheus docs, unknown
-- phpmyadmin: phpMyAdmin, unknown
-- pgadmin: pgAdmin, unknown
-- adminer: Adminer, unknown
-- prometheus-pin: Prometheus, v3.14.0
-- grafana-pin: Grafana, v13.2.2
-- go: Go net, unknown
-- htpasswd: Apache htpasswd, 2.4
-- httpd-source: Apache httpd htpasswd source, 2.4.69
-- owasp-source: OWASP Password Storage Cheat Sheet, 72865b1e3b5754246a101778dc00b37f9c233373
-- redisinsight: RedisInsight, 3.8.0
-- engine-pinned: Docker Engine networking documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- moby-pinned: Moby port mapping source, v28.3.3
+- mongo: mongo-express (unknown)
+- grafana: Grafana docs (unknown)
+- prometheus: Prometheus docs (unknown)
+- phpmyadmin: phpMyAdmin (unknown)
+- pgadmin: pgAdmin (unknown)
+- adminer: Adminer (unknown)
+- prometheus-pin: Prometheus (v3.14.0)
+- grafana-pin: Grafana (v13.2.2)
+- go: Go net (unknown)
+- htpasswd: Apache htpasswd (2.4)
+- httpd-source: Apache httpd htpasswd source (2.4.69)
+- owasp-source: OWASP Password Storage Cheat Sheet (72865b1e3b5754246a101778dc00b37f9c233373)
+- redisinsight: RedisInsight (3.8.0)
+- engine-pinned: Docker Engine networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- moby-pinned: Moby port mapping source (v28.3.3)
 
 Claims (full source mapping in the front matter):
 
@@ -34750,19 +34750,19 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- node: node_exporter, v1.12.1
-- toolkit: Exporter toolkit, v0.17.1
-- security: Prometheus security model, a0d29881382ad1ea20597d34fc4229984b326576
-- alert: Alertmanager, v0.34.1
-- push: Pushgateway, v1.11.3
-- jaeger: Jaeger, v2.21.0
-- jaeger-docs: Jaeger documentation, 4d150659ee4ed3ccc69253ec77c368392f59e625
-- tls: OpenTelemetry configtls, v1.66.0
-- basic: OpenTelemetry basicauth extension, v0.160.0
-- loki: Loki, v3.7.8
-- dskit: dskit, 8d1c6d34bb5a42b04caa982d68403c5a643bb742
-- go: Go documentation, unknown
-- curl: curl, curl-8_14_1
+- node: node_exporter (v1.12.1)
+- toolkit: Exporter toolkit (v0.17.1)
+- security: Prometheus security model (a0d29881382ad1ea20597d34fc4229984b326576)
+- alert: Alertmanager (v0.34.1)
+- push: Pushgateway (v1.11.3)
+- jaeger: Jaeger (v2.21.0)
+- jaeger-docs: Jaeger documentation (4d150659ee4ed3ccc69253ec77c368392f59e625)
+- tls: OpenTelemetry configtls (v1.66.0)
+- basic: OpenTelemetry basicauth extension (v0.160.0)
+- loki: Loki (v3.7.8)
+- dskit: dskit (8d1c6d34bb5a42b04caa982d68403c5a643bb742)
+- go: Go documentation (unknown)
+- curl: curl (curl-8_14_1)
 
 Claims (full source mapping in the front matter):
 
@@ -35346,27 +35346,27 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- portainer: Portainer, unknown
-- coolify: Coolify, unknown
-- dokploy: Dokploy, unknown
-- npm: Nginx Proxy Manager, unknown
-- vaultwarden: Vaultwarden docs, unknown
-- vaultwarden-pin: Vaultwarden config, 3347698712d3e99e652ad4394ef2fc0ce2800fdd
-- dashboard: Dashboard docs, unknown
-- dashboard-old: Dashboard arguments, v2.7.0
-- jenkins: Jenkins, unknown
-- gitea: Gitea docs, unknown
-- gitlab: GitLab CE, unknown
-- kuma: Uptime Kuma, unknown
-- docker: Docker Engine, unknown
-- dozzle: Dozzle, unknown
-- filebrowser: Filebrowser, unknown
-- nodered: Node-RED, unknown
-- gitea-pin: Gitea listener, v1.27.3
-- gitea-mfa-min: Gitea MFA minimum, 1.24
-- registry-docs: Docker Registry documentation (rolling), unknown
-- htpasswd: Apache htpasswd, 2.4
-- owasp-passwords: OWASP password storage, 1a3f58ed2714f258a1d713966457f1a0f426e841
+- portainer: Portainer (unknown)
+- coolify: Coolify (unknown)
+- dokploy: Dokploy (unknown)
+- npm: Nginx Proxy Manager (unknown)
+- vaultwarden: Vaultwarden docs (unknown)
+- vaultwarden-pin: Vaultwarden config (3347698712d3e99e652ad4394ef2fc0ce2800fdd)
+- dashboard: Dashboard docs (unknown)
+- dashboard-old: Dashboard arguments (v2.7.0)
+- jenkins: Jenkins (unknown)
+- gitea: Gitea docs (unknown)
+- gitlab: GitLab CE (unknown)
+- kuma: Uptime Kuma (unknown)
+- docker: Docker Engine (unknown)
+- dozzle: Dozzle (unknown)
+- filebrowser: Filebrowser (unknown)
+- nodered: Node-RED (unknown)
+- gitea-pin: Gitea listener (v1.27.3)
+- gitea-mfa-min: Gitea MFA minimum (1.24)
+- registry-docs: Docker Registry documentation (rolling) (unknown)
+- htpasswd: Apache htpasswd (2.4)
+- owasp-passwords: OWASP password storage (1a3f58ed2714f258a1d713966457f1a0f426e841)
 
 Claims (full source mapping in the front matter):
 
@@ -35624,10 +35624,10 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- protocol: MDN CORS documentation, unknown
-- express: Express cors middleware, unknown
-- fastapi: FastAPI CORSMiddleware, unknown
-- fetch: Fetch Standard credentials, unknown
+- protocol: MDN CORS documentation (unknown)
+- express: Express cors middleware (unknown)
+- fastapi: FastAPI CORSMiddleware (unknown)
+- fetch: Fetch Standard credentials (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -35715,15 +35715,15 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- mdn: MDN HTTP documentation, unknown
-- nginx-source: nginx source, release-1.26.3
-- apache-source: Apache HTTP Server, 2.4.69
-- caddy-source: Caddy source, v2.11.4
-- cloudflare-pages: Cloudflare Pages documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- scanner: Security Headers scanner, unknown
-- helmet: Helmet, v8.1.0
-- django: Django, 5.2
-- curl: curl, 8.23.0
+- mdn: MDN HTTP documentation (unknown)
+- nginx-source: nginx source (release-1.26.3)
+- apache-source: Apache HTTP Server (2.4.69)
+- caddy-source: Caddy source (v2.11.4)
+- cloudflare-pages: Cloudflare Pages documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- scanner: Security Headers scanner (unknown)
+- helmet: Helmet (v8.1.0)
+- django: Django (5.2)
+- curl: curl (8.23.0)
 
 Claims (full source mapping in the front matter):
 
@@ -35745,7 +35745,7 @@ Claims (full source mapping in the front matter):
 - logout-cookies (REASONED; mdn): Clear-Site-Data cookies clears cookies across the registered domain and all subdomains, plus HTTP authentication credentials; invalidate the server session separately.
 - logout-storage (REASONED; mdn): Clear-Site-Data storage removes origin local/session storage, IndexedDB and service-worker registrations; understand effects on companion applications before clearing.
 - logout-header (REASONED; mdn): The cited MDN logout example includes cache, cookies, storage, executionContexts, prefetchCache and prerenderCache.
-- verify-fetch (REASONED; mdn, curl): Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while &#96;-D -&#96; printing each response's header block, and selecting the last one, are this guide's assessment.
+- verify-fetch (REASONED; mdn, curl): Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while `-D -` printing each response's header block, and selecting the last one, are this guide's assessment.
 - verify-values (REASONED; mdn): Judge header values on the final response, not presence on an earlier hop; missing final headers are findings and a failed fetch is inconclusive.
 - verify-scanner (REASONED; scanner): Use the external Security Headers scanner for a second opinion; the guide states that it fetches with GET.
 - verify-csp (REASONED; mdn): Unexpected console violations must be absent in normal use, but this alone is insufficient; confirm a deliberately disallowed resource is blocked while an allowed one loads.
@@ -35867,11 +35867,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- firebase: Firebase documentation, unknown
-- supabase: Supabase documentation, unknown
-- postgres: PostgreSQL documentation, unknown
-- postgres-view: PostgreSQL invoker-view minimum, 15
-- curl: curl, curl-8_14_1
+- firebase: Firebase documentation (unknown)
+- supabase: Supabase documentation (unknown)
+- postgres: PostgreSQL documentation (unknown)
+- postgres-view: PostgreSQL invoker-view minimum (15)
+- curl: curl (curl-8_14_1)
 
 Claims (full source mapping in the front matter):
 
@@ -36908,12 +36908,12 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: Supabase documentation, unknown
-- env: Supabase environment source, eabe06be5b36cf57f2b158bd5093b396606bf801
-- compose: Supabase Compose source, e693f206f5050b0004a86e12e533bb75ba2a9c76
-- compose-env: Supabase Compose source at environment commit, eabe06be5b36cf57f2b158bd5093b396606bf801
-- kong: Supabase Kong configuration source, eabe06be5b36cf57f2b158bd5093b396606bf801
-- curl: curl, curl-8_14_1
+- docs: Supabase documentation (unknown)
+- env: Supabase environment source (eabe06be5b36cf57f2b158bd5093b396606bf801)
+- compose: Supabase Compose source (e693f206f5050b0004a86e12e533bb75ba2a9c76)
+- compose-env: Supabase Compose source at environment commit (eabe06be5b36cf57f2b158bd5093b396606bf801)
+- kong: Supabase Kong configuration source (eabe06be5b36cf57f2b158bd5093b396606bf801)
+- curl: curl (curl-8_14_1)
 
 Claims (full source mapping in the front matter):
 
@@ -37141,20 +37141,20 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- nginx: nginx documentation, unknown
-- apache: Apache documentation, 2.4
-- caddy: Caddy documentation, v2.11.4
-- next: Next.js documentation, unknown
-- vite: Vite documentation, unknown
-- cra: Create React App documentation, unknown
-- coreutils: GNU coreutils documentation, unknown
-- grep: GNU grep, 3.12
-- caddy-rolling: Caddy documentation (rolling), unknown
-- acme-http01: ACME HTTP-01, RFC 8555
-- debian-packaging: Debian apache2 packaging, 2.4.69-1
-- ecma426: ECMA-426, c724f0f494b44b21b651fdbd6412d3437eef0e72
-- next-maps: Next.js browser source maps, v16.3.6
-- vite-maps: Vite production source maps, v8.3.1
+- nginx: nginx documentation (unknown)
+- apache: Apache documentation (2.4)
+- caddy: Caddy documentation (v2.11.4)
+- next: Next.js documentation (unknown)
+- vite: Vite documentation (unknown)
+- cra: Create React App documentation (unknown)
+- coreutils: GNU coreutils documentation (unknown)
+- grep: GNU grep (3.12)
+- caddy-rolling: Caddy documentation (rolling) (unknown)
+- acme-http01: ACME HTTP-01 (RFC 8555)
+- debian-packaging: Debian apache2 packaging (2.4.69-1)
+- ecma426: ECMA-426 (c724f0f494b44b21b651fdbd6412d3437eef0e72)
+- next-maps: Next.js browser source maps (v16.3.6)
+- vite-maps: Vite production source maps (v8.3.1)
 
 Claims (full source mapping in the front matter):
 
@@ -37447,22 +37447,22 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- browser: Browser API and living standards, unknown
-- websocket: WebSocket protocol, RFC 6455
-- owasp: OWASP guidance, unknown
-- github: GitHub webhooks documentation, unknown
-- stripe: Stripe webhooks documentation, unknown
-- stripe-node: stripe-node, v18.5.0
-- stripe-python: stripe-python, v12.5.0
-- node: Node.js crypto documentation, unknown
-- traefik: Traefik timeout reference, v3.5
-- proxy: Caddy and nginx timeout documentation, unknown
-- caddy-source: Caddy source, v2.11.4
-- curl: curl minimum write-out version, 7.75.0
-- python: Python os documentation, unknown
-- nginx-source: nginx source, release-1.26.3
-- haproxy: HAProxy, 3.0
-- haproxy-source: HAProxy source, v3.0.0
+- browser: Browser API and living standards (unknown)
+- websocket: WebSocket protocol (RFC 6455)
+- owasp: OWASP guidance (unknown)
+- github: GitHub webhooks documentation (unknown)
+- stripe: Stripe webhooks documentation (unknown)
+- stripe-node: stripe-node (v18.5.0)
+- stripe-python: stripe-python (v12.5.0)
+- node: Node.js crypto documentation (unknown)
+- traefik: Traefik timeout reference (v3.5)
+- proxy: Caddy and nginx timeout documentation (unknown)
+- caddy-source: Caddy source (v2.11.4)
+- curl: curl minimum write-out version (7.75.0)
+- python: Python os documentation (unknown)
+- nginx-source: nginx source (release-1.26.3)
+- haproxy: HAProxy (3.0)
+- haproxy-source: HAProxy source (v3.0.0)
 
 Claims (full source mapping in the front matter):
 
@@ -37758,22 +37758,22 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- spf: SPF, RFC 7208
-- dkim: DKIM, RFC 6376
-- crypto: DKIM cryptography, RFC 8301
-- dmarc: DMARC, RFC 9989
-- aggregate: DMARC aggregate reporting, RFC 9990
-- failure: DMARC failure reporting, RFC 9991
-- submission: Submission TLS, RFC 8314
-- roles: SMTP submission roles, RFC 6409
-- relay: SMTP relay controls, RFC 2505
-- sts: MTA-STS, RFC 8461
-- rpt: TLS-RPT, RFC 8460
-- results: Authentication-Results, RFC 8601
-- bimi: BIMI documentation, unknown
-- submission-update: Submission TLS update, RFC 8997
-- bind: BIND dig manual, 9.18.39
-- openssl: OpenSSL command documentation, 3.0
+- spf: SPF (RFC 7208)
+- dkim: DKIM (RFC 6376)
+- crypto: DKIM cryptography (RFC 8301)
+- dmarc: DMARC (RFC 9989)
+- aggregate: DMARC aggregate reporting (RFC 9990)
+- failure: DMARC failure reporting (RFC 9991)
+- submission: Submission TLS (RFC 8314)
+- roles: SMTP submission roles (RFC 6409)
+- relay: SMTP relay controls (RFC 2505)
+- sts: MTA-STS (RFC 8461)
+- rpt: TLS-RPT (RFC 8460)
+- results: Authentication-Results (RFC 8601)
+- bimi: BIMI documentation (unknown)
+- submission-update: Submission TLS update (RFC 8997)
+- bind: BIND dig manual (9.18.39)
+- openssl: OpenSSL command documentation (3.0)
 
 Claims (full source mapping in the front matter):
 
@@ -37971,16 +37971,16 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- metabase-docs: Metabase docs, unknown
-- metabase: Metabase, v0.63.18
-- environ: environ, 1.2.0
-- ring: Ring Jetty adapter, 1.15.3
-- jetty: Jetty, 12.1.13
-- superset: Superset docs, unknown
-- superset-compose: Superset Compose, 3d01094d231712e3470eb625be3f9925aeaeadb5
-- redash-docs: Redash docs, unknown
-- redash: Redash, v26.9.0
-- docker: Docker publishing, unknown
+- metabase-docs: Metabase docs (unknown)
+- metabase: Metabase (v0.63.18)
+- environ: environ (1.2.0)
+- ring: Ring Jetty adapter (1.15.3)
+- jetty: Jetty (12.1.13)
+- superset: Superset docs (unknown)
+- superset-compose: Superset Compose (3d01094d231712e3470eb625be3f9925aeaeadb5)
+- redash-docs: Redash docs (unknown)
+- redash: Redash (v26.9.0)
+- docker: Docker publishing (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -38152,17 +38152,17 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- nocodb: NocoDB, 2026.09.0
-- docker: Docker docs, unknown
-- docker-new: Docker CLI, v27.2.0
-- docker-old: Docker CLI, v27.1.2
-- node: Node.js, v22.22.1
-- baserow: Baserow, 2.3.4
-- appsmith: Appsmith, v2.4.1
-- budibase: Budibase, v3.46.0
-- couchdb: CouchDB, 3.5.2
-- litellm: LiteLLM authentication source, 6ef7b86748118ceecd95271727c2fa167ce55fec
-- windmill: Windmill, v1.817.0
+- nocodb: NocoDB (2026.09.0)
+- docker: Docker docs (unknown)
+- docker-new: Docker CLI (v27.2.0)
+- docker-old: Docker CLI (v27.1.2)
+- node: Node.js (v22.22.1)
+- baserow: Baserow (2.3.4)
+- appsmith: Appsmith (v2.4.1)
+- budibase: Budibase (v3.46.0)
+- couchdb: CouchDB (3.5.2)
+- litellm: LiteLLM authentication source (6ef7b86748118ceecd95271727c2fa167ce55fec)
+- windmill: Windmill (v1.817.0)
 
 Claims (full source mapping in the front matter):
 
@@ -38214,7 +38214,7 @@ Claims (full source mapping in the front matter):
 - nocodb-key-logic (DEMONSTRATED; docker): A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated.
 - verify-windmill-control (REASONED; windmill): Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed.
 - verify-couchdb (REASONED; budibase, couchdb): Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control.
-- verify-litellm (REASONED; budibase, litellm): Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-&#96;sk-&#96; keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.
+- verify-litellm (REASONED; budibase, litellm): Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-`sk-` keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.
 - verify-tcp-outcomes (DEMONSTRATED; baserow, budibase, windmill): Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated.
 - verify-tcp-inputs (DEMONSTRATED; baserow, budibase, windmill): Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control.
 <!-- version-basis:end -->
@@ -38693,15 +38693,15 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- cockpit: Cockpit, 368
-- systemd: systemd, v262
-- webmin: Webmin, 2.670
-- webmin-docs: Webmin docs, 8ceae26c5a074053905cbcc6c0053be573633f3a
-- usermin: Usermin, 2.570
-- pve-docs: Proxmox VE 9.2 docs, 9.2.12
-- pve-manager: pve-manager, 9.2.20
-- pve-http: Proxmox HTTP server, 5119ff9bec08c69584c0c98bea3edd0098179e5f
-- pve-common: libpve-common-perl 9.1.21, 5054082fe492429fc37574985c2ca812af9a3125
+- cockpit: Cockpit (368)
+- systemd: systemd (v262)
+- webmin: Webmin (2.670)
+- webmin-docs: Webmin docs (8ceae26c5a074053905cbcc6c0053be573633f3a)
+- usermin: Usermin (2.570)
+- pve-docs: Proxmox VE 9.2 docs (9.2.12)
+- pve-manager: pve-manager (9.2.20)
+- pve-http: Proxmox HTTP server (5119ff9bec08c69584c0c98bea3edd0098179e5f)
+- pve-common: libpve-common-perl 9.1.21 (5054082fe492429fc37574985c2ca812af9a3125)
 
 Claims (full source mapping in the front matter):
 
@@ -39074,8 +39074,8 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- nomad: Nomad Community Edition, 2.0.7
-- consul: Consul Community Edition, 2.0.4
+- nomad: Nomad Community Edition (2.0.7)
+- consul: Consul Community Edition (2.0.4)
 
 Claims (full source mapping in the front matter):
 
@@ -39443,12 +39443,12 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- pb: PocketBase, v0.40.4
-- appwrite: Appwrite, 2.2.0
-- pb-docs: PocketBase documentation (rolling), unknown
-- appwrite-docs: Appwrite documentation (rolling), unknown
-- curl: curl, curl-8_14_1
-- utopia-php-database: utopia-php/database, 7.3.9
+- pb: PocketBase (v0.40.4)
+- appwrite: Appwrite (2.2.0)
+- pb-docs: PocketBase documentation (rolling) (unknown)
+- appwrite-docs: Appwrite documentation (rolling) (unknown)
+- curl: curl (curl-8_14_1)
+- utopia-php-database: utopia-php/database (7.3.9)
 
 Claims (full source mapping in the front matter):
 
@@ -40182,19 +40182,19 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 
 Components (recorded basis):
 
-- chromium: Chromium, 154.0.8037.57
-- cdp: Chrome DevTools Protocol, unknown
-- chrome-change: Chrome remote-debugging announcement, unknown
-- selenium: Selenium Grid, unknown
-- selenium-docker: Selenium Docker images, aafe4d6136f3bb5afcd9b7cb691c624516d06e1b
-- browserless: browserless, unknown
-- playwright: Playwright, unknown
-- browserless-token-default: browserless (open source), 2.56.7
-- browserless-file-fix: browserless Playwright file-protocol fix, 2.51.0
-- browserless-docs: browserless documentation (rolling), unknown
-- playwright-source: Playwright source, v1.58.2
-- curl-docs: curl documentation, curl-8_14_1
-- cve-record-source: CVE-2026-92811 record snapshot, b0b0976792a7c9d6d66ee553050c21cb088a0659
+- chromium: Chromium (154.0.8037.57)
+- cdp: Chrome DevTools Protocol (unknown)
+- chrome-change: Chrome remote-debugging announcement (unknown)
+- selenium: Selenium Grid (unknown)
+- selenium-docker: Selenium Docker images (aafe4d6136f3bb5afcd9b7cb691c624516d06e1b)
+- browserless: browserless (unknown)
+- playwright: Playwright (unknown)
+- browserless-token-default: browserless (open source) (2.56.7)
+- browserless-file-fix: browserless Playwright file-protocol fix (2.51.0)
+- browserless-docs: browserless documentation (rolling) (unknown)
+- playwright-source: Playwright source (v1.58.2)
+- curl-docs: curl documentation (curl-8_14_1)
+- cve-record-source: CVE-2026-92811 record snapshot (b0b0976792a7c9d6d66ee553050c21cb088a0659)
 
 Claims (full source mapping in the front matter):
 
@@ -40529,18 +40529,18 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- strapi: Strapi MFA announcement, unknown
-- directus: Directus documentation, unknown
-- directus-bind: Directus listener source, v12.4.1
-- directus-start: Directus quickstart, 12.0.2
-- hasura: Hasura GraphQL Engine documentation, unknown
-- hasura-start: Hasura quickstart image, 2.46.0
-- hasura-status: Hasura authentication-status minimum, 2.48.0
-- postgrest: PostgREST documentation, unknown
-- postgrest-bind: PostgREST listener source, v16.4
-- apollo: Apollo Server documentation (rolling), unknown
-- strapi-signup-source: Strapi Users and Permissions source, v5.58.0
-- strapi-rolling: Strapi documentation (rolling), unknown
+- strapi: Strapi MFA announcement (unknown)
+- directus: Directus documentation (unknown)
+- directus-bind: Directus listener source (v12.4.1)
+- directus-start: Directus quickstart (12.0.2)
+- hasura: Hasura GraphQL Engine documentation (unknown)
+- hasura-start: Hasura quickstart image (2.46.0)
+- hasura-status: Hasura authentication-status minimum (2.48.0)
+- postgrest: PostgREST documentation (unknown)
+- postgrest-bind: PostgREST listener source (v16.4)
+- apollo: Apollo Server documentation (rolling) (unknown)
+- strapi-signup-source: Strapi Users and Permissions source (v5.58.0)
+- strapi-rolling: Strapi documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 

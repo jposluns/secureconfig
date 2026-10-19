@@ -133,15 +133,15 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: memcached documentation, unknown
-- openssl: OpenSSL CLI, 3.0
-- stable: memcached source, 1.6.45
-- protocol: memcached protocol source, 7278bdee96329915bbc87731ba005095453f5c2f
-- reload: memcached TLS design, 4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969
-- ascii: memcached ASCII authentication release notes, unknown
-- watch: memcached watch-control release notes, unknown
-- security: memcached security release notes, unknown
-- release-notes-source: memcached release notes revision, 780e280d1a7f98f2981ffeb357ef0c9b182a9844
+- docs: memcached documentation (unknown)
+- openssl: OpenSSL CLI (3.0)
+- stable: memcached source (1.6.45)
+- protocol: memcached protocol source (7278bdee96329915bbc87731ba005095453f5c2f)
+- reload: memcached TLS design (4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969)
+- ascii: memcached ASCII authentication release notes (unknown)
+- watch: memcached watch-control release notes (unknown)
+- security: memcached security release notes (unknown)
+- release-notes-source: memcached release notes revision (780e280d1a7f98f2981ffeb357ef0c9b182a9844)
 
 Claims (full source mapping in the front matter):
 

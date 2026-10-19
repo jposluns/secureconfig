@@ -131,16 +131,16 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- metabase-docs: Metabase docs, unknown
-- metabase: Metabase, v0.63.18
-- environ: environ, 1.2.0
-- ring: Ring Jetty adapter, 1.15.3
-- jetty: Jetty, 12.1.13
-- superset: Superset docs, unknown
-- superset-compose: Superset Compose, 3d01094d231712e3470eb625be3f9925aeaeadb5
-- redash-docs: Redash docs, unknown
-- redash: Redash, v26.9.0
-- docker: Docker publishing, unknown
+- metabase-docs: Metabase docs (unknown)
+- metabase: Metabase (v0.63.18)
+- environ: environ (1.2.0)
+- ring: Ring Jetty adapter (1.15.3)
+- jetty: Jetty (12.1.13)
+- superset: Superset docs (unknown)
+- superset-compose: Superset Compose (3d01094d231712e3470eb625be3f9925aeaeadb5)
+- redash-docs: Redash docs (unknown)
+- redash: Redash (v26.9.0)
+- docker: Docker publishing (unknown)
 
 Claims (full source mapping in the front matter):
 

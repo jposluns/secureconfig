@@ -202,12 +202,12 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docker: Official MongoDB Docker images, 0a29f3374c7fa7c38cfe280363b754f898e0a5eb
-- bind: MongoDB bind source, r8.0.32
-- docs: MongoDB documentation, unknown
-- shell: mongosh documentation, unknown
-- v8: MongoDB documentation, 8.0
-- bash: Bash documentation, unknown
+- docker: Official MongoDB Docker images (0a29f3374c7fa7c38cfe280363b754f898e0a5eb)
+- bind: MongoDB bind source (r8.0.32)
+- docs: MongoDB documentation (unknown)
+- shell: mongosh documentation (unknown)
+- v8: MongoDB documentation (8.0)
+- bash: Bash documentation (unknown)
 
 Claims (full source mapping in the front matter):
 

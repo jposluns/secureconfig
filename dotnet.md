@@ -212,18 +212,18 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: ASP.NET Core documentation, .NET 10
-- rate-min: ASP.NET Core rate-limiter minimum, .NET 7
-- net10: ASP.NET Core, .NET 10
-- source: ASP.NET Core source, v10.0.0
-- proxy-fix: ASP.NET Core proxy hardening, 8.0.17
-- runtime: NET runtime source, v10.0.0
-- openssl: OpenSSL documentation, 3.0
-- precedence: WebApplicationBuilder precedence, .NET 7
-- iis: IIS documentation, IIS 10
-- iis-rolling: IIS documentation (rolling), unknown
-- dotnet-rolling: .NET documentation (rolling), unknown
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
+- docs: ASP.NET Core documentation (.NET 10)
+- rate-min: ASP.NET Core rate-limiter minimum (.NET 7)
+- net10: ASP.NET Core (.NET 10)
+- source: ASP.NET Core source (v10.0.0)
+- proxy-fix: ASP.NET Core proxy hardening (8.0.17)
+- runtime: NET runtime source (v10.0.0)
+- openssl: OpenSSL documentation (3.0)
+- precedence: WebApplicationBuilder precedence (.NET 7)
+- iis: IIS documentation (IIS 10)
+- iis-rolling: IIS documentation (rolling) (unknown)
+- dotnet-rolling: .NET documentation (rolling) (unknown)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
 
 Claims (full source mapping in the front matter):
 
