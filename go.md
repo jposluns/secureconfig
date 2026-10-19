@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "56071029dcaea9130592a7a1948c0413617cbade1d32755202be83629ef24825",
+  "body_sha256": "7bda579ecc5f011cb380cd4ad0d43ab95afc524c80c5035ba4ca08afdef5b1b7",
   "components": {
     "http": {
       "name": "Go net/http documentation",
@@ -103,6 +103,28 @@ version_basis: {
       "sources": {
         "scdd6f451714e": "https://github.com/pquerna/otp/blob/v1.5.0/README.md#L9"
       }
+    },
+    "go-env": {
+      "name": "Go environment source",
+      "basis": "go1.27.0",
+      "sources": {
+        "s41d67ab4a28d": "https://github.com/golang/go/blob/go1.27.0/src/os/env.go#L98-L115"
+      }
+    },
+    "cf-docs": {
+      "name": "Cloudflare documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24",
+        "s6f6104362214": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85"
+      }
+    },
+    "authelia-source": {
+      "name": "Authelia source",
+      "basis": "v4.39.28",
+      "sources": {
+        "s38726e46de86": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/webauthn.md#L69-L75"
+      }
     }
   },
   "claims": {
@@ -116,9 +138,9 @@ version_basis: {
     "argon": {"text": "IDKey returns raw bytes; retain random salt and parameters. RFC 9106 choices are time=1/memory=2 GiB/threads=4 or time=3/memory=64 MiB/threads=4.", "components": ["argon"], "sources": ["argon:s95fa46eac674"], "status": "REASONED"},
     "cookies": {"text": "Set session cookie Path=/, Secure, HttpOnly and SameSite=Lax.", "components": ["http"], "sources": ["http:s75405f80decc"], "status": "REASONED"},
     "login-limit": {"text": "A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits.", "components": ["rate"], "sources": ["rate:s5c3fdae5a0af"], "status": "REASONED"},
-    "tokens": {"text": "Load tokens from the environment and generate them per authentication.md; token generation and environment handling lack a listed source.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
+    "tokens": {"text": "Guide advice: load tokens from the environment, never source literals, and generate them per authentication.md; generation stays delegated. Go go1.27.0 Getenv returns an empty string when unset or empty; use LookupEnv's boolean to distinguish them (false when unset, true when present).", "components": ["oidc", "go-env"], "sources": ["oidc:s60cc1d7a8fe6", "go-env:s41d67ab4a28d"], "status": "REASONED"},
     "oidc": {"text": "NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists.", "components": ["oidc"], "sources": ["oidc:s60cc1d7a8fe6"], "status": "REASONED"},
-    "mfa": {"text": "Use pquerna/otp or a fronting identity layer. The fronting identity layer's MFA option has no listed source.", "components": ["oidc", "otp"], "sources": ["oidc:s60cc1d7a8fe6", "otp:scdd6f451714e"], "status": "REASONED"},
+    "mfa": {"text": "Guide advice: use app-level TOTP with pquerna/otp v1.5.0 or a fronting layer such as Cloudflare Access or Authelia; follow mfa.md. Configured Access policies or Authelia's MFA-required passkey flow can add a factor; the citations do not establish default MFA or deployed enforcement.", "components": ["oidc", "otp", "cf-docs", "authelia-source"], "sources": ["oidc:s60cc1d7a8fe6", "otp:scdd6f451714e", "cf-docs:s7e793d13cf31", "cf-docs:s6f6104362214", "authelia-source:s38726e46de86"], "status": "REASONED"},
     "client-validation": {"text": "InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation.", "components": ["tls"], "sources": ["tls:se2152a9c28fc"], "status": "REASONED"},
     "client-ca": {"text": "Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR.", "components": ["tls", "x509"], "sources": ["tls:se2152a9c28fc", "x509:se65b937f9e1e"], "status": "REASONED"},
     "platform-ca": {"text": "Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set.", "components": ["x509"], "sources": ["x509:se65b937f9e1e"], "status": "REASONED"},
@@ -154,7 +176,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -172,6 +194,9 @@ Components (recorded basis):
 - linux: Linux port-threshold documentation, unknown
 - request: Go Request.Host source, 1.27.0
 - otp: pquerna/otp, v1.5.0
+- go-env: Go environment source, go1.27.0
+- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
+- authelia-source: Authelia source, v4.39.28
 
 Claims (full source mapping in the front matter):
 
@@ -185,9 +210,9 @@ Claims (full source mapping in the front matter):
 - argon (REASONED; argon): IDKey returns raw bytes; retain random salt and parameters. RFC 9106 choices are time=1/memory=2 GiB/threads=4 or time=3/memory=64 MiB/threads=4.
 - cookies (REASONED; http): Set session cookie Path=/, Secure, HttpOnly and SameSite=Lax.
 - login-limit (REASONED; rate): A limiter every three seconds with burst five allows about 20/minute; use separate limiters keyed by trusted client address for per-client limits.
-- tokens (REASONED; oidc): Load tokens from the environment and generate them per authentication.md; token generation and environment handling lack a listed source.
+- tokens (REASONED; oidc, go-env): Guide advice: load tokens from the environment, never source literals, and generate them per authentication.md; generation stays delegated. Go go1.27.0 Getenv returns an empty string when unset or empty; use LookupEnv's boolean to distinguish them (false when unset, true when present).
 - oidc (REASONED; oidc): NewProvider discovers the issuer; Verifier with ClientID checks ID-token signature, issuer, audience and expiry; apply separate allowlists.
-- mfa (REASONED; oidc, otp): Use pquerna/otp or a fronting identity layer. The fronting identity layer's MFA option has no listed source.
+- mfa (REASONED; oidc, otp, cf-docs, authelia-source): Guide advice: use app-level TOTP with pquerna/otp v1.5.0 or a fronting layer such as Cloudflare Access or Authelia; follow mfa.md. Configured Access policies or Authelia's MFA-required passkey flow can add a factor; the citations do not establish default MFA or deployed enforcement.
 - client-validation (REASONED; tls): InsecureSkipVerify accepts any certificate and hostname unless custom VerifyConnection/VerifyPeerCertificate checks replace validation.
 - client-ca (REASONED; tls, x509): Use SystemCertPool plus a checked AppendCertsFromPEM result and RootCAs, or override CA locations with SSL_CERT_FILE/SSL_CERT_DIR.
 - platform-ca (REASONED; x509): Go 1.27 certificate-file/directory overrides bypass macOS/Windows platform verification unless GODEBUG=x509sslcertoverrideplatform=0 is also set.
@@ -278,7 +303,11 @@ var loginLimiter = rate.NewLimiter(rate.Every(3*time.Second), 5)   // about 20 p
 if !loginLimiter.Allow() { http.Error(w, "too many requests", http.StatusTooManyRequests); return }
 ```
 
-API keys and tokens come from the environment, never from literals in the source; generate them per [authentication.md](authentication.md). SSO: `github.com/coreos/go-oidc/v3/oidc` pairs with `golang.org/x/oauth2`; `oidc.NewProvider(ctx, issuer)` discovers the provider and `provider.Verifier(&oidc.Config{ClientID: clientID})` checks ID token signature, issuer, audience, and expiry. The allowlist checks that follow are in [oidc-integration.md](oidc-integration.md). MFA: app-level TOTP with [pquerna/otp](https://github.com/pquerna/otp), or a fronting identity layer; requirements in [mfa.md](mfa.md).
+Guide advice: API keys and tokens come from the environment, never from literals in the source; generate them per [authentication.md](authentication.md). Go go1.27.0 documents [`os.Getenv(key)` and `os.LookupEnv(key)`](https://github.com/golang/go/blob/go1.27.0/src/os/env.go#L98-L115): `Getenv` returns the value, or an empty string when unset; `LookupEnv` returns the value (possibly empty) and `true` when present, or an empty string and `false` when unset. If configuration needs to distinguish an unset token from an empty one, use the boolean returned by `LookupEnv`. These APIs load values; token generation stays delegated to [authentication.md](authentication.md).
+
+SSO: `github.com/coreos/go-oidc/v3/oidc` pairs with `golang.org/x/oauth2`; `oidc.NewProvider(ctx, issuer)` discovers the provider and `provider.Verifier(&oidc.Config{ClientID: clientID})` checks ID token signature, issuer, audience, and expiry. The allowlist checks that follow are in [oidc-integration.md](oidc-integration.md).
+
+MFA: this guide advises app-level TOTP with [pquerna/otp](https://github.com/pquerna/otp) (v1.5.0), or a fronting identity layer such as Cloudflare Access or Authelia; requirements in [mfa.md](mfa.md). Cloudflare Access [independent MFA](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24) can require a TOTP authenticator or WebAuthn security key after IdP login; its [MFA settings](https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85) require organization-level enablement before application or policy configuration, and policy settings override application settings, which override organization settings. Authelia v4.39.28 [passkey login](https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/webauthn.md#L69-L75) counts as a single factor and, by default, prompts for a password when the request requires MFA. Guide advice: require MFA in the effective policy and test that access without the second factor is denied; these citations do not establish MFA enforcement by default or enforcement in your Go deployment.
 
 ## 4. Client-side TLS discipline
 
@@ -408,3 +437,7 @@ curl -q -sS -o /dev/null -w '%{http_code}\n' https://example.com/debug/pprof/   
 - expvar (registers /debug/vars on the default mux): https://pkg.go.dev/expvar
 - Linux ip-sysctl, ip_unprivileged_port_start (the privileged-port threshold is configurable): https://docs.kernel.org/networking/ip-sysctl.html#ip-unprivileged-port-start
 - pquerna/otp TOTP support (v1.5.0, checked October 2026): https://github.com/pquerna/otp/blob/v1.5.0/README.md#L9
+- Go environment loading (`go1.27.0`, checked October 2026), Getenv and LookupEnv including unset and empty values; token generation remains delegated to authentication.md: https://github.com/golang/go/blob/go1.27.0/src/os/env.go#L98-L115
+- Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, independent MFA and TOTP/WebAuthn factors (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24
+- Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, MFA enforcement, policy precedence and organization-level prerequisite (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85
+- Authelia source `v4.39.28`, single-factor passkey login and password prompt when a request requires MFA (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/second-factor/webauthn.md#L69-L75

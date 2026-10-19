@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.279 | `go.md`: tokens: pin Token environment handling; preserve the delegation of Token generation to p4.66. (M, M) | Done, #676. Cited Go go1.27.0 environment loading and unset-versus-empty semantics while preserving source-literal advice and token-generation delegation to authentication.md. |
+| 1.280 | `go.md`: mfa: cite the fronting identity layer used for MFA enforcement. (M, M) | Done, #676. Cited configured Cloudflare Access and Authelia MFA enforcement while retaining pquerna/otp v1.5.0 and the limits on default and deployed enforcement. |
 | 1.277 | `python.md`: password: cite bcrypt API and no-user-store conjunction. (M, M) | Done, #673. Cited the pinned argon2-cffi and bcrypt APIs, made local account storage conditional, and retained the framework-capability evidence limit and Django alternative. |
 | 1.278 | `python.md`: secrets: cite or label the 32-byte generation choice. (M, M) | Done, #673. Cited CPython v3.14.8 token input-byte and default semantics and labelled 32 bytes as the guide's example choice, with no universal sizing claim. |
 | 1.274 | `nodejs.md`: password: cite Argon2id recommendation and bcrypt library APIs. (M, M) | Done, #672. Pinned OWASP password guidance and Node package APIs, retaining the legacy bcrypt scope and labelling cost 12 as the guide example. |
