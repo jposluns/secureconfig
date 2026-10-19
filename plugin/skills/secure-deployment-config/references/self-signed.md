@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-12",
+  "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "5fbbb96c3f90c9b24582ebf91409bada06ab382482f8426be1d595f44474f1e9",
+  "body_sha256": "b209ce0aa20390b1ec8888e436f6bb87ea31f15f19bcd4d8529c14faca6a432a",
   "components": {
     "openssl": {
       "name": "OpenSSL documentation (rolling)",
@@ -82,6 +82,25 @@ version_basis: {
       "sources": {
         "s876e668e7116": "https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/securing_networks/using-shared-system-certificates_securing-networks#adding-new-certificates_using-shared-system-certificates"
       }
+    },
+    "coreutils": {
+      "name": "GNU coreutils file permissions",
+      "basis": "v9.7",
+      "sources": {
+        "s876896563d01": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11937-L11942",
+        "s881033f651b3": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11967-L11968",
+        "s9ab719f6189b": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11614-L11622",
+        "s0ef955010eb3": "https://github.com/coreutils/coreutils/blob/v9.7/doc/perm.texi#L492-L535"
+      }
+    },
+    "node-v24": {
+      "name": "Node.js API documentation",
+      "basis": "v24.22.0",
+      "sources": {
+        "sbfee17929443": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3940-L3944",
+        "s684a71cf8b6e": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1786-L1789",
+        "s025a5157269c": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L2250-L2255"
+      }
     }
   },
   "claims": {
@@ -93,7 +112,7 @@ version_basis: {
     "extension-history": {"text": "The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
     "unencrypted-key": {"text": "-noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
     "expiry": {"text": "Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
-    "key-permissions": {"text": "chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "REASONED"},
+    "key-permissions": {"text": "This guide advises chmod 600 and service-user ownership for server.key; GNU coreutils v9.7 documents chmod's mode changes and chown's owner/group changes, not that advice. Mode 600's owner read/write and no group/other permissions are this guide's reading of GNU coreutils v9.7's Numeric Modes definition in doc/perm.texi.", "components": ["openssl", "coreutils"], "sources": ["openssl:s211b1e6e4aa4", "coreutils:s876896563d01", "coreutils:s881033f651b3", "coreutils:s9ab719f6189b", "coreutils:s0ef955010eb3"], "status": "REASONED"},
     "key-compromise": {"text": "Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat.", "components": ["openssl", "git"], "sources": ["openssl:s211b1e6e4aa4", "git:sf961a2e5b8e1"], "status": "REASONED"},
     "mkcert": {"text": "mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs.", "components": ["mkcert"], "sources": ["mkcert:s41ae17dba4ce"], "status": "REASONED"},
     "mkcert-custody": {"text": "Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.", "components": ["mkcert"], "sources": ["mkcert:s41ae17dba4ce"], "status": "REASONED"},
@@ -102,7 +121,7 @@ version_basis: {
     "curl-trust": {"text": "curl --cacert server.crt supplies explicit trust for app.internal.", "components": ["openssl", "curl-source"], "sources": ["openssl:se5d70578564e", "curl-source:s19ed21fc98f8"], "status": "REASONED"},
     "requests-trust": {"text": "REQUESTS_CA_BUNDLE supplies the certificate path to Python requests.", "components": ["openssl", "requests"], "sources": ["openssl:se5d70578564e", "requests:s21c6be6f6df4"], "status": "REASONED"},
     "node-trust": {"text": "NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js.", "components": ["mkcert", "node"], "sources": ["mkcert:s41ae17dba4ce", "node:s402034f5dcea"], "status": "REASONED"},
-    "verification-bypasses": {"text": "Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but Node.js bypass-specific Sources entries are absent.", "components": ["openssl", "requests", "curl-source"], "sources": ["openssl:se5d70578564e", "requests:scff02f87cf30", "curl-source:s60820cd231e1"], "status": "REASONED"},
+    "verification-bypasses": {"text": "Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0. Node.js v24.22.0 scopes the bypasses to process-environment TLS validation, client-connection server verification or server rejection with requestCert=true; accepting attacker certificates and persistence into production are this guide's assessment.", "components": ["openssl", "requests", "curl-source", "node-v24"], "sources": ["openssl:se5d70578564e", "requests:scff02f87cf30", "curl-source:s60820cd231e1", "node-v24:sbfee17929443", "node-v24:s684a71cf8b6e", "node-v24:s025a5157269c"], "status": "REASONED"},
     "verify-extensions": {"text": "Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN.", "components": ["openssl"], "sources": ["openssl:s211b1e6e4aa4"], "status": "DEMONSTRATED", "evidence": "On 2026-10-05 in private /dev/shm scratch, OpenSSL 3.5.5 ran the printed x509 command on three disposable one-day RSA certificates. Missing-SAN and CA:TRUE fixtures each exited 0 but lacked the required SAN or leaf constraint; the fixed fixture also exited 0 and printed DNS:app.internal, IP Address:127.0.0.1 and critical CA:FALSE. Subject and validity dates printed for all three.", "verify": [1]},
     "verify-tls": {"text": "The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0.", "components": ["openssl"], "sources": ["openssl:s581d7ad32359", "openssl:se5d70578564e"], "status": "REASONED", "verify": [2]},
     "verify-failures": {"text": "Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62.", "components": ["openssl"], "sources": ["openssl:s581d7ad32359", "openssl:se5d70578564e"], "status": "REASONED", "verify": [2]},
@@ -119,7 +138,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-12; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -133,6 +152,8 @@ Components (recorded basis):
 - debian-ca: Debian ca-certificates, trixie
 - ubuntu-ca: Ubuntu ca-certificates, noble
 - rhel-ca: RHEL shared system certificates, RHEL 9
+- coreutils: GNU coreutils file permissions, v9.7
+- node-v24: Node.js API documentation, v24.22.0
 
 Claims (full source mapping in the front matter):
 
@@ -144,7 +165,7 @@ Claims (full source mapping in the front matter):
 - extension-history (REASONED; openssl): The command-line extension override relies on OpenSSL 3.0 or later; the guide says end-of-life 1.1.1 instead emits a duplicate invalid extension.
 - unencrypted-key (REASONED; openssl): -noenc leaves the key unencrypted for unattended startup; -nodes is the pre-3.0 spelling, still accepted but deprecated. Protect the key with permissions.
 - expiry (REASONED; openssl): Track the -days expiry with a calendar or monitoring; self-signed certificates do not renew themselves.
-- key-permissions (REASONED; openssl): chmod 600 and service-user ownership protect server.key; filesystem command sources and versions are not recorded.
+- key-permissions (REASONED; openssl, coreutils): This guide advises chmod 600 and service-user ownership for server.key; GNU coreutils v9.7 documents chmod's mode changes and chown's owner/group changes, not that advice. Mode 600's owner read/write and no group/other permissions are this guide's reading of GNU coreutils v9.7's Numeric Modes definition in doc/perm.texi.
 - key-compromise (REASONED; openssl, git): Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat.
 - mkcert (REASONED; mkcert): mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs.
 - mkcert-custody (REASONED; mkcert): Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.
@@ -153,7 +174,7 @@ Claims (full source mapping in the front matter):
 - curl-trust (REASONED; openssl, curl-source): curl --cacert server.crt supplies explicit trust for app.internal.
 - requests-trust (REASONED; openssl, requests): REQUESTS_CA_BUNDLE supplies the certificate path to Python requests.
 - node-trust (REASONED; mkcert, node): NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js.
-- verification-bypasses (REASONED; openssl, requests, curl-source): Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0; the guide says they disable TLS validation, but Node.js bypass-specific Sources entries are absent.
+- verification-bypasses (REASONED; openssl, requests, curl-source, node-v24): Do not commit curl -k, verify=False, rejectUnauthorized: false or NODE_TLS_REJECT_UNAUTHORIZED=0. Node.js v24.22.0 scopes the bypasses to process-environment TLS validation, client-connection server verification or server rejection with requestCert=true; accepting attacker certificates and persistence into production are this guide's assessment.
 - verify-extensions (DEMONSTRATED; openssl): Inspect x509 output for SAN coverage and CA:FALSE, not its exit status: it can exit 0 with no SAN.
 - verify-tls (REASONED; openssl): The app.internal:443 s_client check supplies SNI, hostname checking, verification errors and CAfile; a pass prints Verification: OK, Verified peername: app.internal and return code 0, and exits 0.
 - verify-failures (REASONED; openssl): Without -verify_hostname the name is ignored; without -verify_return_error a verification failure can still complete the handshake and exit 0. Both flags make name or trust failures exit nonzero; wrong name reports code 62.
@@ -197,6 +218,8 @@ Rules that make the certificate actually work:
 
 ## 2. Protect the private key
 
+This guide advises protecting `server.key` with mode `600` and ownership by the account and group your service runs as; `app:app` below is this guide's example, to replace with that account and group. GNU coreutils v9.7 documents `chmod` changing file access permissions and taking new mode bits, and `chown owner:group` changing both owner and group (see Sources); it does not recommend a service account or select one for this key. This guide's reading of `600` is owner read/write and no group or other permissions, based on GNU coreutils v9.7's Numeric Modes definition in `doc/perm.texi` (see Sources).
+
 ```bash
 chmod 600 server.key
 chown app:app server.key      # whichever user your service runs as
@@ -234,7 +257,7 @@ export REQUESTS_CA_BUNDLE=/path/to/server.crt      # Python requests
 export NODE_EXTRA_CA_CERTS=/path/to/server.crt     # Node.js
 ```
 
-Do not ship `curl -k`, `verify=False`, `rejectUnauthorized: false`, or `NODE_TLS_REJECT_UNAUTHORIZED=0` in committed code. Each of these disables TLS validation entirely, for attacker-controlled certificates as much as for your own, and they reliably survive into production.
+Do not ship `curl -k`, `verify=False`, `rejectUnauthorized: false`, or `NODE_TLS_REJECT_UNAUTHORIZED=0` in committed code. For curl and Requests, `-k` and `verify=False` disable certificate verification (see their existing Sources entries). Node.js v24.22.0 documents `NODE_TLS_REJECT_UNAUTHORIZED=0` as an environment variable disabling certificate validation for TLS connections in the Node.js process and strongly discourages its use. In `tls.connect`, `rejectUnauthorized: false` disables verification of the server certificate against supplied CAs for that client connection. In `tls.createServer`, it disables rejection of connections unauthorized by supplied CAs; the option only has an effect when `requestCert` is `true`. These Node.js passages establish the documented settings and their scope, not their use in a particular deployment. This guide's assessment is that these bypasses accept attacker-controlled certificates as readily as your own and reliably survive into production.
 
 ## 5. Verify
 
@@ -274,3 +297,10 @@ Self-signed certificates have no revocation and no third-party accountability, a
 - Debian trixie update-ca-certificates (checked October 2026): https://manpages.debian.org/trixie/ca-certificates/update-ca-certificates.8.en.html#DESCRIPTION
 - Ubuntu noble update-ca-certificates (checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/update-ca-certificates.8.html#description
 - RHEL 9 shared system certificates (checked October 2026): https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/securing_networks/using-shared-system-certificates_securing-networks#adding-new-certificates_using-shared-system-certificates
+- GNU coreutils v9.7 `chmod` syntax (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11937-L11942
+- GNU coreutils v9.7 mode argument (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11967-L11968
+- GNU coreutils v9.7 `chown` owner and group (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11614-L11622
+- GNU coreutils v9.7 numeric mode definition (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/perm.texi#L492-L535
+- Node.js v24.22.0 `NODE_TLS_REJECT_UNAUTHORIZED` (checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/cli.md#L3940-L3944
+- Node.js v24.22.0 `tls.connect` client `rejectUnauthorized` (checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1786-L1789
+- Node.js v24.22.0 `tls.createServer` `rejectUnauthorized` and `requestCert` (checked October 2026): https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L2250-L2255

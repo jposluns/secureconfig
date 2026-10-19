@@ -60,8 +60,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.283 | `agent-builders.md`: debug-remedy: establish whether the debug_permission change is available in the console UI; API remedy is already cited and UI availability is unestablished. (M, M) | `[gap]` |
 | 1.285 | `gitops-controllers.md`: verify-flux: cite curl `--data-binary` behaviour; the six historical GitOps facts remain delegated to row 2.28. (M, M) | `[gap]` |
 | 1.286 | `lighttpd.md`: pin lighttpd TLS/key introduction versions for the 1.4.56 protocol defaults and 1.4.53 separate-key syntax, and pin the redirect default transition at 1.4.75. (M, M) | `[gap]` |
-| 1.287 | `self-signed.md`: key-permissions: cite filesystem command and mode behaviour for the private-key instructions. (M, M) | `[gap]` |
-| 1.288 | `self-signed.md`: verification-bypasses: cite Node.js bypass settings and their scope. (M, M) | `[gap]` |
 | 1.289 | `identity-providers.md`: maintain the Supabase `aal2` authorization-policy claim mapping to the source already cited in the guide. (M, S) | `[gap]` |
 | 1.290 | `firebase-supabase.md`: local-guards: source the ShellCheck 0.11.0 and other shell/tool versions for the recorded authoring guard run. (M, M) | `[gap]` |
 | 1.291 | `pocketbase.md`: source-limits: trace the PocketBase CLI wrapper and Appwrite document read authorization and privileged/API-key requester classification; establish the `--dev` default. (M, M) | `[gap]` |
