@@ -3,7 +3,7 @@ version_basis: {
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "8b70740a86cb79bf789c6c45c58c9c25a8f861630a3d9a4d9d607ccc155089bb",
+  "body_sha256": "6690687db9e1d66f3e67a898fc0b030022e55be24166bc29b8c35554e8081891",
   "components": {
     "firebase": {
       "name": "Firebase documentation",
@@ -1147,7 +1147,7 @@ checks. These checks establish syntax and the stated shell behavior only; they d
 Firebase Rules, execute SQL policies, or demonstrate service authorization. The replacement
 was not installed in the repository, and no whole-corpus gate result is claimed.
 
-REASONED: tool-version provenance for the historical local runs above; the [ShellCheck v0.11.0 changelog](https://github.com/koalaman/shellcheck/blob/v0.11.0/CHANGELOG.md#L1) identifies the release named as ShellCheck 0.11.0 in this guide's run record, but does not establish which binary the authoring host ran. Bash and other tool/parser versions were not recorded and remain unrecorded. This guide's assessment of the recorded checks is limited to syntax and the stated shell behavior, not Firebase Rules compilation, SQL execution or service authorization.
+REASONED: tool-version provenance for the historical local runs above; the [ShellCheck v0.11.0 changelog](https://github.com/koalaman/shellcheck/blob/v0.11.0/CHANGELOG.md#L1) identifies the release named as ShellCheck 0.11.0 in this guide's run record, but does not establish which binary the authoring host ran. Bash and other tool/parser versions were not recorded and remain unrecorded. This guide's assessment of the recorded checks is limited to syntax and the stated shell behaviour, not Firebase Rules compilation, SQL execution or service authorization.
 
 | Scope | Exposed/fixed checks and prerequisites | Status |
 | --- | --- | --- |
