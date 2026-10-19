@@ -10,6 +10,8 @@ because an item that simply vanishes gets proposed again six months later.
 
 | ID | Item | Ended |
 | --- | --- | --- |
+| 1.277 | `python.md`: password: cite bcrypt API and no-user-store conjunction. (M, M) | Done, #673. Cited the pinned argon2-cffi and bcrypt APIs, made local account storage conditional, and retained the framework-capability evidence limit and Django alternative. |
+| 1.278 | `python.md`: secrets: cite or label the 32-byte generation choice. (M, M) | Done, #673. Cited CPython v3.14.8 token input-byte and default semantics and labelled 32 bytes as the guide's example choice, with no universal sizing claim. |
 | 1.274 | `nodejs.md`: password: cite Argon2id recommendation and bcrypt library APIs. (M, M) | Done, #672. Pinned OWASP password guidance and Node package APIs, retaining the legacy bcrypt scope and labelling cost 12 as the guide example. |
 | 1.275 | `nodejs.md`: mfa: source the fronting identity layer beyond the already pinned otplib/qrcode examples. (M, M) | Done, #672. Cited Cloudflare Access independent MFA and policy precedence, retaining TOTP and requiring effective MFA enforcement and origin isolation without claiming a deployment test. |
 | 1.284 | `dotnet.md`: mfa: cite fronting-layer MFA enforcement. (M, M) | Done, #671. Cited Cloudflare Access independent MFA, effective-policy precedence and origin protection, preserving provider enforcement and labelling deployment limits. |

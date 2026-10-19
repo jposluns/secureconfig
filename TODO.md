@@ -59,8 +59,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.269 | `paas.md`: verify-app-auth and verify-secrets: source or label the exact bypass and auth procedures and the bundle scan procedure, and their limits. (M, M) | `[gap]` |
 | 1.273 | `nodejs.md`: bind, remaining source gaps: establish Railway's listener address, injected port and TLS termination location, and Heroku Cedar's listener address. (M, M) | `[gap]` |
 | 1.276 | `python.md`: bind, remaining source gaps: establish Railway's listener address, injected port and TLS termination location, and Heroku Cedar's listener address. (M, M) | `[gap]` |
-| 1.277 | `python.md`: password: cite bcrypt API and no-user-store conjunction. (M, M) | `[gap]` |
-| 1.278 | `python.md`: secrets: cite or label the 32-byte generation choice. (M, M) | `[gap]` |
 | 1.279 | `go.md`: tokens: pin Token environment handling; preserve the delegation of Token generation to p4.66. (M, M) | `[gap]` |
 | 1.280 | `go.md`: mfa: cite the fronting identity layer used for MFA enforcement. (M, M) | `[gap]` |
 | 1.281 | `java.md`: mfa: cite provider/fronting enforcement for the stated MFA setup. (M, M) | `[gap]` |
