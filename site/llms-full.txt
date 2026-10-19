@@ -2272,98 +2272,9 @@ Claims (full source mapping in the JSON block below):
 
 # Strong authentication baseline
 
-<!-- version-basis:start -->
-**Version basis**
+Written against OWASP authentication and password storage (no recorded version), OAuth security BCP RFC 9700, OpenID Connect Core 1.0, NIST password guidance SP 800-63B-4, Python bcrypt rejection threshold 5.0.0, OpenSSL rand 3.5, Python secrets 3.13, and Git ignore rules v2.49.0, plus 9 more recorded bases; 7 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 49 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- owasp: OWASP authentication and password storage (unknown)
-- owasp-p1: OWASP authorization, secrets and session guidance (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
-- oauth: OAuth security BCP (RFC 9700)
-- oidc: OpenID Connect Core (1.0)
-- nist: NIST password guidance (SP 800-63B-4)
-- htpasswd: Apache htpasswd (unknown)
-- bcrypt: Python bcrypt rejection threshold (5.0.0)
-- bcrypt-source: Python bcrypt changelog (2b4ba9ac84df972e8e81311d09559af8dc82ef33)
-- openssl: OpenSSL rand (3.5)
-- python: Python secrets (3.13)
-- gitleaks-source: Gitleaks scanning modes (b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b)
-- git: Git ignore rules (v2.49.0)
-- owasp-docs: OWASP security guidance (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
-- api-security: OWASP API Security (2023)
-- google-oidc: Google OpenID Connect (unknown)
-- entra-multitenant: Microsoft Entra multitenant token validation (49b84e07023770128d83039c07eafb84ff1de1df)
-- cloudflare-access: Cloudflare Access and origin configuration (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
-- fail2ban-jail: fail2ban (1.1.1)
-- grpc-status: gRPC (v1.84.0)
-- websocket-rfc: WebSocket RFC (RFC 6455)
-- sse-spec: WHATWG server-sent events (unknown)
-- stripe-webhooks: stripe-node (v18.5.0)
-- git-log: Git (v2.56.0)
-- gitleaks-p3: Gitleaks (v8.30.1)
-- entra-docs: Microsoft Entra revocation model (231747abc59ae3d50c74e215c1cdd592eb980723)
-- oauth2-proxy: OAuth2 Proxy (v7.15.4)
-- authelia: Authelia (v4.39.28)
-- oauth-revocation: OAuth 2.0 Token Revocation RFC (unknown)
-- google-iap: Google Identity-Aware Proxy (unknown)
-- aws-alb: AWS Application Load Balancer authentication (unknown)
-
-Claims (full source mapping in the front matter):
-
-- tls (REASONED; owasp, oauth): Protect the login page and whole session with TLS or equivalent strong transport; Basic and bearer credentials require HTTPS.
-- password-hashing (REASONED; owasp): Prefer argon2id, then scrypt; bcrypt is legacy and parameterized PBKDF2 serves FIPS requirements. Never use plaintext, unsalted or fast password hashes.
-- bcrypt-length (REASONED; bcrypt, bcrypt-source, owasp): bcrypt limits input to 72 bytes; Python bcrypt 5.0.0+ raises ValueError while earlier versions truncate. Prefer argon2id or scrypt for long passphrases.
-- bcrypt-prehash (REASONED; owasp): If legacy bcrypt is unavoidable, pre-hash with peppered HMAC then base64, never a bare digest susceptible to password shucking.
-- htpasswd-cost (REASONED; htpasswd, owasp): htpasswd -B -C 12 selects bcrypt cost 12; bare -B defaults to 5, below the OWASP minimum of 10.
-- federation (REASONED; owasp, oidc): Prefer supported SSO/OIDC and enable MFA wherever available.
-- machine-tokens (REASONED; oauth): Use separate least-privilege API tokens, exercise rotation and set expiry where supported.
-- session-identity (REASONED; owasp, owasp-docs): Use unpredictable session identifiers and regenerate on login or privilege change, invalidating the old identifier.
-- session-revocation (REASONED; owasp, owasp-docs): Invalidate sessions server-side on logout and password change.
-- login-throttling (REASONED; owasp): Rate-limit authentication with account-aware and aggregate controls alongside source limits; lock or delay failures without enabling denial of access.
-- enumeration (REASONED; owasp): Keep login, registration and reset responses uniform in message and timing.
-- auth-logging (REASONED; owasp): Log authentication successes and failures with account and source address; retain logs for investigation.
-- privilege (REASONED; owasp): Separate administrative and daily-use accounts; restrict database and OS service accounts to the rights the application uses.
-- authorization (REASONED; oidc, oauth): A federated identity still needs an application allowlist before access is granted. The allowlist is this guide's recommendation.
-- code-pkce (REASONED; oauth): Use authorization code flow with PKCE S256, never plain.
-- redirects (REASONED; oauth): Require exact-match redirect URIs.
-- state-nonce (REASONED; oauth, oidc): Generate fresh state and nonce for each transaction, verify both and bind them to the initiating browser session.
-- id-token-signature (REASONED; oidc): Validate ID-token signatures with provider JWKS and a pinned algorithm, never none.
-- id-token-claims (REASONED; oidc): Validate ID-token issuer, audience and expiry before accepting the identity.
-- token-lifecycle (REASONED; oauth): Use short-lived access tokens and refresh-token rotation; never put tokens in URLs.
-- account-linking (REASONED; oidc): Link accounts by issuer plus subject, never by email alone.
-- mfa-enforcement (REASONED; owasp, nist): Require MFA at the point of access in provider policy or the app; enrollment alone must not permit password-only access.
-- control-plane (REASONED; owasp, nist): Require MFA on the Git host, cloud, DNS, deployment platform, secret manager and IdP administrator account.
-- password-length (REASONED; nist): Require at least 8 password characters with enforced MFA, otherwise at least 15; allow long passphrases and all characters without composition or periodic-rotation rules.
-- breached-passwords (REASONED; nist, owasp): Screen new and changed passwords against known breaches; a valid breached password defeats hashing and per-IP limits.
-- recovery (REASONED; nist, owasp): Use random, single-use, short-lived, account-bound reset tokens and a pre-verified delivery channel; recovery must preserve MFA.
-- recovery-reauth (REASONED; nist, owasp): Reauthenticate for recovery-address or MFA-factor changes and invalidate outstanding sessions and unused reset tokens on completion.
-- verify-token-rejection (REASONED; oidc, oauth): Negative tests reject missing, expired, wrong-issuer and wrong-audience tokens.
-- default-deny (REASONED; owasp, owasp-p1): Every endpoint that is not deliberately public must require authentication, applying OWASP's deny-by-default principle. Require authentication for APIs, health dashboards, admin panels, metrics, and message queues, and publish an explicit list of public paths (this guide's recommendation; the cited passage does not cover this).
-- individual-credentials (REASONED; owasp, owasp-p1): Change or disable every vendor default account before exposure. Each human gets an individual account; each service gets its own credential. Never ship credentials in code, containers or documentation. OWASP notes that services sharing one secret make the source of a compromise or leak hard to identify; vendor default accounts, individual human and service credentials, and keeping credentials out of code, containers and documentation are this guide's recommendations.
-- secret-generation (REASONED; owasp, openssl, python): Generate random secrets with openssl rand -base64 32 or Python secrets.token_urlsafe(32).
-- secret-storage (REASONED; owasp, gitleaks-source, git, owasp-docs, owasp-p1): Prefer a secret manager (this guide's recommendation; OWASP lists secret managers as one option). For containers, OWASP advises environment variables only when mounted files or a secret-store fetch are not possible. Ignore .env before the first commit and scan for leaks before pushing. Rotate secrets exposed in a public repository, chat or log; deletion does not unpublish them.
-- session-cookies (REASONED; owasp, owasp-docs, owasp-p1): Mark session cookies Secure, HttpOnly and SameSite Lax or Strict; signing them with a strong random secret is this guide's recommendation, not covered by the cited passage.
-- session-timeouts (REASONED; owasp, owasp-docs): Enforce both idle and absolute session timeouts server-side; cookie expiry alone does not prevent replay.
-- session-unissued (REASONED; owasp, owasp-docs): Reject session identifiers the server never issued to prevent session fixation.
-- csrf (REASONED; owasp, owasp-docs): SameSite alone is not a complete CSRF defense: Lax permits a top-level state-changing GET and sibling subdomains can be same-site. Cookie-authenticated state changes need an anti-CSRF token or strict Origin/Sec-Fetch-Site check, and must not use safe methods such as GET.
-- expensive-endpoint-limits (REASONED; owasp, api-security, owasp-docs): Bound inference, uploads and job submission with request-size, concurrency and timeout limits in addition to per-client rate limits; apply these limits to streaming and webhook transports too.
-- fail2ban (REASONED; owasp, fail2ban-jail): For SSH on Linux hosts, enable the relevant fail2ban jail (guide requirement). fail2ban 1.1.1 ships sshd, nginx-http-auth and webmin-auth filters and jails, with jails disabled by default; enabling relevant jails with matching file-backend logpaths is guide advice, while panel coverage and setup ease remain unestablished (guide assessment).
-- federated-allowlist (REASONED; oidc, google-oidc, entra-multitenant): After federated login, check the identity against an application allowlist of tenants, hosted domains, organization or group membership, or explicit users (this guide's recommendation); a Google sign-in alone does not make someone staff. For Google Workspace or Cloud organizations, check the hd claim in the validated ID token; an email domain or request hd parameter is insufficient. Microsoft common serves organizational and personal accounts; validate the token issuer, signing-key issuer and tid, then apply the application tenant allowlist. Vendor sources support the Google hd check and Microsoft token validation; the full allowlist and staff determination are this guide's recommendations.
-- cloudflare-access (REASONED; cloudflare-access): Cloudflare Access can front a self-hosted web application published through Access with one-time PIN or SSO login; create the Access application before the tunnel route, or it is available to anyone on the Internet. Validate the Access JWT at the origin, verify Tunnel origin TLS, and use Full (strict) for a directly proxied HTTPS origin where applicable; unchanged any-application use is not established.
-- browser-session (REASONED; owasp, owasp-docs): Prefer a server-side session in an HttpOnly cookie to tokens in browser storage.
-- transport-authentication (REASONED; owasp, websocket-rfc, sse-spec, grpc-status, stripe-webhooks): Guide requirements: authenticate and check WebSockets, SSE, GraphQL, gRPC, webhooks, inference and management APIs separately; do not rely on HTML login; verify webhook signatures and reject replays. HTML-login and GraphQL/inference/management coverage, comprehensive replay rejection beyond Stripe's signature/timestamp checks, and deployed protection remain unestablished (guide assessment).
-- offboarding (REASONED; owasp, oauth, owasp-docs, entra-docs, cloudflare-access, oauth2-proxy, authelia, oauth-revocation): When a person leaves, promptly revoke their provider membership, proxy sessions, application sessions, and personal tokens (this guide's recommendation). Entra documents blocking new sign-ins and revoking refresh tokens, while application-issued sessions require revocation by the application; its access-token lifetime varies, and CAE critical-event enforcement can take up to 15 minutes for supported services. Cloudflare Access documents per-user session revocation, but an active IdP profile can start a new session; after user logout, previously issued tokens stop being accepted in 20-30 seconds. OAuth2 Proxy and Authelia document session-cookie expiry, but these passages do not establish immediate per-user revocation for either proxy. RFC 7009 specifies immediate token invalidation with possible propagation delay and conditional access-token revocation support. The fetched sources do not establish a provider-membership removal mechanism or this deployment's measured maximum time-to-revoke. Measure each system's maximum time-to-revoke where immediate revocation is unavailable, and work to shrink it (this guide's recommendation; no delay was measured here). In a deployment test, first confirm that a matched request with each provider, proxy and application session and personal token succeeds against a protected resource. After revocation, replay each old credential at recorded intervals until it is refused and returns no protected data, and the elapsed time for every layer must not exceed its configured maximum time-to-revoke; these are test expectations, not observed results.
-- verify-transports (REASONED; owasp, grpc-status, websocket-rfc, sse-spec): Use real protocol clients against every non-public path and transport: expect HTTP 401, 403 or a login redirect; gRPC UNAUTHENTICATED for missing or invalid credentials (PERMISSION_DENIED for an identified caller lacking permission); SSE refusal; and WebSocket upgrade rejection or protected-operation rejection, no protected data disclosure, and closure on first-message authentication failure. A bare curl GET does not test non-HTTP transports. These are test expectations, not observed responses.
-- verify-secret-scan (REASONED; owasp, gitleaks-source, gitleaks-p3, git-log): A secret scanner must find no leaks in the working tree, staged changes and full history; Gitleaks v8.30.1 provides staged git-diff flags and `--log-opts`, so verify staged, all-ref and merge-commit coverage with the chosen scanner and configuration. Supplementary git log grep misses secrets without the search words, uncommitted files, some refs and merge-only changes; the historical fixture result is not a scan of this repository.
-- verify-default-accounts (REASONED; owasp): Check that the user store has no admin, test or demo account with a known or empty password. This is the guide's recommendation; the OWASP Authentication Cheat Sheet does not list these account names (checked at commit 72865b1e).
-- verify-wrong-tenant (REASONED; oidc, entra-multitenant): Expect a wrong-tenant token to be rejected in an application negative test after issuer and tid validation and the application tenant allowlist. Microsoft documents the validation rules; this guide recommends the allowlist and test, and no deployed rejection was observed.
-- verify-cross-user (REASONED; owasp, owasp-p1): Verify that user A cannot read user B's resources. OWASP describes horizontal privilege escalation and object-specific access checks.
-- verify-origin-isolation (REASONED; owasp, cloudflare-access, oauth2-proxy, authelia, google-iap, aws-alb): Expect the origin to be unreachable except through its fronting layer in a deployment negative test. Cloudflare describes Access policy enforcement, JWT validation and Tunnel access checks, and says a publicly routable origin needs its IP protected by other methods. OAuth2 Proxy documents upstream identity headers and warns that when `--reverse-proxy` is enabled and `--trusted-proxy-ip` is unset, a client that can reach OAuth2 Proxy directly may be able to spoof forwarded headers. Authelia uses session cookies to authorize protected websites. Google IAP says a bypassing attacker can forge unsigned identity headers; its signed-header how-to says to verify the JWT header, payload and signature to secure an app with the IAP JWT, and calls signed headers secondary security; AWS ALB requires verification of its signed claims header and signer ARN. These sources support the guide's origin-isolation test expectation but do not establish that a particular origin is unreachable.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 TLS without authentication leaves a service open to the whole internet over an encrypted channel. These rules apply to every service in this repository's guides. Each rule is a requirement unless it is marked `should` or phrased as a preference.
 
@@ -2483,6 +2394,440 @@ TLS without authentication leaves a service open to the whole internet over an e
 - Cloudflare identity provider options (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/integrations/identity-providers/index.mdx#L14-L18
 - Cloudflare generic OIDC connector (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/integrations/identity-providers/generic-oidc.mdx#L15
 - Cloudflare Access one-time PIN login (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/integrations/identity-providers/one-time-pin.mdx#L15
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/authentication.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- owasp: OWASP authentication and password storage (unknown)
+- owasp-p1: OWASP authorization, secrets and session guidance (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
+- oauth: OAuth security BCP (RFC 9700)
+- oidc: OpenID Connect Core (1.0)
+- nist: NIST password guidance (SP 800-63B-4)
+- htpasswd: Apache htpasswd (unknown)
+- bcrypt: Python bcrypt rejection threshold (5.0.0)
+- bcrypt-source: Python bcrypt changelog (2b4ba9ac84df972e8e81311d09559af8dc82ef33)
+- openssl: OpenSSL rand (3.5)
+- python: Python secrets (3.13)
+- gitleaks-source: Gitleaks scanning modes (b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b)
+- git: Git ignore rules (v2.49.0)
+- owasp-docs: OWASP security guidance (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
+- api-security: OWASP API Security (2023)
+- google-oidc: Google OpenID Connect (unknown)
+- entra-multitenant: Microsoft Entra multitenant token validation (49b84e07023770128d83039c07eafb84ff1de1df)
+- cloudflare-access: Cloudflare Access and origin configuration (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- fail2ban-jail: fail2ban (1.1.1)
+- grpc-status: gRPC (v1.84.0)
+- websocket-rfc: WebSocket RFC (RFC 6455)
+- sse-spec: WHATWG server-sent events (unknown)
+- stripe-webhooks: stripe-node (v18.5.0)
+- git-log: Git (v2.56.0)
+- gitleaks-p3: Gitleaks (v8.30.1)
+- entra-docs: Microsoft Entra revocation model (231747abc59ae3d50c74e215c1cdd592eb980723)
+- oauth2-proxy: OAuth2 Proxy (v7.15.4)
+- authelia: Authelia (v4.39.28)
+- oauth-revocation: OAuth 2.0 Token Revocation RFC (unknown)
+- google-iap: Google Identity-Aware Proxy (unknown)
+- aws-alb: AWS Application Load Balancer authentication (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- tls (REASONED; owasp, oauth): Protect the login page and whole session with TLS or equivalent strong transport; Basic and bearer credentials require HTTPS.
+- password-hashing (REASONED; owasp): Prefer argon2id, then scrypt; bcrypt is legacy and parameterized PBKDF2 serves FIPS requirements. Never use plaintext, unsalted or fast password hashes.
+- bcrypt-length (REASONED; bcrypt, bcrypt-source, owasp): bcrypt limits input to 72 bytes; Python bcrypt 5.0.0+ raises ValueError while earlier versions truncate. Prefer argon2id or scrypt for long passphrases.
+- bcrypt-prehash (REASONED; owasp): If legacy bcrypt is unavoidable, pre-hash with peppered HMAC then base64, never a bare digest susceptible to password shucking.
+- htpasswd-cost (REASONED; htpasswd, owasp): htpasswd -B -C 12 selects bcrypt cost 12; bare -B defaults to 5, below the OWASP minimum of 10.
+- federation (REASONED; owasp, oidc): Prefer supported SSO/OIDC and enable MFA wherever available.
+- machine-tokens (REASONED; oauth): Use separate least-privilege API tokens, exercise rotation and set expiry where supported.
+- session-identity (REASONED; owasp, owasp-docs): Use unpredictable session identifiers and regenerate on login or privilege change, invalidating the old identifier.
+- session-revocation (REASONED; owasp, owasp-docs): Invalidate sessions server-side on logout and password change.
+- login-throttling (REASONED; owasp): Rate-limit authentication with account-aware and aggregate controls alongside source limits; lock or delay failures without enabling denial of access.
+- enumeration (REASONED; owasp): Keep login, registration and reset responses uniform in message and timing.
+- auth-logging (REASONED; owasp): Log authentication successes and failures with account and source address; retain logs for investigation.
+- privilege (REASONED; owasp): Separate administrative and daily-use accounts; restrict database and OS service accounts to the rights the application uses.
+- authorization (REASONED; oidc, oauth): A federated identity still needs an application allowlist before access is granted. The allowlist is this guide's recommendation.
+- code-pkce (REASONED; oauth): Use authorization code flow with PKCE S256, never plain.
+- redirects (REASONED; oauth): Require exact-match redirect URIs.
+- state-nonce (REASONED; oauth, oidc): Generate fresh state and nonce for each transaction, verify both and bind them to the initiating browser session.
+- id-token-signature (REASONED; oidc): Validate ID-token signatures with provider JWKS and a pinned algorithm, never none.
+- id-token-claims (REASONED; oidc): Validate ID-token issuer, audience and expiry before accepting the identity.
+- token-lifecycle (REASONED; oauth): Use short-lived access tokens and refresh-token rotation; never put tokens in URLs.
+- account-linking (REASONED; oidc): Link accounts by issuer plus subject, never by email alone.
+- mfa-enforcement (REASONED; owasp, nist): Require MFA at the point of access in provider policy or the app; enrollment alone must not permit password-only access.
+- control-plane (REASONED; owasp, nist): Require MFA on the Git host, cloud, DNS, deployment platform, secret manager and IdP administrator account.
+- password-length (REASONED; nist): Require at least 8 password characters with enforced MFA, otherwise at least 15; allow long passphrases and all characters without composition or periodic-rotation rules.
+- breached-passwords (REASONED; nist, owasp): Screen new and changed passwords against known breaches; a valid breached password defeats hashing and per-IP limits.
+- recovery (REASONED; nist, owasp): Use random, single-use, short-lived, account-bound reset tokens and a pre-verified delivery channel; recovery must preserve MFA.
+- recovery-reauth (REASONED; nist, owasp): Reauthenticate for recovery-address or MFA-factor changes and invalidate outstanding sessions and unused reset tokens on completion.
+- verify-token-rejection (REASONED; oidc, oauth): Negative tests reject missing, expired, wrong-issuer and wrong-audience tokens.
+- default-deny (REASONED; owasp, owasp-p1): Every endpoint that is not deliberately public must require authentication, applying OWASP's deny-by-default principle. Require authentication for APIs, health dashboards, admin panels, metrics, and message queues, and publish an explicit list of public paths (this guide's recommendation; the cited passage does not cover this).
+- individual-credentials (REASONED; owasp, owasp-p1): Change or disable every vendor default account before exposure. Each human gets an individual account; each service gets its own credential. Never ship credentials in code, containers or documentation. OWASP notes that services sharing one secret make the source of a compromise or leak hard to identify; vendor default accounts, individual human and service credentials, and keeping credentials out of code, containers and documentation are this guide's recommendations.
+- secret-generation (REASONED; owasp, openssl, python): Generate random secrets with openssl rand -base64 32 or Python secrets.token_urlsafe(32).
+- secret-storage (REASONED; owasp, gitleaks-source, git, owasp-docs, owasp-p1): Prefer a secret manager (this guide's recommendation; OWASP lists secret managers as one option). For containers, OWASP advises environment variables only when mounted files or a secret-store fetch are not possible. Ignore .env before the first commit and scan for leaks before pushing. Rotate secrets exposed in a public repository, chat or log; deletion does not unpublish them.
+- session-cookies (REASONED; owasp, owasp-docs, owasp-p1): Mark session cookies Secure, HttpOnly and SameSite Lax or Strict; signing them with a strong random secret is this guide's recommendation, not covered by the cited passage.
+- session-timeouts (REASONED; owasp, owasp-docs): Enforce both idle and absolute session timeouts server-side; cookie expiry alone does not prevent replay.
+- session-unissued (REASONED; owasp, owasp-docs): Reject session identifiers the server never issued to prevent session fixation.
+- csrf (REASONED; owasp, owasp-docs): SameSite alone is not a complete CSRF defense: Lax permits a top-level state-changing GET and sibling subdomains can be same-site. Cookie-authenticated state changes need an anti-CSRF token or strict Origin/Sec-Fetch-Site check, and must not use safe methods such as GET.
+- expensive-endpoint-limits (REASONED; owasp, api-security, owasp-docs): Bound inference, uploads and job submission with request-size, concurrency and timeout limits in addition to per-client rate limits; apply these limits to streaming and webhook transports too.
+- fail2ban (REASONED; owasp, fail2ban-jail): For SSH on Linux hosts, enable the relevant fail2ban jail (guide requirement). fail2ban 1.1.1 ships sshd, nginx-http-auth and webmin-auth filters and jails, with jails disabled by default; enabling relevant jails with matching file-backend logpaths is guide advice, while panel coverage and setup ease remain unestablished (guide assessment).
+- federated-allowlist (REASONED; oidc, google-oidc, entra-multitenant): After federated login, check the identity against an application allowlist of tenants, hosted domains, organization or group membership, or explicit users (this guide's recommendation); a Google sign-in alone does not make someone staff. For Google Workspace or Cloud organizations, check the hd claim in the validated ID token; an email domain or request hd parameter is insufficient. Microsoft common serves organizational and personal accounts; validate the token issuer, signing-key issuer and tid, then apply the application tenant allowlist. Vendor sources support the Google hd check and Microsoft token validation; the full allowlist and staff determination are this guide's recommendations.
+- cloudflare-access (REASONED; cloudflare-access): Cloudflare Access can front a self-hosted web application published through Access with one-time PIN or SSO login; create the Access application before the tunnel route, or it is available to anyone on the Internet. Validate the Access JWT at the origin, verify Tunnel origin TLS, and use Full (strict) for a directly proxied HTTPS origin where applicable; unchanged any-application use is not established.
+- browser-session (REASONED; owasp, owasp-docs): Prefer a server-side session in an HttpOnly cookie to tokens in browser storage.
+- transport-authentication (REASONED; owasp, websocket-rfc, sse-spec, grpc-status, stripe-webhooks): Guide requirements: authenticate and check WebSockets, SSE, GraphQL, gRPC, webhooks, inference and management APIs separately; do not rely on HTML login; verify webhook signatures and reject replays. HTML-login and GraphQL/inference/management coverage, comprehensive replay rejection beyond Stripe's signature/timestamp checks, and deployed protection remain unestablished (guide assessment).
+- offboarding (REASONED; owasp, oauth, owasp-docs, entra-docs, cloudflare-access, oauth2-proxy, authelia, oauth-revocation): When a person leaves, promptly revoke their provider membership, proxy sessions, application sessions, and personal tokens (this guide's recommendation). Entra documents blocking new sign-ins and revoking refresh tokens, while application-issued sessions require revocation by the application; its access-token lifetime varies, and CAE critical-event enforcement can take up to 15 minutes for supported services. Cloudflare Access documents per-user session revocation, but an active IdP profile can start a new session; after user logout, previously issued tokens stop being accepted in 20-30 seconds. OAuth2 Proxy and Authelia document session-cookie expiry, but these passages do not establish immediate per-user revocation for either proxy. RFC 7009 specifies immediate token invalidation with possible propagation delay and conditional access-token revocation support. The fetched sources do not establish a provider-membership removal mechanism or this deployment's measured maximum time-to-revoke. Measure each system's maximum time-to-revoke where immediate revocation is unavailable, and work to shrink it (this guide's recommendation; no delay was measured here). In a deployment test, first confirm that a matched request with each provider, proxy and application session and personal token succeeds against a protected resource. After revocation, replay each old credential at recorded intervals until it is refused and returns no protected data, and the elapsed time for every layer must not exceed its configured maximum time-to-revoke; these are test expectations, not observed results.
+- verify-transports (REASONED; owasp, grpc-status, websocket-rfc, sse-spec): Use real protocol clients against every non-public path and transport: expect HTTP 401, 403 or a login redirect; gRPC UNAUTHENTICATED for missing or invalid credentials (PERMISSION_DENIED for an identified caller lacking permission); SSE refusal; and WebSocket upgrade rejection or protected-operation rejection, no protected data disclosure, and closure on first-message authentication failure. A bare curl GET does not test non-HTTP transports. These are test expectations, not observed responses.
+- verify-secret-scan (REASONED; owasp, gitleaks-source, gitleaks-p3, git-log): A secret scanner must find no leaks in the working tree, staged changes and full history; Gitleaks v8.30.1 provides staged git-diff flags and `--log-opts`, so verify staged, all-ref and merge-commit coverage with the chosen scanner and configuration. Supplementary git log grep misses secrets without the search words, uncommitted files, some refs and merge-only changes; the historical fixture result is not a scan of this repository.
+- verify-default-accounts (REASONED; owasp): Check that the user store has no admin, test or demo account with a known or empty password. This is the guide's recommendation; the OWASP Authentication Cheat Sheet does not list these account names (checked at commit 72865b1e).
+- verify-wrong-tenant (REASONED; oidc, entra-multitenant): Expect a wrong-tenant token to be rejected in an application negative test after issuer and tid validation and the application tenant allowlist. Microsoft documents the validation rules; this guide recommends the allowlist and test, and no deployed rejection was observed.
+- verify-cross-user (REASONED; owasp, owasp-p1): Verify that user A cannot read user B's resources. OWASP describes horizontal privilege escalation and object-specific access checks.
+- verify-origin-isolation (REASONED; owasp, cloudflare-access, oauth2-proxy, authelia, google-iap, aws-alb): Expect the origin to be unreachable except through its fronting layer in a deployment negative test. Cloudflare describes Access policy enforcement, JWT validation and Tunnel access checks, and says a publicly routable origin needs its IP protected by other methods. OAuth2 Proxy documents upstream identity headers and warns that when `--reverse-proxy` is enabled and `--trusted-proxy-ip` is unset, a client that can reach OAuth2 Proxy directly may be able to spoof forwarded headers. Authelia uses session cookies to authorize protected websites. Google IAP says a bypassing attacker can forge unsigned identity headers; its signed-header how-to says to verify the JWT header, payload and signature to secure an app with the IAP JWT, and calls signed headers secondary security; AWS ALB requires verification of its signed claims header and signer ARN. These sources support the guide's origin-isolation test expectation but do not establish that a particular origin is unreachable.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-19",
+  "documentation_checked": "2026-09",
+  "body_sha256": "27a8ed4a0496e311e935628b44758ddc49366b1d9262508b6cf7fbd4275f0af7",
+  "components": {
+    "owasp": {
+      "name": "OWASP authentication and password storage",
+      "basis": "unknown",
+      "sources": {
+        "sc5f1b11d42f4": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html",
+        "s49e8d76431d9": "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html"
+      }
+    },
+    "owasp-p1": {
+      "name": "OWASP authorization, secrets and session guidance",
+      "basis": "668ba7db3d0da5868b8a0305c259f7f6914a6ecd",
+      "sources": {
+        "sa68227c175a9": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Authorization_Cheat_Sheet.md#L30-L38",
+        "s5f5e10a9e4c2": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Authorization_Cheat_Sheet.md#L93-L99",
+        "s5fd4accb6988": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Secrets_Management_Cheat_Sheet.md#L7",
+        "s6ea90d0c28e9": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Secrets_Management_Cheat_Sheet.md#L313",
+        "se0eb20386574": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Secrets_Management_Cheat_Sheet.md#L462-L464",
+        "se49462b39c11": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L131-L149"
+      }
+    },
+    "oauth": {
+      "name": "OAuth security BCP",
+      "basis": "RFC 9700",
+      "sources": {
+        "s4e6d674bf887": "https://www.rfc-editor.org/rfc/rfc9700.html"
+      }
+    },
+    "oidc": {
+      "name": "OpenID Connect Core",
+      "basis": "1.0",
+      "sources": {
+        "scfd2790a544c": "https://openid.net/specs/openid-connect-core-1_0.html"
+      }
+    },
+    "nist": {
+      "name": "NIST password guidance",
+      "basis": "SP 800-63B-4",
+      "sources": {
+        "sada92c9ac010": "https://pages.nist.gov/800-63-4/sp800-63b.html"
+      }
+    },
+    "htpasswd": {
+      "name": "Apache htpasswd",
+      "basis": "unknown",
+      "sources": {
+        "scde9004bb967": "https://httpd.apache.org/docs/2.4/programs/htpasswd.html"
+      }
+    },
+    "bcrypt": {
+      "name": "Python bcrypt rejection threshold",
+      "basis": "5.0.0",
+      "sources": {
+        "saef7bba61b3a": "https://github.com/pyca/bcrypt/blob/2b4ba9ac84df972e8e81311d09559af8dc82ef33/CHANGELOG.rst"
+      }
+    },
+    "bcrypt-source": {
+      "name": "Python bcrypt changelog",
+      "basis": "2b4ba9ac84df972e8e81311d09559af8dc82ef33",
+      "sources": {
+        "saef7bba61b3a": "https://github.com/pyca/bcrypt/blob/2b4ba9ac84df972e8e81311d09559af8dc82ef33/CHANGELOG.rst"
+      }
+    },
+    "openssl": {
+      "name": "OpenSSL rand",
+      "basis": "3.5",
+      "sources": {
+        "s86919b215ba1": "https://docs.openssl.org/3.5/man1/openssl-rand/"
+      }
+    },
+    "python": {
+      "name": "Python secrets",
+      "basis": "3.13",
+      "sources": {
+        "sd2e8196eaa96": "https://docs.python.org/3.13/library/secrets.html#secrets.token_urlsafe"
+      }
+    },
+    "gitleaks-source": {
+      "name": "Gitleaks scanning modes",
+      "basis": "b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b",
+      "sources": {
+        "s44a3edaa543d": "https://github.com/gitleaks/gitleaks/blob/b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b/README.md#L172-L189"
+      }
+    },
+    "git": {
+      "name": "Git ignore rules",
+      "basis": "v2.49.0",
+      "sources": {
+        "s5f377f0fdbd8": "https://github.com/git/git/blob/v2.49.0/Documentation/gitignore.adoc#L15-L18"
+      }
+    },
+    "owasp-docs": {
+      "name": "OWASP security guidance",
+      "basis": "668ba7db3d0da5868b8a0305c259f7f6914a6ecd",
+      "sources": {
+        "seb866a1f94e9": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Secrets_Management_Cheat_Sheet.md#L214-L218",
+        "s0562e4dc23f2": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L163",
+        "s0b82bc050cf3": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L265-L267",
+        "sf069993cc3d7": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L275",
+        "sa5f6e96a876c": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L317",
+        "s4779e856ef9d": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L323-L331",
+        "s4f0aa80b1ef6": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/HTML5_Security_Cheat_Sheet.md#L53",
+        "s232e483ac72b": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Session_Management_Cheat_Sheet.md#L149",
+        "sc088939103f0": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md#L17-L26",
+        "sa7544ec9e1d7": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md#L197",
+        "seb3129173dbb": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.md#L226",
+        "s3369d9106dce": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Denial_of_Service_Cheat_Sheet.md#L80",
+        "sd6d35bd1b67d": "https://github.com/OWASP/CheatSheetSeries/blob/668ba7db3d0da5868b8a0305c259f7f6914a6ecd/cheatsheets/Denial_of_Service_Cheat_Sheet.md#L110-L113"
+      }
+    },
+    "api-security": {
+      "name": "OWASP API Security",
+      "basis": "2023",
+      "sources": {
+        "s213afc24aadb": "https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption/"
+      }
+    },
+    "google-oidc": {
+      "name": "Google OpenID Connect",
+      "basis": "unknown",
+      "sources": {
+        "s4f815acc2976": "https://developers.google.com/identity/openid-connect/openid-connect"
+      }
+    },
+    "entra-multitenant": {
+      "name": "Microsoft Entra multitenant token validation",
+      "basis": "49b84e07023770128d83039c07eafb84ff1de1df",
+      "sources": {
+        "s5e0242f87cb7": "https://github.com/MicrosoftDocs/entra-docs/blob/49b84e07023770128d83039c07eafb84ff1de1df/docs/identity-platform/howto-convert-app-to-be-multi-tenant.md#L43-L63",
+        "s95719206c226": "https://github.com/MicrosoftDocs/entra-docs/blob/49b84e07023770128d83039c07eafb84ff1de1df/docs/identity-platform/access-tokens.md#L179-L187"
+      }
+    },
+    "cloudflare-access": {
+      "name": "Cloudflare Access and origin configuration",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "sfddb92e438ca": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16",
+        "s7cafe1b17afd": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54",
+        "s81e5dd28d3e5": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/validating-json.mdx#L15-L17",
+        "s65c224a2e655": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L59-L67",
+        "sa012410f91eb": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/partials/cloudflare-one/tunnel/origin-parameters.mdx#L198-L206",
+        "sbf4ecbd5ffc1": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/ssl/origin-configuration/ssl-modes/full-strict.mdx#L16-L37",
+        "sf2dbab0fc574": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/session-management.mdx#L159-L186",
+        "sa0e3eb928f4a": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/session-management.mdx#L190-L195",
+        "scb7d48f64a99": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/integrations/identity-providers/index.mdx#L14-L18",
+        "sd606ae12de33": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/integrations/identity-providers/generic-oidc.mdx#L15",
+        "s9f8bead847d2": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/integrations/identity-providers/one-time-pin.mdx#L15"
+      }
+    },
+    "fail2ban-jail": {
+      "name": "fail2ban",
+      "basis": "1.1.1",
+      "sources": {
+        "se7c4e0af046f": "https://github.com/fail2ban/fail2ban/blob/1.1.1/config/jail.conf#L152-L167",
+        "sc1b6e6bc1f84": "https://github.com/fail2ban/fail2ban/blob/1.1.1/config/jail.conf#L271-L279",
+        "s9a6aaa273c73": "https://github.com/fail2ban/fail2ban/blob/1.1.1/config/filter.d/sshd.conf#L104-L111",
+        "sa43cf7ba22fb": "https://github.com/fail2ban/fail2ban/blob/1.1.1/config/jail.conf#L370-L376",
+        "s568ea00c2482": "https://github.com/fail2ban/fail2ban/blob/1.1.1/config/filter.d/nginx-http-auth.conf#L9-L37",
+        "s3c53dd330a7b": "https://github.com/fail2ban/fail2ban/blob/1.1.1/config/jail.conf#L491-L495",
+        "s099abd84ea19": "https://github.com/fail2ban/fail2ban/blob/1.1.1/config/filter.d/webmin-auth.conf#L4-L20"
+      }
+    },
+    "grpc-status": {
+      "name": "gRPC",
+      "basis": "v1.84.0",
+      "sources": {
+        "s595c3c297157": "https://github.com/grpc/grpc/blob/v1.84.0/doc/statuscodes.md#L13-L24"
+      }
+    },
+    "websocket-rfc": {
+      "name": "WebSocket RFC",
+      "basis": "RFC 6455",
+      "sources": {
+        "s07f03be17365": "https://www.rfc-editor.org/rfc/rfc6455.html#section-1.3",
+        "s559dc201b043": "https://www.rfc-editor.org/rfc/rfc6455.html#section-1.4"
+      }
+    },
+    "sse-spec": {
+      "name": "WHATWG server-sent events",
+      "basis": "unknown",
+      "sources": {
+        "sf47a21cc6a1c": "https://html.spec.whatwg.org/multipage/server-sent-events.html"
+      }
+    },
+    "stripe-webhooks": {
+      "name": "stripe-node",
+      "basis": "v18.5.0",
+      "sources": {
+        "s42eea6a7e527": "https://github.com/stripe/stripe-node/blob/v18.5.0/src/Webhooks.ts#L182-L216",
+        "s90f21ad845ca": "https://github.com/stripe/stripe-node/blob/v18.5.0/src/Webhooks.ts#L357-L410"
+      }
+    },
+    "git-log": {
+      "name": "Git",
+      "basis": "v2.56.0",
+      "sources": {
+        "s1cb7f677894d": "https://github.com/git/git/blob/v2.56.0/Documentation/git-log.adoc#L127-L141",
+        "sede4bb3fcdf3": "https://github.com/git/git/blob/v2.56.0/Documentation/git-log.adoc#L102-L109",
+        "s903a3c765e70": "https://github.com/git/git/blob/v2.56.0/Documentation/rev-list-options.adoc#L167-L169"
+      }
+    },
+    "gitleaks-p3": {
+      "name": "Gitleaks",
+      "basis": "v8.30.1",
+      "sources": {
+        "se5afdb7c63d2": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/README.md#L193-L215",
+        "s685ae6ce9b3d": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/README.md#L110-L134",
+        "sfda707f0eb4f": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/cmd/git.go#L14-L20",
+        "s8511b8f313b7": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/cmd/git.go#L64-L77"
+      }
+    },
+    "entra-docs": {
+      "name": "Microsoft Entra revocation model",
+      "basis": "231747abc59ae3d50c74e215c1cdd592eb980723",
+      "sources": {
+        "s983f45259faa": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/users/users-revoke-access.md#L62",
+        "scb38e683ae3f": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/users/users-revoke-access.md#L96-L106",
+        "s9ff4d6ed4cfe": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity-platform/access-tokens.md#L54-L60",
+        "sca6feea4b601": "https://github.com/MicrosoftDocs/entra-docs/blob/231747abc59ae3d50c74e215c1cdd592eb980723/docs/identity/conditional-access/concept-continuous-access-evaluation.md#L21-L25"
+      }
+    },
+    "oauth2-proxy": {
+      "name": "OAuth2 Proxy",
+      "basis": "v7.15.4",
+      "sources": {
+        "s32cedbc14f60": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L126-L130",
+        "s17f0d3cc09b1": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L197",
+        "s6de4892223d2": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L143-L151"
+      }
+    },
+    "authelia": {
+      "name": "Authelia",
+      "basis": "v4.39.28",
+      "sources": {
+        "sc03548e2ed00": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/session/introduction.md#L24-L25",
+        "sc844fe82794f": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/session/introduction.md#L220-L221"
+      }
+    },
+    "oauth-revocation": {
+      "name": "OAuth 2.0 Token Revocation RFC",
+      "basis": "unknown",
+      "sources": {
+        "s3383c9f41cc2": "https://www.rfc-editor.org/rfc/rfc7009.html#section-2.1"
+      }
+    },
+    "google-iap": {
+      "name": "Google Identity-Aware Proxy",
+      "basis": "unknown",
+      "sources": {
+        "s4513609280bb": "https://docs.cloud.google.com/iap/docs/signed-headers-howto#securing_iap_headers"
+      }
+    },
+    "aws-alb": {
+      "name": "AWS Application Load Balancer authentication",
+      "basis": "unknown",
+      "sources": {
+        "sa198710d31f3": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html#user-claims-encoding"
+      }
+    }
+  },
+  "claims": {
+    "tls": {"text": "Protect the login page and whole session with TLS or equivalent strong transport; Basic and bearer credentials require HTTPS.", "components": ["owasp", "oauth"], "sources": ["owasp:sc5f1b11d42f4", "oauth:s4e6d674bf887"], "status": "REASONED"},
+    "password-hashing": {"text": "Prefer argon2id, then scrypt; bcrypt is legacy and parameterized PBKDF2 serves FIPS requirements. Never use plaintext, unsalted or fast password hashes.", "components": ["owasp"], "sources": ["owasp:s49e8d76431d9"], "status": "REASONED"},
+    "bcrypt-length": {"text": "bcrypt limits input to 72 bytes; Python bcrypt 5.0.0+ raises ValueError while earlier versions truncate. Prefer argon2id or scrypt for long passphrases.", "components": ["bcrypt", "bcrypt-source", "owasp"], "sources": ["bcrypt:saef7bba61b3a", "bcrypt-source:saef7bba61b3a", "owasp:s49e8d76431d9"], "status": "REASONED"},
+    "bcrypt-prehash": {"text": "If legacy bcrypt is unavoidable, pre-hash with peppered HMAC then base64, never a bare digest susceptible to password shucking.", "components": ["owasp"], "sources": ["owasp:s49e8d76431d9"], "status": "REASONED"},
+    "htpasswd-cost": {"text": "htpasswd -B -C 12 selects bcrypt cost 12; bare -B defaults to 5, below the OWASP minimum of 10.", "components": ["htpasswd", "owasp"], "sources": ["htpasswd:scde9004bb967", "owasp:s49e8d76431d9"], "status": "REASONED"},
+    "federation": {"text": "Prefer supported SSO/OIDC and enable MFA wherever available.", "components": ["owasp", "oidc"], "sources": ["owasp:sc5f1b11d42f4", "oidc:scfd2790a544c"], "status": "REASONED"},
+    "machine-tokens": {"text": "Use separate least-privilege API tokens, exercise rotation and set expiry where supported.", "components": ["oauth"], "sources": ["oauth:s4e6d674bf887"], "status": "REASONED"},
+    "session-identity": {"text": "Use unpredictable session identifiers and regenerate on login or privilege change, invalidating the old identifier.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:s0b82bc050cf3", "owasp-docs:sf069993cc3d7"], "status": "REASONED"},
+    "session-revocation": {"text": "Invalidate sessions server-side on logout and password change.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:sf069993cc3d7", "owasp-docs:sa5f6e96a876c"], "status": "REASONED"},
+    "login-throttling": {"text": "Rate-limit authentication with account-aware and aggregate controls alongside source limits; lock or delay failures without enabling denial of access.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
+    "enumeration": {"text": "Keep login, registration and reset responses uniform in message and timing.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
+    "auth-logging": {"text": "Log authentication successes and failures with account and source address; retain logs for investigation.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
+    "privilege": {"text": "Separate administrative and daily-use accounts; restrict database and OS service accounts to the rights the application uses.", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
+    "authorization": {"text": "A federated identity still needs an application allowlist before access is granted. The allowlist is this guide's recommendation.", "components": ["oidc", "oauth"], "sources": ["oidc:scfd2790a544c", "oauth:s4e6d674bf887"], "status": "REASONED"},
+    "code-pkce": {"text": "Use authorization code flow with PKCE S256, never plain.", "components": ["oauth"], "sources": ["oauth:s4e6d674bf887"], "status": "REASONED"},
+    "redirects": {"text": "Require exact-match redirect URIs.", "components": ["oauth"], "sources": ["oauth:s4e6d674bf887"], "status": "REASONED"},
+    "state-nonce": {"text": "Generate fresh state and nonce for each transaction, verify both and bind them to the initiating browser session.", "components": ["oauth", "oidc"], "sources": ["oauth:s4e6d674bf887", "oidc:scfd2790a544c"], "status": "REASONED"},
+    "id-token-signature": {"text": "Validate ID-token signatures with provider JWKS and a pinned algorithm, never none.", "components": ["oidc"], "sources": ["oidc:scfd2790a544c"], "status": "REASONED"},
+    "id-token-claims": {"text": "Validate ID-token issuer, audience and expiry before accepting the identity.", "components": ["oidc"], "sources": ["oidc:scfd2790a544c"], "status": "REASONED"},
+    "token-lifecycle": {"text": "Use short-lived access tokens and refresh-token rotation; never put tokens in URLs.", "components": ["oauth"], "sources": ["oauth:s4e6d674bf887"], "status": "REASONED"},
+    "account-linking": {"text": "Link accounts by issuer plus subject, never by email alone.", "components": ["oidc"], "sources": ["oidc:scfd2790a544c"], "status": "REASONED"},
+    "mfa-enforcement": {"text": "Require MFA at the point of access in provider policy or the app; enrollment alone must not permit password-only access.", "components": ["owasp", "nist"], "sources": ["owasp:sc5f1b11d42f4", "nist:sada92c9ac010"], "status": "REASONED"},
+    "control-plane": {"text": "Require MFA on the Git host, cloud, DNS, deployment platform, secret manager and IdP administrator account.", "components": ["owasp", "nist"], "sources": ["owasp:sc5f1b11d42f4", "nist:sada92c9ac010"], "status": "REASONED"},
+    "password-length": {"text": "Require at least 8 password characters with enforced MFA, otherwise at least 15; allow long passphrases and all characters without composition or periodic-rotation rules.", "components": ["nist"], "sources": ["nist:sada92c9ac010"], "status": "REASONED"},
+    "breached-passwords": {"text": "Screen new and changed passwords against known breaches; a valid breached password defeats hashing and per-IP limits.", "components": ["nist", "owasp"], "sources": ["nist:sada92c9ac010", "owasp:sc5f1b11d42f4"], "status": "REASONED"},
+    "recovery": {"text": "Use random, single-use, short-lived, account-bound reset tokens and a pre-verified delivery channel; recovery must preserve MFA.", "components": ["nist", "owasp"], "sources": ["nist:sada92c9ac010", "owasp:sc5f1b11d42f4"], "status": "REASONED"},
+    "recovery-reauth": {"text": "Reauthenticate for recovery-address or MFA-factor changes and invalidate outstanding sessions and unused reset tokens on completion.", "components": ["nist", "owasp"], "sources": ["nist:sada92c9ac010", "owasp:sc5f1b11d42f4"], "status": "REASONED"},
+    "verify-token-rejection": {"text": "Negative tests reject missing, expired, wrong-issuer and wrong-audience tokens.", "components": ["oidc", "oauth"], "sources": ["oidc:scfd2790a544c", "oauth:s4e6d674bf887"], "status": "REASONED"},
+    "default-deny": {"text": "Every endpoint that is not deliberately public must require authentication, applying OWASP's deny-by-default principle. Require authentication for APIs, health dashboards, admin panels, metrics, and message queues, and publish an explicit list of public paths (this guide's recommendation; the cited passage does not cover this).", "components": ["owasp", "owasp-p1"], "sources": ["owasp:sc5f1b11d42f4", "owasp-p1:sa68227c175a9"], "status": "REASONED"},
+    "individual-credentials": {"text": "Change or disable every vendor default account before exposure. Each human gets an individual account; each service gets its own credential. Never ship credentials in code, containers or documentation. OWASP notes that services sharing one secret make the source of a compromise or leak hard to identify; vendor default accounts, individual human and service credentials, and keeping credentials out of code, containers and documentation are this guide's recommendations.", "components": ["owasp", "owasp-p1"], "sources": ["owasp:sc5f1b11d42f4", "owasp-p1:s5fd4accb6988"], "status": "REASONED"},
+    "secret-generation": {"text": "Generate random secrets with openssl rand -base64 32 or Python secrets.token_urlsafe(32).", "components": ["owasp", "openssl", "python"], "sources": ["owasp:sc5f1b11d42f4", "openssl:s86919b215ba1", "python:sd2e8196eaa96"], "status": "REASONED"},
+    "secret-storage": {"text": "Prefer a secret manager (this guide's recommendation; OWASP lists secret managers as one option). For containers, OWASP advises environment variables only when mounted files or a secret-store fetch are not possible. Ignore .env before the first commit and scan for leaks before pushing. Rotate secrets exposed in a public repository, chat or log; deletion does not unpublish them.", "components": ["owasp", "gitleaks-source", "git", "owasp-docs", "owasp-p1"], "sources": ["owasp:sc5f1b11d42f4", "gitleaks-source:s44a3edaa543d", "git:s5f377f0fdbd8", "owasp-docs:seb866a1f94e9", "owasp-p1:s6ea90d0c28e9", "owasp-p1:se0eb20386574"], "status": "REASONED"},
+    "session-cookies": {"text": "Mark session cookies Secure, HttpOnly and SameSite Lax or Strict; signing them with a strong random secret is this guide's recommendation, not covered by the cited passage.", "components": ["owasp", "owasp-docs", "owasp-p1"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:s0562e4dc23f2", "owasp-p1:se49462b39c11"], "status": "REASONED"},
+    "session-timeouts": {"text": "Enforce both idle and absolute session timeouts server-side; cookie expiry alone does not prevent replay.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:s4779e856ef9d"], "status": "REASONED"},
+    "session-unissued": {"text": "Reject session identifiers the server never issued to prevent session fixation.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:s0b82bc050cf3"], "status": "REASONED"},
+    "csrf": {"text": "SameSite alone is not a complete CSRF defense: Lax permits a top-level state-changing GET and sibling subdomains can be same-site. Cookie-authenticated state changes need an anti-CSRF token or strict Origin/Sec-Fetch-Site check, and must not use safe methods such as GET.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:s232e483ac72b", "owasp-docs:sc088939103f0", "owasp-docs:sa7544ec9e1d7", "owasp-docs:seb3129173dbb"], "status": "REASONED"},
+    "expensive-endpoint-limits": {"text": "Bound inference, uploads and job submission with request-size, concurrency and timeout limits in addition to per-client rate limits; apply these limits to streaming and webhook transports too.", "components": ["owasp", "api-security", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "api-security:s213afc24aadb", "owasp-docs:s3369d9106dce", "owasp-docs:sd6d35bd1b67d"], "status": "REASONED"},
+    "fail2ban": {"text": "For SSH on Linux hosts, enable the relevant fail2ban jail (guide requirement). fail2ban 1.1.1 ships sshd, nginx-http-auth and webmin-auth filters and jails, with jails disabled by default; enabling relevant jails with matching file-backend logpaths is guide advice, while panel coverage and setup ease remain unestablished (guide assessment).", "components": ["owasp", "fail2ban-jail"], "sources": ["owasp:sc5f1b11d42f4", "fail2ban-jail:se7c4e0af046f", "fail2ban-jail:sc1b6e6bc1f84", "fail2ban-jail:s9a6aaa273c73", "fail2ban-jail:sa43cf7ba22fb", "fail2ban-jail:s568ea00c2482", "fail2ban-jail:s3c53dd330a7b", "fail2ban-jail:s099abd84ea19"], "status": "REASONED"},
+    "federated-allowlist": {"text": "After federated login, check the identity against an application allowlist of tenants, hosted domains, organization or group membership, or explicit users (this guide's recommendation); a Google sign-in alone does not make someone staff. For Google Workspace or Cloud organizations, check the hd claim in the validated ID token; an email domain or request hd parameter is insufficient. Microsoft common serves organizational and personal accounts; validate the token issuer, signing-key issuer and tid, then apply the application tenant allowlist. Vendor sources support the Google hd check and Microsoft token validation; the full allowlist and staff determination are this guide's recommendations.", "components": ["oidc", "google-oidc", "entra-multitenant"], "sources": ["oidc:scfd2790a544c", "google-oidc:s4f815acc2976", "entra-multitenant:s5e0242f87cb7", "entra-multitenant:s95719206c226"], "status": "REASONED"},
+    "cloudflare-access": {"text": "Cloudflare Access can front a self-hosted web application published through Access with one-time PIN or SSO login; create the Access application before the tunnel route, or it is available to anyone on the Internet. Validate the Access JWT at the origin, verify Tunnel origin TLS, and use Full (strict) for a directly proxied HTTPS origin where applicable; unchanged any-application use is not established.", "components": ["cloudflare-access"], "sources": ["cloudflare-access:sfddb92e438ca", "cloudflare-access:s7cafe1b17afd", "cloudflare-access:s81e5dd28d3e5", "cloudflare-access:s65c224a2e655", "cloudflare-access:sa012410f91eb", "cloudflare-access:sbf4ecbd5ffc1", "cloudflare-access:scb7d48f64a99", "cloudflare-access:sd606ae12de33", "cloudflare-access:s9f8bead847d2"], "status": "REASONED"},
+    "browser-session": {"text": "Prefer a server-side session in an HttpOnly cookie to tokens in browser storage.", "components": ["owasp", "owasp-docs"], "sources": ["owasp:sc5f1b11d42f4", "owasp-docs:s4f0aa80b1ef6"], "status": "REASONED"},
+    "transport-authentication": {"text": "Guide requirements: authenticate and check WebSockets, SSE, GraphQL, gRPC, webhooks, inference and management APIs separately; do not rely on HTML login; verify webhook signatures and reject replays. HTML-login and GraphQL/inference/management coverage, comprehensive replay rejection beyond Stripe's signature/timestamp checks, and deployed protection remain unestablished (guide assessment).", "components": ["owasp", "websocket-rfc", "sse-spec", "grpc-status", "stripe-webhooks"], "sources": ["owasp:sc5f1b11d42f4", "websocket-rfc:s07f03be17365", "websocket-rfc:s559dc201b043", "sse-spec:sf47a21cc6a1c", "grpc-status:s595c3c297157", "stripe-webhooks:s42eea6a7e527", "stripe-webhooks:s90f21ad845ca"], "status": "REASONED"},
+    "offboarding": {"text": "When a person leaves, promptly revoke their provider membership, proxy sessions, application sessions, and personal tokens (this guide's recommendation). Entra documents blocking new sign-ins and revoking refresh tokens, while application-issued sessions require revocation by the application; its access-token lifetime varies, and CAE critical-event enforcement can take up to 15 minutes for supported services. Cloudflare Access documents per-user session revocation, but an active IdP profile can start a new session; after user logout, previously issued tokens stop being accepted in 20-30 seconds. OAuth2 Proxy and Authelia document session-cookie expiry, but these passages do not establish immediate per-user revocation for either proxy. RFC 7009 specifies immediate token invalidation with possible propagation delay and conditional access-token revocation support. The fetched sources do not establish a provider-membership removal mechanism or this deployment's measured maximum time-to-revoke. Measure each system's maximum time-to-revoke where immediate revocation is unavailable, and work to shrink it (this guide's recommendation; no delay was measured here). In a deployment test, first confirm that a matched request with each provider, proxy and application session and personal token succeeds against a protected resource. After revocation, replay each old credential at recorded intervals until it is refused and returns no protected data, and the elapsed time for every layer must not exceed its configured maximum time-to-revoke; these are test expectations, not observed results.", "components": ["owasp", "oauth", "owasp-docs", "entra-docs", "cloudflare-access", "oauth2-proxy", "authelia", "oauth-revocation"], "sources": ["owasp:sc5f1b11d42f4", "oauth:s4e6d674bf887", "owasp-docs:seb866a1f94e9", "entra-docs:s983f45259faa", "entra-docs:scb38e683ae3f", "entra-docs:s9ff4d6ed4cfe", "entra-docs:sca6feea4b601", "cloudflare-access:sf2dbab0fc574", "cloudflare-access:sa0e3eb928f4a", "oauth2-proxy:s32cedbc14f60", "authelia:sc844fe82794f", "oauth-revocation:s3383c9f41cc2"], "status": "REASONED"},
+    "verify-transports": {"text": "Use real protocol clients against every non-public path and transport: expect HTTP 401, 403 or a login redirect; gRPC UNAUTHENTICATED for missing or invalid credentials (PERMISSION_DENIED for an identified caller lacking permission); SSE refusal; and WebSocket upgrade rejection or protected-operation rejection, no protected data disclosure, and closure on first-message authentication failure. A bare curl GET does not test non-HTTP transports. These are test expectations, not observed responses.", "components": ["owasp", "grpc-status", "websocket-rfc", "sse-spec"], "sources": ["owasp:sc5f1b11d42f4", "grpc-status:s595c3c297157", "websocket-rfc:s07f03be17365", "websocket-rfc:s559dc201b043", "sse-spec:sf47a21cc6a1c"], "status": "REASONED"},
+    "verify-secret-scan": {"text": "A secret scanner must find no leaks in the working tree, staged changes and full history; Gitleaks v8.30.1 provides staged git-diff flags and `--log-opts`, so verify staged, all-ref and merge-commit coverage with the chosen scanner and configuration. Supplementary git log grep misses secrets without the search words, uncommitted files, some refs and merge-only changes; the historical fixture result is not a scan of this repository.", "components": ["owasp", "gitleaks-source", "gitleaks-p3", "git-log"], "sources": ["owasp:sc5f1b11d42f4", "gitleaks-source:s44a3edaa543d", "gitleaks-p3:se5afdb7c63d2", "gitleaks-p3:s685ae6ce9b3d", "gitleaks-p3:sfda707f0eb4f", "gitleaks-p3:s8511b8f313b7", "git-log:s1cb7f677894d", "git-log:sede4bb3fcdf3", "git-log:s903a3c765e70"], "status": "REASONED"},
+    "verify-default-accounts": {"text": "Check that the user store has no admin, test or demo account with a known or empty password. This is the guide's recommendation; the OWASP Authentication Cheat Sheet does not list these account names (checked at commit 72865b1e).", "components": ["owasp"], "sources": ["owasp:sc5f1b11d42f4"], "status": "REASONED"},
+    "verify-wrong-tenant": {"text": "Expect a wrong-tenant token to be rejected in an application negative test after issuer and tid validation and the application tenant allowlist. Microsoft documents the validation rules; this guide recommends the allowlist and test, and no deployed rejection was observed.", "components": ["oidc", "entra-multitenant"], "sources": ["oidc:scfd2790a544c", "entra-multitenant:s95719206c226"], "status": "REASONED"},
+    "verify-cross-user": {"text": "Verify that user A cannot read user B's resources. OWASP describes horizontal privilege escalation and object-specific access checks.", "components": ["owasp", "owasp-p1"], "sources": ["owasp:sc5f1b11d42f4", "owasp-p1:s5f5e10a9e4c2"], "status": "REASONED"},
+    "verify-origin-isolation": {"text": "Expect the origin to be unreachable except through its fronting layer in a deployment negative test. Cloudflare describes Access policy enforcement, JWT validation and Tunnel access checks, and says a publicly routable origin needs its IP protected by other methods. OAuth2 Proxy documents upstream identity headers and warns that when `--reverse-proxy` is enabled and `--trusted-proxy-ip` is unset, a client that can reach OAuth2 Proxy directly may be able to spoof forwarded headers. Authelia uses session cookies to authorize protected websites. Google IAP says a bypassing attacker can forge unsigned identity headers; its signed-header how-to says to verify the JWT header, payload and signature to secure an app with the IAP JWT, and calls signed headers secondary security; AWS ALB requires verification of its signed claims header and signer ARN. These sources support the guide's origin-isolation test expectation but do not establish that a particular origin is unreachable.", "components": ["owasp", "cloudflare-access", "oauth2-proxy", "authelia", "google-iap", "aws-alb"], "sources": ["owasp:sc5f1b11d42f4", "cloudflare-access:s7cafe1b17afd", "cloudflare-access:s81e5dd28d3e5", "cloudflare-access:sa012410f91eb", "oauth2-proxy:s6de4892223d2", "oauth2-proxy:s17f0d3cc09b1", "authelia:sc03548e2ed00", "google-iap:s4513609280bb", "aws-alb:sa198710d31f3"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->
 
 ======================================================================
 ==> mfa.md
