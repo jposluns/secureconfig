@@ -179,7 +179,7 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 - Render web-service listener and TLS termination (checked October 2026): https://render.com/docs/web-services
 - Heroku HTTP routing (checked October 2026): https://devcenter.heroku.com/articles/http-routing
 - Heroku web-process port assignment (checked October 2026): https://devcenter.heroku.com/articles/runtime-principles
-- Heroku Fir Private Spaces networking and listener recommendation (checked October 2026): https://devcenter.heroku.com/articles/generations
+- Heroku Fir Private Spaces networking and listener recommendation (checked October 2026): https://devcenter.heroku.com/articles/generations. The article states: "Fir utilizes IPv6 as the default and recommended connection protocol for networking within Heroku Private Spaces." It warns: "If you designed your application, its dependencies, or connected services within a space assuming only IPv4 connectivity, they don’t bind properly on Fir." It recommends: "Ensure IPv6 compatibility by correctly binding to an IPv6 listener or the dual-stack address listener in your app’s language (typically ::) to leverage Fir’s networking configuration." This guide's assessment: these sentences concern networking within Heroku Private Spaces; they do not establish Cedar's listener address or a deployed application's listener configuration.
 - Fly TCP passthrough (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97
 - Fly TLS termination (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176
 - Fly public service binding (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42
@@ -258,7 +258,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "cd9a2dc7036820290dcc411e014e899618917d2517caff2f1ce0bf54ab5dd9cc",
+  "body_sha256": "39bca1278b0b67e83b622a245aafc6bcad76e6953ad76ebf97b0a2520a32ff5a",
   "components": {
     "django": {
       "name": "Django documentation",
