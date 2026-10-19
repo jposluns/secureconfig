@@ -1,6 +1,6 @@
 # Host baseline: SSH, firewall, updates
 
-Written against OpenSSH documentation (no recorded version), OpenSSH 8.2 server manual V_8_2_P1, OpenSSH 8.1 server manual V_8_1_P1, OpenSSH 9.9 source V_9_9_P2, DNF 4.14.0 4.14.0, cloud-init 26.2 26.2, cloud-init 20.1 20.1, and iproute2 ss manual v6.12.0, plus 1 more recorded basis; 9 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
+Written against OpenSSH documentation (no recorded version), OpenSSH 8.2 server manual V_8_2_P1, OpenSSH 8.1 server manual V_8_1_P1, OpenSSH 9.9 source V_9_9_P2, DNF 4.14.0, cloud-init 26.2 and 20.1, iproute2 ss manual v6.12.0, and BusyBox 1_36_1; 9 further sources are pinned to a commit and 9 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -217,7 +217,7 @@ Components (recorded basis):
 - ubuntu-uu: Ubuntu noble unattended-upgrades source (0570be65234e2392d420308470d26920fa4cd21a)
 - ubuntu-apt: Ubuntu noble-updates apt source (835f914ef5657b923fbb8b357f134b00de24c6fd)
 - c9s-dnf: CentOS Stream 9 dnf packaging (3d5ca2af8635e0ef77219625f734d503b9900208)
-- dnf4: DNF 4.14.0 (4.14.0)
+- dnf4: DNF (4.14.0)
 - aws-ssm: AWS Session Manager (unknown)
 - gcp-iap: Google Cloud IAP (unknown)
 - azure-docs: Azure documentation snapshot (8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f)
@@ -226,13 +226,13 @@ Components (recorded basis):
 - crowdsec: CrowdSec (unknown)
 - totp: google-authenticator-libpam (unknown)
 - duo: Duo Unix (unknown)
-- cloudinit26: cloud-init 26.2 (26.2)
-- cloudinit20: cloud-init 20.1 (20.1)
+- cloudinit26: cloud-init (26.2)
+- cloudinit20: cloud-init (20.1)
 - docker: Docker Engine networking (4e9a5751518ed8223a8dcde53693badddd72604f)
 - iproute2: iproute2 ss manual (v6.12.0)
 - ubuntu-nc: Ubuntu noble netcat-openbsd source (c047f1a4572e796c8643fb7e5a719a9d960a677b)
 - c9s-nmap: CentOS Stream 9 nmap packaging (17c2b7795d821cd7fbe311cf3f885be3ea1f122f)
-- busybox: BusyBox 1.36.1 (1_36_1)
+- busybox: BusyBox (1_36_1)
 
 Claims (full source mapping in the JSON block below):
 
@@ -359,7 +359,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "dnf4": {
-      "name": "DNF 4.14.0",
+      "name": "DNF",
       "basis": "4.14.0",
       "sources": {
         "s97934a4740a2": "https://github.com/rpm-software-management/dnf/blob/4.14.0/etc/dnf/automatic.conf#L1-L22",
@@ -428,7 +428,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "cloudinit26": {
-      "name": "cloud-init 26.2",
+      "name": "cloud-init",
       "basis": "26.2",
       "sources": {
         "sad4ec0d2acc5": "https://github.com/canonical/cloud-init/blob/26.2/cloudinit/ssh_util.py#L548-L586",
@@ -437,7 +437,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "cloudinit20": {
-      "name": "cloud-init 20.1",
+      "name": "cloud-init",
       "basis": "20.1",
       "sources": {
         "s471abb6d2123": "https://github.com/canonical/cloud-init/blob/20.1/cloudinit/ssh_util.py#L338-L348",
@@ -485,7 +485,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "busybox": {
-      "name": "BusyBox 1.36.1",
+      "name": "BusyBox",
       "basis": "1_36_1",
       "sources": {
         "s34bdee292f79": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93",
