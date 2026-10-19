@@ -1,171 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-17",
-  "documentation_checked": "2026-09",
-  "body_sha256": "3e508a9aa57450aa708ee435dff5fbd5b96f150b343436a7e16f8267735976fe",
-  "components": {
-    "docs": {
-      "name": "SurrealDB documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s36c00a9caa98": "https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start",
-        "sa4cee13a8dd9": "https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/sql",
-        "s38b5f5aad1d4": "https://surrealdb.com/docs/learn/security",
-        "sdaa9a636537a": "https://surrealdb.com/docs/learn/security/authentication/overview",
-        "sae73137661aa": "https://surrealdb.com/docs/learn/security/best-practices/security-best-practices",
-        "sc798cc43c457": "https://surrealdb.com/docs/learn/security/authorization/capabilities",
-        "sb9c3a17a2998": "https://surrealdb.com/docs/learn/security/authorization/permissions-and-row-level-security",
-        "sfdfa4e63cdd5": "https://surrealdb.com/docs/reference/query-language/statements/define/access/record",
-        "scc00d3d3618d": "https://surrealdb.com/docs/reference/rest-api/http-protocol",
-        "s51100e115b41": "https://surrealdb.com/docs/reference/query-language/statements/info",
-        "s048fd6bd1f3e": "https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt"
-      }
-    },
-    "pinned": {
-      "name": "SurrealDB CLI and image",
-      "basis": "v3.2.4",
-      "sources": {
-        "sac8662d10d16": "https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162",
-        "s91a7bdf0a6e8": "https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/dbs/mod.rs#L47-L50",
-        "s21f5e29c7e44": "https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L177-L180",
-        "sb740fb60a865": "https://github.com/surrealdb/surrealdb/blob/v3.2.4/docker/Dockerfile#L88-L109"
-      }
-    },
-    "defaults": {
-      "name": "SurrealDB 2.0 release announcement",
-      "basis": "unknown",
-      "sources": {
-        "se73fa9c93548": "https://surrealdb.com/releases/2.0"
-      }
-    },
-    "audience": {
-      "name": "SurrealDB native AUDIENCE minimum",
-      "basis": "3.3",
-      "sources": {
-        "s048fd6bd1f3e": "https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt"
-      }
-    },
-    "bash": {
-      "name": "GNU Bash reference manual",
-      "basis": "bash-5.3",
-      "sources": {
-        "sf9757e9fd6e8": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3872"
-      }
-    },
-    "procfs": {
-      "name": "Linux procfs manual",
-      "basis": "man-pages-6.19",
-      "sources": {
-        "s56aa3e840419": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n12",
-        "s9aae2a8587f2": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n26",
-        "sd64e43d1515a": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n43"
-      }
-    },
-    "ptrace": {
-      "name": "Linux ptrace manual",
-      "basis": "man-pages-6.19",
-      "sources": {
-        "sfe9fe6919d33": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man2/ptrace.2?h=man-pages-6.19#n2519"
-      }
-    },
-    "scope-old": {
-      "name": "SurrealDB SCOPE deprecation",
-      "basis": "2.x",
-      "sources": {
-        "s5a6f3aad8f24": "https://surrealdb.com/docs/reference/query-language/statements/define/scope"
-      }
-    },
-    "scope-removed": {
-      "name": "SurrealDB SCOPE removal",
-      "basis": "3.0",
-      "sources": {
-        "s5a6f3aad8f24": "https://surrealdb.com/docs/reference/query-language/statements/define/scope"
-      }
-    }
-  },
-  "claims": {
-    "auth-default": {"text": "Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default.", "components": ["defaults"], "sources": ["defaults:se73fa9c93548"], "status": "REASONED"},
-    "bind-default": {"text": "Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v3.2.4 --bind/-b and SURREAL_BIND retain that loopback default.", "components": ["defaults", "pinned"], "sources": ["defaults:se73fa9c93548", "pinned:s21f5e29c7e44"], "status": "REASONED"},
-    "root-bootstrap": {"text": "User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password.", "components": ["docs", "pinned"], "sources": ["docs:s36c00a9caa98", "pinned:sac8662d10d16"], "status": "REASONED"},
-    "root-input": {"text": "v3.2.4 start has no stdin password form; prompt and use a Bash command-local environment assignment, avoiding argv. As this guide's assessment, the initial server environment may be exposed to the same account and root when the procfs ptrace check permits; an inheriting process may expose it the same way while it runs; treat it as exposed to that account and root while the server runs.", "components": ["pinned", "bash", "procfs", "ptrace"], "sources": ["pinned:sac8662d10d16", "bash:sf9757e9fd6e8", "procfs:s56aa3e840419", "procfs:s9aae2a8587f2", "procfs:sd64e43d1515a", "ptrace:sfe9fe6919d33"], "status": "REASONED"},
-    "environment": {"text": "The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides.", "components": ["docs", "pinned"], "sources": ["docs:s36c00a9caa98", "pinned:s91a7bdf0a6e8", "pinned:s21f5e29c7e44"], "status": "REASONED"},
-    "unauthenticated": {"text": "--unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment.", "components": ["docs", "pinned"], "sources": ["docs:s36c00a9caa98", "docs:s38b5f5aad1d4", "docs:sdaa9a636537a", "pinned:s91a7bdf0a6e8"], "status": "REASONED"},
-    "docker-bind": {"text": "Pinned image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication.", "components": ["pinned"], "sources": ["pinned:sb740fb60a865"], "status": "REASONED"},
-    "private-network": {"text": "Widen host binds only deliberately to private addresses; internal-service databases should have no public interface.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED"},
-    "system-users": {"text": "Root, namespace and database system users use OWNER/EDITOR/VIEWER RBAC; all bypass table/field PERMISSIONS, so scoped system users do not supply record isolation.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sb9c3a17a2998"], "status": "REASONED"},
-    "record-users": {"text": "Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and receive only explicit table/field permissions; absent permissions grant nothing.", "components": ["docs"], "sources": ["docs:sb9c3a17a2998", "docs:sfdfa4e63cdd5"], "status": "REASONED"},
-    "signup": {"text": "Unauthenticated /signup and /signin are intentional; omit SIGNUP to prevent public registration and test refusal alongside a provisioned-account sign-in control.", "components": ["docs"], "sources": ["docs:sfdfa4e63cdd5", "docs:scc00d3d3618d"], "status": "REASONED"},
-    "scope-history": {"text": "Use DEFINE ACCESS TYPE RECORD; legacy DEFINE SCOPE was deprecated in 2.x and removed in 3.0.", "components": ["scope-old", "scope-removed"], "sources": ["scope-old:s5a6f3aad8f24", "scope-removed:s5a6f3aad8f24"], "status": "REASONED"},
-    "access-types": {"text": "DEFINE ACCESS also supports JWT and per-client BEARER keys; standalone JWT creates system-level sessions, while RECORD WITH JWT retains record permissions.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sfdfa4e63cdd5", "docs:s048fd6bd1f3e"], "status": "REASONED"},
-    "jwt-checks": {"text": "Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is a 3.3 feature and 3.2.x uses AUTHENTICATE. Compare invalid tokens against a valid control.", "components": ["docs", "audience"], "sources": ["docs:s048fd6bd1f3e", "audience:s048fd6bd1f3e"], "status": "REASONED"},
-    "capability-all": {"text": "allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
-    "capability-net": {"text": "Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
-    "capability-functions": {"text": "Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
-    "capability-scripting": {"text": "Embedded scripting defaults off; enable it only when required.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
-    "capability-guests": {"text": "Guest access defaults off; capabilities govern what an authorized query may do independently of authentication.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
-    "capability-precedence": {"text": "More-specific capability rules override broader ones; deny wins at equal specificity.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
-    "tls": {"text": "web-crt and web-key provide native HTTPS; a TLS proxy or private tailnet is another documented access pattern.", "components": ["docs"], "sources": ["docs:s36c00a9caa98", "docs:sae73137661aa"], "status": "REASONED"},
-    "mfa": {"text": "No native second factor is provided; require IdP or administrative-gateway MFA and prevent direct-origin bypass.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sae73137661aa"], "status": "REASONED"},
-    "verify-inventory": {"text": "Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication.", "components": ["docs"], "sources": ["docs:s36c00a9caa98", "docs:scc00d3d3618d"], "status": "REASONED", "verify": [1]},
-    "verify-auth": {"text": "Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
-    "verify-auth-limits": {"text": "Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
-    "verify-origin": {"text": "Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [1]},
-    "verify-tls": {"text": "Validate the certificate chain at every TLS termination using normal trust checks, never -k.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # SurrealDB: authentication and TLS
 
-<!-- version-basis:start -->
-**Version basis**
+Written against SurrealDB CLI and image v3.2.4, SurrealDB native AUDIENCE minimum 3.3, SurrealDB SCOPE deprecation 2.x, SurrealDB SCOPE removal 3.0, GNU Bash reference manual bash-5.3, Linux procfs manual man-pages-6.19, and Linux ptrace manual man-pages-6.19; 2 further sources carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 27 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- docs: SurrealDB documentation (rolling) (unknown)
-- pinned: SurrealDB CLI and image (v3.2.4)
-- defaults: SurrealDB 2.0 release announcement (unknown)
-- audience: SurrealDB native AUDIENCE minimum (3.3)
-- bash: GNU Bash reference manual (bash-5.3)
-- procfs: Linux procfs manual (man-pages-6.19)
-- ptrace: Linux ptrace manual (man-pages-6.19)
-- scope-old: SurrealDB SCOPE deprecation (2.x)
-- scope-removed: SurrealDB SCOPE removal (3.0)
-
-Claims (full source mapping in the front matter):
-
-- auth-default (REASONED; defaults): Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default.
-- bind-default (REASONED; defaults, pinned): Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v3.2.4 --bind/-b and SURREAL_BIND retain that loopback default.
-- root-bootstrap (REASONED; docs, pinned): User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password.
-- root-input (REASONED; pinned, bash, procfs, ptrace): v3.2.4 start has no stdin password form; prompt and use a Bash command-local environment assignment, avoiding argv. As this guide's assessment, the initial server environment may be exposed to the same account and root when the procfs ptrace check permits; an inheriting process may expose it the same way while it runs; treat it as exposed to that account and root while the server runs.
-- environment (REASONED; docs, pinned): The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides.
-- unauthenticated (REASONED; docs, pinned): --unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment.
-- docker-bind (REASONED; pinned): Pinned image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication.
-- private-network (REASONED; docs): Widen host binds only deliberately to private addresses; internal-service databases should have no public interface.
-- system-users (REASONED; docs): Root, namespace and database system users use OWNER/EDITOR/VIEWER RBAC; all bypass table/field PERMISSIONS, so scoped system users do not supply record isolation.
-- record-users (REASONED; docs): Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and receive only explicit table/field permissions; absent permissions grant nothing.
-- signup (REASONED; docs): Unauthenticated /signup and /signin are intentional; omit SIGNUP to prevent public registration and test refusal alongside a provisioned-account sign-in control.
-- scope-history (REASONED; scope-old, scope-removed): Use DEFINE ACCESS TYPE RECORD; legacy DEFINE SCOPE was deprecated in 2.x and removed in 3.0.
-- access-types (REASONED; docs): DEFINE ACCESS also supports JWT and per-client BEARER keys; standalone JWT creates system-level sessions, while RECORD WITH JWT retains record permissions.
-- jwt-checks (REASONED; docs, audience): Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is a 3.3 feature and 3.2.x uses AUTHENTICATE. Compare invalid tokens against a valid control.
-- capability-all (REASONED; docs): allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances.
-- capability-net (REASONED; docs): Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF.
-- capability-functions (REASONED; docs): Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances.
-- capability-scripting (REASONED; docs): Embedded scripting defaults off; enable it only when required.
-- capability-guests (REASONED; docs): Guest access defaults off; capabilities govern what an authorized query may do independently of authentication.
-- capability-precedence (REASONED; docs): More-specific capability rules override broader ones; deny wins at equal specificity.
-- tls (REASONED; docs): web-crt and web-key provide native HTTPS; a TLS proxy or private tailnet is another documented access pattern.
-- mfa (REASONED; docs): No native second factor is provided; require IdP or administrative-gateway MFA and prevent direct-origin bypass.
-- verify-inventory (REASONED; docs): Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication.
-- verify-auth (REASONED; docs): Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data.
-- verify-auth-limits (REASONED; docs): Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions.
-- verify-origin (REASONED; docs): Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.
-- verify-tls (REASONED; docs): Validate the certificate chain at every TLS termination using normal trust checks, never -k.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Since SurrealDB 2.0.0, authentication is enabled by default and the CLI binds `127.0.0.1:8000` rather than
 `0.0.0.0` (2.0.0 removed the old `--auth` flag, added `--unauthenticated`, and changed the bind default);
@@ -354,3 +191,192 @@ shell to run.
 - SurrealDB INFO statement (database information requires a system user): https://surrealdb.com/docs/reference/query-language/statements/info
 - SurrealDB DEFINE ACCESS TYPE JWT (native `AUDIENCE` since 3.3, issuer/audience checks via `AUTHENTICATE`) (rolling documentation, checked September 2026): https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt
 - SurrealDB DEFINE SCOPE (deprecated in 2.x, removed in 3.0): https://surrealdb.com/docs/reference/query-language/statements/define/scope
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/surrealdb.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- pinned: SurrealDB CLI and image (v3.2.4)
+- audience: SurrealDB native AUDIENCE minimum (3.3)
+- scope-old: SurrealDB SCOPE deprecation (2.x)
+- scope-removed: SurrealDB SCOPE removal (3.0)
+- docs: SurrealDB documentation (rolling) (unknown)
+- defaults: SurrealDB 2.0 release announcement (unknown)
+- bash: GNU Bash reference manual (bash-5.3)
+- procfs: Linux procfs manual (man-pages-6.19)
+- ptrace: Linux ptrace manual (man-pages-6.19)
+
+Claims (full source mapping in the JSON block below):
+
+- auth-default (REASONED; defaults): Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default.
+- bind-default (REASONED; defaults, pinned): Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v3.2.4 --bind/-b and SURREAL_BIND retain that loopback default.
+- root-bootstrap (REASONED; docs, pinned): User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password.
+- root-input (REASONED; pinned, bash, procfs, ptrace): v3.2.4 start has no stdin password form; prompt and use a Bash command-local environment assignment, avoiding argv. As this guide's assessment, the initial server environment may be exposed to the same account and root when the procfs ptrace check permits; an inheriting process may expose it the same way while it runs; treat it as exposed to that account and root while the server runs.
+- environment (REASONED; docs, pinned): The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides.
+- unauthenticated (REASONED; docs, pinned): --unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment.
+- docker-bind (REASONED; pinned): Pinned image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication.
+- private-network (REASONED; docs): Widen host binds only deliberately to private addresses; internal-service databases should have no public interface.
+- system-users (REASONED; docs): Root, namespace and database system users use OWNER/EDITOR/VIEWER RBAC; all bypass table/field PERMISSIONS, so scoped system users do not supply record isolation.
+- record-users (REASONED; docs): Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and receive only explicit table/field permissions; absent permissions grant nothing.
+- signup (REASONED; docs): Unauthenticated /signup and /signin are intentional; omit SIGNUP to prevent public registration and test refusal alongside a provisioned-account sign-in control.
+- scope-history (REASONED; scope-old, scope-removed): Use DEFINE ACCESS TYPE RECORD; legacy DEFINE SCOPE was deprecated in 2.x and removed in 3.0.
+- access-types (REASONED; docs): DEFINE ACCESS also supports JWT and per-client BEARER keys; standalone JWT creates system-level sessions, while RECORD WITH JWT retains record permissions.
+- jwt-checks (REASONED; docs, audience): Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is a 3.3 feature and 3.2.x uses AUTHENTICATE. Compare invalid tokens against a valid control.
+- capability-all (REASONED; docs): allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances.
+- capability-net (REASONED; docs): Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF.
+- capability-functions (REASONED; docs): Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances.
+- capability-scripting (REASONED; docs): Embedded scripting defaults off; enable it only when required.
+- capability-guests (REASONED; docs): Guest access defaults off; capabilities govern what an authorized query may do independently of authentication.
+- capability-precedence (REASONED; docs): More-specific capability rules override broader ones; deny wins at equal specificity.
+- tls (REASONED; docs): web-crt and web-key provide native HTTPS; a TLS proxy or private tailnet is another documented access pattern.
+- mfa (REASONED; docs): No native second factor is provided; require IdP or administrative-gateway MFA and prevent direct-origin bypass.
+- verify-inventory (REASONED; docs): Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication.
+- verify-auth (REASONED; docs): Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data.
+- verify-auth-limits (REASONED; docs): Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions.
+- verify-origin (REASONED; docs): Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.
+- verify-tls (REASONED; docs): Validate the certificate chain at every TLS termination using normal trust checks, never -k.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-17",
+  "documentation_checked": "2026-09",
+  "body_sha256": "3e508a9aa57450aa708ee435dff5fbd5b96f150b343436a7e16f8267735976fe",
+  "components": {
+    "pinned": {
+      "name": "SurrealDB CLI and image",
+      "basis": "v3.2.4",
+      "sources": {
+        "sac8662d10d16": "https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L148-L162",
+        "s91a7bdf0a6e8": "https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/dbs/mod.rs#L47-L50",
+        "s21f5e29c7e44": "https://github.com/surrealdb/surrealdb/blob/v3.2.4/surrealdb/server/src/cli/start.rs#L177-L180",
+        "sb740fb60a865": "https://github.com/surrealdb/surrealdb/blob/v3.2.4/docker/Dockerfile#L88-L109"
+      }
+    },
+    "audience": {
+      "name": "SurrealDB native AUDIENCE minimum",
+      "basis": "3.3",
+      "sources": {
+        "s048fd6bd1f3e": "https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt"
+      }
+    },
+    "scope-old": {
+      "name": "SurrealDB SCOPE deprecation",
+      "basis": "2.x",
+      "sources": {
+        "s5a6f3aad8f24": "https://surrealdb.com/docs/reference/query-language/statements/define/scope"
+      }
+    },
+    "scope-removed": {
+      "name": "SurrealDB SCOPE removal",
+      "basis": "3.0",
+      "sources": {
+        "s5a6f3aad8f24": "https://surrealdb.com/docs/reference/query-language/statements/define/scope"
+      }
+    },
+    "docs": {
+      "name": "SurrealDB documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s36c00a9caa98": "https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/start",
+        "sa4cee13a8dd9": "https://surrealdb.com/docs/reference/cli/surrealdb-cli/commands/sql",
+        "s38b5f5aad1d4": "https://surrealdb.com/docs/learn/security",
+        "sdaa9a636537a": "https://surrealdb.com/docs/learn/security/authentication/overview",
+        "sae73137661aa": "https://surrealdb.com/docs/learn/security/best-practices/security-best-practices",
+        "sc798cc43c457": "https://surrealdb.com/docs/learn/security/authorization/capabilities",
+        "sb9c3a17a2998": "https://surrealdb.com/docs/learn/security/authorization/permissions-and-row-level-security",
+        "sfdfa4e63cdd5": "https://surrealdb.com/docs/reference/query-language/statements/define/access/record",
+        "scc00d3d3618d": "https://surrealdb.com/docs/reference/rest-api/http-protocol",
+        "s51100e115b41": "https://surrealdb.com/docs/reference/query-language/statements/info",
+        "s048fd6bd1f3e": "https://surrealdb.com/docs/reference/query-language/statements/define/access/jwt"
+      }
+    },
+    "defaults": {
+      "name": "SurrealDB 2.0 release announcement",
+      "basis": "unknown",
+      "sources": {
+        "se73fa9c93548": "https://surrealdb.com/releases/2.0"
+      }
+    },
+    "bash": {
+      "name": "GNU Bash reference manual",
+      "basis": "bash-5.3",
+      "sources": {
+        "sf9757e9fd6e8": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3872"
+      }
+    },
+    "procfs": {
+      "name": "Linux procfs manual",
+      "basis": "man-pages-6.19",
+      "sources": {
+        "s56aa3e840419": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n12",
+        "s9aae2a8587f2": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n26",
+        "sd64e43d1515a": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_environ.5?h=man-pages-6.19#n43"
+      }
+    },
+    "ptrace": {
+      "name": "Linux ptrace manual",
+      "basis": "man-pages-6.19",
+      "sources": {
+        "sfe9fe6919d33": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man2/ptrace.2?h=man-pages-6.19#n2519"
+      }
+    }
+  },
+  "claims": {
+    "auth-default": {"text": "Since 2.0.0 authentication defaults on, --auth was removed and --unauthenticated added; older releases do not share this default.", "components": ["defaults"], "sources": ["defaults:se73fa9c93548"], "status": "REASONED"},
+    "bind-default": {"text": "Since 2.0.0 the CLI defaults to 127.0.0.1:8000; v3.2.4 --bind/-b and SURREAL_BIND retain that loopback default.", "components": ["defaults", "pinned"], "sources": ["defaults:se73fa9c93548", "pinned:s21f5e29c7e44"], "status": "REASONED"},
+    "root-bootstrap": {"text": "User/password flags or SURREAL_USER/PASS initialize a root only when none exists; they neither disable authentication nor rotate an existing password.", "components": ["docs", "pinned"], "sources": ["docs:s36c00a9caa98", "pinned:sac8662d10d16"], "status": "REASONED"},
+    "root-input": {"text": "v3.2.4 start has no stdin password form; prompt and use a Bash command-local environment assignment, avoiding argv. As this guide's assessment, the initial server environment may be exposed to the same account and root when the procfs ptrace check permits; an inheriting process may expose it the same way while it runs; treat it as exposed to that account and root while the server runs.", "components": ["pinned", "bash", "procfs", "ptrace"], "sources": ["pinned:sac8662d10d16", "bash:sf9757e9fd6e8", "procfs:s56aa3e840419", "procfs:s9aae2a8587f2", "procfs:sd64e43d1515a", "ptrace:sfe9fe6919d33"], "status": "REASONED"},
+    "environment": {"text": "The clean-Bash block clears user/password variables and rejects other inherited SURREAL_* options, including auth and bind overrides.", "components": ["docs", "pinned"], "sources": ["docs:s36c00a9caa98", "pinned:s91a7bdf0a6e8", "pinned:s21f5e29c7e44"], "status": "REASONED"},
+    "unauthenticated": {"text": "--unauthenticated/SURREAL_UNAUTHENTICATED gives guests OWNER-equivalent access; never carry it onto a remotely reachable deployment.", "components": ["docs", "pinned"], "sources": ["docs:s36c00a9caa98", "docs:s38b5f5aad1d4", "docs:sdaa9a636537a", "pinned:s91a7bdf0a6e8"], "status": "REASONED"},
+    "docker-bind": {"text": "Pinned image stages set SURREAL_BIND=0.0.0.0:8000 without CMD; start without an override listens on all container IPv4 interfaces, requiring private network or loopback publication.", "components": ["pinned"], "sources": ["pinned:sb740fb60a865"], "status": "REASONED"},
+    "private-network": {"text": "Widen host binds only deliberately to private addresses; internal-service databases should have no public interface.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED"},
+    "system-users": {"text": "Root, namespace and database system users use OWNER/EDITOR/VIEWER RBAC; all bypass table/field PERMISSIONS, so scoped system users do not supply record isolation.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sb9c3a17a2998"], "status": "REASONED"},
+    "record-users": {"text": "Record users authenticate through DEFINE ACCESS TYPE RECORD SIGNUP/SIGNIN logic and receive only explicit table/field permissions; absent permissions grant nothing.", "components": ["docs"], "sources": ["docs:sb9c3a17a2998", "docs:sfdfa4e63cdd5"], "status": "REASONED"},
+    "signup": {"text": "Unauthenticated /signup and /signin are intentional; omit SIGNUP to prevent public registration and test refusal alongside a provisioned-account sign-in control.", "components": ["docs"], "sources": ["docs:sfdfa4e63cdd5", "docs:scc00d3d3618d"], "status": "REASONED"},
+    "scope-history": {"text": "Use DEFINE ACCESS TYPE RECORD; legacy DEFINE SCOPE was deprecated in 2.x and removed in 3.0.", "components": ["scope-old", "scope-removed"], "sources": ["scope-old:s5a6f3aad8f24", "scope-removed:s5a6f3aad8f24"], "status": "REASONED"},
+    "access-types": {"text": "DEFINE ACCESS also supports JWT and per-client BEARER keys; standalone JWT creates system-level sessions, while RECORD WITH JWT retains record permissions.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sfdfa4e63cdd5", "docs:s048fd6bd1f3e"], "status": "REASONED"},
+    "jwt-checks": {"text": "Verify token algorithm/key or JWKS, issuer and audience; native AUDIENCE is a 3.3 feature and 3.2.x uses AUTHENTICATE. Compare invalid tokens against a valid control.", "components": ["docs", "audience"], "sources": ["docs:s048fd6bd1f3e", "audience:s048fd6bd1f3e"], "status": "REASONED"},
+    "capability-all": {"text": "allow-all and deny-all default off; prefer deny-all with narrow route, RPC-method and function allowances.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
+    "capability-net": {"text": "Network access is denied by default; restrict http::* and JWKS destinations and retain external egress protections against SSRF.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
+    "capability-functions": {"text": "Functions are allowed by default; a bare allow-funcs broadens access beyond narrow named allowances.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
+    "capability-scripting": {"text": "Embedded scripting defaults off; enable it only when required.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
+    "capability-guests": {"text": "Guest access defaults off; capabilities govern what an authorized query may do independently of authentication.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
+    "capability-precedence": {"text": "More-specific capability rules override broader ones; deny wins at equal specificity.", "components": ["docs"], "sources": ["docs:sc798cc43c457"], "status": "REASONED"},
+    "tls": {"text": "web-crt and web-key provide native HTTPS; a TLS proxy or private tailnet is another documented access pattern.", "components": ["docs"], "sources": ["docs:s36c00a9caa98", "docs:sae73137661aa"], "status": "REASONED"},
+    "mfa": {"text": "No native second factor is provided; require IdP or administrative-gateway MFA and prevent direct-origin bypass.", "components": ["docs"], "sources": ["docs:sdaa9a636537a", "docs:sae73137661aa"], "status": "REASONED"},
+    "verify-inventory": {"text": "Inventory 8000 on loopback/private addresses; /health establishes process availability, not authentication.", "components": ["docs"], "sources": ["docs:s36c00a9caa98", "docs:scc00d3d3618d"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "Compare INFO FOR DB without credentials and with a system-user JWT on the same NS/DB: exposed auth-off returns info; fixed denies anonymous access and returns authenticated OK data.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
+    "verify-auth-limits": {"text": "Test direct origin and HTTPS; HTTP 200, missing database, disabled route, proxy rejection or transport failure alone proves no authorization control or record permissions.", "components": ["docs"], "sources": ["docs:scc00d3d3618d", "docs:s51100e115b41"], "status": "REASONED", "verify": [1]},
+    "verify-origin": {"text": "Any HTTP answer from an untrusted-network origin probe proves reachability; a gateway result alone does not establish origin isolation.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "Validate the certificate chain at every TLS termination using normal trust checks, never -k.", "components": ["docs"], "sources": ["docs:sae73137661aa"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->
