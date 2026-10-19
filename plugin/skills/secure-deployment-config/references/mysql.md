@@ -780,11 +780,11 @@ Components (recorded basis):
 - mysql8: MySQL reference (8.0)
 - mysql9: MySQL reference (9.7)
 - mysql26: MySQL reference (26.7)
-- image: MySQL image source (2f988f198f35d25b1454fa2504a0e4c348100549)
 - package: MySQL Docker package (mysql-8.4.9)
+- mpackage: MariaDB package source (mariadb-11.8.9)
+- image: MySQL image source (2f988f198f35d25b1454fa2504a0e4c348100549)
 - maria: MariaDB documentation (unknown)
 - mimage: MariaDB image source (1a4c8e99f7816c8d97df11eee52098522dc770cf)
-- mpackage: MariaDB package source (mariadb-11.8.9)
 
 Claims (full source mapping in the JSON block below):
 
@@ -917,6 +917,25 @@ Claims (full source mapping in the JSON block below):
         "sf51fbc6f0ff1": "https://dev.mysql.com/doc/refman/26.7/en/server-system-variables.html#sysvar_bind_address"
       }
     },
+    "package": {
+      "name": "MySQL Docker package",
+      "basis": "mysql-8.4.9",
+      "sources": {
+        "sc4b86a122d43": "https://github.com/mysql/mysql-server/blob/mysql-8.4.9/packaging/rpm-docker/my.cnf.in",
+        "scf03124d3cd4": "https://github.com/mysql/mysql-server/blob/mysql-8.4.9/plugin/x/src/ngs/socket_acceptors_task.cc#L145-L163"
+      }
+    },
+    "mpackage": {
+      "name": "MariaDB package source",
+      "basis": "mariadb-11.8.9",
+      "sources": {
+        "s6443a34ade90": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/debian/additions/mariadb.conf.d/50-server.cnf#L27",
+        "s4fda00559270": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2436-L2439",
+        "sbd05d481e581": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2482-L2493",
+        "s4afb7d28204b": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2540-L2552",
+        "sb92c4a37622f": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/support-files/rpm/server.cnf#L40"
+      }
+    },
     "image": {
       "name": "MySQL image source",
       "basis": "2f988f198f35d25b1454fa2504a0e4c348100549",
@@ -927,14 +946,6 @@ Claims (full source mapping in the JSON block below):
         "s20a475be2b96": "https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L223-L240",
         "s2b7b9e5f4c61": "https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L380-L390",
         "se676b35ed40f": "https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L28-L43"
-      }
-    },
-    "package": {
-      "name": "MySQL Docker package",
-      "basis": "mysql-8.4.9",
-      "sources": {
-        "sc4b86a122d43": "https://github.com/mysql/mysql-server/blob/mysql-8.4.9/packaging/rpm-docker/my.cnf.in",
-        "scf03124d3cd4": "https://github.com/mysql/mysql-server/blob/mysql-8.4.9/plugin/x/src/ngs/socket_acceptors_task.cc#L145-L163"
       }
     },
     "maria": {
@@ -982,17 +993,6 @@ Claims (full source mapping in the JSON block below):
         "s192c8bb1613e": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L394-L409",
         "s7594bc3fbc3b": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L168-L170",
         "s2bc107ec67a2": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L25-L40"
-      }
-    },
-    "mpackage": {
-      "name": "MariaDB package source",
-      "basis": "mariadb-11.8.9",
-      "sources": {
-        "s6443a34ade90": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/debian/additions/mariadb.conf.d/50-server.cnf#L27",
-        "s4fda00559270": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2436-L2439",
-        "sbd05d481e581": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2482-L2493",
-        "s4afb7d28204b": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2540-L2552",
-        "sb92c4a37622f": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/support-files/rpm/server.cnf#L40"
       }
     }
   },

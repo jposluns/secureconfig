@@ -681,14 +681,14 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: PostgreSQL documentation (unknown)
-- docker: PostgreSQL image source (d588a44673ea9d123c1acb1a6924de10a27fc315)
 - init: PostgreSQL initdb source (REL_17_11)
 - pg12: PostgreSQL TLS minimum (12)
 - pg14: PostgreSQL SCRAM default (14)
 - pg15: PostgreSQL schema defaults (15)
 - pg16: PostgreSQL membership and require_auth (16)
 - pg18: PostgreSQL MD5 and logging changes (18)
+- docs: PostgreSQL documentation (unknown)
+- docker: PostgreSQL image source (d588a44673ea9d123c1acb1a6924de10a27fc315)
 - audit: pgAudit source (dedd42ec3fe880bf581dd578c0df87ed4ad246cd)
 
 Claims (full source mapping in the JSON block below):
@@ -747,6 +747,51 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "c0a10a106c69c2bc4358843a0ba962adc1a8fbc25b152175d1d7154d69aa07a4",
   "components": {
+    "init": {
+      "name": "PostgreSQL initdb source",
+      "basis": "REL_17_11",
+      "sources": {
+        "sd22c3409ddcd": "https://github.com/postgres/postgres/blob/REL_17_11/src/backend/libpq/pg_hba.conf.sample#L113-L117",
+        "s311f8c9d4751": "https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L2550-L2557",
+        "s7d7180e2b81f": "https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L3434-L3435"
+      }
+    },
+    "pg12": {
+      "name": "PostgreSQL TLS minimum",
+      "basis": "12",
+      "sources": {
+        "s260cb0b13223": "https://www.postgresql.org/docs/12/release-12.html"
+      }
+    },
+    "pg14": {
+      "name": "PostgreSQL SCRAM default",
+      "basis": "14",
+      "sources": {
+        "s624abdbb3a62": "https://www.postgresql.org/docs/14/release-14.html"
+      }
+    },
+    "pg15": {
+      "name": "PostgreSQL schema defaults",
+      "basis": "15",
+      "sources": {
+        "s674004a0d3a8": "https://www.postgresql.org/docs/15/release-15.html"
+      }
+    },
+    "pg16": {
+      "name": "PostgreSQL membership and require_auth",
+      "basis": "16",
+      "sources": {
+        "s03525343bc49": "https://www.postgresql.org/docs/16/role-membership.html",
+        "s2bdad423cced": "https://www.postgresql.org/docs/16/release-16.html"
+      }
+    },
+    "pg18": {
+      "name": "PostgreSQL MD5 and logging changes",
+      "basis": "18",
+      "sources": {
+        "se36ec635e2a4": "https://www.postgresql.org/docs/18/release-18.html"
+      }
+    },
     "docs": {
       "name": "PostgreSQL documentation",
       "basis": "unknown",
@@ -796,51 +841,6 @@ Claims (full source mapping in the JSON block below):
         "sb9987ddb368d": "https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L235",
         "sea8869c4fd61": "https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L347-L355",
         "s651e63340b47": "https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L92"
-      }
-    },
-    "init": {
-      "name": "PostgreSQL initdb source",
-      "basis": "REL_17_11",
-      "sources": {
-        "sd22c3409ddcd": "https://github.com/postgres/postgres/blob/REL_17_11/src/backend/libpq/pg_hba.conf.sample#L113-L117",
-        "s311f8c9d4751": "https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L2550-L2557",
-        "s7d7180e2b81f": "https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L3434-L3435"
-      }
-    },
-    "pg12": {
-      "name": "PostgreSQL TLS minimum",
-      "basis": "12",
-      "sources": {
-        "s260cb0b13223": "https://www.postgresql.org/docs/12/release-12.html"
-      }
-    },
-    "pg14": {
-      "name": "PostgreSQL SCRAM default",
-      "basis": "14",
-      "sources": {
-        "s624abdbb3a62": "https://www.postgresql.org/docs/14/release-14.html"
-      }
-    },
-    "pg15": {
-      "name": "PostgreSQL schema defaults",
-      "basis": "15",
-      "sources": {
-        "s674004a0d3a8": "https://www.postgresql.org/docs/15/release-15.html"
-      }
-    },
-    "pg16": {
-      "name": "PostgreSQL membership and require_auth",
-      "basis": "16",
-      "sources": {
-        "s03525343bc49": "https://www.postgresql.org/docs/16/role-membership.html",
-        "s2bdad423cced": "https://www.postgresql.org/docs/16/release-16.html"
-      }
-    },
-    "pg18": {
-      "name": "PostgreSQL MD5 and logging changes",
-      "basis": "18",
-      "sources": {
-        "se36ec635e2a4": "https://www.postgresql.org/docs/18/release-18.html"
       }
     },
     "audit": {

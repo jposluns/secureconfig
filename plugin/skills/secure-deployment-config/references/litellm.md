@@ -473,11 +473,11 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: LiteLLM documentation (unknown)
-- source: LiteLLM source (6ef7b86748118ceecd95271727c2fa167ce55fec)
 - sso: LiteLLM SSO allowance (v1.76.0)
 - metrics: LiteLLM metrics default (v1.85.0)
 - cli: LiteLLM CLI (v1.102.1)
+- docs: LiteLLM documentation (unknown)
+- source: LiteLLM source (6ef7b86748118ceecd95271727c2fa167ce55fec)
 
 Claims (full source mapping in the JSON block below):
 
@@ -540,6 +540,27 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "2a5e3014404a2d45329664d113112b9a482ab9426c3c2c0da18d404541b2b3e6",
   "components": {
+    "sso": {
+      "name": "LiteLLM SSO allowance",
+      "basis": "v1.76.0",
+      "sources": {
+        "s683431f972f9": "https://docs.litellm.ai/docs/proxy/admin_ui_sso"
+      }
+    },
+    "metrics": {
+      "name": "LiteLLM metrics default",
+      "basis": "v1.85.0",
+      "sources": {
+        "s7ae2561db315": "https://raw.githubusercontent.com/BerriAI/litellm/v1.85.0/litellm/__init__.py"
+      }
+    },
+    "cli": {
+      "name": "LiteLLM CLI",
+      "basis": "v1.102.1",
+      "sources": {
+        "s2c55655e39fd": "https://github.com/BerriAI/litellm/blob/v1.102.1/litellm/proxy/proxy_cli.py#L666-L667"
+      }
+    },
     "docs": {
       "name": "LiteLLM documentation",
       "basis": "unknown",
@@ -578,27 +599,6 @@ Claims (full source mapping in the JSON block below):
         "s2260325bd6b8": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/route_llm_request.py",
         "sc93fb1082e0c": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/main.py",
         "s6ce39f96b246": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/spend_tracking/spend_tracking_utils.py"
-      }
-    },
-    "sso": {
-      "name": "LiteLLM SSO allowance",
-      "basis": "v1.76.0",
-      "sources": {
-        "s683431f972f9": "https://docs.litellm.ai/docs/proxy/admin_ui_sso"
-      }
-    },
-    "metrics": {
-      "name": "LiteLLM metrics default",
-      "basis": "v1.85.0",
-      "sources": {
-        "s7ae2561db315": "https://raw.githubusercontent.com/BerriAI/litellm/v1.85.0/litellm/__init__.py"
-      }
-    },
-    "cli": {
-      "name": "LiteLLM CLI",
-      "basis": "v1.102.1",
-      "sources": {
-        "s2c55655e39fd": "https://github.com/BerriAI/litellm/blob/v1.102.1/litellm/proxy/proxy_cli.py#L666-L667"
       }
     }
   },

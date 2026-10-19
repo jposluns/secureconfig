@@ -387,15 +387,15 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: memcached documentation (unknown)
 - stable: memcached source (1.6.45)
+- docs: memcached documentation (unknown)
 - protocol: memcached protocol source (7278bdee96329915bbc87731ba005095453f5c2f)
 - reload: memcached TLS design (4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969)
-- openssl: OpenSSL CLI (3.0)
 - ascii: memcached ASCII authentication release notes (unknown)
 - watch: memcached watch-control release notes (unknown)
 - security: memcached security release notes (unknown)
 - release-notes-source: memcached release notes revision (780e280d1a7f98f2981ffeb357ef0c9b182a9844)
+- openssl: OpenSSL CLI (3.0)
 
 Claims (full source mapping in the JSON block below):
 
@@ -444,6 +444,16 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "77879497a23f39f20a85c1fcdb98885f433f831eaa2ed19d973079a8799d182c",
   "components": {
+    "stable": {
+      "name": "memcached source",
+      "basis": "1.6.45",
+      "sources": {
+        "s05c72b35637d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1",
+        "s1310cfc0315d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c",
+        "sceaaea90ec60": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c",
+        "sd40dab94f516": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_text.c"
+      }
+    },
     "docs": {
       "name": "memcached documentation",
       "basis": "unknown",
@@ -459,16 +469,6 @@ Claims (full source mapping in the JSON block below):
         "sc0c6532a1ef5": "https://docs.memcached.org/protocols/basic/"
       }
     },
-    "stable": {
-      "name": "memcached source",
-      "basis": "1.6.45",
-      "sources": {
-        "s05c72b35637d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1",
-        "s1310cfc0315d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c",
-        "sceaaea90ec60": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c",
-        "sd40dab94f516": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_text.c"
-      }
-    },
     "protocol": {
       "name": "memcached protocol source",
       "basis": "7278bdee96329915bbc87731ba005095453f5c2f",
@@ -481,14 +481,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969",
       "sources": {
         "s839f028f2a46": "https://raw.githubusercontent.com/memcached/memcached/4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969/doc/tls.txt"
-      }
-    },
-    "openssl": {
-      "name": "OpenSSL CLI",
-      "basis": "3.0",
-      "sources": {
-        "s00aaf106164f": "https://docs.openssl.org/3.0/man1/openssl-s_client/",
-        "s8a7380c7371d": "https://docs.openssl.org/3.0/man1/openssl-verification-options/"
       }
     },
     "ascii": {
@@ -517,6 +509,14 @@ Claims (full source mapping in the JSON block below):
       "basis": "780e280d1a7f98f2981ffeb357ef0c9b182a9844",
       "sources": {
         "s0a46fce08585": "https://github.com/memcached/memcached/wiki/ReleaseNotes1645/780e280d1a7f98f2981ffeb357ef0c9b182a9844"
+      }
+    },
+    "openssl": {
+      "name": "OpenSSL CLI",
+      "basis": "3.0",
+      "sources": {
+        "s00aaf106164f": "https://docs.openssl.org/3.0/man1/openssl-s_client/",
+        "s8a7380c7371d": "https://docs.openssl.org/3.0/man1/openssl-verification-options/"
       }
     }
   },

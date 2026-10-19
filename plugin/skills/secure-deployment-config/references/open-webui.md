@@ -1,6 +1,6 @@
 # Open WebUI: signup control, TLS, and MFA
 
-Written against Docker Engine localhost boundary 28.0.0; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 62 claims, all reasoned from cited sources.
+Written against Open WebUI (pinned to a commit) and Docker Engine localhost boundary 28.0.0; 1 further source carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 62 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
