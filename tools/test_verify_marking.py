@@ -290,7 +290,7 @@ def main():
 
         # The EOF exception admits only the fixed H2 and the two data fences.
         from version_basis import NOTE_TITLE, note
-        ai = (START + '\n' + note('guide.md') + '\n\n**Version basis**\n\n'
+        ai = (START + '\n' + note('guide.md', historical=True) + '\n\n**Version basis**\n\n'
               '````json\n{}\n````\n' + END + '\n')
         bottom = marked_pilot + '\n\n' + ai
         run(bottom, 0, 'EOF note ends Verify without adding units')
