@@ -43389,7 +43389,7 @@ Claims (full source mapping in the front matter):
 - pb-bind (REASONED; pb): Without a domain serve defaults to 127.0.0.1:8090; with a domain it uses 0.0.0.0:80/443. Behind a local proxy omit the domain and set --http loopback.
 - pb-origins (REASONED; pb): --origins defaults * and accepts comma-separated allowed origins; CORS does not authorize records.
 - pb-proxy (REASONED; pb): Trust only headers the proxy overwrites, review useLeftmostIP ordering and block direct backend access to protect IP/rate controls.
-- pb-dev (REASONED; pb): --dev adds diagnostics including SQL on stderr, not an auth bypass; its default is the configured value, enabled by New() only under probable go run, so a directly run binary defaults to disabled.
+- pb-dev (REASONED; pb): --dev adds diagnostics including SQL on stderr, not an auth bypass; its configured default comes from New(): true if os.Args[0] starts with a nonempty os.TempDir() or cacheDir() prefix, false otherwise.
 - pb-cli (REASONED; pb): In the pinned CLI wrapper, Start() registers the serve and superuser commands on the root command and executes it.
 - pb-rules (REASONED; pb, pb-docs): Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules.
 - pb-manage (REASONED; pb): Top-level manageRule defaults null and permits privileged auth-record changes alongside create/update rules; its validator rejects empty-string rules.
@@ -43422,8 +43422,8 @@ Claims (full source mapping in the front matter):
 - appwrite-recreate (REASONED; appwrite-docs): Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior.
 - appwrite-permissions (REASONED; appwrite, appwrite-docs): Collection and document grants are additive according to legacy documentation; documentSecurity defaults false in Appwrite 2.2.0 and must be enabled for document grants. The pinned parameter description states the need for one permission level.
 - appwrite-creation (REASONED; appwrite, appwrite-docs, utopia-php-database): For null or omitted document permissions, the pinned aggregate helper preserves null before the handler assigns read/update/delete user grants to a nonprivileged requester with a user ID, or an empty list otherwise. API-key classification skips role validation but does not itself determine the default list. Use specific users/teams for private data.
-- appwrite-read-path (REASONED; appwrite): Document GET classifies the requester from authorization roles (keys; owner/developer/admin privileged), reports disabled databases/collections as not found except to those requesters, and fetches the document through the database layer; collection permissions and documentSecurity are stored there at creation.
-- appwrite-requester (REASONED; appwrite): With an API key the request role and scopes come from the key; a standard or ephemeral project key disables the default authorization status, as do admin-mode console sessions outside console project routes, while route scope validation applies to every requester.
+- appwrite-read-path (REASONED; appwrite): Document GET classifies the requester from authorization roles (keys; owner/developer/admin privileged), reports disabled databases/collections as not found except to those requesters, and fetches the document through the database layer; collection permissions and documentSecurity are passed to the database layer at collection creation.
+- appwrite-requester (REASONED; appwrite): With an API key the request role and scopes come from the key; a standard or ephemeral project key for the same project disables the default authorization status, as do admin-mode console sessions outside console project routes, while route scope validation applies to every requester.
 - appwrite-keys (REASONED; appwrite, appwrite-docs): Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients.
 - appwrite-encryption (REASONED; appwrite, appwrite-docs): Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets.
 - appwrite-backups (REASONED; appwrite-docs): Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation.
@@ -43523,9 +43523,9 @@ undermine IP allowlists and rate limits. Review forwarded-header ordering before
 
 `--dev` enables diagnostic logging, including SQL, to stderr; it is not an authentication bypass.
 In the pinned CLI wrapper, `Start()` registers the `serve` and `superuser` commands on the root
-command, and the `--dev` flag default is the configured value, which `New()` enables only when
-the program was probably started with `go run`, so a directly run release binary defaults to
-disabled. In dev mode the pinned code logs executed SQL statements and lowers the logger
+command, and the `--dev` flag default is the configured value. `New()` sets it to true exactly
+when `os.Args[0]` starts with a nonempty `os.TempDir()` or `cacheDir()` prefix, and false otherwise.
+In dev mode the pinned code logs executed SQL statements and lowers the logger
 threshold so practically all logs print. Avoid unnecessary production diagnostics and protect
 their output. See the
 [development-mode behavior](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/core/base.go),
@@ -43772,7 +43772,7 @@ assessment alongside the cited documentation. See the
 [admin-mode authorization status](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L312-L339),
 [request role assignment](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L357-L361),
 [route scope validation](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L503-L507),
-[collection permission storage](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L221-L227), and the
+[collection permission handoff](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L221-L227), and the
 [pinned dependency](https://github.com/appwrite/appwrite/blob/2.2.0/composer.lock#L3461-L3471).
 
 Properly scoped server API keys **bypass resource permissions**. A successful server-key test
@@ -44142,7 +44142,7 @@ service result or deployed-bundle scan is claimed.
 - [Appwrite 2.2.0 admin-mode roles and authorization status (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L312-L339).
 - [Appwrite 2.2.0 request role assignment (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L357-L361).
 - [Appwrite 2.2.0 route scope validation (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L503-L507).
-- [Appwrite 2.2.0 collection permission and documentSecurity storage (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L221-L227).
+- [Appwrite 2.2.0 collection permission and documentSecurity handoff (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L221-L227).
 - [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
 - [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 - [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
