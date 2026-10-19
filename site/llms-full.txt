@@ -3286,12 +3286,12 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: Vault documentation (unknown)
 - run: Vault loopback run (2.1.1)
 - ha: Vault handler source (v1.21.0)
 - forward: Vault forwarding source (v1.20.0)
 - jwt-min: Vault JWT audience minimum (1.17)
 - wrap-history: Vault historical wrapping qualification (0.8)
+- docs: Vault documentation (unknown)
 - curl: curl minimum write-out version (7.75.0)
 
 Claims (full source mapping in the JSON block below):
@@ -3340,6 +3340,41 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "c0cc4cc8e447a97ecaf2d7468cc3b61f66ab601a32ecad3bd7ff8c892b95d894",
   "components": {
+    "run": {
+      "name": "Vault loopback run",
+      "basis": "2.1.1",
+      "sources": {
+        "sd936be5e4c41": "https://github.com/hashicorp/vault/blob/v2.1.1/builtin/credential/approle/backend.go"
+      }
+    },
+    "ha": {
+      "name": "Vault handler source",
+      "basis": "v1.21.0",
+      "sources": {
+        "s8c81f240066a": "https://raw.githubusercontent.com/hashicorp/vault/v1.21.0/http/handler.go"
+      }
+    },
+    "forward": {
+      "name": "Vault forwarding source",
+      "basis": "v1.20.0",
+      "sources": {
+        "sfdb628929b01": "https://raw.githubusercontent.com/hashicorp/vault/v1.20.0/http/logical.go"
+      }
+    },
+    "jwt-min": {
+      "name": "Vault JWT audience minimum",
+      "basis": "1.17",
+      "sources": {
+        "sf213104862ac": "https://developer.hashicorp.com/vault/docs/auth/jwt"
+      }
+    },
+    "wrap-history": {
+      "name": "Vault historical wrapping qualification",
+      "basis": "0.8",
+      "sources": {
+        "sa79f2fd07092": "https://developer.hashicorp.com/vault/docs/concepts/response-wrapping"
+      }
+    },
     "docs": {
       "name": "Vault documentation",
       "basis": "unknown",
@@ -3394,41 +3429,6 @@ Claims (full source mapping in the JSON block below):
         "sd032f083ae99": "https://developer.hashicorp.com/vault/docs/commands/operator/raft",
         "s70ec02f4b4d7": "https://developer.hashicorp.com/vault/docs/commands/status",
         "sdb9905c2f649": "https://developer.hashicorp.com/vault/docs/commands/token/lookup"
-      }
-    },
-    "run": {
-      "name": "Vault loopback run",
-      "basis": "2.1.1",
-      "sources": {
-        "sd936be5e4c41": "https://github.com/hashicorp/vault/blob/v2.1.1/builtin/credential/approle/backend.go"
-      }
-    },
-    "ha": {
-      "name": "Vault handler source",
-      "basis": "v1.21.0",
-      "sources": {
-        "s8c81f240066a": "https://raw.githubusercontent.com/hashicorp/vault/v1.21.0/http/handler.go"
-      }
-    },
-    "forward": {
-      "name": "Vault forwarding source",
-      "basis": "v1.20.0",
-      "sources": {
-        "sfdb628929b01": "https://raw.githubusercontent.com/hashicorp/vault/v1.20.0/http/logical.go"
-      }
-    },
-    "jwt-min": {
-      "name": "Vault JWT audience minimum",
-      "basis": "1.17",
-      "sources": {
-        "sf213104862ac": "https://developer.hashicorp.com/vault/docs/auth/jwt"
-      }
-    },
-    "wrap-history": {
-      "name": "Vault historical wrapping qualification",
-      "basis": "0.8",
-      "sources": {
-        "sa79f2fd07092": "https://developer.hashicorp.com/vault/docs/concepts/response-wrapping"
       }
     },
     "curl": {
@@ -13404,14 +13404,14 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: PostgreSQL documentation (unknown)
-- docker: PostgreSQL image source (d588a44673ea9d123c1acb1a6924de10a27fc315)
 - init: PostgreSQL initdb source (REL_17_11)
 - pg12: PostgreSQL TLS minimum (12)
 - pg14: PostgreSQL SCRAM default (14)
 - pg15: PostgreSQL schema defaults (15)
 - pg16: PostgreSQL membership and require_auth (16)
 - pg18: PostgreSQL MD5 and logging changes (18)
+- docs: PostgreSQL documentation (unknown)
+- docker: PostgreSQL image source (d588a44673ea9d123c1acb1a6924de10a27fc315)
 - audit: pgAudit source (dedd42ec3fe880bf581dd578c0df87ed4ad246cd)
 
 Claims (full source mapping in the JSON block below):
@@ -13470,6 +13470,51 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "c0a10a106c69c2bc4358843a0ba962adc1a8fbc25b152175d1d7154d69aa07a4",
   "components": {
+    "init": {
+      "name": "PostgreSQL initdb source",
+      "basis": "REL_17_11",
+      "sources": {
+        "sd22c3409ddcd": "https://github.com/postgres/postgres/blob/REL_17_11/src/backend/libpq/pg_hba.conf.sample#L113-L117",
+        "s311f8c9d4751": "https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L2550-L2557",
+        "s7d7180e2b81f": "https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L3434-L3435"
+      }
+    },
+    "pg12": {
+      "name": "PostgreSQL TLS minimum",
+      "basis": "12",
+      "sources": {
+        "s260cb0b13223": "https://www.postgresql.org/docs/12/release-12.html"
+      }
+    },
+    "pg14": {
+      "name": "PostgreSQL SCRAM default",
+      "basis": "14",
+      "sources": {
+        "s624abdbb3a62": "https://www.postgresql.org/docs/14/release-14.html"
+      }
+    },
+    "pg15": {
+      "name": "PostgreSQL schema defaults",
+      "basis": "15",
+      "sources": {
+        "s674004a0d3a8": "https://www.postgresql.org/docs/15/release-15.html"
+      }
+    },
+    "pg16": {
+      "name": "PostgreSQL membership and require_auth",
+      "basis": "16",
+      "sources": {
+        "s03525343bc49": "https://www.postgresql.org/docs/16/role-membership.html",
+        "s2bdad423cced": "https://www.postgresql.org/docs/16/release-16.html"
+      }
+    },
+    "pg18": {
+      "name": "PostgreSQL MD5 and logging changes",
+      "basis": "18",
+      "sources": {
+        "se36ec635e2a4": "https://www.postgresql.org/docs/18/release-18.html"
+      }
+    },
     "docs": {
       "name": "PostgreSQL documentation",
       "basis": "unknown",
@@ -13519,51 +13564,6 @@ Claims (full source mapping in the JSON block below):
         "sb9987ddb368d": "https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L235",
         "sea8869c4fd61": "https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L347-L355",
         "s651e63340b47": "https://github.com/docker-library/postgres/blob/d588a44673ea9d123c1acb1a6924de10a27fc315/19/bookworm/docker-entrypoint.sh#L92"
-      }
-    },
-    "init": {
-      "name": "PostgreSQL initdb source",
-      "basis": "REL_17_11",
-      "sources": {
-        "sd22c3409ddcd": "https://github.com/postgres/postgres/blob/REL_17_11/src/backend/libpq/pg_hba.conf.sample#L113-L117",
-        "s311f8c9d4751": "https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L2550-L2557",
-        "s7d7180e2b81f": "https://github.com/postgres/postgres/blob/REL_17_11/src/bin/initdb/initdb.c#L3434-L3435"
-      }
-    },
-    "pg12": {
-      "name": "PostgreSQL TLS minimum",
-      "basis": "12",
-      "sources": {
-        "s260cb0b13223": "https://www.postgresql.org/docs/12/release-12.html"
-      }
-    },
-    "pg14": {
-      "name": "PostgreSQL SCRAM default",
-      "basis": "14",
-      "sources": {
-        "s624abdbb3a62": "https://www.postgresql.org/docs/14/release-14.html"
-      }
-    },
-    "pg15": {
-      "name": "PostgreSQL schema defaults",
-      "basis": "15",
-      "sources": {
-        "s674004a0d3a8": "https://www.postgresql.org/docs/15/release-15.html"
-      }
-    },
-    "pg16": {
-      "name": "PostgreSQL membership and require_auth",
-      "basis": "16",
-      "sources": {
-        "s03525343bc49": "https://www.postgresql.org/docs/16/role-membership.html",
-        "s2bdad423cced": "https://www.postgresql.org/docs/16/release-16.html"
-      }
-    },
-    "pg18": {
-      "name": "PostgreSQL MD5 and logging changes",
-      "basis": "18",
-      "sources": {
-        "se36ec635e2a4": "https://www.postgresql.org/docs/18/release-18.html"
       }
     },
     "audit": {
@@ -14875,11 +14875,11 @@ Components (recorded basis):
 - mysql8: MySQL reference (8.0)
 - mysql9: MySQL reference (9.7)
 - mysql26: MySQL reference (26.7)
-- image: MySQL image source (2f988f198f35d25b1454fa2504a0e4c348100549)
 - package: MySQL Docker package (mysql-8.4.9)
+- mpackage: MariaDB package source (mariadb-11.8.9)
+- image: MySQL image source (2f988f198f35d25b1454fa2504a0e4c348100549)
 - maria: MariaDB documentation (unknown)
 - mimage: MariaDB image source (1a4c8e99f7816c8d97df11eee52098522dc770cf)
-- mpackage: MariaDB package source (mariadb-11.8.9)
 
 Claims (full source mapping in the JSON block below):
 
@@ -15012,6 +15012,25 @@ Claims (full source mapping in the JSON block below):
         "sf51fbc6f0ff1": "https://dev.mysql.com/doc/refman/26.7/en/server-system-variables.html#sysvar_bind_address"
       }
     },
+    "package": {
+      "name": "MySQL Docker package",
+      "basis": "mysql-8.4.9",
+      "sources": {
+        "sc4b86a122d43": "https://github.com/mysql/mysql-server/blob/mysql-8.4.9/packaging/rpm-docker/my.cnf.in",
+        "scf03124d3cd4": "https://github.com/mysql/mysql-server/blob/mysql-8.4.9/plugin/x/src/ngs/socket_acceptors_task.cc#L145-L163"
+      }
+    },
+    "mpackage": {
+      "name": "MariaDB package source",
+      "basis": "mariadb-11.8.9",
+      "sources": {
+        "s6443a34ade90": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/debian/additions/mariadb.conf.d/50-server.cnf#L27",
+        "s4fda00559270": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2436-L2439",
+        "sbd05d481e581": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2482-L2493",
+        "s4afb7d28204b": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2540-L2552",
+        "sb92c4a37622f": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/support-files/rpm/server.cnf#L40"
+      }
+    },
     "image": {
       "name": "MySQL image source",
       "basis": "2f988f198f35d25b1454fa2504a0e4c348100549",
@@ -15022,14 +15041,6 @@ Claims (full source mapping in the JSON block below):
         "s20a475be2b96": "https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L223-L240",
         "s2b7b9e5f4c61": "https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L380-L390",
         "se676b35ed40f": "https://github.com/docker-library/mysql/blob/2f988f198f35d25b1454fa2504a0e4c348100549/8.4/docker-entrypoint.sh#L28-L43"
-      }
-    },
-    "package": {
-      "name": "MySQL Docker package",
-      "basis": "mysql-8.4.9",
-      "sources": {
-        "sc4b86a122d43": "https://github.com/mysql/mysql-server/blob/mysql-8.4.9/packaging/rpm-docker/my.cnf.in",
-        "scf03124d3cd4": "https://github.com/mysql/mysql-server/blob/mysql-8.4.9/plugin/x/src/ngs/socket_acceptors_task.cc#L145-L163"
       }
     },
     "maria": {
@@ -15077,17 +15088,6 @@ Claims (full source mapping in the JSON block below):
         "s192c8bb1613e": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L394-L409",
         "s7594bc3fbc3b": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L168-L170",
         "s2bc107ec67a2": "https://github.com/MariaDB/mariadb-docker/blob/1a4c8e99f7816c8d97df11eee52098522dc770cf/11.8/docker-entrypoint.sh#L25-L40"
-      }
-    },
-    "mpackage": {
-      "name": "MariaDB package source",
-      "basis": "mariadb-11.8.9",
-      "sources": {
-        "s6443a34ade90": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/debian/additions/mariadb.conf.d/50-server.cnf#L27",
-        "s4fda00559270": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2436-L2439",
-        "sbd05d481e581": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2482-L2493",
-        "s4afb7d28204b": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/sql/mysqld.cc#L2540-L2552",
-        "sb92c4a37622f": "https://github.com/MariaDB/server/blob/mariadb-11.8.9/support-files/rpm/server.cnf#L40"
       }
     }
   },
@@ -15918,11 +15918,11 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docker: Official MongoDB Docker images (0a29f3374c7fa7c38cfe280363b754f898e0a5eb)
 - bind: MongoDB bind source (r8.0.32)
+- v8: MongoDB documentation (8.0)
+- docker: Official MongoDB Docker images (0a29f3374c7fa7c38cfe280363b754f898e0a5eb)
 - docs: MongoDB documentation (unknown)
 - shell: mongosh documentation (unknown)
-- v8: MongoDB documentation (8.0)
 - bash: Bash documentation (unknown)
 
 Claims (full source mapping in the JSON block below):
@@ -16016,6 +16016,43 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "8b2445dc1e8749610ca70401436e9371ff8e3717fc36d5980a8f76e7520e47ae",
   "components": {
+    "bind": {
+      "name": "MongoDB bind source",
+      "basis": "r8.0.32",
+      "sources": {
+        "s754f20f4ec55": "https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_base.cpp#L125-L132",
+        "s492eaf134763": "https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_server_helpers.cpp#L404-L410"
+      }
+    },
+    "v8": {
+      "name": "MongoDB documentation",
+      "basis": "8.0",
+      "sources": {
+        "s6f1f3f56616d": "https://www.mongodb.com/docs/v8.0/core/auditing/",
+        "s9e86819e68db": "https://www.mongodb.com/docs/v8.0/reference/audit-message/mongo/",
+        "seedf77aa3e73": "https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/",
+        "s9fcdc05982a6": "https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/",
+        "s1f3040d0fe4c": "https://www.mongodb.com/docs/v8.0/reference/parameters/",
+        "s4ffa7b653364": "https://www.mongodb.com/docs/v8.0/reference/program/mongod/",
+        "s3b7dabf8f41b": "https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/",
+        "see769a1a1e2b": "https://www.mongodb.com/docs/v8.0/reference/configuration-options/",
+        "sf88108a9609d": "https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/",
+        "sdd8ad5fe92b2": "https://www.mongodb.com/docs/v8.0/core/csfle/",
+        "s23650ad42657": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/",
+        "s2a52e3acf56a": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/automatic-encryption/",
+        "s2876af0be5e7": "https://www.mongodb.com/docs/v8.0/core/csfle/reference/csfle-options-clients/",
+        "se39572dfb8ad": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/",
+        "s1b94cb5e8305": "https://www.mongodb.com/docs/v8.0/release-notes/7.0/",
+        "s1d229cb03243": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/",
+        "se55ecf8e7f85": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/qe-options-clients/",
+        "s47b976aa1f45": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/",
+        "sd08442f8ff38": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/",
+        "sc9621a9507cc": "https://www.mongodb.com/docs/v8.0/administration/monitoring/",
+        "sb5d5b8d3dfa1": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/encryption-algorithms/",
+        "s43213b00956d": "https://www.mongodb.com/docs/v8.0/release-notes/8.0/",
+        "s09f3af996812": "https://www.mongodb.com/docs/v8.0/release-notes/8.0-compatibility/"
+      }
+    },
     "docker": {
       "name": "Official MongoDB Docker images",
       "basis": "0a29f3374c7fa7c38cfe280363b754f898e0a5eb",
@@ -16027,14 +16064,6 @@ Claims (full source mapping in the JSON block below):
         "sec084eaf4f47": "https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/Dockerfile#L122-L125",
         "s794426369608": "https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/windows/windowsservercore-ltsc2022/Dockerfile#L67",
         "sb1af26c1c65f": "https://github.com/docker-library/mongo/blob/0a29f3374c7fa7c38cfe280363b754f898e0a5eb/8.3/docker-entrypoint.sh#L71-L87"
-      }
-    },
-    "bind": {
-      "name": "MongoDB bind source",
-      "basis": "r8.0.32",
-      "sources": {
-        "s754f20f4ec55": "https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_base.cpp#L125-L132",
-        "s492eaf134763": "https://github.com/mongodb/mongo/blob/r8.0.32/src/mongo/db/server_options_server_helpers.cpp#L404-L410"
       }
     },
     "docs": {
@@ -16077,35 +16106,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "unknown",
       "sources": {
         "s5ed633d4d270": "https://www.mongodb.com/docs/mongodb-shell/reference/options/"
-      }
-    },
-    "v8": {
-      "name": "MongoDB documentation",
-      "basis": "8.0",
-      "sources": {
-        "s6f1f3f56616d": "https://www.mongodb.com/docs/v8.0/core/auditing/",
-        "s9e86819e68db": "https://www.mongodb.com/docs/v8.0/reference/audit-message/mongo/",
-        "seedf77aa3e73": "https://www.mongodb.com/docs/v8.0/tutorial/configure-auditing/",
-        "s9fcdc05982a6": "https://www.mongodb.com/docs/v8.0/tutorial/configure-audit-filters/",
-        "s1f3040d0fe4c": "https://www.mongodb.com/docs/v8.0/reference/parameters/",
-        "s4ffa7b653364": "https://www.mongodb.com/docs/v8.0/reference/program/mongod/",
-        "s3b7dabf8f41b": "https://www.mongodb.com/docs/v8.0/core/security-encryption-at-rest/",
-        "see769a1a1e2b": "https://www.mongodb.com/docs/v8.0/reference/configuration-options/",
-        "sf88108a9609d": "https://www.mongodb.com/docs/v8.0/tutorial/configure-encryption/",
-        "sdd8ad5fe92b2": "https://www.mongodb.com/docs/v8.0/core/csfle/",
-        "s23650ad42657": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/manual-encryption/",
-        "s2a52e3acf56a": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/automatic-encryption/",
-        "s2876af0be5e7": "https://www.mongodb.com/docs/v8.0/core/csfle/reference/csfle-options-clients/",
-        "se39572dfb8ad": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/",
-        "s1b94cb5e8305": "https://www.mongodb.com/docs/v8.0/release-notes/7.0/",
-        "s1d229cb03243": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/limitations/",
-        "se55ecf8e7f85": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/qe-options-clients/",
-        "s47b976aa1f45": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/fundamentals/manual-encryption/",
-        "sd08442f8ff38": "https://www.mongodb.com/docs/v8.0/core/queryable-encryption/reference/supported-operations/",
-        "sc9621a9507cc": "https://www.mongodb.com/docs/v8.0/administration/monitoring/",
-        "sb5d5b8d3dfa1": "https://www.mongodb.com/docs/v8.0/core/csfle/fundamentals/encryption-algorithms/",
-        "s43213b00956d": "https://www.mongodb.com/docs/v8.0/release-notes/8.0/",
-        "s09f3af996812": "https://www.mongodb.com/docs/v8.0/release-notes/8.0-compatibility/"
       }
     },
     "bash": {
@@ -17063,7 +17063,6 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: Redis documentation (unknown)
 - r60: Redis configuration (6.0.20)
 - r62: Redis configuration (6.2.14)
 - r620: Redis configuration (6.2.0)
@@ -17071,12 +17070,13 @@ Components (recorded basis):
 - r82: Redis configuration (8.2.1)
 - r86: Redis configuration (8.6.0)
 - ha: Redis HA source (8.10.1)
-- image: Redis image source (584feaab6cd12a77866c121beff1bb16ff239486)
 - image8: Redis image tag (v8.10.2)
 - r74: Redis compiled defaults (7.4.8)
 - r8102: Redis compiled defaults (8.10.2)
-- valkey: Valkey documentation (unknown)
+- docs: Redis documentation (unknown)
+- image: Redis image source (584feaab6cd12a77866c121beff1bb16ff239486)
 - release-notes: Redis release notes (unknown)
+- valkey: Valkey documentation (unknown)
 
 Claims (full source mapping in the JSON block below):
 
@@ -17147,57 +17147,6 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "bdd2c88e86e24637097c57f8abfd523f83b1044fefe1d7d33aaddd94532315e6",
   "components": {
-    "docs": {
-      "name": "Redis documentation",
-      "basis": "unknown",
-      "sources": {
-        "s676f92c46896": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/",
-        "s5f24cdfad62f": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/",
-        "s6cf51f8deeec": "https://redis.io/docs/latest/commands/auth/",
-        "s72fa2dffefe0": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/",
-        "s503353d67ab0": "https://redis.io/docs/latest/commands/flushall/",
-        "s04727068bf6d": "https://redis.io/docs/latest/commands/flushdb/",
-        "s77f119379267": "https://redis.io/docs/latest/commands/swapdb/",
-        "s94f2d2ff2791": "https://redis.io/docs/latest/commands/keys/",
-        "sbf9af1bcd939": "https://redis.io/docs/latest/commands/randomkey/",
-        "sf208d01054d8": "https://redis.io/docs/latest/commands/scan/",
-        "s845464defcbf": "https://redis.io/docs/latest/commands/function-delete/",
-        "se6006d0ebe9d": "https://redis.io/docs/latest/commands/function-flush/",
-        "sfe89bc1db7ec": "https://redis.io/docs/latest/commands/function-load/",
-        "s2d7c63097f6b": "https://redis.io/docs/latest/commands/function-restore/",
-        "s810656b5a50e": "https://redis.io/docs/latest/commands/acl-setuser/",
-        "seaec1ae0ac17": "https://redis.io/docs/latest/commands/config-rewrite/",
-        "s96598ec29ba4": "https://redis.io/docs/latest/commands/acl-save/",
-        "s3e1c0de156e5": "https://redis.io/docs/latest/commands/acl-load/",
-        "s89a679483b31": "https://redis.io/docs/latest/commands/client-kill/",
-        "sb5b7454ab5ec": "https://redis.io/docs/latest/commands/psubscribe/",
-        "s19cd1836b3cd": "https://redis.io/docs/latest/commands/publish/",
-        "sedf741005697": "https://redis.io/docs/latest/commands/subscribe/",
-        "s6e5d3141dadd": "https://redis.io/docs/latest/commands/eval/",
-        "s783428f2ae71": "https://redis.io/docs/latest/commands/evalsha/",
-        "s0b532abc6b3e": "https://redis.io/docs/latest/commands/fcall/",
-        "se9b0821291f2": "https://redis.io/docs/latest/commands/eval_ro/",
-        "sf9ad57a17ff4": "https://redis.io/docs/latest/commands/evalsha_ro/",
-        "s4265e3593644": "https://redis.io/docs/latest/commands/fcall_ro/",
-        "sc6b4e54687ac": "https://redis.io/docs/latest/develop/tools/cli/",
-        "sd3d4315b25ce": "https://redis.io/docs/latest/commands/get/",
-        "se987368157bc": "https://redis.io/docs/latest/commands/set/",
-        "sc62448a319aa": "https://redis.io/docs/latest/commands/ping/",
-        "s04c6a2a49051": "https://redis.io/docs/latest/commands/acl-getuser/",
-        "s7ab1aac347a4": "https://redis.io/docs/latest/commands/config-get/",
-        "sb5f5479eccf8": "https://redis.io/docs/latest/commands/acl-log/",
-        "s8d6577576295": "https://redis.io/docs/latest/commands/acl-dryrun/",
-        "s43b199002e27": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/#acl-rules-for-sentinel-and-replicas",
-        "s34e2264081b7": "https://redis.io/docs/latest/operate/oss_and_stack/management/replication/#setting-a-replica-to-authenticate-to-a-master",
-        "s426dcab02f8b": "https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#configuring-sentinel-instances-with-authentication",
-        "s6c549585a510": "https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#redis-access-control-list-authentication",
-        "s075c67b3e9d7": "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports",
-        "sce02504d451b": "https://redis.io/docs/latest/commands/info/",
-        "sfe348474049a": "https://redis.io/docs/latest/commands/cluster-nodes/",
-        "s04d70801d688": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/#sentinel",
-        "sb384cc06fc43": "https://redis.io/docs/latest/commands/config-set/"
-      }
-    },
     "r60": {
       "name": "Redis configuration",
       "basis": "6.0.20",
@@ -17254,15 +17203,6 @@ Claims (full source mapping in the JSON block below):
         "s28f3f121848c": "https://raw.githubusercontent.com/redis/redis/8.10.1/src/tls.c"
       }
     },
-    "image": {
-      "name": "Redis image source",
-      "basis": "584feaab6cd12a77866c121beff1bb16ff239486",
-      "sources": {
-        "s6e56989d73a1": "https://github.com/redis/docker-library-redis/blob/584feaab6cd12a77866c121beff1bb16ff239486/6.2/debian/Dockerfile#L85-L90",
-        "sdb0e9a2d1d56": "https://github.com/redis/docker-library-redis/blob/584feaab6cd12a77866c121beff1bb16ff239486/7.4/debian/Dockerfile#L146-L150",
-        "s65ef31503c67": "https://github.com/redis/docker-library-redis/blob/584feaab6cd12a77866c121beff1bb16ff239486/7.4/debian/docker-entrypoint.sh"
-      }
-    },
     "image8": {
       "name": "Redis image tag",
       "basis": "v8.10.2",
@@ -17288,13 +17228,64 @@ Claims (full source mapping in the JSON block below):
         "see1833b741f4": "https://github.com/redis/redis/blob/8.10.2/src/acl.c#L1430-L1438"
       }
     },
-    "valkey": {
-      "name": "Valkey documentation",
+    "docs": {
+      "name": "Redis documentation",
       "basis": "unknown",
       "sources": {
-        "sb488496d1f4b": "https://valkey.io/topics/acl/",
-        "s0eebdf8ee73e": "https://valkey.io/topics/security/",
-        "sdc8d63632a85": "https://valkey.io/topics/tls/"
+        "s676f92c46896": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/",
+        "s5f24cdfad62f": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/",
+        "s6cf51f8deeec": "https://redis.io/docs/latest/commands/auth/",
+        "s72fa2dffefe0": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/",
+        "s503353d67ab0": "https://redis.io/docs/latest/commands/flushall/",
+        "s04727068bf6d": "https://redis.io/docs/latest/commands/flushdb/",
+        "s77f119379267": "https://redis.io/docs/latest/commands/swapdb/",
+        "s94f2d2ff2791": "https://redis.io/docs/latest/commands/keys/",
+        "sbf9af1bcd939": "https://redis.io/docs/latest/commands/randomkey/",
+        "sf208d01054d8": "https://redis.io/docs/latest/commands/scan/",
+        "s845464defcbf": "https://redis.io/docs/latest/commands/function-delete/",
+        "se6006d0ebe9d": "https://redis.io/docs/latest/commands/function-flush/",
+        "sfe89bc1db7ec": "https://redis.io/docs/latest/commands/function-load/",
+        "s2d7c63097f6b": "https://redis.io/docs/latest/commands/function-restore/",
+        "s810656b5a50e": "https://redis.io/docs/latest/commands/acl-setuser/",
+        "seaec1ae0ac17": "https://redis.io/docs/latest/commands/config-rewrite/",
+        "s96598ec29ba4": "https://redis.io/docs/latest/commands/acl-save/",
+        "s3e1c0de156e5": "https://redis.io/docs/latest/commands/acl-load/",
+        "s89a679483b31": "https://redis.io/docs/latest/commands/client-kill/",
+        "sb5b7454ab5ec": "https://redis.io/docs/latest/commands/psubscribe/",
+        "s19cd1836b3cd": "https://redis.io/docs/latest/commands/publish/",
+        "sedf741005697": "https://redis.io/docs/latest/commands/subscribe/",
+        "s6e5d3141dadd": "https://redis.io/docs/latest/commands/eval/",
+        "s783428f2ae71": "https://redis.io/docs/latest/commands/evalsha/",
+        "s0b532abc6b3e": "https://redis.io/docs/latest/commands/fcall/",
+        "se9b0821291f2": "https://redis.io/docs/latest/commands/eval_ro/",
+        "sf9ad57a17ff4": "https://redis.io/docs/latest/commands/evalsha_ro/",
+        "s4265e3593644": "https://redis.io/docs/latest/commands/fcall_ro/",
+        "sc6b4e54687ac": "https://redis.io/docs/latest/develop/tools/cli/",
+        "sd3d4315b25ce": "https://redis.io/docs/latest/commands/get/",
+        "se987368157bc": "https://redis.io/docs/latest/commands/set/",
+        "sc62448a319aa": "https://redis.io/docs/latest/commands/ping/",
+        "s04c6a2a49051": "https://redis.io/docs/latest/commands/acl-getuser/",
+        "s7ab1aac347a4": "https://redis.io/docs/latest/commands/config-get/",
+        "sb5f5479eccf8": "https://redis.io/docs/latest/commands/acl-log/",
+        "s8d6577576295": "https://redis.io/docs/latest/commands/acl-dryrun/",
+        "s43b199002e27": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/#acl-rules-for-sentinel-and-replicas",
+        "s34e2264081b7": "https://redis.io/docs/latest/operate/oss_and_stack/management/replication/#setting-a-replica-to-authenticate-to-a-master",
+        "s426dcab02f8b": "https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#configuring-sentinel-instances-with-authentication",
+        "s6c549585a510": "https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#redis-access-control-list-authentication",
+        "s075c67b3e9d7": "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports",
+        "sce02504d451b": "https://redis.io/docs/latest/commands/info/",
+        "sfe348474049a": "https://redis.io/docs/latest/commands/cluster-nodes/",
+        "s04d70801d688": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/#sentinel",
+        "sb384cc06fc43": "https://redis.io/docs/latest/commands/config-set/"
+      }
+    },
+    "image": {
+      "name": "Redis image source",
+      "basis": "584feaab6cd12a77866c121beff1bb16ff239486",
+      "sources": {
+        "s6e56989d73a1": "https://github.com/redis/docker-library-redis/blob/584feaab6cd12a77866c121beff1bb16ff239486/6.2/debian/Dockerfile#L85-L90",
+        "sdb0e9a2d1d56": "https://github.com/redis/docker-library-redis/blob/584feaab6cd12a77866c121beff1bb16ff239486/7.4/debian/Dockerfile#L146-L150",
+        "s65ef31503c67": "https://github.com/redis/docker-library-redis/blob/584feaab6cd12a77866c121beff1bb16ff239486/7.4/debian/docker-entrypoint.sh"
       }
     },
     "release-notes": {
@@ -17303,6 +17294,15 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "sadcc4b0a2908": "https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.6-release-notes/",
         "sead103199248": "https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.10-release-notes/"
+      }
+    },
+    "valkey": {
+      "name": "Valkey documentation",
+      "basis": "unknown",
+      "sources": {
+        "sb488496d1f4b": "https://valkey.io/topics/acl/",
+        "s0eebdf8ee73e": "https://valkey.io/topics/security/",
+        "sdc8d63632a85": "https://valkey.io/topics/tls/"
       }
     }
   },
@@ -19771,11 +19771,11 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: RabbitMQ documentation (unknown)
 - source: RabbitMQ source (v4.3.6)
-- image: RabbitMQ image source (76efb370838e36e4b120e252e75cf0dac70a7d55)
 - admin: rabbitmqadmin (v2)
 - topic-min: RabbitMQ topic authorization introduction (3.7.0)
+- docs: RabbitMQ documentation (unknown)
+- image: RabbitMQ image source (76efb370838e36e4b120e252e75cf0dac70a7d55)
 - management-source: RabbitMQ management documentation source (db23826ebaa810b3cdd525fd290125d65f6c3005)
 - otp: Erlang/OTP distribution (27)
 - curl: curl documentation (unknown)
@@ -19826,6 +19826,38 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "02208e1c7164f30bd94a7488df842c3d2b5709113cd61925722fae35b7159460",
   "components": {
+    "source": {
+      "name": "RabbitMQ source",
+      "basis": "v4.3.6",
+      "sources": {
+        "sd358fada6993": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/Makefile#L33-L38",
+        "s23753cce5d91": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L22",
+        "s776b41dfa37a": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L65-L71",
+        "s2373a87402c7": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L151-L154",
+        "scde094099cd2": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L178-L186",
+        "s429261f04d72": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L1206-L1233",
+        "s3db3e9410319": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L2008-L2025",
+        "s631a5974cf74": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/scripts/rabbitmq-env#L143-L146",
+        "sb2136f9c4d1a": "https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env",
+        "s9977401b5976": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.6",
+        "s314eda502b64": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L104-L118",
+        "s8dd5ade37995": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60"
+      }
+    },
+    "admin": {
+      "name": "rabbitmqadmin",
+      "basis": "v2",
+      "sources": {
+        "sdd5688854073": "https://www.rabbitmq.com/docs/management-cli"
+      }
+    },
+    "topic-min": {
+      "name": "RabbitMQ topic authorization introduction",
+      "basis": "3.7.0",
+      "sources": {
+        "se34f4e7886f1": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0"
+      }
+    },
     "docs": {
       "name": "RabbitMQ documentation",
       "basis": "unknown",
@@ -19848,24 +19880,6 @@ Claims (full source mapping in the JSON block below):
         "s008b12a42f70": "https://www.rabbitmq.com/docs/channels"
       }
     },
-    "source": {
-      "name": "RabbitMQ source",
-      "basis": "v4.3.6",
-      "sources": {
-        "sd358fada6993": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/Makefile#L33-L38",
-        "s23753cce5d91": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L22",
-        "s776b41dfa37a": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L65-L71",
-        "s2373a87402c7": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L151-L154",
-        "scde094099cd2": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L178-L186",
-        "s429261f04d72": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L1206-L1233",
-        "s3db3e9410319": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L2008-L2025",
-        "s631a5974cf74": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/scripts/rabbitmq-env#L143-L146",
-        "sb2136f9c4d1a": "https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env",
-        "s9977401b5976": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.6",
-        "s314eda502b64": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L104-L118",
-        "s8dd5ade37995": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60"
-      }
-    },
     "image": {
       "name": "RabbitMQ image source",
       "basis": "76efb370838e36e4b120e252e75cf0dac70a7d55",
@@ -19874,20 +19888,6 @@ Claims (full source mapping in the JSON block below):
         "s6e9f51045566": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/ubuntu/Dockerfile#L321",
         "se5da6700ffd7": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/10-defaults.conf#L8",
         "sb5b8462e18fd": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/Dockerfile#L327"
-      }
-    },
-    "admin": {
-      "name": "rabbitmqadmin",
-      "basis": "v2",
-      "sources": {
-        "sdd5688854073": "https://www.rabbitmq.com/docs/management-cli"
-      }
-    },
-    "topic-min": {
-      "name": "RabbitMQ topic authorization introduction",
-      "basis": "3.7.0",
-      "sources": {
-        "se34f4e7886f1": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0"
       }
     },
     "management-source": {
@@ -20502,12 +20502,12 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: Mosquitto documentation (unknown)
 - v20: Mosquitto (v2.0.22)
-- library: Mosquitto image catalogue (920b00976e6e8335bab0a3fd293b95b6b2404ce3)
-- image: Mosquitto image source (5b74cce8a4fe2a73b57df6c703bfde2cfd535d60)
 - v21: Mosquitto (v2.1.2)
 - v16: Mosquitto legacy (v1.6.15)
+- docs: Mosquitto documentation (unknown)
+- library: Mosquitto image catalogue (920b00976e6e8335bab0a3fd293b95b6b2404ce3)
+- image: Mosquitto image source (5b74cce8a4fe2a73b57df6c703bfde2cfd535d60)
 - release-notes: Mosquitto release announcements (unknown)
 
 Claims (full source mapping in the JSON block below):
@@ -20565,21 +20565,6 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-10",
   "body_sha256": "73b1d3529e9fdfcd23efa56ade3bf305d2e5d39c8844da14cbcb843de2ef6dc9",
   "components": {
-    "docs": {
-      "name": "Mosquitto documentation",
-      "basis": "unknown",
-      "sources": {
-        "s4d96861c4f39": "https://mosquitto.org/documentation/migrating-to-2-0/",
-        "s66b826cab3e9": "https://mosquitto.org/documentation/listeners/per-listener-settings/",
-        "sddca3657b9c1": "https://mosquitto.org/man/mosquitto_passwd-1.html",
-        "s9aa3260c5b79": "https://mosquitto.org/documentation/authentication-methods/",
-        "s1791866ca31b": "https://mosquitto.org/man/mosquitto-conf-5.html",
-        "s280527f289d0": "https://mosquitto.org/documentation/plugins/acl-file/",
-        "sd34bd50f5f0f": "https://mosquitto.org/man/mosquitto-8.html",
-        "s6711164e3e5f": "https://mosquitto.org/man/mosquitto_sub-1.html",
-        "s1476cea737a4": "https://mosquitto.org/man/mosquitto_pub-1.html"
-      }
-    },
     "v20": {
       "name": "Mosquitto",
       "basis": "v2.0.22",
@@ -20595,27 +20580,6 @@ Claims (full source mapping in the JSON block below):
         "saf5cd7c6f12b": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/session_expiry.c",
         "saff73f3b983e": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/handle_connect.c#L120-L133",
         "sa116e59b51a4": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/security.c#L691-L693"
-      }
-    },
-    "library": {
-      "name": "Mosquitto image catalogue",
-      "basis": "920b00976e6e8335bab0a3fd293b95b6b2404ce3",
-      "sources": {
-        "s0d99329a59ae": "https://github.com/docker-library/official-images/blob/920b00976e6e8335bab0a3fd293b95b6b2404ce3/library/eclipse-mosquitto#L3-L13"
-      }
-    },
-    "image": {
-      "name": "Mosquitto image source",
-      "basis": "5b74cce8a4fe2a73b57df6c703bfde2cfd535d60",
-      "sources": {
-        "sdfa81718b7ff": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L30",
-        "s38217a9ac8cc": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L77-L80",
-        "see5ae9bc6aa9": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L99-L101",
-        "s90852e30653e": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/mosquitto.conf",
-        "s2653cf87d9d0": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/docker-entrypoint.sh",
-        "s48d123c4c6d9": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/README.md#L27-L28",
-        "s270129425e74": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/1.6-openssl/Dockerfile#L66",
-        "sd127367f6308": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.0-openssl/Dockerfile#L69"
       }
     },
     "v21": {
@@ -20650,6 +20614,42 @@ Claims (full source mapping in the JSON block below):
         "seb5311de9f93": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/src/net.c#L605-L690",
         "sbfaf2572ea61": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/man/mosquitto.conf.5.xml#L167-L185",
         "s0d1a10094e93": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/mosquitto.conf"
+      }
+    },
+    "docs": {
+      "name": "Mosquitto documentation",
+      "basis": "unknown",
+      "sources": {
+        "s4d96861c4f39": "https://mosquitto.org/documentation/migrating-to-2-0/",
+        "s66b826cab3e9": "https://mosquitto.org/documentation/listeners/per-listener-settings/",
+        "sddca3657b9c1": "https://mosquitto.org/man/mosquitto_passwd-1.html",
+        "s9aa3260c5b79": "https://mosquitto.org/documentation/authentication-methods/",
+        "s1791866ca31b": "https://mosquitto.org/man/mosquitto-conf-5.html",
+        "s280527f289d0": "https://mosquitto.org/documentation/plugins/acl-file/",
+        "sd34bd50f5f0f": "https://mosquitto.org/man/mosquitto-8.html",
+        "s6711164e3e5f": "https://mosquitto.org/man/mosquitto_sub-1.html",
+        "s1476cea737a4": "https://mosquitto.org/man/mosquitto_pub-1.html"
+      }
+    },
+    "library": {
+      "name": "Mosquitto image catalogue",
+      "basis": "920b00976e6e8335bab0a3fd293b95b6b2404ce3",
+      "sources": {
+        "s0d99329a59ae": "https://github.com/docker-library/official-images/blob/920b00976e6e8335bab0a3fd293b95b6b2404ce3/library/eclipse-mosquitto#L3-L13"
+      }
+    },
+    "image": {
+      "name": "Mosquitto image source",
+      "basis": "5b74cce8a4fe2a73b57df6c703bfde2cfd535d60",
+      "sources": {
+        "sdfa81718b7ff": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L30",
+        "s38217a9ac8cc": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L77-L80",
+        "see5ae9bc6aa9": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L99-L101",
+        "s90852e30653e": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/mosquitto.conf",
+        "s2653cf87d9d0": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/docker-entrypoint.sh",
+        "s48d123c4c6d9": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/README.md#L27-L28",
+        "s270129425e74": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/1.6-openssl/Dockerfile#L66",
+        "sd127367f6308": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.0-openssl/Dockerfile#L69"
       }
     },
     "release-notes": {
@@ -21620,9 +21620,9 @@ Components (recorded basis):
 
 - default: Kafka listener default (4.3.1)
 - docs: Kafka documentation (4.3)
-- kafka-design: Apache Kafka issue tracker and KIPs (unknown)
 - source: Kafka source (4.3.0)
 - legacy: Kafka legacy authorization (3.9)
+- kafka-design: Apache Kafka issue tracker and KIPs (unknown)
 - redpanda: Redpanda documentation (unknown)
 - openssl: OpenSSL documentation (3.5)
 
@@ -21707,14 +21707,6 @@ Claims (full source mapping in the JSON block below):
         "s4d4a39897877": "https://kafka.apache.org/43/operations/monitoring/"
       }
     },
-    "kafka-design": {
-      "name": "Apache Kafka issue tracker and KIPs",
-      "basis": "unknown",
-      "sources": {
-        "s2083e6339454": "https://issues.apache.org/jira/browse/KAFKA-15513",
-        "sdeef4a8b642f": "https://cwiki.apache.org/confluence/spaces/KAFKA/pages/195728007/KIP-801+Implement+an+Authorizer+that+stores+metadata+in+__cluster_metadata"
-      }
-    },
     "source": {
       "name": "Kafka source",
       "basis": "4.3.0",
@@ -21738,6 +21730,14 @@ Claims (full source mapping in the JSON block below):
       "basis": "3.9",
       "sources": {
         "se10d0fcd0e46": "https://kafka.apache.org/39/security/authorization-and-acls/"
+      }
+    },
+    "kafka-design": {
+      "name": "Apache Kafka issue tracker and KIPs",
+      "basis": "unknown",
+      "sources": {
+        "s2083e6339454": "https://issues.apache.org/jira/browse/KAFKA-15513",
+        "sdeef4a8b642f": "https://cwiki.apache.org/confluence/spaces/KAFKA/pages/195728007/KIP-801+Implement+an+Authorizer+that+stores+metadata+in+__cluster_metadata"
       }
     },
     "redpanda": {
@@ -21810,7 +21810,7 @@ Claims (full source mapping in the JSON block below):
 
 # ClickHouse: listen address, the default user, and TLS ports
 
-No release versions are recorded for this guide's sources; the recorded bases are in the section for AI assistants. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 53 claims, all reasoned from cited sources.
+Written against ClickHouse documentation (no recorded version); 5 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 53 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -23948,15 +23948,15 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: memcached documentation (unknown)
 - stable: memcached source (1.6.45)
+- docs: memcached documentation (unknown)
 - protocol: memcached protocol source (7278bdee96329915bbc87731ba005095453f5c2f)
 - reload: memcached TLS design (4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969)
-- openssl: OpenSSL CLI (3.0)
 - ascii: memcached ASCII authentication release notes (unknown)
 - watch: memcached watch-control release notes (unknown)
 - security: memcached security release notes (unknown)
 - release-notes-source: memcached release notes revision (780e280d1a7f98f2981ffeb357ef0c9b182a9844)
+- openssl: OpenSSL CLI (3.0)
 
 Claims (full source mapping in the JSON block below):
 
@@ -24005,6 +24005,16 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "77879497a23f39f20a85c1fcdb98885f433f831eaa2ed19d973079a8799d182c",
   "components": {
+    "stable": {
+      "name": "memcached source",
+      "basis": "1.6.45",
+      "sources": {
+        "s05c72b35637d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1",
+        "s1310cfc0315d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c",
+        "sceaaea90ec60": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c",
+        "sd40dab94f516": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_text.c"
+      }
+    },
     "docs": {
       "name": "memcached documentation",
       "basis": "unknown",
@@ -24020,16 +24030,6 @@ Claims (full source mapping in the JSON block below):
         "sc0c6532a1ef5": "https://docs.memcached.org/protocols/basic/"
       }
     },
-    "stable": {
-      "name": "memcached source",
-      "basis": "1.6.45",
-      "sources": {
-        "s05c72b35637d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/doc/memcached.1",
-        "s1310cfc0315d": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/memcached.c",
-        "sceaaea90ec60": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_bin.c",
-        "sd40dab94f516": "https://raw.githubusercontent.com/memcached/memcached/1.6.45/proto_text.c"
-      }
-    },
     "protocol": {
       "name": "memcached protocol source",
       "basis": "7278bdee96329915bbc87731ba005095453f5c2f",
@@ -24042,14 +24042,6 @@ Claims (full source mapping in the JSON block below):
       "basis": "4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969",
       "sources": {
         "s839f028f2a46": "https://raw.githubusercontent.com/memcached/memcached/4b9e6198fc44c9eb3ae80802a1b0dcbaf9602969/doc/tls.txt"
-      }
-    },
-    "openssl": {
-      "name": "OpenSSL CLI",
-      "basis": "3.0",
-      "sources": {
-        "s00aaf106164f": "https://docs.openssl.org/3.0/man1/openssl-s_client/",
-        "s8a7380c7371d": "https://docs.openssl.org/3.0/man1/openssl-verification-options/"
       }
     },
     "ascii": {
@@ -24078,6 +24070,14 @@ Claims (full source mapping in the JSON block below):
       "basis": "780e280d1a7f98f2981ffeb357ef0c9b182a9844",
       "sources": {
         "s0a46fce08585": "https://github.com/memcached/memcached/wiki/ReleaseNotes1645/780e280d1a7f98f2981ffeb357ef0c9b182a9844"
+      }
+    },
+    "openssl": {
+      "name": "OpenSSL CLI",
+      "basis": "3.0",
+      "sources": {
+        "s00aaf106164f": "https://docs.openssl.org/3.0/man1/openssl-s_client/",
+        "s8a7380c7371d": "https://docs.openssl.org/3.0/man1/openssl-verification-options/"
       }
     }
   },
@@ -26095,11 +26095,11 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 Components (recorded basis):
 
 - server: NATS Server (v2.14.7)
+- image-server: NATS image listener source (v2.15.0)
+- cli: natscli (v0.4.0)
 - commit: NATS baseline commit (8d8b69a8c46a46a150eabb7f312607c4d9c58faf)
 - library: NATS image catalogue (dcd3db677d8919c3a42d369bd48a6f1c234b3ae8)
 - image: NATS image source (0e72748d3cb553ccdb8c2da7c75ec3b767be51a5)
-- image-server: NATS image listener source (v2.15.0)
-- cli: natscli (v0.4.0)
 - server-docs: NATS Server documentation (rolling) (unknown)
 - go: Go socket source (go1.26.8)
 
@@ -26191,6 +26191,27 @@ Claims (full source mapping in the JSON block below):
         "sfe9cfda67037": "https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/auth_callout.go"
       }
     },
+    "image-server": {
+      "name": "NATS image listener source",
+      "basis": "v2.15.0",
+      "sources": {
+        "se8793d3c33b3": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/const.go#L85-L86",
+        "s9860c7a8a315": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/opts.go#L6265-L6266",
+        "s4f35f43b860b": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/server.go#L2874-L2880",
+        "s6d1b9c207c22": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/server.go#L3132-L3138",
+        "s63fb63ed420f": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/route.go#L2752-L2753",
+        "s483a2d169cbf": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/util.go#L267-L275"
+      }
+    },
+    "cli": {
+      "name": "natscli",
+      "basis": "v0.4.0",
+      "sources": {
+        "s068dbbd154ce": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/nats/main.go",
+        "sd263b3e2aeb4": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/util.go",
+        "sc6b88ab2d1f8": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/sub_command.go"
+      }
+    },
     "commit": {
       "name": "NATS baseline commit",
       "basis": "8d8b69a8c46a46a150eabb7f312607c4d9c58faf",
@@ -26227,27 +26248,6 @@ Claims (full source mapping in the JSON block below):
         "s242baf7508a4": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/nanoserver-ltsc2022/Dockerfile#L5-L9",
         "s1be190b618be": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/scratch/Dockerfile#L5-L9",
         "s0d4076849de7": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/alpine3.22/Dockerfile#L38-L43"
-      }
-    },
-    "image-server": {
-      "name": "NATS image listener source",
-      "basis": "v2.15.0",
-      "sources": {
-        "se8793d3c33b3": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/const.go#L85-L86",
-        "s9860c7a8a315": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/opts.go#L6265-L6266",
-        "s4f35f43b860b": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/server.go#L2874-L2880",
-        "s6d1b9c207c22": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/server.go#L3132-L3138",
-        "s63fb63ed420f": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/route.go#L2752-L2753",
-        "s483a2d169cbf": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/util.go#L267-L275"
-      }
-    },
-    "cli": {
-      "name": "natscli",
-      "basis": "v0.4.0",
-      "sources": {
-        "s068dbbd154ce": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/nats/main.go",
-        "sd263b3e2aeb4": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/util.go",
-        "sc6b88ab2d1f8": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/sub_command.go"
       }
     },
     "server-docs": {
@@ -27879,12 +27879,12 @@ Components (recorded basis):
 - influx1: InfluxDB OSS (1.x)
 - single: VictoriaMetrics single-node (v1.152.0)
 - cluster: VictoriaMetrics cluster (v1.152.0-cluster)
+- image: VictoriaMetrics shipped Compose image (v1.151.0)
+- enterprise: QuestDB Enterprise qualification (4.0.0)
 - rpc: VictoriaMetrics cluster source (e4b1d55683f0da20410dc765787bd4e9b5afa0da)
 - proxy: VictoriaMetrics security/vmauth documentation (unknown)
 - single-commit: VictoriaMetrics single-node source commit (540b91da031aa8b7d53d3784693bb451e2be980a)
-- image: VictoriaMetrics shipped Compose image (v1.151.0)
 - quest: QuestDB documentation (unknown)
-- enterprise: QuestDB Enterprise qualification (4.0.0)
 
 Claims (full source mapping in the JSON block below):
 
@@ -28004,6 +28004,20 @@ Claims (full source mapping in the JSON block below):
         "sb0412a061355": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/prometheus/prometheus.go#L57-L60"
       }
     },
+    "image": {
+      "name": "VictoriaMetrics shipped Compose image",
+      "basis": "v1.151.0",
+      "sources": {
+        "s42d2b0ce4a7e": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/deployment/docker/compose-vm-single.yml#L18-L37"
+      }
+    },
+    "enterprise": {
+      "name": "QuestDB Enterprise qualification",
+      "basis": "4.0.0",
+      "sources": {
+        "s3a0487771c1a": "https://questdb.com/docs/configuration/http-server/"
+      }
+    },
     "rpc": {
       "name": "VictoriaMetrics cluster source",
       "basis": "e4b1d55683f0da20410dc765787bd4e9b5afa0da",
@@ -28029,13 +28043,6 @@ Claims (full source mapping in the JSON block below):
         "sa2064b7f7fde": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/victoria-metrics/main.go#L91-L114"
       }
     },
-    "image": {
-      "name": "VictoriaMetrics shipped Compose image",
-      "basis": "v1.151.0",
-      "sources": {
-        "s42d2b0ce4a7e": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/deployment/docker/compose-vm-single.yml#L18-L37"
-      }
-    },
     "quest": {
       "name": "QuestDB documentation",
       "basis": "unknown",
@@ -28045,13 +28052,6 @@ Claims (full source mapping in the JSON block below):
         "se0fda155b33d": "https://questdb.com/docs/configuration/ingestion/",
         "s19f43451ff2b": "https://questdb.com/docs/configuration/http-min-server/",
         "s7ca922a2e0f5": "https://questdb.com/docs/configuration/tls/"
-      }
-    },
-    "enterprise": {
-      "name": "QuestDB Enterprise qualification",
-      "basis": "4.0.0",
-      "sources": {
-        "s3a0487771c1a": "https://questdb.com/docs/configuration/http-server/"
       }
     }
   },
@@ -29914,7 +29914,7 @@ Claims (full source mapping in the JSON block below):
 
 # Open WebUI: signup control, TLS, and MFA
 
-Written against Docker Engine localhost boundary 28.0.0; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 62 claims, all reasoned from cited sources.
+Written against Open WebUI (pinned to a commit) and Docker Engine localhost boundary 28.0.0; 1 further source carries no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 62 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -30989,11 +30989,11 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: LiteLLM documentation (unknown)
-- source: LiteLLM source (6ef7b86748118ceecd95271727c2fa167ce55fec)
 - sso: LiteLLM SSO allowance (v1.76.0)
 - metrics: LiteLLM metrics default (v1.85.0)
 - cli: LiteLLM CLI (v1.102.1)
+- docs: LiteLLM documentation (unknown)
+- source: LiteLLM source (6ef7b86748118ceecd95271727c2fa167ce55fec)
 
 Claims (full source mapping in the JSON block below):
 
@@ -31056,6 +31056,27 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "2a5e3014404a2d45329664d113112b9a482ab9426c3c2c0da18d404541b2b3e6",
   "components": {
+    "sso": {
+      "name": "LiteLLM SSO allowance",
+      "basis": "v1.76.0",
+      "sources": {
+        "s683431f972f9": "https://docs.litellm.ai/docs/proxy/admin_ui_sso"
+      }
+    },
+    "metrics": {
+      "name": "LiteLLM metrics default",
+      "basis": "v1.85.0",
+      "sources": {
+        "s7ae2561db315": "https://raw.githubusercontent.com/BerriAI/litellm/v1.85.0/litellm/__init__.py"
+      }
+    },
+    "cli": {
+      "name": "LiteLLM CLI",
+      "basis": "v1.102.1",
+      "sources": {
+        "s2c55655e39fd": "https://github.com/BerriAI/litellm/blob/v1.102.1/litellm/proxy/proxy_cli.py#L666-L667"
+      }
+    },
     "docs": {
       "name": "LiteLLM documentation",
       "basis": "unknown",
@@ -31094,27 +31115,6 @@ Claims (full source mapping in the JSON block below):
         "s2260325bd6b8": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/route_llm_request.py",
         "sc93fb1082e0c": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/main.py",
         "s6ce39f96b246": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/spend_tracking/spend_tracking_utils.py"
-      }
-    },
-    "sso": {
-      "name": "LiteLLM SSO allowance",
-      "basis": "v1.76.0",
-      "sources": {
-        "s683431f972f9": "https://docs.litellm.ai/docs/proxy/admin_ui_sso"
-      }
-    },
-    "metrics": {
-      "name": "LiteLLM metrics default",
-      "basis": "v1.85.0",
-      "sources": {
-        "s7ae2561db315": "https://raw.githubusercontent.com/BerriAI/litellm/v1.85.0/litellm/__init__.py"
-      }
-    },
-    "cli": {
-      "name": "LiteLLM CLI",
-      "basis": "v1.102.1",
-      "sources": {
-        "s2c55655e39fd": "https://github.com/BerriAI/litellm/blob/v1.102.1/litellm/proxy/proxy_cli.py#L666-L667"
       }
     }
   },
@@ -31181,7 +31181,7 @@ Claims (full source mapping in the JSON block below):
 
 # Model servers: llama.cpp, vLLM, TGI, SGLang, Triton, and LM Studio
 
-Written against vLLM v0.30.0, TGI launcher/image v3.3.7, SGLang v0.5.20, and curl minimum write-out version 7.75.0; 8 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 75 claims: 3 demonstrated by a check that ran and 72 reasoned from cited sources.
+Written against llama.cpp (pinned to a commit), vLLM v0.30.0, TGI launcher/image v3.3.7, SGLang v0.5.20, and curl minimum write-out version 7.75.0; 7 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-09-27; documentation checked September 2026. The guide records 75 claims: 3 demonstrated by a check that ran and 72 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -31737,12 +31737,12 @@ Components (recorded basis):
 
 - llama: llama.cpp (e0dff58475bc9ed68eedcb265ee998f2fcabb3b1)
 - vllm: vLLM (v0.30.0)
+- tgi: TGI launcher/image (v3.3.7)
+- sglang: SGLang (v0.5.20)
 - vllm-a: vLLM source (dee37d89115db4c94a820a79a78a7828e141c910)
 - vllm-b: vLLM second source (8c1557a79c539ffe82d004d2a0c8d7b5e71159ce)
-- tgi: TGI launcher/image (v3.3.7)
 - tgi-router: TGI router (24ee40d143d8d046039f12f76940a85886cbe152)
 - tgi-docs: TGI documentation (unknown)
-- sglang: SGLang (v0.5.20)
 - sglang-rolling: SGLang documentation (rolling) (unknown)
 - triton: Triton source (546a78766fb112128aa0b10a70c55f4f39c3b1df)
 - triton-rolling: Triton documentation (rolling) (unknown)
@@ -31893,6 +31893,34 @@ Claims (full source mapping in the JSON block below):
         "sed65b4428b70": "https://github.com/vllm-project/vllm/blob/v0.30.0/vllm/v1/executor/uniproc_executor.py#L77-L88"
       }
     },
+    "tgi": {
+      "name": "TGI launcher/image",
+      "basis": "v3.3.7",
+      "sources": {
+        "s6d442de48f37": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs#L769-L774",
+        "se7504fa5bd0c": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/Dockerfile#L147-L149",
+        "sbe4cfd078ceb": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/router/src/server.rs#L1906-L1910",
+        "s3f8623221ee5": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs"
+      }
+    },
+    "sglang": {
+      "name": "SGLang",
+      "basis": "v0.5.20",
+      "sources": {
+        "saf08ef6910b0": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L72-L73",
+        "sbf57dc2f54d2": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L155-L162",
+        "sa5df753aef88": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/auth.py#L145-L151",
+        "scce1a63feba8": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L397-L399",
+        "s0a4966847154": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/server_args_config_parser.py#L118-L187",
+        "s8ca6d030efbc": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/server_args_config_parser.py#L68-L83",
+        "scc4de2d1f4bc": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/environ.py",
+        "s50e55d90147c": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/engine.py#L1109",
+        "se29cdc6dade1": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L311-L325",
+        "sc1a3bbee2b6e": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L704-L711",
+        "sedc94f049a2d": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L732-L736",
+        "sd5cd1ab725c3": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/http_server.py#L818-L850"
+      }
+    },
     "vllm-a": {
       "name": "vLLM source",
       "basis": "dee37d89115db4c94a820a79a78a7828e141c910",
@@ -31920,16 +31948,6 @@ Claims (full source mapping in the JSON block below):
         "se5d922e084ed": "https://github.com/vllm-project/vllm/blob/8c1557a79c539ffe82d004d2a0c8d7b5e71159ce/vllm/envs.py#L801"
       }
     },
-    "tgi": {
-      "name": "TGI launcher/image",
-      "basis": "v3.3.7",
-      "sources": {
-        "s6d442de48f37": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs#L769-L774",
-        "se7504fa5bd0c": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/Dockerfile#L147-L149",
-        "sbe4cfd078ceb": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/router/src/server.rs#L1906-L1910",
-        "s3f8623221ee5": "https://github.com/huggingface/text-generation-inference/blob/v3.3.7/launcher/src/main.rs"
-      }
-    },
     "tgi-router": {
       "name": "TGI router",
       "basis": "24ee40d143d8d046039f12f76940a85886cbe152",
@@ -31943,24 +31961,6 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s07efbedb395d": "https://github.com/huggingface/text-generation-inference",
         "sf21d69ac884f": "https://huggingface.co/docs/text-generation-inference/reference/launcher"
-      }
-    },
-    "sglang": {
-      "name": "SGLang",
-      "basis": "v0.5.20",
-      "sources": {
-        "saf08ef6910b0": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L72-L73",
-        "sbf57dc2f54d2": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/arg_groups/fields/serving.py#L155-L162",
-        "sa5df753aef88": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/auth.py#L145-L151",
-        "scce1a63feba8": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L397-L399",
-        "s0a4966847154": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/server_args_config_parser.py#L118-L187",
-        "s8ca6d030efbc": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/utils/server_args_config_parser.py#L68-L83",
-        "scc4de2d1f4bc": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/environ.py",
-        "s50e55d90147c": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/engine.py#L1109",
-        "se29cdc6dade1": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L311-L325",
-        "sc1a3bbee2b6e": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L704-L711",
-        "sedc94f049a2d": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/server_args.py#L732-L736",
-        "sd5cd1ab725c3": "https://github.com/sgl-project/sglang/blob/v0.5.20/python/sglang/srt/entrypoints/http_server.py#L818-L850"
       }
     },
     "sglang-rolling": {
@@ -36773,13 +36773,13 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 Components (recorded basis):
 
 - comfy: ComfyUI (v0.37.0)
+- webui: AUTOMATIC1111 (v1.10.1)
+- fooocus: Fooocus (v2.5.5)
 - comfy-rolling: ComfyUI documentation (rolling) (unknown)
 - comfy-registry-rolling: ComfyUI Registry documentation (rolling) (unknown)
 - comfy-advisory: ComfyUI January 2025 security advisory (unknown)
 - comfy-manager-advisory: ComfyUI-Manager security advisory (unknown)
-- webui: AUTOMATIC1111 (v1.10.1)
 - invoke-rolling: InvokeAI documentation (rolling) (unknown)
-- fooocus: Fooocus (v2.5.5)
 - gradio: Gradio (3.41.2)
 - engine: Docker Engine minimum loopback boundary (28.0)
 - compose: Compose Specification (914ec15d1fa4)
@@ -36832,6 +36832,55 @@ Claims (full source mapping in the JSON block below):
         "sbd178d58a098": "https://github.com/Comfy-Org/ComfyUI/blob/v0.37.0/comfy/cli_args.py#L63-L64"
       }
     },
+    "webui": {
+      "name": "AUTOMATIC1111",
+      "basis": "v1.10.1",
+      "sources": {
+        "s42a42cca605b": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113",
+        "s0195caed3cb9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L114-L139",
+        "sd5f3496b66aa": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L70-L90",
+        "s82803810022a": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L6",
+        "s914278bcbf70": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_cmd_options.py#L7-L15",
+        "s66a044b7666c": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L199-L205",
+        "sb59e633133f6": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L274-L284",
+        "s57d98254f09d": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L689-L690",
+        "s256946a60534": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/models.py#L221-L231",
+        "s5b2e23d1781d": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/paths_internal.py#L12-L13",
+        "sfa27f3a86456": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/launch_utils.py#L463-L464",
+        "sebe977aeb6f3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/sysinfo.py#L130-L148",
+        "sc9117bccdef5": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui.py#L1223-L1232",
+        "s370f032e0497": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L10-L16",
+        "saf69abeba189": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/requirements_versions.txt#L11",
+        "sf3f6d5cafad0": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_init.py#L17-L24",
+        "sbfd3d01539c3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui_loadsave.py#L14-L73",
+        "s7b714092036e": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L77-L78",
+        "s23a49b75b6a1": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L79-L82",
+        "s9a93a7fe8617": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L47",
+        "s72ec61fe38c9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L51"
+      }
+    },
+    "fooocus": {
+      "name": "Fooocus",
+      "basis": "v2.5.5",
+      "sources": {
+        "s38232435e83d": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301",
+        "s63ce6f5a8fa9": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/ldm_patched/modules/args_parser.py#L36",
+        "sca9aed72a579": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/args_manager.py#L43-L47",
+        "s456b2a263c88": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L13-L14",
+        "s2eb7ac87bb1f": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/webui.py#L1120-L1128",
+        "s35ce6e657cb8": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entry_with_update.py#L16-L46",
+        "s6157fae93872": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/Dockerfile#L17-L29",
+        "s5c792b662186": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entrypoint.sh#L33",
+        "s79380d927e3b": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker-compose.yml#L6-L11",
+        "s431336fa6375": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker.md#L19-L78",
+        "scb18d8c421f5": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/.dockerignore#L53",
+        "s170da4e26268": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L8-L16",
+        "s21eb28118a14": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L19-L34",
+        "sfcc14904297e": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L37-L41",
+        "s2ef62a4cd853": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L7-L9",
+        "sc90edaf29ac7": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/requirements_versions.txt#L13"
+      }
+    },
     "comfy-rolling": {
       "name": "ComfyUI documentation (rolling)",
       "basis": "unknown",
@@ -36860,33 +36909,6 @@ Claims (full source mapping in the JSON block below):
         "s4ce66189c3c9": "https://github.com/Comfy-Org/ComfyUI-Manager/security/advisories/GHSA-95pq-hr8p-f5g7"
       }
     },
-    "webui": {
-      "name": "AUTOMATIC1111",
-      "basis": "v1.10.1",
-      "sources": {
-        "s42a42cca605b": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L87-L113",
-        "s0195caed3cb9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L114-L139",
-        "sd5f3496b66aa": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L70-L90",
-        "s82803810022a": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L6",
-        "s914278bcbf70": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_cmd_options.py#L7-L15",
-        "s66a044b7666c": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L199-L205",
-        "sb59e633133f6": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L274-L284",
-        "s57d98254f09d": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/api.py#L689-L690",
-        "s256946a60534": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/api/models.py#L221-L231",
-        "s5b2e23d1781d": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/paths_internal.py#L12-L13",
-        "sfa27f3a86456": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/launch_utils.py#L463-L464",
-        "sebe977aeb6f3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/sysinfo.py#L130-L148",
-        "sc9117bccdef5": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui.py#L1223-L1232",
-        "s370f032e0497": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/initialize_util.py#L10-L16",
-        "saf69abeba189": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/requirements_versions.txt#L11",
-        "sf3f6d5cafad0": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/shared_init.py#L17-L24",
-        "sbfd3d01539c3": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/ui_loadsave.py#L14-L73",
-        "s7b714092036e": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L77-L78",
-        "s23a49b75b6a1": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/webui.py#L79-L82",
-        "s9a93a7fe8617": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L47",
-        "s72ec61fe38c9": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.10.1/modules/cmd_args.py#L51"
-      }
-    },
     "invoke-rolling": {
       "name": "InvokeAI documentation (rolling)",
       "basis": "unknown",
@@ -36894,28 +36916,6 @@ Claims (full source mapping in the JSON block below):
         "s23a1a14da479": "https://invoke.ai/features/multi-user-mode/admin-guide/",
         "s4c6175f3800d": "https://invoke.ai/features/multi-user-mode/api-guide/",
         "sb0dc1b679ef2": "https://invoke.ai/configuration/invokeai-yaml/"
-      }
-    },
-    "fooocus": {
-      "name": "Fooocus",
-      "basis": "v2.5.5",
-      "sources": {
-        "s38232435e83d": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/readme.md#L296-L301",
-        "s63ce6f5a8fa9": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/ldm_patched/modules/args_parser.py#L36",
-        "sca9aed72a579": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/args_manager.py#L43-L47",
-        "s456b2a263c88": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L13-L14",
-        "s2eb7ac87bb1f": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/webui.py#L1120-L1128",
-        "s35ce6e657cb8": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entry_with_update.py#L16-L46",
-        "s6157fae93872": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/Dockerfile#L17-L29",
-        "s5c792b662186": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/entrypoint.sh#L33",
-        "s79380d927e3b": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker-compose.yml#L6-L11",
-        "s431336fa6375": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/docker.md#L19-L78",
-        "scb18d8c421f5": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/.dockerignore#L53",
-        "s170da4e26268": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L8-L16",
-        "s21eb28118a14": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L19-L34",
-        "sfcc14904297e": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/modules/auth.py#L37-L41",
-        "s2ef62a4cd853": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/launch.py#L7-L9",
-        "sc90edaf29ac7": "https://github.com/lllyasviel/Fooocus/blob/v2.5.5/requirements_versions.txt#L13"
       }
     },
     "gradio": {
@@ -37008,7 +37008,7 @@ Claims (full source mapping in the JSON block below):
 
 # Self-hosted chat and agent UIs: AnythingLLM, LobeChat, Chainlit, OpenHands
 
-Written against LobeHub v2.2.16, Docker CLI v27.5.1, Docker Compose v2.32.4, compose-go v2.4.7, Moby v27.5.1, and curl minimum write-out version 7.75.0; 7 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 30 claims, all reasoned from cited sources.
+Written against AnythingLLM documentation (no recorded version), LobeHub v2.2.16, Docker CLI v27.5.1, Docker Compose v2.32.4, compose-go v2.4.7, Moby v27.5.1, and curl minimum write-out version 7.75.0; 6 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 30 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

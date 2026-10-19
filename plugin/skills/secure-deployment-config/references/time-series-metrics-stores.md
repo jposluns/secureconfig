@@ -244,12 +244,12 @@ Components (recorded basis):
 - influx1: InfluxDB OSS (1.x)
 - single: VictoriaMetrics single-node (v1.152.0)
 - cluster: VictoriaMetrics cluster (v1.152.0-cluster)
+- image: VictoriaMetrics shipped Compose image (v1.151.0)
+- enterprise: QuestDB Enterprise qualification (4.0.0)
 - rpc: VictoriaMetrics cluster source (e4b1d55683f0da20410dc765787bd4e9b5afa0da)
 - proxy: VictoriaMetrics security/vmauth documentation (unknown)
 - single-commit: VictoriaMetrics single-node source commit (540b91da031aa8b7d53d3784693bb451e2be980a)
-- image: VictoriaMetrics shipped Compose image (v1.151.0)
 - quest: QuestDB documentation (unknown)
-- enterprise: QuestDB Enterprise qualification (4.0.0)
 
 Claims (full source mapping in the JSON block below):
 
@@ -369,6 +369,20 @@ Claims (full source mapping in the JSON block below):
         "sb0412a061355": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0-cluster/app/vmselect/prometheus/prometheus.go#L57-L60"
       }
     },
+    "image": {
+      "name": "VictoriaMetrics shipped Compose image",
+      "basis": "v1.151.0",
+      "sources": {
+        "s42d2b0ce4a7e": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/deployment/docker/compose-vm-single.yml#L18-L37"
+      }
+    },
+    "enterprise": {
+      "name": "QuestDB Enterprise qualification",
+      "basis": "4.0.0",
+      "sources": {
+        "s3a0487771c1a": "https://questdb.com/docs/configuration/http-server/"
+      }
+    },
     "rpc": {
       "name": "VictoriaMetrics cluster source",
       "basis": "e4b1d55683f0da20410dc765787bd4e9b5afa0da",
@@ -394,13 +408,6 @@ Claims (full source mapping in the JSON block below):
         "sa2064b7f7fde": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/app/victoria-metrics/main.go#L91-L114"
       }
     },
-    "image": {
-      "name": "VictoriaMetrics shipped Compose image",
-      "basis": "v1.151.0",
-      "sources": {
-        "s42d2b0ce4a7e": "https://github.com/VictoriaMetrics/VictoriaMetrics/blob/v1.152.0/deployment/docker/compose-vm-single.yml#L18-L37"
-      }
-    },
     "quest": {
       "name": "QuestDB documentation",
       "basis": "unknown",
@@ -410,13 +417,6 @@ Claims (full source mapping in the JSON block below):
         "se0fda155b33d": "https://questdb.com/docs/configuration/ingestion/",
         "s19f43451ff2b": "https://questdb.com/docs/configuration/http-min-server/",
         "s7ca922a2e0f5": "https://questdb.com/docs/configuration/tls/"
-      }
-    },
-    "enterprise": {
-      "name": "QuestDB Enterprise qualification",
-      "basis": "4.0.0",
-      "sources": {
-        "s3a0487771c1a": "https://questdb.com/docs/configuration/http-server/"
       }
     }
   },

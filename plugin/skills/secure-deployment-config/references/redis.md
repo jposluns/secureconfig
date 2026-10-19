@@ -853,7 +853,6 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: Redis documentation (unknown)
 - r60: Redis configuration (6.0.20)
 - r62: Redis configuration (6.2.14)
 - r620: Redis configuration (6.2.0)
@@ -861,12 +860,13 @@ Components (recorded basis):
 - r82: Redis configuration (8.2.1)
 - r86: Redis configuration (8.6.0)
 - ha: Redis HA source (8.10.1)
-- image: Redis image source (584feaab6cd12a77866c121beff1bb16ff239486)
 - image8: Redis image tag (v8.10.2)
 - r74: Redis compiled defaults (7.4.8)
 - r8102: Redis compiled defaults (8.10.2)
-- valkey: Valkey documentation (unknown)
+- docs: Redis documentation (unknown)
+- image: Redis image source (584feaab6cd12a77866c121beff1bb16ff239486)
 - release-notes: Redis release notes (unknown)
+- valkey: Valkey documentation (unknown)
 
 Claims (full source mapping in the JSON block below):
 
@@ -937,57 +937,6 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "bdd2c88e86e24637097c57f8abfd523f83b1044fefe1d7d33aaddd94532315e6",
   "components": {
-    "docs": {
-      "name": "Redis documentation",
-      "basis": "unknown",
-      "sources": {
-        "s676f92c46896": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/",
-        "s5f24cdfad62f": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/",
-        "s6cf51f8deeec": "https://redis.io/docs/latest/commands/auth/",
-        "s72fa2dffefe0": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/",
-        "s503353d67ab0": "https://redis.io/docs/latest/commands/flushall/",
-        "s04727068bf6d": "https://redis.io/docs/latest/commands/flushdb/",
-        "s77f119379267": "https://redis.io/docs/latest/commands/swapdb/",
-        "s94f2d2ff2791": "https://redis.io/docs/latest/commands/keys/",
-        "sbf9af1bcd939": "https://redis.io/docs/latest/commands/randomkey/",
-        "sf208d01054d8": "https://redis.io/docs/latest/commands/scan/",
-        "s845464defcbf": "https://redis.io/docs/latest/commands/function-delete/",
-        "se6006d0ebe9d": "https://redis.io/docs/latest/commands/function-flush/",
-        "sfe89bc1db7ec": "https://redis.io/docs/latest/commands/function-load/",
-        "s2d7c63097f6b": "https://redis.io/docs/latest/commands/function-restore/",
-        "s810656b5a50e": "https://redis.io/docs/latest/commands/acl-setuser/",
-        "seaec1ae0ac17": "https://redis.io/docs/latest/commands/config-rewrite/",
-        "s96598ec29ba4": "https://redis.io/docs/latest/commands/acl-save/",
-        "s3e1c0de156e5": "https://redis.io/docs/latest/commands/acl-load/",
-        "s89a679483b31": "https://redis.io/docs/latest/commands/client-kill/",
-        "sb5b7454ab5ec": "https://redis.io/docs/latest/commands/psubscribe/",
-        "s19cd1836b3cd": "https://redis.io/docs/latest/commands/publish/",
-        "sedf741005697": "https://redis.io/docs/latest/commands/subscribe/",
-        "s6e5d3141dadd": "https://redis.io/docs/latest/commands/eval/",
-        "s783428f2ae71": "https://redis.io/docs/latest/commands/evalsha/",
-        "s0b532abc6b3e": "https://redis.io/docs/latest/commands/fcall/",
-        "se9b0821291f2": "https://redis.io/docs/latest/commands/eval_ro/",
-        "sf9ad57a17ff4": "https://redis.io/docs/latest/commands/evalsha_ro/",
-        "s4265e3593644": "https://redis.io/docs/latest/commands/fcall_ro/",
-        "sc6b4e54687ac": "https://redis.io/docs/latest/develop/tools/cli/",
-        "sd3d4315b25ce": "https://redis.io/docs/latest/commands/get/",
-        "se987368157bc": "https://redis.io/docs/latest/commands/set/",
-        "sc62448a319aa": "https://redis.io/docs/latest/commands/ping/",
-        "s04c6a2a49051": "https://redis.io/docs/latest/commands/acl-getuser/",
-        "s7ab1aac347a4": "https://redis.io/docs/latest/commands/config-get/",
-        "sb5f5479eccf8": "https://redis.io/docs/latest/commands/acl-log/",
-        "s8d6577576295": "https://redis.io/docs/latest/commands/acl-dryrun/",
-        "s43b199002e27": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/#acl-rules-for-sentinel-and-replicas",
-        "s34e2264081b7": "https://redis.io/docs/latest/operate/oss_and_stack/management/replication/#setting-a-replica-to-authenticate-to-a-master",
-        "s426dcab02f8b": "https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#configuring-sentinel-instances-with-authentication",
-        "s6c549585a510": "https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#redis-access-control-list-authentication",
-        "s075c67b3e9d7": "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports",
-        "sce02504d451b": "https://redis.io/docs/latest/commands/info/",
-        "sfe348474049a": "https://redis.io/docs/latest/commands/cluster-nodes/",
-        "s04d70801d688": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/#sentinel",
-        "sb384cc06fc43": "https://redis.io/docs/latest/commands/config-set/"
-      }
-    },
     "r60": {
       "name": "Redis configuration",
       "basis": "6.0.20",
@@ -1044,15 +993,6 @@ Claims (full source mapping in the JSON block below):
         "s28f3f121848c": "https://raw.githubusercontent.com/redis/redis/8.10.1/src/tls.c"
       }
     },
-    "image": {
-      "name": "Redis image source",
-      "basis": "584feaab6cd12a77866c121beff1bb16ff239486",
-      "sources": {
-        "s6e56989d73a1": "https://github.com/redis/docker-library-redis/blob/584feaab6cd12a77866c121beff1bb16ff239486/6.2/debian/Dockerfile#L85-L90",
-        "sdb0e9a2d1d56": "https://github.com/redis/docker-library-redis/blob/584feaab6cd12a77866c121beff1bb16ff239486/7.4/debian/Dockerfile#L146-L150",
-        "s65ef31503c67": "https://github.com/redis/docker-library-redis/blob/584feaab6cd12a77866c121beff1bb16ff239486/7.4/debian/docker-entrypoint.sh"
-      }
-    },
     "image8": {
       "name": "Redis image tag",
       "basis": "v8.10.2",
@@ -1078,13 +1018,64 @@ Claims (full source mapping in the JSON block below):
         "see1833b741f4": "https://github.com/redis/redis/blob/8.10.2/src/acl.c#L1430-L1438"
       }
     },
-    "valkey": {
-      "name": "Valkey documentation",
+    "docs": {
+      "name": "Redis documentation",
       "basis": "unknown",
       "sources": {
-        "sb488496d1f4b": "https://valkey.io/topics/acl/",
-        "s0eebdf8ee73e": "https://valkey.io/topics/security/",
-        "sdc8d63632a85": "https://valkey.io/topics/tls/"
+        "s676f92c46896": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/",
+        "s5f24cdfad62f": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/",
+        "s6cf51f8deeec": "https://redis.io/docs/latest/commands/auth/",
+        "s72fa2dffefe0": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/",
+        "s503353d67ab0": "https://redis.io/docs/latest/commands/flushall/",
+        "s04727068bf6d": "https://redis.io/docs/latest/commands/flushdb/",
+        "s77f119379267": "https://redis.io/docs/latest/commands/swapdb/",
+        "s94f2d2ff2791": "https://redis.io/docs/latest/commands/keys/",
+        "sbf9af1bcd939": "https://redis.io/docs/latest/commands/randomkey/",
+        "sf208d01054d8": "https://redis.io/docs/latest/commands/scan/",
+        "s845464defcbf": "https://redis.io/docs/latest/commands/function-delete/",
+        "se6006d0ebe9d": "https://redis.io/docs/latest/commands/function-flush/",
+        "sfe89bc1db7ec": "https://redis.io/docs/latest/commands/function-load/",
+        "s2d7c63097f6b": "https://redis.io/docs/latest/commands/function-restore/",
+        "s810656b5a50e": "https://redis.io/docs/latest/commands/acl-setuser/",
+        "seaec1ae0ac17": "https://redis.io/docs/latest/commands/config-rewrite/",
+        "s96598ec29ba4": "https://redis.io/docs/latest/commands/acl-save/",
+        "s3e1c0de156e5": "https://redis.io/docs/latest/commands/acl-load/",
+        "s89a679483b31": "https://redis.io/docs/latest/commands/client-kill/",
+        "sb5b7454ab5ec": "https://redis.io/docs/latest/commands/psubscribe/",
+        "s19cd1836b3cd": "https://redis.io/docs/latest/commands/publish/",
+        "sedf741005697": "https://redis.io/docs/latest/commands/subscribe/",
+        "s6e5d3141dadd": "https://redis.io/docs/latest/commands/eval/",
+        "s783428f2ae71": "https://redis.io/docs/latest/commands/evalsha/",
+        "s0b532abc6b3e": "https://redis.io/docs/latest/commands/fcall/",
+        "se9b0821291f2": "https://redis.io/docs/latest/commands/eval_ro/",
+        "sf9ad57a17ff4": "https://redis.io/docs/latest/commands/evalsha_ro/",
+        "s4265e3593644": "https://redis.io/docs/latest/commands/fcall_ro/",
+        "sc6b4e54687ac": "https://redis.io/docs/latest/develop/tools/cli/",
+        "sd3d4315b25ce": "https://redis.io/docs/latest/commands/get/",
+        "se987368157bc": "https://redis.io/docs/latest/commands/set/",
+        "sc62448a319aa": "https://redis.io/docs/latest/commands/ping/",
+        "s04c6a2a49051": "https://redis.io/docs/latest/commands/acl-getuser/",
+        "s7ab1aac347a4": "https://redis.io/docs/latest/commands/config-get/",
+        "sb5f5479eccf8": "https://redis.io/docs/latest/commands/acl-log/",
+        "s8d6577576295": "https://redis.io/docs/latest/commands/acl-dryrun/",
+        "s43b199002e27": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/#acl-rules-for-sentinel-and-replicas",
+        "s34e2264081b7": "https://redis.io/docs/latest/operate/oss_and_stack/management/replication/#setting-a-replica-to-authenticate-to-a-master",
+        "s426dcab02f8b": "https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#configuring-sentinel-instances-with-authentication",
+        "s6c549585a510": "https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/#redis-access-control-list-authentication",
+        "s075c67b3e9d7": "https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/#redis-cluster-tcp-ports",
+        "sce02504d451b": "https://redis.io/docs/latest/commands/info/",
+        "sfe348474049a": "https://redis.io/docs/latest/commands/cluster-nodes/",
+        "s04d70801d688": "https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/#sentinel",
+        "sb384cc06fc43": "https://redis.io/docs/latest/commands/config-set/"
+      }
+    },
+    "image": {
+      "name": "Redis image source",
+      "basis": "584feaab6cd12a77866c121beff1bb16ff239486",
+      "sources": {
+        "s6e56989d73a1": "https://github.com/redis/docker-library-redis/blob/584feaab6cd12a77866c121beff1bb16ff239486/6.2/debian/Dockerfile#L85-L90",
+        "sdb0e9a2d1d56": "https://github.com/redis/docker-library-redis/blob/584feaab6cd12a77866c121beff1bb16ff239486/7.4/debian/Dockerfile#L146-L150",
+        "s65ef31503c67": "https://github.com/redis/docker-library-redis/blob/584feaab6cd12a77866c121beff1bb16ff239486/7.4/debian/docker-entrypoint.sh"
       }
     },
     "release-notes": {
@@ -1093,6 +1084,15 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "sadcc4b0a2908": "https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.6-release-notes/",
         "sead103199248": "https://redis.io/docs/latest/operate/oss_and_stack/stack-with-enterprise/release-notes/redisce/redisos-8.10-release-notes/"
+      }
+    },
+    "valkey": {
+      "name": "Valkey documentation",
+      "basis": "unknown",
+      "sources": {
+        "sb488496d1f4b": "https://valkey.io/topics/acl/",
+        "s0eebdf8ee73e": "https://valkey.io/topics/security/",
+        "sdc8d63632a85": "https://valkey.io/topics/tls/"
       }
     }
   },

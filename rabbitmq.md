@@ -672,11 +672,11 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: RabbitMQ documentation (unknown)
 - source: RabbitMQ source (v4.3.6)
-- image: RabbitMQ image source (76efb370838e36e4b120e252e75cf0dac70a7d55)
 - admin: rabbitmqadmin (v2)
 - topic-min: RabbitMQ topic authorization introduction (3.7.0)
+- docs: RabbitMQ documentation (unknown)
+- image: RabbitMQ image source (76efb370838e36e4b120e252e75cf0dac70a7d55)
 - management-source: RabbitMQ management documentation source (db23826ebaa810b3cdd525fd290125d65f6c3005)
 - otp: Erlang/OTP distribution (27)
 - curl: curl documentation (unknown)
@@ -727,6 +727,38 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-09",
   "body_sha256": "02208e1c7164f30bd94a7488df842c3d2b5709113cd61925722fae35b7159460",
   "components": {
+    "source": {
+      "name": "RabbitMQ source",
+      "basis": "v4.3.6",
+      "sources": {
+        "sd358fada6993": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/Makefile#L33-L38",
+        "s23753cce5d91": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L22",
+        "s776b41dfa37a": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L65-L71",
+        "s2373a87402c7": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L151-L154",
+        "scde094099cd2": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L178-L186",
+        "s429261f04d72": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L1206-L1233",
+        "s3db3e9410319": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L2008-L2025",
+        "s631a5974cf74": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/scripts/rabbitmq-env#L143-L146",
+        "sb2136f9c4d1a": "https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env",
+        "s9977401b5976": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.6",
+        "s314eda502b64": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L104-L118",
+        "s8dd5ade37995": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60"
+      }
+    },
+    "admin": {
+      "name": "rabbitmqadmin",
+      "basis": "v2",
+      "sources": {
+        "sdd5688854073": "https://www.rabbitmq.com/docs/management-cli"
+      }
+    },
+    "topic-min": {
+      "name": "RabbitMQ topic authorization introduction",
+      "basis": "3.7.0",
+      "sources": {
+        "se34f4e7886f1": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0"
+      }
+    },
     "docs": {
       "name": "RabbitMQ documentation",
       "basis": "unknown",
@@ -749,24 +781,6 @@ Claims (full source mapping in the JSON block below):
         "s008b12a42f70": "https://www.rabbitmq.com/docs/channels"
       }
     },
-    "source": {
-      "name": "RabbitMQ source",
-      "basis": "v4.3.6",
-      "sources": {
-        "sd358fada6993": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/Makefile#L33-L38",
-        "s23753cce5d91": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L22",
-        "s776b41dfa37a": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L65-L71",
-        "s2373a87402c7": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L151-L154",
-        "scde094099cd2": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/src/rabbit_mgmt_app.erl#L178-L186",
-        "s429261f04d72": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L1206-L1233",
-        "s3db3e9410319": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit_common/src/rabbit_env.erl#L2008-L2025",
-        "s631a5974cf74": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbit/scripts/rabbitmq-env#L143-L146",
-        "sb2136f9c4d1a": "https://raw.githubusercontent.com/rabbitmq/rabbitmq-server/v4.3.6/deps/rabbit/scripts/rabbitmq-env",
-        "s9977401b5976": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v4.3.6",
-        "s314eda502b64": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_web_dispatch/src/rabbit_web_dispatch_sup.erl#L104-L118",
-        "s8dd5ade37995": "https://github.com/rabbitmq/rabbitmq-server/blob/v4.3.6/deps/rabbitmq_management/priv/schema/rabbitmq_management.schema#L58-L60"
-      }
-    },
     "image": {
       "name": "RabbitMQ image source",
       "basis": "76efb370838e36e4b120e252e75cf0dac70a7d55",
@@ -775,20 +789,6 @@ Claims (full source mapping in the JSON block below):
         "s6e9f51045566": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/ubuntu/Dockerfile#L321",
         "se5da6700ffd7": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/10-defaults.conf#L8",
         "sb5b8462e18fd": "https://github.com/docker-library/rabbitmq/blob/76efb370838e36e4b120e252e75cf0dac70a7d55/4.3/alpine/Dockerfile#L327"
-      }
-    },
-    "admin": {
-      "name": "rabbitmqadmin",
-      "basis": "v2",
-      "sources": {
-        "sdd5688854073": "https://www.rabbitmq.com/docs/management-cli"
-      }
-    },
-    "topic-min": {
-      "name": "RabbitMQ topic authorization introduction",
-      "basis": "3.7.0",
-      "sources": {
-        "se34f4e7886f1": "https://github.com/rabbitmq/rabbitmq-server/releases/tag/v3.7.0"
       }
     },
     "management-source": {
