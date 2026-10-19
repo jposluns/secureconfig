@@ -288,6 +288,35 @@ def main():
         ):
             run(body, 1, "per-command comment is not a fence declaration", "new/changed/excess")
 
+        # The EOF exception admits only the fixed H2 and the two data fences.
+        from version_basis import NOTE_TITLE, note
+        ai = (START + '\n' + note('guide.md') + '\n\n**Version basis**\n\n'
+              '````json\n{}\n````\n' + END + '\n')
+        bottom = marked_pilot + '\n\n' + ai
+        run(bottom, 0, 'EOF note ends Verify without adding units')
+        run(bottom.replace('# Guide', '# Verify'), 0, 'EOF stays opaque under a level-one Verify root')
+        run(bottom + '\n \t\n', 0, 'END is last nonblank line')
+        run(bottom.rstrip('\n'), 0, 'EOF END without final newline')
+        for changed in (
+            bottom + 'After END\n', front + bottom.replace('## ' + NOTE_TITLE, '## Other'),
+            bottom.replace('## ' + NOTE_TITLE, '### ' + NOTE_TITLE),
+            bottom.replace('```text', '```bash'), bottom.replace('````json', '~~~json'),
+            bottom.replace('\n````\n', '\n```\n'),
+            bottom.replace('**Version basis**', '## Verify'),
+            bottom.replace('Read the secureconfig guide at', '## Verify'),
+            bottom.replace('**Version basis**', '### Extra'),
+            bottom.replace('**Version basis**', 'Title\n---'),
+            bottom.replace('**Version basis**', '<b>extra HTML</b>'),
+            bottom.replace('**Version basis**', '<!-- another -->'),
+            bottom.replace('**Version basis**', '```sh\necho hidden\n```'),
+            bottom.replace('**Version basis**', '```text\nsecond prompt\n```'),
+            bottom.replace('**Version basis**', '````json\n{}\n````'),
+        ):
+            run(changed, 1, 'invalid EOF generated shape', '[unsupported-container]')
+        listing.write_text('other.md\n', encoding='utf-8')
+        run(bottom, 1, 'EOF exemption requires enrollment', 'HTML comment outside')
+        listing.write_text('guide.md\n', encoding='utf-8')
+
         # Round-2: unsupported containers must fail closed even when their
         # contents look marked, or a nested heading would hide the Verify root.
         unsupported = "[unsupported-container]"

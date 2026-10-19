@@ -50,8 +50,7 @@ python3 tools/version_basis.py --check
     echo "==> ${f}"
     echo "======================================================================"
     echo
-    # A concatenated document cannot carry several YAML front matters.
-    # Keep the complete generated summary and guide body in each guide.
+    # Strip legacy front matter; retain each two-section guide whole, including JSON.
     python3 tools/version_basis.py --no-advisory --bundle "$f"
   done
 } > "$out"

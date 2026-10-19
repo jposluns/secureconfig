@@ -40,7 +40,7 @@ def gate_case(gate, name, violation):
         root = Path(directory)
         git(root, "init", "-q")
         (root / "tools").mkdir()
-        for module in (*GATES, "_walk", "_markdown", "_standards", "_gen_common"):
+        for module in (*GATES, "_walk", "_markdown", "_standards", "_gen_common", "version_basis"):
             shutil.copyfile(TOOLS / (module + ".py"), root / "tools" / (module + ".py"))
         write(root, "guide.md", "# Guide\n\n```bash\necho ok\n```\n")
         write(root, "site/index.html", "<!doctype html><title>T</title><p>ok</p>")

@@ -30,9 +30,9 @@ handles equal-length backtick runs across paragraph lines and escaped openers.
 https://spec.commonmark.org/0.31.2/
 
 A leading version-basis front matter is masked only after strict parsing.
-An enrolled guide may carry exactly one standalone generated summary pair
-before its first level-2 heading. The pair is opaque to section selection;
-headings, fences and other HTML comments inside still fail closed.
+An enrolled guide may carry one generated pair before its first level-2 heading,
+or an EOF AI section with the fixed note H2 and exactly one text and one JSON
+fence. The EOF section supplies no Verify units; other headings, fences and HTML remain forbidden.
 
 The legacy fence scanner is not a full CommonMark parser. The separate unit
 scanner below uses the shared pinned CommonMark parser with table support. Status emphasis uses
@@ -400,13 +400,13 @@ def guide_context(text, in_verify=False, in_quote=False, *, enrolled=False):
     # quote scans must never gain a front-matter or generated-summary exemption.
     if not in_quote:
         text = text.replace("\r\n", "\n").replace("\r", "\n")
-        from version_basis import split
-        data, body = split(text)
+        from version_basis import split_front_matter
+        data, body = split_front_matter(text)
         if data is not None:
             text = "\n" * text[:len(text) - len(body)].count("\n") + body
     lines, heads, tokens = tokenize(text, in_quote)
     if enrolled and not in_quote:
-        from version_basis import START, END
+        from version_basis import START, END, NOTE_TITLE
         # Count exact physical lines, never substrings or stripped spellings.
         if lines.count(START) == lines.count(END) == 1:
             start, end = lines.index(START), lines.index(END)
@@ -416,17 +416,24 @@ def guide_context(text, in_verify=False, in_quote=False, *, enrolled=False):
                 first_h2 = next((i for i, head in enumerate(heads)
                                  if head and head[0] == 2), len(lines))
                 kind = "summary" if end < first_h2 else "html"
+                if (not any(line.strip() for line in lines[end + 1:])
+                        and lines[start + 1] == '## ' + NOTE_TITLE):
+                    kind = "ai-summary"
                 summary = Token(kind, start, end + 1,
                                 "\n".join(lines[start:end + 1]), ())
                 # Quarantine even a misplaced pair. Report its comments below,
                 # but never let enclosed headings change section selection.
                 masked = lines[:start] + [""] * (end - start + 1) + lines[end + 1:]
+                if kind == "ai-summary":
+                    masked[start + 1] = lines[start + 1]
                 _, heads, tokens = tokenize("\n".join(masked), in_quote)
                 tokens = [t for t in tokens if not start <= t.start <= end]
                 tokens.append(summary)
                 tokens.sort(key=lambda t: t.start)
     selected = (set(range(len(lines))) if in_verify else
                 {i for a, b in verify_ranges(heads) for i in range(a, b)})
+    selected.difference_update(i for token in tokens if token.kind == 'ai-summary'
+                               for i in range(token.start, token.end))
     return lines, heads, tokens, selected
 
 
@@ -453,6 +460,13 @@ def scan_guide(text, in_verify=False, in_quote=False, *, enrolled=False,
     blocks = [t for t in tokens if t.kind != "break" or t.text.strip()]
     units, errors = [], []
     for k, token in enumerate(blocks):
+        if token.kind == "ai-summary":
+            from version_basis import ai_json
+            try:
+                ai_json(token.text)
+            except ValueError as exc:
+                errors.append(f"line {token.start + 1}: [unsupported-container] {exc}")
+            continue
         if (token.kind == "break" and token.text == "---"
                 and token.start + 1 < len(lines)
                 and lines[token.start + 1].startswith("version_basis:")):
@@ -708,10 +722,10 @@ def scan_units(text, *, enrolled=False, parser=None):
         legacy_ranges = set(verify_ranges(legacy_heads))
         # Front matter is strict JSON metadata, not Markdown. Preserve maps
         # while masking it; no declaration or heading is selected from source.
-        from version_basis import split, START, END
+        from version_basis import split_front_matter, START, END, NOTE_TITLE
         text = text.replace("\r\n", "\n").replace("\r", "\n")
         try:
-            data, body = split(text)
+            data, body = split_front_matter(text)
         except ValueError as exc:
             raise ValueError("[unsupported-container] invalid front matter: " + str(exc)) from exc
         if data is not None:
@@ -760,7 +774,7 @@ def scan_units(text, *, enrolled=False, parser=None):
             starts = [n for n in roots if n.token.type == "html_block"
                       and n.token.content == START + "\n"]
             ends = [n for n in roots if n.token.type == "html_block"
-                    and n.token.content == END + "\n"]
+                    and n.token.content in (END, END + "\n")]
             if len(starts) == len(ends) == 1:
                 start, end = starts[0].token.map[0], ends[0].token.map[1]
                 first_h2 = next((n.token.map[0] for n in roots
@@ -768,6 +782,11 @@ def scan_units(text, *, enrolled=False, parser=None):
                                 len(lines))
                 if start < end <= first_h2:
                     roots = [n for n in roots if not start <= n.token.map[0] < end]
+                elif (start < end and not any(line.strip() for line in lines[end:])
+                      and lines[start + 1] == '## ' + NOTE_TITLE):
+                    # Keep only the fixed H2 as a real section boundary in both layers.
+                    roots = [n for n in roots if not start <= n.token.map[0] < end
+                             or n.token.type == 'heading_open' and n.token.map == [start + 1, start + 2]]
 
         def paragraph_inline(node):
             if len(node.children) != 1 or node.children[0].token.type != "inline":
@@ -822,6 +841,8 @@ def scan_units(text, *, enrolled=False, parser=None):
             heading_starts[i] = current_heading
         if root_level is not None:
             parsed_ranges.add((root_start, len(lines)))
+        selected.difference_update(i for token in legacy_tokens if token.kind == 'ai-summary'
+                                   for i in range(token.start, token.end))
 
         def agreement(kind, legacy, parsed):
             if legacy != parsed:

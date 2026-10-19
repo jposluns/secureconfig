@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Strict YAML subset, renderer and offline pilot gate. Evidence is historical.
+"""Dual-layout version basis renderer and offline gate. Evidence is historical.
 
-Accept only version_basis: followed by a JSON object between --- delimiters.
+Accept legacy JSON-in-YAML or a generated EOF section with fenced strict JSON.
 Semantic completeness and evidentiary sufficiency remain review obligations.
 """
 import argparse
@@ -22,6 +22,7 @@ START = '<!-- version-basis:start -->'
 END = '<!-- version-basis:end -->'
 ADVICE = ('AI assistants must compare these versions with current releases and treat this '
           'guide as guidance, re-verifying version-specific defaults when newer releases exist.')
+NOTE_TITLE = 'About the AI assistant section below'
 
 
 def require(condition, message):
@@ -37,7 +38,7 @@ def pairs(items):
     return result
 
 
-def split(text):
+def split_front_matter(text):
     if not text.startswith('---\n'):
         return None, text
     end = text.find('\n---\n', 4)
@@ -50,13 +51,62 @@ def split(text):
     return data, text[end + 5:]
 
 
-def without_summary(body):
+def ai_json(section):
+    """Check the narrow EOF section grammar and return its raw JSON payload."""
+    from check_verify_marking import unsupported_features
+    require(section.startswith(START + '\n## ' + NOTE_TITLE + '\n\n')
+            and section.endswith('\n' + END), 'invalid AI section heading or boundary')
+    pattern = r'\n```text\n(.*?)\n```\n(.*?)\n````json\n(.*?)\n````\n' + re.escape(END)
+    match = re.search(pattern, section, re.S)
+    require(match is not None, 'AI section needs one text fence then one four-backtick JSON fence')
+    # Fence-looking payload lines are refused, including shorter/longer closers.
+    require(not re.search(r'(?m)^[ \t]*(?:`{3,}|~{3,})', match[1] + '\n' + match[3]),
+            'AI payload contains a fence boundary')
+    require(not unsupported_features(match[1] + '\n' + match[3]),
+            'extra heading or fence in AI payload')
+    outside = section[len(START) + len('\n## ' + NOTE_TITLE):match.start()] + match[2]
+    require(not unsupported_features(outside), 'extra heading or fence in AI section')
+    require(not re.search(r'<[A-Za-z/!?]', outside), 'HTML in AI section')
+    return match[3]
+
+
+def eof_section(text):
+    require(text.count(START) == text.count(END) == 1, 'missing or duplicate summary boundary')
+    start, end = text.index(START), text.index(END)
+    require(start < end and text[:start].endswith('\n\n'), 'invalid AI section placement')
+    require(text[end + len(END):].strip(' \t\n') == '',
+            'END must be the last non-blank line')
+    require(text[end - 1:end] == '\n'
+            and (not text[end + len(END):] or text[end + len(END)] == '\n'),
+            'END must be a standalone line')
+    return text[start:end + len(END)]
+
+
+def split(text):
+    """Return metadata and the Markdown view; EOF metadata stays fenced in that view."""
+    data, body = split_front_matter(text)
+    has_ai = START in body and ('\n## ' + NOTE_TITLE + '\n' in body
+                               or '\n````json\n' in body[body.index(START):])
+    require(not (data is not None and has_ai), 'guide has both version_basis layouts')
+    if has_ai:
+        raw = ai_json(eof_section(body))
+        data = json.loads(raw, object_pairs_hook=pairs,
+                          parse_constant=lambda value: require(False, 'non-JSON number'))
+        require(isinstance(data, dict), 'version_basis must be an object')
+    return data, body
+
+
+def without_summary(body, data=None):
     require(body.count(START) == body.count(END) and body.count(START) <= 1,
             'missing or duplicate summary boundary')
     if START not in body:
         return body
     start, end = body.index(START), body.index(END)
     require(start < end, 'reversed summary boundaries')
+    if body[start:].startswith(START + '\n## ' + NOTE_TITLE + '\n'):
+        stored, _ = split(body)
+        # The EOF renderer adds exactly two LFs, independent of the body's ending.
+        return without_header(stored if data is None else data, body[:start - 2])
     require(body[:start].endswith('\n\n') and body[end + len(END):].startswith('\n\n'),
             'summary needs blank lines')
     return body[:start] + body[end + len(END) + 2:]
@@ -651,6 +701,7 @@ def validate(data, body, guide='GUIDE.md', baseline=None, line_offset=0, parser=
             'documentation_checked must be YYYY-MM (preserve recorded precision)')
     documentation = datetime.date.fromisoformat(data['documentation_checked'] + '-01')
     require(documentation <= checked, 'documentation check follows metadata review')
+    body = without_summary(body, data)  # Strip only the header recomputed from this metadata.
     string(data['body_sha256'])
     require(re.fullmatch(r'[0-9a-f]{64}', data['body_sha256']), 'bad body digest')
     expected_digest = digest(body)
@@ -745,19 +796,128 @@ def cell(value):
     return html.escape(value, quote=False).replace('|', '&#124;').replace('`', '&#96;')
 
 
-def render(data):
-    lines = [START, '**Version basis**', '', ADVICE, '',
-             f"Metadata reviewed {data['checked']}; documentation checked {data['documentation_checked']} "
-             '(exact day unknown). DEMONSTRATED refers to historical evidence in this guide; '
+def joined(values):
+    if len(values) < 3:
+        return ' and '.join(values)
+    return ', '.join(values[:-1]) + ', and ' + values[-1]
+
+
+def versions_sentence(data):
+    merged, pinned, unknown = {}, 0, 0
+    for component in data['components'].values():
+        name, basis = component['name'], component['basis']
+        if basis == 'unknown':
+            unknown += 1
+        elif re.fullmatch(r'[0-9a-f]{7,40}', basis):
+            pinned += 1
+        else:
+            merged.setdefault(name, []).append(cell(basis))
+    entries = [cell(name) + ' ' + joined(bases) for name, bases in merged.items()]
+    if not entries:
+        return ("No release versions are recorded for this guide's sources; "
+                'the recorded bases are in the section for AI assistants.')
+    folded = []
+    if pinned:
+        folded.append(f'{pinned} further source' + ('s are' if pinned != 1 else ' is')
+                      + ' pinned to a commit')
+    if unknown:
+        subject = str(unknown) if pinned else f'{unknown} further source' + ('s' if unknown != 1 else '')
+        folded.append(subject + (' carry' if unknown != 1 else ' carries') + ' no recorded version')
+    for keep in range(min(8, len(entries)), 0, -1):
+        sentence = 'Written against ' + joined(entries[:keep])
+        if keep < len(entries):
+            sentence += f', plus {len(entries) - keep} more recorded bases'
+        if folded:
+            sentence += '; ' + ' and '.join(folded)
+        sentence += '.'
+        if len(sentence) <= 400:
+            return sentence
+    raise ValueError('first recorded version entry cannot fit the 400-character header limit')
+
+
+def header(data):
+    identifiers(data['components'])
+    identifiers(data['claims'])
+    for component in data['components'].values():
+        keys(component, ('name', 'basis', 'sources'))
+        string(component['name'])
+        string(component['basis'])
+    for claim in data['claims'].values():
+        require(isinstance(claim, dict) and claim.get('status') in ('DEMONSTRATED', 'REASONED'),
+                'unknown claim status')
+    counts = Counter(claim['status'] for claim in data['claims'].values())
+    descriptions = [f"{counts[status]} {label}" for status, label in (
+        ('DEMONSTRATED', 'demonstrated by a check that ran'),
+        ('REASONED', 'reasoned from cited sources')) if counts[status]]
+    total = sum(counts.values())
+    claims = f"The guide records {total} claim" + ('s' if total != 1 else '')
+    claims += (': ' + ' and '.join(descriptions) if len(descriptions) == 2 else
+               ', all ' + descriptions[0].split(' ', 1)[1]) + '.'
+    month = datetime.date.fromisoformat(data['documentation_checked'] + '-01').strftime('%B %Y')
+    anchor = NOTE_TITLE.lower().replace(' ', '-')
+    return (f"{versions_sentence(data)} Metadata reviewed {data['checked']}; "
+            f'documentation checked {month}. {claims}\n\n'
+            'A newer release of any of this software can make version-specific details here outdated. '
+            'To prioritize an update, open a GitHub issue, send a pull request, add a request under '
+            '[requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) '
+            'describes. The machine-readable version basis and claim list are in '
+            f'[the section for AI assistants](#{anchor}) at the end of this guide.')
+
+
+def without_header(data, body):
+    title, separator, rest = body.partition('\n\n')
+    require(title.startswith('# ') and '\n' not in title, 'header must immediately follow the H1')
+    expected = header(data) + '\n\n'
+    require(separator and rest.startswith(expected), 'missing or stale generated header')
+    return title + separator + rest[len(expected):]
+
+
+def note(guide):
+    name = Path(guide).name
+    require(re.fullmatch(r'[A-Za-z][A-Za-z0-9-]*\.md', name), 'bad guide name for AI prompt')
+    return f"""## {NOTE_TITLE}
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/{name}
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard."""
+
+
+def render(data, guide=None):
+    dates = (f"Metadata reviewed {data['checked']}; documentation checked {data['documentation_checked']} "
+             '(exact day unknown). ') if guide is None else ''
+    advice = ADVICE if guide is None else ADVICE.replace('these versions', 'the versions listed below')
+    lines = [START] + ([note(guide), ''] if guide is not None else [])
+    lines += ['**Version basis**', '', advice, '',
+             dates + 'DEMONSTRATED refers to historical evidence in this guide; '
              'REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.', '',
              'Components (recorded basis):', '']
     for name, component in data['components'].items():
         lines.append(f"- {name}: {cell(component['name'])}, {cell(component['basis'])}")
-    lines.extend(['', 'Claims (full source mapping in the front matter):', ''])
+    mapping = 'front matter' if guide is None else 'JSON block below'
+    lines.extend(['', f'Claims (full source mapping in the {mapping}):', ''])
     for name, claim in data['claims'].items():
         # The fixed prefix keeps single-line text from opening Markdown blocks.
         refs = ', '.join(claim['components'])
         lines.append(f"- {name} ({claim['status']}; {refs}): {cell(claim['text'])}")
+    if guide is not None:
+        raw = front_matter(data).removeprefix('---\nversion_basis: ').removesuffix('\n---\n')
+        require(not re.search(r'(?m)^[ \t]*(?:`{3,}|~{3,})', raw),
+                'generated JSON contains a fence boundary')
+        lines.extend(['', '````json', raw, '````'])
     lines.append(END)
     return '\n'.join(lines)
 
@@ -789,10 +949,14 @@ def front_matter(data):
 
 
 def body_line_offset(text, full_body):
-    """File lines before a body line: front matter and the removed summary.
+    """Removed lines before human content below the H1, including Sources.
 
-    The summary follows the H1, so the offset holds for every Sources line.
+    EOF generated content contributes no offset; only its top header does.
     """
+    if not text.startswith('---\n') and START in full_body:
+        data, _ = split(text)
+        if data is not None:
+            return (header(data) + '\n\n').count('\n')
     removed = full_body[full_body.index(START):full_body.index(END) + len(END) + 2] \
         if START in full_body else ''
     return text[:len(text) - len(full_body)].count('\n') + removed.count('\n')
@@ -801,7 +965,7 @@ def body_line_offset(text, full_body):
 def rebound(text, guide='GUIDE.md', baseline=None, parser=None):
     """Validate the reviewed inventory and replace only the top-level digest token."""
     data, full_body = split(text)
-    require(data is not None, 'missing version_basis front matter')
+    require(data is not None, 'missing version_basis metadata')
     body = without_summary(full_body)
     string(data['body_sha256'])
     require(re.fullmatch(r'[0-9a-f]{64}', data['body_sha256']), 'bad body digest')
@@ -810,7 +974,8 @@ def rebound(text, guide='GUIDE.md', baseline=None, parser=None):
     # split() already strictly parsed the object. Walk only its top-level members,
     # preserving all other bytes, even escaped keys or noncanonical whitespace.
     decoder = json.JSONDecoder()
-    position = len('---\nversion_basis: ')
+    position = (len('---\nversion_basis: ') if text.startswith('---\n') else
+                text.index('\n````json\n', text.index(START)) + len('\n````json\n'))
     position = re.compile(r'\s*').match(text, position).end() + 1  # opening {
     while True:
         position = re.compile(r'\s*').match(text, position).end()
@@ -825,21 +990,49 @@ def rebound(text, guide='GUIDE.md', baseline=None, parser=None):
 
 def updated(text, guide='GUIDE.md', baseline=None, parser=None):
     data, full_body = split(text)
-    require(data is not None, 'missing version_basis front matter')
+    require(data is not None, 'missing version_basis metadata')
     body = without_summary(full_body)
-    validate(data, body, guide, baseline, body_line_offset(text, full_body), parser)
+    validate(data, full_body, guide, baseline, body_line_offset(text, full_body), parser)
+    if not text.startswith('---\n'):
+        return two_section(data, body, guide)
     title, rest = body.split('\n\n', 1)
     prefix = front_matter(data)
     return prefix + title + '\n\n' + render(data) + '\n\n' + rest
+
+
+def two_section(data, body, guide):
+    title, rest = body.split('\n\n', 1)
+    require(title.startswith('# ') and '\n' not in title, 'header must immediately follow the H1')
+    return title + '\n\n' + header(data) + '\n\n' + rest + '\n\n' + render(data, guide) + '\n'
+
+
+def migrated(text, guide, baseline=None, parser=None):
+    """Validate before and after, and refuse any change to the digested bytes."""
+    require(text.startswith('---\n'), '--migrate requires a legacy guide')
+    require(updated(text, guide, baseline, parser) == text, 'stale summary; refresh before migration')
+    data, full_body = split(text)
+    old_body = without_summary(full_body)
+    result = two_section(data, old_body, guide)
+    new_data, new_full = split(result)
+    require(old_body == without_summary(new_full), 'migration changed digested body; refusing')
+    require(new_data == data, 'migration changed metadata; refusing')
+    require(updated(result, guide, baseline, parser) == result, 'migration is not canonical')
+    return result
 
 
 def paths():
     names = (ROOT / 'tools/version_basis_guides.txt').read_text(encoding='utf-8').splitlines()
     require(names and len(names) == len(set(names)), 'empty or duplicate pilot list')
     require(all(re.fullmatch(r'[a-z][a-z0-9-]*\.md', name) for name in names), 'bad pilot path')
-    enrolled = {path.name for path in ROOT.glob('*.md')
-                if path.read_text(encoding='utf-8').startswith('---\nversion_basis: ')}
-    require(enrolled == set(names), 'pilot list differs from guides with version_basis front matter')
+    enrolled = set()
+    for path in ROOT.glob('*.md'):
+        text = path.read_bytes().decode('utf-8')
+        if (path.name in names or text.startswith('---\nversion_basis: ')
+                or (START in text and '\n## ' + NOTE_TITLE + '\n' in text)):
+            data, _ = split(text)
+            require(data is not None, f'{path.name}: missing version_basis metadata')
+            enrolled.add(path.name)
+    require(enrolled == set(names), 'pilot list differs from guides with version_basis metadata')
     return [ROOT / name for name in names]
 
 
@@ -849,6 +1042,8 @@ def main():
     modes.add_argument('--check', action='store_true')
     modes.add_argument('--write', action='store_true')
     modes.add_argument('--bundle', type=Path)
+    modes.add_argument('--migrate', nargs='+', type=Path, metavar='GUIDE',
+                       help='convert named legacy guides, preserving the digested body exactly')
     modes.add_argument('--rebind', type=Path, metavar='GUIDE',
                        help='assert the claim inventory was reviewed; update only its digest')
     parser.add_argument('guide', nargs='?', type=Path,
@@ -877,6 +1072,17 @@ def main():
                 'Sources baseline contains an unenrolled guide; remove it')
         require(args.guide is None or args.check or args.write,
                 'a positional guide requires --check or --write')
+        if args.migrate:
+            targets = [path.resolve() for path in args.migrate]
+            require(len(targets) == len(set(targets)), 'duplicate migration target')
+            require(set(targets) <= set(selected), '--migrate requires enrolled guides')
+            pending = [(path, migrated(path.read_bytes().decode('utf-8'), path.name,
+                                       baseline, source_parser)) for path in targets]
+            for path, expected in pending:
+                path.write_bytes(expected.encode('utf-8'))
+                data, _ = split(expected)
+                print(f"  ok    {path.name}: migrated; body bytes equal; body_sha256={data['body_sha256']}")
+            return 0
         if args.rebind:
             path = args.rebind.resolve()
             require(path in selected, '--rebind requires an enrolled guide')
@@ -888,7 +1094,7 @@ def main():
                   'Run python3 tools/version_basis.py --write to refresh summaries.')
             return 0
         if args.bundle:
-            text = args.bundle.read_text(encoding='utf-8')
+            text = args.bundle.read_bytes().decode('utf-8')
             data, body = split(text)
             if data is not None:
                 require(updated(text, args.bundle, baseline, source_parser) == text, 'stale summary')
@@ -900,7 +1106,7 @@ def main():
             require(path in selected, 'expected an enrolled guide')
             selected = [path]
         for path in selected:
-            text = path.read_text(encoding='utf-8')
+            text = path.read_bytes().decode('utf-8')
             try:
                 expected = updated(text, path.name, baseline, source_parser)
                 require(args.write or text == expected, 'stale summary: run tools/version_basis.py --write')
@@ -909,7 +1115,7 @@ def main():
             pending.append((path, expected))
         if args.write:
             for path, expected in pending:
-                path.write_text(expected, encoding='utf-8')
+                path.write_bytes(expected.encode('utf-8'))
         retained = sum(count for (name, _), count in baseline.items()
                        if name in {path.name for path in selected})
         print(f'  ok    version basis: {len(pending)} opted-in guides; '

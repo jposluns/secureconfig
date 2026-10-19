@@ -144,13 +144,37 @@ link destination or a code span outside image alt text.
 
 ## Version basis
 
-The enrolled guides are listed in `tools/version_basis_guides.txt`. Their front matter uses a
-restricted JSON-in-YAML format: `---`, then `version_basis: ` followed by one strict JSON object,
+The enrolled guides are listed in `tools/version_basis_guides.txt`. During the transition each
+listed guide must use exactly one of two layouts. This tooling phase migrates no guides.
+The legacy layout uses restricted JSON-in-YAML front matter: `---`, then `version_basis: ` followed by one strict JSON object,
 then `---`, each delimiter on its own line. Use double-quoted JSON keys and strings. YAML aliases,
 tags, comments, block scalars, trailing commas, duplicate keys, non-JSON numbers and unknown fields
-are rejected. `--write` emits one component source and one claim per line. Use a renderer that
-understands front matter; the llms bundle strips it and retains the visible summary.
-Directly after the H1, the summary keeps its preamble, lists each component and recorded basis once, then lists each claim with its status, component IDs and full text in front-matter order.
+are rejected. `--write` emits one component source and one claim per line. For legacy guides use
+a renderer that understands front matter; the llms bundle strips it and retains the visible summary.
+The legacy summary follows the H1. It lists each component and recorded basis once, then each
+claim with its status, component IDs and full text in metadata order.
+
+The two-section layout has no front matter. Its H1 is followed by a generated plain-Markdown
+header, the unchanged human body and Sources, and a generated AI section at EOF. The existing
+single marker pair wraps the fixed H2 "About the AI assistant section below", the human note
+and its `text` prompt, the summary, and the complete metadata in a four-backtick `json` fence.
+END is the last non-blank line. Other headings, fences and HTML inside the pair are refused.
+The JSON generator refuses fence-looking payload lines. The llms bundle and plugin retain the
+whole two-section guide, including the JSON. Legacy link-check preprocessing remains active;
+two-section JSON is already fenced, and its component URLs must also occur in Sources.
+
+The header merges identical component names in metadata order, folds unknown and lowercase
+7-to-40-digit hexadecimal bases into counts, and keeps at most eight entries and 400 characters
+in its versions sentence, dropping entries from the tail. At least one displayable entry is kept;
+if that entry cannot fit, generation fails. Zero status counts are omitted. With no displayable
+release, the header points to the complete recorded bases below. Keep headline components first.
+The fixed note title also supplies the header anchor.
+
+Later batches use `python3 tools/version_basis.py --migrate GUIDE...` with explicit enrolled
+legacy filenames. All targets are validated before any is written; duplicate, unlisted, already
+migrated, stale or invalid targets fail. Migration compares old and new digested body bytes and
+metadata, refusing any difference. It never rebinds. Rebuild both bundles and run the gates in
+the same change as each migration batch. `--check` and `--write` preserve each guide's layout.
 
 Schema 1 requires exactly these top-level fields:
 
@@ -160,8 +184,13 @@ Schema 1 requires exactly these top-level fields:
 - `documentation_checked`: `YYYY-MM`, matching the Sources heading and no later than `checked`.
   Preserve the recorded precision; a metadata review does not establish a new documentation check.
 - `body_sha256`: lowercase SHA-256 of the UTF-8 body returned by `without_summary()` after `split()`
-  removes front matter in `tools/version_basis.py`. The generated summary and its extra blank line
-  are excluded. Do not hash the complete Markdown file.
+  in `tools/version_basis.py`. Legacy front matter and the summary are excluded. For the new
+  layout, the EOF section and exactly two separator LFs are removed, and validation recomputes
+  and strips only the exact generated header. Human-body bytes, including trailing whitespace,
+  retain their old meaning. Do not hash the complete Markdown file. A changed or stale header
+  fails even with `--write` or `--rebind`; after changing metadata that affects the header,
+  replace the header with the exact output of `header(data)` before regenerating. Do not rebind
+  to excuse a header mismatch.
 - `components`: nonempty object keyed by IDs matching `[a-z][a-z0-9-]*`. Each component has exactly
   `name`, `basis` and `sources`. Use `unknown` when no version is recorded, but a source URL
   recognized as pinned by the lexical URL check requires a component with a basis other than
