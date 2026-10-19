@@ -1,304 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-05",
-  "documentation_checked": "2026-09",
-  "body_sha256": "10f455bd5e1e9cc54ea69a2d50883c9cba79de0ada5085b56891741f8232ee5d",
-  "components": {
-    "docs": {
-      "name": "ASP.NET Core documentation",
-      "basis": ".NET 10",
-      "sources": {
-        "s8c762260991c": "https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0",
-        "s74dcd6a72d63": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0",
-        "s5701d26de241": "https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0",
-        "s3790c49f70b9": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0",
-        "s9d10c561bb48": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions?view=aspnetcore-10.0",
-        "sa3c22a38f4cb": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0",
-        "sb6780977fa3f": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy?view=aspnetcore-10.0",
-        "s592dc85bb71f": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication?view=aspnetcore-10.0",
-        "s6afc0255098f": "https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator?view=net-10.0",
-        "s2d5a930aac35": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/mfa?view=aspnetcore-10.0"
-      }
-    },
-    "rate-min": {
-      "name": "ASP.NET Core rate-limiter minimum",
-      "basis": ".NET 7",
-      "sources": {
-        "sd3fef8f45066": "https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit"
-      }
-    },
-    "net10": {
-      "name": "ASP.NET Core",
-      "basis": ".NET 10",
-      "sources": {
-        "s74dcd6a72d63": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0",
-        "s5701d26de241": "https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0",
-        "s0d7c367ac06f": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-configuration?view=aspnetcore-10.0",
-        "sc0654e58fc4c": "https://learn.microsoft.com/en-us/aspnet/core/security/samesite?view=aspnetcore-10.0",
-        "s837df4b1657f": "https://learn.microsoft.com/en-us/aspnet/core/breaking-changes/10/cookie-authentication-api-endpoints?view=aspnetcore-10.0",
-        "s2f7e6a8213f1": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-10.0",
-        "s61afb89034f8": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/environments?view=aspnetcore-10.0",
-        "s9d290374f4e8": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.builder.migrationsendpointextensions.usemigrationsendpoint?view=aspnetcore-10.0",
-        "s1ce47370d948": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/options?view=aspnetcore-10.0",
-        "s55f298bf0048": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.disablerequestsizelimitattribute?view=aspnetcore-10.0",
-        "s792d3e8f3e42": "https://learn.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-10.0",
-        "s529a3d7cce08": "https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/iis/in-process-hosting?view=aspnetcore-10.0",
-        "s6682926c8da7": "https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?view=aspnetcore-10.0",
-        "s66f1ab4555d6": "https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/default-settings?view=aspnetcore-10.0",
-        "sd635cefc0a9f": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.dataprotection.dataprotectionbuilderextensions.protectkeyswithcertificate?view=aspnetcore-10.0",
-        "s9463626a3d0e": "https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-10.0",
-        "s1d58219cedec": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/aspnetcore-openapi?view=aspnetcore-10.0",
-        "s1f9d4c5e975c": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-10.0",
-        "sc41b77cc06c8": "https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-10.0",
-        "se101626c29d6": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/host-filtering?view=aspnetcore-10.0"
-      }
-    },
-    "source": {
-      "name": "ASP.NET Core source",
-      "basis": "v10.0.0",
-      "sources": {
-        "sb62cff70e3b8": "https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Middleware/HttpsPolicy/src/HstsOptions.cs",
-        "sfc86e3f62243": "https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Middleware/HttpOverrides/src/ForwardedHeadersOptions.cs",
-        "s903da00d32b5": "https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/KestrelServerLimits.cs",
-        "sc00d8d67e93b": "https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/Http2Limits.cs",
-        "s67f347ba7947": "https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Http/Http/src/Features/FormOptions.cs",
-        "s18c44d6c2fb7": "https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/KestrelServerOptions.cs"
-      }
-    },
-    "proxy-fix": {
-      "name": "ASP.NET Core proxy hardening",
-      "basis": "8.0.17",
-      "sources": {
-        "s2864662bcd21": "https://learn.microsoft.com/en-us/aspnet/core/breaking-changes/8/forwarded-headers-unknown-proxies?view=aspnetcore-10.0"
-      }
-    },
-    "runtime": {
-      "name": "NET runtime source",
-      "basis": "v10.0.0",
-      "sources": {
-        "s29ee940c94b9": "https://raw.githubusercontent.com/dotnet/runtime/v10.0.0/src/native/libs/System.Security.Cryptography.Native/pal_x509_root.c"
-      }
-    },
-    "openssl": {
-      "name": "OpenSSL documentation",
-      "basis": "3.0",
-      "sources": {
-        "scac6dada5f6a": "https://docs.openssl.org/3.0/man3/SSL_CTX_load_verify_locations/"
-      }
-    },
-    "precedence": {
-      "name": "WebApplicationBuilder precedence",
-      "basis": ".NET 7",
-      "sources": {
-        "s10d46bc97fef": "https://learn.microsoft.com/en-us/aspnet/core/breaking-changes/7/environment-variable-precedence?view=aspnetcore-10.0"
-      }
-    },
-    "iis": {
-      "name": "IIS documentation",
-      "basis": "IIS 10",
-      "sources": {
-        "sb2eac755b583": "https://learn.microsoft.com/en-us/iis/configuration/system.webserver/security/requestfiltering/"
-      }
-    },
-    "iis-rolling": {
-      "name": "IIS documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s267eddd43502": "https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/"
-      }
-    },
-    "dotnet-rolling": {
-      "name": ".NET documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s640872a17a8a": "https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography"
-      }
-    },
-    "cf-docs": {
-      "name": "Cloudflare documentation",
-      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
-      "sources": {
-        "s6f6104362214": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85",
-        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24",
-        "sfddb92e438ca": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16",
-        "s863803bd9a1f": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L48-L48"
-      }
-    }
-  },
-  "claims": {
-    "tls": {"text": "Kestrel serves wildcard HTTP 80 and HTTPS 443 with PKCS12 or PEM Path/KeyPath; supply certificate passwords from environment or a secret store.", "components": ["docs", "net10"], "sources": ["docs:s74dcd6a72d63", "net10:s74dcd6a72d63"], "status": "REASONED"},
-    "tls-protocols": {"text": "Default SslProtocols.None delegates to the OS; example explicitly permits only TLS 1.2 and 1.3.", "components": ["net10"], "sources": ["net10:s74dcd6a72d63"], "status": "REASONED"},
-    "hsts-age": {"text": "NET 10 HSTS defaults to 30 days; example selects 365 days outside Development.", "components": ["source"], "sources": ["source:sb62cff70e3b8"], "status": "REASONED"},
-    "hsts-subdomains": {"text": "HSTS IncludeSubDomains defaults false; example enables it only when all affected subdomains support HTTPS.", "components": ["source"], "sources": ["source:sb62cff70e3b8"], "status": "REASONED"},
-    "hsts-preload": {"text": "HSTS Preload defaults false.", "components": ["source"], "sources": ["source:sb62cff70e3b8"], "status": "REASONED"},
-    "redirect": {"text": "UseHttpsRedirection needs an HTTPS port via ASPNETCORE_HTTPS_PORT=443 or HttpsPort.", "components": ["docs"], "sources": ["docs:s8c762260991c"], "status": "REASONED"},
-    "proxy-bind": {"text": "ListenLocalhost(5000), or localhost:5000 URLs, binds behind a same-host proxy; process forwarded headers first.", "components": ["docs", "net10"], "sources": ["docs:s74dcd6a72d63", "net10:s5701d26de241"], "status": "REASONED"},
-    "proxy-default": {"text": "NET 10 trusts ::1 and 127.0.0.0/8 by default; adding 127.0.0.1 does not narrow that list.", "components": ["net10", "source"], "sources": ["net10:s5701d26de241", "source:sfc86e3f62243"], "status": "REASONED"},
-    "proxy-networks": {"text": "NET 10 replaces obsolete KnownNetworks with KnownIPNetworks/System.Net.IPNetwork; narrow both lists together and never leave both empty.", "components": ["net10", "source"], "sources": ["net10:s5701d26de241", "source:sfc86e3f62243"], "status": "REASONED"},
-    "proxy-hardening": {"text": "Unknown-proxy headers are ignored in 8.0.17 and 9.0.6 and NET 10, even without X-Forwarded-For processing; register the real proxy.", "components": ["net10", "proxy-fix"], "sources": ["net10:s5701d26de241", "proxy-fix:s2864662bcd21"], "status": "REASONED"},
-    "proxy-https": {"text": "When the proxy handles redirects/HSTS, omit the app middleware; missing forwarded-header handling can cause redirect loops.", "components": ["docs"], "sources": ["docs:s8c762260991c", "docs:s5701d26de241"], "status": "REASONED"},
-    "password": {"text": "Identity uses PBKDF2 with default 100000 iterations; keep its password hasher.", "components": ["docs"], "sources": ["docs:s3790c49f70b9", "docs:s9d10c561bb48"], "status": "REASONED"},
-    "lockout": {"text": "Configure five failures, five-minute lockout and allowance for new users; PasswordSignInAsync must use lockoutOnFailure=true, while the template uses false.", "components": ["net10"], "sources": ["net10:s0d7c367ac06f"], "status": "REASONED"},
-    "cookies": {"text": "Configure HttpOnly, SecurePolicy.Always, SameSite=Lax and eight-hour expiry; cookie-only auth uses the same options.", "components": ["docs", "net10"], "sources": ["docs:sa3c22a38f4cb", "docs:sb6780977fa3f", "net10:s0d7c367ac06f"], "status": "REASONED"},
-    "samesite": {"text": "NET 10 auth cookie defaults Lax; Strict can suppress cross-site app cookies without universally breaking OAuth/OIDC callbacks.", "components": ["net10"], "sources": ["net10:sc0654e58fc4c"], "status": "REASONED"},
-    "remote-cookies": {"text": "Correlation and OIDC nonce cookies separately default None; preserve secure cross-site settings and avoid global rewriting.", "components": ["net10"], "sources": ["net10:sc0654e58fc4c"], "status": "REASONED"},
-    "authorization": {"text": "Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages.", "components": ["docs"], "sources": ["docs:sa3c22a38f4cb"], "status": "REASONED"},
-    "login-limit": {"text": "NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing.", "components": ["rate-min"], "sources": ["rate-min:sd3fef8f45066"], "status": "REASONED"},
-    "oidc": {"text": "Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json.", "components": ["docs"], "sources": ["docs:s592dc85bb71f"], "status": "REASONED"},
-    "mfa": {"text": "Enforce MFA at the identity provider or fronting layer; this guide recommends Cloudflare Access independent MFA for a self-hosted public app only with effective MFA enforcement (policy over application over organization) and no origin bypass. The cited pages do not establish this deployment's enforcement or origin isolation.", "components": ["docs", "cf-docs"], "sources": ["docs:s592dc85bb71f", "docs:s2d5a930aac35", "cf-docs:s6f6104362214", "cf-docs:s7e793d13cf31", "cf-docs:sfddb92e438ca", "cf-docs:s863803bd9a1f"], "status": "REASONED"},
-    "client-validation": {"text": "Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback.", "components": ["docs"], "sources": ["docs:s6afc0255098f"], "status": "REASONED"},
-    "client-ca": {"text": "On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots.", "components": ["runtime", "openssl", "dotnet-rolling"], "sources": ["dotnet-rolling:s640872a17a8a", "runtime:s29ee940c94b9", "openssl:scac6dada5f6a"], "status": "REASONED"},
-    "developer-errors": {"text": "Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1", "net10:s61afb89034f8"], "status": "REASONED"},
-    "error-handler": {"text": "Install UseExceptionHandler early after forwarding; provide a generic /Error route supporting failed methods/anonymous requests and preserve intentional 413 responses.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1"], "status": "REASONED"},
-    "environment": {"text": "Production is default absent overrides; NET 7+ WebApplicationBuilder prioritizes command-line/DOTNET_ over ASPNETCORE_, while older WebHost differs.", "components": ["net10", "precedence"], "sources": ["net10:s61afb89034f8", "precedence:s10d46bc97fef"], "status": "REASONED"},
-    "database-diagnostics": {"text": "Register database developer exception filters before Build and migrations middleware after Build only in Development; migrations execute database changes.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1", "net10:s9d290374f4e8"], "status": "REASONED"},
-    "body-limit": {"text": "NET 10 Kestrel total body default is 30000000 bytes, null unlimited; example lowers it to 1048576 bytes.", "components": ["net10", "source"], "sources": ["net10:s1ce47370d948", "source:s903da00d32b5"], "status": "REASONED"},
-    "body-override": {"text": "RequestSizeLimit overrides before body reading; DisableRequestSizeLimit removes the protection.", "components": ["net10"], "sources": ["net10:s1ce47370d948", "net10:s55f298bf0048"], "status": "REASONED"},
-    "multipart": {"text": "MultipartBodyLengthLimit defaults 134217728 bytes per parsed section; example uses 1048576. Framing consumes total allowance and parsing failure need not return 413.", "components": ["source", "net10"], "sources": ["source:s67f347ba7947", "net10:s792d3e8f3e42"], "status": "REASONED"},
-    "iis-body": {"text": "In-process IISServerOptions body default is 30000000, separately from IIS maxAllowedContentLength default 30000000; out-of-process IIS disables Kestrel body limiting.", "components": ["net10"], "sources": ["net10:s1ce47370d948", "net10:s792d3e8f3e42", "net10:s529a3d7cce08"], "status": "REASONED"},
-    "keepalive": {"text": "Kestrel KeepAliveTimeout defaults to 130 seconds; it is not a total execution deadline.", "components": ["net10", "source"], "sources": ["net10:s1ce47370d948", "source:s903da00d32b5"], "status": "REASONED"},
-    "header-timeout": {"text": "Kestrel RequestHeadersTimeout defaults to 30 seconds; it is not a total execution deadline.", "components": ["net10", "source"], "sources": ["net10:s1ce47370d948", "source:s903da00d32b5"], "status": "REASONED"},
-    "connections": {"text": "MaxConcurrentConnections defaults null/unlimited; example caps ordinary connections at 100.", "components": ["source"], "sources": ["source:s903da00d32b5"], "status": "REASONED"},
-    "upgraded": {"text": "Upgraded connections leave the ordinary count; MaxConcurrentUpgradedConnections separately defaults null.", "components": ["net10", "source"], "sources": ["net10:s1ce47370d948", "source:s903da00d32b5"], "status": "REASONED"},
-    "header-count": {"text": "Kestrel MaxRequestHeaderCount defaults 100.", "components": ["source"], "sources": ["source:s903da00d32b5"], "status": "REASONED"},
-    "header-size": {"text": "Kestrel MaxRequestHeadersTotalSize defaults 32768 bytes.", "components": ["source"], "sources": ["source:s903da00d32b5"], "status": "REASONED"},
-    "request-rate": {"text": "MinRequestBodyDataRate defaults 240 bytes/second with five-second grace.", "components": ["source"], "sources": ["source:s903da00d32b5"], "status": "REASONED"},
-    "response-rate": {"text": "MinResponseDataRate defaults 240 bytes/second with five-second grace.", "components": ["source"], "sources": ["source:s903da00d32b5"], "status": "REASONED"},
-    "rate-scope": {"text": "HTTP/2 per-request rate adjustments differ from HTTP/1.x; several timeout/rate checks are disabled under a debugger.", "components": ["net10"], "sources": ["net10:s1ce47370d948"], "status": "REASONED"},
-    "h2-streams": {"text": "NET 10 HTTP/2 MaxStreamsPerConnection defaults 100.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
-    "h2-table": {"text": "NET 10 HTTP/2 HeaderTableSize defaults 4096 bytes.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
-    "h2-frame": {"text": "NET 10 HTTP/2 MaxFrameSize defaults 16384 bytes.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
-    "h2-header": {"text": "NET 10 HTTP/2 MaxRequestHeaderFieldSize defaults 32768 bytes, not the older 8192.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
-    "h2-connection-window": {"text": "NET 10 HTTP/2 InitialConnectionWindowSize defaults 1048576 bytes, not the older 131072.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
-    "h2-stream-window": {"text": "NET 10 HTTP/2 InitialStreamWindowSize defaults 786432 bytes, not the older 98304.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
-    "h2-ping-delay": {"text": "NET 10 HTTP/2 KeepAlivePingDelay defaults TimeSpan.MaxValue, disabling pings.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
-    "h2-ping-timeout": {"text": "NET 10 HTTP/2 KeepAlivePingTimeout defaults 20 seconds.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
-    "h2-scope": {"text": "Flow-control windows bound outstanding buffered data, not total bodies; Http2Limits do not configure HTTP/3.", "components": ["net10", "source"], "sources": ["net10:s1ce47370d948", "source:sc00d8d67e93b"], "status": "REASONED"},
-    "key-defaults": {"text": "Data Protection key persistence depends on hosting: user profiles, IIS or Azure may persist; process-only fallback and disposable container layers can lose keys.", "components": ["net10"], "sources": ["net10:s66f1ab4555d6"], "status": "REASONED"},
-    "key-persistence": {"text": "Persist keys durably with restricted permissions; replicas share repository, application name and decryption certificates, not merely identical directory names.", "components": ["net10"], "sources": ["net10:s6682926c8da7", "net10:sd635cefc0a9f"], "status": "REASONED"},
-    "key-encryption": {"text": "Choosing an explicit repository disables automatic at-rest encryption; configure ProtectKeysWithCertificate and retain needed keys/certificates.", "components": ["net10"], "sources": ["net10:s6682926c8da7", "net10:sd635cefc0a9f"], "status": "REASONED"},
-    "key-isolation": {"text": "Separate repositories, permissions and certificate private keys for untrusted apps; SetApplicationName is not isolation from another holder of master keys.", "components": ["net10"], "sources": ["net10:s6682926c8da7"], "status": "REASONED"},
-    "cookie-sharing": {"text": "Cookie continuity also needs compatible cookie names, schemes, stores and identity-validation configuration.", "components": ["net10"], "sources": ["net10:s9463626a3d0e"], "status": "REASONED"},
-    "server-header": {"text": "NET 10 AddServerHeader defaults true; set false and check all hosting layers since header removal does not control access.", "components": ["source"], "sources": ["source:s18c44d6c2fb7"], "status": "REASONED"},
-    "iis-headers": {"text": "Remove IIS X-Powered-By and set removeServerHeader; the latter requires IIS 10 with Windows Server/Windows 10 version 1709 or later.", "components": ["iis", "iis-rolling"], "sources": ["iis-rolling:s267eddd43502", "iis:sb2eac755b583"], "status": "REASONED"},
-    "openapi": {"text": "NET 10 built-in OpenAPI requires AddOpenApi before Build; map only in Development or RequireAuthorization with an appropriate policy.", "components": ["net10"], "sources": ["net10:s1d58219cedec"], "status": "REASONED"},
-    "swagger": {"text": "Built-in OpenAPI has no Swagger UI; keep separately added UseSwaggerUI in Development or protect it separately from the document.", "components": ["net10"], "sources": ["net10:s1f9d4c5e975c"], "status": "REASONED"},
-    "health": {"text": "Register health checks and authorize /healthz; monitoring must authenticate or use a deliberately controlled minimal liveness route.", "components": ["net10"], "sources": ["net10:sc41b77cc06c8"], "status": "REASONED"},
-    "health-host": {"text": "RequireHost checks a spoofable Host header and is not a network or authentication boundary.", "components": ["net10"], "sources": ["net10:sc41b77cc06c8"], "status": "REASONED"},
-    "host-filter": {"text": "AllowedHosts uses semicolon-separated names without ports; wildcard permits all. It neither authenticates nor binds interfaces; forwarded-host allowlisting is separate.", "components": ["net10"], "sources": ["net10:s5701d26de241", "net10:se101626c29d6"], "status": "REASONED"},
-    "verify-redirect": {"text": "HTTP should return 307/308 with HTTPS Location.", "components": ["docs"], "sources": ["docs:s8c762260991c"], "status": "REASONED", "verify": [1]},
-    "verify-tls": {"text": "HTTPS must validate without -k and show HSTS.", "components": ["docs", "net10"], "sources": ["docs:s8c762260991c", "net10:s74dcd6a72d63"], "status": "REASONED", "verify": [1]},
-    "verify-api": {"text": "Known protected NET 10 cookie API endpoints return 401 anonymous and 403 forbidden; pages/OIDC/custom handlers may redirect. Confirm authorized success first.", "components": ["net10"], "sources": ["net10:s837df4b1657f"], "status": "REASONED", "verify": [1]},
-    "verify-bind": {"text": "Inspect every listener for 127.0.0.1 and ::1 behind the proxy.", "components": ["docs", "net10"], "sources": ["docs:s74dcd6a72d63", "net10:s74dcd6a72d63"], "status": "REASONED", "verify": [1]},
-    "verify-errors": {"text": "Controlled exception should expose marker/detail under development and generic 500 under production; inspect plain/HTML bodies and correlate handler execution.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1"], "status": "REASONED", "verify": [2]},
-    "verify-body": {"text": "Body-consuming test route returns 204 at 1048576 bytes, 413 at 1048577; raised limit permits both. Isolate other limits and distinguish upstream rejection.", "components": ["net10"], "sources": ["net10:s1ce47370d948"], "status": "REASONED", "verify": [3]},
-    "verify-aux": {"text": "Probe actual diagnostic/OpenAPI/UI/health routes anonymously, then authorized; Development-only routes should be absent and retained routes protected. Status alone does not prove authorization.", "components": ["net10"], "sources": ["net10:s1d58219cedec", "net10:s1f9d4c5e975c", "net10:sc41b77cc06c8"], "status": "REASONED", "verify": [4]},
-    "verify-migrations": {"text": "GET cannot prove migrations middleware absent; inspect registration and test actual behavior only in isolated database infrastructure.", "components": ["net10"], "sources": ["net10:s9d290374f4e8"], "status": "REASONED"},
-    "verify-headers": {"text": "Inspect public success, redirect and error responses for absent Server/X-Powered-By after hosting-layer removal where supported.", "components": ["source", "iis", "iis-rolling"], "sources": ["source:s18c44d6c2fb7", "iis-rolling:s267eddd43502", "iis:sb2eac755b583"], "status": "REASONED", "verify": [5]},
-    "verify-cookie": {"text": "Anonymous cookie API control returns 401; original cookie keeps the same identity with 200 before/after restart and across confirmed replicas, before expiry and without identity changes.", "components": ["net10"], "sources": ["net10:s837df4b1657f", "net10:s66f1ab4555d6", "net10:s9463626a3d0e"], "status": "REASONED", "verify": [6]},
-    "verify-antiforgery": {"text": "Retain an antiforgery token and cookie across restart and submit without replacement; key loss can invalidate it independently of login recovery.", "components": ["net10"], "sources": ["net10:s6682926c8da7", "net10:s66f1ab4555d6"], "status": "REASONED"}
-  }
-}
----
 # ASP.NET Core and Kestrel: TLS and authentication
 
-<!-- version-basis:start -->
-**Version basis**
+Written against ASP.NET Core documentation .NET 10, ASP.NET Core rate-limiter minimum .NET 7, ASP.NET Core .NET 10, ASP.NET Core source v10.0.0, ASP.NET Core proxy hardening 8.0.17, NET runtime source v10.0.0, WebApplicationBuilder precedence .NET 7, and OpenSSL documentation 3.0, plus 1 more recorded basis; 1 further source is pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 71 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- docs: ASP.NET Core documentation (.NET 10)
-- rate-min: ASP.NET Core rate-limiter minimum (.NET 7)
-- net10: ASP.NET Core (.NET 10)
-- source: ASP.NET Core source (v10.0.0)
-- proxy-fix: ASP.NET Core proxy hardening (8.0.17)
-- runtime: NET runtime source (v10.0.0)
-- openssl: OpenSSL documentation (3.0)
-- precedence: WebApplicationBuilder precedence (.NET 7)
-- iis: IIS documentation (IIS 10)
-- iis-rolling: IIS documentation (rolling) (unknown)
-- dotnet-rolling: .NET documentation (rolling) (unknown)
-- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
-
-Claims (full source mapping in the front matter):
-
-- tls (REASONED; docs, net10): Kestrel serves wildcard HTTP 80 and HTTPS 443 with PKCS12 or PEM Path/KeyPath; supply certificate passwords from environment or a secret store.
-- tls-protocols (REASONED; net10): Default SslProtocols.None delegates to the OS; example explicitly permits only TLS 1.2 and 1.3.
-- hsts-age (REASONED; source): NET 10 HSTS defaults to 30 days; example selects 365 days outside Development.
-- hsts-subdomains (REASONED; source): HSTS IncludeSubDomains defaults false; example enables it only when all affected subdomains support HTTPS.
-- hsts-preload (REASONED; source): HSTS Preload defaults false.
-- redirect (REASONED; docs): UseHttpsRedirection needs an HTTPS port via ASPNETCORE_HTTPS_PORT=443 or HttpsPort.
-- proxy-bind (REASONED; docs, net10): ListenLocalhost(5000), or localhost:5000 URLs, binds behind a same-host proxy; process forwarded headers first.
-- proxy-default (REASONED; net10, source): NET 10 trusts ::1 and 127.0.0.0/8 by default; adding 127.0.0.1 does not narrow that list.
-- proxy-networks (REASONED; net10, source): NET 10 replaces obsolete KnownNetworks with KnownIPNetworks/System.Net.IPNetwork; narrow both lists together and never leave both empty.
-- proxy-hardening (REASONED; net10, proxy-fix): Unknown-proxy headers are ignored in 8.0.17 and 9.0.6 and NET 10, even without X-Forwarded-For processing; register the real proxy.
-- proxy-https (REASONED; docs): When the proxy handles redirects/HSTS, omit the app middleware; missing forwarded-header handling can cause redirect loops.
-- password (REASONED; docs): Identity uses PBKDF2 with default 100000 iterations; keep its password hasher.
-- lockout (REASONED; net10): Configure five failures, five-minute lockout and allowance for new users; PasswordSignInAsync must use lockoutOnFailure=true, while the template uses false.
-- cookies (REASONED; docs, net10): Configure HttpOnly, SecurePolicy.Always, SameSite=Lax and eight-hour expiry; cookie-only auth uses the same options.
-- samesite (REASONED; net10): NET 10 auth cookie defaults Lax; Strict can suppress cross-site app cookies without universally breaking OAuth/OIDC callbacks.
-- remote-cookies (REASONED; net10): Correlation and OIDC nonce cookies separately default None; preserve secure cross-site settings and avoid global rewriting.
-- authorization (REASONED; docs): Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages.
-- login-limit (REASONED; rate-min): NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing.
-- oidc (REASONED; docs): Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json.
-- mfa (REASONED; docs, cf-docs): Enforce MFA at the identity provider or fronting layer; this guide recommends Cloudflare Access independent MFA for a self-hosted public app only with effective MFA enforcement (policy over application over organization) and no origin bypass. The cited pages do not establish this deployment's enforcement or origin isolation.
-- client-validation (REASONED; docs): Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback.
-- client-ca (REASONED; runtime, openssl, dotnet-rolling): On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots.
-- developer-errors (REASONED; net10): Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment.
-- error-handler (REASONED; net10): Install UseExceptionHandler early after forwarding; provide a generic /Error route supporting failed methods/anonymous requests and preserve intentional 413 responses.
-- environment (REASONED; net10, precedence): Production is default absent overrides; NET 7+ WebApplicationBuilder prioritizes command-line/DOTNET_ over ASPNETCORE_, while older WebHost differs.
-- database-diagnostics (REASONED; net10): Register database developer exception filters before Build and migrations middleware after Build only in Development; migrations execute database changes.
-- body-limit (REASONED; net10, source): NET 10 Kestrel total body default is 30000000 bytes, null unlimited; example lowers it to 1048576 bytes.
-- body-override (REASONED; net10): RequestSizeLimit overrides before body reading; DisableRequestSizeLimit removes the protection.
-- multipart (REASONED; source, net10): MultipartBodyLengthLimit defaults 134217728 bytes per parsed section; example uses 1048576. Framing consumes total allowance and parsing failure need not return 413.
-- iis-body (REASONED; net10): In-process IISServerOptions body default is 30000000, separately from IIS maxAllowedContentLength default 30000000; out-of-process IIS disables Kestrel body limiting.
-- keepalive (REASONED; net10, source): Kestrel KeepAliveTimeout defaults to 130 seconds; it is not a total execution deadline.
-- header-timeout (REASONED; net10, source): Kestrel RequestHeadersTimeout defaults to 30 seconds; it is not a total execution deadline.
-- connections (REASONED; source): MaxConcurrentConnections defaults null/unlimited; example caps ordinary connections at 100.
-- upgraded (REASONED; net10, source): Upgraded connections leave the ordinary count; MaxConcurrentUpgradedConnections separately defaults null.
-- header-count (REASONED; source): Kestrel MaxRequestHeaderCount defaults 100.
-- header-size (REASONED; source): Kestrel MaxRequestHeadersTotalSize defaults 32768 bytes.
-- request-rate (REASONED; source): MinRequestBodyDataRate defaults 240 bytes/second with five-second grace.
-- response-rate (REASONED; source): MinResponseDataRate defaults 240 bytes/second with five-second grace.
-- rate-scope (REASONED; net10): HTTP/2 per-request rate adjustments differ from HTTP/1.x; several timeout/rate checks are disabled under a debugger.
-- h2-streams (REASONED; source): NET 10 HTTP/2 MaxStreamsPerConnection defaults 100.
-- h2-table (REASONED; source): NET 10 HTTP/2 HeaderTableSize defaults 4096 bytes.
-- h2-frame (REASONED; source): NET 10 HTTP/2 MaxFrameSize defaults 16384 bytes.
-- h2-header (REASONED; source): NET 10 HTTP/2 MaxRequestHeaderFieldSize defaults 32768 bytes, not the older 8192.
-- h2-connection-window (REASONED; source): NET 10 HTTP/2 InitialConnectionWindowSize defaults 1048576 bytes, not the older 131072.
-- h2-stream-window (REASONED; source): NET 10 HTTP/2 InitialStreamWindowSize defaults 786432 bytes, not the older 98304.
-- h2-ping-delay (REASONED; source): NET 10 HTTP/2 KeepAlivePingDelay defaults TimeSpan.MaxValue, disabling pings.
-- h2-ping-timeout (REASONED; source): NET 10 HTTP/2 KeepAlivePingTimeout defaults 20 seconds.
-- h2-scope (REASONED; net10, source): Flow-control windows bound outstanding buffered data, not total bodies; Http2Limits do not configure HTTP/3.
-- key-defaults (REASONED; net10): Data Protection key persistence depends on hosting: user profiles, IIS or Azure may persist; process-only fallback and disposable container layers can lose keys.
-- key-persistence (REASONED; net10): Persist keys durably with restricted permissions; replicas share repository, application name and decryption certificates, not merely identical directory names.
-- key-encryption (REASONED; net10): Choosing an explicit repository disables automatic at-rest encryption; configure ProtectKeysWithCertificate and retain needed keys/certificates.
-- key-isolation (REASONED; net10): Separate repositories, permissions and certificate private keys for untrusted apps; SetApplicationName is not isolation from another holder of master keys.
-- cookie-sharing (REASONED; net10): Cookie continuity also needs compatible cookie names, schemes, stores and identity-validation configuration.
-- server-header (REASONED; source): NET 10 AddServerHeader defaults true; set false and check all hosting layers since header removal does not control access.
-- iis-headers (REASONED; iis, iis-rolling): Remove IIS X-Powered-By and set removeServerHeader; the latter requires IIS 10 with Windows Server/Windows 10 version 1709 or later.
-- openapi (REASONED; net10): NET 10 built-in OpenAPI requires AddOpenApi before Build; map only in Development or RequireAuthorization with an appropriate policy.
-- swagger (REASONED; net10): Built-in OpenAPI has no Swagger UI; keep separately added UseSwaggerUI in Development or protect it separately from the document.
-- health (REASONED; net10): Register health checks and authorize /healthz; monitoring must authenticate or use a deliberately controlled minimal liveness route.
-- health-host (REASONED; net10): RequireHost checks a spoofable Host header and is not a network or authentication boundary.
-- host-filter (REASONED; net10): AllowedHosts uses semicolon-separated names without ports; wildcard permits all. It neither authenticates nor binds interfaces; forwarded-host allowlisting is separate.
-- verify-redirect (REASONED; docs): HTTP should return 307/308 with HTTPS Location.
-- verify-tls (REASONED; docs, net10): HTTPS must validate without -k and show HSTS.
-- verify-api (REASONED; net10): Known protected NET 10 cookie API endpoints return 401 anonymous and 403 forbidden; pages/OIDC/custom handlers may redirect. Confirm authorized success first.
-- verify-bind (REASONED; docs, net10): Inspect every listener for 127.0.0.1 and ::1 behind the proxy.
-- verify-errors (REASONED; net10): Controlled exception should expose marker/detail under development and generic 500 under production; inspect plain/HTML bodies and correlate handler execution.
-- verify-body (REASONED; net10): Body-consuming test route returns 204 at 1048576 bytes, 413 at 1048577; raised limit permits both. Isolate other limits and distinguish upstream rejection.
-- verify-aux (REASONED; net10): Probe actual diagnostic/OpenAPI/UI/health routes anonymously, then authorized; Development-only routes should be absent and retained routes protected. Status alone does not prove authorization.
-- verify-migrations (REASONED; net10): GET cannot prove migrations middleware absent; inspect registration and test actual behavior only in isolated database infrastructure.
-- verify-headers (REASONED; source, iis, iis-rolling): Inspect public success, redirect and error responses for absent Server/X-Powered-By after hosting-layer removal where supported.
-- verify-cookie (REASONED; net10): Anonymous cookie API control returns 401; original cookie keeps the same identity with 200 before/after restart and across confirmed replicas, before expiry and without identity changes.
-- verify-antiforgery (REASONED; net10): Retain an antiforgery token and cookie across restart and submit without replacement; key loss can invalidate it independently of login recovery.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Preferred production layout: bind Kestrel to loopback and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). Kestrel can also terminate TLS itself, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
@@ -752,3 +456,325 @@ Also retain an antiforgery token and its accompanying cookie across a restart, t
 - Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, independent MFA and supported TOTP/WebAuthn factors (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24
 - Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, self-hosted public application authentication layer (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16
 - Cloudflare documentation `c896795b8e8bab68d05ae78d64c9cbcda1fdb104`, publicly routable origin protection requirement (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L48-L48
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/dotnet.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- docs: ASP.NET Core documentation (.NET 10)
+- rate-min: ASP.NET Core rate-limiter minimum (.NET 7)
+- net10: ASP.NET Core (.NET 10)
+- source: ASP.NET Core source (v10.0.0)
+- proxy-fix: ASP.NET Core proxy hardening (8.0.17)
+- runtime: NET runtime source (v10.0.0)
+- precedence: WebApplicationBuilder precedence (.NET 7)
+- dotnet-rolling: .NET documentation (rolling) (unknown)
+- openssl: OpenSSL documentation (3.0)
+- iis: IIS documentation (IIS 10)
+- iis-rolling: IIS documentation (rolling) (unknown)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+
+Claims (full source mapping in the JSON block below):
+
+- tls (REASONED; docs, net10): Kestrel serves wildcard HTTP 80 and HTTPS 443 with PKCS12 or PEM Path/KeyPath; supply certificate passwords from environment or a secret store.
+- tls-protocols (REASONED; net10): Default SslProtocols.None delegates to the OS; example explicitly permits only TLS 1.2 and 1.3.
+- hsts-age (REASONED; source): NET 10 HSTS defaults to 30 days; example selects 365 days outside Development.
+- hsts-subdomains (REASONED; source): HSTS IncludeSubDomains defaults false; example enables it only when all affected subdomains support HTTPS.
+- hsts-preload (REASONED; source): HSTS Preload defaults false.
+- redirect (REASONED; docs): UseHttpsRedirection needs an HTTPS port via ASPNETCORE_HTTPS_PORT=443 or HttpsPort.
+- proxy-bind (REASONED; docs, net10): ListenLocalhost(5000), or localhost:5000 URLs, binds behind a same-host proxy; process forwarded headers first.
+- proxy-default (REASONED; net10, source): NET 10 trusts ::1 and 127.0.0.0/8 by default; adding 127.0.0.1 does not narrow that list.
+- proxy-networks (REASONED; net10, source): NET 10 replaces obsolete KnownNetworks with KnownIPNetworks/System.Net.IPNetwork; narrow both lists together and never leave both empty.
+- proxy-hardening (REASONED; net10, proxy-fix): Unknown-proxy headers are ignored in 8.0.17 and 9.0.6 and NET 10, even without X-Forwarded-For processing; register the real proxy.
+- proxy-https (REASONED; docs): When the proxy handles redirects/HSTS, omit the app middleware; missing forwarded-header handling can cause redirect loops.
+- password (REASONED; docs): Identity uses PBKDF2 with default 100000 iterations; keep its password hasher.
+- lockout (REASONED; net10): Configure five failures, five-minute lockout and allowance for new users; PasswordSignInAsync must use lockoutOnFailure=true, while the template uses false.
+- cookies (REASONED; docs, net10): Configure HttpOnly, SecurePolicy.Always, SameSite=Lax and eight-hour expiry; cookie-only auth uses the same options.
+- samesite (REASONED; net10): NET 10 auth cookie defaults Lax; Strict can suppress cross-site app cookies without universally breaking OAuth/OIDC callbacks.
+- remote-cookies (REASONED; net10): Correlation and OIDC nonce cookies separately default None; preserve secure cross-site settings and avoid global rewriting.
+- authorization (REASONED; docs): Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages.
+- login-limit (REASONED; rate-min): NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing.
+- oidc (REASONED; docs): Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json.
+- mfa (REASONED; docs, cf-docs): Enforce MFA at the identity provider or fronting layer; this guide recommends Cloudflare Access independent MFA for a self-hosted public app only with effective MFA enforcement (policy over application over organization) and no origin bypass. The cited pages do not establish this deployment's enforcement or origin isolation.
+- client-validation (REASONED; docs): Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback.
+- client-ca (REASONED; runtime, openssl, dotnet-rolling): On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots.
+- developer-errors (REASONED; net10): Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment.
+- error-handler (REASONED; net10): Install UseExceptionHandler early after forwarding; provide a generic /Error route supporting failed methods/anonymous requests and preserve intentional 413 responses.
+- environment (REASONED; net10, precedence): Production is default absent overrides; NET 7+ WebApplicationBuilder prioritizes command-line/DOTNET_ over ASPNETCORE_, while older WebHost differs.
+- database-diagnostics (REASONED; net10): Register database developer exception filters before Build and migrations middleware after Build only in Development; migrations execute database changes.
+- body-limit (REASONED; net10, source): NET 10 Kestrel total body default is 30000000 bytes, null unlimited; example lowers it to 1048576 bytes.
+- body-override (REASONED; net10): RequestSizeLimit overrides before body reading; DisableRequestSizeLimit removes the protection.
+- multipart (REASONED; source, net10): MultipartBodyLengthLimit defaults 134217728 bytes per parsed section; example uses 1048576. Framing consumes total allowance and parsing failure need not return 413.
+- iis-body (REASONED; net10): In-process IISServerOptions body default is 30000000, separately from IIS maxAllowedContentLength default 30000000; out-of-process IIS disables Kestrel body limiting.
+- keepalive (REASONED; net10, source): Kestrel KeepAliveTimeout defaults to 130 seconds; it is not a total execution deadline.
+- header-timeout (REASONED; net10, source): Kestrel RequestHeadersTimeout defaults to 30 seconds; it is not a total execution deadline.
+- connections (REASONED; source): MaxConcurrentConnections defaults null/unlimited; example caps ordinary connections at 100.
+- upgraded (REASONED; net10, source): Upgraded connections leave the ordinary count; MaxConcurrentUpgradedConnections separately defaults null.
+- header-count (REASONED; source): Kestrel MaxRequestHeaderCount defaults 100.
+- header-size (REASONED; source): Kestrel MaxRequestHeadersTotalSize defaults 32768 bytes.
+- request-rate (REASONED; source): MinRequestBodyDataRate defaults 240 bytes/second with five-second grace.
+- response-rate (REASONED; source): MinResponseDataRate defaults 240 bytes/second with five-second grace.
+- rate-scope (REASONED; net10): HTTP/2 per-request rate adjustments differ from HTTP/1.x; several timeout/rate checks are disabled under a debugger.
+- h2-streams (REASONED; source): NET 10 HTTP/2 MaxStreamsPerConnection defaults 100.
+- h2-table (REASONED; source): NET 10 HTTP/2 HeaderTableSize defaults 4096 bytes.
+- h2-frame (REASONED; source): NET 10 HTTP/2 MaxFrameSize defaults 16384 bytes.
+- h2-header (REASONED; source): NET 10 HTTP/2 MaxRequestHeaderFieldSize defaults 32768 bytes, not the older 8192.
+- h2-connection-window (REASONED; source): NET 10 HTTP/2 InitialConnectionWindowSize defaults 1048576 bytes, not the older 131072.
+- h2-stream-window (REASONED; source): NET 10 HTTP/2 InitialStreamWindowSize defaults 786432 bytes, not the older 98304.
+- h2-ping-delay (REASONED; source): NET 10 HTTP/2 KeepAlivePingDelay defaults TimeSpan.MaxValue, disabling pings.
+- h2-ping-timeout (REASONED; source): NET 10 HTTP/2 KeepAlivePingTimeout defaults 20 seconds.
+- h2-scope (REASONED; net10, source): Flow-control windows bound outstanding buffered data, not total bodies; Http2Limits do not configure HTTP/3.
+- key-defaults (REASONED; net10): Data Protection key persistence depends on hosting: user profiles, IIS or Azure may persist; process-only fallback and disposable container layers can lose keys.
+- key-persistence (REASONED; net10): Persist keys durably with restricted permissions; replicas share repository, application name and decryption certificates, not merely identical directory names.
+- key-encryption (REASONED; net10): Choosing an explicit repository disables automatic at-rest encryption; configure ProtectKeysWithCertificate and retain needed keys/certificates.
+- key-isolation (REASONED; net10): Separate repositories, permissions and certificate private keys for untrusted apps; SetApplicationName is not isolation from another holder of master keys.
+- cookie-sharing (REASONED; net10): Cookie continuity also needs compatible cookie names, schemes, stores and identity-validation configuration.
+- server-header (REASONED; source): NET 10 AddServerHeader defaults true; set false and check all hosting layers since header removal does not control access.
+- iis-headers (REASONED; iis, iis-rolling): Remove IIS X-Powered-By and set removeServerHeader; the latter requires IIS 10 with Windows Server/Windows 10 version 1709 or later.
+- openapi (REASONED; net10): NET 10 built-in OpenAPI requires AddOpenApi before Build; map only in Development or RequireAuthorization with an appropriate policy.
+- swagger (REASONED; net10): Built-in OpenAPI has no Swagger UI; keep separately added UseSwaggerUI in Development or protect it separately from the document.
+- health (REASONED; net10): Register health checks and authorize /healthz; monitoring must authenticate or use a deliberately controlled minimal liveness route.
+- health-host (REASONED; net10): RequireHost checks a spoofable Host header and is not a network or authentication boundary.
+- host-filter (REASONED; net10): AllowedHosts uses semicolon-separated names without ports; wildcard permits all. It neither authenticates nor binds interfaces; forwarded-host allowlisting is separate.
+- verify-redirect (REASONED; docs): HTTP should return 307/308 with HTTPS Location.
+- verify-tls (REASONED; docs, net10): HTTPS must validate without -k and show HSTS.
+- verify-api (REASONED; net10): Known protected NET 10 cookie API endpoints return 401 anonymous and 403 forbidden; pages/OIDC/custom handlers may redirect. Confirm authorized success first.
+- verify-bind (REASONED; docs, net10): Inspect every listener for 127.0.0.1 and ::1 behind the proxy.
+- verify-errors (REASONED; net10): Controlled exception should expose marker/detail under development and generic 500 under production; inspect plain/HTML bodies and correlate handler execution.
+- verify-body (REASONED; net10): Body-consuming test route returns 204 at 1048576 bytes, 413 at 1048577; raised limit permits both. Isolate other limits and distinguish upstream rejection.
+- verify-aux (REASONED; net10): Probe actual diagnostic/OpenAPI/UI/health routes anonymously, then authorized; Development-only routes should be absent and retained routes protected. Status alone does not prove authorization.
+- verify-migrations (REASONED; net10): GET cannot prove migrations middleware absent; inspect registration and test actual behavior only in isolated database infrastructure.
+- verify-headers (REASONED; source, iis, iis-rolling): Inspect public success, redirect and error responses for absent Server/X-Powered-By after hosting-layer removal where supported.
+- verify-cookie (REASONED; net10): Anonymous cookie API control returns 401; original cookie keeps the same identity with 200 before/after restart and across confirmed replicas, before expiry and without identity changes.
+- verify-antiforgery (REASONED; net10): Retain an antiforgery token and cookie across restart and submit without replacement; key loss can invalidate it independently of login recovery.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-05",
+  "documentation_checked": "2026-09",
+  "body_sha256": "10f455bd5e1e9cc54ea69a2d50883c9cba79de0ada5085b56891741f8232ee5d",
+  "components": {
+    "docs": {
+      "name": "ASP.NET Core documentation",
+      "basis": ".NET 10",
+      "sources": {
+        "s8c762260991c": "https://learn.microsoft.com/en-us/aspnet/core/security/enforcing-ssl?view=aspnetcore-10.0",
+        "s74dcd6a72d63": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0",
+        "s5701d26de241": "https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0",
+        "s3790c49f70b9": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-10.0",
+        "s9d10c561bb48": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.passwordhasheroptions?view=aspnetcore-10.0",
+        "sa3c22a38f4cb": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0",
+        "sb6780977fa3f": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.cookiesecurepolicy?view=aspnetcore-10.0",
+        "s592dc85bb71f": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-oidc-web-authentication?view=aspnetcore-10.0",
+        "s6afc0255098f": "https://learn.microsoft.com/en-us/dotnet/api/system.net.http.httpclienthandler.dangerousacceptanyservercertificatevalidator?view=net-10.0",
+        "s2d5a930aac35": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/mfa?view=aspnetcore-10.0"
+      }
+    },
+    "rate-min": {
+      "name": "ASP.NET Core rate-limiter minimum",
+      "basis": ".NET 7",
+      "sources": {
+        "sd3fef8f45066": "https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit"
+      }
+    },
+    "net10": {
+      "name": "ASP.NET Core",
+      "basis": ".NET 10",
+      "sources": {
+        "s74dcd6a72d63": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-10.0",
+        "s5701d26de241": "https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0",
+        "s0d7c367ac06f": "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-configuration?view=aspnetcore-10.0",
+        "sc0654e58fc4c": "https://learn.microsoft.com/en-us/aspnet/core/security/samesite?view=aspnetcore-10.0",
+        "s837df4b1657f": "https://learn.microsoft.com/en-us/aspnet/core/breaking-changes/10/cookie-authentication-api-endpoints?view=aspnetcore-10.0",
+        "s2f7e6a8213f1": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-10.0",
+        "s61afb89034f8": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/environments?view=aspnetcore-10.0",
+        "s9d290374f4e8": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.builder.migrationsendpointextensions.usemigrationsendpoint?view=aspnetcore-10.0",
+        "s1ce47370d948": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/options?view=aspnetcore-10.0",
+        "s55f298bf0048": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.disablerequestsizelimitattribute?view=aspnetcore-10.0",
+        "s792d3e8f3e42": "https://learn.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads?view=aspnetcore-10.0",
+        "s529a3d7cce08": "https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/iis/in-process-hosting?view=aspnetcore-10.0",
+        "s6682926c8da7": "https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?view=aspnetcore-10.0",
+        "s66f1ab4555d6": "https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/default-settings?view=aspnetcore-10.0",
+        "sd635cefc0a9f": "https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.dataprotection.dataprotectionbuilderextensions.protectkeyswithcertificate?view=aspnetcore-10.0",
+        "s9463626a3d0e": "https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-10.0",
+        "s1d58219cedec": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/aspnetcore-openapi?view=aspnetcore-10.0",
+        "s1f9d4c5e975c": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/using-openapi-documents?view=aspnetcore-10.0",
+        "sc41b77cc06c8": "https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-10.0",
+        "se101626c29d6": "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/host-filtering?view=aspnetcore-10.0"
+      }
+    },
+    "source": {
+      "name": "ASP.NET Core source",
+      "basis": "v10.0.0",
+      "sources": {
+        "sb62cff70e3b8": "https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Middleware/HttpsPolicy/src/HstsOptions.cs",
+        "sfc86e3f62243": "https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Middleware/HttpOverrides/src/ForwardedHeadersOptions.cs",
+        "s903da00d32b5": "https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/KestrelServerLimits.cs",
+        "sc00d8d67e93b": "https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/Http2Limits.cs",
+        "s67f347ba7947": "https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Http/Http/src/Features/FormOptions.cs",
+        "s18c44d6c2fb7": "https://raw.githubusercontent.com/dotnet/aspnetcore/v10.0.0/src/Servers/Kestrel/Core/src/KestrelServerOptions.cs"
+      }
+    },
+    "proxy-fix": {
+      "name": "ASP.NET Core proxy hardening",
+      "basis": "8.0.17",
+      "sources": {
+        "s2864662bcd21": "https://learn.microsoft.com/en-us/aspnet/core/breaking-changes/8/forwarded-headers-unknown-proxies?view=aspnetcore-10.0"
+      }
+    },
+    "runtime": {
+      "name": "NET runtime source",
+      "basis": "v10.0.0",
+      "sources": {
+        "s29ee940c94b9": "https://raw.githubusercontent.com/dotnet/runtime/v10.0.0/src/native/libs/System.Security.Cryptography.Native/pal_x509_root.c"
+      }
+    },
+    "precedence": {
+      "name": "WebApplicationBuilder precedence",
+      "basis": ".NET 7",
+      "sources": {
+        "s10d46bc97fef": "https://learn.microsoft.com/en-us/aspnet/core/breaking-changes/7/environment-variable-precedence?view=aspnetcore-10.0"
+      }
+    },
+    "dotnet-rolling": {
+      "name": ".NET documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s640872a17a8a": "https://learn.microsoft.com/en-us/dotnet/standard/security/cross-platform-cryptography"
+      }
+    },
+    "openssl": {
+      "name": "OpenSSL documentation",
+      "basis": "3.0",
+      "sources": {
+        "scac6dada5f6a": "https://docs.openssl.org/3.0/man3/SSL_CTX_load_verify_locations/"
+      }
+    },
+    "iis": {
+      "name": "IIS documentation",
+      "basis": "IIS 10",
+      "sources": {
+        "sb2eac755b583": "https://learn.microsoft.com/en-us/iis/configuration/system.webserver/security/requestfiltering/"
+      }
+    },
+    "iis-rolling": {
+      "name": "IIS documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s267eddd43502": "https://learn.microsoft.com/en-us/iis/configuration/system.webserver/httpprotocol/customheaders/"
+      }
+    },
+    "cf-docs": {
+      "name": "Cloudflare documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "s6f6104362214": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85",
+        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24",
+        "sfddb92e438ca": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16",
+        "s863803bd9a1f": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L48-L48"
+      }
+    }
+  },
+  "claims": {
+    "tls": {"text": "Kestrel serves wildcard HTTP 80 and HTTPS 443 with PKCS12 or PEM Path/KeyPath; supply certificate passwords from environment or a secret store.", "components": ["docs", "net10"], "sources": ["docs:s74dcd6a72d63", "net10:s74dcd6a72d63"], "status": "REASONED"},
+    "tls-protocols": {"text": "Default SslProtocols.None delegates to the OS; example explicitly permits only TLS 1.2 and 1.3.", "components": ["net10"], "sources": ["net10:s74dcd6a72d63"], "status": "REASONED"},
+    "hsts-age": {"text": "NET 10 HSTS defaults to 30 days; example selects 365 days outside Development.", "components": ["source"], "sources": ["source:sb62cff70e3b8"], "status": "REASONED"},
+    "hsts-subdomains": {"text": "HSTS IncludeSubDomains defaults false; example enables it only when all affected subdomains support HTTPS.", "components": ["source"], "sources": ["source:sb62cff70e3b8"], "status": "REASONED"},
+    "hsts-preload": {"text": "HSTS Preload defaults false.", "components": ["source"], "sources": ["source:sb62cff70e3b8"], "status": "REASONED"},
+    "redirect": {"text": "UseHttpsRedirection needs an HTTPS port via ASPNETCORE_HTTPS_PORT=443 or HttpsPort.", "components": ["docs"], "sources": ["docs:s8c762260991c"], "status": "REASONED"},
+    "proxy-bind": {"text": "ListenLocalhost(5000), or localhost:5000 URLs, binds behind a same-host proxy; process forwarded headers first.", "components": ["docs", "net10"], "sources": ["docs:s74dcd6a72d63", "net10:s5701d26de241"], "status": "REASONED"},
+    "proxy-default": {"text": "NET 10 trusts ::1 and 127.0.0.0/8 by default; adding 127.0.0.1 does not narrow that list.", "components": ["net10", "source"], "sources": ["net10:s5701d26de241", "source:sfc86e3f62243"], "status": "REASONED"},
+    "proxy-networks": {"text": "NET 10 replaces obsolete KnownNetworks with KnownIPNetworks/System.Net.IPNetwork; narrow both lists together and never leave both empty.", "components": ["net10", "source"], "sources": ["net10:s5701d26de241", "source:sfc86e3f62243"], "status": "REASONED"},
+    "proxy-hardening": {"text": "Unknown-proxy headers are ignored in 8.0.17 and 9.0.6 and NET 10, even without X-Forwarded-For processing; register the real proxy.", "components": ["net10", "proxy-fix"], "sources": ["net10:s5701d26de241", "proxy-fix:s2864662bcd21"], "status": "REASONED"},
+    "proxy-https": {"text": "When the proxy handles redirects/HSTS, omit the app middleware; missing forwarded-header handling can cause redirect loops.", "components": ["docs"], "sources": ["docs:s8c762260991c", "docs:s5701d26de241"], "status": "REASONED"},
+    "password": {"text": "Identity uses PBKDF2 with default 100000 iterations; keep its password hasher.", "components": ["docs"], "sources": ["docs:s3790c49f70b9", "docs:s9d10c561bb48"], "status": "REASONED"},
+    "lockout": {"text": "Configure five failures, five-minute lockout and allowance for new users; PasswordSignInAsync must use lockoutOnFailure=true, while the template uses false.", "components": ["net10"], "sources": ["net10:s0d7c367ac06f"], "status": "REASONED"},
+    "cookies": {"text": "Configure HttpOnly, SecurePolicy.Always, SameSite=Lax and eight-hour expiry; cookie-only auth uses the same options.", "components": ["docs", "net10"], "sources": ["docs:sa3c22a38f4cb", "docs:sb6780977fa3f", "net10:s0d7c367ac06f"], "status": "REASONED"},
+    "samesite": {"text": "NET 10 auth cookie defaults Lax; Strict can suppress cross-site app cookies without universally breaking OAuth/OIDC callbacks.", "components": ["net10"], "sources": ["net10:sc0654e58fc4c"], "status": "REASONED"},
+    "remote-cookies": {"text": "Correlation and OIDC nonce cookies separately default None; preserve secure cross-site settings and avoid global rewriting.", "components": ["net10"], "sources": ["net10:sc0654e58fc4c"], "status": "REASONED"},
+    "authorization": {"text": "Run authentication before authorization and Map calls; use an authenticated fallback policy and explicitly AllowAnonymous on public pages.", "components": ["docs"], "sources": ["docs:sa3c22a38f4cb"], "status": "REASONED"},
+    "login-limit": {"text": "NET 7+ built-in rate limiting: login policy permits 20 per 15 minutes, no queue, 429 rejection; endpoint policies need UseRateLimiter after routing.", "components": ["rate-min"], "sources": ["rate-min:sd3fef8f45066"], "status": "REASONED"},
+    "oidc": {"text": "Configure OpenIdConnect code flow with cookie DefaultScheme and OIDC DefaultChallengeScheme; keep client secrets outside appsettings.json.", "components": ["docs"], "sources": ["docs:s592dc85bb71f"], "status": "REASONED"},
+    "mfa": {"text": "Enforce MFA at the identity provider or fronting layer; this guide recommends Cloudflare Access independent MFA for a self-hosted public app only with effective MFA enforcement (policy over application over organization) and no origin bypass. The cited pages do not establish this deployment's enforcement or origin isolation.", "components": ["docs", "cf-docs"], "sources": ["docs:s592dc85bb71f", "docs:s2d5a930aac35", "cf-docs:s6f6104362214", "cf-docs:s7e793d13cf31", "cf-docs:sfddb92e438ca", "cf-docs:s863803bd9a1f"], "status": "REASONED"},
+    "client-validation": {"text": "Never accept every certificate through DangerousAcceptAnyServerCertificateValidator or an always-true callback.", "components": ["docs"], "sources": ["docs:s6afc0255098f"], "status": "REASONED"},
+    "client-ca": {"text": "On Linux NET 10 install internal roots or use SSL_CERT_FILE for a PEM file and SSL_CERT_DIR for a certificate directory; preserve needed public roots.", "components": ["runtime", "openssl", "dotnet-rolling"], "sources": ["dotnet-rolling:s640872a17a8a", "runtime:s29ee940c94b9", "openssl:scac6dada5f6a"], "status": "REASONED"},
+    "developer-errors": {"text": "Development automatically enables the Developer Exception Page; production must exclude it and check the effective environment.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1", "net10:s61afb89034f8"], "status": "REASONED"},
+    "error-handler": {"text": "Install UseExceptionHandler early after forwarding; provide a generic /Error route supporting failed methods/anonymous requests and preserve intentional 413 responses.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1"], "status": "REASONED"},
+    "environment": {"text": "Production is default absent overrides; NET 7+ WebApplicationBuilder prioritizes command-line/DOTNET_ over ASPNETCORE_, while older WebHost differs.", "components": ["net10", "precedence"], "sources": ["net10:s61afb89034f8", "precedence:s10d46bc97fef"], "status": "REASONED"},
+    "database-diagnostics": {"text": "Register database developer exception filters before Build and migrations middleware after Build only in Development; migrations execute database changes.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1", "net10:s9d290374f4e8"], "status": "REASONED"},
+    "body-limit": {"text": "NET 10 Kestrel total body default is 30000000 bytes, null unlimited; example lowers it to 1048576 bytes.", "components": ["net10", "source"], "sources": ["net10:s1ce47370d948", "source:s903da00d32b5"], "status": "REASONED"},
+    "body-override": {"text": "RequestSizeLimit overrides before body reading; DisableRequestSizeLimit removes the protection.", "components": ["net10"], "sources": ["net10:s1ce47370d948", "net10:s55f298bf0048"], "status": "REASONED"},
+    "multipart": {"text": "MultipartBodyLengthLimit defaults 134217728 bytes per parsed section; example uses 1048576. Framing consumes total allowance and parsing failure need not return 413.", "components": ["source", "net10"], "sources": ["source:s67f347ba7947", "net10:s792d3e8f3e42"], "status": "REASONED"},
+    "iis-body": {"text": "In-process IISServerOptions body default is 30000000, separately from IIS maxAllowedContentLength default 30000000; out-of-process IIS disables Kestrel body limiting.", "components": ["net10"], "sources": ["net10:s1ce47370d948", "net10:s792d3e8f3e42", "net10:s529a3d7cce08"], "status": "REASONED"},
+    "keepalive": {"text": "Kestrel KeepAliveTimeout defaults to 130 seconds; it is not a total execution deadline.", "components": ["net10", "source"], "sources": ["net10:s1ce47370d948", "source:s903da00d32b5"], "status": "REASONED"},
+    "header-timeout": {"text": "Kestrel RequestHeadersTimeout defaults to 30 seconds; it is not a total execution deadline.", "components": ["net10", "source"], "sources": ["net10:s1ce47370d948", "source:s903da00d32b5"], "status": "REASONED"},
+    "connections": {"text": "MaxConcurrentConnections defaults null/unlimited; example caps ordinary connections at 100.", "components": ["source"], "sources": ["source:s903da00d32b5"], "status": "REASONED"},
+    "upgraded": {"text": "Upgraded connections leave the ordinary count; MaxConcurrentUpgradedConnections separately defaults null.", "components": ["net10", "source"], "sources": ["net10:s1ce47370d948", "source:s903da00d32b5"], "status": "REASONED"},
+    "header-count": {"text": "Kestrel MaxRequestHeaderCount defaults 100.", "components": ["source"], "sources": ["source:s903da00d32b5"], "status": "REASONED"},
+    "header-size": {"text": "Kestrel MaxRequestHeadersTotalSize defaults 32768 bytes.", "components": ["source"], "sources": ["source:s903da00d32b5"], "status": "REASONED"},
+    "request-rate": {"text": "MinRequestBodyDataRate defaults 240 bytes/second with five-second grace.", "components": ["source"], "sources": ["source:s903da00d32b5"], "status": "REASONED"},
+    "response-rate": {"text": "MinResponseDataRate defaults 240 bytes/second with five-second grace.", "components": ["source"], "sources": ["source:s903da00d32b5"], "status": "REASONED"},
+    "rate-scope": {"text": "HTTP/2 per-request rate adjustments differ from HTTP/1.x; several timeout/rate checks are disabled under a debugger.", "components": ["net10"], "sources": ["net10:s1ce47370d948"], "status": "REASONED"},
+    "h2-streams": {"text": "NET 10 HTTP/2 MaxStreamsPerConnection defaults 100.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
+    "h2-table": {"text": "NET 10 HTTP/2 HeaderTableSize defaults 4096 bytes.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
+    "h2-frame": {"text": "NET 10 HTTP/2 MaxFrameSize defaults 16384 bytes.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
+    "h2-header": {"text": "NET 10 HTTP/2 MaxRequestHeaderFieldSize defaults 32768 bytes, not the older 8192.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
+    "h2-connection-window": {"text": "NET 10 HTTP/2 InitialConnectionWindowSize defaults 1048576 bytes, not the older 131072.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
+    "h2-stream-window": {"text": "NET 10 HTTP/2 InitialStreamWindowSize defaults 786432 bytes, not the older 98304.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
+    "h2-ping-delay": {"text": "NET 10 HTTP/2 KeepAlivePingDelay defaults TimeSpan.MaxValue, disabling pings.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
+    "h2-ping-timeout": {"text": "NET 10 HTTP/2 KeepAlivePingTimeout defaults 20 seconds.", "components": ["source"], "sources": ["source:sc00d8d67e93b"], "status": "REASONED"},
+    "h2-scope": {"text": "Flow-control windows bound outstanding buffered data, not total bodies; Http2Limits do not configure HTTP/3.", "components": ["net10", "source"], "sources": ["net10:s1ce47370d948", "source:sc00d8d67e93b"], "status": "REASONED"},
+    "key-defaults": {"text": "Data Protection key persistence depends on hosting: user profiles, IIS or Azure may persist; process-only fallback and disposable container layers can lose keys.", "components": ["net10"], "sources": ["net10:s66f1ab4555d6"], "status": "REASONED"},
+    "key-persistence": {"text": "Persist keys durably with restricted permissions; replicas share repository, application name and decryption certificates, not merely identical directory names.", "components": ["net10"], "sources": ["net10:s6682926c8da7", "net10:sd635cefc0a9f"], "status": "REASONED"},
+    "key-encryption": {"text": "Choosing an explicit repository disables automatic at-rest encryption; configure ProtectKeysWithCertificate and retain needed keys/certificates.", "components": ["net10"], "sources": ["net10:s6682926c8da7", "net10:sd635cefc0a9f"], "status": "REASONED"},
+    "key-isolation": {"text": "Separate repositories, permissions and certificate private keys for untrusted apps; SetApplicationName is not isolation from another holder of master keys.", "components": ["net10"], "sources": ["net10:s6682926c8da7"], "status": "REASONED"},
+    "cookie-sharing": {"text": "Cookie continuity also needs compatible cookie names, schemes, stores and identity-validation configuration.", "components": ["net10"], "sources": ["net10:s9463626a3d0e"], "status": "REASONED"},
+    "server-header": {"text": "NET 10 AddServerHeader defaults true; set false and check all hosting layers since header removal does not control access.", "components": ["source"], "sources": ["source:s18c44d6c2fb7"], "status": "REASONED"},
+    "iis-headers": {"text": "Remove IIS X-Powered-By and set removeServerHeader; the latter requires IIS 10 with Windows Server/Windows 10 version 1709 or later.", "components": ["iis", "iis-rolling"], "sources": ["iis-rolling:s267eddd43502", "iis:sb2eac755b583"], "status": "REASONED"},
+    "openapi": {"text": "NET 10 built-in OpenAPI requires AddOpenApi before Build; map only in Development or RequireAuthorization with an appropriate policy.", "components": ["net10"], "sources": ["net10:s1d58219cedec"], "status": "REASONED"},
+    "swagger": {"text": "Built-in OpenAPI has no Swagger UI; keep separately added UseSwaggerUI in Development or protect it separately from the document.", "components": ["net10"], "sources": ["net10:s1f9d4c5e975c"], "status": "REASONED"},
+    "health": {"text": "Register health checks and authorize /healthz; monitoring must authenticate or use a deliberately controlled minimal liveness route.", "components": ["net10"], "sources": ["net10:sc41b77cc06c8"], "status": "REASONED"},
+    "health-host": {"text": "RequireHost checks a spoofable Host header and is not a network or authentication boundary.", "components": ["net10"], "sources": ["net10:sc41b77cc06c8"], "status": "REASONED"},
+    "host-filter": {"text": "AllowedHosts uses semicolon-separated names without ports; wildcard permits all. It neither authenticates nor binds interfaces; forwarded-host allowlisting is separate.", "components": ["net10"], "sources": ["net10:s5701d26de241", "net10:se101626c29d6"], "status": "REASONED"},
+    "verify-redirect": {"text": "HTTP should return 307/308 with HTTPS Location.", "components": ["docs"], "sources": ["docs:s8c762260991c"], "status": "REASONED", "verify": [1]},
+    "verify-tls": {"text": "HTTPS must validate without -k and show HSTS.", "components": ["docs", "net10"], "sources": ["docs:s8c762260991c", "net10:s74dcd6a72d63"], "status": "REASONED", "verify": [1]},
+    "verify-api": {"text": "Known protected NET 10 cookie API endpoints return 401 anonymous and 403 forbidden; pages/OIDC/custom handlers may redirect. Confirm authorized success first.", "components": ["net10"], "sources": ["net10:s837df4b1657f"], "status": "REASONED", "verify": [1]},
+    "verify-bind": {"text": "Inspect every listener for 127.0.0.1 and ::1 behind the proxy.", "components": ["docs", "net10"], "sources": ["docs:s74dcd6a72d63", "net10:s74dcd6a72d63"], "status": "REASONED", "verify": [1]},
+    "verify-errors": {"text": "Controlled exception should expose marker/detail under development and generic 500 under production; inspect plain/HTML bodies and correlate handler execution.", "components": ["net10"], "sources": ["net10:s2f7e6a8213f1"], "status": "REASONED", "verify": [2]},
+    "verify-body": {"text": "Body-consuming test route returns 204 at 1048576 bytes, 413 at 1048577; raised limit permits both. Isolate other limits and distinguish upstream rejection.", "components": ["net10"], "sources": ["net10:s1ce47370d948"], "status": "REASONED", "verify": [3]},
+    "verify-aux": {"text": "Probe actual diagnostic/OpenAPI/UI/health routes anonymously, then authorized; Development-only routes should be absent and retained routes protected. Status alone does not prove authorization.", "components": ["net10"], "sources": ["net10:s1d58219cedec", "net10:s1f9d4c5e975c", "net10:sc41b77cc06c8"], "status": "REASONED", "verify": [4]},
+    "verify-migrations": {"text": "GET cannot prove migrations middleware absent; inspect registration and test actual behavior only in isolated database infrastructure.", "components": ["net10"], "sources": ["net10:s9d290374f4e8"], "status": "REASONED"},
+    "verify-headers": {"text": "Inspect public success, redirect and error responses for absent Server/X-Powered-By after hosting-layer removal where supported.", "components": ["source", "iis", "iis-rolling"], "sources": ["source:s18c44d6c2fb7", "iis-rolling:s267eddd43502", "iis:sb2eac755b583"], "status": "REASONED", "verify": [5]},
+    "verify-cookie": {"text": "Anonymous cookie API control returns 401; original cookie keeps the same identity with 200 before/after restart and across confirmed replicas, before expiry and without identity changes.", "components": ["net10"], "sources": ["net10:s837df4b1657f", "net10:s66f1ab4555d6", "net10:s9463626a3d0e"], "status": "REASONED", "verify": [6]},
+    "verify-antiforgery": {"text": "Retain an antiforgery token and cookie across restart and submit without replacement; key loss can invalidate it independently of login recovery.", "components": ["net10"], "sources": ["net10:s6682926c8da7", "net10:s66f1ab4555d6"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->

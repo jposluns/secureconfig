@@ -1,175 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-09-26",
-  "documentation_checked": "2026-09",
-  "body_sha256": "72fb83f126c17a7bf6712bea8620686191699a388b522b41778ca65b8b8c506f",
-  "components": {
-    "metabase-docs": {
-      "name": "Metabase docs",
-      "basis": "unknown",
-      "sources": {
-        "sefe12b1b495c": "https://www.metabase.com/docs/latest/",
-        "s5e2251b3184d": "https://www.metabase.com/docs/latest/configuring-metabase/setting-up-metabase",
-        "s521b3063e9f0": "https://www.metabase.com/docs/latest/embedding/public-links",
-        "s02b7797b6ffe": "https://www.metabase.com/docs/latest/permissions/data",
-        "s434abdb1aaef": "https://www.metabase.com/docs/latest/databases/users-roles-privileges"
-      }
-    },
-    "metabase": {
-      "name": "Metabase",
-      "basis": "v0.63.18",
-      "sources": {
-        "s8df4cbf03036": "https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L54",
-        "s7dbf92797642": "https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L76-L88",
-        "s7e71ce4cff1b": "https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/server/instance.clj#L36-L41",
-        "sed761829c85c": "https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L79",
-        "sea59c4ef7f2e": "https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L164",
-        "sabe1aa2cf0a9": "https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L195",
-        "s18f6f2188fe9": "https://github.com/metabase/metabase/blob/v0.63.18/bin/docker/run_metabase.sh#L2-L5",
-        "s9b0c73c666ff": "https://github.com/metabase/metabase/blob/v0.63.18/Dockerfile#L66-L69"
-      }
-    },
-    "environ": {
-      "name": "environ",
-      "basis": "1.2.0",
-      "sources": {
-        "s37ed6de2d80d": "https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L32-L43",
-        "s9754f7c47384": "https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L64-L79"
-      }
-    },
-    "ring": {
-      "name": "Ring Jetty adapter",
-      "basis": "1.15.3",
-      "sources": {
-        "s0455b1b1fb12": "https://github.com/ring-clojure/ring/blob/1.15.3/ring-jetty-adapter/src/ring/adapter/jetty.clj#L202-L207"
-      }
-    },
-    "jetty": {
-      "name": "Jetty",
-      "basis": "12.1.13",
-      "sources": {
-        "s8f9e4989175e": "https://github.com/jetty/jetty.project/blob/jetty-12.1.13/jetty-core/jetty-server/src/main/java/org/eclipse/jetty/server/ServerConnector.java#L338-L344"
-      }
-    },
-    "superset": {
-      "name": "Superset docs",
-      "basis": "unknown",
-      "sources": {
-        "se97be7353585": "https://superset.apache.org/admin-docs/security/"
-      }
-    },
-    "superset-compose": {
-      "name": "Superset Compose",
-      "basis": "3d01094d231712e3470eb625be3f9925aeaeadb5",
-      "sources": {
-        "s0ceca7af7f79": "https://github.com/apache/superset/blob/3d01094d231712e3470eb625be3f9925aeaeadb5/docker-compose.yml"
-      }
-    },
-    "redash-docs": {
-      "name": "Redash docs",
-      "basis": "unknown",
-      "sources": {
-        "s069a74340b65": "https://redash.io/help/",
-        "s4c72252b5447": "https://redash.io/help/open-source/setup/",
-        "sbaf5b44079a0": "https://redash.io/help/open-source/admin-guide/secrets/"
-      }
-    },
-    "redash": {
-      "name": "Redash",
-      "basis": "v26.9.0",
-      "sources": {
-        "se93d7c47b037": "https://github.com/getredash/redash/blob/v26.9.0/bin/docker-entrypoint#L49-L50",
-        "s9f1ef7237804": "https://github.com/getredash/redash/blob/v26.9.0/Dockerfile#L133-L134"
-      }
-    },
-    "docker": {
-      "name": "Docker publishing",
-      "basis": "unknown",
-      "sources": {
-        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
-      }
-    }
-  },
-  "claims": {
-    "private": {"text": "Keep BI tools private with fronting MFA and least-privilege read-only DB accounts unless write-back is needed.", "components": ["redash-docs", "metabase-docs"], "sources": ["redash-docs:s4c72252b5447", "metabase-docs:s434abdb1aaef"], "status": "REASONED"},
-    "metabase-setup": {"text": "First account is admin; finish setup before anyone else can reach it.", "components": ["metabase-docs"], "sources": ["metabase-docs:s5e2251b3184d"], "status": "REASONED"},
-    "metabase-precedence": {"text": "Settings merge .lein-env, .boot-env, environment and JVM properties in order; later empty values mask earlier settings.", "components": ["metabase", "environ"], "sources": ["metabase:s8df4cbf03036", "metabase:s7dbf92797642", "environ:s37ed6de2d80d", "environ:s9754f7c47384"], "status": "REASONED"},
-    "metabase-bind": {"text": "Final nonblank MB_JETTY_HOST sets the jar host; otherwise Ring passes no host and Jetty binds wildcard. Use loopback behind a local proxy.", "components": ["metabase", "ring", "jetty"], "sources": ["metabase:s7e71ce4cff1b", "metabase:sed761829c85c", "metabase:sea59c4ef7f2e", "metabase:sabe1aa2cf0a9", "ring:s0455b1b1fb12", "jetty:s8f9e4989175e"], "status": "REASONED"},
-    "metabase-image": {"text": "Image exports MB_JETTY_HOST=0.0.0.0 when unset/empty; publish 127.0.0.1:3000:3000 before first start.", "components": ["metabase", "docker"], "sources": ["metabase:s18f6f2188fe9", "metabase:s9b0c73c666ff", "docker:s1e53417c513d"], "status": "REASONED"},
-    "metabase-port": {"text": "Port defaults 3000 unless the final MB_JETTY_PORT is nonblank.", "components": ["metabase"], "sources": ["metabase:s8df4cbf03036", "metabase:s7dbf92797642", "metabase:s7e71ce4cff1b"], "status": "REASONED"},
-    "metabase-sharing": {"text": "Public links/embeds default enabled and expose view-only question/dashboard/document results without login; disable unneeded sharing.", "components": ["metabase-docs"], "sources": ["metabase-docs:s521b3063e9f0"], "status": "REASONED"},
-    "metabase-embed": {"text": "Public embed URLs are recoverable; embeds do not strengthen the public-link boundary.", "components": ["metabase-docs"], "sources": ["metabase-docs:s521b3063e9f0"], "status": "REASONED"},
-    "metabase-sandbox": {"text": "Row/column security is Pro/Enterprise; free-tier sharing exposes the rows/columns the question queries.", "components": ["metabase-docs"], "sources": ["metabase-docs:s02b7797b6ffe"], "status": "REASONED"},
-    "superset-secret": {"text": "Set a unique complex random SECRET_KEY before exposure; it signs session cookies.", "components": ["superset"], "sources": ["superset:se97be7353585"], "status": "REASONED"},
-    "superset-admin": {"text": "Replace the first-run admin password before exposure.", "components": ["superset", "superset-compose"], "sources": ["superset:se97be7353585", "superset-compose:s0ceca7af7f79"], "status": "REASONED"},
-    "superset-public": {"text": "Absent AUTH_ROLE_PUBLIC does not prove denial; inspect effective Public-role grants, which provide no data access by default.", "components": ["superset"], "sources": ["superset:se97be7353585"], "status": "REASONED"},
-    "superset-copy": {"text": "PUBLIC_ROLE_LIKE copies permissions at superset init; broad roles grant access without scoping datasets/dashboards.", "components": ["superset"], "sources": ["superset:se97be7353585"], "status": "REASONED"},
-    "superset-compose": {"text": "Example Compose is unsupported for production; use unique passwords/SECRET_KEY, not the example against production data.", "components": ["superset-compose"], "sources": ["superset-compose:s0ceca7af7f79"], "status": "REASONED"},
-    "redash-setup": {"text": "Create the first-run admin before others reach setup.", "components": ["redash-docs"], "sources": ["redash-docs:s4c72252b5447"], "status": "REASONED"},
-    "redash-https": {"text": "Enforce HTTPS and the private-access pattern.", "components": ["redash-docs"], "sources": ["redash-docs:s4c72252b5447"], "status": "REASONED"},
-    "redash-cookie": {"text": "Use an instance-specific REDASH_COOKIE_SECRET; never commit or reuse it.", "components": ["redash-docs"], "sources": ["redash-docs:sbaf5b44079a0"], "status": "REASONED"},
-    "redash-encryption": {"text": "REDASH_SECRET_KEY encrypts data-source credentials; use a strong unique value outside version control.", "components": ["redash-docs"], "sources": ["redash-docs:sbaf5b44079a0"], "status": "REASONED"},
-    "redash-bind": {"text": "Default image server uses REDASH_GUNICORN_BIND or [::]:5000 when unset/empty; dual-stack may accept IPv4. Bind/publish privately.", "components": ["redash"], "sources": ["redash:se93d7c47b037", "redash:s9f1ef7237804"], "status": "REASONED"},
-    "verify-credentials": {"text": "Confirm no default admin/admin or example credentials work.", "components": ["metabase-docs", "superset-compose", "redash-docs"], "sources": ["metabase-docs:s5e2251b3184d", "superset-compose:s0ceca7af7f79", "redash-docs:s4c72252b5447"], "status": "REASONED"},
-    "verify-db": {"text": "Inspect effective/inherited DB grants; confirm reads and denied writes on a disposable object; scope needed write-back separately.", "components": ["metabase-docs"], "sources": ["metabase-docs:s434abdb1aaef"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory application/proxy sockets and Docker NAT publications; probe direct origins over IPv4/IPv6/LAN/VPC. Absent ss entries do not prove isolation.", "components": ["metabase", "superset-compose", "redash", "docker"], "sources": ["metabase:s8df4cbf03036", "superset-compose:s0ceca7af7f79", "redash:se93d7c47b037", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]},
-    "verify-ports": {"text": "Verify lists Metabase/Superset/Redash defaults 3000/8088/5000, qualified as install-dependent.", "components": ["metabase", "superset-compose", "redash"], "sources": ["metabase:s8df4cbf03036", "superset-compose:s0ceca7af7f79", "redash:se93d7c47b037"], "status": "REASONED", "verify": [1]},
-    "verify-data": {"text": "Authorized data is the control; anonymous data fails. Denial/verified login challenge passes; SPA shells, 404/errors and arbitrary redirects are inconclusive.", "components": ["metabase-docs", "superset", "redash-docs"], "sources": ["metabase-docs:s521b3063e9f0", "superset:se97be7353585", "redash-docs:s4c72252b5447"], "status": "REASONED", "verify": [1]},
-    "verify-private": {"text": "For tunnel-only access, confirm public isolation separately and test authorization on the permitted private path.", "components": ["redash-docs", "docker"], "sources": ["redash-docs:s4c72252b5447", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # BI dashboards: Metabase, Superset, Redash
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Metabase v0.63.18, Redash v26.9.0, environ 1.2.0, Ring Jetty adapter 1.15.3, and Jetty 12.1.13; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 25 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- metabase-docs: Metabase docs (unknown)
-- metabase: Metabase (v0.63.18)
-- environ: environ (1.2.0)
-- ring: Ring Jetty adapter (1.15.3)
-- jetty: Jetty (12.1.13)
-- superset: Superset docs (unknown)
-- superset-compose: Superset Compose (3d01094d231712e3470eb625be3f9925aeaeadb5)
-- redash-docs: Redash docs (unknown)
-- redash: Redash (v26.9.0)
-- docker: Docker publishing (unknown)
-
-Claims (full source mapping in the front matter):
-
-- private (REASONED; redash-docs, metabase-docs): Keep BI tools private with fronting MFA and least-privilege read-only DB accounts unless write-back is needed.
-- metabase-setup (REASONED; metabase-docs): First account is admin; finish setup before anyone else can reach it.
-- metabase-precedence (REASONED; metabase, environ): Settings merge .lein-env, .boot-env, environment and JVM properties in order; later empty values mask earlier settings.
-- metabase-bind (REASONED; metabase, ring, jetty): Final nonblank MB_JETTY_HOST sets the jar host; otherwise Ring passes no host and Jetty binds wildcard. Use loopback behind a local proxy.
-- metabase-image (REASONED; metabase, docker): Image exports MB_JETTY_HOST=0.0.0.0 when unset/empty; publish 127.0.0.1:3000:3000 before first start.
-- metabase-port (REASONED; metabase): Port defaults 3000 unless the final MB_JETTY_PORT is nonblank.
-- metabase-sharing (REASONED; metabase-docs): Public links/embeds default enabled and expose view-only question/dashboard/document results without login; disable unneeded sharing.
-- metabase-embed (REASONED; metabase-docs): Public embed URLs are recoverable; embeds do not strengthen the public-link boundary.
-- metabase-sandbox (REASONED; metabase-docs): Row/column security is Pro/Enterprise; free-tier sharing exposes the rows/columns the question queries.
-- superset-secret (REASONED; superset): Set a unique complex random SECRET_KEY before exposure; it signs session cookies.
-- superset-admin (REASONED; superset, superset-compose): Replace the first-run admin password before exposure.
-- superset-public (REASONED; superset): Absent AUTH_ROLE_PUBLIC does not prove denial; inspect effective Public-role grants, which provide no data access by default.
-- superset-copy (REASONED; superset): PUBLIC_ROLE_LIKE copies permissions at superset init; broad roles grant access without scoping datasets/dashboards.
-- superset-compose (REASONED; superset-compose): Example Compose is unsupported for production; use unique passwords/SECRET_KEY, not the example against production data.
-- redash-setup (REASONED; redash-docs): Create the first-run admin before others reach setup.
-- redash-https (REASONED; redash-docs): Enforce HTTPS and the private-access pattern.
-- redash-cookie (REASONED; redash-docs): Use an instance-specific REDASH_COOKIE_SECRET; never commit or reuse it.
-- redash-encryption (REASONED; redash-docs): REDASH_SECRET_KEY encrypts data-source credentials; use a strong unique value outside version control.
-- redash-bind (REASONED; redash): Default image server uses REDASH_GUNICORN_BIND or [::]:5000 when unset/empty; dual-stack may accept IPv4. Bind/publish privately.
-- verify-credentials (REASONED; metabase-docs, superset-compose, redash-docs): Confirm no default admin/admin or example credentials work.
-- verify-db (REASONED; metabase-docs): Inspect effective/inherited DB grants; confirm reads and denied writes on a disposable object; scope needed write-back separately.
-- verify-listeners (REASONED; metabase, superset-compose, redash, docker): Inventory application/proxy sockets and Docker NAT publications; probe direct origins over IPv4/IPv6/LAN/VPC. Absent ss entries do not prove isolation.
-- verify-ports (REASONED; metabase, superset-compose, redash): Verify lists Metabase/Superset/Redash defaults 3000/8088/5000, qualified as install-dependent.
-- verify-data (REASONED; metabase-docs, superset, redash-docs): Authorized data is the control; anonymous data fails. Denial/verified login challenge passes; SPA shells, 404/errors and arbitrary redirects are inconclusive.
-- verify-private (REASONED; redash-docs, docker): For tunnel-only access, confirm public isolation separately and test authorization on the permitted private path.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 These tools hold live connections to your production databases and cache query results in their own
 storage. An exposed instance, or one still running default or example credentials, leaks both the
@@ -296,3 +129,196 @@ connection string or the tool's own login is not enough.
 - Redash secret keys (cookie signing, data-source-credential encryption, do not reuse across instances or commit): https://redash.io/help/open-source/admin-guide/secrets/
 - Metabase database users, roles, and privileges (a dedicated least-privilege read-only account): https://www.metabase.com/docs/latest/databases/users-roles-privileges
 - Docker port publishing (a published container port is served through NAT/forwarding rules, so the host may show no matching listener): https://docs.docker.com/engine/network/port-publishing/
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/bi-dashboards.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- metabase: Metabase (v0.63.18)
+- redash: Redash (v26.9.0)
+- metabase-docs: Metabase docs (unknown)
+- superset: Superset docs (unknown)
+- superset-compose: Superset Compose (3d01094d231712e3470eb625be3f9925aeaeadb5)
+- redash-docs: Redash docs (unknown)
+- environ: environ (1.2.0)
+- ring: Ring Jetty adapter (1.15.3)
+- jetty: Jetty (12.1.13)
+- docker: Docker publishing (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- private (REASONED; redash-docs, metabase-docs): Keep BI tools private with fronting MFA and least-privilege read-only DB accounts unless write-back is needed.
+- metabase-setup (REASONED; metabase-docs): First account is admin; finish setup before anyone else can reach it.
+- metabase-precedence (REASONED; metabase, environ): Settings merge .lein-env, .boot-env, environment and JVM properties in order; later empty values mask earlier settings.
+- metabase-bind (REASONED; metabase, ring, jetty): Final nonblank MB_JETTY_HOST sets the jar host; otherwise Ring passes no host and Jetty binds wildcard. Use loopback behind a local proxy.
+- metabase-image (REASONED; metabase, docker): Image exports MB_JETTY_HOST=0.0.0.0 when unset/empty; publish 127.0.0.1:3000:3000 before first start.
+- metabase-port (REASONED; metabase): Port defaults 3000 unless the final MB_JETTY_PORT is nonblank.
+- metabase-sharing (REASONED; metabase-docs): Public links/embeds default enabled and expose view-only question/dashboard/document results without login; disable unneeded sharing.
+- metabase-embed (REASONED; metabase-docs): Public embed URLs are recoverable; embeds do not strengthen the public-link boundary.
+- metabase-sandbox (REASONED; metabase-docs): Row/column security is Pro/Enterprise; free-tier sharing exposes the rows/columns the question queries.
+- superset-secret (REASONED; superset): Set a unique complex random SECRET_KEY before exposure; it signs session cookies.
+- superset-admin (REASONED; superset, superset-compose): Replace the first-run admin password before exposure.
+- superset-public (REASONED; superset): Absent AUTH_ROLE_PUBLIC does not prove denial; inspect effective Public-role grants, which provide no data access by default.
+- superset-copy (REASONED; superset): PUBLIC_ROLE_LIKE copies permissions at superset init; broad roles grant access without scoping datasets/dashboards.
+- superset-compose (REASONED; superset-compose): Example Compose is unsupported for production; use unique passwords/SECRET_KEY, not the example against production data.
+- redash-setup (REASONED; redash-docs): Create the first-run admin before others reach setup.
+- redash-https (REASONED; redash-docs): Enforce HTTPS and the private-access pattern.
+- redash-cookie (REASONED; redash-docs): Use an instance-specific REDASH_COOKIE_SECRET; never commit or reuse it.
+- redash-encryption (REASONED; redash-docs): REDASH_SECRET_KEY encrypts data-source credentials; use a strong unique value outside version control.
+- redash-bind (REASONED; redash): Default image server uses REDASH_GUNICORN_BIND or [::]:5000 when unset/empty; dual-stack may accept IPv4. Bind/publish privately.
+- verify-credentials (REASONED; metabase-docs, superset-compose, redash-docs): Confirm no default admin/admin or example credentials work.
+- verify-db (REASONED; metabase-docs): Inspect effective/inherited DB grants; confirm reads and denied writes on a disposable object; scope needed write-back separately.
+- verify-listeners (REASONED; metabase, superset-compose, redash, docker): Inventory application/proxy sockets and Docker NAT publications; probe direct origins over IPv4/IPv6/LAN/VPC. Absent ss entries do not prove isolation.
+- verify-ports (REASONED; metabase, superset-compose, redash): Verify lists Metabase/Superset/Redash defaults 3000/8088/5000, qualified as install-dependent.
+- verify-data (REASONED; metabase-docs, superset, redash-docs): Authorized data is the control; anonymous data fails. Denial/verified login challenge passes; SPA shells, 404/errors and arbitrary redirects are inconclusive.
+- verify-private (REASONED; redash-docs, docker): For tunnel-only access, confirm public isolation separately and test authorization on the permitted private path.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "72fb83f126c17a7bf6712bea8620686191699a388b522b41778ca65b8b8c506f",
+  "components": {
+    "metabase": {
+      "name": "Metabase",
+      "basis": "v0.63.18",
+      "sources": {
+        "s8df4cbf03036": "https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L54",
+        "s7dbf92797642": "https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/config/core.clj#L76-L88",
+        "s7e71ce4cff1b": "https://github.com/metabase/metabase/blob/v0.63.18/src/metabase/server/instance.clj#L36-L41",
+        "sed761829c85c": "https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L79",
+        "sea59c4ef7f2e": "https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L164",
+        "sabe1aa2cf0a9": "https://github.com/metabase/metabase/blob/v0.63.18/deps.edn#L195",
+        "s18f6f2188fe9": "https://github.com/metabase/metabase/blob/v0.63.18/bin/docker/run_metabase.sh#L2-L5",
+        "s9b0c73c666ff": "https://github.com/metabase/metabase/blob/v0.63.18/Dockerfile#L66-L69"
+      }
+    },
+    "redash": {
+      "name": "Redash",
+      "basis": "v26.9.0",
+      "sources": {
+        "se93d7c47b037": "https://github.com/getredash/redash/blob/v26.9.0/bin/docker-entrypoint#L49-L50",
+        "s9f1ef7237804": "https://github.com/getredash/redash/blob/v26.9.0/Dockerfile#L133-L134"
+      }
+    },
+    "metabase-docs": {
+      "name": "Metabase docs",
+      "basis": "unknown",
+      "sources": {
+        "sefe12b1b495c": "https://www.metabase.com/docs/latest/",
+        "s5e2251b3184d": "https://www.metabase.com/docs/latest/configuring-metabase/setting-up-metabase",
+        "s521b3063e9f0": "https://www.metabase.com/docs/latest/embedding/public-links",
+        "s02b7797b6ffe": "https://www.metabase.com/docs/latest/permissions/data",
+        "s434abdb1aaef": "https://www.metabase.com/docs/latest/databases/users-roles-privileges"
+      }
+    },
+    "superset": {
+      "name": "Superset docs",
+      "basis": "unknown",
+      "sources": {
+        "se97be7353585": "https://superset.apache.org/admin-docs/security/"
+      }
+    },
+    "superset-compose": {
+      "name": "Superset Compose",
+      "basis": "3d01094d231712e3470eb625be3f9925aeaeadb5",
+      "sources": {
+        "s0ceca7af7f79": "https://github.com/apache/superset/blob/3d01094d231712e3470eb625be3f9925aeaeadb5/docker-compose.yml"
+      }
+    },
+    "redash-docs": {
+      "name": "Redash docs",
+      "basis": "unknown",
+      "sources": {
+        "s069a74340b65": "https://redash.io/help/",
+        "s4c72252b5447": "https://redash.io/help/open-source/setup/",
+        "sbaf5b44079a0": "https://redash.io/help/open-source/admin-guide/secrets/"
+      }
+    },
+    "environ": {
+      "name": "environ",
+      "basis": "1.2.0",
+      "sources": {
+        "s37ed6de2d80d": "https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L32-L43",
+        "s9754f7c47384": "https://github.com/weavejester/environ/blob/1.2.0/environ/src/environ/core.cljc#L64-L79"
+      }
+    },
+    "ring": {
+      "name": "Ring Jetty adapter",
+      "basis": "1.15.3",
+      "sources": {
+        "s0455b1b1fb12": "https://github.com/ring-clojure/ring/blob/1.15.3/ring-jetty-adapter/src/ring/adapter/jetty.clj#L202-L207"
+      }
+    },
+    "jetty": {
+      "name": "Jetty",
+      "basis": "12.1.13",
+      "sources": {
+        "s8f9e4989175e": "https://github.com/jetty/jetty.project/blob/jetty-12.1.13/jetty-core/jetty-server/src/main/java/org/eclipse/jetty/server/ServerConnector.java#L338-L344"
+      }
+    },
+    "docker": {
+      "name": "Docker publishing",
+      "basis": "unknown",
+      "sources": {
+        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
+      }
+    }
+  },
+  "claims": {
+    "private": {"text": "Keep BI tools private with fronting MFA and least-privilege read-only DB accounts unless write-back is needed.", "components": ["redash-docs", "metabase-docs"], "sources": ["redash-docs:s4c72252b5447", "metabase-docs:s434abdb1aaef"], "status": "REASONED"},
+    "metabase-setup": {"text": "First account is admin; finish setup before anyone else can reach it.", "components": ["metabase-docs"], "sources": ["metabase-docs:s5e2251b3184d"], "status": "REASONED"},
+    "metabase-precedence": {"text": "Settings merge .lein-env, .boot-env, environment and JVM properties in order; later empty values mask earlier settings.", "components": ["metabase", "environ"], "sources": ["metabase:s8df4cbf03036", "metabase:s7dbf92797642", "environ:s37ed6de2d80d", "environ:s9754f7c47384"], "status": "REASONED"},
+    "metabase-bind": {"text": "Final nonblank MB_JETTY_HOST sets the jar host; otherwise Ring passes no host and Jetty binds wildcard. Use loopback behind a local proxy.", "components": ["metabase", "ring", "jetty"], "sources": ["metabase:s7e71ce4cff1b", "metabase:sed761829c85c", "metabase:sea59c4ef7f2e", "metabase:sabe1aa2cf0a9", "ring:s0455b1b1fb12", "jetty:s8f9e4989175e"], "status": "REASONED"},
+    "metabase-image": {"text": "Image exports MB_JETTY_HOST=0.0.0.0 when unset/empty; publish 127.0.0.1:3000:3000 before first start.", "components": ["metabase", "docker"], "sources": ["metabase:s18f6f2188fe9", "metabase:s9b0c73c666ff", "docker:s1e53417c513d"], "status": "REASONED"},
+    "metabase-port": {"text": "Port defaults 3000 unless the final MB_JETTY_PORT is nonblank.", "components": ["metabase"], "sources": ["metabase:s8df4cbf03036", "metabase:s7dbf92797642", "metabase:s7e71ce4cff1b"], "status": "REASONED"},
+    "metabase-sharing": {"text": "Public links/embeds default enabled and expose view-only question/dashboard/document results without login; disable unneeded sharing.", "components": ["metabase-docs"], "sources": ["metabase-docs:s521b3063e9f0"], "status": "REASONED"},
+    "metabase-embed": {"text": "Public embed URLs are recoverable; embeds do not strengthen the public-link boundary.", "components": ["metabase-docs"], "sources": ["metabase-docs:s521b3063e9f0"], "status": "REASONED"},
+    "metabase-sandbox": {"text": "Row/column security is Pro/Enterprise; free-tier sharing exposes the rows/columns the question queries.", "components": ["metabase-docs"], "sources": ["metabase-docs:s02b7797b6ffe"], "status": "REASONED"},
+    "superset-secret": {"text": "Set a unique complex random SECRET_KEY before exposure; it signs session cookies.", "components": ["superset"], "sources": ["superset:se97be7353585"], "status": "REASONED"},
+    "superset-admin": {"text": "Replace the first-run admin password before exposure.", "components": ["superset", "superset-compose"], "sources": ["superset:se97be7353585", "superset-compose:s0ceca7af7f79"], "status": "REASONED"},
+    "superset-public": {"text": "Absent AUTH_ROLE_PUBLIC does not prove denial; inspect effective Public-role grants, which provide no data access by default.", "components": ["superset"], "sources": ["superset:se97be7353585"], "status": "REASONED"},
+    "superset-copy": {"text": "PUBLIC_ROLE_LIKE copies permissions at superset init; broad roles grant access without scoping datasets/dashboards.", "components": ["superset"], "sources": ["superset:se97be7353585"], "status": "REASONED"},
+    "superset-compose": {"text": "Example Compose is unsupported for production; use unique passwords/SECRET_KEY, not the example against production data.", "components": ["superset-compose"], "sources": ["superset-compose:s0ceca7af7f79"], "status": "REASONED"},
+    "redash-setup": {"text": "Create the first-run admin before others reach setup.", "components": ["redash-docs"], "sources": ["redash-docs:s4c72252b5447"], "status": "REASONED"},
+    "redash-https": {"text": "Enforce HTTPS and the private-access pattern.", "components": ["redash-docs"], "sources": ["redash-docs:s4c72252b5447"], "status": "REASONED"},
+    "redash-cookie": {"text": "Use an instance-specific REDASH_COOKIE_SECRET; never commit or reuse it.", "components": ["redash-docs"], "sources": ["redash-docs:sbaf5b44079a0"], "status": "REASONED"},
+    "redash-encryption": {"text": "REDASH_SECRET_KEY encrypts data-source credentials; use a strong unique value outside version control.", "components": ["redash-docs"], "sources": ["redash-docs:sbaf5b44079a0"], "status": "REASONED"},
+    "redash-bind": {"text": "Default image server uses REDASH_GUNICORN_BIND or [::]:5000 when unset/empty; dual-stack may accept IPv4. Bind/publish privately.", "components": ["redash"], "sources": ["redash:se93d7c47b037", "redash:s9f1ef7237804"], "status": "REASONED"},
+    "verify-credentials": {"text": "Confirm no default admin/admin or example credentials work.", "components": ["metabase-docs", "superset-compose", "redash-docs"], "sources": ["metabase-docs:s5e2251b3184d", "superset-compose:s0ceca7af7f79", "redash-docs:s4c72252b5447"], "status": "REASONED"},
+    "verify-db": {"text": "Inspect effective/inherited DB grants; confirm reads and denied writes on a disposable object; scope needed write-back separately.", "components": ["metabase-docs"], "sources": ["metabase-docs:s434abdb1aaef"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inventory application/proxy sockets and Docker NAT publications; probe direct origins over IPv4/IPv6/LAN/VPC. Absent ss entries do not prove isolation.", "components": ["metabase", "superset-compose", "redash", "docker"], "sources": ["metabase:s8df4cbf03036", "superset-compose:s0ceca7af7f79", "redash:se93d7c47b037", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]},
+    "verify-ports": {"text": "Verify lists Metabase/Superset/Redash defaults 3000/8088/5000, qualified as install-dependent.", "components": ["metabase", "superset-compose", "redash"], "sources": ["metabase:s8df4cbf03036", "superset-compose:s0ceca7af7f79", "redash:se93d7c47b037"], "status": "REASONED", "verify": [1]},
+    "verify-data": {"text": "Authorized data is the control; anonymous data fails. Denial/verified login challenge passes; SPA shells, 404/errors and arbitrary redirects are inconclusive.", "components": ["metabase-docs", "superset", "redash-docs"], "sources": ["metabase-docs:s521b3063e9f0", "superset:se97be7353585", "redash-docs:s4c72252b5447"], "status": "REASONED", "verify": [1]},
+    "verify-private": {"text": "For tunnel-only access, confirm public isolation separately and test authorization on the permitted private path.", "components": ["redash-docs", "docker"], "sources": ["redash-docs:s4c72252b5447", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->

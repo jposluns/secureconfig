@@ -1,203 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-18",
-  "documentation_checked": "2026-09",
-  "body_sha256": "92d3d0f412f545709088bb0ce3d9b82c95988187a6fd4fcf75747d818f8d5c8b",
-  "components": {
-    "mongo": {
-      "name": "mongo-express",
-      "basis": "unknown",
-      "sources": {
-        "s69ec4eee2c85": "https://github.com/mongo-express/mongo-express"
-      }
-    },
-    "grafana": {
-      "name": "Grafana docs",
-      "basis": "unknown",
-      "sources": {
-        "s7aa447405cc5": "https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/",
-        "sc241e0772095": "https://grafana.com/docs/grafana/latest/setup-grafana/set-up-https/"
-      }
-    },
-    "prometheus": {
-      "name": "Prometheus docs",
-      "basis": "unknown",
-      "sources": {
-        "scce074c47e9c": "https://prometheus.io/docs/guides/basic-auth/",
-        "sc48b506cc29a": "https://prometheus.io/docs/guides/tls-encryption/"
-      }
-    },
-    "phpmyadmin": {
-      "name": "phpMyAdmin",
-      "basis": "unknown",
-      "sources": {
-        "s5f6c8965c539": "https://www.phpmyadmin.net/docs/"
-      }
-    },
-    "pgadmin": {
-      "name": "pgAdmin",
-      "basis": "unknown",
-      "sources": {
-        "s2f7e33714435": "https://www.pgadmin.org/docs/"
-      }
-    },
-    "adminer": {
-      "name": "Adminer",
-      "basis": "unknown",
-      "sources": {
-        "sb5eda9397b18": "https://www.adminer.org/"
-      }
-    },
-    "prometheus-pin": {
-      "name": "Prometheus",
-      "basis": "v3.14.0",
-      "sources": {
-        "s6d5f308b02a2": "https://github.com/prometheus/prometheus/blob/v3.14.0/cmd/prometheus/main.go#L424-L425"
-      }
-    },
-    "grafana-pin": {
-      "name": "Grafana",
-      "basis": "v13.2.2",
-      "sources": {
-        "s4c6ff3174e7e": "https://github.com/grafana/grafana/blob/v13.2.2/conf/defaults.ini#L49-L50",
-        "sb00e234d0ddd": "https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L467-L469",
-        "sf14b29976adb": "https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L568"
-      }
-    },
-    "go": {
-      "name": "Go net",
-      "basis": "unknown",
-      "sources": {
-        "s37204ff1b27c": "https://pkg.go.dev/net#Listen"
-      }
-    },
-    "htpasswd": {
-      "name": "Apache htpasswd",
-      "basis": "2.4",
-      "sources": {
-        "scde9004bb967": "https://httpd.apache.org/docs/2.4/programs/htpasswd.html"
-      }
-    },
-    "httpd-source": {
-      "name": "Apache httpd htpasswd source",
-      "basis": "2.4.69",
-      "sources": {
-        "sfed14ba2991a": "https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L297",
-        "sf711558bdf3c": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45",
-        "s4aa0f7f341fb": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L292-L295",
-        "s4ec6b9b216dc": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L383",
-        "s6952d96564d9": "https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L129"
-      }
-    },
-    "owasp-source": {
-      "name": "OWASP Password Storage Cheat Sheet",
-      "basis": "72865b1e3b5754246a101778dc00b37f9c233373",
-      "sources": {
-        "s4531e65b6502": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13"
-      }
-    },
-    "redisinsight": {
-      "name": "RedisInsight",
-      "basis": "3.8.0",
-      "sources": {
-        "s6b8fb1c9bbbc": "https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/config/default.ts#L99-L100",
-        "s7ba57be16bb3": "https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/config/default.ts#L133",
-        "sddf9b5ee80b9": "https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/src/common/middlewares/single-user-auth.middleware.ts#L20-L49",
-        "s5e6e219b4b65": "https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/src/modules/auth/window-auth/middleware/window.auth.middleware.ts#L14-L35"
-      }
-    },
-    "engine-pinned": {
-      "name": "Docker Engine networking documentation",
-      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
-      "sources": {
-        "sb3dacfbaf7e1": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L33-L38",
-        "s1c82ff316a7e": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L60-L62",
-        "sc244607b20e4": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L11-L15"
-      }
-    },
-    "moby-pinned": {
-      "name": "Moby port mapping source",
-      "basis": "v28.3.3",
-      "sources": {
-        "seaf4197aafaa": "https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go"
-      }
-    }
-  },
-  "claims": {
-    "private": {"text": "Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight 3.8.0 config defaults to 0.0.0.0:5540 via RI_APP_HOST/RI_APP_PORT, with empty excludeAuthRoutes; fetched session/window middleware does not establish complete inbound authentication or login/dashboard 200 responses. Keeping RedisInsight and similar tools on loopback or a private network is this guide's advice.", "components": ["grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer", "redisinsight"], "sources": ["grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18", "redisinsight:s6b8fb1c9bbbc", "redisinsight:s7ba57be16bb3", "redisinsight:sddf9b5ee80b9", "redisinsight:s5e6e219b4b65"], "status": "REASONED"},
-    "mongo-enable": {"text": "Recent login defaults off; current ENABLED and deprecated BASICAUTH fallback differ from some 1.0.x username-triggered builds. Set both flags and verify.", "components": ["mongo"], "sources": ["mongo:s69ec4eee2c85"], "status": "REASONED"},
-    "mongo-credentials": {"text": "Set nonempty BASICAUTH_USERNAME/PASSWORD instead of admin/pass defaults.", "components": ["mongo"], "sources": ["mongo:s69ec4eee2c85"], "status": "REASONED"},
-    "mongo-database": {"text": "Web Basic auth is separate from MongoDB credentials in ME_CONFIG_MONGODB_URL.", "components": ["mongo"], "sources": ["mongo:s69ec4eee2c85"], "status": "REASONED"},
-    "grafana-admin": {"text": "First login uses admin/admin and prompts for replacement; use strong credentials and individual accounts.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5"], "status": "REASONED"},
-    "grafana-anonymous": {"text": "Disable Grafana anonymous access if enabled.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5"], "status": "REASONED"},
-    "grafana-mfa": {"text": "Prefer SSO with MFA at the identity provider.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5"], "status": "REASONED"},
-    "grafana-bind": {"text": "Empty http_addr joins the port and binds all interfaces; set 127.0.0.1.", "components": ["grafana-pin", "go"], "sources": ["grafana-pin:s4c6ff3174e7e", "grafana-pin:sb00e234d0ddd", "grafana-pin:sf14b29976adb", "go:s37204ff1b27c"], "status": "REASONED"},
-    "grafana-tls": {"text": "Native HTTPS uses server protocol=https, cert_file and cert_key.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5", "grafana:sc241e0772095"], "status": "REASONED"},
-    "prometheus-auth": {"text": "Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes.", "components": ["prometheus"], "sources": ["prometheus:scce074c47e9c"], "status": "REASONED"},
-    "prometheus-bcrypt": {"text": "Use htpasswd -nB -C 12; Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, by this guide's comparison below OWASP's minimum work factor of 10 for legacy bcrypt.", "components": ["prometheus", "htpasswd", "httpd-source", "owasp-source"], "sources": ["prometheus:scce074c47e9c", "htpasswd:scde9004bb967", "httpd-source:sfed14ba2991a", "httpd-source:sf711558bdf3c", "httpd-source:s4aa0f7f341fb", "httpd-source:s4ec6b9b216dc", "httpd-source:s6952d96564d9", "owasp-source:s4531e65b6502"], "status": "REASONED"},
-    "prometheus-bind": {"text": "Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090.", "components": ["prometheus-pin"], "sources": ["prometheus-pin:s6d5f308b02a2"], "status": "REASONED"},
-    "prometheus-tls": {"text": "web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config.", "components": ["prometheus"], "sources": ["prometheus:sc48b506cc29a"], "status": "REASONED"},
-    "database-panels": {"text": "Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated.", "components": ["phpmyadmin", "pgadmin"], "sources": ["phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435"], "status": "REASONED"},
-    "pgadmin-login": {"text": "pgAdmin server mode has its own accounts/login.", "components": ["pgadmin"], "sources": ["pgadmin:s2f7e33714435"], "status": "REASONED"},
-    "adminer-login": {"text": "Adminer uses database credentials, not a separate account store; server-side connections expose even private databases to login attempts.", "components": ["adminer"], "sources": ["adminer:sb5eda9397b18"], "status": "REASONED"},
-    "adminer-file": {"text": "Renaming Adminer is no access control; require private access or proxy TLS/auth/MFA, updates and removal of unused copies.", "components": ["adminer"], "sources": ["adminer:sb5eda9397b18"], "status": "REASONED"},
-    "verify-listeners": {"text": "Inventory sockets and Docker publications; as this guide's assessment, a protected frontend or absent socket does not prove backend isolation or reachability. Docker documents explicit publish addresses and IPv6-to-IPv4 proxying when no host IP is given, the bridge is IPv4-only and --userland-proxy=true (default). Fetched sources do not establish NAT publication without a host listener; the fetched Moby TCP path listens even without a proxy.", "components": ["grafana-pin", "prometheus-pin", "engine-pinned", "moby-pinned"], "sources": ["grafana-pin:s4c6ff3174e7e", "prometheus-pin:s6d5f308b02a2", "engine-pinned:sb3dacfbaf7e1", "engine-pinned:s1c82ff316a7e", "engine-pinned:sc244607b20e4", "moby-pinned:seaf4197aafaa"], "status": "REASONED", "verify": [1]},
-    "verify-login": {"text": "Anonymous dashboard data is a finding; require denial or verified login challenge. Arbitrary redirects and DNS/TLS/proxy errors are inconclusive.", "components": ["mongo", "grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer"], "sources": ["mongo:s69ec4eee2c85", "grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18"], "status": "REASONED", "verify": [1]},
-    "verify-data": {"text": "A 200 login shell proves nothing; require a known data route to succeed authorized and deny anonymous access; 404/server errors are inconclusive.", "components": ["mongo", "grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer"], "sources": ["mongo:s69ec4eee2c85", "grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # Admin panels: phpMyAdmin, pgAdmin, mongo-express, Grafana, Prometheus
 
-<!-- version-basis:start -->
-**Version basis**
+Written against phpMyAdmin (no recorded version), Grafana v13.2.2, Prometheus v3.14.0, RedisInsight 3.8.0, Apache htpasswd 2.4, Apache httpd htpasswd source 2.4.69, and Moby port mapping source v28.3.3; 2 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 20 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- mongo: mongo-express (unknown)
-- grafana: Grafana docs (unknown)
-- prometheus: Prometheus docs (unknown)
-- phpmyadmin: phpMyAdmin (unknown)
-- pgadmin: pgAdmin (unknown)
-- adminer: Adminer (unknown)
-- prometheus-pin: Prometheus (v3.14.0)
-- grafana-pin: Grafana (v13.2.2)
-- go: Go net (unknown)
-- htpasswd: Apache htpasswd (2.4)
-- httpd-source: Apache httpd htpasswd source (2.4.69)
-- owasp-source: OWASP Password Storage Cheat Sheet (72865b1e3b5754246a101778dc00b37f9c233373)
-- redisinsight: RedisInsight (3.8.0)
-- engine-pinned: Docker Engine networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
-- moby-pinned: Moby port mapping source (v28.3.3)
-
-Claims (full source mapping in the front matter):
-
-- private (REASONED; grafana, prometheus, phpmyadmin, pgadmin, adminer, redisinsight): Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight 3.8.0 config defaults to 0.0.0.0:5540 via RI_APP_HOST/RI_APP_PORT, with empty excludeAuthRoutes; fetched session/window middleware does not establish complete inbound authentication or login/dashboard 200 responses. Keeping RedisInsight and similar tools on loopback or a private network is this guide's advice.
-- mongo-enable (REASONED; mongo): Recent login defaults off; current ENABLED and deprecated BASICAUTH fallback differ from some 1.0.x username-triggered builds. Set both flags and verify.
-- mongo-credentials (REASONED; mongo): Set nonempty BASICAUTH_USERNAME/PASSWORD instead of admin/pass defaults.
-- mongo-database (REASONED; mongo): Web Basic auth is separate from MongoDB credentials in ME_CONFIG_MONGODB_URL.
-- grafana-admin (REASONED; grafana): First login uses admin/admin and prompts for replacement; use strong credentials and individual accounts.
-- grafana-anonymous (REASONED; grafana): Disable Grafana anonymous access if enabled.
-- grafana-mfa (REASONED; grafana): Prefer SSO with MFA at the identity provider.
-- grafana-bind (REASONED; grafana-pin, go): Empty http_addr joins the port and binds all interfaces; set 127.0.0.1.
-- grafana-tls (REASONED; grafana): Native HTTPS uses server protocol=https, cert_file and cert_key.
-- prometheus-auth (REASONED; prometheus): Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes.
-- prometheus-bcrypt (REASONED; prometheus, htpasswd, httpd-source, owasp-source): Use htpasswd -nB -C 12; Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, by this guide's comparison below OWASP's minimum work factor of 10 for legacy bcrypt.
-- prometheus-bind (REASONED; prometheus-pin): Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090.
-- prometheus-tls (REASONED; prometheus): web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config.
-- database-panels (REASONED; phpmyadmin, pgadmin): Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated.
-- pgadmin-login (REASONED; pgadmin): pgAdmin server mode has its own accounts/login.
-- adminer-login (REASONED; adminer): Adminer uses database credentials, not a separate account store; server-side connections expose even private databases to login attempts.
-- adminer-file (REASONED; adminer): Renaming Adminer is no access control; require private access or proxy TLS/auth/MFA, updates and removal of unused copies.
-- verify-listeners (REASONED; grafana-pin, prometheus-pin, engine-pinned, moby-pinned): Inventory sockets and Docker publications; as this guide's assessment, a protected frontend or absent socket does not prove backend isolation or reachability. Docker documents explicit publish addresses and IPv6-to-IPv4 proxying when no host IP is given, the bridge is IPv4-only and --userland-proxy=true (default). Fetched sources do not establish NAT publication without a host listener; the fetched Moby TCP path listens even without a proxy.
-- verify-login (REASONED; mongo, grafana, prometheus, phpmyadmin, pgadmin, adminer): Anonymous dashboard data is a finding; require denial or verified login challenge. Arbitrary redirects and DNS/TLS/proxy errors are inconclusive.
-- verify-data (REASONED; mongo, grafana, prometheus, phpmyadmin, pgadmin, adminer): A 200 login shell proves nothing; require a known data route to succeed authorized and deny anonymous access; 404/server errors are inconclusive.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Database and monitoring panels are the most-scanned targets on the internet, and several ship with known default credentials. One rule dominates everything tool-specific below: **an admin panel is never reachable from the public internet.** Bind it to loopback and reach it through SSH port forwarding, a VPN or tailnet ([tailscale.md](tailscale.md)), or Cloudflare Access ([cloudflare.md](cloudflare.md)); anything public sits behind a TLS proxy with its own authentication ([nginx.md](nginx.md), [caddy.md](caddy.md)) plus MFA ([mfa.md](mfa.md)).
 
@@ -309,3 +114,224 @@ REASONED: preceding block; listener inventory, anonymous front-page/data-route c
 - Docker conditional IPv6-to-IPv4 userland-proxy mapping, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L60-L62
 - Docker Linux firewall rules for publication, at 4e9a5751518ed8223a8dcde53693badddd72604f (checked October 2026): https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L11-L15
 - Moby port mapping at v28.3.3, conditional proxy startup and TCP listening without a proxy (checked October 2026): https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/admin-uis.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- phpmyadmin: phpMyAdmin (unknown)
+- grafana-pin: Grafana (v13.2.2)
+- prometheus-pin: Prometheus (v3.14.0)
+- pgadmin: pgAdmin (unknown)
+- mongo: mongo-express (unknown)
+- grafana: Grafana docs (unknown)
+- prometheus: Prometheus docs (unknown)
+- adminer: Adminer (unknown)
+- redisinsight: RedisInsight (3.8.0)
+- go: Go net (unknown)
+- htpasswd: Apache htpasswd (2.4)
+- httpd-source: Apache httpd htpasswd source (2.4.69)
+- engine-pinned: Docker Engine networking documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- moby-pinned: Moby port mapping source (v28.3.3)
+- owasp-source: OWASP Password Storage Cheat Sheet (72865b1e3b5754246a101778dc00b37f9c233373)
+
+Claims (full source mapping in the JSON block below):
+
+- private (REASONED; grafana, prometheus, phpmyadmin, pgadmin, adminer, redisinsight): Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight 3.8.0 config defaults to 0.0.0.0:5540 via RI_APP_HOST/RI_APP_PORT, with empty excludeAuthRoutes; fetched session/window middleware does not establish complete inbound authentication or login/dashboard 200 responses. Keeping RedisInsight and similar tools on loopback or a private network is this guide's advice.
+- mongo-enable (REASONED; mongo): Recent login defaults off; current ENABLED and deprecated BASICAUTH fallback differ from some 1.0.x username-triggered builds. Set both flags and verify.
+- mongo-credentials (REASONED; mongo): Set nonempty BASICAUTH_USERNAME/PASSWORD instead of admin/pass defaults.
+- mongo-database (REASONED; mongo): Web Basic auth is separate from MongoDB credentials in ME_CONFIG_MONGODB_URL.
+- grafana-admin (REASONED; grafana): First login uses admin/admin and prompts for replacement; use strong credentials and individual accounts.
+- grafana-anonymous (REASONED; grafana): Disable Grafana anonymous access if enabled.
+- grafana-mfa (REASONED; grafana): Prefer SSO with MFA at the identity provider.
+- grafana-bind (REASONED; grafana-pin, go): Empty http_addr joins the port and binds all interfaces; set 127.0.0.1.
+- grafana-tls (REASONED; grafana): Native HTTPS uses server protocol=https, cert_file and cert_key.
+- prometheus-auth (REASONED; prometheus): Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes.
+- prometheus-bcrypt (REASONED; prometheus, htpasswd, httpd-source, owasp-source): Use htpasswd -nB -C 12; Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, by this guide's comparison below OWASP's minimum work factor of 10 for legacy bcrypt.
+- prometheus-bind (REASONED; prometheus-pin): Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090.
+- prometheus-tls (REASONED; prometheus): web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config.
+- database-panels (REASONED; phpmyadmin, pgadmin): Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated.
+- pgadmin-login (REASONED; pgadmin): pgAdmin server mode has its own accounts/login.
+- adminer-login (REASONED; adminer): Adminer uses database credentials, not a separate account store; server-side connections expose even private databases to login attempts.
+- adminer-file (REASONED; adminer): Renaming Adminer is no access control; require private access or proxy TLS/auth/MFA, updates and removal of unused copies.
+- verify-listeners (REASONED; grafana-pin, prometheus-pin, engine-pinned, moby-pinned): Inventory sockets and Docker publications; as this guide's assessment, a protected frontend or absent socket does not prove backend isolation or reachability. Docker documents explicit publish addresses and IPv6-to-IPv4 proxying when no host IP is given, the bridge is IPv4-only and --userland-proxy=true (default). Fetched sources do not establish NAT publication without a host listener; the fetched Moby TCP path listens even without a proxy.
+- verify-login (REASONED; mongo, grafana, prometheus, phpmyadmin, pgadmin, adminer): Anonymous dashboard data is a finding; require denial or verified login challenge. Arbitrary redirects and DNS/TLS/proxy errors are inconclusive.
+- verify-data (REASONED; mongo, grafana, prometheus, phpmyadmin, pgadmin, adminer): A 200 login shell proves nothing; require a known data route to succeed authorized and deny anonymous access; 404/server errors are inconclusive.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-18",
+  "documentation_checked": "2026-09",
+  "body_sha256": "92d3d0f412f545709088bb0ce3d9b82c95988187a6fd4fcf75747d818f8d5c8b",
+  "components": {
+    "phpmyadmin": {
+      "name": "phpMyAdmin",
+      "basis": "unknown",
+      "sources": {
+        "s5f6c8965c539": "https://www.phpmyadmin.net/docs/"
+      }
+    },
+    "grafana-pin": {
+      "name": "Grafana",
+      "basis": "v13.2.2",
+      "sources": {
+        "s4c6ff3174e7e": "https://github.com/grafana/grafana/blob/v13.2.2/conf/defaults.ini#L49-L50",
+        "sb00e234d0ddd": "https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L467-L469",
+        "sf14b29976adb": "https://github.com/grafana/grafana/blob/v13.2.2/pkg/api/http_server.go#L568"
+      }
+    },
+    "prometheus-pin": {
+      "name": "Prometheus",
+      "basis": "v3.14.0",
+      "sources": {
+        "s6d5f308b02a2": "https://github.com/prometheus/prometheus/blob/v3.14.0/cmd/prometheus/main.go#L424-L425"
+      }
+    },
+    "pgadmin": {
+      "name": "pgAdmin",
+      "basis": "unknown",
+      "sources": {
+        "s2f7e33714435": "https://www.pgadmin.org/docs/"
+      }
+    },
+    "mongo": {
+      "name": "mongo-express",
+      "basis": "unknown",
+      "sources": {
+        "s69ec4eee2c85": "https://github.com/mongo-express/mongo-express"
+      }
+    },
+    "grafana": {
+      "name": "Grafana docs",
+      "basis": "unknown",
+      "sources": {
+        "s7aa447405cc5": "https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/",
+        "sc241e0772095": "https://grafana.com/docs/grafana/latest/setup-grafana/set-up-https/"
+      }
+    },
+    "prometheus": {
+      "name": "Prometheus docs",
+      "basis": "unknown",
+      "sources": {
+        "scce074c47e9c": "https://prometheus.io/docs/guides/basic-auth/",
+        "sc48b506cc29a": "https://prometheus.io/docs/guides/tls-encryption/"
+      }
+    },
+    "adminer": {
+      "name": "Adminer",
+      "basis": "unknown",
+      "sources": {
+        "sb5eda9397b18": "https://www.adminer.org/"
+      }
+    },
+    "redisinsight": {
+      "name": "RedisInsight",
+      "basis": "3.8.0",
+      "sources": {
+        "s6b8fb1c9bbbc": "https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/config/default.ts#L99-L100",
+        "s7ba57be16bb3": "https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/config/default.ts#L133",
+        "sddf9b5ee80b9": "https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/src/common/middlewares/single-user-auth.middleware.ts#L20-L49",
+        "s5e6e219b4b65": "https://github.com/redis/RedisInsight/blob/3.8.0/redisinsight/api/src/modules/auth/window-auth/middleware/window.auth.middleware.ts#L14-L35"
+      }
+    },
+    "go": {
+      "name": "Go net",
+      "basis": "unknown",
+      "sources": {
+        "s37204ff1b27c": "https://pkg.go.dev/net#Listen"
+      }
+    },
+    "htpasswd": {
+      "name": "Apache htpasswd",
+      "basis": "2.4",
+      "sources": {
+        "scde9004bb967": "https://httpd.apache.org/docs/2.4/programs/htpasswd.html"
+      }
+    },
+    "httpd-source": {
+      "name": "Apache httpd htpasswd source",
+      "basis": "2.4.69",
+      "sources": {
+        "sfed14ba2991a": "https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L297",
+        "sf711558bdf3c": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L45",
+        "s4aa0f7f341fb": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L292-L295",
+        "s4ec6b9b216dc": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L373-L383",
+        "s6952d96564d9": "https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L129"
+      }
+    },
+    "engine-pinned": {
+      "name": "Docker Engine networking documentation",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "sb3dacfbaf7e1": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L33-L38",
+        "s1c82ff316a7e": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/port-publishing.md#L60-L62",
+        "sc244607b20e4": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/network/packet-filtering-firewalls.md#L11-L15"
+      }
+    },
+    "moby-pinned": {
+      "name": "Moby port mapping source",
+      "basis": "v28.3.3",
+      "sources": {
+        "seaf4197aafaa": "https://raw.githubusercontent.com/moby/moby/v28.3.3/libnetwork/drivers/bridge/port_mapping_linux.go"
+      }
+    },
+    "owasp-source": {
+      "name": "OWASP Password Storage Cheat Sheet",
+      "basis": "72865b1e3b5754246a101778dc00b37f9c233373",
+      "sources": {
+        "s4531e65b6502": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13"
+      }
+    }
+  },
+  "claims": {
+    "private": {"text": "Keep panels private; public front doors need proxy TLS, authentication and MFA. RedisInsight 3.8.0 config defaults to 0.0.0.0:5540 via RI_APP_HOST/RI_APP_PORT, with empty excludeAuthRoutes; fetched session/window middleware does not establish complete inbound authentication or login/dashboard 200 responses. Keeping RedisInsight and similar tools on loopback or a private network is this guide's advice.", "components": ["grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer", "redisinsight"], "sources": ["grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18", "redisinsight:s6b8fb1c9bbbc", "redisinsight:s7ba57be16bb3", "redisinsight:sddf9b5ee80b9", "redisinsight:s5e6e219b4b65"], "status": "REASONED"},
+    "mongo-enable": {"text": "Recent login defaults off; current ENABLED and deprecated BASICAUTH fallback differ from some 1.0.x username-triggered builds. Set both flags and verify.", "components": ["mongo"], "sources": ["mongo:s69ec4eee2c85"], "status": "REASONED"},
+    "mongo-credentials": {"text": "Set nonempty BASICAUTH_USERNAME/PASSWORD instead of admin/pass defaults.", "components": ["mongo"], "sources": ["mongo:s69ec4eee2c85"], "status": "REASONED"},
+    "mongo-database": {"text": "Web Basic auth is separate from MongoDB credentials in ME_CONFIG_MONGODB_URL.", "components": ["mongo"], "sources": ["mongo:s69ec4eee2c85"], "status": "REASONED"},
+    "grafana-admin": {"text": "First login uses admin/admin and prompts for replacement; use strong credentials and individual accounts.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5"], "status": "REASONED"},
+    "grafana-anonymous": {"text": "Disable Grafana anonymous access if enabled.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5"], "status": "REASONED"},
+    "grafana-mfa": {"text": "Prefer SSO with MFA at the identity provider.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5"], "status": "REASONED"},
+    "grafana-bind": {"text": "Empty http_addr joins the port and binds all interfaces; set 127.0.0.1.", "components": ["grafana-pin", "go"], "sources": ["grafana-pin:s4c6ff3174e7e", "grafana-pin:sb00e234d0ddd", "grafana-pin:sf14b29976adb", "go:s37204ff1b27c"], "status": "REASONED"},
+    "grafana-tls": {"text": "Native HTTPS uses server protocol=https, cert_file and cert_key.", "components": ["grafana"], "sources": ["grafana:s7aa447405cc5", "grafana:sc241e0772095"], "status": "REASONED"},
+    "prometheus-auth": {"text": "Authentication defaults off; web.config.file supplies basic_auth_users with bcrypt hashes.", "components": ["prometheus"], "sources": ["prometheus:scce074c47e9c"], "status": "REASONED"},
+    "prometheus-bcrypt": {"text": "Use htpasswd -nB -C 12; Apache httpd 2.4.69 bare -B defaults to bcrypt cost 5, by this guide's comparison below OWASP's minimum work factor of 10 for legacy bcrypt.", "components": ["prometheus", "htpasswd", "httpd-source", "owasp-source"], "sources": ["prometheus:scce074c47e9c", "htpasswd:scde9004bb967", "httpd-source:sfed14ba2991a", "httpd-source:sf711558bdf3c", "httpd-source:s4aa0f7f341fb", "httpd-source:s4ec6b9b216dc", "httpd-source:s6952d96564d9", "owasp-source:s4531e65b6502"], "status": "REASONED"},
+    "prometheus-bind": {"text": "Default 0.0.0.0:9090; set --web.listen-address=127.0.0.1:9090.", "components": ["prometheus-pin"], "sources": ["prometheus-pin:s6d5f308b02a2"], "status": "REASONED"},
+    "prometheus-tls": {"text": "web.yml tls_server_config cert_file/key_file enable TLS; validate with promtool check web-config.", "components": ["prometheus"], "sources": ["prometheus:sc48b506cc29a"], "status": "REASONED"},
+    "database-panels": {"text": "Keep phpMyAdmin/pgAdmin behind proxy TLS/auth, restrict source IPs where supported and keep updated.", "components": ["phpmyadmin", "pgadmin"], "sources": ["phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435"], "status": "REASONED"},
+    "pgadmin-login": {"text": "pgAdmin server mode has its own accounts/login.", "components": ["pgadmin"], "sources": ["pgadmin:s2f7e33714435"], "status": "REASONED"},
+    "adminer-login": {"text": "Adminer uses database credentials, not a separate account store; server-side connections expose even private databases to login attempts.", "components": ["adminer"], "sources": ["adminer:sb5eda9397b18"], "status": "REASONED"},
+    "adminer-file": {"text": "Renaming Adminer is no access control; require private access or proxy TLS/auth/MFA, updates and removal of unused copies.", "components": ["adminer"], "sources": ["adminer:sb5eda9397b18"], "status": "REASONED"},
+    "verify-listeners": {"text": "Inventory sockets and Docker publications; as this guide's assessment, a protected frontend or absent socket does not prove backend isolation or reachability. Docker documents explicit publish addresses and IPv6-to-IPv4 proxying when no host IP is given, the bridge is IPv4-only and --userland-proxy=true (default). Fetched sources do not establish NAT publication without a host listener; the fetched Moby TCP path listens even without a proxy.", "components": ["grafana-pin", "prometheus-pin", "engine-pinned", "moby-pinned"], "sources": ["grafana-pin:s4c6ff3174e7e", "prometheus-pin:s6d5f308b02a2", "engine-pinned:sb3dacfbaf7e1", "engine-pinned:s1c82ff316a7e", "engine-pinned:sc244607b20e4", "moby-pinned:seaf4197aafaa"], "status": "REASONED", "verify": [1]},
+    "verify-login": {"text": "Anonymous dashboard data is a finding; require denial or verified login challenge. Arbitrary redirects and DNS/TLS/proxy errors are inconclusive.", "components": ["mongo", "grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer"], "sources": ["mongo:s69ec4eee2c85", "grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18"], "status": "REASONED", "verify": [1]},
+    "verify-data": {"text": "A 200 login shell proves nothing; require a known data route to succeed authorized and deny anonymous access; 404/server errors are inconclusive.", "components": ["mongo", "grafana", "prometheus", "phpmyadmin", "pgadmin", "adminer"], "sources": ["mongo:s69ec4eee2c85", "grafana:s7aa447405cc5", "prometheus:scce074c47e9c", "phpmyadmin:s5f6c8965c539", "pgadmin:s2f7e33714435", "adminer:sb5eda9397b18"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->

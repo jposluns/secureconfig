@@ -1,281 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-18",
-  "documentation_checked": "2026-09",
-  "body_sha256": "43cf22968b497a23408d386c38d01f763e391f115cf9a92f4fb443ce28cea9a8",
-  "components": {
-    "nocodb": {
-      "name": "NocoDB",
-      "basis": "2026.09.0",
-      "sources": {
-        "sa19c6557b712": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/Noco.ts",
-        "s635b35ce4689": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/utils/trustProxy.ts",
-        "sd74ca4df55b0": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/run/dockerEntry.ts",
-        "s5ea55dc5f0d9": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/services/users/users.service.ts",
-        "sd0e9f451673f": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/interface/AppSettings.ts",
-        "s8a1de0bc97b0": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/helpers/initAdminFromEnv.ts",
-        "sca40040b40cc": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/utils/encryptDecrypt.ts",
-        "saf056bb4ff37": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/helpers/initDataSourceEncryption.ts",
-        "sbfbf630008e1": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/docker/start.sh",
-        "se5da9707c684": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/docker/start-litestream.sh",
-        "s536899ecd4a5": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md",
-        "sca0c9c0ecf24": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L56-L75",
-        "sb4d5b659f7b8": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L77-L90",
-        "s2769b9054778": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L82",
-        "s2b16e2c93606": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L90",
-        "s118384fa1d9f": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L95",
-        "s9bee4adc612e": "https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0",
-        "s3f296c702bc5": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3",
-        "se81c30b3f43b": "https://github.com/nocodb/nocodb/blob/2026.09.0/docker-compose/examples/external-postgres-and-redis/docker.env"
-      }
-    },
-    "docker": {
-      "name": "Docker docs",
-      "basis": "unknown",
-      "sources": {
-        "sd34e76a09f6c": "https://docs.docker.com/reference/cli/docker/container/exec/",
-        "s2fecb6db5480": "https://docs.docker.com/engine/network/firewall-iptables/"
-      }
-    },
-    "docker-new": {
-      "name": "Docker CLI",
-      "basis": "v27.2.0",
-      "sources": {
-        "sca9a0e1e4b6a": "https://github.com/docker/cli/blob/v27.2.0/cli/command/formatter/container.go"
-      }
-    },
-    "docker-old": {
-      "name": "Docker CLI",
-      "basis": "v27.1.2",
-      "sources": {
-        "sa202ad11d4ed": "https://github.com/docker/cli/blob/v27.1.2/cli/command/formatter/container.go"
-      }
-    },
-    "node": {
-      "name": "Node.js",
-      "basis": "v22.22.1",
-      "sources": {
-        "sfb3e306c102d": "https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md"
-      }
-    },
-    "baserow": {
-      "name": "Baserow",
-      "basis": "2.3.4",
-      "sources": {
-        "s1b31314982f4": "https://github.com/baserow/baserow/blob/2.3.4/docker-compose.yml",
-        "s3f61036aca03": "https://github.com/baserow/baserow/blob/2.3.4/docs/installation/install-with-docker.md",
-        "s34b87f60dcc6": "https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/core/user/handler.py",
-        "s4588448964a2": "https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/core/models.py",
-        "sd858f9ee45e0": "https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/core/apps.py",
-        "s1a472d828699": "https://github.com/baserow/baserow/blob/2.3.4/.env.example"
-      }
-    },
-    "appsmith": {
-      "name": "Appsmith",
-      "basis": "v2.4.1",
-      "sources": {
-        "s2650629933a1": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/resources/application-ce.properties",
-        "sd1c55be91e30": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/solutions/ce/UserSignupCEImpl.java",
-        "se3cd894dc579": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/exceptions/AppsmithError.java",
-        "sa68daf87cde7": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/docker/fs/opt/appsmith/entrypoint.sh",
-        "s9fdcff5a28a4": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/docker/docker-compose.yml",
-        "sfa551c344e8b": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/aws_ami/docker-compose.yml"
-      }
-    },
-    "budibase": {
-      "name": "Budibase",
-      "basis": "v3.46.0",
-      "sources": {
-        "s735ead81ce9c": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/.env",
-        "s74d858053d12": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml",
-        "s7fbf706a4c8f": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/proxy/nginx.prod.conf",
-        "s45379b35a980": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts",
-        "sc0a3ac85466f": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/controllers/global/users.ts",
-        "s4902d93986c7": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts",
-        "s5209f2549c9b": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/.env#L4-L16",
-        "s9afbeb2063b5": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml#L111-L120",
-        "s32775c45ba51": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml#L129-L144",
-        "s4d349b4d4ac3": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/proxy/nginx.prod.conf#L86",
-        "s2a033b3a4117": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/proxy/nginx.prod.conf#L236-L239",
-        "s2db467c4f1cf": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts#L40-L43",
-        "sbd761572fef0": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts#L133-L167",
-        "sb8f5a18ab4ee": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts#L13-L28",
-        "s7883460cabbf": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts#L75-L79",
-        "se18a9c7182fb": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/controllers/global/users.ts#L229-L274",
-        "s816a78b83956": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/server/src/startup/index.ts#L226-L266",
-        "sedd5e0682bf0": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/backend-core/src/environment.ts#L267-L268",
-        "s35ae42bd7a1c": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml#L27-L28",
-        "scdcd8b6e7071": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/Dockerfile#L89-L91",
-        "sc74f36aa8340": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/Dockerfile#L151-L154",
-        "sf6e2a660380f": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/VERSION#L1",
-        "sfdc76e71aff6": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/runner.sh#L165-L166",
-        "s851ad716e105": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/docker-entrypoint.sh#L70-L75",
-        "se993218560de": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/hosting.properties#L4-L18",
-        "s6179ec0d9abd": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot#L11-L15",
-        "s9cc27222e133": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/backend-core/tests/jestEnv.ts#L9-L10",
-        "sbe7e0469e7a8": "https://github.com/Budibase/budibase/blob/v3.46.0/scripts/dev/manage.js#L11-L12"
-      }
-    },
-    "couchdb": {
-      "name": "CouchDB",
-      "basis": "3.5.2",
-      "sources": {
-        "s34292991c4ec": "https://github.com/apache/couchdb/blob/3.5.2/src/docs/src/api/server/authn.rst"
-      }
-    },
-    "litellm": {
-      "name": "LiteLLM authentication source",
-      "basis": "6ef7b86748118ceecd95271727c2fa167ce55fec",
-      "sources": {
-        "sbe6fa0b81017": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/user_api_key_auth.py"
-      }
-    },
-    "windmill": {
-      "name": "Windmill",
-      "basis": "v1.817.0",
-      "sources": {
-        "s91439e21d4ac": "https://github.com/windmill-labs/windmill/blob/v1.817.0/README.md",
-        "s8e4bbba271f2": "https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/src/main.rs",
-        "sd775b7c95872": "https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/windmill-worker/src/worker.rs",
-        "sfcc72cf06c9e": "https://github.com/windmill-labs/windmill/blob/v1.817.0/docker-compose.yml",
-        "s345ca635c837": "https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/migrations/20220123221903_first.up.sql",
-        "s03c33b490c08": "https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/migrations/20220816185849_remove_non_admin_users.up.sql"
-      }
-    }
-  },
-  "claims": {
-    "private": {"text": "Keep builders private with fronting auth, claim admin early and protect databases storing connected-system credentials.", "components": ["nocodb", "baserow", "appsmith", "budibase", "windmill"], "sources": ["nocodb:sd74ca4df55b0", "baserow:s1b31314982f4", "appsmith:s9fdcff5a28a4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "REASONED"},
-    "nocodb-bind": {"text": "PORT defaults 8080; listen omits host, so Node binds unspecified IPv6/IPv4. No application bind setting; restrict publication/firewall.", "components": ["nocodb", "node"], "sources": ["nocodb:sa19c6557b712", "nocodb:sd74ca4df55b0", "node:sfb3e306c102d"], "status": "REASONED"},
-    "nocodb-first": {"text": "First signup becomes super-admin; claim first or seed NC_ADMIN_EMAIL/NC_ADMIN_PASSWORD.", "components": ["nocodb"], "sources": ["nocodb:s5ea55dc5f0d9", "nocodb:s8a1de0bc97b0"], "status": "REASONED"},
-    "nocodb-signup": {"text": "invite_only_signup defaults false; enable to stop later self-signups.", "components": ["nocodb"], "sources": ["nocodb:s5ea55dc5f0d9", "nocodb:sd0e9f451673f"], "status": "REASONED"},
-    "nocodb-encryption": {"text": "Unset NC_CONNECTION_ENCRYPT_KEY stores external DB credentials unchanged; set before adding sources, or startup encrypts existing sources when added later.", "components": ["nocodb"], "sources": ["nocodb:sca40040b40cc", "nocodb:saf056bb4ff37"], "status": "REASONED"},
-    "nocodb-jwt": {"text": "Unset NC_AUTH_JWT_SECRET generates/stores a UUID as nc_auth_jwt_secret; replace README sample 569a1821-0a93-45e8-87ab-eb857f20a010.", "components": ["nocodb"], "sources": ["nocodb:sa19c6557b712", "nocodb:s536899ecd4a5"], "status": "REASONED"},
-    "nocodb-cors": {"text": "Entry file allows every CORS origin.", "components": ["nocodb"], "sources": ["nocodb:sd74ca4df55b0"], "status": "REASONED"},
-    "nocodb-proxy": {"text": "Startup resets trust proxy from NC_TRUST_PROXY, default no trust; restrict hops/subnets, never true with direct client access.", "components": ["nocodb"], "sources": ["nocodb:sa19c6557b712", "nocodb:s635b35ce4689", "nocodb:sd74ca4df55b0"], "status": "REASONED"},
-    "nocodb-packaging": {"text": "README marks binaries for quick local testing and documents Docker image and Auto-upstall paths; the October 2026 release API record lists no assets; the 2026.09.0 tag carries package version 0.301.3. Use the image or vendor install script for production (guide advice). The README command fetches the script over plain HTTP and executes it with Bash; its source link points to develop. Fetch over HTTPS from a pinned, reviewed source and read before running (guide advice).", "components": ["nocodb"], "sources": ["nocodb:s536899ecd4a5", "nocodb:sca0c9c0ecf24", "nocodb:sb4d5b659f7b8", "nocodb:s118384fa1d9f", "nocodb:s9bee4adc612e", "nocodb:s3f296c702bc5", "nocodb:s2769b9054778", "nocodb:s2b16e2c93606"], "status": "REASONED"},
-    "baserow-bind": {"text": "Caddy publishes 80/443 on HOST_PUBLISH_IP default 0.0.0.0; set it or publish loopback. Docker wildcard publication bypasses UFW.", "components": ["baserow"], "sources": ["baserow:s1b31314982f4", "baserow:s3f61036aca03"], "status": "REASONED"},
-    "baserow-first": {"text": "First signup becomes staff; claim before exposure.", "components": ["baserow"], "sources": ["baserow:s34b87f60dcc6"], "status": "REASONED"},
-    "baserow-signup": {"text": "allow_new_signups defaults True; disable in admin settings, yielding Sign up is disabled.", "components": ["baserow"], "sources": ["baserow:s34b87f60dcc6", "baserow:s4588448964a2"], "status": "REASONED"},
-    "baserow-secrets": {"text": "Compose requires SECRET_KEY/DATABASE_PASSWORD/REDIS_PASSWORD; .env.example leaves them empty. Generate your own.", "components": ["baserow"], "sources": ["baserow:s1b31314982f4", "baserow:s1a472d828699"], "status": "REASONED"},
-    "baserow-mfa": {"text": "Core registers a TOTP provider.", "components": ["baserow"], "sources": ["baserow:sd858f9ee45e0"], "status": "REASONED"},
-    "appsmith-bind": {"text": "Java defaults APPSMITH_SERVER_ADDRESS=127.0.0.1 and port 8080 inside the container.", "components": ["appsmith"], "sources": ["appsmith:s2650629933a1"], "status": "REASONED"},
-    "appsmith-publish": {"text": "Bundled Caddy fronts port 80; development Compose publishes host 8080, AWS example 80/443.", "components": ["appsmith"], "sources": ["appsmith:sa68daf87cde7", "appsmith:s9fdcff5a28a4", "appsmith:sfa551c344e8b"], "status": "REASONED"},
-    "appsmith-first": {"text": "First signup claims super-user while no users exist; claim before exposure.", "components": ["appsmith"], "sources": ["appsmith:sd1c55be91e30"], "status": "REASONED"},
-    "appsmith-signup": {"text": "APPSMITH_SIGNUP_DISABLED defaults false; set true or restrict APPSMITH_SIGNUP_ALLOWED_DOMAINS. Refusal is SIGNUP_DISABLED.", "components": ["appsmith"], "sources": ["appsmith:s2650629933a1", "appsmith:sd1c55be91e30", "appsmith:se3cd894dc579"], "status": "REASONED"},
-    "appsmith-encryption": {"text": "Entrypoint generates 13-character encryption password/salt; external values override them. Development Compose sets both abcd; replace before first start.", "components": ["appsmith"], "sources": ["appsmith:sa68daf87cde7", "appsmith:s9fdcff5a28a4"], "status": "REASONED"},
-    "appsmith-rotation": {"text": "Changing an existing abcd encryption pair presumably makes stored credentials unreadable; plan re-entry. Inferred, not tested.", "components": ["appsmith"], "sources": ["appsmith:sa68daf87cde7", "appsmith:s9fdcff5a28a4"], "status": "REASONED"},
-    "budibase-publish": {"text": "Proxy publishes MAIN_PORT, sample 10000; LiteLLM publishes LITELLM_PORT default 4000.", "components": ["budibase"], "sources": ["budibase:s735ead81ce9c", "budibase:s74d858053d12"], "status": "REASONED"},
-    "budibase-couchdb": {"text": "Proxy /db/ reaches CouchDB. Compose maps COUCH_DB_USER/PASSWORD to COUCHDB_USER/PASSWORD; the image entrypoint adds that admin only when both are non-empty and its existing-admin check finds none for that name. With unchanged samples and that condition, anyone reaching the proxy can try budibase/budibase.", "components": ["budibase"], "sources": ["budibase:s735ead81ce9c", "budibase:s7fbf706a4c8f", "budibase:s5209f2549c9b", "budibase:s9afbeb2063b5", "budibase:s4d349b4d4ac3", "budibase:s2a033b3a4117", "budibase:scdcd8b6e7071", "budibase:sc74f36aa8340", "budibase:sf6e2a660380f", "budibase:sfdc76e71aff6", "budibase:s851ad716e105"], "status": "REASONED"},
-    "budibase-secrets": {"text": "Sample JWT_SECRET/API_ENCRYPTION_KEY are testsecret; service passwords, INTERNAL_API_KEY and LITELLM_MASTER_KEY are budibase. Replace all before first start. Compose pins docker.io/litellm/litellm:main-v1.83.10-stable.patch.3 and passes LITELLM_MASTER_KEY; acceptance of budibase by that image is not established.", "components": ["budibase"], "sources": ["budibase:s735ead81ce9c", "budibase:s74d858053d12", "budibase:s5209f2549c9b", "budibase:s32775c45ba51"], "status": "REASONED"},
-    "budibase-sample-check": {"text": "This guide's October 2026 search of the full v3.46.0 tag with git grep -l testsecret v3.46.0 found exactly hosting/.env, hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot, hosting/hosting.properties, packages/backend-core/tests/jestEnv.ts and scripts/dev/manage.js. This guide inspected those hits. This guide's assessment is that these hits do not establish absence of production rejection; no live safeguard test ran.", "components": ["budibase"], "sources": ["budibase:s735ead81ce9c", "budibase:s5209f2549c9b", "budibase:se993218560de", "budibase:s6179ec0d9abd", "budibase:s9cc27222e133", "budibase:sbe7e0469e7a8"], "status": "REASONED"},
-    "budibase-init": {"text": "POST /api/global/users/init is public; its body validator requires string email and tenantId fields, permits an optional password, rejects unknown fields and precedes adminUser. In the supplied tenant context, checkAnyUserExists() truthy causes 403 with the exact vendor error quoted in the body. The helper definition was not fetched, so which users count and any multi-tenancy exception remain unestablished. This guide assesses this POST as unsafe for read-only claimed-state probing: invalid bodies can fail validation in both states, while accepted initialization creates an admin.", "components": ["budibase"], "sources": ["budibase:s45379b35a980", "budibase:sc0a3ac85466f", "budibase:s4902d93986c7", "budibase:s2db467c4f1cf", "budibase:sbd761572fef0", "budibase:sb8f5a18ab4ee", "budibase:s7883460cabbf", "budibase:se18a9c7182fb"], "status": "REASONED"},
-    "budibase-seed": {"text": "Claim admin before exposure (guide advice), manually or with BB_ADMIN_USER_EMAIL/BB_ADMIN_USER_PASSWORD. Startup attempts seeding only with SELF_HOSTED truthy, MULTI_TENANCY falsy and both values non-empty; in tenancy.getTenantId() context, it calls createAdminUser when the admin checklist is not checked OR the email does not exist, with hashPassword/requirePassword/skipPasswordValidation true.", "components": ["budibase"], "sources": ["budibase:sc0a3ac85466f", "budibase:sedd5e0682bf0", "budibase:s35ae42bd7a1c", "budibase:s816a78b83956"], "status": "REASONED"},
-    "windmill-code": {"text": "Workers execute user scripts; a login enables code execution on worker hosts.", "components": ["windmill"], "sources": ["windmill:s91439e21d4ac", "windmill:sd775b7c95872"], "status": "REASONED"},
-    "windmill-bind": {"text": "Default 0.0.0.0:8000; SERVER_BIND_ADDR changes binary binding. Default wildcard bind was not observed.", "components": ["windmill"], "sources": ["windmill:s8e4bbba271f2"], "status": "REASONED"},
-    "windmill-compose": {"text": "Compose exposes server 8000 internally; Caddy publishes 80/25 on all host interfaces. Bind publications privately; container loopback cutting Caddy off is inferred.", "components": ["windmill"], "sources": ["windmill:sfcc72cf06c9e"], "status": "REASONED"},
-    "windmill-sandbox": {"text": "DISABLE_NSJAIL defaults true; sandboxing is not enabled by default.", "components": ["windmill"], "sources": ["windmill:sd775b7c95872"], "status": "REASONED"},
-    "windmill-privileged": {"text": "Shipped worker uses privileged=true.", "components": ["windmill"], "sources": ["windmill:sfcc72cf06c9e"], "status": "REASONED"},
-    "windmill-smtp": {"text": "Port 25 serves email triggers; do not publish unless used.", "components": ["windmill"], "sources": ["windmill:sfcc72cf06c9e"], "status": "REASONED"},
-    "windmill-debugger": {"text": "Vendor warns REQUIRE_SIGNED_DEBUG_REQUESTS=false exposes an unauthenticated code-execution debugger on reachable deployments.", "components": ["windmill"], "sources": ["windmill:sfcc72cf06c9e"], "status": "REASONED"},
-    "verify-nocodb-signup": {"text": "Controlled signup creation is exposed; invite-only refusal is fixed. Hidden links prove nothing; inspect backend setting and confirm admin login.", "components": ["nocodb"], "sources": ["nocodb:s5ea55dc5f0d9", "nocodb:sd0e9f451673f"], "status": "REASONED"},
-    "verify-baserow-signup": {"text": "Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login.", "components": ["baserow"], "sources": ["baserow:s34b87f60dcc6", "baserow:s4588448964a2"], "status": "REASONED"},
-    "verify-appsmith-signup": {"text": "Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts.", "components": ["appsmith"], "sources": ["appsmith:s2650629933a1", "appsmith:sd1c55be91e30", "appsmith:se3cd894dc579"], "status": "REASONED"},
-    "verify-external": {"text": "Probe each public IP; control proves only its port, refusal/timeout may be local filtering, and unexpected connections need host confirmation.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "REASONED"},
-    "windmill-default-login": {"text": "Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200.", "components": ["windmill"], "sources": ["windmill:s91439e21d4ac", "windmill:s345ca635c837", "windmill:s03c33b490c08"], "status": "DEMONSTRATED", "evidence": "After the password was changed, `changeme` got `400` and the new password `200`.", "verify": [4]},
-    "windmill-loopback": {"text": "SERVER_BIND_ADDR=127.0.0.1 produced only a loopback listener on the test port.", "components": ["windmill"], "sources": ["windmill:s8e4bbba271f2"], "status": "DEMONSTRATED", "evidence": "The server's only listener was on 127.0.0.1, at the test port the run set."},
-    "windmill-sandbox-run": {"text": "Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation.", "components": ["windmill"], "sources": ["windmill:sd775b7c95872"], "status": "DEMONSTRATED", "evidence": "on the loopback run, without nsjail installed, the worker logged \"Nsjail sandboxing will NOT be available\"."},
-    "verify-inventory": {"text": "Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation.", "components": ["docker", "baserow", "appsmith", "budibase", "windmill"], "sources": ["docker:s2fecb6db5480", "baserow:s1b31314982f4", "appsmith:s9fdcff5a28a4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "REASONED", "verify": [1]},
-    "verify-port-display": {"text": "IPv6 wildcard displays [::]: from v27.2.0 versus ::: through v27.1.2; both mean all host addresses unless filtered.", "components": ["docker", "docker-new", "docker-old"], "sources": ["docker:s2fecb6db5480", "docker-new:sca9a0e1e4b6a", "docker-old:sa202ad11d4ed"], "status": "REASONED", "verify": [1]},
-    "verify-sample-tokens": {"text": "Whole-token search found sample secrets/variants, clean replaced copies and unreadable paths; harmless matches and external environment values limit scope.", "components": ["nocodb", "appsmith", "budibase", "windmill"], "sources": ["nocodb:s536899ecd4a5", "appsmith:s9fdcff5a28a4", "budibase:s735ead81ce9c", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "On copies with the values replaced it printed \"no vendor sample tokens found\", and on an unreadable path it reported that it did not check.", "verify": [2]},
-    "verify-nocodb-key": {"text": "docker exec tests configured key presence without printing it or passing its value in argv; no real container run. Startup selection/process value remain unverified.", "components": ["nocodb", "docker"], "sources": ["nocodb:sbfbf630008e1", "nocodb:se5da9707c684", "docker:sd34e76a09f6c"], "status": "REASONED", "verify": [3]},
-    "nocodb-key-limits": {"text": "Trusted shells/startup assumed; environment remains readable to same-account/root or Docker-socket holders. Presence does not prove encryption; do not inject a replacement key.", "components": ["nocodb", "docker"], "sources": ["nocodb:sca40040b40cc", "nocodb:sbfbf630008e1", "nocodb:se5da9707c684", "docker:sd34e76a09f6c"], "status": "REASONED", "verify": [3]},
-    "nocodb-key-logic": {"text": "A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated.", "components": ["docker"], "sources": ["docker:sd34e76a09f6c"], "status": "DEMONSTRATED", "evidence": "With a stand-in for `docker exec`, the block printed \"non-empty\" for a set key, \"EMPTY or unset\" for an empty and an unset one, and \"not checked\" when the container was missing;"},
-    "verify-windmill-control": {"text": "Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed.", "components": ["windmill"], "sources": ["windmill:s91439e21d4ac"], "status": "REASONED"},
-    "verify-couchdb": {"text": "Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control.", "components": ["budibase", "couchdb"], "sources": ["budibase:s735ead81ce9c", "budibase:s7fbf706a4c8f", "couchdb:s34292991c4ec", "budibase:s5209f2549c9b", "budibase:s9afbeb2063b5", "budibase:s2a033b3a4117", "budibase:s851ad716e105"], "status": "REASONED", "verify": [5]},
-    "verify-litellm": {"text": "Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-`sk-` keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.", "components": ["budibase", "litellm"], "sources": ["budibase:s735ead81ce9c", "budibase:s74d858053d12", "litellm:sbe6fa0b81017", "budibase:s32775c45ba51"], "status": "REASONED", "verify": [5]},
-    "verify-tcp-outcomes": {"text": "Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "On loopback it printed \"connected\" for the control and an open port, \"timed out\" for a port whose accept queue was full (standing in for a filtered one) and \"refused\" for a closed port, and it stopped when the control was closed.", "verify": [6]},
-    "verify-tcp-inputs": {"text": "Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "`::ffff:0:0` and `::ffff:7f00:1` passed and connected to a listener bound to 127.0.0.1", "verify": [6]}
-  }
-}
----
 # Low-code internal-tool builders: NocoDB, Baserow, Appsmith, Budibase, and Windmill
 
-<!-- version-basis:start -->
-**Version basis**
+Written against NocoDB 2026.09.0, Baserow 2.3.4, Appsmith v2.4.1, Budibase v3.46.0, Windmill v1.817.0, Docker CLI v27.2.0 and v27.1.2, Node.js v22.22.1, and CouchDB 3.5.2; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 51 claims: 7 demonstrated by a check that ran and 44 reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- nocodb: NocoDB (2026.09.0)
-- docker: Docker docs (unknown)
-- docker-new: Docker CLI (v27.2.0)
-- docker-old: Docker CLI (v27.1.2)
-- node: Node.js (v22.22.1)
-- baserow: Baserow (2.3.4)
-- appsmith: Appsmith (v2.4.1)
-- budibase: Budibase (v3.46.0)
-- couchdb: CouchDB (3.5.2)
-- litellm: LiteLLM authentication source (6ef7b86748118ceecd95271727c2fa167ce55fec)
-- windmill: Windmill (v1.817.0)
-
-Claims (full source mapping in the front matter):
-
-- private (REASONED; nocodb, baserow, appsmith, budibase, windmill): Keep builders private with fronting auth, claim admin early and protect databases storing connected-system credentials.
-- nocodb-bind (REASONED; nocodb, node): PORT defaults 8080; listen omits host, so Node binds unspecified IPv6/IPv4. No application bind setting; restrict publication/firewall.
-- nocodb-first (REASONED; nocodb): First signup becomes super-admin; claim first or seed NC_ADMIN_EMAIL/NC_ADMIN_PASSWORD.
-- nocodb-signup (REASONED; nocodb): invite_only_signup defaults false; enable to stop later self-signups.
-- nocodb-encryption (REASONED; nocodb): Unset NC_CONNECTION_ENCRYPT_KEY stores external DB credentials unchanged; set before adding sources, or startup encrypts existing sources when added later.
-- nocodb-jwt (REASONED; nocodb): Unset NC_AUTH_JWT_SECRET generates/stores a UUID as nc_auth_jwt_secret; replace README sample 569a1821-0a93-45e8-87ab-eb857f20a010.
-- nocodb-cors (REASONED; nocodb): Entry file allows every CORS origin.
-- nocodb-proxy (REASONED; nocodb): Startup resets trust proxy from NC_TRUST_PROXY, default no trust; restrict hops/subnets, never true with direct client access.
-- nocodb-packaging (REASONED; nocodb): README marks binaries for quick local testing and documents Docker image and Auto-upstall paths; the October 2026 release API record lists no assets; the 2026.09.0 tag carries package version 0.301.3. Use the image or vendor install script for production (guide advice). The README command fetches the script over plain HTTP and executes it with Bash; its source link points to develop. Fetch over HTTPS from a pinned, reviewed source and read before running (guide advice).
-- baserow-bind (REASONED; baserow): Caddy publishes 80/443 on HOST_PUBLISH_IP default 0.0.0.0; set it or publish loopback. Docker wildcard publication bypasses UFW.
-- baserow-first (REASONED; baserow): First signup becomes staff; claim before exposure.
-- baserow-signup (REASONED; baserow): allow_new_signups defaults True; disable in admin settings, yielding Sign up is disabled.
-- baserow-secrets (REASONED; baserow): Compose requires SECRET_KEY/DATABASE_PASSWORD/REDIS_PASSWORD; .env.example leaves them empty. Generate your own.
-- baserow-mfa (REASONED; baserow): Core registers a TOTP provider.
-- appsmith-bind (REASONED; appsmith): Java defaults APPSMITH_SERVER_ADDRESS=127.0.0.1 and port 8080 inside the container.
-- appsmith-publish (REASONED; appsmith): Bundled Caddy fronts port 80; development Compose publishes host 8080, AWS example 80/443.
-- appsmith-first (REASONED; appsmith): First signup claims super-user while no users exist; claim before exposure.
-- appsmith-signup (REASONED; appsmith): APPSMITH_SIGNUP_DISABLED defaults false; set true or restrict APPSMITH_SIGNUP_ALLOWED_DOMAINS. Refusal is SIGNUP_DISABLED.
-- appsmith-encryption (REASONED; appsmith): Entrypoint generates 13-character encryption password/salt; external values override them. Development Compose sets both abcd; replace before first start.
-- appsmith-rotation (REASONED; appsmith): Changing an existing abcd encryption pair presumably makes stored credentials unreadable; plan re-entry. Inferred, not tested.
-- budibase-publish (REASONED; budibase): Proxy publishes MAIN_PORT, sample 10000; LiteLLM publishes LITELLM_PORT default 4000.
-- budibase-couchdb (REASONED; budibase): Proxy /db/ reaches CouchDB. Compose maps COUCH_DB_USER/PASSWORD to COUCHDB_USER/PASSWORD; the image entrypoint adds that admin only when both are non-empty and its existing-admin check finds none for that name. With unchanged samples and that condition, anyone reaching the proxy can try budibase/budibase.
-- budibase-secrets (REASONED; budibase): Sample JWT_SECRET/API_ENCRYPTION_KEY are testsecret; service passwords, INTERNAL_API_KEY and LITELLM_MASTER_KEY are budibase. Replace all before first start. Compose pins docker.io/litellm/litellm:main-v1.83.10-stable.patch.3 and passes LITELLM_MASTER_KEY; acceptance of budibase by that image is not established.
-- budibase-sample-check (REASONED; budibase): This guide's October 2026 search of the full v3.46.0 tag with git grep -l testsecret v3.46.0 found exactly hosting/.env, hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot, hosting/hosting.properties, packages/backend-core/tests/jestEnv.ts and scripts/dev/manage.js. This guide inspected those hits. This guide's assessment is that these hits do not establish absence of production rejection; no live safeguard test ran.
-- budibase-init (REASONED; budibase): POST /api/global/users/init is public; its body validator requires string email and tenantId fields, permits an optional password, rejects unknown fields and precedes adminUser. In the supplied tenant context, checkAnyUserExists() truthy causes 403 with the exact vendor error quoted in the body. The helper definition was not fetched, so which users count and any multi-tenancy exception remain unestablished. This guide assesses this POST as unsafe for read-only claimed-state probing: invalid bodies can fail validation in both states, while accepted initialization creates an admin.
-- budibase-seed (REASONED; budibase): Claim admin before exposure (guide advice), manually or with BB_ADMIN_USER_EMAIL/BB_ADMIN_USER_PASSWORD. Startup attempts seeding only with SELF_HOSTED truthy, MULTI_TENANCY falsy and both values non-empty; in tenancy.getTenantId() context, it calls createAdminUser when the admin checklist is not checked OR the email does not exist, with hashPassword/requirePassword/skipPasswordValidation true.
-- windmill-code (REASONED; windmill): Workers execute user scripts; a login enables code execution on worker hosts.
-- windmill-bind (REASONED; windmill): Default 0.0.0.0:8000; SERVER_BIND_ADDR changes binary binding. Default wildcard bind was not observed.
-- windmill-compose (REASONED; windmill): Compose exposes server 8000 internally; Caddy publishes 80/25 on all host interfaces. Bind publications privately; container loopback cutting Caddy off is inferred.
-- windmill-sandbox (REASONED; windmill): DISABLE_NSJAIL defaults true; sandboxing is not enabled by default.
-- windmill-privileged (REASONED; windmill): Shipped worker uses privileged=true.
-- windmill-smtp (REASONED; windmill): Port 25 serves email triggers; do not publish unless used.
-- windmill-debugger (REASONED; windmill): Vendor warns REQUIRE_SIGNED_DEBUG_REQUESTS=false exposes an unauthenticated code-execution debugger on reachable deployments.
-- verify-nocodb-signup (REASONED; nocodb): Controlled signup creation is exposed; invite-only refusal is fixed. Hidden links prove nothing; inspect backend setting and confirm admin login.
-- verify-baserow-signup (REASONED; baserow): Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login.
-- verify-appsmith-signup (REASONED; appsmith): Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts.
-- verify-external (REASONED; baserow, budibase, windmill): Probe each public IP; control proves only its port, refusal/timeout may be local filtering, and unexpected connections need host confirmation.
-- windmill-default-login (DEMONSTRATED; windmill): Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200.
-- windmill-loopback (DEMONSTRATED; windmill): SERVER_BIND_ADDR=127.0.0.1 produced only a loopback listener on the test port.
-- windmill-sandbox-run (DEMONSTRATED; windmill): Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation.
-- verify-inventory (REASONED; docker, baserow, appsmith, budibase, windmill): Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation.
-- verify-port-display (REASONED; docker, docker-new, docker-old): IPv6 wildcard displays [::]: from v27.2.0 versus ::: through v27.1.2; both mean all host addresses unless filtered.
-- verify-sample-tokens (DEMONSTRATED; nocodb, appsmith, budibase, windmill): Whole-token search found sample secrets/variants, clean replaced copies and unreadable paths; harmless matches and external environment values limit scope.
-- verify-nocodb-key (REASONED; nocodb, docker): docker exec tests configured key presence without printing it or passing its value in argv; no real container run. Startup selection/process value remain unverified.
-- nocodb-key-limits (REASONED; nocodb, docker): Trusted shells/startup assumed; environment remains readable to same-account/root or Docker-socket holders. Presence does not prove encryption; do not inject a replacement key.
-- nocodb-key-logic (DEMONSTRATED; docker): A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated.
-- verify-windmill-control (REASONED; windmill): Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed.
-- verify-couchdb (REASONED; budibase, couchdb): Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control.
-- verify-litellm (REASONED; budibase, litellm): Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-`sk-` keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.
-- verify-tcp-outcomes (DEMONSTRATED; baserow, budibase, windmill): Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated.
-- verify-tcp-inputs (DEMONSTRATED; baserow, budibase, windmill): Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 These tools sit on top of your databases and APIs and let people build internal apps, forms and
 automations quickly. That is also the exposure. Each one stores credentials for the systems it connects
@@ -735,3 +462,302 @@ mean to publish is the finding.
 - Windmill v1.817.0 worker (`DISABLE_NSJAIL`): https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/windmill-worker/src/worker.rs
 - Windmill v1.817.0 Compose file: https://github.com/windmill-labs/windmill/blob/v1.817.0/docker-compose.yml
 - Windmill v1.817.0 seeded-user migrations: https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/migrations/20220123221903_first.up.sql and https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/migrations/20220816185849_remove_non_admin_users.up.sql
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/low-code-builders.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- nocodb: NocoDB (2026.09.0)
+- baserow: Baserow (2.3.4)
+- appsmith: Appsmith (v2.4.1)
+- budibase: Budibase (v3.46.0)
+- windmill: Windmill (v1.817.0)
+- docker: Docker docs (unknown)
+- docker-new: Docker CLI (v27.2.0)
+- docker-old: Docker CLI (v27.1.2)
+- node: Node.js (v22.22.1)
+- couchdb: CouchDB (3.5.2)
+- litellm: LiteLLM authentication source (6ef7b86748118ceecd95271727c2fa167ce55fec)
+
+Claims (full source mapping in the JSON block below):
+
+- private (REASONED; nocodb, baserow, appsmith, budibase, windmill): Keep builders private with fronting auth, claim admin early and protect databases storing connected-system credentials.
+- nocodb-bind (REASONED; nocodb, node): PORT defaults 8080; listen omits host, so Node binds unspecified IPv6/IPv4. No application bind setting; restrict publication/firewall.
+- nocodb-first (REASONED; nocodb): First signup becomes super-admin; claim first or seed NC_ADMIN_EMAIL/NC_ADMIN_PASSWORD.
+- nocodb-signup (REASONED; nocodb): invite_only_signup defaults false; enable to stop later self-signups.
+- nocodb-encryption (REASONED; nocodb): Unset NC_CONNECTION_ENCRYPT_KEY stores external DB credentials unchanged; set before adding sources, or startup encrypts existing sources when added later.
+- nocodb-jwt (REASONED; nocodb): Unset NC_AUTH_JWT_SECRET generates/stores a UUID as nc_auth_jwt_secret; replace README sample 569a1821-0a93-45e8-87ab-eb857f20a010.
+- nocodb-cors (REASONED; nocodb): Entry file allows every CORS origin.
+- nocodb-proxy (REASONED; nocodb): Startup resets trust proxy from NC_TRUST_PROXY, default no trust; restrict hops/subnets, never true with direct client access.
+- nocodb-packaging (REASONED; nocodb): README marks binaries for quick local testing and documents Docker image and Auto-upstall paths; the October 2026 release API record lists no assets; the 2026.09.0 tag carries package version 0.301.3. Use the image or vendor install script for production (guide advice). The README command fetches the script over plain HTTP and executes it with Bash; its source link points to develop. Fetch over HTTPS from a pinned, reviewed source and read before running (guide advice).
+- baserow-bind (REASONED; baserow): Caddy publishes 80/443 on HOST_PUBLISH_IP default 0.0.0.0; set it or publish loopback. Docker wildcard publication bypasses UFW.
+- baserow-first (REASONED; baserow): First signup becomes staff; claim before exposure.
+- baserow-signup (REASONED; baserow): allow_new_signups defaults True; disable in admin settings, yielding Sign up is disabled.
+- baserow-secrets (REASONED; baserow): Compose requires SECRET_KEY/DATABASE_PASSWORD/REDIS_PASSWORD; .env.example leaves them empty. Generate your own.
+- baserow-mfa (REASONED; baserow): Core registers a TOTP provider.
+- appsmith-bind (REASONED; appsmith): Java defaults APPSMITH_SERVER_ADDRESS=127.0.0.1 and port 8080 inside the container.
+- appsmith-publish (REASONED; appsmith): Bundled Caddy fronts port 80; development Compose publishes host 8080, AWS example 80/443.
+- appsmith-first (REASONED; appsmith): First signup claims super-user while no users exist; claim before exposure.
+- appsmith-signup (REASONED; appsmith): APPSMITH_SIGNUP_DISABLED defaults false; set true or restrict APPSMITH_SIGNUP_ALLOWED_DOMAINS. Refusal is SIGNUP_DISABLED.
+- appsmith-encryption (REASONED; appsmith): Entrypoint generates 13-character encryption password/salt; external values override them. Development Compose sets both abcd; replace before first start.
+- appsmith-rotation (REASONED; appsmith): Changing an existing abcd encryption pair presumably makes stored credentials unreadable; plan re-entry. Inferred, not tested.
+- budibase-publish (REASONED; budibase): Proxy publishes MAIN_PORT, sample 10000; LiteLLM publishes LITELLM_PORT default 4000.
+- budibase-couchdb (REASONED; budibase): Proxy /db/ reaches CouchDB. Compose maps COUCH_DB_USER/PASSWORD to COUCHDB_USER/PASSWORD; the image entrypoint adds that admin only when both are non-empty and its existing-admin check finds none for that name. With unchanged samples and that condition, anyone reaching the proxy can try budibase/budibase.
+- budibase-secrets (REASONED; budibase): Sample JWT_SECRET/API_ENCRYPTION_KEY are testsecret; service passwords, INTERNAL_API_KEY and LITELLM_MASTER_KEY are budibase. Replace all before first start. Compose pins docker.io/litellm/litellm:main-v1.83.10-stable.patch.3 and passes LITELLM_MASTER_KEY; acceptance of budibase by that image is not established.
+- budibase-sample-check (REASONED; budibase): This guide's October 2026 search of the full v3.46.0 tag with git grep -l testsecret v3.46.0 found exactly hosting/.env, hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot, hosting/hosting.properties, packages/backend-core/tests/jestEnv.ts and scripts/dev/manage.js. This guide inspected those hits. This guide's assessment is that these hits do not establish absence of production rejection; no live safeguard test ran.
+- budibase-init (REASONED; budibase): POST /api/global/users/init is public; its body validator requires string email and tenantId fields, permits an optional password, rejects unknown fields and precedes adminUser. In the supplied tenant context, checkAnyUserExists() truthy causes 403 with the exact vendor error quoted in the body. The helper definition was not fetched, so which users count and any multi-tenancy exception remain unestablished. This guide assesses this POST as unsafe for read-only claimed-state probing: invalid bodies can fail validation in both states, while accepted initialization creates an admin.
+- budibase-seed (REASONED; budibase): Claim admin before exposure (guide advice), manually or with BB_ADMIN_USER_EMAIL/BB_ADMIN_USER_PASSWORD. Startup attempts seeding only with SELF_HOSTED truthy, MULTI_TENANCY falsy and both values non-empty; in tenancy.getTenantId() context, it calls createAdminUser when the admin checklist is not checked OR the email does not exist, with hashPassword/requirePassword/skipPasswordValidation true.
+- windmill-code (REASONED; windmill): Workers execute user scripts; a login enables code execution on worker hosts.
+- windmill-bind (REASONED; windmill): Default 0.0.0.0:8000; SERVER_BIND_ADDR changes binary binding. Default wildcard bind was not observed.
+- windmill-compose (REASONED; windmill): Compose exposes server 8000 internally; Caddy publishes 80/25 on all host interfaces. Bind publications privately; container loopback cutting Caddy off is inferred.
+- windmill-sandbox (REASONED; windmill): DISABLE_NSJAIL defaults true; sandboxing is not enabled by default.
+- windmill-privileged (REASONED; windmill): Shipped worker uses privileged=true.
+- windmill-smtp (REASONED; windmill): Port 25 serves email triggers; do not publish unless used.
+- windmill-debugger (REASONED; windmill): Vendor warns REQUIRE_SIGNED_DEBUG_REQUESTS=false exposes an unauthenticated code-execution debugger on reachable deployments.
+- verify-nocodb-signup (REASONED; nocodb): Controlled signup creation is exposed; invite-only refusal is fixed. Hidden links prove nothing; inspect backend setting and confirm admin login.
+- verify-baserow-signup (REASONED; baserow): Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login.
+- verify-appsmith-signup (REASONED; appsmith): Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts.
+- verify-external (REASONED; baserow, budibase, windmill): Probe each public IP; control proves only its port, refusal/timeout may be local filtering, and unexpected connections need host confirmation.
+- windmill-default-login (DEMONSTRATED; windmill): Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200.
+- windmill-loopback (DEMONSTRATED; windmill): SERVER_BIND_ADDR=127.0.0.1 produced only a loopback listener on the test port.
+- windmill-sandbox-run (DEMONSTRATED; windmill): Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation.
+- verify-inventory (REASONED; docker, baserow, appsmith, budibase, windmill): Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation.
+- verify-port-display (REASONED; docker, docker-new, docker-old): IPv6 wildcard displays [::]: from v27.2.0 versus ::: through v27.1.2; both mean all host addresses unless filtered.
+- verify-sample-tokens (DEMONSTRATED; nocodb, appsmith, budibase, windmill): Whole-token search found sample secrets/variants, clean replaced copies and unreadable paths; harmless matches and external environment values limit scope.
+- verify-nocodb-key (REASONED; nocodb, docker): docker exec tests configured key presence without printing it or passing its value in argv; no real container run. Startup selection/process value remain unverified.
+- nocodb-key-limits (REASONED; nocodb, docker): Trusted shells/startup assumed; environment remains readable to same-account/root or Docker-socket holders. Presence does not prove encryption; do not inject a replacement key.
+- nocodb-key-logic (DEMONSTRATED; docker): A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated.
+- verify-windmill-control (REASONED; windmill): Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed.
+- verify-couchdb (REASONED; budibase, couchdb): Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control.
+- verify-litellm (REASONED; budibase, litellm): Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-`sk-` keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.
+- verify-tcp-outcomes (DEMONSTRATED; baserow, budibase, windmill): Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated.
+- verify-tcp-inputs (DEMONSTRATED; baserow, budibase, windmill): Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-18",
+  "documentation_checked": "2026-09",
+  "body_sha256": "43cf22968b497a23408d386c38d01f763e391f115cf9a92f4fb443ce28cea9a8",
+  "components": {
+    "nocodb": {
+      "name": "NocoDB",
+      "basis": "2026.09.0",
+      "sources": {
+        "sa19c6557b712": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/Noco.ts",
+        "s635b35ce4689": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/utils/trustProxy.ts",
+        "sd74ca4df55b0": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/run/dockerEntry.ts",
+        "s5ea55dc5f0d9": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/services/users/users.service.ts",
+        "sd0e9f451673f": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/interface/AppSettings.ts",
+        "s8a1de0bc97b0": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/helpers/initAdminFromEnv.ts",
+        "sca40040b40cc": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/utils/encryptDecrypt.ts",
+        "saf056bb4ff37": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/src/helpers/initDataSourceEncryption.ts",
+        "sbfbf630008e1": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/docker/start.sh",
+        "se5da9707c684": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/docker/start-litestream.sh",
+        "s536899ecd4a5": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md",
+        "sca0c9c0ecf24": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L56-L75",
+        "sb4d5b659f7b8": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L77-L90",
+        "s2769b9054778": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L82",
+        "s2b16e2c93606": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L90",
+        "s118384fa1d9f": "https://github.com/nocodb/nocodb/blob/2026.09.0/README.md#L95",
+        "s9bee4adc612e": "https://api.github.com/repos/nocodb/nocodb/releases/tags/2026.09.0",
+        "s3f296c702bc5": "https://github.com/nocodb/nocodb/blob/2026.09.0/packages/nocodb/package.json#L3",
+        "se81c30b3f43b": "https://github.com/nocodb/nocodb/blob/2026.09.0/docker-compose/examples/external-postgres-and-redis/docker.env"
+      }
+    },
+    "baserow": {
+      "name": "Baserow",
+      "basis": "2.3.4",
+      "sources": {
+        "s1b31314982f4": "https://github.com/baserow/baserow/blob/2.3.4/docker-compose.yml",
+        "s3f61036aca03": "https://github.com/baserow/baserow/blob/2.3.4/docs/installation/install-with-docker.md",
+        "s34b87f60dcc6": "https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/core/user/handler.py",
+        "s4588448964a2": "https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/core/models.py",
+        "sd858f9ee45e0": "https://github.com/baserow/baserow/blob/2.3.4/backend/src/baserow/core/apps.py",
+        "s1a472d828699": "https://github.com/baserow/baserow/blob/2.3.4/.env.example"
+      }
+    },
+    "appsmith": {
+      "name": "Appsmith",
+      "basis": "v2.4.1",
+      "sources": {
+        "s2650629933a1": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/resources/application-ce.properties",
+        "sd1c55be91e30": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/solutions/ce/UserSignupCEImpl.java",
+        "se3cd894dc579": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/app/server/appsmith-server/src/main/java/com/appsmith/server/exceptions/AppsmithError.java",
+        "sa68daf87cde7": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/docker/fs/opt/appsmith/entrypoint.sh",
+        "s9fdcff5a28a4": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/docker/docker-compose.yml",
+        "sfa551c344e8b": "https://github.com/appsmithorg/appsmith/blob/v2.4.1/deploy/aws_ami/docker-compose.yml"
+      }
+    },
+    "budibase": {
+      "name": "Budibase",
+      "basis": "v3.46.0",
+      "sources": {
+        "s735ead81ce9c": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/.env",
+        "s74d858053d12": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml",
+        "s7fbf706a4c8f": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/proxy/nginx.prod.conf",
+        "s45379b35a980": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts",
+        "sc0a3ac85466f": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/controllers/global/users.ts",
+        "s4902d93986c7": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts",
+        "s5209f2549c9b": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/.env#L4-L16",
+        "s9afbeb2063b5": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml#L111-L120",
+        "s32775c45ba51": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml#L129-L144",
+        "s4d349b4d4ac3": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/proxy/nginx.prod.conf#L86",
+        "s2a033b3a4117": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/proxy/nginx.prod.conf#L236-L239",
+        "s2db467c4f1cf": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts#L40-L43",
+        "sbd761572fef0": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/index.ts#L133-L167",
+        "sb8f5a18ab4ee": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts#L13-L28",
+        "s7883460cabbf": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/routes/global/users.ts#L75-L79",
+        "se18a9c7182fb": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/worker/src/api/controllers/global/users.ts#L229-L274",
+        "s816a78b83956": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/server/src/startup/index.ts#L226-L266",
+        "sedd5e0682bf0": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/backend-core/src/environment.ts#L267-L268",
+        "s35ae42bd7a1c": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/docker-compose.yaml#L27-L28",
+        "scdcd8b6e7071": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/Dockerfile#L89-L91",
+        "sc74f36aa8340": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/Dockerfile#L151-L154",
+        "sf6e2a660380f": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/VERSION#L1",
+        "sfdc76e71aff6": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/runner.sh#L165-L166",
+        "s851ad716e105": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/couchdb/docker-entrypoint.sh#L70-L75",
+        "se993218560de": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/hosting.properties#L4-L18",
+        "s6179ec0d9abd": "https://github.com/Budibase/budibase/blob/v3.46.0/hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot#L11-L15",
+        "s9cc27222e133": "https://github.com/Budibase/budibase/blob/v3.46.0/packages/backend-core/tests/jestEnv.ts#L9-L10",
+        "sbe7e0469e7a8": "https://github.com/Budibase/budibase/blob/v3.46.0/scripts/dev/manage.js#L11-L12"
+      }
+    },
+    "windmill": {
+      "name": "Windmill",
+      "basis": "v1.817.0",
+      "sources": {
+        "s91439e21d4ac": "https://github.com/windmill-labs/windmill/blob/v1.817.0/README.md",
+        "s8e4bbba271f2": "https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/src/main.rs",
+        "sd775b7c95872": "https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/windmill-worker/src/worker.rs",
+        "sfcc72cf06c9e": "https://github.com/windmill-labs/windmill/blob/v1.817.0/docker-compose.yml",
+        "s345ca635c837": "https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/migrations/20220123221903_first.up.sql",
+        "s03c33b490c08": "https://github.com/windmill-labs/windmill/blob/v1.817.0/backend/migrations/20220816185849_remove_non_admin_users.up.sql"
+      }
+    },
+    "docker": {
+      "name": "Docker docs",
+      "basis": "unknown",
+      "sources": {
+        "sd34e76a09f6c": "https://docs.docker.com/reference/cli/docker/container/exec/",
+        "s2fecb6db5480": "https://docs.docker.com/engine/network/firewall-iptables/"
+      }
+    },
+    "docker-new": {
+      "name": "Docker CLI",
+      "basis": "v27.2.0",
+      "sources": {
+        "sca9a0e1e4b6a": "https://github.com/docker/cli/blob/v27.2.0/cli/command/formatter/container.go"
+      }
+    },
+    "docker-old": {
+      "name": "Docker CLI",
+      "basis": "v27.1.2",
+      "sources": {
+        "sa202ad11d4ed": "https://github.com/docker/cli/blob/v27.1.2/cli/command/formatter/container.go"
+      }
+    },
+    "node": {
+      "name": "Node.js",
+      "basis": "v22.22.1",
+      "sources": {
+        "sfb3e306c102d": "https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md"
+      }
+    },
+    "couchdb": {
+      "name": "CouchDB",
+      "basis": "3.5.2",
+      "sources": {
+        "s34292991c4ec": "https://github.com/apache/couchdb/blob/3.5.2/src/docs/src/api/server/authn.rst"
+      }
+    },
+    "litellm": {
+      "name": "LiteLLM authentication source",
+      "basis": "6ef7b86748118ceecd95271727c2fa167ce55fec",
+      "sources": {
+        "sbe6fa0b81017": "https://raw.githubusercontent.com/BerriAI/litellm/6ef7b86748118ceecd95271727c2fa167ce55fec/litellm/proxy/auth/user_api_key_auth.py"
+      }
+    }
+  },
+  "claims": {
+    "private": {"text": "Keep builders private with fronting auth, claim admin early and protect databases storing connected-system credentials.", "components": ["nocodb", "baserow", "appsmith", "budibase", "windmill"], "sources": ["nocodb:sd74ca4df55b0", "baserow:s1b31314982f4", "appsmith:s9fdcff5a28a4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "REASONED"},
+    "nocodb-bind": {"text": "PORT defaults 8080; listen omits host, so Node binds unspecified IPv6/IPv4. No application bind setting; restrict publication/firewall.", "components": ["nocodb", "node"], "sources": ["nocodb:sa19c6557b712", "nocodb:sd74ca4df55b0", "node:sfb3e306c102d"], "status": "REASONED"},
+    "nocodb-first": {"text": "First signup becomes super-admin; claim first or seed NC_ADMIN_EMAIL/NC_ADMIN_PASSWORD.", "components": ["nocodb"], "sources": ["nocodb:s5ea55dc5f0d9", "nocodb:s8a1de0bc97b0"], "status": "REASONED"},
+    "nocodb-signup": {"text": "invite_only_signup defaults false; enable to stop later self-signups.", "components": ["nocodb"], "sources": ["nocodb:s5ea55dc5f0d9", "nocodb:sd0e9f451673f"], "status": "REASONED"},
+    "nocodb-encryption": {"text": "Unset NC_CONNECTION_ENCRYPT_KEY stores external DB credentials unchanged; set before adding sources, or startup encrypts existing sources when added later.", "components": ["nocodb"], "sources": ["nocodb:sca40040b40cc", "nocodb:saf056bb4ff37"], "status": "REASONED"},
+    "nocodb-jwt": {"text": "Unset NC_AUTH_JWT_SECRET generates/stores a UUID as nc_auth_jwt_secret; replace README sample 569a1821-0a93-45e8-87ab-eb857f20a010.", "components": ["nocodb"], "sources": ["nocodb:sa19c6557b712", "nocodb:s536899ecd4a5"], "status": "REASONED"},
+    "nocodb-cors": {"text": "Entry file allows every CORS origin.", "components": ["nocodb"], "sources": ["nocodb:sd74ca4df55b0"], "status": "REASONED"},
+    "nocodb-proxy": {"text": "Startup resets trust proxy from NC_TRUST_PROXY, default no trust; restrict hops/subnets, never true with direct client access.", "components": ["nocodb"], "sources": ["nocodb:sa19c6557b712", "nocodb:s635b35ce4689", "nocodb:sd74ca4df55b0"], "status": "REASONED"},
+    "nocodb-packaging": {"text": "README marks binaries for quick local testing and documents Docker image and Auto-upstall paths; the October 2026 release API record lists no assets; the 2026.09.0 tag carries package version 0.301.3. Use the image or vendor install script for production (guide advice). The README command fetches the script over plain HTTP and executes it with Bash; its source link points to develop. Fetch over HTTPS from a pinned, reviewed source and read before running (guide advice).", "components": ["nocodb"], "sources": ["nocodb:s536899ecd4a5", "nocodb:sca0c9c0ecf24", "nocodb:sb4d5b659f7b8", "nocodb:s118384fa1d9f", "nocodb:s9bee4adc612e", "nocodb:s3f296c702bc5", "nocodb:s2769b9054778", "nocodb:s2b16e2c93606"], "status": "REASONED"},
+    "baserow-bind": {"text": "Caddy publishes 80/443 on HOST_PUBLISH_IP default 0.0.0.0; set it or publish loopback. Docker wildcard publication bypasses UFW.", "components": ["baserow"], "sources": ["baserow:s1b31314982f4", "baserow:s3f61036aca03"], "status": "REASONED"},
+    "baserow-first": {"text": "First signup becomes staff; claim before exposure.", "components": ["baserow"], "sources": ["baserow:s34b87f60dcc6"], "status": "REASONED"},
+    "baserow-signup": {"text": "allow_new_signups defaults True; disable in admin settings, yielding Sign up is disabled.", "components": ["baserow"], "sources": ["baserow:s34b87f60dcc6", "baserow:s4588448964a2"], "status": "REASONED"},
+    "baserow-secrets": {"text": "Compose requires SECRET_KEY/DATABASE_PASSWORD/REDIS_PASSWORD; .env.example leaves them empty. Generate your own.", "components": ["baserow"], "sources": ["baserow:s1b31314982f4", "baserow:s1a472d828699"], "status": "REASONED"},
+    "baserow-mfa": {"text": "Core registers a TOTP provider.", "components": ["baserow"], "sources": ["baserow:sd858f9ee45e0"], "status": "REASONED"},
+    "appsmith-bind": {"text": "Java defaults APPSMITH_SERVER_ADDRESS=127.0.0.1 and port 8080 inside the container.", "components": ["appsmith"], "sources": ["appsmith:s2650629933a1"], "status": "REASONED"},
+    "appsmith-publish": {"text": "Bundled Caddy fronts port 80; development Compose publishes host 8080, AWS example 80/443.", "components": ["appsmith"], "sources": ["appsmith:sa68daf87cde7", "appsmith:s9fdcff5a28a4", "appsmith:sfa551c344e8b"], "status": "REASONED"},
+    "appsmith-first": {"text": "First signup claims super-user while no users exist; claim before exposure.", "components": ["appsmith"], "sources": ["appsmith:sd1c55be91e30"], "status": "REASONED"},
+    "appsmith-signup": {"text": "APPSMITH_SIGNUP_DISABLED defaults false; set true or restrict APPSMITH_SIGNUP_ALLOWED_DOMAINS. Refusal is SIGNUP_DISABLED.", "components": ["appsmith"], "sources": ["appsmith:s2650629933a1", "appsmith:sd1c55be91e30", "appsmith:se3cd894dc579"], "status": "REASONED"},
+    "appsmith-encryption": {"text": "Entrypoint generates 13-character encryption password/salt; external values override them. Development Compose sets both abcd; replace before first start.", "components": ["appsmith"], "sources": ["appsmith:sa68daf87cde7", "appsmith:s9fdcff5a28a4"], "status": "REASONED"},
+    "appsmith-rotation": {"text": "Changing an existing abcd encryption pair presumably makes stored credentials unreadable; plan re-entry. Inferred, not tested.", "components": ["appsmith"], "sources": ["appsmith:sa68daf87cde7", "appsmith:s9fdcff5a28a4"], "status": "REASONED"},
+    "budibase-publish": {"text": "Proxy publishes MAIN_PORT, sample 10000; LiteLLM publishes LITELLM_PORT default 4000.", "components": ["budibase"], "sources": ["budibase:s735ead81ce9c", "budibase:s74d858053d12"], "status": "REASONED"},
+    "budibase-couchdb": {"text": "Proxy /db/ reaches CouchDB. Compose maps COUCH_DB_USER/PASSWORD to COUCHDB_USER/PASSWORD; the image entrypoint adds that admin only when both are non-empty and its existing-admin check finds none for that name. With unchanged samples and that condition, anyone reaching the proxy can try budibase/budibase.", "components": ["budibase"], "sources": ["budibase:s735ead81ce9c", "budibase:s7fbf706a4c8f", "budibase:s5209f2549c9b", "budibase:s9afbeb2063b5", "budibase:s4d349b4d4ac3", "budibase:s2a033b3a4117", "budibase:scdcd8b6e7071", "budibase:sc74f36aa8340", "budibase:sf6e2a660380f", "budibase:sfdc76e71aff6", "budibase:s851ad716e105"], "status": "REASONED"},
+    "budibase-secrets": {"text": "Sample JWT_SECRET/API_ENCRYPTION_KEY are testsecret; service passwords, INTERNAL_API_KEY and LITELLM_MASTER_KEY are budibase. Replace all before first start. Compose pins docker.io/litellm/litellm:main-v1.83.10-stable.patch.3 and passes LITELLM_MASTER_KEY; acceptance of budibase by that image is not established.", "components": ["budibase"], "sources": ["budibase:s735ead81ce9c", "budibase:s74d858053d12", "budibase:s5209f2549c9b", "budibase:s32775c45ba51"], "status": "REASONED"},
+    "budibase-sample-check": {"text": "This guide's October 2026 search of the full v3.46.0 tag with git grep -l testsecret v3.46.0 found exactly hosting/.env, hosting/digitalocean/files/var/lib/cloud/scripts/per-instance/001_onboot, hosting/hosting.properties, packages/backend-core/tests/jestEnv.ts and scripts/dev/manage.js. This guide inspected those hits. This guide's assessment is that these hits do not establish absence of production rejection; no live safeguard test ran.", "components": ["budibase"], "sources": ["budibase:s735ead81ce9c", "budibase:s5209f2549c9b", "budibase:se993218560de", "budibase:s6179ec0d9abd", "budibase:s9cc27222e133", "budibase:sbe7e0469e7a8"], "status": "REASONED"},
+    "budibase-init": {"text": "POST /api/global/users/init is public; its body validator requires string email and tenantId fields, permits an optional password, rejects unknown fields and precedes adminUser. In the supplied tenant context, checkAnyUserExists() truthy causes 403 with the exact vendor error quoted in the body. The helper definition was not fetched, so which users count and any multi-tenancy exception remain unestablished. This guide assesses this POST as unsafe for read-only claimed-state probing: invalid bodies can fail validation in both states, while accepted initialization creates an admin.", "components": ["budibase"], "sources": ["budibase:s45379b35a980", "budibase:sc0a3ac85466f", "budibase:s4902d93986c7", "budibase:s2db467c4f1cf", "budibase:sbd761572fef0", "budibase:sb8f5a18ab4ee", "budibase:s7883460cabbf", "budibase:se18a9c7182fb"], "status": "REASONED"},
+    "budibase-seed": {"text": "Claim admin before exposure (guide advice), manually or with BB_ADMIN_USER_EMAIL/BB_ADMIN_USER_PASSWORD. Startup attempts seeding only with SELF_HOSTED truthy, MULTI_TENANCY falsy and both values non-empty; in tenancy.getTenantId() context, it calls createAdminUser when the admin checklist is not checked OR the email does not exist, with hashPassword/requirePassword/skipPasswordValidation true.", "components": ["budibase"], "sources": ["budibase:sc0a3ac85466f", "budibase:sedd5e0682bf0", "budibase:s35ae42bd7a1c", "budibase:s816a78b83956"], "status": "REASONED"},
+    "windmill-code": {"text": "Workers execute user scripts; a login enables code execution on worker hosts.", "components": ["windmill"], "sources": ["windmill:s91439e21d4ac", "windmill:sd775b7c95872"], "status": "REASONED"},
+    "windmill-bind": {"text": "Default 0.0.0.0:8000; SERVER_BIND_ADDR changes binary binding. Default wildcard bind was not observed.", "components": ["windmill"], "sources": ["windmill:s8e4bbba271f2"], "status": "REASONED"},
+    "windmill-compose": {"text": "Compose exposes server 8000 internally; Caddy publishes 80/25 on all host interfaces. Bind publications privately; container loopback cutting Caddy off is inferred.", "components": ["windmill"], "sources": ["windmill:sfcc72cf06c9e"], "status": "REASONED"},
+    "windmill-sandbox": {"text": "DISABLE_NSJAIL defaults true; sandboxing is not enabled by default.", "components": ["windmill"], "sources": ["windmill:sd775b7c95872"], "status": "REASONED"},
+    "windmill-privileged": {"text": "Shipped worker uses privileged=true.", "components": ["windmill"], "sources": ["windmill:sfcc72cf06c9e"], "status": "REASONED"},
+    "windmill-smtp": {"text": "Port 25 serves email triggers; do not publish unless used.", "components": ["windmill"], "sources": ["windmill:sfcc72cf06c9e"], "status": "REASONED"},
+    "windmill-debugger": {"text": "Vendor warns REQUIRE_SIGNED_DEBUG_REQUESTS=false exposes an unauthenticated code-execution debugger on reachable deployments.", "components": ["windmill"], "sources": ["windmill:sfcc72cf06c9e"], "status": "REASONED"},
+    "verify-nocodb-signup": {"text": "Controlled signup creation is exposed; invite-only refusal is fixed. Hidden links prove nothing; inspect backend setting and confirm admin login.", "components": ["nocodb"], "sources": ["nocodb:s5ea55dc5f0d9", "nocodb:sd0e9f451673f"], "status": "REASONED"},
+    "verify-baserow-signup": {"text": "Controlled signup creation is exposed; Sign up is disabled is fixed. Inspect allow_new_signups and confirm admin login.", "components": ["baserow"], "sources": ["baserow:s34b87f60dcc6", "baserow:s4588448964a2"], "status": "REASONED"},
+    "verify-appsmith-signup": {"text": "Controlled signup creation is exposed; SIGNUP_DISABLED is fixed. Inspect backend settings, confirm admin login and delete test accounts.", "components": ["appsmith"], "sources": ["appsmith:s2650629933a1", "appsmith:sd1c55be91e30", "appsmith:se3cd894dc579"], "status": "REASONED"},
+    "verify-external": {"text": "Probe each public IP; control proves only its port, refusal/timeout may be local filtering, and unexpected connections need host confirmation.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "REASONED"},
+    "windmill-default-login": {"text": "Fresh loopback DB had only admin@windmill.dev as a password user/super-admin; changeme returned 200/token, then 400 after rotation while the new password returned 200.", "components": ["windmill"], "sources": ["windmill:s91439e21d4ac", "windmill:s345ca635c837", "windmill:s03c33b490c08"], "status": "DEMONSTRATED", "evidence": "After the password was changed, `changeme` got `400` and the new password `200`.", "verify": [4]},
+    "windmill-loopback": {"text": "SERVER_BIND_ADDR=127.0.0.1 produced only a loopback listener on the test port.", "components": ["windmill"], "sources": ["windmill:s8e4bbba271f2"], "status": "DEMONSTRATED", "evidence": "The server's only listener was on 127.0.0.1, at the test port the run set."},
+    "windmill-sandbox-run": {"text": "Loopback worker without nsjail logged sandboxing unavailable; this does not demonstrate isolation.", "components": ["windmill"], "sources": ["windmill:sd775b7c95872"], "status": "DEMONSTRATED", "evidence": "on the loopback run, without nsjail installed, the worker logged \"Nsjail sandboxing will NOT be available\"."},
+    "verify-inventory": {"text": "Inventory host sockets and Docker publications; NAT may have no socket, so absent ss entries do not establish isolation.", "components": ["docker", "baserow", "appsmith", "budibase", "windmill"], "sources": ["docker:s2fecb6db5480", "baserow:s1b31314982f4", "appsmith:s9fdcff5a28a4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "REASONED", "verify": [1]},
+    "verify-port-display": {"text": "IPv6 wildcard displays [::]: from v27.2.0 versus ::: through v27.1.2; both mean all host addresses unless filtered.", "components": ["docker", "docker-new", "docker-old"], "sources": ["docker:s2fecb6db5480", "docker-new:sca9a0e1e4b6a", "docker-old:sa202ad11d4ed"], "status": "REASONED", "verify": [1]},
+    "verify-sample-tokens": {"text": "Whole-token search found sample secrets/variants, clean replaced copies and unreadable paths; harmless matches and external environment values limit scope.", "components": ["nocodb", "appsmith", "budibase", "windmill"], "sources": ["nocodb:s536899ecd4a5", "appsmith:s9fdcff5a28a4", "budibase:s735ead81ce9c", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "On copies with the values replaced it printed \"no vendor sample tokens found\", and on an unreadable path it reported that it did not check.", "verify": [2]},
+    "verify-nocodb-key": {"text": "docker exec tests configured key presence without printing it or passing its value in argv; no real container run. Startup selection/process value remain unverified.", "components": ["nocodb", "docker"], "sources": ["nocodb:sbfbf630008e1", "nocodb:se5da9707c684", "docker:sd34e76a09f6c"], "status": "REASONED", "verify": [3]},
+    "nocodb-key-limits": {"text": "Trusted shells/startup assumed; environment remains readable to same-account/root or Docker-socket holders. Presence does not prove encryption; do not inject a replacement key.", "components": ["nocodb", "docker"], "sources": ["nocodb:sca40040b40cc", "nocodb:sbfbf630008e1", "nocodb:se5da9707c684", "docker:sd34e76a09f6c"], "status": "REASONED", "verify": [3]},
+    "nocodb-key-logic": {"text": "A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated.", "components": ["docker"], "sources": ["docker:sd34e76a09f6c"], "status": "DEMONSTRATED", "evidence": "With a stand-in for `docker exec`, the block printed \"non-empty\" for a set key, \"EMPTY or unset\" for an empty and an unset one, and \"not checked\" when the container was missing;"},
+    "verify-windmill-control": {"text": "Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed.", "components": ["windmill"], "sources": ["windmill:s91439e21d4ac"], "status": "REASONED"},
+    "verify-couchdb": {"text": "Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control.", "components": ["budibase", "couchdb"], "sources": ["budibase:s735ead81ce9c", "budibase:s7fbf706a4c8f", "couchdb:s34292991c4ec", "budibase:s5209f2549c9b", "budibase:s9afbeb2063b5", "budibase:s2a033b3a4117", "budibase:s851ad716e105"], "status": "REASONED", "verify": [5]},
+    "verify-litellm": {"text": "Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-`sk-` keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.", "components": ["budibase", "litellm"], "sources": ["budibase:s735ead81ce9c", "budibase:s74d858053d12", "litellm:sbe6fa0b81017", "budibase:s32775c45ba51"], "status": "REASONED", "verify": [5]},
+    "verify-tcp-outcomes": {"text": "Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "On loopback it printed \"connected\" for the control and an open port, \"timed out\" for a port whose accept queue was full (standing in for a filtered one) and \"refused\" for a closed port, and it stopped when the control was closed.", "verify": [6]},
+    "verify-tcp-inputs": {"text": "Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control.", "components": ["baserow", "budibase", "windmill"], "sources": ["baserow:s1b31314982f4", "budibase:s74d858053d12", "windmill:sfcc72cf06c9e"], "status": "DEMONSTRATED", "evidence": "`::ffff:0:0` and `::ffff:7f00:1` passed and connected to a listener bound to 127.0.0.1", "verify": [6]}
+  }
+}
+````
+<!-- version-basis:end -->

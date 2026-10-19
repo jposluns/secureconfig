@@ -1,296 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-18",
-  "documentation_checked": "2026-09",
-  "body_sha256": "325223859acb920caba7e11658d3c3b87a9f7703faeab9e05b7641db8696fd48",
-  "components": {
-    "python": {
-      "name": "Python http.server documentation",
-      "basis": "3.14.4",
-      "sources": {
-        "s8fae94406709": "https://docs.python.org/3/library/http.server.html"
-      }
-    },
-    "gunicorn": {
-      "name": "Gunicorn documentation",
-      "basis": "unknown",
-      "sources": {
-        "s72daf362300c": "https://gunicorn.org/reference/settings/"
-      }
-    },
-    "uvicorn": {
-      "name": "Uvicorn source",
-      "basis": "5ac6265a01ff6dcadb0e4250152c3deaf8a168a9",
-      "sources": {
-        "s02429a4a09d9": "https://github.com/Kludex/uvicorn/blob/5ac6265a01ff6dcadb0e4250152c3deaf8a168a9/docs/settings.md"
-      }
-    },
-    "django": {
-      "name": "Django documentation",
-      "basis": "6.1",
-      "sources": {
-        "s7289e1c111ae": "https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/"
-      }
-    },
-    "argon": {
-      "name": "argon2-cffi documentation",
-      "basis": "unknown",
-      "sources": {
-        "sff2b9a487e67": "https://argon2-cffi.readthedocs.io/"
-      }
-    },
-    "werkzeug": {
-      "name": "Werkzeug documentation",
-      "basis": "unknown",
-      "sources": {
-        "sd5066c63a3ca": "https://werkzeug.palletsprojects.com/en/stable/serving/"
-      }
-    },
-    "fastapi": {
-      "name": "FastAPI documentation",
-      "basis": "unknown",
-      "sources": {
-        "s077aff608a5c": "https://fastapi.tiangolo.com/reference/security/"
-      }
-    },
-    "oidc-stub": {
-      "name": "FastAPI OpenIdConnect source",
-      "basis": "31bbb380748ccead62fc0f42dbf4273f11dadccf",
-      "sources": {
-        "s876e3d51e7ac": "https://github.com/fastapi/fastapi/blob/31bbb380748ccead62fc0f42dbf4273f11dadccf/fastapi/security/open_id_connect_url.py"
-      }
-    },
-    "python-pin": {
-      "name": "Python http.server source",
-      "basis": "v3.14.4",
-      "sources": {
-        "s0038729960a0": "https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1322-L1334",
-        "sa3111578d65d": "https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1371-L1373"
-      }
-    },
-    "stdlib-docs": {
-      "name": "Python standard library documentation",
-      "basis": "3.14",
-      "sources": {
-        "s971d128efc65": "https://docs.python.org/3.14/library/secrets.html",
-        "sdad376a711c3": "https://docs.python.org/3.14/library/os.html#os.getenv"
-      }
-    },
-    "pyotp": {
-      "name": "PyOTP",
-      "basis": "v2.9.0",
-      "sources": {
-        "sc118b8ed3bdd": "https://github.com/pyauth/pyotp/blob/v2.9.0/README.rst#L4-L5"
-      }
-    },
-    "qrcode": {
-      "name": "qrcode",
-      "basis": "v8.2",
-      "sources": {
-        "s8247ddfed3d3": "https://github.com/lincolnloop/python-qrcode/blob/v8.2/README.rst#L41-L44"
-      }
-    },
-    "django-otp": {
-      "name": "django-otp",
-      "basis": "1.6.1",
-      "sources": {
-        "sa5c0f7097219": "https://pypi.org/project/django-otp/1.6.1/"
-      }
-    },
-    "requests": {
-      "name": "Requests",
-      "basis": "v2.32.3",
-      "sources": {
-        "s21c6be6f6df4": "https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239",
-        "s17c5a0a7ffb2": "https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L241-L243"
-      }
-    },
-    "slowapi": {
-      "name": "slowapi source",
-      "basis": "v0.1.10",
-      "sources": {
-        "sf150aa58aa31": "https://github.com/laurentS/slowapi/blob/v0.1.10/README.md#L1-L3",
-        "s4ca3e1e80817": "https://github.com/laurentS/slowapi/blob/v0.1.10/README.md#L24-L50"
-      }
-    },
-    "httpx": {
-      "name": "HTTPX source and documentation",
-      "basis": "0.28.1",
-      "sources": {
-        "s52608d6c5e47": "https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L3-L7",
-        "sd33b79237122": "https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L9-L53",
-        "s928d85a8d13e": "https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L12-L17",
-        "s3734fbccdf40": "https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L72-L86",
-        "s30dd14bf172e": "https://github.com/encode/httpx/blob/0.28.1/httpx/_config.py#L23-L40",
-        "s4a1f3b43f184": "https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L133-L154",
-        "sc5a61a9b2f64": "https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L278-L298"
-      }
-    },
-    "cpython-ssl": {
-      "name": "CPython ssl source and documentation",
-      "basis": "v3.14.8",
-      "sources": {
-        "sbac049853cda": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L390-L405",
-        "s6dcc06feaaaf": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L542-L548",
-        "s4d7f143c9456": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L730-L736",
-        "s4a1cd173d596": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L744-L754",
-        "s79d6191e12eb": "https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L421-L433",
-        "s82c72b9a971a": "https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L1642-L1649"
-      }
-    },
-    "openssl": {
-      "name": "OpenSSL documentation",
-      "basis": "openssl-4.0.3",
-      "sources": {
-        "s592eb65718de": "https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man3/SSL_CTX_load_verify_locations.pod#L39-L49"
-      }
-    },
-    "render": {
-      "name": "Render documentation",
-      "basis": "unknown",
-      "sources": {
-        "s1820ac471b6c": "https://render.com/docs/web-services"
-      }
-    },
-    "heroku": {
-      "name": "Heroku documentation",
-      "basis": "unknown",
-      "sources": {
-        "s370d4beec29a": "https://devcenter.heroku.com/articles/runtime-principles",
-        "s211f5fe76042": "https://devcenter.heroku.com/articles/generations",
-        "s0c5bf300cef4": "https://devcenter.heroku.com/articles/http-routing"
-      }
-    },
-    "fly-pinned": {
-      "name": "Fly.io pinned documentation",
-      "basis": "2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9",
-      "sources": {
-        "s62fec91543a1": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42",
-        "s61c1e50d2c11": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92",
-        "s254c8c8a5edd": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97",
-        "s32999aa4c58c": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176"
-      }
-    },
-    "railway": {
-      "name": "Railway documentation",
-      "basis": "72354493198302677fb6be6c692dd75c64cae2c6",
-      "sources": {
-        "sac1383056b65": "https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146"
-      }
-    },
-    "argon-api": {
-      "name": "argon2-cffi API example",
-      "basis": "25.1.0",
-      "sources": {
-        "s193f86db0a79": "https://github.com/hynek/argon2-cffi/blob/25.1.0/README.md#L11-L28"
-      }
-    },
-    "bcrypt-api": {
-      "name": "Python bcrypt API example",
-      "basis": "2b4ba9ac84df972e8e81311d09559af8dc82ef33",
-      "sources": {
-        "s340a2923b6da": "https://github.com/pyca/bcrypt/blob/2b4ba9ac84df972e8e81311d09559af8dc82ef33/README.rst#L62-L76"
-      }
-    },
-    "cpython-secrets": {
-      "name": "CPython secrets documentation and source",
-      "basis": "v3.14.8",
-      "sources": {
-        "s31e1a792a6b1": "https://github.com/python/cpython/blob/v3.14.8/Doc/library/secrets.rst#L91-L103",
-        "s7cc14a5ebfa0": "https://github.com/python/cpython/blob/v3.14.8/Lib/secrets.py#L31-L45",
-        "sdef0e1600064": "https://github.com/python/cpython/blob/v3.14.8/Doc/library/secrets.rst#L125-L130"
-      }
-    }
-  },
-  "claims": {
-    "bind": {"text": "This guide advises loopback for same-host TLS proxies, no extra managed listeners, and wildcard only for authenticated direct TLS or private TLS ingress; app auth remains required. Rules vary (Fir Private Spaces: IPv6/dual-stack recommended; Fly without handlers: TCP passthrough); Railway address/injected port/TLS location and Cedar address remain uncited.", "components": ["gunicorn", "uvicorn", "render", "heroku", "fly-pinned", "railway"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9", "render:s1820ac471b6c", "heroku:s370d4beec29a", "heroku:s211f5fe76042", "heroku:s0c5bf300cef4", "fly-pinned:s62fec91543a1", "fly-pinned:s61c1e50d2c11", "fly-pinned:s254c8c8a5edd", "fly-pinned:s32999aa4c58c", "railway:sac1383056b65"], "status": "REASONED"},
-    "flask-tls": {"text": "Flask development server binds 127.0.0.1:8443 with cert/key ssl_context; adhoc requires cryptography and remains development-only.", "components": ["werkzeug"], "sources": ["werkzeug:sd5066c63a3ca"], "status": "REASONED"},
-    "gunicorn-tls": {"text": "Gunicorn binds 0.0.0.0:8443 with --certfile and --keyfile for direct TLS.", "components": ["gunicorn"], "sources": ["gunicorn:s72daf362300c"], "status": "REASONED"},
-    "uvicorn-tls": {"text": "Uvicorn binds 0.0.0.0:8443 with --ssl-certfile and --ssl-keyfile for direct TLS.", "components": ["uvicorn"], "sources": ["uvicorn:s02429a4a09d9"], "status": "REASONED"},
-    "django-redirect": {"text": "Set SECURE_SSL_REDIRECT=True.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
-    "django-proxy": {"text": "Set SECURE_PROXY_SSL_HEADER only behind a trusted proxy that strips and replaces X-Forwarded-Proto; prevent direct bypass.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
-    "django-cookies": {"text": "Set SESSION_COOKIE_SECURE and CSRF_COOKIE_SECURE true.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
-    "django-hsts": {"text": "Begin HSTS at 3600 seconds and include-subdomains false; raise duration and scope only after valid HTTPS is confirmed.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
-    "deploy-check": {"text": "Run manage.py check --deploy and fix its findings.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
-    "password": {"text": "Keep Django's built-in hashing; do not replace it with custom code (guide advice). For Flask/FastAPI apps implementing local password accounts, this guide advises account storage and argon2-cffi or bcrypt under authentication.md's constraints; argon2-cffi 25.1.0's PasswordHasher.verify raises VerifyMismatchError on mismatch, and these APIs do not establish framework user-store capabilities.", "components": ["django", "argon", "argon-api", "bcrypt-api"], "sources": ["django:s7289e1c111ae", "argon:sff2b9a487e67", "argon-api:s193f86db0a79", "bcrypt-api:s340a2923b6da"], "status": "REASONED"},
-    "secrets": {"text": "Generate secrets.token_urlsafe(32) and load secrets from the environment (guide advice); 32 counts random input bytes and is this guide's example choice, not a universal size. CPython v3.14.8 uses DEFAULT_ENTROPY (32 bytes) when omitted or None, but that default may change, including in maintenance releases.", "components": ["django", "stdlib-docs", "cpython-secrets"], "sources": ["django:s7289e1c111ae", "stdlib-docs:s971d128efc65", "stdlib-docs:sdad376a711c3", "cpython-secrets:s31e1a792a6b1", "cpython-secrets:s7cc14a5ebfa0", "cpython-secrets:sdef0e1600064"], "status": "REASONED"},
-    "credential-extraction": {"text": "FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry.", "components": ["fastapi"], "sources": ["fastapi:s077aff608a5c"], "status": "REASONED"},
-    "oidc": {"text": "OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately.", "components": ["fastapi", "oidc-stub"], "sources": ["fastapi:s077aff608a5c", "oidc-stub:s876e3d51e7ac"], "status": "REASONED"},
-    "login-limit": {"text": "Rate-limiting login routes and a proxy-level limit are this guide's advice. slowapi v0.1.10 documents limits for Starlette/FastAPI HTTP endpoints; endpoints using its limit decorator must take an explicit request argument, and WebSocket endpoints are not supported.", "components": ["fastapi", "slowapi"], "sources": ["fastapi:s077aff608a5c", "slowapi:sf150aa58aa31", "slowapi:s4ca3e1e80817"], "status": "REASONED"},
-    "mfa": {"text": "Use pyotp and qrcode, django-otp for Django, or linked MFA guidance.", "components": ["django", "pyotp", "qrcode", "django-otp"], "sources": ["django:s7289e1c111ae", "pyotp:sc118b8ed3bdd", "qrcode:s8247ddfed3d3", "django-otp:sa5c0f7097219"], "status": "REASONED"},
-    "client-validation": {"text": "Never ship requests/httpx verify=False or ssl._create_unverified_context; HTTPX documents verify=False and CPython defines _create_unverified_context. The prohibition is this guide's advice.", "components": ["python", "requests", "httpx", "cpython-ssl"], "sources": ["python:s8fae94406709", "requests:s17c5a0a7ffb2", "httpx:s928d85a8d13e", "cpython-ssl:s4a1cd173d596"], "status": "REASONED"},
-    "client-ca": {"text": "REQUESTS_CA_BUNDLE selects a requests CA. HTTPX 0.28.1's transport passes verify and trust_env to create_ssl_context, which reads SSL_CERT_FILE when verify=True and trust_env=True; its SSL guide contradicts that source. Its environment guide says environment variables are used by default but does not list SSL_CERT_FILE. CPython's ssl module reports OpenSSL default verify paths; with no CA specified and verification enabled, ssl.create_default_context() tries to load default CAs, which may fail silently. OpenSSL names SSL_CERT_FILE as an environment override for its default CA file; CPython's cited files do not name that variable, so whether a given ssl configuration uses it remains unverified. The export and explicit-context choices are this guide's advice.", "components": ["python", "requests", "httpx", "cpython-ssl", "openssl"], "sources": ["python:s8fae94406709", "requests:s21c6be6f6df4", "httpx:s52608d6c5e47", "httpx:sd33b79237122", "httpx:s3734fbccdf40", "httpx:s30dd14bf172e", "httpx:s4a1f3b43f184", "httpx:sc5a61a9b2f64", "cpython-ssl:sbac049853cda", "cpython-ssl:s6dcc06feaaaf", "cpython-ssl:s4d7f143c9456", "cpython-ssl:s79d6191e12eb", "cpython-ssl:s82c72b9a971a", "openssl:s592eb65718de"], "status": "REASONED"},
-    "http-server-bind": {"text": "As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000.", "components": ["python-pin"], "sources": ["python-pin:s0038729960a0", "python-pin:sa3111578d65d"], "status": "REASONED"},
-    "http-server-files": {"text": "http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel.", "components": ["python"], "sources": ["python:s8fae94406709"], "status": "REASONED"},
-    "verify-tls": {"text": "Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation.", "components": ["gunicorn", "uvicorn"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9"], "status": "REASONED", "verify": [1]},
-    "verify-auth": {"text": "A real protected route denies no credentials with 401/403 and accepts valid file-supplied credentials with 2xx; logs or direct probing distinguish app from proxy enforcement.", "components": ["django", "fastapi"], "sources": ["django:s7289e1c111ae", "fastapi:s077aff608a5c"], "status": "REASONED", "verify": [1]},
-    "verify-bind": {"text": "Inspect every listener for loopback behind a same-host proxy or the required managed-ingress address and port.", "components": ["gunicorn", "uvicorn"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # Python web apps: TLS and authentication
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Django documentation 6.1, Python http.server documentation 3.14.4, Python http.server source v3.14.4, Python standard library documentation 3.14, CPython ssl source and documentation v3.14.8, CPython secrets documentation and source v3.14.8, PyOTP v2.9.0, and qrcode v8.2, plus 6 more recorded bases; 5 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- python: Python http.server documentation (3.14.4)
-- gunicorn: Gunicorn documentation (unknown)
-- uvicorn: Uvicorn source (5ac6265a01ff6dcadb0e4250152c3deaf8a168a9)
-- django: Django documentation (6.1)
-- argon: argon2-cffi documentation (unknown)
-- werkzeug: Werkzeug documentation (unknown)
-- fastapi: FastAPI documentation (unknown)
-- oidc-stub: FastAPI OpenIdConnect source (31bbb380748ccead62fc0f42dbf4273f11dadccf)
-- python-pin: Python http.server source (v3.14.4)
-- stdlib-docs: Python standard library documentation (3.14)
-- pyotp: PyOTP (v2.9.0)
-- qrcode: qrcode (v8.2)
-- django-otp: django-otp (1.6.1)
-- requests: Requests (v2.32.3)
-- slowapi: slowapi source (v0.1.10)
-- httpx: HTTPX source and documentation (0.28.1)
-- cpython-ssl: CPython ssl source and documentation (v3.14.8)
-- openssl: OpenSSL documentation (openssl-4.0.3)
-- render: Render documentation (unknown)
-- heroku: Heroku documentation (unknown)
-- fly-pinned: Fly.io pinned documentation (2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9)
-- railway: Railway documentation (72354493198302677fb6be6c692dd75c64cae2c6)
-- argon-api: argon2-cffi API example (25.1.0)
-- bcrypt-api: Python bcrypt API example (2b4ba9ac84df972e8e81311d09559af8dc82ef33)
-- cpython-secrets: CPython secrets documentation and source (v3.14.8)
-
-Claims (full source mapping in the front matter):
-
-- bind (REASONED; gunicorn, uvicorn, render, heroku, fly-pinned, railway): This guide advises loopback for same-host TLS proxies, no extra managed listeners, and wildcard only for authenticated direct TLS or private TLS ingress; app auth remains required. Rules vary (Fir Private Spaces: IPv6/dual-stack recommended; Fly without handlers: TCP passthrough); Railway address/injected port/TLS location and Cedar address remain uncited.
-- flask-tls (REASONED; werkzeug): Flask development server binds 127.0.0.1:8443 with cert/key ssl_context; adhoc requires cryptography and remains development-only.
-- gunicorn-tls (REASONED; gunicorn): Gunicorn binds 0.0.0.0:8443 with --certfile and --keyfile for direct TLS.
-- uvicorn-tls (REASONED; uvicorn): Uvicorn binds 0.0.0.0:8443 with --ssl-certfile and --ssl-keyfile for direct TLS.
-- django-redirect (REASONED; django): Set SECURE_SSL_REDIRECT=True.
-- django-proxy (REASONED; django): Set SECURE_PROXY_SSL_HEADER only behind a trusted proxy that strips and replaces X-Forwarded-Proto; prevent direct bypass.
-- django-cookies (REASONED; django): Set SESSION_COOKIE_SECURE and CSRF_COOKIE_SECURE true.
-- django-hsts (REASONED; django): Begin HSTS at 3600 seconds and include-subdomains false; raise duration and scope only after valid HTTPS is confirmed.
-- deploy-check (REASONED; django): Run manage.py check --deploy and fix its findings.
-- password (REASONED; django, argon, argon-api, bcrypt-api): Keep Django's built-in hashing; do not replace it with custom code (guide advice). For Flask/FastAPI apps implementing local password accounts, this guide advises account storage and argon2-cffi or bcrypt under authentication.md's constraints; argon2-cffi 25.1.0's PasswordHasher.verify raises VerifyMismatchError on mismatch, and these APIs do not establish framework user-store capabilities.
-- secrets (REASONED; django, stdlib-docs, cpython-secrets): Generate secrets.token_urlsafe(32) and load secrets from the environment (guide advice); 32 counts random input bytes and is this guide's example choice, not a universal size. CPython v3.14.8 uses DEFAULT_ENTROPY (32 bytes) when omitted or None, but that default may change, including in maintenance releases.
-- credential-extraction (REASONED; fastapi): FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry.
-- oidc (REASONED; fastapi, oidc-stub): OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately.
-- login-limit (REASONED; fastapi, slowapi): Rate-limiting login routes and a proxy-level limit are this guide's advice. slowapi v0.1.10 documents limits for Starlette/FastAPI HTTP endpoints; endpoints using its limit decorator must take an explicit request argument, and WebSocket endpoints are not supported.
-- mfa (REASONED; django, pyotp, qrcode, django-otp): Use pyotp and qrcode, django-otp for Django, or linked MFA guidance.
-- client-validation (REASONED; python, requests, httpx, cpython-ssl): Never ship requests/httpx verify=False or ssl._create_unverified_context; HTTPX documents verify=False and CPython defines _create_unverified_context. The prohibition is this guide's advice.
-- client-ca (REASONED; python, requests, httpx, cpython-ssl, openssl): REQUESTS_CA_BUNDLE selects a requests CA. HTTPX 0.28.1's transport passes verify and trust_env to create_ssl_context, which reads SSL_CERT_FILE when verify=True and trust_env=True; its SSL guide contradicts that source. Its environment guide says environment variables are used by default but does not list SSL_CERT_FILE. CPython's ssl module reports OpenSSL default verify paths; with no CA specified and verification enabled, ssl.create_default_context() tries to load default CAs, which may fail silently. OpenSSL names SSL_CERT_FILE as an environment override for its default CA file; CPython's cited files do not name that variable, so whether a given ssl configuration uses it remains unverified. The export and explicit-context choices are this guide's advice.
-- http-server-bind (REASONED; python-pin): As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000.
-- http-server-files (REASONED; python): http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel.
-- verify-tls (REASONED; gunicorn, uvicorn): Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation.
-- verify-auth (REASONED; django, fastapi): A real protected route denies no credentials with 401/403 and accepts valid file-supplied credentials with 2xx; logs or direct probing distinguish app from proxy enforcement.
-- verify-bind (REASONED; gunicorn, uvicorn): Inspect every listener for loopback behind a same-host proxy or the required managed-ingress address and port.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Covers Flask, FastAPI/Uvicorn, Gunicorn, and Django. This guide's preferred production layout: bind the app server to `127.0.0.1` and terminate TLS in a reverse proxy ([caddy.md](caddy.md), [nginx.md](nginx.md)) or behind [cloudflare.md](cloudflare.md). For managed HTTP ingress, bind the listener required by your deployment; TLS termination depends on the platform and configuration described below ([paas.md](paas.md)). The app servers can also terminate TLS themselves, shown below. Certificates: [free-certificates.md](free-certificates.md) or [self-signed.md](self-signed.md).
 
@@ -455,3 +167,317 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 - Fly public service binding (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42
 - Fly IPv4 and IPv6 wildcard qualification (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92
 - Railway target ports (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/python.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- django: Django documentation (6.1)
+- python: Python http.server documentation (3.14.4)
+- python-pin: Python http.server source (v3.14.4)
+- stdlib-docs: Python standard library documentation (3.14)
+- cpython-ssl: CPython ssl source and documentation (v3.14.8)
+- cpython-secrets: CPython secrets documentation and source (v3.14.8)
+- gunicorn: Gunicorn documentation (unknown)
+- uvicorn: Uvicorn source (5ac6265a01ff6dcadb0e4250152c3deaf8a168a9)
+- fastapi: FastAPI documentation (unknown)
+- oidc-stub: FastAPI OpenIdConnect source (31bbb380748ccead62fc0f42dbf4273f11dadccf)
+- bcrypt-api: Python bcrypt API example (2b4ba9ac84df972e8e81311d09559af8dc82ef33)
+- werkzeug: Werkzeug documentation (unknown)
+- argon: argon2-cffi documentation (unknown)
+- pyotp: PyOTP (v2.9.0)
+- qrcode: qrcode (v8.2)
+- django-otp: django-otp (1.6.1)
+- requests: Requests (v2.32.3)
+- slowapi: slowapi source (v0.1.10)
+- httpx: HTTPX source and documentation (0.28.1)
+- openssl: OpenSSL documentation (openssl-4.0.3)
+- argon-api: argon2-cffi API example (25.1.0)
+- render: Render documentation (unknown)
+- heroku: Heroku documentation (unknown)
+- fly-pinned: Fly.io pinned documentation (2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9)
+- railway: Railway documentation (72354493198302677fb6be6c692dd75c64cae2c6)
+
+Claims (full source mapping in the JSON block below):
+
+- bind (REASONED; gunicorn, uvicorn, render, heroku, fly-pinned, railway): This guide advises loopback for same-host TLS proxies, no extra managed listeners, and wildcard only for authenticated direct TLS or private TLS ingress; app auth remains required. Rules vary (Fir Private Spaces: IPv6/dual-stack recommended; Fly without handlers: TCP passthrough); Railway address/injected port/TLS location and Cedar address remain uncited.
+- flask-tls (REASONED; werkzeug): Flask development server binds 127.0.0.1:8443 with cert/key ssl_context; adhoc requires cryptography and remains development-only.
+- gunicorn-tls (REASONED; gunicorn): Gunicorn binds 0.0.0.0:8443 with --certfile and --keyfile for direct TLS.
+- uvicorn-tls (REASONED; uvicorn): Uvicorn binds 0.0.0.0:8443 with --ssl-certfile and --ssl-keyfile for direct TLS.
+- django-redirect (REASONED; django): Set SECURE_SSL_REDIRECT=True.
+- django-proxy (REASONED; django): Set SECURE_PROXY_SSL_HEADER only behind a trusted proxy that strips and replaces X-Forwarded-Proto; prevent direct bypass.
+- django-cookies (REASONED; django): Set SESSION_COOKIE_SECURE and CSRF_COOKIE_SECURE true.
+- django-hsts (REASONED; django): Begin HSTS at 3600 seconds and include-subdomains false; raise duration and scope only after valid HTTPS is confirmed.
+- deploy-check (REASONED; django): Run manage.py check --deploy and fix its findings.
+- password (REASONED; django, argon, argon-api, bcrypt-api): Keep Django's built-in hashing; do not replace it with custom code (guide advice). For Flask/FastAPI apps implementing local password accounts, this guide advises account storage and argon2-cffi or bcrypt under authentication.md's constraints; argon2-cffi 25.1.0's PasswordHasher.verify raises VerifyMismatchError on mismatch, and these APIs do not establish framework user-store capabilities.
+- secrets (REASONED; django, stdlib-docs, cpython-secrets): Generate secrets.token_urlsafe(32) and load secrets from the environment (guide advice); 32 counts random input bytes and is this guide's example choice, not a universal size. CPython v3.14.8 uses DEFAULT_ENTROPY (32 bytes) when omitted or None, but that default may change, including in maintenance releases.
+- credential-extraction (REASONED; fastapi): FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry.
+- oidc (REASONED; fastapi, oidc-stub): OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately.
+- login-limit (REASONED; fastapi, slowapi): Rate-limiting login routes and a proxy-level limit are this guide's advice. slowapi v0.1.10 documents limits for Starlette/FastAPI HTTP endpoints; endpoints using its limit decorator must take an explicit request argument, and WebSocket endpoints are not supported.
+- mfa (REASONED; django, pyotp, qrcode, django-otp): Use pyotp and qrcode, django-otp for Django, or linked MFA guidance.
+- client-validation (REASONED; python, requests, httpx, cpython-ssl): Never ship requests/httpx verify=False or ssl._create_unverified_context; HTTPX documents verify=False and CPython defines _create_unverified_context. The prohibition is this guide's advice.
+- client-ca (REASONED; python, requests, httpx, cpython-ssl, openssl): REQUESTS_CA_BUNDLE selects a requests CA. HTTPX 0.28.1's transport passes verify and trust_env to create_ssl_context, which reads SSL_CERT_FILE when verify=True and trust_env=True; its SSL guide contradicts that source. Its environment guide says environment variables are used by default but does not list SSL_CERT_FILE. CPython's ssl module reports OpenSSL default verify paths; with no CA specified and verification enabled, ssl.create_default_context() tries to load default CAs, which may fail silently. OpenSSL names SSL_CERT_FILE as an environment override for its default CA file; CPython's cited files do not name that variable, so whether a given ssl configuration uses it remains unverified. The export and explicit-context choices are this guide's advice.
+- http-server-bind (REASONED; python-pin): As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000.
+- http-server-files (REASONED; python): http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel.
+- verify-tls (REASONED; gunicorn, uvicorn): Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation.
+- verify-auth (REASONED; django, fastapi): A real protected route denies no credentials with 401/403 and accepts valid file-supplied credentials with 2xx; logs or direct probing distinguish app from proxy enforcement.
+- verify-bind (REASONED; gunicorn, uvicorn): Inspect every listener for loopback behind a same-host proxy or the required managed-ingress address and port.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-18",
+  "documentation_checked": "2026-09",
+  "body_sha256": "325223859acb920caba7e11658d3c3b87a9f7703faeab9e05b7641db8696fd48",
+  "components": {
+    "django": {
+      "name": "Django documentation",
+      "basis": "6.1",
+      "sources": {
+        "s7289e1c111ae": "https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/"
+      }
+    },
+    "python": {
+      "name": "Python http.server documentation",
+      "basis": "3.14.4",
+      "sources": {
+        "s8fae94406709": "https://docs.python.org/3/library/http.server.html"
+      }
+    },
+    "python-pin": {
+      "name": "Python http.server source",
+      "basis": "v3.14.4",
+      "sources": {
+        "s0038729960a0": "https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1322-L1334",
+        "sa3111578d65d": "https://github.com/python/cpython/blob/v3.14.4/Lib/http/server.py#L1371-L1373"
+      }
+    },
+    "stdlib-docs": {
+      "name": "Python standard library documentation",
+      "basis": "3.14",
+      "sources": {
+        "s971d128efc65": "https://docs.python.org/3.14/library/secrets.html",
+        "sdad376a711c3": "https://docs.python.org/3.14/library/os.html#os.getenv"
+      }
+    },
+    "cpython-ssl": {
+      "name": "CPython ssl source and documentation",
+      "basis": "v3.14.8",
+      "sources": {
+        "sbac049853cda": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L390-L405",
+        "s6dcc06feaaaf": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L542-L548",
+        "s4d7f143c9456": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L730-L736",
+        "s4a1cd173d596": "https://github.com/python/cpython/blob/v3.14.8/Lib/ssl.py#L744-L754",
+        "s79d6191e12eb": "https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L421-L433",
+        "s82c72b9a971a": "https://github.com/python/cpython/blob/v3.14.8/Doc/library/ssl.rst#L1642-L1649"
+      }
+    },
+    "cpython-secrets": {
+      "name": "CPython secrets documentation and source",
+      "basis": "v3.14.8",
+      "sources": {
+        "s31e1a792a6b1": "https://github.com/python/cpython/blob/v3.14.8/Doc/library/secrets.rst#L91-L103",
+        "s7cc14a5ebfa0": "https://github.com/python/cpython/blob/v3.14.8/Lib/secrets.py#L31-L45",
+        "sdef0e1600064": "https://github.com/python/cpython/blob/v3.14.8/Doc/library/secrets.rst#L125-L130"
+      }
+    },
+    "gunicorn": {
+      "name": "Gunicorn documentation",
+      "basis": "unknown",
+      "sources": {
+        "s72daf362300c": "https://gunicorn.org/reference/settings/"
+      }
+    },
+    "uvicorn": {
+      "name": "Uvicorn source",
+      "basis": "5ac6265a01ff6dcadb0e4250152c3deaf8a168a9",
+      "sources": {
+        "s02429a4a09d9": "https://github.com/Kludex/uvicorn/blob/5ac6265a01ff6dcadb0e4250152c3deaf8a168a9/docs/settings.md"
+      }
+    },
+    "fastapi": {
+      "name": "FastAPI documentation",
+      "basis": "unknown",
+      "sources": {
+        "s077aff608a5c": "https://fastapi.tiangolo.com/reference/security/"
+      }
+    },
+    "oidc-stub": {
+      "name": "FastAPI OpenIdConnect source",
+      "basis": "31bbb380748ccead62fc0f42dbf4273f11dadccf",
+      "sources": {
+        "s876e3d51e7ac": "https://github.com/fastapi/fastapi/blob/31bbb380748ccead62fc0f42dbf4273f11dadccf/fastapi/security/open_id_connect_url.py"
+      }
+    },
+    "bcrypt-api": {
+      "name": "Python bcrypt API example",
+      "basis": "2b4ba9ac84df972e8e81311d09559af8dc82ef33",
+      "sources": {
+        "s340a2923b6da": "https://github.com/pyca/bcrypt/blob/2b4ba9ac84df972e8e81311d09559af8dc82ef33/README.rst#L62-L76"
+      }
+    },
+    "werkzeug": {
+      "name": "Werkzeug documentation",
+      "basis": "unknown",
+      "sources": {
+        "sd5066c63a3ca": "https://werkzeug.palletsprojects.com/en/stable/serving/"
+      }
+    },
+    "argon": {
+      "name": "argon2-cffi documentation",
+      "basis": "unknown",
+      "sources": {
+        "sff2b9a487e67": "https://argon2-cffi.readthedocs.io/"
+      }
+    },
+    "pyotp": {
+      "name": "PyOTP",
+      "basis": "v2.9.0",
+      "sources": {
+        "sc118b8ed3bdd": "https://github.com/pyauth/pyotp/blob/v2.9.0/README.rst#L4-L5"
+      }
+    },
+    "qrcode": {
+      "name": "qrcode",
+      "basis": "v8.2",
+      "sources": {
+        "s8247ddfed3d3": "https://github.com/lincolnloop/python-qrcode/blob/v8.2/README.rst#L41-L44"
+      }
+    },
+    "django-otp": {
+      "name": "django-otp",
+      "basis": "1.6.1",
+      "sources": {
+        "sa5c0f7097219": "https://pypi.org/project/django-otp/1.6.1/"
+      }
+    },
+    "requests": {
+      "name": "Requests",
+      "basis": "v2.32.3",
+      "sources": {
+        "s21c6be6f6df4": "https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L238-L239",
+        "s17c5a0a7ffb2": "https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L241-L243"
+      }
+    },
+    "slowapi": {
+      "name": "slowapi source",
+      "basis": "v0.1.10",
+      "sources": {
+        "sf150aa58aa31": "https://github.com/laurentS/slowapi/blob/v0.1.10/README.md#L1-L3",
+        "s4ca3e1e80817": "https://github.com/laurentS/slowapi/blob/v0.1.10/README.md#L24-L50"
+      }
+    },
+    "httpx": {
+      "name": "HTTPX source and documentation",
+      "basis": "0.28.1",
+      "sources": {
+        "s52608d6c5e47": "https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L3-L7",
+        "sd33b79237122": "https://github.com/encode/httpx/blob/0.28.1/docs/environment_variables.md#L9-L53",
+        "s928d85a8d13e": "https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L12-L17",
+        "s3734fbccdf40": "https://github.com/encode/httpx/blob/0.28.1/docs/advanced/ssl.md#L72-L86",
+        "s30dd14bf172e": "https://github.com/encode/httpx/blob/0.28.1/httpx/_config.py#L23-L40",
+        "s4a1f3b43f184": "https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L133-L154",
+        "sc5a61a9b2f64": "https://github.com/encode/httpx/blob/0.28.1/httpx/_transports/default.py#L278-L298"
+      }
+    },
+    "openssl": {
+      "name": "OpenSSL documentation",
+      "basis": "openssl-4.0.3",
+      "sources": {
+        "s592eb65718de": "https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man3/SSL_CTX_load_verify_locations.pod#L39-L49"
+      }
+    },
+    "argon-api": {
+      "name": "argon2-cffi API example",
+      "basis": "25.1.0",
+      "sources": {
+        "s193f86db0a79": "https://github.com/hynek/argon2-cffi/blob/25.1.0/README.md#L11-L28"
+      }
+    },
+    "render": {
+      "name": "Render documentation",
+      "basis": "unknown",
+      "sources": {
+        "s1820ac471b6c": "https://render.com/docs/web-services"
+      }
+    },
+    "heroku": {
+      "name": "Heroku documentation",
+      "basis": "unknown",
+      "sources": {
+        "s370d4beec29a": "https://devcenter.heroku.com/articles/runtime-principles",
+        "s211f5fe76042": "https://devcenter.heroku.com/articles/generations",
+        "s0c5bf300cef4": "https://devcenter.heroku.com/articles/http-routing"
+      }
+    },
+    "fly-pinned": {
+      "name": "Fly.io pinned documentation",
+      "basis": "2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9",
+      "sources": {
+        "s62fec91543a1": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42",
+        "s61c1e50d2c11": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92",
+        "s254c8c8a5edd": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97",
+        "s32999aa4c58c": "https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176"
+      }
+    },
+    "railway": {
+      "name": "Railway documentation",
+      "basis": "72354493198302677fb6be6c692dd75c64cae2c6",
+      "sources": {
+        "sac1383056b65": "https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146"
+      }
+    }
+  },
+  "claims": {
+    "bind": {"text": "This guide advises loopback for same-host TLS proxies, no extra managed listeners, and wildcard only for authenticated direct TLS or private TLS ingress; app auth remains required. Rules vary (Fir Private Spaces: IPv6/dual-stack recommended; Fly without handlers: TCP passthrough); Railway address/injected port/TLS location and Cedar address remain uncited.", "components": ["gunicorn", "uvicorn", "render", "heroku", "fly-pinned", "railway"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9", "render:s1820ac471b6c", "heroku:s370d4beec29a", "heroku:s211f5fe76042", "heroku:s0c5bf300cef4", "fly-pinned:s62fec91543a1", "fly-pinned:s61c1e50d2c11", "fly-pinned:s254c8c8a5edd", "fly-pinned:s32999aa4c58c", "railway:sac1383056b65"], "status": "REASONED"},
+    "flask-tls": {"text": "Flask development server binds 127.0.0.1:8443 with cert/key ssl_context; adhoc requires cryptography and remains development-only.", "components": ["werkzeug"], "sources": ["werkzeug:sd5066c63a3ca"], "status": "REASONED"},
+    "gunicorn-tls": {"text": "Gunicorn binds 0.0.0.0:8443 with --certfile and --keyfile for direct TLS.", "components": ["gunicorn"], "sources": ["gunicorn:s72daf362300c"], "status": "REASONED"},
+    "uvicorn-tls": {"text": "Uvicorn binds 0.0.0.0:8443 with --ssl-certfile and --ssl-keyfile for direct TLS.", "components": ["uvicorn"], "sources": ["uvicorn:s02429a4a09d9"], "status": "REASONED"},
+    "django-redirect": {"text": "Set SECURE_SSL_REDIRECT=True.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
+    "django-proxy": {"text": "Set SECURE_PROXY_SSL_HEADER only behind a trusted proxy that strips and replaces X-Forwarded-Proto; prevent direct bypass.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
+    "django-cookies": {"text": "Set SESSION_COOKIE_SECURE and CSRF_COOKIE_SECURE true.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
+    "django-hsts": {"text": "Begin HSTS at 3600 seconds and include-subdomains false; raise duration and scope only after valid HTTPS is confirmed.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
+    "deploy-check": {"text": "Run manage.py check --deploy and fix its findings.", "components": ["django"], "sources": ["django:s7289e1c111ae"], "status": "REASONED"},
+    "password": {"text": "Keep Django's built-in hashing; do not replace it with custom code (guide advice). For Flask/FastAPI apps implementing local password accounts, this guide advises account storage and argon2-cffi or bcrypt under authentication.md's constraints; argon2-cffi 25.1.0's PasswordHasher.verify raises VerifyMismatchError on mismatch, and these APIs do not establish framework user-store capabilities.", "components": ["django", "argon", "argon-api", "bcrypt-api"], "sources": ["django:s7289e1c111ae", "argon:sff2b9a487e67", "argon-api:s193f86db0a79", "bcrypt-api:s340a2923b6da"], "status": "REASONED"},
+    "secrets": {"text": "Generate secrets.token_urlsafe(32) and load secrets from the environment (guide advice); 32 counts random input bytes and is this guide's example choice, not a universal size. CPython v3.14.8 uses DEFAULT_ENTROPY (32 bytes) when omitted or None, but that default may change, including in maintenance releases.", "components": ["django", "stdlib-docs", "cpython-secrets"], "sources": ["django:s7289e1c111ae", "stdlib-docs:s971d128efc65", "stdlib-docs:sdad376a711c3", "cpython-secrets:s31e1a792a6b1", "cpython-secrets:s7cc14a5ebfa0", "cpython-secrets:sdef0e1600064"], "status": "REASONED"},
+    "credential-extraction": {"text": "FastAPI security helpers extract credentials and declare schemes; presence/scheme checks do not verify signature, issuer, audience or expiry.", "components": ["fastapi"], "sources": ["fastapi:s077aff608a5c"], "status": "REASONED"},
+    "oidc": {"text": "OpenIdConnect is a stub and does not use its discovery URL; validate extracted tokens with an OIDC library and authorize separately.", "components": ["fastapi", "oidc-stub"], "sources": ["fastapi:s077aff608a5c", "oidc-stub:s876e3d51e7ac"], "status": "REASONED"},
+    "login-limit": {"text": "Rate-limiting login routes and a proxy-level limit are this guide's advice. slowapi v0.1.10 documents limits for Starlette/FastAPI HTTP endpoints; endpoints using its limit decorator must take an explicit request argument, and WebSocket endpoints are not supported.", "components": ["fastapi", "slowapi"], "sources": ["fastapi:s077aff608a5c", "slowapi:sf150aa58aa31", "slowapi:s4ca3e1e80817"], "status": "REASONED"},
+    "mfa": {"text": "Use pyotp and qrcode, django-otp for Django, or linked MFA guidance.", "components": ["django", "pyotp", "qrcode", "django-otp"], "sources": ["django:s7289e1c111ae", "pyotp:sc118b8ed3bdd", "qrcode:s8247ddfed3d3", "django-otp:sa5c0f7097219"], "status": "REASONED"},
+    "client-validation": {"text": "Never ship requests/httpx verify=False or ssl._create_unverified_context; HTTPX documents verify=False and CPython defines _create_unverified_context. The prohibition is this guide's advice.", "components": ["python", "requests", "httpx", "cpython-ssl"], "sources": ["python:s8fae94406709", "requests:s17c5a0a7ffb2", "httpx:s928d85a8d13e", "cpython-ssl:s4a1cd173d596"], "status": "REASONED"},
+    "client-ca": {"text": "REQUESTS_CA_BUNDLE selects a requests CA. HTTPX 0.28.1's transport passes verify and trust_env to create_ssl_context, which reads SSL_CERT_FILE when verify=True and trust_env=True; its SSL guide contradicts that source. Its environment guide says environment variables are used by default but does not list SSL_CERT_FILE. CPython's ssl module reports OpenSSL default verify paths; with no CA specified and verification enabled, ssl.create_default_context() tries to load default CAs, which may fail silently. OpenSSL names SSL_CERT_FILE as an environment override for its default CA file; CPython's cited files do not name that variable, so whether a given ssl configuration uses it remains unverified. The export and explicit-context choices are this guide's advice.", "components": ["python", "requests", "httpx", "cpython-ssl", "openssl"], "sources": ["python:s8fae94406709", "requests:s21c6be6f6df4", "httpx:s52608d6c5e47", "httpx:sd33b79237122", "httpx:s3734fbccdf40", "httpx:s30dd14bf172e", "httpx:s4a1f3b43f184", "httpx:sc5a61a9b2f64", "cpython-ssl:sbac049853cda", "cpython-ssl:s6dcc06feaaaf", "cpython-ssl:s4d7f143c9456", "cpython-ssl:s79d6191e12eb", "cpython-ssl:s82c72b9a971a", "openssl:s592eb65718de"], "status": "REASONED"},
+    "http-server-bind": {"text": "As of Python 3.14.4, http.server binds every interface by default; explicitly bind 127.0.0.1:8000.", "components": ["python-pin"], "sources": ["python-pin:s0038729960a0", "python-pin:sa3111578d65d"], "status": "REASONED"},
+    "http-server-files": {"text": "http.server serves the current directory and follows symlinks outside it; it is unsuitable for production. Share only a non-private directory through an SSH tunnel.", "components": ["python"], "sources": ["python:s8fae94406709"], "status": "REASONED"},
+    "verify-tls": {"text": "Public HTTPS must succeed without -k; certificate, chain, hostname and trust failures need investigation.", "components": ["gunicorn", "uvicorn"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "A real protected route denies no credentials with 401/403 and accepts valid file-supplied credentials with 2xx; logs or direct probing distinguish app from proxy enforcement.", "components": ["django", "fastapi"], "sources": ["django:s7289e1c111ae", "fastapi:s077aff608a5c"], "status": "REASONED", "verify": [1]},
+    "verify-bind": {"text": "Inspect every listener for loopback behind a same-host proxy or the required managed-ingress address and port.", "components": ["gunicorn", "uvicorn"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->
