@@ -6370,7 +6370,7 @@ With the authentication from section 3 in place, this unauthenticated probe retu
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -6388,6 +6388,10 @@ Components (recorded basis):
 - heroku: Heroku documentation, unknown
 - fly-pinned: Fly.io pinned documentation, 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9
 - railway: Railway documentation, 72354493198302677fb6be6c692dd75c64cae2c6
+- owasp: OWASP password storage cheat sheet, commit 72865b1e
+- bcrypt: node.bcrypt.js, v6.0.0
+- argon2: node-argon2, v0.45.1
+- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
 
 Claims (full source mapping in the front matter):
 
@@ -6397,7 +6401,7 @@ Claims (full source mapping in the front matter):
 - privilege (REASONED; node, linux-ip, linux-capabilities): On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout.
 - proxy (REASONED; express): Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.
 - headers (REASONED; helmet): Install helmet() for security headers including HSTS.
-- password (REASONED; session): Prefer argon2id for new apps; existing bcrypt systems use hash cost 12 and compare. Password-library APIs are not covered by listed Sources.
+- password (REASONED; session, owasp, bcrypt, argon2): Guide advice: prefer Argon2id for new apps (argon2 v0.45.1 supports it); retain bcrypt only for legacy systems without Argon2/scrypt, with its 72-byte limit and example cost 12 (OWASP minimum 10). bcrypt v6.0.0 hash/compare return Promises without callbacks when supported; numeric hash cost generates a salt and means 2^cost iterations.
 - session-secret (REASONED; session): Load a long random SESSION_SECRET from the environment.
 - session-save (REASONED; session): Set resave=false and saveUninitialized=false.
 - cookies (REASONED; session): Set Secure, HttpOnly, SameSite=lax and an eight-hour cookie maxAge in milliseconds.
@@ -6405,7 +6409,7 @@ Claims (full source mapping in the front matter):
 - expiry (REASONED; session): No cookie maximum age is set by default; set cookie.maxAge.
 - login-limit (REASONED; rate): Use a 20-request, 15-minute login limit; v8 or newer defaults to IPv6 /56 grouping, closing the v7 rotation bypass; pair IP limits with account controls.
 - tokens (REASONED; node, node-v24): This guide advises loading API keys and tokens from process.env, never from source literals, and comparing self-checked secret values with crypto.timingSafeEqual using equal-byte-length byte inputs; process.env exposes the user environment, while timingSafeEqual's input requirements and surrounding-code limit are documented.
-- mfa (REASONED; session, otplib, qrcode): Use otplib plus qrcode for TOTP enrolment or a fronting identity layer; the fronting identity layer is not covered by listed Sources.
+- mfa (REASONED; session, otplib, qrcode, cf-docs): Add otplib/qrcode TOTP or require Cloudflare Access independent MFA in the effective policy (policy &gt; application &gt; organization). This guide requires an origin unreachable around Access and testing enforcement; cited pages do not establish a deployed policy or origin isolation.
 - tls-validation (REASONED; node, node-v24): This guide advises never setting NODE_TLS_REJECT_UNAUTHORIZED=0 for the Node.js process's TLS connections or rejectUnauthorized=false for a client TLS connection or an HTTPS agent whose requests use it; Node.js documents the TLS validation effects, and the agent reach is this guide's assessment of the documented options flow.
 - client-ca (REASONED; node, node-v24): This guide advises setting NODE_EXTRA_CA_CERTS to a PEM file before launching Node.js for an internal CA or self-signed server; it extends well-known roots, is read only at launch, and is ignored when Node.js runs as setuid root or with Linux file capabilities; neither it nor the well-known roots is used by a TLS or HTTPS client or server given an explicit ca option.
 - verify-redirect (REASONED; node): HTTP should return 301 with an HTTPS Location.
@@ -6484,7 +6488,9 @@ app.use(helmet());
 
 Follow [authentication.md](authentication.md). The pieces most Node projects need:
 
-Password hashing: prefer `argon2id` (the `argon2` package) for new applications; the `bcrypt` example below is acceptable and is the right choice for existing bcrypt systems, per [authentication.md](authentication.md):
+Password hashing: this guide recommends `argon2id` (the `argon2` package) for new applications and keeping `bcrypt` for existing bcrypt systems only where Argon2 and scrypt are unavailable, per [authentication.md](authentication.md). OWASP recommends Argon2id and limits bcrypt to that legacy scope, with a work factor of at least 10 and a 72-byte password limit (see the pinned Password Storage passages in Sources). The `argon2` package at v0.45.1 supports Argon2id and uses it by default.
+
+The example uses the documented `bcrypt` v6.0.0 CommonJS import, `hash(password, cost)` and `compare(password, hash)` APIs. Without a callback, these asynchronous methods return Promises when Promise support is available and support `await`; `compare` resolves to whether the password matches the hash. A numeric second argument to `hash` generates a salt using that cost; the documented work is `2^cost` hashing iterations. Cost 12 is this guide's example choice, not an OWASP mandate or a measured optimum for your server:
 
 ```js
 const bcrypt = require('bcrypt');
@@ -6516,7 +6522,11 @@ app.use('/login', rateLimit({ windowMs: 15 * 60 * 1000, limit: 20 }));
 
 This guide advises: load API keys and tokens from `process.env`, never from literals in the source. Generate them per [authentication.md](authentication.md). Where you check them yourself, compare equal-byte-length byte inputs with `crypto.timingSafeEqual`; it accepts `ArrayBuffer`, `Buffer`, `TypedArray` or `DataView` inputs, throws on different byte lengths, and does not make surrounding code timing-safe. The use of `process.env` for secrets and the ban on source literals are this guide's advice; Node.js documents `process.env` as the user environment and the comparison API's input requirements.
 
-MFA: add TOTP with [otplib](https://github.com/yeojz/otplib) plus the [qrcode](https://www.npmjs.com/package/qrcode) package for enrolment QR codes, or front the app with an identity layer; requirements and options in [mfa.md](mfa.md).
+MFA: add TOTP with [otplib](https://github.com/yeojz/otplib) plus the [qrcode](https://www.npmjs.com/package/qrcode) package for enrolment QR codes, or front the app with Cloudflare Access and require independent MFA in its effective policy; requirements and options in [mfa.md](mfa.md).
+
+Cloudflare Access independent MFA prompts for an additional authentication method before granting application access, without relying on the IdP's MFA configuration. Its MFA settings have precedence **policy > application > organization**; application and policy settings can turn MFA off (see the pinned independent-MFA and MFA-requirements passages in Sources). This guide requires checking that the effective policy requires MFA and testing that access without the second factor is denied.
+
+This guide also requires that the origin be unreachable around Access. Cloudflare describes Access as an authentication layer between users and the origin, warns that publishing a tunnel route without an Access application exposes it to anyone, and requires other origin-IP protection for an already publicly routable application (see the pinned self-hosted application passages in Sources). These pages do not establish a deployed MFA policy or this application's origin isolation; those remain deployment test requirements, not observed results.
 
 ## 4. Client-side TLS discipline
 
@@ -6582,6 +6592,18 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 - Fly public service binding (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42
 - Fly IPv4 and IPv6 wildcard qualification (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92
 - Railway target ports (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146
+- OWASP password storage cheat sheet Argon2id recommendation (commit 72865b1e, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L11
+- OWASP password storage cheat sheet legacy bcrypt cost and input limit (commit 72865b1e, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13
+- OWASP password storage cheat sheet bcrypt legacy scope (commit 72865b1e, checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L136-L138
+- node.bcrypt.js CommonJS import (v6.0.0, checked October 2026): https://github.com/kelektiv/node.bcrypt.js/blob/v6.0.0/README.md#L104
+- node.bcrypt.js Promises and async/await (v6.0.0, checked October 2026): https://github.com/kelektiv/node.bcrypt.js/blob/v6.0.0/README.md#L148-L181
+- node.bcrypt.js hash and compare APIs (v6.0.0, checked October 2026): https://github.com/kelektiv/node.bcrypt.js/blob/v6.0.0/README.md#L248-L262
+- node.bcrypt.js cost meaning (v6.0.0, checked October 2026): https://github.com/kelektiv/node.bcrypt.js/blob/v6.0.0/README.md#L268
+- node-argon2 Argon2id support and default (v0.45.1, checked October 2026): https://github.com/ranisalt/node-argon2/blob/v0.45.1/README.md#L12-L13
+- Cloudflare documentation independent MFA (c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24
+- Cloudflare documentation MFA requirements and precedence (c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81
+- Cloudflare documentation self-hosted authentication layer (c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16
+- Cloudflare documentation origin connection and protection (c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54
 
 ======================================================================
 ==> python.md
