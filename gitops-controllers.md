@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-15",
+  "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "b158153728c84055ad07ac40aef30d5debffd04a1faa42c2cab665877e2fb2be",
+  "body_sha256": "908b108054ff323b7d30f6ec6652728a0d065571804b124943b579b8f09f77cc",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -105,7 +105,9 @@ version_basis: {
       "name": "curl",
       "basis": "curl-8_14_1",
       "sources": {
-        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md"
+        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md",
+        "s9537bb790553": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data-binary.md#L4-L32",
+        "sd3b039bafbf6": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data.md#L4-L49"
       }
     },
     "flux": {
@@ -188,7 +190,7 @@ version_basis: {
     "verify-repo-metrics": {"text": "Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control.", "components": ["argo"], "sources": ["argo:s98b27313f615", "argo:s1a13cc06db6d"], "status": "REASONED", "verify": [2]},
     "verify-server-metrics": {"text": "Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive.", "components": ["argo"], "sources": ["argo:s028a4769d6c3", "argo:s743c8187cbd7"], "status": "REASONED"},
     "verify-profiler": {"text": "From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control.", "components": ["argo"], "sources": ["argo:sc52bbd14bff4", "argo:s028a4769d6c3"], "status": "REASONED"},
-    "verify-flux": {"text": "Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. Sources has no curl --data-binary reference.", "components": ["flux", "python", "curl"], "sources": ["flux:s35bb9a844dcf", "python:s7a54556e5dac", "python:s31fccd7d50e5", "curl:s3db522258e44"], "status": "REASONED", "verify": [3]},
+    "verify-flux": {"text": "Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. The cited curl curl-8_14_1 lines show --data-binary posting data exactly as specified, preserving newlines and carriage returns that --data strips from @file input, reading @- from stdin and @filename from a file, and posting like --data's POST request.", "components": ["flux", "python", "curl"], "sources": ["flux:s35bb9a844dcf", "python:s7a54556e5dac", "python:s31fccd7d50e5", "curl:s3db522258e44", "curl:s9537bb790553", "curl:sd3b039bafbf6"], "status": "REASONED", "verify": [3]},
     "verify-receiver-status": {"text": "Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection.", "components": ["flux"], "sources": ["flux:s35bb9a844dcf"], "status": "REASONED"}
   }
 }
@@ -200,7 +202,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -264,7 +266,7 @@ Claims (full source mapping in the front matter):
 - verify-repo-metrics (REASONED; argo): Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control.
 - verify-server-metrics (REASONED; argo): Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive.
 - verify-profiler (REASONED; argo): From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control.
-- verify-flux (REASONED; flux, python, curl): Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. Sources has no curl --data-binary reference.
+- verify-flux (REASONED; flux, python, curl): Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. The cited curl curl-8_14_1 lines show --data-binary posting data exactly as specified, preserving newlines and carriage returns that --data strips from @file input, reading @- from stdin and @filename from a file, and posting like --data's POST request.
 - verify-receiver-status (REASONED; flux): Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection.
 <!-- version-basis:end -->
 
@@ -642,6 +644,7 @@ need the guarded-subshell form so an unsubstituted address cannot time out and r
 
 - Python HMAC calculation and binary stdin: https://docs.python.org/3/library/hmac.html and https://docs.python.org/3/library/sys.html#sys.stdin
 - [curl curl-8_14_1 custom headers (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
+- curl curl-8_14_1 (checked October 2026): [--data-binary posts data exactly as specified, with newlines and carriage returns preserved and @- reading stdin (4-32)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data-binary.md#L4-L32); [--data sends a POST request and strips carriage returns and newlines from @file input (4-49)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data.md#L4-L49).
 
 Argo CD source claims below were checked offline at v3.5.3, commit
 `c9c369efcc5b2a0bd720803f8d14a1c3eaddf579`. Dex v2.45.1, Redis 8.2.3 and docker-library-redis v8.2.3 (commit `bcbc692165ce2241e194035041c5b5e01d2e1a5f`) were checked offline in October 2026. Retained readthedocs links provide operational guidance;
