@@ -1923,8 +1923,8 @@ class TwoSectionTests(unittest.TestCase):
             vb.migrated(self.legacy(BODY.replace('# Fixture\n\n', '# Fixture\nIntro\n\n')),
                         'fixture.md')
         renderer = vb.two_section
-        def changed(data, body, guide):
-            return renderer(data, body + 'Extra prose.\n', guide)
+        def changed(data, body, guide, **options):
+            return renderer(data, body + 'Extra prose.\n', guide, **options)
         with patch.object(vb, 'two_section', side_effect=changed):
             with self.assertRaisesRegex(ValueError, 'migration changed digested body'):
                 vb.migrated(self.legacy(), 'fixture.md')
@@ -2018,6 +2018,171 @@ class TwoSectionTests(unittest.TestCase):
                 line = text.split('\n').index('https://example.com/a__b') + 1
                 for findings in (lexical_findings(path), parsed_findings(path, parser)):
                     self.assertEqual(list(findings), [f'fixture.md:{line}: bare URL contains __: https://example.com/a__b'])
+
+
+class TopPromptTests(unittest.TestCase):
+    INTRO = 'TEST TEXT: Product is a service; this guide helps your AI assistant check its security.'
+
+    def historical(self):
+        return vb.migrated(vb.updated(document(fixture()), 'fixture.md'), 'fixture.md')
+
+    def test_positions_digest_prompt_and_note(self):
+        old = self.historical()
+        introduced = vb.introduced(old, 'fixture.md', self.INTRO)
+        expected = BODY.replace('# Fixture\n\n', '# Fixture\n\n' + self.INTRO + '\n\n', 1)
+        for position, body in (('title', BODY), ('intro', expected)):
+            with self.subTest(position=position):
+                data = fixture()
+                data['body_sha256'] = vb.digest(body)
+                text = vb.two_section(data, body, 'fixture.md', position=position)
+                self.assertEqual(vb.updated(text, 'fixture.md'), text)
+                self.assertEqual(vb.without_summary(text), body)
+                self.assertEqual(vb.split(text)[0]['body_sha256'], vb.digest(body))
+                start = len('# Fixture\n\n') + (len(self.INTRO) + 2 if position == 'intro' else 0)
+                self.assertEqual(text[start:start + len(vb.top_block(data, 'fixture.md'))],
+                                 vb.top_block(data, 'fixture.md'))
+                self.assertEqual(text.count(vb.prompt('fixture.md')), 1)
+                self.assertIn(vb.prompt('fixture.md'), old)
+                self.assertIn('<a id="ai-assistant-prompt"></a>', text)
+                self.assertIn('[the prompt at the top](#ai-assistant-prompt)', vb.eof_section(text))
+                self.assertNotIn('```text', vb.eof_section(text))
+                self.assertEqual(vb.render(data, 'fixture.md').split('**Version basis**', 1)[1],
+                                 vb.render(data, 'fixture.md', historical=True).split('**Version basis**', 1)[1])
+                if position == 'intro':
+                    self.assertEqual(text, introduced)
+                else:
+                    self.assertEqual(vb.introduced(text, 'fixture.md', self.INTRO), introduced)
+        with self.assertRaisesRegex(ValueError, 'body changed'):
+            vb.updated(introduced.replace(self.INTRO, self.INTRO + ' Changed.'), 'fixture.md')
+        self.assertEqual(vb.updated(old, 'fixture.md'), old)
+
+    def test_edited_duplicate_misplaced_and_wrong_guide_fail_closed(self):
+        for position in ('title', 'intro'):
+            text = vb.two_section(fixture(), BODY, 'fixture.md', position=position)
+            block = vb.top_block(fixture(), 'fixture.md') + '\n\n'
+            stripped = text.replace(block, '', 1)
+            mutations = [text.replace('give it the prompt below:', 'give it this prompt:', 1),
+                         text.replace('/main/fixture.md', '/main/other.md', 1),
+                         text.replace('ai-assistant-prompt', 'changed-anchor', 1),
+                         text.replace('Written against Product', 'Written against Other', 1),
+                         text.replace('```text', '```bash', 1),
+                         text.replace(block, block + block, 1), stripped,
+                         stripped.replace('## Verify', 'Extra paragraph.\n\n' + block + '## Verify', 1),
+                         stripped.replace('## Sources', block + '## Sources', 1),
+                         text.replace(block, '\n' + block, 1),
+                         text.replace(block, block.replace('\n', '\r\n'), 1)]
+            for changed in mutations:
+                for operation in (vb.updated, vb.rebound):
+                    with self.subTest(position=position, operation=operation, changed=changed[:150]):
+                        with self.assertRaises(ValueError):
+                            operation(changed, 'fixture.md')
+        historical = self.historical()
+        with self.assertRaises(ValueError):
+            vb.updated(historical.replace(vb.header(fixture()), vb.top_block(fixture(), 'fixture.md'), 1),
+                       'fixture.md')
+
+    def test_intro_grammar_and_body_difference_assertion(self):
+        old = self.historical()
+        for intro in ('', ' one', 'one\n\ntwo', '# Heading', '- item', '> quote',
+                      '```text\nx\n```', '<b>HTML</b>', 'one\n---', 'one\rwrapped',
+                      'one\n\n', 'one\n  indented', '[ref]: https://example.com'):
+            with self.subTest(intro=intro), self.assertRaises(ValueError):
+                vb.introduced(old, 'fixture.md', intro)
+        wrapped = self.INTRO + '\nA second line of the same paragraph.'
+        result = vb.introduced(old, 'fixture.md', wrapped)
+        self.assertIn(wrapped, vb.without_summary(result))
+        with self.assertRaisesRegex(ValueError, 'already has an intro'):
+            vb.introduced(result, 'fixture.md', self.INTRO)
+        renderer = vb.two_section
+        def changed(data, body, guide, **options):
+            if options.get('position') == 'historical':
+                return renderer(data, body, guide, **options)
+            return renderer(data, body.replace('A documented control.', 'Changed control.'), guide, **options)
+        with patch.object(vb, 'two_section', side_effect=changed):
+            with self.assertRaisesRegex(ValueError, 'beyond inserted intro'):
+                vb.introduced(old, 'fixture.md', self.INTRO)
+        def changed_metadata(data, body, guide, **options):
+            if options.get('position') != 'historical':
+                data['claims']['control']['text'] = 'Changed claim.'
+            return renderer(data, body, guide, **options)
+        with patch.object(vb, 'two_section', side_effect=changed_metadata):
+            with self.assertRaisesRegex(ValueError, 'metadata beyond digest'):
+                vb.introduced(old, 'fixture.md', self.INTRO)
+        with self.assertRaisesRegex(ValueError, 'body changed'):
+            vb.introduced(old.replace('A documented control.', 'Unreviewed.'), 'fixture.md', self.INTRO)
+
+    def test_gates_bundles_and_physical_lines(self):
+        from check_bare_urls import lexical_findings, parsed_findings
+        from check_verify_marking import scan_units, scan_guide
+        from check_verify_safety import logical_lines, findings_for
+        parser = gate_parser(required=True)
+        old = self.historical()
+        old_units, old_errors = scan_units(old, enrolled=True, parser=parser)
+        for text in (vb.two_section(fixture(), BODY, 'fixture.md', position='title'),
+                     vb.introduced(old, 'fixture.md', self.INTRO)):
+            units, errors = scan_units(text, enrolled=True, parser=parser)
+            self.assertEqual(errors, old_errors)
+            self.assertEqual([u[1:] for u in units], [u[1:] for u in old_units])
+            self.assertEqual(len(scan_guide(text, enrolled=True)[0]), 1)
+            self.assertEqual(list(logical_lines(text, 'fixture.md')),
+                             list(logical_lines(vb.mask_top(text)[:vb.mask_top(text).index(vb.START)], 'fixture.md')))
+            bad = text.replace('Read the secureconfig guide at', 'curl -k https://example.com')
+            self.assertTrue(any(list(findings_for(code)) for _, code in logical_lines(bad, 'fixture.md')))
+            bad = text.replace('- Product v1.0:', '- Product v1.0 <a href=x>bad</a>:')
+            line = bad.split('\n').index('- Product v1.0 <a href=x>bad</a>: ' + URL) + 1
+            with self.assertRaisesRegex(ValueError, f'Sources line {line}:'):
+                vb.rebound(bad, 'fixture.md')
+            with tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / 'fixture.md'
+                path.write_text(text)
+                self.assertEqual(list(lexical_findings(path)), [])
+                self.assertEqual(list(parsed_findings(path, parser)), [])
+                result = subprocess.run([sys.executable, str(vb.ROOT / 'tools/version_basis.py'),
+                                         '--bundle', str(path)], capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout, text)
+                path.write_text(text.replace('A documented control.', 'https://example.com/a__b', 1))
+                self.assertTrue(list(lexical_findings(path)))
+                self.assertTrue(list(parsed_findings(path, parser)))
+
+    def test_cli_preflight_and_no_partial_write(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'tools').mkdir()
+            (root / 'tools/version_basis_guides.txt').write_text('fixture.md\n')
+            (root / 'tools/version_basis_sources_baseline.txt').write_text('')
+            (root / 'CHANGELOG.md').write_text('## 2026-09-26\n')
+            path = root / 'fixture.md'
+            old = self.historical()
+            path.write_text(old)
+            def run(*args):
+                with patch.object(vb, 'ROOT', root), patch.object(sys, 'argv', ['version_basis.py', *args]), \
+                        contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    return vb.main()
+            self.assertEqual(run('--introduce', str(path), '--intro', '- list'), 1)
+            self.assertEqual(path.read_text(), old)
+            self.assertEqual(run('--introduce', str(root / 'missing.md'), '--intro', self.INTRO), 1)
+            self.assertEqual(run('--introduce', str(path), '--intro', self.INTRO), 0)
+            self.assertEqual(path.read_text(), vb.introduced(old, 'fixture.md', self.INTRO))
+            self.assertEqual(run('--check'), 0)
+
+    def test_local_link_gate_accepts_only_exact_prompt_anchor(self):
+        script = (vb.ROOT / 'tools/run_all_checks.sh').read_text()
+        function = 'heading_slugs() {' + script.split('heading_slugs() {', 1)[1].split('\n}', 1)[0] + '\n}'
+        text = vb.introduced(self.historical(), 'fixture.md', self.INTRO)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.md'
+            for candidate, accepted in (
+                    (text, True), (self.historical(), False),
+                    (text.replace('give it the prompt below:', 'Edited invitation:', 1), False),
+                    (text.replace('/main/fixture.md', '/main/other.md', 1), False),
+                    (text.replace('<a id="ai-assistant-prompt"></a>', '', 1), False)):
+                path.write_text(candidate)
+                result = subprocess.run(['bash', '-c', function + '\nheading_slugs "$1"',
+                                         'anchor-test', str(path)], cwd=vb.ROOT,
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual('ai-assistant-prompt' in result.stdout.splitlines(), accepted)
 
 
 if __name__ == '__main__':

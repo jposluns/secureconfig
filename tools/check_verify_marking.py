@@ -399,6 +399,9 @@ def guide_context(text, in_verify=False, in_quote=False, *, enrolled=False):
     # Only a document's leading, strictly parsed metadata is opaque. Recursive
     # quote scans must never gain a front-matter or generated-summary exemption.
     if not in_quote:
+        if enrolled:
+            from version_basis import mask_top
+            text = mask_top(text)
         text = text.replace("\r\n", "\n").replace("\r", "\n")
         from version_basis import split_front_matter
         data, body = split_front_matter(text)
@@ -722,7 +725,9 @@ def scan_units(text, *, enrolled=False, parser=None):
         legacy_ranges = set(verify_ranges(legacy_heads))
         # Front matter is strict JSON metadata, not Markdown. Preserve maps
         # while masking it; no declaration or heading is selected from source.
-        from version_basis import split_front_matter, START, END, NOTE_TITLE
+        from version_basis import split_front_matter, START, END, NOTE_TITLE, mask_top
+        if enrolled:
+            text = mask_top(text)
         text = text.replace("\r\n", "\n").replace("\r", "\n")
         try:
             data, body = split_front_matter(text)

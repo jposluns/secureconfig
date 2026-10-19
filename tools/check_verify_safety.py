@@ -301,6 +301,7 @@ def logical_lines(text, guide="GUIDE.md"):
         try:
             section = vb.eof_section(text)
             if vb.updated(text, guide) == text:
+                text = vb.mask_top(text)
                 text = text[:text.index(section)]
         except (OSError, ValueError, TypeError, KeyError):
             pass
