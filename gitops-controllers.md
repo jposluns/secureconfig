@@ -1,6 +1,6 @@
 # GitOps controllers: Argo CD and Flux
 
-Written against Argo CD v3.5.3 source (pinned to a commit), Flux OIDC introduction v2.9, Dex v2.45.1 source v2.45.1, Redis 8.2.3 source 8.2.3, and curl curl-8_14_1; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 50 claims, all reasoned from cited sources.
+Written against Argo CD v3.5.3 source (pinned to a commit), Flux OIDC introduction v2.9, Dex source v2.45.1, Redis source 8.2.3, and curl curl-8_14_1; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 50 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -498,9 +498,9 @@ Components (recorded basis):
 - flux-oidc: Flux OIDC introduction (v2.9)
 - argo-docs: Argo CD documentation (unknown)
 - flux: Flux documentation (unknown)
-- dex: Dex v2.45.1 source (v2.45.1)
+- dex: Dex source (v2.45.1)
 - redis-image: docker-library-redis v8.2.3 source (bcbc692165ce2241e194035041c5b5e01d2e1a5f)
-- redis-source: Redis 8.2.3 source (8.2.3)
+- redis-source: Redis source (8.2.3)
 - curl: curl (curl-8_14_1)
 - python: Python documentation (unknown)
 
@@ -655,7 +655,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "dex": {
-      "name": "Dex v2.45.1 source",
+      "name": "Dex source",
       "basis": "v2.45.1",
       "sources": {
         "s3b9512b79dea": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L151-L199",
@@ -673,7 +673,7 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "redis-source": {
-      "name": "Redis 8.2.3 source",
+      "name": "Redis source",
       "basis": "8.2.3",
       "sources": {
         "s667fc16bf18f": "https://github.com/redis/redis/blob/8.2.3/src/server.h#L142-L143",
