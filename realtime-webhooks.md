@@ -1,6 +1,6 @@
 # WebSockets, server-sent events, and webhooks: authenticating the non-page endpoints
 
-Written against WebSocket protocol RFC 6455, stripe-node v18.5.0, stripe-python v12.5.0, Traefik timeout reference v3.5, Caddy source v2.11.4, nginx source release-1.26.3, HAProxy 3.0, and HAProxy source v3.0.0, plus 1 more recorded bases; 7 further sources carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 36 claims, all reasoned from cited sources.
+Written against WebSocket protocol RFC 6455, stripe-node v18.5.0, stripe-python v12.5.0, Traefik timeout reference v3.5, Caddy source v2.11.4, nginx source release-1.26.3, HAProxy 3.0, and HAProxy source v3.0.0, plus 1 more recorded basis; 7 further sources carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 36 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

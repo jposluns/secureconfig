@@ -1,173 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-18",
-  "documentation_checked": "2026-09",
-  "body_sha256": "096aac84d8e85e741360a95b6e4fbadf6b3621a153725920785f898bb479528b",
-  "components": {
-    "docker": {
-      "name": "Docker documentation",
-      "basis": "unknown",
-      "sources": {
-        "s6ca35cbd69e7": "https://docs.docker.com/reference/dockerfile/",
-        "s8b7485a246e4": "https://docs.docker.com/reference/compose-file/",
-        "s5d6294cf605e": "https://docs.docker.com/reference/cli/docker/container/run/"
-      }
-    },
-    "docker-daemon": {
-      "name": "Docker daemon security documentation",
-      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
-      "sources": {
-        "secebea1a69ab": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/_index.md#L84-L112",
-        "s79490cd2f3b2": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/install/linux-postinstall.md#L29-L39",
-        "s8eab393a61c6": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/rootless/_index.md#L8-L21",
-        "s94d57fcbfafe": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L1330-L1350",
-        "s372ddf9da1f0": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L1460-L1467",
-        "see4d326cd914": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L1495-L1515"
-      }
-    },
-    "compose-2324": {
-      "name": "Docker Compose source and reference",
-      "basis": "v2.32.4",
-      "sources": {
-        "s906b5822e9c4": "https://github.com/docker/compose/blob/v2.32.4/docs/reference/compose_exec.md#L1-L7",
-        "sfe4c568a9887": "https://github.com/docker/compose/blob/v2.32.4/cmd/compose/exec.go#L84-L110",
-        "s1bf114813e47": "https://github.com/docker/compose/blob/v2.32.4/cmd/compose/up.go#L145-L155"
-      }
-    },
-    "procfs-619": {
-      "name": "Linux process status and capabilities manuals",
-      "basis": "man-pages-6.19",
-      "sources": {
-        "sa94440d59945": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_status.5?h=man-pages-6.19#n315",
-        "s74035196d5f7": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man7/capabilities.7?h=man-pages-6.19#n1367"
-      }
-    },
-    "kubernetes-website": {
-      "name": "Kubernetes process namespace documentation",
-      "basis": "47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8",
-      "sources": {
-        "s3df8336a2aa8": "https://github.com/kubernetes/website/blob/47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8/content/en/docs/tasks/configure-pod-container/share-process-namespace.md#L115-L119"
-      }
-    },
-    "kubernetes": {
-      "name": "Kubernetes documentation",
-      "basis": "unknown",
-      "sources": {
-        "sb78ea91d0308": "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
-        "s1a2d717974c7": "https://kubernetes.io/docs/concepts/security/pod-security-standards/",
-        "s953450b4076f": "https://kubernetes.io/docs/concepts/services-networking/network-policies/"
-      }
-    },
-    "kubernetes-134": {
-      "name": "Kubernetes Pod Security Admission",
-      "basis": "1.34",
-      "sources": {
-        "s9b9aaf5067e2": "https://v1-34.docs.kubernetes.io/docs/concepts/security/pod-security-admission/",
-        "sa25682f200f0": "https://v1-34.docs.kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/"
-      }
-    },
-    "kubectl-134": {
-      "name": "kubectl source",
-      "basis": "v1.34.0",
-      "sources": {
-        "s0906dc78482b": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L293-L310",
-        "s1adb8cde69c0": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L103-L194",
-        "sc98b92ba3ebf": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L591-L622",
-        "s2ffc04de1d63": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/util/override_options.go#L29-L90",
-        "sf5417ce59241": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/exec/exec.go#L52-L56"
-      }
-    },
-    "rfc7396": {
-      "name": "JSON Merge Patch",
-      "basis": "RFC 7396",
-      "sources": {
-        "sda39f95d0890": "https://www.rfc-editor.org/rfc/rfc7396#section-2"
-      }
-    },
-    "busybox-1361": {
-      "name": "BusyBox source",
-      "basis": "1_36_1",
-      "sources": {
-        "s14b89daa008d": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59",
-        "s34bdee292f79": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93",
-        "s8a53fb647996": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L888-L922"
-      }
-    }
-  },
-  "claims": {
-    "docker-user": {"text": "Dockerfile USER sets build/runtime identity; set user and group, since no primary group uses root. Compose user overrides it; unset in both runs as root.", "components": ["docker"], "sources": ["docker:s6ca35cbd69e7", "docker:s8b7485a246e4"], "status": "REASONED"},
-    "docker-rootfs": {"text": "Compose read_only makes the root filesystem read-only; provide tmpfs only for required writable paths.", "components": ["docker"], "sources": ["docker:s8b7485a246e4"], "status": "REASONED"},
-    "docker-capabilities": {"text": "cap_drop: [ALL] removes capabilities; add back only specific required capabilities with cap_add.", "components": ["docker"], "sources": ["docker:s8b7485a246e4"], "status": "REASONED"},
-    "docker-escalation": {"text": "no-new-privileges prevents setuid privilege gain; the guide lists bare, equals-true and colon-true spellings as equivalent.", "components": ["docker"], "sources": ["docker:s5d6294cf605e", "docker:s8b7485a246e4"], "status": "REASONED"},
-    "docker-socket": {"text": "Never mount /var/run/docker.sock. In Docker's default rootful configuration, daemon control lets a user start a container that can alter the host filesystem without restriction, and docker-group membership grants root-level privileges; Rootless mode runs the daemon and containers without root privileges. Docker documents mounted-socket daemon control with a Docker client, and documents --privileged and host bind mounts; a socket-holding container starting a privileged sibling or bind-mounting host / to escape is this guide's assessment. Rootless mode narrowing the available host privilege but not making the mount safe is this guide's assessment.", "components": ["docker", "docker-daemon"], "sources": ["docker:s5d6294cf605e", "docker-daemon:secebea1a69ab", "docker-daemon:s79490cd2f3b2", "docker-daemon:s8eab393a61c6", "docker-daemon:s94d57fcbfafe", "docker-daemon:s372ddf9da1f0", "docker-daemon:see4d326cd914"], "status": "REASONED"},
-    "kube-user": {"text": "runAsNonRoot rejects root; pin runAsUser and runAsGroup to 10001, with the guide noting runtime-default GID 0 if unset.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308"], "status": "REASONED"},
-    "kube-rootfs": {"text": "Set readOnlyRootFilesystem per container; this is a separate recommendation, not a restricted Pod Security requirement.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
-    "kube-escalation": {"text": "Set allowPrivilegeEscalation: false in the container securityContext.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
-    "kube-capabilities": {"text": "Drop ALL capabilities in the container securityContext.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
-    "kube-seccomp": {"text": "RuntimeDefault selects the runtime syscall filter instead of Unconfined.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
-    "admission": {"text": "Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp.", "components": ["kubernetes", "kubernetes-134"], "sources": ["kubernetes:s1a2d717974c7", "kubernetes-134:s9b9aaf5067e2"], "status": "REASONED"},
-    "existing-pods": {"text": "Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads.", "components": ["kubernetes", "kubernetes-134"], "sources": ["kubernetes:s1a2d717974c7", "kubernetes-134:sa25682f200f0"], "status": "REASONED"},
-    "policy-semantics": {"text": "NetworkPolicies are additive and require an enforcing CNI; both source egress and destination ingress must allow a connection.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
-    "default-deny": {"text": "The empty podSelector with Ingress and Egress isolates all pods selected in the namespace before narrow allowances.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
-    "dns": {"text": "The app egress rule permits UDP/TCP 53 to all kube-system pods, not just CoreDNS; narrow it to the actual resolver.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
-    "database-path": {"text": "Allow app egress to role: db and db ingress from role: app on TCP 5432; other paths governed by these namespace policies are refused.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
-    "policy-limits": {"text": "hostNetwork and same-node traffic handling are implementation-dependent; database TLS/authentication remain separate controls.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
-    "verify-user": {"text": "Compose exec targets the app service in the resolved project and id must report a nonzero UID; using the actual container name for bare docker exec is this guide's advice.", "components": ["docker", "compose-2324"], "sources": ["docker:s6ca35cbd69e7", "docker:s8b7485a246e4", "compose-2324:s906b5822e9c4", "compose-2324:sfe4c568a9887"], "status": "REASONED", "verify": [1]},
-    "verify-rootfs": {"text": "With read_only false, touch on an existing owned path must print WRITABLE; after docker compose up -d --force-recreate with read_only true, it must print blocked. ENOENT or EACCES can also print blocked on a writable filesystem, so blocked alone is not proof of a read-only root. This guide's assessment: the errno, including typical EROFS, depends on the image and path; the probe's exit 0 does not discriminate.", "components": ["docker", "compose-2324"], "sources": ["docker:s8b7485a246e4", "compose-2324:s1bf114813e47"], "status": "REASONED", "verify": [1]},
-    "verify-context": {"text": "kubectl get reads the declared context; kubectl exec inspects the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities. Clearing CapBnd under drop:[ALL] is this guide's expected runtime state; with shareProcessNamespace, PID 1 belongs to the pod sandbox, so select the application PID.", "components": ["kubernetes", "kubectl-134", "procfs-619", "kubernetes-website"], "sources": ["kubernetes:sb78ea91d0308", "kubectl-134:sf5417ce59241", "procfs-619:sa94440d59945", "procfs-619:s74035196d5f7", "kubernetes-website:s3df8336a2aa8"], "status": "REASONED", "verify": [1]},
-    "verify-probe": {"text": "Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified.", "components": ["kubernetes", "kubectl-134", "rfc7396", "busybox-1361"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7", "kubernetes:s953450b4076f", "kubectl-134:s0906dc78482b", "kubectl-134:s1adb8cde69c0", "kubectl-134:sc98b92ba3ebf", "kubectl-134:s2ffc04de1d63", "rfc7396:sda39f95d0890", "busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s8a53fb647996"], "status": "REASONED", "verify": [1]},
-    "verify-segmentation": {"text": "The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # Containers: non-root, dropped capabilities, read-only root, and network segmentation
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Docker documentation (no recorded version), Docker Compose source and reference v2.32.4, Kubernetes Pod Security Admission 1.34, kubectl source v1.34.0, Linux process status and capabilities manuals man-pages-6.19, JSON Merge Patch RFC 7396, and BusyBox source 1_36_1; 2 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- docker: Docker documentation (unknown)
-- docker-daemon: Docker daemon security documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
-- compose-2324: Docker Compose source and reference (v2.32.4)
-- procfs-619: Linux process status and capabilities manuals (man-pages-6.19)
-- kubernetes-website: Kubernetes process namespace documentation (47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8)
-- kubernetes: Kubernetes documentation (unknown)
-- kubernetes-134: Kubernetes Pod Security Admission (1.34)
-- kubectl-134: kubectl source (v1.34.0)
-- rfc7396: JSON Merge Patch (RFC 7396)
-- busybox-1361: BusyBox source (1_36_1)
-
-Claims (full source mapping in the front matter):
-
-- docker-user (REASONED; docker): Dockerfile USER sets build/runtime identity; set user and group, since no primary group uses root. Compose user overrides it; unset in both runs as root.
-- docker-rootfs (REASONED; docker): Compose read_only makes the root filesystem read-only; provide tmpfs only for required writable paths.
-- docker-capabilities (REASONED; docker): cap_drop: [ALL] removes capabilities; add back only specific required capabilities with cap_add.
-- docker-escalation (REASONED; docker): no-new-privileges prevents setuid privilege gain; the guide lists bare, equals-true and colon-true spellings as equivalent.
-- docker-socket (REASONED; docker, docker-daemon): Never mount /var/run/docker.sock. In Docker's default rootful configuration, daemon control lets a user start a container that can alter the host filesystem without restriction, and docker-group membership grants root-level privileges; Rootless mode runs the daemon and containers without root privileges. Docker documents mounted-socket daemon control with a Docker client, and documents --privileged and host bind mounts; a socket-holding container starting a privileged sibling or bind-mounting host / to escape is this guide's assessment. Rootless mode narrowing the available host privilege but not making the mount safe is this guide's assessment.
-- kube-user (REASONED; kubernetes): runAsNonRoot rejects root; pin runAsUser and runAsGroup to 10001, with the guide noting runtime-default GID 0 if unset.
-- kube-rootfs (REASONED; kubernetes): Set readOnlyRootFilesystem per container; this is a separate recommendation, not a restricted Pod Security requirement.
-- kube-escalation (REASONED; kubernetes): Set allowPrivilegeEscalation: false in the container securityContext.
-- kube-capabilities (REASONED; kubernetes): Drop ALL capabilities in the container securityContext.
-- kube-seccomp (REASONED; kubernetes): RuntimeDefault selects the runtime syscall filter instead of Unconfined.
-- admission (REASONED; kubernetes, kubernetes-134): Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp.
-- existing-pods (REASONED; kubernetes, kubernetes-134): Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads.
-- policy-semantics (REASONED; kubernetes): NetworkPolicies are additive and require an enforcing CNI; both source egress and destination ingress must allow a connection.
-- default-deny (REASONED; kubernetes): The empty podSelector with Ingress and Egress isolates all pods selected in the namespace before narrow allowances.
-- dns (REASONED; kubernetes): The app egress rule permits UDP/TCP 53 to all kube-system pods, not just CoreDNS; narrow it to the actual resolver.
-- database-path (REASONED; kubernetes): Allow app egress to role: db and db ingress from role: app on TCP 5432; other paths governed by these namespace policies are refused.
-- policy-limits (REASONED; kubernetes): hostNetwork and same-node traffic handling are implementation-dependent; database TLS/authentication remain separate controls.
-- verify-user (REASONED; docker, compose-2324): Compose exec targets the app service in the resolved project and id must report a nonzero UID; using the actual container name for bare docker exec is this guide's advice.
-- verify-rootfs (REASONED; docker, compose-2324): With read_only false, touch on an existing owned path must print WRITABLE; after docker compose up -d --force-recreate with read_only true, it must print blocked. ENOENT or EACCES can also print blocked on a writable filesystem, so blocked alone is not proof of a read-only root. This guide's assessment: the errno, including typical EROFS, depends on the image and path; the probe's exit 0 does not discriminate.
-- verify-context (REASONED; kubernetes, kubectl-134, procfs-619, kubernetes-website): kubectl get reads the declared context; kubectl exec inspects the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities. Clearing CapBnd under drop:[ALL] is this guide's expected runtime state; with shareProcessNamespace, PID 1 belongs to the pod sandbox, so select the application PID.
-- verify-probe (REASONED; kubernetes, kubectl-134, rfc7396, busybox-1361): Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified.
-- verify-segmentation (REASONED; kubernetes): The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 A model server, chat UI, or proxy is the thing most likely to face untrusted input, so treat its container as compromised eventually and limit what that gets an attacker: not root, not the host's capabilities, not a writable filesystem, and not a route to the rest of the network.
 
@@ -358,3 +193,194 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
 - Linux man-pages man-pages-6.19 capability bounding set (checked October 2026): https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man7/capabilities.7?h=man-pages-6.19#n1367
 - kubectl v1.34.0 exec Pod and container examples (checked October 2026): https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/exec/exec.go#L52-L56
 - Kubernetes website 47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8 shared process namespace and pod sandbox (checked October 2026): https://github.com/kubernetes/website/blob/47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8/content/en/docs/tasks/configure-pod-container/share-process-namespace.md#L115-L119
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/container-hardening.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- docker: Docker documentation (unknown)
+- docker-daemon: Docker daemon security documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- compose-2324: Docker Compose source and reference (v2.32.4)
+- kubernetes-website: Kubernetes process namespace documentation (47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8)
+- kubernetes: Kubernetes documentation (unknown)
+- kubernetes-134: Kubernetes Pod Security Admission (1.34)
+- kubectl-134: kubectl source (v1.34.0)
+- procfs-619: Linux process status and capabilities manuals (man-pages-6.19)
+- rfc7396: JSON Merge Patch (RFC 7396)
+- busybox-1361: BusyBox source (1_36_1)
+
+Claims (full source mapping in the JSON block below):
+
+- docker-user (REASONED; docker): Dockerfile USER sets build/runtime identity; set user and group, since no primary group uses root. Compose user overrides it; unset in both runs as root.
+- docker-rootfs (REASONED; docker): Compose read_only makes the root filesystem read-only; provide tmpfs only for required writable paths.
+- docker-capabilities (REASONED; docker): cap_drop: [ALL] removes capabilities; add back only specific required capabilities with cap_add.
+- docker-escalation (REASONED; docker): no-new-privileges prevents setuid privilege gain; the guide lists bare, equals-true and colon-true spellings as equivalent.
+- docker-socket (REASONED; docker, docker-daemon): Never mount /var/run/docker.sock. In Docker's default rootful configuration, daemon control lets a user start a container that can alter the host filesystem without restriction, and docker-group membership grants root-level privileges; Rootless mode runs the daemon and containers without root privileges. Docker documents mounted-socket daemon control with a Docker client, and documents --privileged and host bind mounts; a socket-holding container starting a privileged sibling or bind-mounting host / to escape is this guide's assessment. Rootless mode narrowing the available host privilege but not making the mount safe is this guide's assessment.
+- kube-user (REASONED; kubernetes): runAsNonRoot rejects root; pin runAsUser and runAsGroup to 10001, with the guide noting runtime-default GID 0 if unset.
+- kube-rootfs (REASONED; kubernetes): Set readOnlyRootFilesystem per container; this is a separate recommendation, not a restricted Pod Security requirement.
+- kube-escalation (REASONED; kubernetes): Set allowPrivilegeEscalation: false in the container securityContext.
+- kube-capabilities (REASONED; kubernetes): Drop ALL capabilities in the container securityContext.
+- kube-seccomp (REASONED; kubernetes): RuntimeDefault selects the runtime syscall filter instead of Unconfined.
+- admission (REASONED; kubernetes, kubernetes-134): Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp.
+- existing-pods (REASONED; kubernetes, kubernetes-134): Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads.
+- policy-semantics (REASONED; kubernetes): NetworkPolicies are additive and require an enforcing CNI; both source egress and destination ingress must allow a connection.
+- default-deny (REASONED; kubernetes): The empty podSelector with Ingress and Egress isolates all pods selected in the namespace before narrow allowances.
+- dns (REASONED; kubernetes): The app egress rule permits UDP/TCP 53 to all kube-system pods, not just CoreDNS; narrow it to the actual resolver.
+- database-path (REASONED; kubernetes): Allow app egress to role: db and db ingress from role: app on TCP 5432; other paths governed by these namespace policies are refused.
+- policy-limits (REASONED; kubernetes): hostNetwork and same-node traffic handling are implementation-dependent; database TLS/authentication remain separate controls.
+- verify-user (REASONED; docker, compose-2324): Compose exec targets the app service in the resolved project and id must report a nonzero UID; using the actual container name for bare docker exec is this guide's advice.
+- verify-rootfs (REASONED; docker, compose-2324): With read_only false, touch on an existing owned path must print WRITABLE; after docker compose up -d --force-recreate with read_only true, it must print blocked. ENOENT or EACCES can also print blocked on a writable filesystem, so blocked alone is not proof of a read-only root. This guide's assessment: the errno, including typical EROFS, depends on the image and path; the probe's exit 0 does not discriminate.
+- verify-context (REASONED; kubernetes, kubectl-134, procfs-619, kubernetes-website): kubectl get reads the declared context; kubectl exec inspects the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities. Clearing CapBnd under drop:[ALL] is this guide's expected runtime state; with shareProcessNamespace, PID 1 belongs to the pod sandbox, so select the application PID.
+- verify-probe (REASONED; kubernetes, kubectl-134, rfc7396, busybox-1361): Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified.
+- verify-segmentation (REASONED; kubernetes): The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-18",
+  "documentation_checked": "2026-09",
+  "body_sha256": "096aac84d8e85e741360a95b6e4fbadf6b3621a153725920785f898bb479528b",
+  "components": {
+    "docker": {
+      "name": "Docker documentation",
+      "basis": "unknown",
+      "sources": {
+        "s6ca35cbd69e7": "https://docs.docker.com/reference/dockerfile/",
+        "s8b7485a246e4": "https://docs.docker.com/reference/compose-file/",
+        "s5d6294cf605e": "https://docs.docker.com/reference/cli/docker/container/run/"
+      }
+    },
+    "docker-daemon": {
+      "name": "Docker daemon security documentation",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "secebea1a69ab": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/_index.md#L84-L112",
+        "s79490cd2f3b2": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/install/linux-postinstall.md#L29-L39",
+        "s8eab393a61c6": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/security/rootless/_index.md#L8-L21",
+        "s94d57fcbfafe": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L1330-L1350",
+        "s372ddf9da1f0": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L1460-L1467",
+        "see4d326cd914": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/data/cli/engine/docker_container_run.yaml#L1495-L1515"
+      }
+    },
+    "compose-2324": {
+      "name": "Docker Compose source and reference",
+      "basis": "v2.32.4",
+      "sources": {
+        "s906b5822e9c4": "https://github.com/docker/compose/blob/v2.32.4/docs/reference/compose_exec.md#L1-L7",
+        "sfe4c568a9887": "https://github.com/docker/compose/blob/v2.32.4/cmd/compose/exec.go#L84-L110",
+        "s1bf114813e47": "https://github.com/docker/compose/blob/v2.32.4/cmd/compose/up.go#L145-L155"
+      }
+    },
+    "kubernetes-website": {
+      "name": "Kubernetes process namespace documentation",
+      "basis": "47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8",
+      "sources": {
+        "s3df8336a2aa8": "https://github.com/kubernetes/website/blob/47132eb5367cfdcba0a3b33a0b3ffc81185bd7e8/content/en/docs/tasks/configure-pod-container/share-process-namespace.md#L115-L119"
+      }
+    },
+    "kubernetes": {
+      "name": "Kubernetes documentation",
+      "basis": "unknown",
+      "sources": {
+        "sb78ea91d0308": "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
+        "s1a2d717974c7": "https://kubernetes.io/docs/concepts/security/pod-security-standards/",
+        "s953450b4076f": "https://kubernetes.io/docs/concepts/services-networking/network-policies/"
+      }
+    },
+    "kubernetes-134": {
+      "name": "Kubernetes Pod Security Admission",
+      "basis": "1.34",
+      "sources": {
+        "s9b9aaf5067e2": "https://v1-34.docs.kubernetes.io/docs/concepts/security/pod-security-admission/",
+        "sa25682f200f0": "https://v1-34.docs.kubernetes.io/docs/tasks/configure-pod-container/enforce-standards-namespace-labels/"
+      }
+    },
+    "kubectl-134": {
+      "name": "kubectl source",
+      "basis": "v1.34.0",
+      "sources": {
+        "s0906dc78482b": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L293-L310",
+        "s1adb8cde69c0": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L103-L194",
+        "sc98b92ba3ebf": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/run/run.go#L591-L622",
+        "s2ffc04de1d63": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/util/override_options.go#L29-L90",
+        "sf5417ce59241": "https://github.com/kubernetes/kubernetes/blob/v1.34.0/staging/src/k8s.io/kubectl/pkg/cmd/exec/exec.go#L52-L56"
+      }
+    },
+    "procfs-619": {
+      "name": "Linux process status and capabilities manuals",
+      "basis": "man-pages-6.19",
+      "sources": {
+        "sa94440d59945": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man5/proc_pid_status.5?h=man-pages-6.19#n315",
+        "s74035196d5f7": "https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/man/man7/capabilities.7?h=man-pages-6.19#n1367"
+      }
+    },
+    "rfc7396": {
+      "name": "JSON Merge Patch",
+      "basis": "RFC 7396",
+      "sources": {
+        "sda39f95d0890": "https://www.rfc-editor.org/rfc/rfc7396#section-2"
+      }
+    },
+    "busybox-1361": {
+      "name": "BusyBox source",
+      "basis": "1_36_1",
+      "sources": {
+        "s14b89daa008d": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59",
+        "s34bdee292f79": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93",
+        "s8a53fb647996": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L888-L922"
+      }
+    }
+  },
+  "claims": {
+    "docker-user": {"text": "Dockerfile USER sets build/runtime identity; set user and group, since no primary group uses root. Compose user overrides it; unset in both runs as root.", "components": ["docker"], "sources": ["docker:s6ca35cbd69e7", "docker:s8b7485a246e4"], "status": "REASONED"},
+    "docker-rootfs": {"text": "Compose read_only makes the root filesystem read-only; provide tmpfs only for required writable paths.", "components": ["docker"], "sources": ["docker:s8b7485a246e4"], "status": "REASONED"},
+    "docker-capabilities": {"text": "cap_drop: [ALL] removes capabilities; add back only specific required capabilities with cap_add.", "components": ["docker"], "sources": ["docker:s8b7485a246e4"], "status": "REASONED"},
+    "docker-escalation": {"text": "no-new-privileges prevents setuid privilege gain; the guide lists bare, equals-true and colon-true spellings as equivalent.", "components": ["docker"], "sources": ["docker:s5d6294cf605e", "docker:s8b7485a246e4"], "status": "REASONED"},
+    "docker-socket": {"text": "Never mount /var/run/docker.sock. In Docker's default rootful configuration, daemon control lets a user start a container that can alter the host filesystem without restriction, and docker-group membership grants root-level privileges; Rootless mode runs the daemon and containers without root privileges. Docker documents mounted-socket daemon control with a Docker client, and documents --privileged and host bind mounts; a socket-holding container starting a privileged sibling or bind-mounting host / to escape is this guide's assessment. Rootless mode narrowing the available host privilege but not making the mount safe is this guide's assessment.", "components": ["docker", "docker-daemon"], "sources": ["docker:s5d6294cf605e", "docker-daemon:secebea1a69ab", "docker-daemon:s79490cd2f3b2", "docker-daemon:s8eab393a61c6", "docker-daemon:s94d57fcbfafe", "docker-daemon:s372ddf9da1f0", "docker-daemon:see4d326cd914"], "status": "REASONED"},
+    "kube-user": {"text": "runAsNonRoot rejects root; pin runAsUser and runAsGroup to 10001, with the guide noting runtime-default GID 0 if unset.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308"], "status": "REASONED"},
+    "kube-rootfs": {"text": "Set readOnlyRootFilesystem per container; this is a separate recommendation, not a restricted Pod Security requirement.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
+    "kube-escalation": {"text": "Set allowPrivilegeEscalation: false in the container securityContext.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
+    "kube-capabilities": {"text": "Drop ALL capabilities in the container securityContext.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
+    "kube-seccomp": {"text": "RuntimeDefault selects the runtime syscall filter instead of Unconfined.", "components": ["kubernetes"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7"], "status": "REASONED"},
+    "admission": {"text": "Namespace enforce: restricted rejects new violating Pods: privileged mode, host namespaces/ports, root, missing capability drops or Unconfined seccomp.", "components": ["kubernetes", "kubernetes-134"], "sources": ["kubernetes:s1a2d717974c7", "kubernetes-134:s9b9aaf5067e2"], "status": "REASONED"},
+    "existing-pods": {"text": "Adding the namespace label warns about existing violating Pods without evicting them; recreate workloads.", "components": ["kubernetes", "kubernetes-134"], "sources": ["kubernetes:s1a2d717974c7", "kubernetes-134:sa25682f200f0"], "status": "REASONED"},
+    "policy-semantics": {"text": "NetworkPolicies are additive and require an enforcing CNI; both source egress and destination ingress must allow a connection.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
+    "default-deny": {"text": "The empty podSelector with Ingress and Egress isolates all pods selected in the namespace before narrow allowances.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
+    "dns": {"text": "The app egress rule permits UDP/TCP 53 to all kube-system pods, not just CoreDNS; narrow it to the actual resolver.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
+    "database-path": {"text": "Allow app egress to role: db and db ingress from role: app on TCP 5432; other paths governed by these namespace policies are refused.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
+    "policy-limits": {"text": "hostNetwork and same-node traffic handling are implementation-dependent; database TLS/authentication remain separate controls.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED"},
+    "verify-user": {"text": "Compose exec targets the app service in the resolved project and id must report a nonzero UID; using the actual container name for bare docker exec is this guide's advice.", "components": ["docker", "compose-2324"], "sources": ["docker:s6ca35cbd69e7", "docker:s8b7485a246e4", "compose-2324:s906b5822e9c4", "compose-2324:sfe4c568a9887"], "status": "REASONED", "verify": [1]},
+    "verify-rootfs": {"text": "With read_only false, touch on an existing owned path must print WRITABLE; after docker compose up -d --force-recreate with read_only true, it must print blocked. ENOENT or EACCES can also print blocked on a writable filesystem, so blocked alone is not proof of a read-only root. This guide's assessment: the errno, including typical EROFS, depends on the image and path; the probe's exit 0 does not discriminate.", "components": ["docker", "compose-2324"], "sources": ["docker:s8b7485a246e4", "compose-2324:s1bf114813e47"], "status": "REASONED", "verify": [1]},
+    "verify-context": {"text": "kubectl get reads the declared context; kubectl exec inspects the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities. Clearing CapBnd under drop:[ALL] is this guide's expected runtime state; with shareProcessNamespace, PID 1 belongs to the pod sandbox, so select the application PID.", "components": ["kubernetes", "kubectl-134", "procfs-619", "kubernetes-website"], "sources": ["kubernetes:sb78ea91d0308", "kubectl-134:sf5417ce59241", "procfs-619:sa94440d59945", "procfs-619:s74035196d5f7", "kubernetes-website:s3df8336a2aa8"], "status": "REASONED", "verify": [1]},
+    "verify-probe": {"text": "Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; the busybox:1.36 image's nc build and options remain unverified.", "components": ["kubernetes", "kubectl-134", "rfc7396", "busybox-1361"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7", "kubernetes:s953450b4076f", "kubectl-134:s0906dc78482b", "kubectl-134:s1adb8cde69c0", "kubectl-134:sc98b92ba3ebf", "kubectl-134:s2ffc04de1d63", "rfc7396:sda39f95d0890", "busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s8a53fb647996"], "status": "REASONED", "verify": [1]},
+    "verify-segmentation": {"text": "The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->
