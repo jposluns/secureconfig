@@ -1,9 +1,9 @@
 ---
 version_basis: {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "0e8e7b8e26f4ef9d8d28f094f761036b36568ccfc917e643aeed266bc52aec59",
+  "body_sha256": "56cf568348e9a9e7890afd9133b526447b70bf593b07da5b93bedb63ce116e85",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -23,7 +23,13 @@ version_basis: {
         "s31a5adccd695": "https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/backup.go",
         "se74188862a55": "https://github.com/pocketbase/pocketbase/blob/v0.40.4/core/backup_create.go#L36-L60",
         "sf6ffdca4dd39": "https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/apis/middlewares_rate_limit.go",
-        "s1b04c2cd16ec": "https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L234-L239"
+        "s1b04c2cd16ec": "https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L234-L239",
+        "sb63f49346abe": "https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L73-L79",
+        "sd700e81880f2": "https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L129-L139",
+        "s54430c83a38a": "https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L165-L173",
+        "s2c8f78f2d5ac": "https://github.com/pocketbase/pocketbase/blob/v0.40.4/tools/osutils/run.go#L10-L19",
+        "s5b0dd2fd7a6a": "https://github.com/pocketbase/pocketbase/blob/v0.40.4/core/base.go#L1277-L1286",
+        "sf7c2fb5e78e7": "https://github.com/pocketbase/pocketbase/blob/v0.40.4/core/base.go#L1489-L1499"
       }
     },
     "appwrite": {
@@ -43,7 +49,15 @@ version_basis: {
         "s655a0abb9ef0": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/src/Appwrite/Platform/Modules/Functions/Http/Functions/Create.php",
         "s4ab95ecbf6b5": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/init/constants.php",
         "s8e5272615f2e": "https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/docker-compose.yml",
-        "s7ba6f9c71972": "https://github.com/appwrite/appwrite/blob/2.2.0/composer.lock#L3461-L3471"
+        "s7ba6f9c71972": "https://github.com/appwrite/appwrite/blob/2.2.0/composer.lock#L3461-L3471",
+        "s5396e119c026": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L80-L95",
+        "s82988de645fa": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L103-L120",
+        "s224cc9d8a387": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Utopia/Database/Documents/User.php#L75-L109",
+        "sc55465cf878d": "https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L144-L161",
+        "sed1bf9453ecb": "https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L312-L339",
+        "s8784d02c82c9": "https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L357-L361",
+        "sf60a2b283b80": "https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L503-L507",
+        "s1fe0e6185518": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L221-L227"
       }
     },
     "pb-docs": {
@@ -97,7 +111,8 @@ version_basis: {
     "pb-bind": {"text": "Without a domain serve defaults to 127.0.0.1:8090; with a domain it uses 0.0.0.0:80/443. Behind a local proxy omit the domain and set --http loopback.", "components": ["pb"], "sources": ["pb:s4b155ef30262"], "status": "REASONED"},
     "pb-origins": {"text": "--origins defaults * and accepts comma-separated allowed origins; CORS does not authorize records.", "components": ["pb"], "sources": ["pb:s4b155ef30262"], "status": "REASONED"},
     "pb-proxy": {"text": "Trust only headers the proxy overwrites, review useLeftmostIP ordering and block direct backend access to protect IP/rate controls.", "components": ["pb"], "sources": ["pb:s03dd7dd84c2a"], "status": "REASONED"},
-    "pb-dev": {"text": "--dev adds diagnostics including SQL on stderr, not an auth bypass; its flag default remains unverified.", "components": ["pb"], "sources": ["pb:seb56d3763223", "pb:s1b04c2cd16ec"], "status": "REASONED"},
+    "pb-dev": {"text": "--dev adds diagnostics including SQL on stderr, not an auth bypass; its configured default comes from New(): true if os.Args[0] starts with a nonempty os.TempDir() or cacheDir() prefix, false otherwise.", "components": ["pb"], "sources": ["pb:seb56d3763223", "pb:s1b04c2cd16ec", "pb:sb63f49346abe", "pb:s2c8f78f2d5ac", "pb:sd700e81880f2", "pb:s5b0dd2fd7a6a", "pb:sf7c2fb5e78e7"], "status": "REASONED"},
+    "pb-cli": {"text": "In the pinned CLI wrapper, Start() registers the serve and superuser commands on the root command and executes it.", "components": ["pb"], "sources": ["pb:s54430c83a38a"], "status": "REASONED"},
     "pb-rules": {"text": "Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:saedbdfbdfc48", "pb:s04ae861b5709"], "status": "REASONED"},
     "pb-manage": {"text": "Top-level manageRule defaults null and permits privileged auth-record changes alongside create/update rules; its validator rejects empty-string rules.", "components": ["pb"], "sources": ["pb:sce114368c2ad"], "status": "REASONED"},
     "pb-files": {"text": "File fields default unprotected despite locked record rules; Protected plus an authorized viewRule gates downloads, while a public viewRule still permits public access.", "components": ["pb", "pb-docs"], "sources": ["pb-docs:sf711b6345643", "pb:sa5e571f8d473"], "status": "REASONED"},
@@ -129,6 +144,8 @@ version_basis: {
     "appwrite-recreate": {"text": "Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s4a965bdeeb98"], "status": "REASONED"},
     "appwrite-permissions": {"text": "Collection and document grants are additive according to legacy documentation; documentSecurity defaults false in Appwrite 2.2.0 and must be enabled for document grants. The pinned parameter description states the need for one permission level.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:sf916851a0b10", "appwrite-docs:s58ad28816c5d"], "status": "REASONED"},
     "appwrite-creation": {"text": "For null or omitted document permissions, the pinned aggregate helper preserves null before the handler assigns read/update/delete user grants to a nonprivileged requester with a user ID, or an empty list otherwise. API-key classification skips role validation but does not itself determine the default list. Use specific users/teams for private data.", "components": ["appwrite", "appwrite-docs", "utopia-php-database"], "sources": ["appwrite:s5b4b3eb2271f", "appwrite:s93647e16b966", "appwrite:sda698c40fc34", "appwrite-docs:sa0bd132f7968", "appwrite:s7ba6f9c71972", "utopia-php-database:s847e0ded0300"], "status": "REASONED"},
+    "appwrite-read-path": {"text": "Document GET classifies the requester from authorization roles (keys; owner/developer/admin privileged), reports disabled databases/collections as not found except to those requesters, and fetches the document through the database layer; collection permissions and documentSecurity are passed to the database layer at collection creation.", "components": ["appwrite"], "sources": ["appwrite:s5396e119c026", "appwrite:s82988de645fa", "appwrite:s224cc9d8a387", "appwrite:s1fe0e6185518"], "status": "REASONED"},
+    "appwrite-requester": {"text": "With an API key the request role and scopes come from the key; a standard or ephemeral project key for the same project disables the default authorization status, as do admin-mode console sessions outside console project routes, while route scope validation applies to every requester.", "components": ["appwrite"], "sources": ["appwrite:sc55465cf878d", "appwrite:sed1bf9453ecb", "appwrite:s8784d02c82c9", "appwrite:sf60a2b283b80"], "status": "REASONED"},
     "appwrite-keys": {"text": "Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s193bfa5c6e22", "appwrite-docs:saa37bb5d4d7e"], "status": "REASONED"},
     "appwrite-encryption": {"text": "Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite-docs:s256ef73f7b85"], "status": "REASONED"},
     "appwrite-backups": {"text": "Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s256ef73f7b85"], "status": "REASONED"},
@@ -161,7 +178,7 @@ version_basis: {
     "verify-bundle": {"text": "Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:s773e441dd51c", "appwrite-docs:saa37bb5d4d7e"], "status": "REASONED", "verify": [3]},
     "local-guards": {"text": "Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite-docs:sa0bd132f7968", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments, and omitted or shortened `set --` lines."},
     "local-syntax": {"text": "All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body.", "components": ["appwrite", "pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite:s2bb21218c5ee", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "All three bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring."},
-    "source-limits": {"text": "PocketBase CLI wrapper and Appwrite document read-authorization internals remain untraced; requester privileged/API-key classification remains untraced; the --dev default is not established.", "components": ["appwrite-docs", "pb-docs"], "sources": ["appwrite-docs:s58ad28816c5d", "pb-docs:s9029ab974cf1"], "status": "REASONED"}
+    "source-limits": {"text": "The PocketBase CLI wrapper, --dev default, and Appwrite requester classification and document-read call sites are now cited; how utopia-php/database matches roles against collection/document permissions (including documentSecurity) and what the disabled default authorization status bypasses remain untraced in that unfetched dependency.", "components": ["appwrite-docs", "pb-docs", "appwrite"], "sources": ["appwrite-docs:s58ad28816c5d", "pb-docs:s9029ab974cf1", "appwrite:s7ba6f9c71972"], "status": "REASONED"}
   }
 }
 ---
@@ -172,7 +189,7 @@ version_basis: {
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -192,7 +209,8 @@ Claims (full source mapping in the front matter):
 - pb-bind (REASONED; pb): Without a domain serve defaults to 127.0.0.1:8090; with a domain it uses 0.0.0.0:80/443. Behind a local proxy omit the domain and set --http loopback.
 - pb-origins (REASONED; pb): --origins defaults * and accepts comma-separated allowed origins; CORS does not authorize records.
 - pb-proxy (REASONED; pb): Trust only headers the proxy overwrites, review useLeftmostIP ordering and block direct backend access to protect IP/rate controls.
-- pb-dev (REASONED; pb): --dev adds diagnostics including SQL on stderr, not an auth bypass; its flag default remains unverified.
+- pb-dev (REASONED; pb): --dev adds diagnostics including SQL on stderr, not an auth bypass; its configured default comes from New(): true if os.Args[0] starts with a nonempty os.TempDir() or cacheDir() prefix, false otherwise.
+- pb-cli (REASONED; pb): In the pinned CLI wrapper, Start() registers the serve and superuser commands on the root command and executes it.
 - pb-rules (REASONED; pb, pb-docs): Each list/view/create/update/delete rule defaults null (superuser-only); empty opens to guests and nonempty filters. Superusers bypass rules.
 - pb-manage (REASONED; pb): Top-level manageRule defaults null and permits privileged auth-record changes alongside create/update rules; its validator rejects empty-string rules.
 - pb-files (REASONED; pb, pb-docs): File fields default unprotected despite locked record rules; Protected plus an authorized viewRule gates downloads, while a public viewRule still permits public access.
@@ -224,6 +242,8 @@ Claims (full source mapping in the front matter):
 - appwrite-recreate (REASONED; appwrite-docs): Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior.
 - appwrite-permissions (REASONED; appwrite, appwrite-docs): Collection and document grants are additive according to legacy documentation; documentSecurity defaults false in Appwrite 2.2.0 and must be enabled for document grants. The pinned parameter description states the need for one permission level.
 - appwrite-creation (REASONED; appwrite, appwrite-docs, utopia-php-database): For null or omitted document permissions, the pinned aggregate helper preserves null before the handler assigns read/update/delete user grants to a nonprivileged requester with a user ID, or an empty list otherwise. API-key classification skips role validation but does not itself determine the default list. Use specific users/teams for private data.
+- appwrite-read-path (REASONED; appwrite): Document GET classifies the requester from authorization roles (keys; owner/developer/admin privileged), reports disabled databases/collections as not found except to those requesters, and fetches the document through the database layer; collection permissions and documentSecurity are passed to the database layer at collection creation.
+- appwrite-requester (REASONED; appwrite): With an API key the request role and scopes come from the key; a standard or ephemeral project key for the same project disables the default authorization status, as do admin-mode console sessions outside console project routes, while route scope validation applies to every requester.
 - appwrite-keys (REASONED; appwrite, appwrite-docs): Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients.
 - appwrite-encryption (REASONED; appwrite, appwrite-docs): Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets.
 - appwrite-backups (REASONED; appwrite-docs): Back up database, persistent storage and deployment configuration; restrict access and test restoration in a separate installation.
@@ -256,7 +276,7 @@ Claims (full source mapping in the front matter):
 - verify-bundle (REASONED; pb-docs, appwrite-docs): Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning.
 - local-guards (DEMONSTRATED; pb-docs, appwrite-docs): Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning.
 - local-syntax (DEMONSTRATED; appwrite, pb-docs, appwrite-docs): All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body.
-- source-limits (REASONED; appwrite-docs, pb-docs): PocketBase CLI wrapper and Appwrite document read-authorization internals remain untraced; requester privileged/API-key classification remains untraced; the --dev default is not established.
+- source-limits (REASONED; appwrite-docs, pb-docs, appwrite): The PocketBase CLI wrapper, --dev default, and Appwrite requester classification and document-read call sites are now cited; how utopia-php/database matches roles against collection/document permissions (including documentSecurity) and what the disabled default authorization status bypasses remain untraced in that unfetched dependency.
 <!-- version-basis:end -->
 
 Like Firebase and Supabase ([firebase-supabase.md](firebase-supabase.md)), these backends hand a
@@ -322,9 +342,19 @@ undermine IP allowlists and rate limits. Review forwarded-header ordering before
 [proxy settings](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/core/settings_model.go).
 
 `--dev` enables diagnostic logging, including SQL, to stderr; it is not an authentication bypass.
-Its flag default was not verified here. Avoid unnecessary production diagnostics and protect
+In the pinned CLI wrapper, `Start()` registers the `serve` and `superuser` commands on the root
+command, and the `--dev` flag default is the configured value. `New()` sets it to true exactly
+when `os.Args[0]` starts with a nonempty `os.TempDir()` or `cacheDir()` prefix, and false otherwise.
+In dev mode the pinned code logs executed SQL statements and lowers the logger
+threshold so practically all logs print. Avoid unnecessary production diagnostics and protect
 their output. See the
-[development-mode behavior](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/core/base.go).
+[development-mode behavior](https://raw.githubusercontent.com/pocketbase/pocketbase/v0.40.4/core/base.go),
+[command wiring](https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L165-L173),
+[dev default selection](https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L73-L79),
+[go run detection](https://github.com/pocketbase/pocketbase/blob/v0.40.4/tools/osutils/run.go#L10-L19),
+[flag-to-app wiring](https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L129-L139),
+[dev SQL logging](https://github.com/pocketbase/pocketbase/blob/v0.40.4/core/base.go#L1277-L1286), and
+[dev logger level](https://github.com/pocketbase/pocketbase/blob/v0.40.4/core/base.go#L1489-L1499).
 
 ### 3. Cover records, auth-record management, files, and realtime separately
 
@@ -541,6 +571,29 @@ data. See [document create parameter](https://github.com/appwrite/appwrite/blob/
 [pinned dependency](https://github.com/appwrite/appwrite/blob/2.2.0/composer.lock#L3461-L3471),
 [pinned aggregate helper](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Helpers/Permission.php#L151-L155), and
 [permission roles](https://appwrite.io/docs/advanced/security/permissions).
+
+For a 2.2.0 document GET, the pinned handler reads the requester class from the request's
+authorization roles: the `keys` role marks an API-key request, and the `owner`, `developer`, or
+`admin` role marks a privileged one. A disabled database or collection is reported as not found,
+except to API-key or privileged requesters, and the document itself is then fetched through the
+database layer. With an API key, the request's role and scopes come from the key; a standard or
+ephemeral project key for the same project disables the database layer's default authorization
+status, as do admin-mode console sessions outside the console project routes, while route scope
+validation still applies to every requester. Collection `permissions` and `documentSecurity` are
+handed to utopia-php/database when the collection is created. How requester roles are matched
+against stored collection and document permissions, and exactly what the disabled default
+authorization status bypasses, are implemented in that pinned Composer dependency, which was not
+traced here; reading these call sites as the permission bypass for server keys is this guide's
+assessment alongside the cited documentation. See the
+[document read handler](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L80-L95),
+[document fetch](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L103-L120),
+[role classification](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Utopia/Database/Documents/User.php#L75-L109),
+[API-key role and authorization status](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L144-L161),
+[admin-mode authorization status](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L312-L339),
+[request role assignment](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L357-L361),
+[route scope validation](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L503-L507),
+[collection permission handoff](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L221-L227), and the
+[pinned dependency](https://github.com/appwrite/appwrite/blob/2.2.0/composer.lock#L3461-L3471).
 
 Properly scoped server API keys **bypass resource permissions**. A successful server-key test
 does not establish that an ordinary user is authorized. Scopes are selected per key and still
@@ -848,7 +901,7 @@ service result or deployed-bundle scan is claimed.
 | Check scope or source-work ID | Procedure and prerequisites | Status |
 | --- | --- | --- |
 | Service comparisons | Demonstrate every REASONED comparison above on PocketBase v0.40.4 and Appwrite 2.2.0, recording binary/image identity, commands, response bodies, denied and allowed identities, disposable-data cleanup, and effective settings. Requires writable service fixtures, a container runtime, controlled accounts and mailboxes, S3 and backup fixtures, ClamAV, function execution, a second-host ingress fixture, and the actual client build. Include all five PocketBase actions, manageRule, file-token issuance versus protected downloads (unrelated-user and unsigned-guest denial, permitted-user bytes), realtime, bootstrap-token handling, MFA, verification, retained-token behavior, additive Appwrite permissions, server-key scopes, registration, console MFA (fresh password-only denial and successful TOTP completion), TLS, proxy trust, limits, encrypted recovery, uploads, and executor privacy. | REASONED: full service-comparison inventory; a live PocketBase or Appwrite stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. This comparison still requires the writable service, container, account, mailbox, S3, backup, scanner, function, second-host ingress, and actual-build prerequisites named in this row. All three Verify shell blocks passed bash -n and ShellCheck 0.11.0 with exit 0 and no output. With curl and grep stubbed, written and embedded placeholders, example.com, angle brackets, empty values, and omitted or shortened set -- lines printed their refusal messages without invoking either stub. The signup JSON parsed as four expected string fields; valid curl stubs printed arguments and protected input separately. The grep stub exercised match, no-match, and error branches; real grep on a disposable marker printed only client.js with exit 0 and, after removal, no output with exit 1. None establishes the listed live outcomes. Exposed public authorization should admit unintended access and fixed authorization should deny or filter it while retaining permitted controls; the other expected outcomes remain those in the individual comparisons, per the guide’s cited PocketBase API rules and filters (rolling documentation, checked September 2026); Appwrite legacy collection/document permissions (rolling documentation, checked October 2026); Appwrite 2.2.0 console registration handler; PocketBase v0.40.4 auth defaults, manageRule validation, and MFA; PocketBase v0.40.4 file-token and download authorization; PocketBase v0.40.4 realtime authorization; PocketBase v0.40.4 authentication and superuser IP middleware; PocketBase v0.40.4 settings, encryption, proxy trust, SMTP, backups, and rate defaults; PocketBase v0.40.4 backup download authorization; PocketBase v0.40.4 rate limiter and exemptions; PocketBase v0.40.4 listener and origin flags; Appwrite 2.2.0 API-key authorization, scopes, MFA enforcement, and abuse exemptions; Appwrite 2.2.0 hostname routing and HTTPS enforcement; Appwrite email delivery (rolling documentation, checked September 2026); Appwrite self-hosted backups and encryption-key preservation (rolling documentation, checked September 2026); Appwrite 2.2.0 bucket defaults and upload controls; Appwrite 2.2.0 function execute roles, execution-key scopes, and enablement; Appwrite 2.2.0 Compose console path, persistent volumes, and Docker socket mounts; PocketBase authentication (rolling documentation, checked September 2026); Appwrite project API keys (rolling documentation, checked September 2026); PocketBase v0.40.4 installer and bootstrap-token lifetime; PocketBase v0.40.4 record CRUD handlers; PocketBase v0.40.4 record authorization and token validation; PocketBase v0.40.4 native TLS and ACME listener; Appwrite console MFA enrollment and recovery codes (rolling documentation, checked September 2026); Appwrite rate limits (rolling documentation, checked September 2026); and Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026). REASONED from the cited vendor documentation and available pinned sources; live behavior is not demonstrated. |
-| SELFHOSTED-BACKEND-SOURCE-1 | Complete pin-specific tracing for the Appwrite document read-authorization internals and PocketBase CLI wrapper. Requester privileged/API-key classification remains untraced. The pinned collection default, document-create permission branch, and backup archive are now cited above; the --dev flag default remains unverified. | Open; complete pinned-source verification is not claimed. |
+| SELFHOSTED-BACKEND-SOURCE-1 | Complete pin-specific tracing for the Appwrite document read-authorization internals. The PocketBase CLI wrapper, the `--dev` flag default, the Appwrite requester privileged/API-key classification, and the Appwrite-repository document-read call sites are now cited above, alongside the earlier collection default, document-create permission branch, and backup archive pins. Still untraced: how utopia-php/database matches requester roles against stored collection and document permissions, including documentSecurity, for document reads, and what the disabled default authorization status bypasses inside that dependency. | REASONED: pinned-source reading of the PocketBase v0.40.4 and Appwrite 2.2.0 repositories only; the utopia-php/database Composer dependency was not traced, so its enforcement internals stay open and complete pinned-source verification is not claimed. |
 
 ## Sources (checked September 2026)
 
@@ -896,6 +949,20 @@ service result or deployed-bundle scan is claimed.
 - [Appwrite 2.2.0 storage thresholds and release constant](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/init/constants.php).
 - [Appwrite 2.2.0 Compose console path, persistent volumes, and Docker socket mounts](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/docker-compose.yml).
 - [PocketBase v0.40.4 CLI wrapper and development flag wiring (checked October 2026)](https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L234-L239).
+- [PocketBase v0.40.4 dev default selection (checked October 2026)](https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L73-L79).
+- [PocketBase v0.40.4 flag-to-app dev wiring (checked October 2026)](https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L129-L139).
+- [PocketBase v0.40.4 root command wiring for serve and superuser (checked October 2026)](https://github.com/pocketbase/pocketbase/blob/v0.40.4/pocketbase.go#L165-L173).
+- [PocketBase v0.40.4 go run detection (checked October 2026)](https://github.com/pocketbase/pocketbase/blob/v0.40.4/tools/osutils/run.go#L10-L19).
+- [PocketBase v0.40.4 dev SQL logging (checked October 2026)](https://github.com/pocketbase/pocketbase/blob/v0.40.4/core/base.go#L1277-L1286).
+- [PocketBase v0.40.4 dev logger level (checked October 2026)](https://github.com/pocketbase/pocketbase/blob/v0.40.4/core/base.go#L1489-L1499).
+- [Appwrite 2.2.0 document read handler and requester checks (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L80-L95).
+- [Appwrite 2.2.0 document fetch through the database layer (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L103-L120).
+- [Appwrite 2.2.0 privileged and key role classification (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Utopia/Database/Documents/User.php#L75-L109).
+- [Appwrite 2.2.0 API-key role, scopes, and authorization status (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L144-L161).
+- [Appwrite 2.2.0 admin-mode roles and authorization status (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L312-L339).
+- [Appwrite 2.2.0 request role assignment (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L357-L361).
+- [Appwrite 2.2.0 route scope validation (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L503-L507).
+- [Appwrite 2.2.0 collection permission and documentSecurity handoff (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L221-L227).
 - [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
 - [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 - [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
