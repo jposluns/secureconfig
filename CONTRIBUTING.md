@@ -169,11 +169,14 @@ The JSON generator refuses fence-looking payload lines. The llms bundle and plug
 whole two-section guide, including the JSON. Legacy link-check preprocessing remains active;
 two-section JSON is already fenced, and its component URLs must also occur in Sources.
 
-The header merges identical component names in metadata order, folds unknown and lowercase
-7-to-40-digit hexadecimal bases into counts, and keeps at most eight entries and 400 characters
-in its versions sentence, dropping entries from the tail. At least one displayable entry is kept;
-if that entry cannot fit, generation fails. Zero status counts are omitted. With no displayable
-release, the header points to the complete recorded bases below. Keep headline components first.
+The header names the first component in metadata order first, with its release basis or
+`(pinned to a commit)` for a lowercase 7-to-40-digit hexadecimal basis, otherwise
+`(no recorded version)` for `unknown`. It merges identical component names in metadata order
+and folds other commit-pinned and unknown components into counts, excluding the named headline.
+Its versions sentence keeps at most eight merged entries and 400 characters, dropping entries
+from the tail. The merged headline is always kept, even if it alone exceeds 400 characters;
+trailing counts are omitted only if they cannot fit alongside it. Zero status counts are omitted.
+Keep headline components first.
 The fixed note title also supplies the header anchor.
 
 Later batches use `python3 tools/version_basis.py --migrate GUIDE...` with explicit enrolled

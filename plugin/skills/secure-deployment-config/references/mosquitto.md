@@ -532,12 +532,12 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 
 Components (recorded basis):
 
-- docs: Mosquitto documentation (unknown)
 - v20: Mosquitto (v2.0.22)
-- library: Mosquitto image catalogue (920b00976e6e8335bab0a3fd293b95b6b2404ce3)
-- image: Mosquitto image source (5b74cce8a4fe2a73b57df6c703bfde2cfd535d60)
 - v21: Mosquitto (v2.1.2)
 - v16: Mosquitto legacy (v1.6.15)
+- docs: Mosquitto documentation (unknown)
+- library: Mosquitto image catalogue (920b00976e6e8335bab0a3fd293b95b6b2404ce3)
+- image: Mosquitto image source (5b74cce8a4fe2a73b57df6c703bfde2cfd535d60)
 - release-notes: Mosquitto release announcements (unknown)
 
 Claims (full source mapping in the JSON block below):
@@ -595,21 +595,6 @@ Claims (full source mapping in the JSON block below):
   "documentation_checked": "2026-10",
   "body_sha256": "73b1d3529e9fdfcd23efa56ade3bf305d2e5d39c8844da14cbcb843de2ef6dc9",
   "components": {
-    "docs": {
-      "name": "Mosquitto documentation",
-      "basis": "unknown",
-      "sources": {
-        "s4d96861c4f39": "https://mosquitto.org/documentation/migrating-to-2-0/",
-        "s66b826cab3e9": "https://mosquitto.org/documentation/listeners/per-listener-settings/",
-        "sddca3657b9c1": "https://mosquitto.org/man/mosquitto_passwd-1.html",
-        "s9aa3260c5b79": "https://mosquitto.org/documentation/authentication-methods/",
-        "s1791866ca31b": "https://mosquitto.org/man/mosquitto-conf-5.html",
-        "s280527f289d0": "https://mosquitto.org/documentation/plugins/acl-file/",
-        "sd34bd50f5f0f": "https://mosquitto.org/man/mosquitto-8.html",
-        "s6711164e3e5f": "https://mosquitto.org/man/mosquitto_sub-1.html",
-        "s1476cea737a4": "https://mosquitto.org/man/mosquitto_pub-1.html"
-      }
-    },
     "v20": {
       "name": "Mosquitto",
       "basis": "v2.0.22",
@@ -625,27 +610,6 @@ Claims (full source mapping in the JSON block below):
         "saf5cd7c6f12b": "https://raw.githubusercontent.com/eclipse-mosquitto/mosquitto/v2.0.22/src/session_expiry.c",
         "saff73f3b983e": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/handle_connect.c#L120-L133",
         "sa116e59b51a4": "https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.22/src/security.c#L691-L693"
-      }
-    },
-    "library": {
-      "name": "Mosquitto image catalogue",
-      "basis": "920b00976e6e8335bab0a3fd293b95b6b2404ce3",
-      "sources": {
-        "s0d99329a59ae": "https://github.com/docker-library/official-images/blob/920b00976e6e8335bab0a3fd293b95b6b2404ce3/library/eclipse-mosquitto#L3-L13"
-      }
-    },
-    "image": {
-      "name": "Mosquitto image source",
-      "basis": "5b74cce8a4fe2a73b57df6c703bfde2cfd535d60",
-      "sources": {
-        "sdfa81718b7ff": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L30",
-        "s38217a9ac8cc": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L77-L80",
-        "see5ae9bc6aa9": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L99-L101",
-        "s90852e30653e": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/mosquitto.conf",
-        "s2653cf87d9d0": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/docker-entrypoint.sh",
-        "s48d123c4c6d9": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/README.md#L27-L28",
-        "s270129425e74": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/1.6-openssl/Dockerfile#L66",
-        "sd127367f6308": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.0-openssl/Dockerfile#L69"
       }
     },
     "v21": {
@@ -680,6 +644,42 @@ Claims (full source mapping in the JSON block below):
         "seb5311de9f93": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/src/net.c#L605-L690",
         "sbfaf2572ea61": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/man/mosquitto.conf.5.xml#L167-L185",
         "s0d1a10094e93": "https://github.com/eclipse-mosquitto/mosquitto/blob/v1.6.15/mosquitto.conf"
+      }
+    },
+    "docs": {
+      "name": "Mosquitto documentation",
+      "basis": "unknown",
+      "sources": {
+        "s4d96861c4f39": "https://mosquitto.org/documentation/migrating-to-2-0/",
+        "s66b826cab3e9": "https://mosquitto.org/documentation/listeners/per-listener-settings/",
+        "sddca3657b9c1": "https://mosquitto.org/man/mosquitto_passwd-1.html",
+        "s9aa3260c5b79": "https://mosquitto.org/documentation/authentication-methods/",
+        "s1791866ca31b": "https://mosquitto.org/man/mosquitto-conf-5.html",
+        "s280527f289d0": "https://mosquitto.org/documentation/plugins/acl-file/",
+        "sd34bd50f5f0f": "https://mosquitto.org/man/mosquitto-8.html",
+        "s6711164e3e5f": "https://mosquitto.org/man/mosquitto_sub-1.html",
+        "s1476cea737a4": "https://mosquitto.org/man/mosquitto_pub-1.html"
+      }
+    },
+    "library": {
+      "name": "Mosquitto image catalogue",
+      "basis": "920b00976e6e8335bab0a3fd293b95b6b2404ce3",
+      "sources": {
+        "s0d99329a59ae": "https://github.com/docker-library/official-images/blob/920b00976e6e8335bab0a3fd293b95b6b2404ce3/library/eclipse-mosquitto#L3-L13"
+      }
+    },
+    "image": {
+      "name": "Mosquitto image source",
+      "basis": "5b74cce8a4fe2a73b57df6c703bfde2cfd535d60",
+      "sources": {
+        "sdfa81718b7ff": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L30",
+        "s38217a9ac8cc": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L77-L80",
+        "see5ae9bc6aa9": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/Dockerfile#L99-L101",
+        "s90852e30653e": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/mosquitto.conf",
+        "s2653cf87d9d0": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/docker-entrypoint.sh",
+        "s48d123c4c6d9": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.1-alpine/README.md#L27-L28",
+        "s270129425e74": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/1.6-openssl/Dockerfile#L66",
+        "sd127367f6308": "https://github.com/eclipse-mosquitto/mosquitto/blob/5b74cce8a4fe2a73b57df6c703bfde2cfd535d60/docker/2.0-openssl/Dockerfile#L69"
       }
     },
     "release-notes": {

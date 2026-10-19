@@ -1762,8 +1762,9 @@ class TwoSectionTests(unittest.TestCase):
                          'Written against Product v1, v2, and v3; 1 further source is pinned '
                          'to a commit and 1 carries no recorded version.')
         self.assertIn('Product v1 and v2.', components([('Product', 'v1'), ('Product', 'v2')]))
-        self.assertIn('No release versions are recorded', components([('Docs', 'unknown'),
-                                                                     ('Pin', 'a' * 40)]))
+        self.assertEqual(components([('Docs', 'unknown'), ('Pin', 'a' * 40)]),
+                         'Written against Docs (no recorded version); '
+                         '1 further source is pinned to a commit.')
         self.assertEqual(components([('Notice', '2025')]), 'Written against Notice 2025.')
         self.assertIn('&lt;&amp;&#124;&#96;&gt;', components([('<&|`>', 'v1')]))
         sentence = components([(f'Product{i}', 'v1') for i in range(10)])
@@ -1772,8 +1773,88 @@ class TwoSectionTests(unittest.TestCase):
         sentence = components([(f'Product{i}' + 'x' * 90, 'v1') for i in range(8)])
         self.assertLessEqual(len(sentence), 400)
         self.assertIn('plus 5 more recorded bases', sentence)
-        with self.assertRaisesRegex(ValueError, '400-character'):
-            components([('x' * 400, 'v1')])
+        self.assertEqual(components([('x' * 400, 'v1')]),
+                         'Written against ' + 'x' * 400 + ' v1.')
+
+    def test_commit_pinned_headline(self):
+        data = fixture()
+        for size in (7, 40):
+            with self.subTest(size=size):
+                data['components'] = {
+                    'headline': dict(name='Open WebUI', basis='a' * size, sources={SID: URL}),
+                    'docs': dict(name='Docs', basis='unknown', sources={SID: URL}),
+                    'docker': dict(name='Docker', basis='v29', sources={SID: URL})}
+                expected = ('Written against Open WebUI (pinned to a commit) and Docker v29; '
+                            '1 further source carries no recorded version.')
+                self.assertTrue(vb.header(data).startswith(expected + ' Metadata reviewed'))
+                data['components']['pin'] = dict(name='Other', basis='b' * 7, sources={SID: URL})
+                self.assertEqual(vb.versions_sentence(data), expected.replace(
+                    '1 further source carries', '1 further source is pinned to a commit and 1 carries'))
+
+    def test_unversioned_headline(self):
+        data = fixture()
+        data['components'] = {
+            'headline': dict(name='AnythingLLM', basis='unknown', sources={SID: URL}),
+            'lobe': dict(name='LobeHub', basis='v2', sources={SID: URL})}
+        expected = 'Written against AnythingLLM (no recorded version) and LobeHub v2.'
+        self.assertTrue(vb.header(data).startswith(expected + ' Metadata reviewed'))
+        data['components']['docs'] = dict(name='Docs', basis='unknown', sources={SID: URL})
+        self.assertEqual(vb.versions_sentence(data), expected[:-1] +
+                         '; 1 further source carries no recorded version.')
+        for basis, label in (('unknown', 'no recorded version'), ('a' * 7, 'pinned to a commit')):
+            data['components'] = {'headline': dict(name='Product', basis=basis, sources={SID: URL})}
+            self.assertEqual(vb.versions_sentence(data), f'Written against Product ({label}).')
+
+    def test_release_headline_header_unchanged(self):
+        self.assertEqual(vb.header(fixture()),
+            'Written against Product v1.0. Metadata reviewed 2026-09-26; '
+            'documentation checked September 2026. The guide records 1 claim, '
+            'all reasoned from cited sources.\n\n'
+            'A newer release of any of this software can make version-specific details here outdated. '
+            'To prioritize an update, open a GitHub issue, send a pull request, add a request under '
+            '[requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) '
+            'describes. The machine-readable version basis and claim list are in '
+            '[the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.')
+
+    def test_headline_merging_and_escaping(self):
+        data = fixture()
+        for basis, label in (('unknown', 'no recorded version'), ('a' * 7, 'pinned to a commit')):
+            data['components'] = {
+                'headline': dict(name='<&|`>', basis=basis, sources={SID: URL}),
+                'other': dict(name='Other', basis='v1', sources={SID: URL}),
+                'release': dict(name='<&|`>', basis='v2', sources={SID: URL}),
+                'docs': dict(name='<&|`>', basis='unknown', sources={SID: URL})}
+            self.assertEqual(vb.versions_sentence(data),
+                f'Written against &lt;&amp;&#124;&#96;&gt; ({label}) and v2 and Other v1; '
+                '1 further source carries no recorded version.')
+
+    def test_headline_limits(self):
+        data = fixture()
+        for basis, suffix in (('v1', ' v1'), ('a' * 7, ' (pinned to a commit)'),
+                              ('unknown', ' (no recorded version)')):
+            with self.subTest(basis=basis):
+                data['components'] = {
+                    'headline': dict(name='Headline', basis=basis, sources={SID: URL}),
+                    **{f'c{i}': dict(name=f'Other{i}', basis='v1', sources={SID: URL})
+                       for i in range(8)}}
+                self.assertEqual(vb.versions_sentence(data),
+                    'Written against Headline' + suffix + ', ' +
+                    ', '.join(f'Other{i} v1' for i in range(6)) +
+                    ', and Other6 v1, plus 1 more recorded bases.')
+                # Exact boundary includes the truncation and folded-count clauses.
+                data['components']['docs'] = dict(name='Docs', basis='unknown', sources={SID: URL})
+                tail = ', plus 8 more recorded bases; 1 further source carries no recorded version.'
+                size = 400 - len('Written against ' + suffix + tail)
+                data['components']['headline']['name'] = 'x' * size
+                expected = 'Written against ' + 'x' * size + suffix + tail
+                self.assertEqual(len(expected), 400)
+                self.assertEqual(vb.versions_sentence(data), expected)
+                data['components']['headline']['name'] += 'x'
+                self.assertEqual(vb.versions_sentence(data),
+                                 'Written against ' + 'x' * (size + 1) + suffix + '.')
+                data['components']['headline']['name'] = 'x' * 400
+                self.assertEqual(vb.versions_sentence(data),
+                                 'Written against ' + 'x' * 400 + suffix + '.')
 
     def test_malformed_mixed_and_stale_sections(self):
         current = vb.migrated(self.legacy(), 'fixture.md')

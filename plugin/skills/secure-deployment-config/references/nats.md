@@ -1207,11 +1207,11 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 Components (recorded basis):
 
 - server: NATS Server (v2.14.7)
+- image-server: NATS image listener source (v2.15.0)
+- cli: natscli (v0.4.0)
 - commit: NATS baseline commit (8d8b69a8c46a46a150eabb7f312607c4d9c58faf)
 - library: NATS image catalogue (dcd3db677d8919c3a42d369bd48a6f1c234b3ae8)
 - image: NATS image source (0e72748d3cb553ccdb8c2da7c75ec3b767be51a5)
-- image-server: NATS image listener source (v2.15.0)
-- cli: natscli (v0.4.0)
 - server-docs: NATS Server documentation (rolling) (unknown)
 - go: Go socket source (go1.26.8)
 
@@ -1303,6 +1303,27 @@ Claims (full source mapping in the JSON block below):
         "sfe9cfda67037": "https://raw.githubusercontent.com/nats-io/nats-server/v2.14.7/server/auth_callout.go"
       }
     },
+    "image-server": {
+      "name": "NATS image listener source",
+      "basis": "v2.15.0",
+      "sources": {
+        "se8793d3c33b3": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/const.go#L85-L86",
+        "s9860c7a8a315": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/opts.go#L6265-L6266",
+        "s4f35f43b860b": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/server.go#L2874-L2880",
+        "s6d1b9c207c22": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/server.go#L3132-L3138",
+        "s63fb63ed420f": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/route.go#L2752-L2753",
+        "s483a2d169cbf": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/util.go#L267-L275"
+      }
+    },
+    "cli": {
+      "name": "natscli",
+      "basis": "v0.4.0",
+      "sources": {
+        "s068dbbd154ce": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/nats/main.go",
+        "sd263b3e2aeb4": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/util.go",
+        "sc6b88ab2d1f8": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/sub_command.go"
+      }
+    },
     "commit": {
       "name": "NATS baseline commit",
       "basis": "8d8b69a8c46a46a150eabb7f312607c4d9c58faf",
@@ -1339,27 +1360,6 @@ Claims (full source mapping in the JSON block below):
         "s242baf7508a4": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/nanoserver-ltsc2022/Dockerfile#L5-L9",
         "s1be190b618be": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/scratch/Dockerfile#L5-L9",
         "s0d4076849de7": "https://github.com/nats-io/nats-docker/blob/0e72748d3cb553ccdb8c2da7c75ec3b767be51a5/2.14.x/alpine3.22/Dockerfile#L38-L43"
-      }
-    },
-    "image-server": {
-      "name": "NATS image listener source",
-      "basis": "v2.15.0",
-      "sources": {
-        "se8793d3c33b3": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/const.go#L85-L86",
-        "s9860c7a8a315": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/opts.go#L6265-L6266",
-        "s4f35f43b860b": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/server.go#L2874-L2880",
-        "s6d1b9c207c22": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/server.go#L3132-L3138",
-        "s63fb63ed420f": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/route.go#L2752-L2753",
-        "s483a2d169cbf": "https://github.com/nats-io/nats-server/blob/v2.15.0/server/util.go#L267-L275"
-      }
-    },
-    "cli": {
-      "name": "natscli",
-      "basis": "v0.4.0",
-      "sources": {
-        "s068dbbd154ce": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/nats/main.go",
-        "sd263b3e2aeb4": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/util.go",
-        "sc6b88ab2d1f8": "https://raw.githubusercontent.com/nats-io/natscli/v0.4.0/cli/sub_command.go"
       }
     },
     "server-docs": {

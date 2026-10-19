@@ -1,6 +1,6 @@
 # ClickHouse: listen address, the default user, and TLS ports
 
-No release versions are recorded for this guide's sources; the recorded bases are in the section for AI assistants. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 53 claims, all reasoned from cited sources.
+Written against ClickHouse documentation (no recorded version); 5 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 53 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

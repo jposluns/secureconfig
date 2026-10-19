@@ -869,18 +869,21 @@ def joined(values):
 
 def versions_sentence(data):
     merged, pinned, unknown = {}, 0, 0
-    for component in data['components'].values():
+    for index, component in enumerate(data['components'].values()):
         name, basis = component['name'], component['basis']
         if basis == 'unknown':
-            unknown += 1
+            if index == 0:
+                merged.setdefault(name, []).append('(no recorded version)')
+            else:
+                unknown += 1
         elif re.fullmatch(r'[0-9a-f]{7,40}', basis):
-            pinned += 1
+            if index == 0:
+                merged.setdefault(name, []).append('(pinned to a commit)')
+            else:
+                pinned += 1
         else:
             merged.setdefault(name, []).append(cell(basis))
     entries = [cell(name) + ' ' + joined(bases) for name, bases in merged.items()]
-    if not entries:
-        return ("No release versions are recorded for this guide's sources; "
-                'the recorded bases are in the section for AI assistants.')
     folded = []
     if pinned:
         folded.append(f'{pinned} further source' + ('s are' if pinned != 1 else ' is')
@@ -897,7 +900,9 @@ def versions_sentence(data):
         sentence += '.'
         if len(sentence) <= 400:
             return sentence
-    raise ValueError('first recorded version entry cannot fit the 400-character header limit')
+    # Keep the merged headline even when it alone exceeds the limit. If only
+    # the trailing counts overflow, omit those too rather than lose the headline.
+    return 'Written against ' + entries[0] + '.'
 
 
 def header(data):
