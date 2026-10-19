@@ -1,225 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-19",
-  "documentation_checked": "2026-09",
-  "body_sha256": "7dc59d278092451cbf9bc33836b92a411a629f5285413f75b1409ecbf11a9774",
-  "components": {
-    "runpod": {
-      "name": "RunPod documentation",
-      "basis": "unknown",
-      "sources": {
-        "s817198f039ee": "https://docs.runpod.io/pods/configuration/expose-ports",
-        "s13c43b856d4f": "https://docs.runpod.io/pods/configuration/use-ssh"
-      }
-    },
-    "vast": {
-      "name": "Vast.ai documentation",
-      "basis": "unknown",
-      "sources": {
-        "sc25989a1613e": "https://docs.vast.ai/guides/instances/connect/networking",
-        "s0bdbda534723": "https://docs.vast.ai/guides/instances/connect/instance-portal",
-        "s6e0303ef19fe": "https://docs.vast.ai/guides/instances/connect/ssh"
-      }
-    },
-    "vast-image": {
-      "name": "Vast.ai base image",
-      "basis": "00064421641881c1f83ff58c55f13cbc10cbea4d",
-      "sources": {
-        "sf75c3c07819e": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/README.md",
-        "s5d2b91002bac": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/README.md#L175-L187",
-        "s229c9334547e": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/README.md#L135-L147",
-        "s3b735c4b3632": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/README.md#L154-L158",
-        "s037a7cbd778c": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/ROOT/opt/instance-tools/tests/base/26-caddy-auth.sh#L97-L110",
-        "sdc669faa429d": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/ROOT/opt/supervisor-scripts/caddy.sh#L9-L14",
-        "s0428d55e9145": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/ROOT/opt/supervisor-scripts/x11vnc.sh#L22-L24",
-        "s1b8c6c46f358": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/README.template.md#L47-L50",
-        "s44f3439f13de": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/README.template.md#L76-L80",
-        "sd0ba21945c9a": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L14-L40",
-        "sc77a7717bbc4": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L68-L71",
-        "s3c43b58f9e41": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L75-L93",
-        "sf1b910a375c6": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L125-L132",
-        "sae1085635ff9": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L175-L186",
-        "sd9c32e411f08": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L212-L240",
-        "s5a43e0cf8348": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L293-L308",
-        "sea35d951abe5": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L311-L321",
-        "s4a05112af859": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L323-L387",
-        "s5c18e60bb9e7": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L400-L413",
-        "s92be3bd5cdef": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/launch.sh#L77-L92",
-        "s7ac7955e604d": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/ROOT/opt/supervisor-scripts/syncthing.sh#L14-L16",
-        "s10acc068e127": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/ROOT/etc/vast_boot.d/10-prep-env.sh#L12-L27",
-        "s6d0bc9f2a0da": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/capabilities/manifest.py#L674-L694"
-      }
-    },
-    "lambda": {
-      "name": "Lambda Public Cloud documentation",
-      "basis": "unknown",
-      "sources": {
-        "se22064748974": "https://docs.lambda.ai/public-cloud/firewalls/",
-        "sb12b4a953833": "https://docs.lambda.ai/public-cloud/on-demand/connecting-instance/"
-      }
-    },
-    "modal": {
-      "name": "Modal proxy authentication",
-      "basis": "unknown",
-      "sources": {
-        "s7d083f819a21": "https://modal.com/docs/guide/webhook-proxy-auth",
-        "s12a4f5e04dbe": "https://modal.com/docs/guide/shared-endpoints",
-        "s33e1c2c2faf3": "https://modal.com/docs/guide/endpoints"
-      }
-    },
-    "jupyter": {
-      "name": "Jupyter Server security",
-      "basis": "unknown",
-      "sources": {
-        "sc703a8030c8f": "https://jupyter-server.readthedocs.io/en/latest/operators/security.html"
-      }
-    },
-    "jupyter-contents": {
-      "name": "Jupyter Server contents authentication",
-      "basis": "v2.18.0",
-      "sources": {
-        "sdc3ad9152505": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/contents/handlers.py#L83-L186",
-        "sf0a3ea8ee42e": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/contents/handlers.py#L436-L445",
-        "s4bdc7b9183f3": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/base/handlers.py#L782-L789",
-        "s4e7504ed1ac8": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/base/handlers.py#L1201",
-        "s52316685e1e4": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/auth/identity.py#L465-L516",
-        "s83f1081e863e": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/auth/identity.py#L255-L298",
-        "s6c884bdf8fb4": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/docs/source/operators/security.rst#L6-L26",
-        "sb7fab0e85c94": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/docs/source/operators/security.rst#L315-L322",
-        "s58a8a77857b5": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/api/api.yaml#L82-L137"
-      }
-    },
-    "iproute2": {
-      "name": "iproute2 ss manual",
-      "basis": "v6.12.0",
-      "sources": {
-        "s2afc4764d5bb": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34",
-        "sfaa932c2ca13": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44",
-        "sd295f82d643f": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163",
-        "s65278ee45850": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375",
-        "s6c87acff18cf": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L358-L359",
-        "sf8fdfa16eb3f": "https://github.com/iproute2/iproute2/blob/v6.12.0/misc/ss.c#L6114-L6117",
-        "s1e96518d2ede": "https://github.com/iproute2/iproute2/blob/v6.12.0/misc/ss.c#L4235-L4240"
-      }
-    },
-    "network-namespaces": {
-      "name": "Linux network namespaces manual",
-      "basis": "man-pages-5.13",
-      "sources": {
-        "s427c923e346f": "https://github.com/mkerrisk/man-pages/blob/man-pages-5.13/man7/network_namespaces.7#L30-L40"
-      }
-    },
-    "ollama": {
-      "name": "Ollama",
-      "basis": "v0.34.2",
-      "sources": {
-        "s96f77aee8bdd": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go",
-        "sd146dc5d917d": "https://github.com/ollama/ollama/blob/v0.34.2/api/client.go",
-        "s7478dad099ab": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go",
-        "s2abe15b73bce": "https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go"
-      }
-    }
-  },
-  "claims": {
-    "publication": {"text": "Raw port publication or a firewall allowance adds no listener authentication; platform proxies authenticate only the routes they actually cover.", "components": ["runpod", "vast", "lambda", "modal"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "lambda:se22064748974", "modal:s7d083f819a21"], "status": "REASONED"},
-    "runpod-http": {"text": "Expose HTTP Ports publishes https://[POD_ID]-[INTERNAL_PORT].proxy.runpod.net with automatic HTTPS; anyone with the URL can reach it, so the application still needs authentication.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
-    "runpod-tcp": {"text": "Exposed TCP ports forward directly on a public IP without automatic TLS; secure template listeners before exposure and implement application TLS for sensitive TCP data.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
-    "runpod-symmetry": {"text": "TCP configuration values above 70000 request symmetrical mapping rather than naming valid ports; read the assigned mapping from the pod environment, such as RUNPOD_TCP_PORT_70000. Mapping remains public.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
-    "vast-ssh-port": {"text": "Vast.ai SSH launch mode opens internal port 22 by default.", "components": ["vast"], "sources": ["vast:sc25989a1613e"], "status": "REASONED"},
-    "vast-jupyter-port": {"text": "Vast.ai Jupyter launch mode opens internal 8080 as well as SSH port 22 by default.", "components": ["vast"], "sources": ["vast:sc25989a1613e"], "status": "REASONED"},
-    "vast-mapping": {"text": "Each open Vast.ai internal port maps to a random external port on a usually shared public IP; the networking docs describe no additional firewall step.", "components": ["vast"], "sources": ["vast:sc25989a1613e"], "status": "REASONED"},
-    "vast-proxy": {"text": "Instance Portal uses local Caddy proxying when external and internal ports differ; forwarded apps can stay on loopback and PORTAL_CONFIG describes routing and presentation.", "components": ["vast"], "sources": ["vast:s0bdbda534723"], "status": "REASONED"},
-    "vast-token": {"text": "Portal links carry a credential token; protect the URL, test access without it and confirm the selected route actually authenticates.", "components": ["vast"], "sources": ["vast:s0bdbda534723"], "status": "REASONED"},
-    "vast-auth-controls": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the README documents OPEN_BUTTON_TOKEN for Basic/Bearer access, WEB_PASSWORD as a custom password, ENABLE_AUTH=false to disable authentication (default true), and AUTH_EXCLUDE as external ports excluded from authentication. The cited portal-aio configurator implements these; the auth test code records test expectations, not observed results.", "components": ["vast-image", "vast"], "sources": ["vast-image:sf75c3c07819e", "vast:s0bdbda534723", "vast-image:s5d2b91002bac", "vast-image:s229c9334547e", "vast-image:s3b735c4b3632", "vast-image:s037a7cbd778c", "vast-image:sdc669faa429d", "vast-image:sc77a7717bbc4", "vast-image:s3c43b58f9e41", "vast-image:sf1b910a375c6", "vast-image:sd9c32e411f08", "vast-image:sea35d951abe5", "vast-image:s4a05112af859"], "status": "REASONED"},
-    "vast-portal-routing": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, portal-aio reads PORTAL_CONFIG only when /etc/portal.yaml is absent, writes it back there, and emits a Caddy listener only where external and internal ports differ and the external port has a VAST_TCP_PORT mapping; other entries bypass proxying with no portal authentication. In this guide's assessment, routing configuration is not a credential.", "components": ["vast-image"], "sources": ["vast-image:sd0ba21945c9a", "vast-image:sd9c32e411f08"], "status": "REASONED"},
-    "vast-portal-jupyter": {"text": "Boot edits PORTAL_CONFIG: absent/empty 8080 mapping drops Jupyter; non-Jupyter /.launch drops it and Jupyter /.launch rewrites 8080:18080 to equal ports unless JUPYTER_OVERRIDE=true (case-insensitive). Re-add needs no /.launch, a nonempty mapping, no Jupyter entry and FORCE_JUPYTER not false (case-insensitive); /etc/portal.yaml wins, so only effective equal-port entries lose portal authentication.", "components": ["vast-image"], "sources": ["vast-image:s10acc068e127", "vast-image:sd9c32e411f08", "vast-image:sd0ba21945c9a"], "status": "REASONED"},
-    "vast-auth-defaults": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the configurator keeps authentication on unless ENABLE_AUTH equals false case-insensitively, serves plain HTTP unless ENABLE_HTTPS is true with valid certs, defaults WEB_USERNAME to vastai, and gives WEB_PASSWORD and OPEN_BUTTON_TOKEN no precedence: an unset one mirrors the other, and one generated value serves both when neither is set.", "components": ["vast-image"], "sources": ["vast-image:s3c43b58f9e41"], "status": "REASONED"},
-    "vast-auth-routes": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, a protected port accepts either token as a token query parameter, a container-label auth cookie or an Authorization: Bearer header, sets the cookie on a valid query token, and falls back to HTTP Basic whose hashed password is WEB_PASSWORD.", "components": ["vast-image"], "sources": ["vast-image:sf1b910a375c6", "vast-image:s4a05112af859", "vast-image:sea35d951abe5"], "status": "REASONED"},
-    "vast-auth-exemptions": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, AUTH_EXCLUDE ports, matched externally, and every port under ENABLE_AUTH=false are proxied with no authentication, an exposure. Even on authenticated ports, /portal-resolver answers anonymously and ACME challenge, change-password, manifest and security.txt paths proxy to the backend with no credential, an exposure for private content there.", "components": ["vast-image"], "sources": ["vast-image:sc77a7717bbc4", "vast-image:sd9c32e411f08", "vast-image:s5a43e0cf8348", "vast-image:sae1085635ff9", "vast-image:s4a05112af859"], "status": "REASONED"},
-    "vast-token-reuse": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the configurator prints the effective credentials to its console output, and OPEN_BUTTON_TOKEN is also the Syncthing GUI API key in the launcher and supervisor scripts (the supervisor's random fallback only when unset or empty). In this guide's reasoning, sharing a token-bearing link shares these reused credentials too.", "components": ["vast-image"], "sources": ["vast-image:s5c18e60bb9e7", "vast-image:s92be3bd5cdef", "vast-image:s7ac7955e604d"], "status": "REASONED"},
-    "vast-manifest-report": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, manifest reporting and configurator enforcement lowercase ENABLE_AUTH and default unset to \"true\": reporting tests equality to \"true\", enforcement inequality to \"false\". Other values can be reported disabled yet enforced; the manifest reports, it does not enforce.", "components": ["vast-image"], "sources": ["vast-image:s6d0bc9f2a0da", "vast-image:s3c43b58f9e41"], "status": "REASONED"},
-    "lambda-default": {"text": "Lambda inbound firewall denies by default except ICMP and TCP 22; other listeners require explicit global/workspace rules or a per-instance ruleset attached at launch.", "components": ["lambda"], "sources": ["lambda:se22064748974"], "status": "REASONED"},
-    "lambda-rule": {"text": "An allow rule admits the specified source range without authenticating callers; pair it with listener or proxy authentication. Removing an allow rule closes access.", "components": ["lambda"], "sources": ["lambda:se22064748974"], "status": "REASONED"},
-    "modal-web": {"text": "Web endpoints using modal.fastapi_endpoint, the replacement for @web_endpoint, are public by default; requires_proxy_auth=True enables proxy authentication.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
-    "modal-dedicated": {"text": "Dedicated Endpoints require proxy authentication by default; --unauthenticated makes them public.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
-    "modal-server": {"text": "Servers require proxy authentication by default; @app.server(unauthenticated=True) makes them public.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
-    "modal-shared": {"text": "Shared Endpoints always require a Proxy Token; the cited pages document the --unauthenticated option for Dedicated Endpoints only, so, in this guide's assessment, a Shared Endpoint cannot be made public.", "components": ["modal"], "sources": ["modal:s7d083f819a21", "modal:s12a4f5e04dbe", "modal:s33e1c2c2faf3"], "status": "REASONED"},
-    "modal-credentials": {"text": "Proxy authentication accepts Modal-Key and Modal-Secret or Authorization: Bearer <token_id>.<token_secret>; missing credentials on a protected endpoint return 401.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
-    "runpod-bind": {"text": "RunPod HTTP proxy needs the exposed pod interface: bind the exposed service to 0.0.0.0 inside the pod, not localhost.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
-    "listener-auth": {"text": "Whichever binding the platform's proxy needs, add the listener's OWN authentication where it supports one; otherwise keep the unauthenticated backend private and put an authenticating gateway in front, so the platform exposes the gateway rather than the bare listener. At Ollama v0.34.2, the cited local API route setup installs CORS and host filtering without an inbound credential check. Cloud sign-in and OLLAMA_AUTH client outbound signing are separate from local inbound authentication.", "components": ["runpod", "vast", "jupyter", "ollama"], "sources": ["runpod:s817198f039ee", "vast:s0bdbda534723", "jupyter:sc703a8030c8f", "ollama:s96f77aee8bdd", "ollama:sd146dc5d917d", "ollama:s7478dad099ab", "ollama:s2abe15b73bce"], "status": "REASONED"},
-    "mfa": {"text": "MFA: this guide cites no platform feature that adds a second factor to the workload itself, so workload authentication must be verified separately. This guide's advice is to enable MFA on each RunPod, Vast.ai, Lambda, and Modal platform account; no account-security source for these platforms is cited here. In this guide's reasoning, an API key or proxy-auth token secures a machine client and is a separate control from the platform login.", "components": ["modal", "jupyter"], "sources": ["modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED"},
-    "lambda-ssh": {"text": "Lambda requires an SSH key at launch; keep the private key off the instance.", "components": ["lambda"], "sources": ["lambda:sb12b4a953833"], "status": "REASONED"},
-    "vast-ssh": {"text": "Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance.", "components": ["vast"], "sources": ["vast:s6e0303ef19fe"], "status": "REASONED"},
-    "runpod-ssh": {"text": "RunPod recommends SSH keys and offers an optional password; use the key and skip the password.", "components": ["runpod"], "sources": ["runpod:s13c43b856d4f"], "status": "REASONED"},
-    "verify-inventory": {"text": "This guide infers from the ss namespace switch and Linux namespace isolation that ss -tlnp inventories TCP listeners only in the current network namespace, assuming normal live kernel/proc inputs without input-file environment overrides. This is not a UDP, firewall-state or platform-publication check; this guide's test design requires cross-checking platform mappings and probing each mapped port from outside.", "components": ["runpod", "vast", "iproute2", "network-namespaces"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850", "iproute2:s6c87acff18cf", "iproute2:sf8fdfa16eb3f", "iproute2:s1e96518d2ede", "network-namespaces:s427c923e346f"], "status": "REASONED", "verify": [1]},
-    "verify-jupyter": {"text": "This guide's test design compares anonymous and valid-token requests directly to loopback :8888/api/contents. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in Authorization: token or the token query parameter; password-only and cookie-authenticated requests need separate controls.", "components": ["jupyter", "jupyter-contents"], "sources": ["jupyter:sc703a8030c8f", "jupyter-contents:sdc3ad9152505", "jupyter-contents:sf0a3ea8ee42e", "jupyter-contents:s4bdc7b9183f3", "jupyter-contents:s4e7504ed1ac8", "jupyter-contents:s52316685e1e4", "jupyter-contents:s83f1081e863e", "jupyter-contents:s6c884bdf8fb4", "jupyter-contents:sb7fab0e85c94", "jupyter-contents:s58a8a77857b5"], "status": "REASONED", "verify": [1]},
-    "verify-mapping": {"text": "Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control.", "components": ["runpod", "vast", "modal", "jupyter"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
-    "verify-portal-exempt": {"text": "For an authenticated portal mapping at the cited commit, this guide expects resolver 200, exempt-path backend responses and a Basic challenge elsewhere, distinguishable only with a portal header known to differ from the backend. Anonymous known private content is a finding when that path is private; transport failures, backend 401s and unexplained responses are INCONCLUSIVE.", "components": ["vast-image"], "sources": ["vast-image:sae1085635ff9", "vast-image:s4a05112af859", "vast-image:sd9c32e411f08", "vast-image:s3c43b58f9e41"], "status": "REASONED", "verify": [2]},
-    "remote-desktop": {"text": "Overlooking a template's remote desktop: at Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the linux-desktop launcher configures x11vnc on port 5900 with a password from VNC_PASSWORD, falling back to OPEN_BUTTON_TOKEN when VNC_PASSWORD is unset or empty. The template README describes OPEN_BUTTON_TOKEN as randomly generated on first boot and visible in instance logs, and offers Selkies WebRTC and Guacamole browser VNC alongside direct VNC. These citations do not establish other templates' ports or password defaults, or the strength of the effective VNC password. This guide's advice: check both browser and direct VNC listeners and their public mappings for missing or weak authentication. In this guide's reasoning, the browser page's HTTPS does not protect a separately reachable VNC connection, so a direct VNC mapping needs its own strong password and an encrypted tunnel, or should be kept off the public mapping. This guide's advice: test a direct VNC mapping with a VNC client, since the browser access controls and the HTTP status checks above may not cover it.", "components": ["runpod", "vast", "vast-image"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast-image:s0428d55e9145", "vast-image:s1b8c6c46f358", "vast-image:s44f3439f13de"], "status": "REASONED"}
-  }
-}
----
 # Rented GPUs: RunPod, Vast.ai, Lambda, Modal
 
-<!-- version-basis:start -->
-**Version basis**
+Written against RunPod documentation (no recorded version), Jupyter Server contents authentication v2.18.0, Ollama v0.34.2, iproute2 ss manual v6.12.0, and Linux network namespaces manual man-pages-5.13; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 35 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- runpod: RunPod documentation (unknown)
-- vast: Vast.ai documentation (unknown)
-- vast-image: Vast.ai base image (00064421641881c1f83ff58c55f13cbc10cbea4d)
-- lambda: Lambda Public Cloud documentation (unknown)
-- modal: Modal proxy authentication (unknown)
-- jupyter: Jupyter Server security (unknown)
-- jupyter-contents: Jupyter Server contents authentication (v2.18.0)
-- iproute2: iproute2 ss manual (v6.12.0)
-- network-namespaces: Linux network namespaces manual (man-pages-5.13)
-- ollama: Ollama (v0.34.2)
-
-Claims (full source mapping in the front matter):
-
-- publication (REASONED; runpod, vast, lambda, modal): Raw port publication or a firewall allowance adds no listener authentication; platform proxies authenticate only the routes they actually cover.
-- runpod-http (REASONED; runpod): Expose HTTP Ports publishes https://[POD_ID]-[INTERNAL_PORT].proxy.runpod.net with automatic HTTPS; anyone with the URL can reach it, so the application still needs authentication.
-- runpod-tcp (REASONED; runpod): Exposed TCP ports forward directly on a public IP without automatic TLS; secure template listeners before exposure and implement application TLS for sensitive TCP data.
-- runpod-symmetry (REASONED; runpod): TCP configuration values above 70000 request symmetrical mapping rather than naming valid ports; read the assigned mapping from the pod environment, such as RUNPOD_TCP_PORT_70000. Mapping remains public.
-- vast-ssh-port (REASONED; vast): Vast.ai SSH launch mode opens internal port 22 by default.
-- vast-jupyter-port (REASONED; vast): Vast.ai Jupyter launch mode opens internal 8080 as well as SSH port 22 by default.
-- vast-mapping (REASONED; vast): Each open Vast.ai internal port maps to a random external port on a usually shared public IP; the networking docs describe no additional firewall step.
-- vast-proxy (REASONED; vast): Instance Portal uses local Caddy proxying when external and internal ports differ; forwarded apps can stay on loopback and PORTAL_CONFIG describes routing and presentation.
-- vast-token (REASONED; vast): Portal links carry a credential token; protect the URL, test access without it and confirm the selected route actually authenticates.
-- vast-auth-controls (REASONED; vast-image, vast): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the README documents OPEN_BUTTON_TOKEN for Basic/Bearer access, WEB_PASSWORD as a custom password, ENABLE_AUTH=false to disable authentication (default true), and AUTH_EXCLUDE as external ports excluded from authentication. The cited portal-aio configurator implements these; the auth test code records test expectations, not observed results.
-- vast-portal-routing (REASONED; vast-image): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, portal-aio reads PORTAL_CONFIG only when /etc/portal.yaml is absent, writes it back there, and emits a Caddy listener only where external and internal ports differ and the external port has a VAST_TCP_PORT mapping; other entries bypass proxying with no portal authentication. In this guide's assessment, routing configuration is not a credential.
-- vast-portal-jupyter (REASONED; vast-image): Boot edits PORTAL_CONFIG: absent/empty 8080 mapping drops Jupyter; non-Jupyter /.launch drops it and Jupyter /.launch rewrites 8080:18080 to equal ports unless JUPYTER_OVERRIDE=true (case-insensitive). Re-add needs no /.launch, a nonempty mapping, no Jupyter entry and FORCE_JUPYTER not false (case-insensitive); /etc/portal.yaml wins, so only effective equal-port entries lose portal authentication.
-- vast-auth-defaults (REASONED; vast-image): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the configurator keeps authentication on unless ENABLE_AUTH equals false case-insensitively, serves plain HTTP unless ENABLE_HTTPS is true with valid certs, defaults WEB_USERNAME to vastai, and gives WEB_PASSWORD and OPEN_BUTTON_TOKEN no precedence: an unset one mirrors the other, and one generated value serves both when neither is set.
-- vast-auth-routes (REASONED; vast-image): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, a protected port accepts either token as a token query parameter, a container-label auth cookie or an Authorization: Bearer header, sets the cookie on a valid query token, and falls back to HTTP Basic whose hashed password is WEB_PASSWORD.
-- vast-auth-exemptions (REASONED; vast-image): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, AUTH_EXCLUDE ports, matched externally, and every port under ENABLE_AUTH=false are proxied with no authentication, an exposure. Even on authenticated ports, /portal-resolver answers anonymously and ACME challenge, change-password, manifest and security.txt paths proxy to the backend with no credential, an exposure for private content there.
-- vast-token-reuse (REASONED; vast-image): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the configurator prints the effective credentials to its console output, and OPEN_BUTTON_TOKEN is also the Syncthing GUI API key in the launcher and supervisor scripts (the supervisor's random fallback only when unset or empty). In this guide's reasoning, sharing a token-bearing link shares these reused credentials too.
-- vast-manifest-report (REASONED; vast-image): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, manifest reporting and configurator enforcement lowercase ENABLE_AUTH and default unset to "true": reporting tests equality to "true", enforcement inequality to "false". Other values can be reported disabled yet enforced; the manifest reports, it does not enforce.
-- lambda-default (REASONED; lambda): Lambda inbound firewall denies by default except ICMP and TCP 22; other listeners require explicit global/workspace rules or a per-instance ruleset attached at launch.
-- lambda-rule (REASONED; lambda): An allow rule admits the specified source range without authenticating callers; pair it with listener or proxy authentication. Removing an allow rule closes access.
-- modal-web (REASONED; modal): Web endpoints using modal.fastapi_endpoint, the replacement for @web_endpoint, are public by default; requires_proxy_auth=True enables proxy authentication.
-- modal-dedicated (REASONED; modal): Dedicated Endpoints require proxy authentication by default; --unauthenticated makes them public.
-- modal-server (REASONED; modal): Servers require proxy authentication by default; @app.server(unauthenticated=True) makes them public.
-- modal-shared (REASONED; modal): Shared Endpoints always require a Proxy Token; the cited pages document the --unauthenticated option for Dedicated Endpoints only, so, in this guide's assessment, a Shared Endpoint cannot be made public.
-- modal-credentials (REASONED; modal): Proxy authentication accepts Modal-Key and Modal-Secret or Authorization: Bearer &lt;token_id&gt;.&lt;token_secret&gt;; missing credentials on a protected endpoint return 401.
-- runpod-bind (REASONED; runpod): RunPod HTTP proxy needs the exposed pod interface: bind the exposed service to 0.0.0.0 inside the pod, not localhost.
-- listener-auth (REASONED; runpod, vast, jupyter, ollama): Whichever binding the platform's proxy needs, add the listener's OWN authentication where it supports one; otherwise keep the unauthenticated backend private and put an authenticating gateway in front, so the platform exposes the gateway rather than the bare listener. At Ollama v0.34.2, the cited local API route setup installs CORS and host filtering without an inbound credential check. Cloud sign-in and OLLAMA_AUTH client outbound signing are separate from local inbound authentication.
-- mfa (REASONED; modal, jupyter): MFA: this guide cites no platform feature that adds a second factor to the workload itself, so workload authentication must be verified separately. This guide's advice is to enable MFA on each RunPod, Vast.ai, Lambda, and Modal platform account; no account-security source for these platforms is cited here. In this guide's reasoning, an API key or proxy-auth token secures a machine client and is a separate control from the platform login.
-- lambda-ssh (REASONED; lambda): Lambda requires an SSH key at launch; keep the private key off the instance.
-- vast-ssh (REASONED; vast): Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance.
-- runpod-ssh (REASONED; runpod): RunPod recommends SSH keys and offers an optional password; use the key and skip the password.
-- verify-inventory (REASONED; runpod, vast, iproute2, network-namespaces): This guide infers from the ss namespace switch and Linux namespace isolation that ss -tlnp inventories TCP listeners only in the current network namespace, assuming normal live kernel/proc inputs without input-file environment overrides. This is not a UDP, firewall-state or platform-publication check; this guide's test design requires cross-checking platform mappings and probing each mapped port from outside.
-- verify-jupyter (REASONED; jupyter, jupyter-contents): This guide's test design compares anonymous and valid-token requests directly to loopback :8888/api/contents. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in Authorization: token or the token query parameter; password-only and cookie-authenticated requests need separate controls.
-- verify-mapping (REASONED; runpod, vast, modal, jupyter): Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control.
-- verify-portal-exempt (REASONED; vast-image): For an authenticated portal mapping at the cited commit, this guide expects resolver 200, exempt-path backend responses and a Basic challenge elsewhere, distinguishable only with a portal header known to differ from the backend. Anonymous known private content is a finding when that path is private; transport failures, backend 401s and unexplained responses are INCONCLUSIVE.
-- remote-desktop (REASONED; runpod, vast, vast-image): Overlooking a template's remote desktop: at Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the linux-desktop launcher configures x11vnc on port 5900 with a password from VNC_PASSWORD, falling back to OPEN_BUTTON_TOKEN when VNC_PASSWORD is unset or empty. The template README describes OPEN_BUTTON_TOKEN as randomly generated on first boot and visible in instance logs, and offers Selkies WebRTC and Guacamole browser VNC alongside direct VNC. These citations do not establish other templates' ports or password defaults, or the strength of the effective VNC password. This guide's advice: check both browser and direct VNC listeners and their public mappings for missing or weak authentication. In this guide's reasoning, the browser page's HTTPS does not protect a separately reachable VNC connection, so a direct VNC mapping needs its own strong password and an encrypted tunnel, or should be kept off the public mapping. This guide's advice: test a direct VNC mapping with a VNC client, since the browser access controls and the HTTP status checks above may not cover it.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Unlike the major clouds, most rented-GPU platforms put no default-deny firewall in front of the box. How a bound port becomes public differs by platform: on RunPod you expose a port (HTTP or TCP), on Vast.ai a launch mode or an added port maps it to a public port, on Lambda you open a firewall rule (its inbound firewall is deny-by-default), and on Modal it depends on the serverless construct. Raw port publication and a firewall allowance add NO authentication of their own, so a listener exposed that way is reachable with only whatever auth it has itself; an authenticating platform proxy is the exception (Modal's Endpoints and Servers require proxy auth by default and Shared Endpoints always do, only a public Web endpoint does not, and Vast.ai's Instance Portal gates the routes it proxies), but do not assume one is in front of a given port. Treat every listener the same way you would on your own hardware: bind it privately or authenticate it, per [ollama.md](ollama.md) and [model-servers.md](model-servers.md).
 
@@ -424,3 +207,246 @@ REASONED: following block; this guide's test design for the Vast.ai portal's pat
 - Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d linux-desktop x11vnc port and password fallback; does not establish password strength (checked October 2026): https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/ROOT/opt/supervisor-scripts/x11vnc.sh#L22-L24
 - Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d linux-desktop browser and direct connection choices (checked October 2026): https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/README.template.md#L47-L50
 - Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d linux-desktop documented VNC password and override (checked October 2026): https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/README.template.md#L76-L80
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/gpu-clouds.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- runpod: RunPod documentation (unknown)
+- vast: Vast.ai documentation (unknown)
+- vast-image: Vast.ai base image (00064421641881c1f83ff58c55f13cbc10cbea4d)
+- lambda: Lambda Public Cloud documentation (unknown)
+- modal: Modal proxy authentication (unknown)
+- jupyter: Jupyter Server security (unknown)
+- jupyter-contents: Jupyter Server contents authentication (v2.18.0)
+- ollama: Ollama (v0.34.2)
+- iproute2: iproute2 ss manual (v6.12.0)
+- network-namespaces: Linux network namespaces manual (man-pages-5.13)
+
+Claims (full source mapping in the JSON block below):
+
+- publication (REASONED; runpod, vast, lambda, modal): Raw port publication or a firewall allowance adds no listener authentication; platform proxies authenticate only the routes they actually cover.
+- runpod-http (REASONED; runpod): Expose HTTP Ports publishes https://[POD_ID]-[INTERNAL_PORT].proxy.runpod.net with automatic HTTPS; anyone with the URL can reach it, so the application still needs authentication.
+- runpod-tcp (REASONED; runpod): Exposed TCP ports forward directly on a public IP without automatic TLS; secure template listeners before exposure and implement application TLS for sensitive TCP data.
+- runpod-symmetry (REASONED; runpod): TCP configuration values above 70000 request symmetrical mapping rather than naming valid ports; read the assigned mapping from the pod environment, such as RUNPOD_TCP_PORT_70000. Mapping remains public.
+- vast-ssh-port (REASONED; vast): Vast.ai SSH launch mode opens internal port 22 by default.
+- vast-jupyter-port (REASONED; vast): Vast.ai Jupyter launch mode opens internal 8080 as well as SSH port 22 by default.
+- vast-mapping (REASONED; vast): Each open Vast.ai internal port maps to a random external port on a usually shared public IP; the networking docs describe no additional firewall step.
+- vast-proxy (REASONED; vast): Instance Portal uses local Caddy proxying when external and internal ports differ; forwarded apps can stay on loopback and PORTAL_CONFIG describes routing and presentation.
+- vast-token (REASONED; vast): Portal links carry a credential token; protect the URL, test access without it and confirm the selected route actually authenticates.
+- vast-auth-controls (REASONED; vast-image, vast): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the README documents OPEN_BUTTON_TOKEN for Basic/Bearer access, WEB_PASSWORD as a custom password, ENABLE_AUTH=false to disable authentication (default true), and AUTH_EXCLUDE as external ports excluded from authentication. The cited portal-aio configurator implements these; the auth test code records test expectations, not observed results.
+- vast-portal-routing (REASONED; vast-image): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, portal-aio reads PORTAL_CONFIG only when /etc/portal.yaml is absent, writes it back there, and emits a Caddy listener only where external and internal ports differ and the external port has a VAST_TCP_PORT mapping; other entries bypass proxying with no portal authentication. In this guide's assessment, routing configuration is not a credential.
+- vast-portal-jupyter (REASONED; vast-image): Boot edits PORTAL_CONFIG: absent/empty 8080 mapping drops Jupyter; non-Jupyter /.launch drops it and Jupyter /.launch rewrites 8080:18080 to equal ports unless JUPYTER_OVERRIDE=true (case-insensitive). Re-add needs no /.launch, a nonempty mapping, no Jupyter entry and FORCE_JUPYTER not false (case-insensitive); /etc/portal.yaml wins, so only effective equal-port entries lose portal authentication.
+- vast-auth-defaults (REASONED; vast-image): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the configurator keeps authentication on unless ENABLE_AUTH equals false case-insensitively, serves plain HTTP unless ENABLE_HTTPS is true with valid certs, defaults WEB_USERNAME to vastai, and gives WEB_PASSWORD and OPEN_BUTTON_TOKEN no precedence: an unset one mirrors the other, and one generated value serves both when neither is set.
+- vast-auth-routes (REASONED; vast-image): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, a protected port accepts either token as a token query parameter, a container-label auth cookie or an Authorization: Bearer header, sets the cookie on a valid query token, and falls back to HTTP Basic whose hashed password is WEB_PASSWORD.
+- vast-auth-exemptions (REASONED; vast-image): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, AUTH_EXCLUDE ports, matched externally, and every port under ENABLE_AUTH=false are proxied with no authentication, an exposure. Even on authenticated ports, /portal-resolver answers anonymously and ACME challenge, change-password, manifest and security.txt paths proxy to the backend with no credential, an exposure for private content there.
+- vast-token-reuse (REASONED; vast-image): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the configurator prints the effective credentials to its console output, and OPEN_BUTTON_TOKEN is also the Syncthing GUI API key in the launcher and supervisor scripts (the supervisor's random fallback only when unset or empty). In this guide's reasoning, sharing a token-bearing link shares these reused credentials too.
+- vast-manifest-report (REASONED; vast-image): At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, manifest reporting and configurator enforcement lowercase ENABLE_AUTH and default unset to "true": reporting tests equality to "true", enforcement inequality to "false". Other values can be reported disabled yet enforced; the manifest reports, it does not enforce.
+- lambda-default (REASONED; lambda): Lambda inbound firewall denies by default except ICMP and TCP 22; other listeners require explicit global/workspace rules or a per-instance ruleset attached at launch.
+- lambda-rule (REASONED; lambda): An allow rule admits the specified source range without authenticating callers; pair it with listener or proxy authentication. Removing an allow rule closes access.
+- modal-web (REASONED; modal): Web endpoints using modal.fastapi_endpoint, the replacement for @web_endpoint, are public by default; requires_proxy_auth=True enables proxy authentication.
+- modal-dedicated (REASONED; modal): Dedicated Endpoints require proxy authentication by default; --unauthenticated makes them public.
+- modal-server (REASONED; modal): Servers require proxy authentication by default; @app.server(unauthenticated=True) makes them public.
+- modal-shared (REASONED; modal): Shared Endpoints always require a Proxy Token; the cited pages document the --unauthenticated option for Dedicated Endpoints only, so, in this guide's assessment, a Shared Endpoint cannot be made public.
+- modal-credentials (REASONED; modal): Proxy authentication accepts Modal-Key and Modal-Secret or Authorization: Bearer &lt;token_id&gt;.&lt;token_secret&gt;; missing credentials on a protected endpoint return 401.
+- runpod-bind (REASONED; runpod): RunPod HTTP proxy needs the exposed pod interface: bind the exposed service to 0.0.0.0 inside the pod, not localhost.
+- listener-auth (REASONED; runpod, vast, jupyter, ollama): Whichever binding the platform's proxy needs, add the listener's OWN authentication where it supports one; otherwise keep the unauthenticated backend private and put an authenticating gateway in front, so the platform exposes the gateway rather than the bare listener. At Ollama v0.34.2, the cited local API route setup installs CORS and host filtering without an inbound credential check. Cloud sign-in and OLLAMA_AUTH client outbound signing are separate from local inbound authentication.
+- mfa (REASONED; modal, jupyter): MFA: this guide cites no platform feature that adds a second factor to the workload itself, so workload authentication must be verified separately. This guide's advice is to enable MFA on each RunPod, Vast.ai, Lambda, and Modal platform account; no account-security source for these platforms is cited here. In this guide's reasoning, an API key or proxy-auth token secures a machine client and is a separate control from the platform login.
+- lambda-ssh (REASONED; lambda): Lambda requires an SSH key at launch; keep the private key off the instance.
+- vast-ssh (REASONED; vast): Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance.
+- runpod-ssh (REASONED; runpod): RunPod recommends SSH keys and offers an optional password; use the key and skip the password.
+- verify-inventory (REASONED; runpod, vast, iproute2, network-namespaces): This guide infers from the ss namespace switch and Linux namespace isolation that ss -tlnp inventories TCP listeners only in the current network namespace, assuming normal live kernel/proc inputs without input-file environment overrides. This is not a UDP, firewall-state or platform-publication check; this guide's test design requires cross-checking platform mappings and probing each mapped port from outside.
+- verify-jupyter (REASONED; jupyter, jupyter-contents): This guide's test design compares anonymous and valid-token requests directly to loopback :8888/api/contents. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in Authorization: token or the token query parameter; password-only and cookie-authenticated requests need separate controls.
+- verify-mapping (REASONED; runpod, vast, modal, jupyter): Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control.
+- verify-portal-exempt (REASONED; vast-image): For an authenticated portal mapping at the cited commit, this guide expects resolver 200, exempt-path backend responses and a Basic challenge elsewhere, distinguishable only with a portal header known to differ from the backend. Anonymous known private content is a finding when that path is private; transport failures, backend 401s and unexplained responses are INCONCLUSIVE.
+- remote-desktop (REASONED; runpod, vast, vast-image): Overlooking a template's remote desktop: at Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the linux-desktop launcher configures x11vnc on port 5900 with a password from VNC_PASSWORD, falling back to OPEN_BUTTON_TOKEN when VNC_PASSWORD is unset or empty. The template README describes OPEN_BUTTON_TOKEN as randomly generated on first boot and visible in instance logs, and offers Selkies WebRTC and Guacamole browser VNC alongside direct VNC. These citations do not establish other templates' ports or password defaults, or the strength of the effective VNC password. This guide's advice: check both browser and direct VNC listeners and their public mappings for missing or weak authentication. In this guide's reasoning, the browser page's HTTPS does not protect a separately reachable VNC connection, so a direct VNC mapping needs its own strong password and an encrypted tunnel, or should be kept off the public mapping. This guide's advice: test a direct VNC mapping with a VNC client, since the browser access controls and the HTTP status checks above may not cover it.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-19",
+  "documentation_checked": "2026-09",
+  "body_sha256": "7dc59d278092451cbf9bc33836b92a411a629f5285413f75b1409ecbf11a9774",
+  "components": {
+    "runpod": {
+      "name": "RunPod documentation",
+      "basis": "unknown",
+      "sources": {
+        "s817198f039ee": "https://docs.runpod.io/pods/configuration/expose-ports",
+        "s13c43b856d4f": "https://docs.runpod.io/pods/configuration/use-ssh"
+      }
+    },
+    "vast": {
+      "name": "Vast.ai documentation",
+      "basis": "unknown",
+      "sources": {
+        "sc25989a1613e": "https://docs.vast.ai/guides/instances/connect/networking",
+        "s0bdbda534723": "https://docs.vast.ai/guides/instances/connect/instance-portal",
+        "s6e0303ef19fe": "https://docs.vast.ai/guides/instances/connect/ssh"
+      }
+    },
+    "vast-image": {
+      "name": "Vast.ai base image",
+      "basis": "00064421641881c1f83ff58c55f13cbc10cbea4d",
+      "sources": {
+        "sf75c3c07819e": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/README.md",
+        "s5d2b91002bac": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/README.md#L175-L187",
+        "s229c9334547e": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/README.md#L135-L147",
+        "s3b735c4b3632": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/README.md#L154-L158",
+        "s037a7cbd778c": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/ROOT/opt/instance-tools/tests/base/26-caddy-auth.sh#L97-L110",
+        "sdc669faa429d": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/ROOT/opt/supervisor-scripts/caddy.sh#L9-L14",
+        "s0428d55e9145": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/ROOT/opt/supervisor-scripts/x11vnc.sh#L22-L24",
+        "s1b8c6c46f358": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/README.template.md#L47-L50",
+        "s44f3439f13de": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/README.template.md#L76-L80",
+        "sd0ba21945c9a": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L14-L40",
+        "sc77a7717bbc4": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L68-L71",
+        "s3c43b58f9e41": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L75-L93",
+        "sf1b910a375c6": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L125-L132",
+        "sae1085635ff9": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L175-L186",
+        "sd9c32e411f08": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L212-L240",
+        "s5a43e0cf8348": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L293-L308",
+        "sea35d951abe5": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L311-L321",
+        "s4a05112af859": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L323-L387",
+        "s5c18e60bb9e7": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/caddy_manager/caddy_config_manager.py#L400-L413",
+        "s92be3bd5cdef": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/launch.sh#L77-L92",
+        "s7ac7955e604d": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/ROOT/opt/supervisor-scripts/syncthing.sh#L14-L16",
+        "s10acc068e127": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/ROOT/etc/vast_boot.d/10-prep-env.sh#L12-L27",
+        "s6d0bc9f2a0da": "https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/portal-aio/capabilities/manifest.py#L674-L694"
+      }
+    },
+    "lambda": {
+      "name": "Lambda Public Cloud documentation",
+      "basis": "unknown",
+      "sources": {
+        "se22064748974": "https://docs.lambda.ai/public-cloud/firewalls/",
+        "sb12b4a953833": "https://docs.lambda.ai/public-cloud/on-demand/connecting-instance/"
+      }
+    },
+    "modal": {
+      "name": "Modal proxy authentication",
+      "basis": "unknown",
+      "sources": {
+        "s7d083f819a21": "https://modal.com/docs/guide/webhook-proxy-auth",
+        "s12a4f5e04dbe": "https://modal.com/docs/guide/shared-endpoints",
+        "s33e1c2c2faf3": "https://modal.com/docs/guide/endpoints"
+      }
+    },
+    "jupyter": {
+      "name": "Jupyter Server security",
+      "basis": "unknown",
+      "sources": {
+        "sc703a8030c8f": "https://jupyter-server.readthedocs.io/en/latest/operators/security.html"
+      }
+    },
+    "jupyter-contents": {
+      "name": "Jupyter Server contents authentication",
+      "basis": "v2.18.0",
+      "sources": {
+        "sdc3ad9152505": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/contents/handlers.py#L83-L186",
+        "sf0a3ea8ee42e": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/contents/handlers.py#L436-L445",
+        "s4bdc7b9183f3": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/base/handlers.py#L782-L789",
+        "s4e7504ed1ac8": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/base/handlers.py#L1201",
+        "s52316685e1e4": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/auth/identity.py#L465-L516",
+        "s83f1081e863e": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/auth/identity.py#L255-L298",
+        "s6c884bdf8fb4": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/docs/source/operators/security.rst#L6-L26",
+        "sb7fab0e85c94": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/docs/source/operators/security.rst#L315-L322",
+        "s58a8a77857b5": "https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/api/api.yaml#L82-L137"
+      }
+    },
+    "ollama": {
+      "name": "Ollama",
+      "basis": "v0.34.2",
+      "sources": {
+        "s96f77aee8bdd": "https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go",
+        "sd146dc5d917d": "https://github.com/ollama/ollama/blob/v0.34.2/api/client.go",
+        "s7478dad099ab": "https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go",
+        "s2abe15b73bce": "https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go"
+      }
+    },
+    "iproute2": {
+      "name": "iproute2 ss manual",
+      "basis": "v6.12.0",
+      "sources": {
+        "s2afc4764d5bb": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34",
+        "sfaa932c2ca13": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44",
+        "sd295f82d643f": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163",
+        "s65278ee45850": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375",
+        "s6c87acff18cf": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L358-L359",
+        "sf8fdfa16eb3f": "https://github.com/iproute2/iproute2/blob/v6.12.0/misc/ss.c#L6114-L6117",
+        "s1e96518d2ede": "https://github.com/iproute2/iproute2/blob/v6.12.0/misc/ss.c#L4235-L4240"
+      }
+    },
+    "network-namespaces": {
+      "name": "Linux network namespaces manual",
+      "basis": "man-pages-5.13",
+      "sources": {
+        "s427c923e346f": "https://github.com/mkerrisk/man-pages/blob/man-pages-5.13/man7/network_namespaces.7#L30-L40"
+      }
+    }
+  },
+  "claims": {
+    "publication": {"text": "Raw port publication or a firewall allowance adds no listener authentication; platform proxies authenticate only the routes they actually cover.", "components": ["runpod", "vast", "lambda", "modal"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "lambda:se22064748974", "modal:s7d083f819a21"], "status": "REASONED"},
+    "runpod-http": {"text": "Expose HTTP Ports publishes https://[POD_ID]-[INTERNAL_PORT].proxy.runpod.net with automatic HTTPS; anyone with the URL can reach it, so the application still needs authentication.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
+    "runpod-tcp": {"text": "Exposed TCP ports forward directly on a public IP without automatic TLS; secure template listeners before exposure and implement application TLS for sensitive TCP data.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
+    "runpod-symmetry": {"text": "TCP configuration values above 70000 request symmetrical mapping rather than naming valid ports; read the assigned mapping from the pod environment, such as RUNPOD_TCP_PORT_70000. Mapping remains public.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
+    "vast-ssh-port": {"text": "Vast.ai SSH launch mode opens internal port 22 by default.", "components": ["vast"], "sources": ["vast:sc25989a1613e"], "status": "REASONED"},
+    "vast-jupyter-port": {"text": "Vast.ai Jupyter launch mode opens internal 8080 as well as SSH port 22 by default.", "components": ["vast"], "sources": ["vast:sc25989a1613e"], "status": "REASONED"},
+    "vast-mapping": {"text": "Each open Vast.ai internal port maps to a random external port on a usually shared public IP; the networking docs describe no additional firewall step.", "components": ["vast"], "sources": ["vast:sc25989a1613e"], "status": "REASONED"},
+    "vast-proxy": {"text": "Instance Portal uses local Caddy proxying when external and internal ports differ; forwarded apps can stay on loopback and PORTAL_CONFIG describes routing and presentation.", "components": ["vast"], "sources": ["vast:s0bdbda534723"], "status": "REASONED"},
+    "vast-token": {"text": "Portal links carry a credential token; protect the URL, test access without it and confirm the selected route actually authenticates.", "components": ["vast"], "sources": ["vast:s0bdbda534723"], "status": "REASONED"},
+    "vast-auth-controls": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the README documents OPEN_BUTTON_TOKEN for Basic/Bearer access, WEB_PASSWORD as a custom password, ENABLE_AUTH=false to disable authentication (default true), and AUTH_EXCLUDE as external ports excluded from authentication. The cited portal-aio configurator implements these; the auth test code records test expectations, not observed results.", "components": ["vast-image", "vast"], "sources": ["vast-image:sf75c3c07819e", "vast:s0bdbda534723", "vast-image:s5d2b91002bac", "vast-image:s229c9334547e", "vast-image:s3b735c4b3632", "vast-image:s037a7cbd778c", "vast-image:sdc669faa429d", "vast-image:sc77a7717bbc4", "vast-image:s3c43b58f9e41", "vast-image:sf1b910a375c6", "vast-image:sd9c32e411f08", "vast-image:sea35d951abe5", "vast-image:s4a05112af859"], "status": "REASONED"},
+    "vast-portal-routing": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, portal-aio reads PORTAL_CONFIG only when /etc/portal.yaml is absent, writes it back there, and emits a Caddy listener only where external and internal ports differ and the external port has a VAST_TCP_PORT mapping; other entries bypass proxying with no portal authentication. In this guide's assessment, routing configuration is not a credential.", "components": ["vast-image"], "sources": ["vast-image:sd0ba21945c9a", "vast-image:sd9c32e411f08"], "status": "REASONED"},
+    "vast-portal-jupyter": {"text": "Boot edits PORTAL_CONFIG: absent/empty 8080 mapping drops Jupyter; non-Jupyter /.launch drops it and Jupyter /.launch rewrites 8080:18080 to equal ports unless JUPYTER_OVERRIDE=true (case-insensitive). Re-add needs no /.launch, a nonempty mapping, no Jupyter entry and FORCE_JUPYTER not false (case-insensitive); /etc/portal.yaml wins, so only effective equal-port entries lose portal authentication.", "components": ["vast-image"], "sources": ["vast-image:s10acc068e127", "vast-image:sd9c32e411f08", "vast-image:sd0ba21945c9a"], "status": "REASONED"},
+    "vast-auth-defaults": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the configurator keeps authentication on unless ENABLE_AUTH equals false case-insensitively, serves plain HTTP unless ENABLE_HTTPS is true with valid certs, defaults WEB_USERNAME to vastai, and gives WEB_PASSWORD and OPEN_BUTTON_TOKEN no precedence: an unset one mirrors the other, and one generated value serves both when neither is set.", "components": ["vast-image"], "sources": ["vast-image:s3c43b58f9e41"], "status": "REASONED"},
+    "vast-auth-routes": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, a protected port accepts either token as a token query parameter, a container-label auth cookie or an Authorization: Bearer header, sets the cookie on a valid query token, and falls back to HTTP Basic whose hashed password is WEB_PASSWORD.", "components": ["vast-image"], "sources": ["vast-image:sf1b910a375c6", "vast-image:s4a05112af859", "vast-image:sea35d951abe5"], "status": "REASONED"},
+    "vast-auth-exemptions": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, AUTH_EXCLUDE ports, matched externally, and every port under ENABLE_AUTH=false are proxied with no authentication, an exposure. Even on authenticated ports, /portal-resolver answers anonymously and ACME challenge, change-password, manifest and security.txt paths proxy to the backend with no credential, an exposure for private content there.", "components": ["vast-image"], "sources": ["vast-image:sc77a7717bbc4", "vast-image:sd9c32e411f08", "vast-image:s5a43e0cf8348", "vast-image:sae1085635ff9", "vast-image:s4a05112af859"], "status": "REASONED"},
+    "vast-token-reuse": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the configurator prints the effective credentials to its console output, and OPEN_BUTTON_TOKEN is also the Syncthing GUI API key in the launcher and supervisor scripts (the supervisor's random fallback only when unset or empty). In this guide's reasoning, sharing a token-bearing link shares these reused credentials too.", "components": ["vast-image"], "sources": ["vast-image:s5c18e60bb9e7", "vast-image:s92be3bd5cdef", "vast-image:s7ac7955e604d"], "status": "REASONED"},
+    "vast-manifest-report": {"text": "At base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, manifest reporting and configurator enforcement lowercase ENABLE_AUTH and default unset to \"true\": reporting tests equality to \"true\", enforcement inequality to \"false\". Other values can be reported disabled yet enforced; the manifest reports, it does not enforce.", "components": ["vast-image"], "sources": ["vast-image:s6d0bc9f2a0da", "vast-image:s3c43b58f9e41"], "status": "REASONED"},
+    "lambda-default": {"text": "Lambda inbound firewall denies by default except ICMP and TCP 22; other listeners require explicit global/workspace rules or a per-instance ruleset attached at launch.", "components": ["lambda"], "sources": ["lambda:se22064748974"], "status": "REASONED"},
+    "lambda-rule": {"text": "An allow rule admits the specified source range without authenticating callers; pair it with listener or proxy authentication. Removing an allow rule closes access.", "components": ["lambda"], "sources": ["lambda:se22064748974"], "status": "REASONED"},
+    "modal-web": {"text": "Web endpoints using modal.fastapi_endpoint, the replacement for @web_endpoint, are public by default; requires_proxy_auth=True enables proxy authentication.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
+    "modal-dedicated": {"text": "Dedicated Endpoints require proxy authentication by default; --unauthenticated makes them public.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
+    "modal-server": {"text": "Servers require proxy authentication by default; @app.server(unauthenticated=True) makes them public.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
+    "modal-shared": {"text": "Shared Endpoints always require a Proxy Token; the cited pages document the --unauthenticated option for Dedicated Endpoints only, so, in this guide's assessment, a Shared Endpoint cannot be made public.", "components": ["modal"], "sources": ["modal:s7d083f819a21", "modal:s12a4f5e04dbe", "modal:s33e1c2c2faf3"], "status": "REASONED"},
+    "modal-credentials": {"text": "Proxy authentication accepts Modal-Key and Modal-Secret or Authorization: Bearer <token_id>.<token_secret>; missing credentials on a protected endpoint return 401.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
+    "runpod-bind": {"text": "RunPod HTTP proxy needs the exposed pod interface: bind the exposed service to 0.0.0.0 inside the pod, not localhost.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
+    "listener-auth": {"text": "Whichever binding the platform's proxy needs, add the listener's OWN authentication where it supports one; otherwise keep the unauthenticated backend private and put an authenticating gateway in front, so the platform exposes the gateway rather than the bare listener. At Ollama v0.34.2, the cited local API route setup installs CORS and host filtering without an inbound credential check. Cloud sign-in and OLLAMA_AUTH client outbound signing are separate from local inbound authentication.", "components": ["runpod", "vast", "jupyter", "ollama"], "sources": ["runpod:s817198f039ee", "vast:s0bdbda534723", "jupyter:sc703a8030c8f", "ollama:s96f77aee8bdd", "ollama:sd146dc5d917d", "ollama:s7478dad099ab", "ollama:s2abe15b73bce"], "status": "REASONED"},
+    "mfa": {"text": "MFA: this guide cites no platform feature that adds a second factor to the workload itself, so workload authentication must be verified separately. This guide's advice is to enable MFA on each RunPod, Vast.ai, Lambda, and Modal platform account; no account-security source for these platforms is cited here. In this guide's reasoning, an API key or proxy-auth token secures a machine client and is a separate control from the platform login.", "components": ["modal", "jupyter"], "sources": ["modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED"},
+    "lambda-ssh": {"text": "Lambda requires an SSH key at launch; keep the private key off the instance.", "components": ["lambda"], "sources": ["lambda:sb12b4a953833"], "status": "REASONED"},
+    "vast-ssh": {"text": "Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance.", "components": ["vast"], "sources": ["vast:s6e0303ef19fe"], "status": "REASONED"},
+    "runpod-ssh": {"text": "RunPod recommends SSH keys and offers an optional password; use the key and skip the password.", "components": ["runpod"], "sources": ["runpod:s13c43b856d4f"], "status": "REASONED"},
+    "verify-inventory": {"text": "This guide infers from the ss namespace switch and Linux namespace isolation that ss -tlnp inventories TCP listeners only in the current network namespace, assuming normal live kernel/proc inputs without input-file environment overrides. This is not a UDP, firewall-state or platform-publication check; this guide's test design requires cross-checking platform mappings and probing each mapped port from outside.", "components": ["runpod", "vast", "iproute2", "network-namespaces"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850", "iproute2:s6c87acff18cf", "iproute2:sf8fdfa16eb3f", "iproute2:s1e96518d2ede", "network-namespaces:s427c923e346f"], "status": "REASONED", "verify": [1]},
+    "verify-jupyter": {"text": "This guide's test design compares anonymous and valid-token requests directly to loopback :8888/api/contents. For Jupyter Server v2.18.0 with token authentication enabled, no session cookie, the route at that URL and an existing readable contents path, anonymous GET returns 403 without a login redirect; with default authorization, valid-token GET completes the JSON model. The REST specification documents HTTP 200 for this successful GET. Any anonymous data response is a finding, in this guide's assessment. Tokens are accepted in Authorization: token or the token query parameter; password-only and cookie-authenticated requests need separate controls.", "components": ["jupyter", "jupyter-contents"], "sources": ["jupyter:sc703a8030c8f", "jupyter-contents:sdc3ad9152505", "jupyter-contents:sf0a3ea8ee42e", "jupyter-contents:s4bdc7b9183f3", "jupyter-contents:s4e7504ed1ac8", "jupyter-contents:s52316685e1e4", "jupyter-contents:s83f1081e863e", "jupyter-contents:s6c884bdf8fb4", "jupyter-contents:sb7fab0e85c94", "jupyter-contents:s58a8a77857b5"], "status": "REASONED", "verify": [1]},
+    "verify-mapping": {"text": "Repeat credential-free and authenticated requests per exposed mapping; anonymous app data fails, while a proxy 401 alone does not prove native listener auth and needs the direct positive control.", "components": ["runpod", "vast", "modal", "jupyter"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast:s0bdbda534723", "modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED", "verify": [1]},
+    "verify-portal-exempt": {"text": "For an authenticated portal mapping at the cited commit, this guide expects resolver 200, exempt-path backend responses and a Basic challenge elsewhere, distinguishable only with a portal header known to differ from the backend. Anonymous known private content is a finding when that path is private; transport failures, backend 401s and unexplained responses are INCONCLUSIVE.", "components": ["vast-image"], "sources": ["vast-image:sae1085635ff9", "vast-image:s4a05112af859", "vast-image:sd9c32e411f08", "vast-image:s3c43b58f9e41"], "status": "REASONED", "verify": [2]},
+    "remote-desktop": {"text": "Overlooking a template's remote desktop: at Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d, the linux-desktop launcher configures x11vnc on port 5900 with a password from VNC_PASSWORD, falling back to OPEN_BUTTON_TOKEN when VNC_PASSWORD is unset or empty. The template README describes OPEN_BUTTON_TOKEN as randomly generated on first boot and visible in instance logs, and offers Selkies WebRTC and Guacamole browser VNC alongside direct VNC. These citations do not establish other templates' ports or password defaults, or the strength of the effective VNC password. This guide's advice: check both browser and direct VNC listeners and their public mappings for missing or weak authentication. In this guide's reasoning, the browser page's HTTPS does not protect a separately reachable VNC connection, so a direct VNC mapping needs its own strong password and an encrypted tunnel, or should be kept off the public mapping. This guide's advice: test a direct VNC mapping with a VNC client, since the browser access controls and the HTTP status checks above may not cover it.", "components": ["runpod", "vast", "vast-image"], "sources": ["runpod:s817198f039ee", "vast:sc25989a1613e", "vast-image:s0428d55e9145", "vast-image:s1b8c6c46f358", "vast-image:s44f3439f13de"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->

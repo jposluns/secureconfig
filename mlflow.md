@@ -1,204 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-05",
-  "documentation_checked": "2026-09",
-  "body_sha256": "ee30ff570fece0f829e8b7a87b1a777387f0b1f32d2e160049713119d344088e",
-  "components": {
-    "docs": {
-      "name": "MLflow documentation",
-      "basis": "unknown",
-      "sources": {
-        "scbbc07258943": "https://mlflow.org/docs/latest/self-hosting/security/basic-http-auth/",
-        "sc3a2d70cabf9": "https://mlflow.org/docs/latest/api_reference/auth/rest-api.html",
-        "s5b79d1871e0b": "https://mlflow.org/docs/latest/api_reference/cli.html",
-        "s2517159af609": "https://mlflow.org/docs/latest/self-hosting/architecture/tracking-server",
-        "s996e587e947a": "https://mlflow.org/docs/latest/api_reference/rest-api.html",
-        "s559e7a8271b9": "https://mlflow.org/docs/latest/api_reference/cli.html#mlflow"
-      }
-    },
-    "source": {
-      "name": "MLflow pinned source",
-      "basis": "v3.16.1",
-      "sources": {
-        "sf7285d252e29": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/cli_args.py#L162-L180",
-        "sa3993a9b625f": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541",
-        "sd775f10c4d07": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/auth/__init__.py#L6008-L6021",
-        "s349a81b9478e": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L401-L402",
-        "s99d30948902f": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L85-L86",
-        "s687f1c9977cd": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L94-L105",
-        "s1661739df39d": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/environment_variables.py#L493-L503",
-        "s5801c6ac1ac2": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/rest_utils.py#L254-L292"
-      }
-    },
-    "middleware-min": {
-      "name": "MLflow security middleware minimum",
-      "basis": "3.5.0",
-      "sources": {
-        "s2517159af609": "https://mlflow.org/docs/latest/self-hosting/architecture/tracking-server"
-      }
-    },
-    "docker": {
-      "name": "Docker Engine loopback publication minimum",
-      "basis": "28.0.0",
-      "sources": {
-        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
-      }
-    },
-    "curl": {
-      "name": "curl minimum write-out version",
-      "basis": "7.75.0",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
-      }
-    },
-    "nginx": {
-      "name": "nginx proxy implementation",
-      "basis": "release-1.28.0",
-      "sources": {
-        "s6dfa81e36717": "https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_proxy_module.c#L305-L310"
-      }
-    },
-    "caddy": {
-      "name": "Caddy reverse proxy parser",
-      "basis": "v2.11.4",
-      "sources": {
-        "s52039756d4f4": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L40",
-        "s9dde4a2bda4c": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L58-L62"
-      }
-    },
-    "iproute2": {
-      "name": "iproute2 ss manual",
-      "basis": "v6.12.0",
-      "sources": {
-        "s2afc4764d5bb": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34",
-        "sfaa932c2ca13": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44",
-        "sd295f82d643f": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163",
-        "s65278ee45850": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375"
-      }
-    },
-    "cf-docs": {
-      "name": "Cloudflare documentation",
-      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
-      "sources": {
-        "s6f6104362214": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85",
-        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24",
-        "sbec4996a7089": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/service-credentials/service-tokens.mdx#L33",
-        "s543b1f2eb29c": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/service-credentials/service-tokens.mdx#L45-L49",
-        "sc565f2d80e6e": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/service-credentials/service-tokens.mdx#L59"
-      }
-    },
-    "oauth2-proxy-source": {
-      "name": "oauth2-proxy documentation",
-      "basis": "v7.15.4",
-      "sources": {
-        "sa403e3d826b4": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L94-L108",
-        "se7a200583def": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L274"
-      }
-    },
-    "authelia-source": {
-      "name": "Authelia source",
-      "basis": "v4.39.28",
-      "sources": {
-        "s768b165b44a0": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/security/access-control.md#L506-L507",
-        "sd4dd76e70475": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/security/access-control.md#L536-L537"
-      }
-    }
-  },
-  "claims": {
-    "default-host": {"text": "v3.16.1 defaults to 127.0.0.1 unless MLFLOW_HOST overrides it; explicitly bind privately and do not treat --host as an authentication setting.", "components": ["source"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f"], "status": "REASONED"},
-    "default-port": {"text": "v3.16.1 serves the tracking UI and REST API on port 5000 unless MLFLOW_PORT overrides it.", "components": ["source"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f"], "status": "REASONED"},
-    "default-auth": {"text": "Authentication is opt-in; a reachable server without the auth app permits reading, changing and deleting tracking resources and proxied artifacts.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s2517159af609"], "status": "REASONED"},
-    "container-bind": {"text": "Normal bridge NAT requires host loopback publication 127.0.0.1:5000:5000 and --host 0.0.0.0 inside the container; container loopback cannot serve the publication. Before Docker 28.0.0, same-layer-2 hosts could reach loopback-published ports.", "components": ["docker", "docs"], "sources": ["docker:s1e53417c513d", "docs:s5b79d1871e0b"], "status": "REASONED"},
-    "middleware-scope": {"text": "Security middleware requires MLflow 3.5.0 or newer and the default Uvicorn server; --gunicorn-opts and --waitress-opts do not use it.", "components": ["middleware-min", "docs"], "sources": ["middleware-min:s2517159af609", "docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
-    "host-allowlist": {"text": "Set --allowed-hosts mlflow.example.com for access beyond loopback; defaults admit localhost, 127.0.0.1, [::1], 0.0.0.0 and private ranges as Host headers, not client-source firewall rules.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
-    "cors": {"text": "Set --cors-allowed-origins https://mlflow.example.com for the intended browser origin.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
-    "middleware-disable": {"text": "Do not use --disable-security-middleware outside a test.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
-    "tls": {"text": "There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.", "components": ["docs", "nginx", "caddy"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609", "nginx:s6dfa81e36717", "caddy:s52039756d4f4", "caddy:s9dde4a2bda4c"], "status": "REASONED"},
-    "client-tls": {"text": "Use MLFLOW_TRACKING_URI=https://mlflow.example.com and never enable MLFLOW_TRACKING_INSECURE_TLS in production.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
-    "auth-app": {"text": "Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
-    "csrf-key": {"text": "Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
-    "env-file": {"text": "Global --env-file loads dotenv before the server command without overriding existing environment; clear inherited key/config-path variables and require a readable regular non-symlink file before launching.", "components": ["docs", "source"], "sources": ["docs:s559e7a8271b9", "source:s99d30948902f", "source:s687f1c9977cd"], "status": "REASONED"},
-    "key-exposure": {"text": "Only the file path reaches the launch command; MLflow v3.16.1 loads the key into its environment and forwards it to workers, retaining same-account/root memory and inheriting-process environment exposure.", "components": ["source", "docs"], "sources": ["source:sd775f10c4d07", "source:s349a81b9478e", "docs:s559e7a8271b9", "source:s99d30948902f", "source:s687f1c9977cd"], "status": "REASONED"},
-    "admin-bootstrap": {"text": "No default admin password: first start requires at least 12 characters from MLFLOW_AUTH_ADMIN_PASSWORD or admin_password, rejects password1234 and fails without a password; an already-bootstrapped admin needs no resupply.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
-    "default-permission": {"text": "default_permission is READ on every resource; set NO_PERMISSIONS in the auth configuration to remove that default grant.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
-    "auth-database": {"text": "database_uri defaults to basic_auth.db in the working directory; use a central database for multiple nodes, as in the PostgreSQL auth-database example.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
-    "auth-config": {"text": "MLFLOW_AUTH_CONFIG_PATH selects basic_auth.ini; authorization_function accepts module:function for custom authentication, while the shipped scheme is HTTP Basic.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
-    "password-rotation": {"text": "PATCH /api/2.0/mlflow/users/update-password takes username and password; the example feeds current and new passwords through curl config stdin with JSON/config escaping.", "components": ["docs", "curl"], "sources": ["docs:sc3a2d70cabf9", "curl:s2b2686afaf41"], "status": "REASONED"},
-    "user-creation": {"text": "User creation requires admin credentials at /signup or POST /api/2.0/mlflow/users/create; give humans individual accounts and CI a separate low-permission user.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:sc3a2d70cabf9"], "status": "REASONED"},
-    "client-credentials": {"text": "~/.mlflow/credentials stores passwords unencrypted; prefer runtime-injected MLFLOW_TRACKING_USERNAME/MLFLOW_TRACKING_PASSWORD.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
-    "rate-limit": {"text": "The UI has no login-attempt limit and Basic auth is checked on every protected API request; rate-limit all authentication-bearing routes at the proxy and protect password transport with TLS.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
-    "mfa": {"text": "MFA: this guide's cited MLflow material does not establish MFA support in the basic-auth app. Guide advice: put an identity-aware layer in front (Cloudflare Access, Authelia, oauth2-proxy per mfa.md) and require MFA for human access. Cloudflare Access at c896795b8e8bab68d05ae78d64c9cbcda1fdb104 supports IdP-based MFA requirements for Okta, Microsoft Entra ID, Generic OIDC and Generic SAML 2.0, rejecting a user who does not present the required method, or independent MFA with methods including TOTP and WebAuthn security keys; independent MFA must first be enabled at organization level, and its effective requirement follows policy over application over organization. Authelia v4.39.28 applies the first matching access-control rule, or default_policy if none matches; its two_factor policy requires successful 2FA. oauth2-proxy v7.15.4 documents an OAuth provider and upstream endpoints, not second-factor enforcement in these passages; guide advice: require MFA at the identity provider for this login and test enforcement there. These sources do not establish MFA enforcement in a deployed MLflow combination.", "components": ["docs", "cf-docs", "oauth2-proxy-source", "authelia-source"], "sources": ["docs:scbbc07258943", "cf-docs:s6f6104362214", "cf-docs:s7e793d13cf31", "oauth2-proxy-source:sa403e3d826b4", "oauth2-proxy-source:se7a200583def", "authelia-source:s768b165b44a0", "authelia-source:sd4dd76e70475"], "status": "REASONED"},
-    "proxy-token": {"text": "MLflow v3.16.1 declares MLFLOW_TRACKING_USERNAME, MLFLOW_TRACKING_PASSWORD and MLFLOW_TRACKING_TOKEN as tracking authentication inputs; in the cited HTTP request-construction path, nonempty username and password credentials select an Authorization: Basic header unless the auth mode is kubernetes or kubernetes-namespaced, otherwise a nonempty token selects Authorization: Bearer. The token variable's comment claims precedence, but that request code selects Basic first under those conditions; AWS SigV4 overwrites Authorization, and a configured auth handler is applied separately, so this is not a guarantee for every authentication mode. Cloudflare Access service tokens at c896795b8e8bab68d05ae78d64c9cbcda1fdb104 use CF-Access-Client-Id and CF-Access-Client-Secret headers, with a Service Auth policy required to avoid an IdP login prompt; a self-hosted Access application can alternatively be configured to accept the service token in one header. Guide advice: confirm that the chosen client and proxy combination preserves both proxy authentication and MLflow authentication; these citations do not establish that MLFLOW_TRACKING_TOKEN alone supplies Cloudflare service-token headers or that both layers work together.", "components": ["docs", "source", "cf-docs"], "sources": ["docs:s2517159af609", "source:s1661739df39d", "source:s5801c6ac1ac2", "cf-docs:sbec4996a7089", "cf-docs:s543b1f2eb29c", "cf-docs:sc565f2d80e6e"], "status": "REASONED"},
-    "artifact-proxy": {"text": "--serve-artifacts defaults on; --artifacts-destination s3://bucket lets the server proxy reads/writes for proxied experiments, holding storage credentials so clients need none.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
-    "artifact-existing": {"text": "Pre-existing experiments and explicit direct artifact locations retain their locations outside tracking-server permission enforcement; inspect locations and apply storage IAM directly.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
-    "artifact-direct": {"text": "With --no-serve-artifacts every client needs storage credentials and tracking-server permissions no longer gate artifacts; use environment or instance-role credentials, not repository/Compose secrets.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
-    "verify-bind": {"text": "Read every listener and require 5000 on 127.0.0.1.", "components": ["source", "iproute2"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850"], "status": "REASONED", "verify": [1]},
-    "verify-network": {"text": "Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive.", "components": ["curl", "docs"], "sources": ["curl:s2b2686afaf41", "docs:s5b79d1871e0b"], "status": "REASONED", "verify": [1]},
-    "verify-public-auth": {"text": "POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass.", "components": ["docs", "curl"], "sources": ["docs:scbbc07258943", "docs:s996e587e947a", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-backend-auth": {"text": "Repeat anonymous 401/admin 200 directly on loopback with Host: mlflow.example.com; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s5b79d1871e0b", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]},
-    "verify-authorization": {"text": "Search filters visible experiments and does not prove authorization denial. First GET a real experiment as admin for 200, then the same backend resource as a low-permission user for 403; 401 means bad credentials and a failed admin control is inconclusive.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # MLflow tracking server: no authentication by default
 
-<!-- version-basis:start -->
-**Version basis**
+Written against MLflow pinned source v3.16.1, MLflow security middleware minimum 3.5.0, Docker Engine loopback publication minimum 28.0.0, nginx proxy implementation release-1.28.0, Caddy reverse proxy parser v2.11.4, oauth2-proxy documentation v7.15.4, and Authelia source v4.39.28, plus 2 more recorded bases; 1 further source is pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- docs: MLflow documentation (unknown)
-- source: MLflow pinned source (v3.16.1)
-- middleware-min: MLflow security middleware minimum (3.5.0)
-- docker: Docker Engine loopback publication minimum (28.0.0)
-- curl: curl minimum write-out version (7.75.0)
-- nginx: nginx proxy implementation (release-1.28.0)
-- caddy: Caddy reverse proxy parser (v2.11.4)
-- iproute2: iproute2 ss manual (v6.12.0)
-- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
-- oauth2-proxy-source: oauth2-proxy documentation (v7.15.4)
-- authelia-source: Authelia source (v4.39.28)
-
-Claims (full source mapping in the front matter):
-
-- default-host (REASONED; source): v3.16.1 defaults to 127.0.0.1 unless MLFLOW_HOST overrides it; explicitly bind privately and do not treat --host as an authentication setting.
-- default-port (REASONED; source): v3.16.1 serves the tracking UI and REST API on port 5000 unless MLFLOW_PORT overrides it.
-- default-auth (REASONED; docs): Authentication is opt-in; a reachable server without the auth app permits reading, changing and deleting tracking resources and proxied artifacts.
-- container-bind (REASONED; docker, docs): Normal bridge NAT requires host loopback publication 127.0.0.1:5000:5000 and --host 0.0.0.0 inside the container; container loopback cannot serve the publication. Before Docker 28.0.0, same-layer-2 hosts could reach loopback-published ports.
-- middleware-scope (REASONED; middleware-min, docs): Security middleware requires MLflow 3.5.0 or newer and the default Uvicorn server; --gunicorn-opts and --waitress-opts do not use it.
-- host-allowlist (REASONED; docs): Set --allowed-hosts mlflow.example.com for access beyond loopback; defaults admit localhost, 127.0.0.1, [::1], 0.0.0.0 and private ranges as Host headers, not client-source firewall rules.
-- cors (REASONED; docs): Set --cors-allowed-origins https://mlflow.example.com for the intended browser origin.
-- middleware-disable (REASONED; docs): Do not use --disable-security-middleware outside a test.
-- tls (REASONED; docs, nginx, caddy): There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.
-- client-tls (REASONED; docs): Use MLFLOW_TRACKING_URI=https://mlflow.example.com and never enable MLFLOW_TRACKING_INSECURE_TLS in production.
-- auth-app (REASONED; docs): Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label.
-- csrf-key (REASONED; docs): Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control.
-- env-file (REASONED; docs, source): Global --env-file loads dotenv before the server command without overriding existing environment; clear inherited key/config-path variables and require a readable regular non-symlink file before launching.
-- key-exposure (REASONED; source, docs): Only the file path reaches the launch command; MLflow v3.16.1 loads the key into its environment and forwards it to workers, retaining same-account/root memory and inheriting-process environment exposure.
-- admin-bootstrap (REASONED; docs): No default admin password: first start requires at least 12 characters from MLFLOW_AUTH_ADMIN_PASSWORD or admin_password, rejects password1234 and fails without a password; an already-bootstrapped admin needs no resupply.
-- default-permission (REASONED; docs): default_permission is READ on every resource; set NO_PERMISSIONS in the auth configuration to remove that default grant.
-- auth-database (REASONED; docs): database_uri defaults to basic_auth.db in the working directory; use a central database for multiple nodes, as in the PostgreSQL auth-database example.
-- auth-config (REASONED; docs): MLFLOW_AUTH_CONFIG_PATH selects basic_auth.ini; authorization_function accepts module:function for custom authentication, while the shipped scheme is HTTP Basic.
-- password-rotation (REASONED; docs, curl): PATCH /api/2.0/mlflow/users/update-password takes username and password; the example feeds current and new passwords through curl config stdin with JSON/config escaping.
-- user-creation (REASONED; docs): User creation requires admin credentials at /signup or POST /api/2.0/mlflow/users/create; give humans individual accounts and CI a separate low-permission user.
-- client-credentials (REASONED; docs): ~/.mlflow/credentials stores passwords unencrypted; prefer runtime-injected MLFLOW_TRACKING_USERNAME/MLFLOW_TRACKING_PASSWORD.
-- rate-limit (REASONED; docs): The UI has no login-attempt limit and Basic auth is checked on every protected API request; rate-limit all authentication-bearing routes at the proxy and protect password transport with TLS.
-- mfa (REASONED; docs, cf-docs, oauth2-proxy-source, authelia-source): MFA: this guide's cited MLflow material does not establish MFA support in the basic-auth app. Guide advice: put an identity-aware layer in front (Cloudflare Access, Authelia, oauth2-proxy per mfa.md) and require MFA for human access. Cloudflare Access at c896795b8e8bab68d05ae78d64c9cbcda1fdb104 supports IdP-based MFA requirements for Okta, Microsoft Entra ID, Generic OIDC and Generic SAML 2.0, rejecting a user who does not present the required method, or independent MFA with methods including TOTP and WebAuthn security keys; independent MFA must first be enabled at organization level, and its effective requirement follows policy over application over organization. Authelia v4.39.28 applies the first matching access-control rule, or default_policy if none matches; its two_factor policy requires successful 2FA. oauth2-proxy v7.15.4 documents an OAuth provider and upstream endpoints, not second-factor enforcement in these passages; guide advice: require MFA at the identity provider for this login and test enforcement there. These sources do not establish MFA enforcement in a deployed MLflow combination.
-- proxy-token (REASONED; docs, source, cf-docs): MLflow v3.16.1 declares MLFLOW_TRACKING_USERNAME, MLFLOW_TRACKING_PASSWORD and MLFLOW_TRACKING_TOKEN as tracking authentication inputs; in the cited HTTP request-construction path, nonempty username and password credentials select an Authorization: Basic header unless the auth mode is kubernetes or kubernetes-namespaced, otherwise a nonempty token selects Authorization: Bearer. The token variable's comment claims precedence, but that request code selects Basic first under those conditions; AWS SigV4 overwrites Authorization, and a configured auth handler is applied separately, so this is not a guarantee for every authentication mode. Cloudflare Access service tokens at c896795b8e8bab68d05ae78d64c9cbcda1fdb104 use CF-Access-Client-Id and CF-Access-Client-Secret headers, with a Service Auth policy required to avoid an IdP login prompt; a self-hosted Access application can alternatively be configured to accept the service token in one header. Guide advice: confirm that the chosen client and proxy combination preserves both proxy authentication and MLflow authentication; these citations do not establish that MLFLOW_TRACKING_TOKEN alone supplies Cloudflare service-token headers or that both layers work together.
-- artifact-proxy (REASONED; docs): --serve-artifacts defaults on; --artifacts-destination s3://bucket lets the server proxy reads/writes for proxied experiments, holding storage credentials so clients need none.
-- artifact-existing (REASONED; docs): Pre-existing experiments and explicit direct artifact locations retain their locations outside tracking-server permission enforcement; inspect locations and apply storage IAM directly.
-- artifact-direct (REASONED; docs): With --no-serve-artifacts every client needs storage credentials and tracking-server permissions no longer gate artifacts; use environment or instance-role credentials, not repository/Compose secrets.
-- verify-bind (REASONED; source, iproute2): Read every listener and require 5000 on 127.0.0.1.
-- verify-network (REASONED; curl, docs): Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive.
-- verify-public-auth (REASONED; docs, curl): POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass.
-- verify-backend-auth (REASONED; docs): Repeat anonymous 401/admin 200 directly on loopback with Host: mlflow.example.com; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement.
-- verify-authorization (REASONED; docs): Search filters visible experiments and does not prove authorization denial. First GET a real experiment as admin for 200, then the same backend resource as a low-permission user for 403; 401 means bad credentials and a failed admin control is inconclusive.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 `mlflow server` serves the tracking UI and REST API at `http://127.0.0.1:5000` (as of v3.16.1, unless `MLFLOW_HOST` or `MLFLOW_PORT` is set) and performs no authentication: anyone who can reach the port can read, alter, and delete experiments, runs, registered models, and (with artifact proxying on) the artifacts themselves. Authentication is opt-in through a separate app, and the server has no dedicated TLS flags (though `mlflow server --uvicorn-opts` can forward `--ssl-keyfile`/`--ssl-certfile` to the default Uvicorn server); MLflow's tracking-server documentation recommends a reverse proxy or VPN for both.
 
@@ -394,3 +198,225 @@ REASONED: preceding block; listener inventory, external TCP reachability, proxy/
 - Cloudflare service-token Service Auth requirement, request headers and configurable single-header alternative (pinned commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104, checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/service-credentials/service-tokens.mdx#L33, https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/service-credentials/service-tokens.mdx#L45-L49, https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/service-credentials/service-tokens.mdx#L59
 - oauth2-proxy v7.15.4 provider and upstream configuration; these entries do not establish MFA enforcement (checked October 2026): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L94-L108, https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L274
 - Authelia v4.39.28 first matching rule, default policy and two_factor requirement (checked October 2026): https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/security/access-control.md#L506-L507, https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/security/access-control.md#L536-L537
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/mlflow.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- source: MLflow pinned source (v3.16.1)
+- middleware-min: MLflow security middleware minimum (3.5.0)
+- docs: MLflow documentation (unknown)
+- docker: Docker Engine loopback publication minimum (28.0.0)
+- nginx: nginx proxy implementation (release-1.28.0)
+- caddy: Caddy reverse proxy parser (v2.11.4)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- oauth2-proxy-source: oauth2-proxy documentation (v7.15.4)
+- authelia-source: Authelia source (v4.39.28)
+- curl: curl minimum write-out version (7.75.0)
+- iproute2: iproute2 ss manual (v6.12.0)
+
+Claims (full source mapping in the JSON block below):
+
+- default-host (REASONED; source): v3.16.1 defaults to 127.0.0.1 unless MLFLOW_HOST overrides it; explicitly bind privately and do not treat --host as an authentication setting.
+- default-port (REASONED; source): v3.16.1 serves the tracking UI and REST API on port 5000 unless MLFLOW_PORT overrides it.
+- default-auth (REASONED; docs): Authentication is opt-in; a reachable server without the auth app permits reading, changing and deleting tracking resources and proxied artifacts.
+- container-bind (REASONED; docker, docs): Normal bridge NAT requires host loopback publication 127.0.0.1:5000:5000 and --host 0.0.0.0 inside the container; container loopback cannot serve the publication. Before Docker 28.0.0, same-layer-2 hosts could reach loopback-published ports.
+- middleware-scope (REASONED; middleware-min, docs): Security middleware requires MLflow 3.5.0 or newer and the default Uvicorn server; --gunicorn-opts and --waitress-opts do not use it.
+- host-allowlist (REASONED; docs): Set --allowed-hosts mlflow.example.com for access beyond loopback; defaults admit localhost, 127.0.0.1, [::1], 0.0.0.0 and private ranges as Host headers, not client-source firewall rules.
+- cors (REASONED; docs): Set --cors-allowed-origins https://mlflow.example.com for the intended browser origin.
+- middleware-disable (REASONED; docs): Do not use --disable-security-middleware outside a test.
+- tls (REASONED; docs, nginx, caddy): There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.
+- client-tls (REASONED; docs): Use MLFLOW_TRACKING_URI=https://mlflow.example.com and never enable MLFLOW_TRACKING_INSECURE_TLS in production.
+- auth-app (REASONED; docs): Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label.
+- csrf-key (REASONED; docs): Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control.
+- env-file (REASONED; docs, source): Global --env-file loads dotenv before the server command without overriding existing environment; clear inherited key/config-path variables and require a readable regular non-symlink file before launching.
+- key-exposure (REASONED; source, docs): Only the file path reaches the launch command; MLflow v3.16.1 loads the key into its environment and forwards it to workers, retaining same-account/root memory and inheriting-process environment exposure.
+- admin-bootstrap (REASONED; docs): No default admin password: first start requires at least 12 characters from MLFLOW_AUTH_ADMIN_PASSWORD or admin_password, rejects password1234 and fails without a password; an already-bootstrapped admin needs no resupply.
+- default-permission (REASONED; docs): default_permission is READ on every resource; set NO_PERMISSIONS in the auth configuration to remove that default grant.
+- auth-database (REASONED; docs): database_uri defaults to basic_auth.db in the working directory; use a central database for multiple nodes, as in the PostgreSQL auth-database example.
+- auth-config (REASONED; docs): MLFLOW_AUTH_CONFIG_PATH selects basic_auth.ini; authorization_function accepts module:function for custom authentication, while the shipped scheme is HTTP Basic.
+- password-rotation (REASONED; docs, curl): PATCH /api/2.0/mlflow/users/update-password takes username and password; the example feeds current and new passwords through curl config stdin with JSON/config escaping.
+- user-creation (REASONED; docs): User creation requires admin credentials at /signup or POST /api/2.0/mlflow/users/create; give humans individual accounts and CI a separate low-permission user.
+- client-credentials (REASONED; docs): ~/.mlflow/credentials stores passwords unencrypted; prefer runtime-injected MLFLOW_TRACKING_USERNAME/MLFLOW_TRACKING_PASSWORD.
+- rate-limit (REASONED; docs): The UI has no login-attempt limit and Basic auth is checked on every protected API request; rate-limit all authentication-bearing routes at the proxy and protect password transport with TLS.
+- mfa (REASONED; docs, cf-docs, oauth2-proxy-source, authelia-source): MFA: this guide's cited MLflow material does not establish MFA support in the basic-auth app. Guide advice: put an identity-aware layer in front (Cloudflare Access, Authelia, oauth2-proxy per mfa.md) and require MFA for human access. Cloudflare Access at c896795b8e8bab68d05ae78d64c9cbcda1fdb104 supports IdP-based MFA requirements for Okta, Microsoft Entra ID, Generic OIDC and Generic SAML 2.0, rejecting a user who does not present the required method, or independent MFA with methods including TOTP and WebAuthn security keys; independent MFA must first be enabled at organization level, and its effective requirement follows policy over application over organization. Authelia v4.39.28 applies the first matching access-control rule, or default_policy if none matches; its two_factor policy requires successful 2FA. oauth2-proxy v7.15.4 documents an OAuth provider and upstream endpoints, not second-factor enforcement in these passages; guide advice: require MFA at the identity provider for this login and test enforcement there. These sources do not establish MFA enforcement in a deployed MLflow combination.
+- proxy-token (REASONED; docs, source, cf-docs): MLflow v3.16.1 declares MLFLOW_TRACKING_USERNAME, MLFLOW_TRACKING_PASSWORD and MLFLOW_TRACKING_TOKEN as tracking authentication inputs; in the cited HTTP request-construction path, nonempty username and password credentials select an Authorization: Basic header unless the auth mode is kubernetes or kubernetes-namespaced, otherwise a nonempty token selects Authorization: Bearer. The token variable's comment claims precedence, but that request code selects Basic first under those conditions; AWS SigV4 overwrites Authorization, and a configured auth handler is applied separately, so this is not a guarantee for every authentication mode. Cloudflare Access service tokens at c896795b8e8bab68d05ae78d64c9cbcda1fdb104 use CF-Access-Client-Id and CF-Access-Client-Secret headers, with a Service Auth policy required to avoid an IdP login prompt; a self-hosted Access application can alternatively be configured to accept the service token in one header. Guide advice: confirm that the chosen client and proxy combination preserves both proxy authentication and MLflow authentication; these citations do not establish that MLFLOW_TRACKING_TOKEN alone supplies Cloudflare service-token headers or that both layers work together.
+- artifact-proxy (REASONED; docs): --serve-artifacts defaults on; --artifacts-destination s3://bucket lets the server proxy reads/writes for proxied experiments, holding storage credentials so clients need none.
+- artifact-existing (REASONED; docs): Pre-existing experiments and explicit direct artifact locations retain their locations outside tracking-server permission enforcement; inspect locations and apply storage IAM directly.
+- artifact-direct (REASONED; docs): With --no-serve-artifacts every client needs storage credentials and tracking-server permissions no longer gate artifacts; use environment or instance-role credentials, not repository/Compose secrets.
+- verify-bind (REASONED; source, iproute2): Read every listener and require 5000 on 127.0.0.1.
+- verify-network (REASONED; curl, docs): Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive.
+- verify-public-auth (REASONED; docs, curl): POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass.
+- verify-backend-auth (REASONED; docs): Repeat anonymous 401/admin 200 directly on loopback with Host: mlflow.example.com; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement.
+- verify-authorization (REASONED; docs): Search filters visible experiments and does not prove authorization denial. First GET a real experiment as admin for 200, then the same backend resource as a low-permission user for 403; 401 means bad credentials and a failed admin control is inconclusive.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-05",
+  "documentation_checked": "2026-09",
+  "body_sha256": "ee30ff570fece0f829e8b7a87b1a777387f0b1f32d2e160049713119d344088e",
+  "components": {
+    "source": {
+      "name": "MLflow pinned source",
+      "basis": "v3.16.1",
+      "sources": {
+        "sf7285d252e29": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/cli_args.py#L162-L180",
+        "sa3993a9b625f": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L369-L541",
+        "sd775f10c4d07": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/auth/__init__.py#L6008-L6021",
+        "s349a81b9478e": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/server/__init__.py#L401-L402",
+        "s99d30948902f": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L85-L86",
+        "s687f1c9977cd": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/cli/__init__.py#L94-L105",
+        "s1661739df39d": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/environment_variables.py#L493-L503",
+        "s5801c6ac1ac2": "https://github.com/mlflow/mlflow/blob/v3.16.1/mlflow/utils/rest_utils.py#L254-L292"
+      }
+    },
+    "middleware-min": {
+      "name": "MLflow security middleware minimum",
+      "basis": "3.5.0",
+      "sources": {
+        "s2517159af609": "https://mlflow.org/docs/latest/self-hosting/architecture/tracking-server"
+      }
+    },
+    "docs": {
+      "name": "MLflow documentation",
+      "basis": "unknown",
+      "sources": {
+        "scbbc07258943": "https://mlflow.org/docs/latest/self-hosting/security/basic-http-auth/",
+        "sc3a2d70cabf9": "https://mlflow.org/docs/latest/api_reference/auth/rest-api.html",
+        "s5b79d1871e0b": "https://mlflow.org/docs/latest/api_reference/cli.html",
+        "s2517159af609": "https://mlflow.org/docs/latest/self-hosting/architecture/tracking-server",
+        "s996e587e947a": "https://mlflow.org/docs/latest/api_reference/rest-api.html",
+        "s559e7a8271b9": "https://mlflow.org/docs/latest/api_reference/cli.html#mlflow"
+      }
+    },
+    "docker": {
+      "name": "Docker Engine loopback publication minimum",
+      "basis": "28.0.0",
+      "sources": {
+        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
+      }
+    },
+    "nginx": {
+      "name": "nginx proxy implementation",
+      "basis": "release-1.28.0",
+      "sources": {
+        "s6dfa81e36717": "https://github.com/nginx/nginx/blob/release-1.28.0/src/http/modules/ngx_http_proxy_module.c#L305-L310"
+      }
+    },
+    "caddy": {
+      "name": "Caddy reverse proxy parser",
+      "basis": "v2.11.4",
+      "sources": {
+        "s52039756d4f4": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L40",
+        "s9dde4a2bda4c": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go#L58-L62"
+      }
+    },
+    "cf-docs": {
+      "name": "Cloudflare documentation",
+      "basis": "c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "s6f6104362214": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L17-L85",
+        "s7e793d13cf31": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/access-settings/independent-mfa.mdx#L15-L24",
+        "sbec4996a7089": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/service-credentials/service-tokens.mdx#L33",
+        "s543b1f2eb29c": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/service-credentials/service-tokens.mdx#L45-L49",
+        "sc565f2d80e6e": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/service-credentials/service-tokens.mdx#L59"
+      }
+    },
+    "oauth2-proxy-source": {
+      "name": "oauth2-proxy documentation",
+      "basis": "v7.15.4",
+      "sources": {
+        "sa403e3d826b4": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L94-L108",
+        "se7a200583def": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/docs/docs/configuration/overview.md#L274"
+      }
+    },
+    "authelia-source": {
+      "name": "Authelia source",
+      "basis": "v4.39.28",
+      "sources": {
+        "s768b165b44a0": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/security/access-control.md#L506-L507",
+        "sd4dd76e70475": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/configuration/security/access-control.md#L536-L537"
+      }
+    },
+    "curl": {
+      "name": "curl minimum write-out version",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    },
+    "iproute2": {
+      "name": "iproute2 ss manual",
+      "basis": "v6.12.0",
+      "sources": {
+        "s2afc4764d5bb": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L33-L34",
+        "sfaa932c2ca13": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L43-L44",
+        "sd295f82d643f": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L162-L163",
+        "s65278ee45850": "https://github.com/iproute2/iproute2/blob/v6.12.0/man/man8/ss.8#L374-L375"
+      }
+    }
+  },
+  "claims": {
+    "default-host": {"text": "v3.16.1 defaults to 127.0.0.1 unless MLFLOW_HOST overrides it; explicitly bind privately and do not treat --host as an authentication setting.", "components": ["source"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f"], "status": "REASONED"},
+    "default-port": {"text": "v3.16.1 serves the tracking UI and REST API on port 5000 unless MLFLOW_PORT overrides it.", "components": ["source"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f"], "status": "REASONED"},
+    "default-auth": {"text": "Authentication is opt-in; a reachable server without the auth app permits reading, changing and deleting tracking resources and proxied artifacts.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s2517159af609"], "status": "REASONED"},
+    "container-bind": {"text": "Normal bridge NAT requires host loopback publication 127.0.0.1:5000:5000 and --host 0.0.0.0 inside the container; container loopback cannot serve the publication. Before Docker 28.0.0, same-layer-2 hosts could reach loopback-published ports.", "components": ["docker", "docs"], "sources": ["docker:s1e53417c513d", "docs:s5b79d1871e0b"], "status": "REASONED"},
+    "middleware-scope": {"text": "Security middleware requires MLflow 3.5.0 or newer and the default Uvicorn server; --gunicorn-opts and --waitress-opts do not use it.", "components": ["middleware-min", "docs"], "sources": ["middleware-min:s2517159af609", "docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
+    "host-allowlist": {"text": "Set --allowed-hosts mlflow.example.com for access beyond loopback; defaults admit localhost, 127.0.0.1, [::1], 0.0.0.0 and private ranges as Host headers, not client-source firewall rules.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
+    "cors": {"text": "Set --cors-allowed-origins https://mlflow.example.com for the intended browser origin.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
+    "middleware-disable": {"text": "Do not use --disable-security-middleware outside a test.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
+    "tls": {"text": "There are no dedicated server TLS flags; --uvicorn-opts can forward --ssl-keyfile/--ssl-certfile. Use a TLS proxy to 127.0.0.1:5000 or a tunnel/tailnet and set the allowed public hostname.", "components": ["docs", "nginx", "caddy"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609", "nginx:s6dfa81e36717", "caddy:s52039756d4f4", "caddy:s9dde4a2bda4c"], "status": "REASONED"},
+    "client-tls": {"text": "Use MLFLOW_TRACKING_URI=https://mlflow.example.com and never enable MLFLOW_TRACKING_INSECURE_TLS in production.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
+    "auth-app": {"text": "Install mlflow[auth] and run --app-name basic-auth; client username/password variables alone enable no server authentication. The September 2026 documentation has no experimental label.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
+    "csrf-key": {"text": "Provision a long random MLFLOW_FLASK_SERVER_SECRET_KEY identical on every replica through a protected server.env file, mode 0600, with protected directories and no other-account ACL access; keep file and backups out of source control.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
+    "env-file": {"text": "Global --env-file loads dotenv before the server command without overriding existing environment; clear inherited key/config-path variables and require a readable regular non-symlink file before launching.", "components": ["docs", "source"], "sources": ["docs:s559e7a8271b9", "source:s99d30948902f", "source:s687f1c9977cd"], "status": "REASONED"},
+    "key-exposure": {"text": "Only the file path reaches the launch command; MLflow v3.16.1 loads the key into its environment and forwards it to workers, retaining same-account/root memory and inheriting-process environment exposure.", "components": ["source", "docs"], "sources": ["source:sd775f10c4d07", "source:s349a81b9478e", "docs:s559e7a8271b9", "source:s99d30948902f", "source:s687f1c9977cd"], "status": "REASONED"},
+    "admin-bootstrap": {"text": "No default admin password: first start requires at least 12 characters from MLFLOW_AUTH_ADMIN_PASSWORD or admin_password, rejects password1234 and fails without a password; an already-bootstrapped admin needs no resupply.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
+    "default-permission": {"text": "default_permission is READ on every resource; set NO_PERMISSIONS in the auth configuration to remove that default grant.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
+    "auth-database": {"text": "database_uri defaults to basic_auth.db in the working directory; use a central database for multiple nodes, as in the PostgreSQL auth-database example.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
+    "auth-config": {"text": "MLFLOW_AUTH_CONFIG_PATH selects basic_auth.ini; authorization_function accepts module:function for custom authentication, while the shipped scheme is HTTP Basic.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
+    "password-rotation": {"text": "PATCH /api/2.0/mlflow/users/update-password takes username and password; the example feeds current and new passwords through curl config stdin with JSON/config escaping.", "components": ["docs", "curl"], "sources": ["docs:sc3a2d70cabf9", "curl:s2b2686afaf41"], "status": "REASONED"},
+    "user-creation": {"text": "User creation requires admin credentials at /signup or POST /api/2.0/mlflow/users/create; give humans individual accounts and CI a separate low-permission user.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:sc3a2d70cabf9"], "status": "REASONED"},
+    "client-credentials": {"text": "~/.mlflow/credentials stores passwords unencrypted; prefer runtime-injected MLFLOW_TRACKING_USERNAME/MLFLOW_TRACKING_PASSWORD.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
+    "rate-limit": {"text": "The UI has no login-attempt limit and Basic auth is checked on every protected API request; rate-limit all authentication-bearing routes at the proxy and protect password transport with TLS.", "components": ["docs"], "sources": ["docs:scbbc07258943"], "status": "REASONED"},
+    "mfa": {"text": "MFA: this guide's cited MLflow material does not establish MFA support in the basic-auth app. Guide advice: put an identity-aware layer in front (Cloudflare Access, Authelia, oauth2-proxy per mfa.md) and require MFA for human access. Cloudflare Access at c896795b8e8bab68d05ae78d64c9cbcda1fdb104 supports IdP-based MFA requirements for Okta, Microsoft Entra ID, Generic OIDC and Generic SAML 2.0, rejecting a user who does not present the required method, or independent MFA with methods including TOTP and WebAuthn security keys; independent MFA must first be enabled at organization level, and its effective requirement follows policy over application over organization. Authelia v4.39.28 applies the first matching access-control rule, or default_policy if none matches; its two_factor policy requires successful 2FA. oauth2-proxy v7.15.4 documents an OAuth provider and upstream endpoints, not second-factor enforcement in these passages; guide advice: require MFA at the identity provider for this login and test enforcement there. These sources do not establish MFA enforcement in a deployed MLflow combination.", "components": ["docs", "cf-docs", "oauth2-proxy-source", "authelia-source"], "sources": ["docs:scbbc07258943", "cf-docs:s6f6104362214", "cf-docs:s7e793d13cf31", "oauth2-proxy-source:sa403e3d826b4", "oauth2-proxy-source:se7a200583def", "authelia-source:s768b165b44a0", "authelia-source:sd4dd76e70475"], "status": "REASONED"},
+    "proxy-token": {"text": "MLflow v3.16.1 declares MLFLOW_TRACKING_USERNAME, MLFLOW_TRACKING_PASSWORD and MLFLOW_TRACKING_TOKEN as tracking authentication inputs; in the cited HTTP request-construction path, nonempty username and password credentials select an Authorization: Basic header unless the auth mode is kubernetes or kubernetes-namespaced, otherwise a nonempty token selects Authorization: Bearer. The token variable's comment claims precedence, but that request code selects Basic first under those conditions; AWS SigV4 overwrites Authorization, and a configured auth handler is applied separately, so this is not a guarantee for every authentication mode. Cloudflare Access service tokens at c896795b8e8bab68d05ae78d64c9cbcda1fdb104 use CF-Access-Client-Id and CF-Access-Client-Secret headers, with a Service Auth policy required to avoid an IdP login prompt; a self-hosted Access application can alternatively be configured to accept the service token in one header. Guide advice: confirm that the chosen client and proxy combination preserves both proxy authentication and MLflow authentication; these citations do not establish that MLFLOW_TRACKING_TOKEN alone supplies Cloudflare service-token headers or that both layers work together.", "components": ["docs", "source", "cf-docs"], "sources": ["docs:s2517159af609", "source:s1661739df39d", "source:s5801c6ac1ac2", "cf-docs:sbec4996a7089", "cf-docs:s543b1f2eb29c", "cf-docs:sc565f2d80e6e"], "status": "REASONED"},
+    "artifact-proxy": {"text": "--serve-artifacts defaults on; --artifacts-destination s3://bucket lets the server proxy reads/writes for proxied experiments, holding storage credentials so clients need none.", "components": ["docs"], "sources": ["docs:s5b79d1871e0b", "docs:s2517159af609"], "status": "REASONED"},
+    "artifact-existing": {"text": "Pre-existing experiments and explicit direct artifact locations retain their locations outside tracking-server permission enforcement; inspect locations and apply storage IAM directly.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
+    "artifact-direct": {"text": "With --no-serve-artifacts every client needs storage credentials and tracking-server permissions no longer gate artifacts; use environment or instance-role credentials, not repository/Compose secrets.", "components": ["docs"], "sources": ["docs:s2517159af609"], "status": "REASONED"},
+    "verify-bind": {"text": "Read every listener and require 5000 on 127.0.0.1.", "components": ["source", "iproute2"], "sources": ["source:sf7285d252e29", "source:sa3993a9b625f", "iproute2:s2afc4764d5bb", "iproute2:sfaa932c2ca13", "iproute2:sd295f82d643f", "iproute2:s65278ee45850"], "status": "REASONED", "verify": [1]},
+    "verify-network": {"text": "Outside :5000 must form no TCP connection: time_connect stays 0.000000 with a connection-level failure. A handshake or HTTP response means exposure; DNS/local socket errors are inconclusive.", "components": ["curl", "docs"], "sources": ["curl:s2b2686afaf41", "docs:s5b79d1871e0b"], "status": "REASONED", "verify": [1]},
+    "verify-public-auth": {"text": "POST experiments/search with a minimal body: anonymous and wrong-password requests should return 401, valid admin 200; an open backend returns anonymous 200. Proxy credentials may also be needed; shell success is not a pass.", "components": ["docs", "curl"], "sources": ["docs:scbbc07258943", "docs:s996e587e947a", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-backend-auth": {"text": "Repeat anonymous 401/admin 200 directly on loopback with Host: mlflow.example.com; an allowlist Host rejection is 403 before auth, and a proxy-only denial proves no backend enforcement.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s5b79d1871e0b", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]},
+    "verify-authorization": {"text": "Search filters visible experiments and does not prove authorization denial. First GET a real experiment as admin for 200, then the same backend resource as a low-permission user for 403; 401 means bad credentials and a failed admin control is inconclusive.", "components": ["docs"], "sources": ["docs:scbbc07258943", "docs:s996e587e947a"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->

@@ -1,341 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-17",
-  "documentation_checked": "2026-09",
-  "body_sha256": "1df2b900bb4797e8f2561a2cb2066c6c74bf8505a9043279c660e1d96229198f",
-  "components": {
-    "see": {
-      "name": "SQLite Encryption Extension",
-      "basis": "unknown",
-      "sources": {
-        "sda3d8876503d": "https://www.sqlite.org/see/doc/trunk/www/readme.wiki"
-      }
-    },
-    "cipher": {
-      "name": "SQLCipher",
-      "basis": "unknown",
-      "sources": {
-        "s57d83a42a74a": "https://www.zetetic.net/sqlcipher/"
-      }
-    },
-    "turso": {
-      "name": "Turso documentation",
-      "basis": "unknown",
-      "sources": {
-        "sb32fd9c679e1": "https://docs.turso.tech/sdk/http/quickstart",
-        "sfec4e734f423": "https://docs.turso.tech/cli/db/tokens/create",
-        "se409838a474a": "https://docs.turso.tech/sdk/http/reference"
-      }
-    },
-    "litestream": {
-      "name": "Litestream documentation",
-      "basis": "unknown",
-      "sources": {
-        "sec3d72af1447": "https://litestream.io/guides/",
-        "s87fa51accafc": "https://litestream.io/guides/s3/",
-        "sa5dddf04652c": "https://litestream.io/reference/config/"
-      }
-    },
-    "mcp": {
-      "name": "Litestream MCP minimum",
-      "basis": "v0.5.0",
-      "sources": {
-        "sa5dddf04652c": "https://litestream.io/reference/config/"
-      }
-    },
-    "litefs": {
-      "name": "LiteFS source",
-      "basis": "v0.5.14",
-      "sources": {
-        "s694a6ba8eafa": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L134-L268",
-        "s864cacb8e7cc": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L76-L99",
-        "s16da1761d6cc": "https://github.com/superfly/litefs/blob/v0.5.14/http/client.go#L32-L43",
-        "sf0e982d0e36a": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L57",
-        "s9389d639da6b": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/etc/litefs.yml#L54-L58",
-        "s475c28fd949e": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L76-L110",
-        "s055e15e84ba5": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L219-L233",
-        "s0b0bac964067": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L288-L333",
-        "s326a1007e5c2": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L294-L318",
-        "s4547cc32557d": "https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2779-L2811",
-        "s85ece0e83d43": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1904-L1910",
-        "sa467eeb47f34": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L320-L346",
-        "s5ffa5c20fc78": "https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2682-L2776",
-        "s02908966756d": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L495-L520",
-        "sd63fa776fbc1": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L526-L585",
-        "s1c51b7efc42d": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L686-L699",
-        "scd0168363c1a": "https://github.com/superfly/litefs/blob/v0.5.14/http/http.go#L15-L43",
-        "s298808a10d50": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L461-L493",
-        "s7269cca8b0ea": "https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2387-L2448",
-        "sbd59a1af784e": "https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2452-L2609",
-        "sa199174f541b": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L348-L407",
-        "s750403129022": "https://github.com/superfly/litefs/blob/v0.5.14/db.go#L215-L325",
-        "s5009045b97e1": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1525-L1531",
-        "se2add54cf935": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L39-L41",
-        "s59a2dfccd853": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1455-L1465",
-        "s246e6ad0d330": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L409-L459",
-        "sae4ece3fbc87": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L408-L432",
-        "s7bcb006d6884": "https://github.com/superfly/litefs/blob/v0.5.14/lease.go#L168-L170",
-        "se1a41376a98d": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L271-L292",
-        "s93c0ad91a567": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L779-L803",
-        "s36792457dd64": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L487-L488",
-        "s7234e34af9ef": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1661-L1713",
-        "s4cebe21e711d": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L329-L348",
-        "sb43f5d78723c": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L241-L244",
-        "s8dfa3f10f3d3": "https://github.com/superfly/litefs/blob/v0.5.14/lease.go#L99-L131",
-        "s83d8bd834347": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1384-L1387",
-        "s3284d1a3ecad": "https://github.com/superfly/litefs/blob/v0.5.14/Dockerfile",
-        "s2b80fdf8adbe": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L519-L524",
-        "sc0568fe7e0ee": "https://github.com/superfly/litefs/blob/v0.5.14/http/proxy_server.go#L131-L144",
-        "sf0d31f900082": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/etc/litefs.yml#L60-L68",
-        "s82103ee03d64": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L32-L35"
-      }
-    },
-    "litefs-docs": {
-      "name": "LiteFS documentation",
-      "basis": "unknown",
-      "sources": {
-        "s13b9e92d9996": "https://fly.io/docs/litefs/",
-        "sd7c0ba136b25": "https://fly.io/docs/litefs/config/"
-      }
-    },
-    "go": {
-      "name": "Go library documentation",
-      "basis": "unknown",
-      "sources": {
-        "s6c5be8454523": "https://pkg.go.dev/github.com/golang/net/http2/h2c#NewHandler",
-        "s37204ff1b27c": "https://pkg.go.dev/net#Listen",
-        "se49529035a0c": "https://pkg.go.dev/expvar",
-        "s0246034dddd1": "https://pkg.go.dev/net/http/pprof"
-      }
-    },
-    "docker": {
-      "name": "Docker documentation",
-      "basis": "unknown",
-      "sources": {
-        "s881082f899b2": "https://docs.docker.com/engine/network/drivers/bridge/",
-        "s6732393fd414": "https://docs.docker.com/engine/network/drivers/host/",
-        "s00095bd02553": "https://docs.docker.com/engine/network/#container-networks"
-      }
-    },
-    "sqlite-rolling": {
-      "name": "SQLite documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s2721da91f8d2": "https://www.sqlite.org/serverless.html",
-        "sf3d7f8391994": "https://www.sqlite.org/tempfiles.html",
-        "s742deb3338bb": "https://sqlite.org/loadext.html",
-        "sadf0431c1271": "https://www.sqlite.org/security.html"
-      }
-    },
-    "git": {
-      "name": "Git documentation",
-      "basis": "v2.56.0",
-      "sources": {
-        "s12aad6467212": "https://github.com/git/git/blob/v2.56.0/Documentation/gitignore.adoc#L15-L18",
-        "s8054ab09dc74": "https://github.com/git/git/blob/v2.56.0/Documentation/git-rm.adoc#L17-L28",
-        "s9a6802adec89": "https://github.com/git/git/blob/v2.56.0/Documentation/git-log.adoc#L16-L16"
-      }
-    },
-    "coreutils": {
-      "name": "GNU Coreutils stat manual",
-      "basis": "v9.7",
-      "sources": {
-        "s247df4545dc0": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L12989-L12995",
-        "sfd49553ab6e5": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13046",
-        "sbd6f7cad7bf4": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13062",
-        "s3e55a7242c33": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13073"
-      }
-    },
-    "bash": {
-      "name": "GNU Bash reference manual",
-      "basis": "bash-5.3",
-      "sources": {
-        "s3711969be580": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n450",
-        "s7fec9b923488": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n769",
-        "s77b19e384d70": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n1397",
-        "se4f37e01a249": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n1866",
-        "s07f77f16f9f5": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n2288",
-        "sbed8cd562a35": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n2993",
-        "s7c9e44003867": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3131",
-        "s223b5c4d9a28": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4350",
-        "se02ece9163d4": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4582",
-        "s6067b2b1f78a": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5216",
-        "sa506f1abd6a1": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6182",
-        "s7d29125b4005": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n8232",
-        "s8962e63cfb20": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n2580",
-        "s8a27e686ddfb": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5466",
-        "s213f6d8d1f07": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3280",
-        "sf9757e9fd6e8": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3872",
-        "s8cbc1b4709e2": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4737",
-        "s3255eca7e496": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4852",
-        "s252aa2e81179": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5156",
-        "s8447036b2114": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5161",
-        "s5cab49305f3d": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5548",
-        "s6e8ae812c1c3": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5625",
-        "sb38bf74a89b0": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5629",
-        "s260459961fbc": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5659",
-        "s8c59508bd4c8": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5917",
-        "s8016d1aecfca": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5929",
-        "se62fd3ad4fc3": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6122",
-        "s2df39d2c9c1c": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6194",
-        "s80e3246e96d8": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n7274"
-      }
-    },
-    "curl": {
-      "name": "curl",
-      "basis": "curl-8_14_1",
-      "sources": {
-        "s5b71321b79ea": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/disable.md#L4-L20",
-        "sc405a4bffc27": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/globoff.md#L4-L22",
-        "s345ec65025b0": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/noproxy.md#L18-L28",
-        "sc9973c4ceec1": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/connect-timeout.md#L19-L28",
-        "s7b6dca376156": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/max-time.md#L21-L27",
-        "s156481f6b726": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/silent.md#L4-L25",
-        "s07916104bf60": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/show-error.md#L4-L19",
-        "sa937dbe5dd4a": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L4-L33",
-        "s021603e35e68": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L49-L53",
-        "s5e1383feef7d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79",
-        "s39402f9cb25c": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L105-L107",
-        "sf2dcd83157a6": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/insecure.md#L4-L30",
-        "s13f463154cea": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/fail.md#L24-L28",
-        "s2f1ff2f6cacd": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/output.md#L4-L53",
-        "sd3b039bafbf6": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data.md#L4-L49",
-        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md"
-      }
-    },
-    "grep-docs": {
-      "name": "GNU grep documentation",
-      "basis": "v3.12",
-      "sources": {
-        "s1733b640052b": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n197",
-        "s99f121f5426a": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n342",
-        "sbc8d05ab659b": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n621",
-        "sfdd7a73eab39": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n757",
-        "s7f9dc35e81c5": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n788",
-        "s5170317ddea8": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1110",
-        "sc08d6af4d642": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1142",
-        "scd528c854b46": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1150",
-        "sb8be8b716426": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1274",
-        "s5d5af9297df2": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1316",
-        "se99a83dba3c5": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1363"
-      }
-    }
-  },
-  "claims": {
-    "filesystem": {"text": "No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sadf0431c1271"], "status": "REASONED"},
-    "extensions": {"text": "Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s742deb3338bb"], "status": "REASONED"},
-    "web-files": {"text": "Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
-    "git-files": {"text": "Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. This guide assesses committed database rows as permanently available to anyone who clones, even after a later deletion commit.", "components": ["sqlite-rolling", "git"], "sources": ["sqlite-rolling:sf3d7f8391994", "git:s12aad6467212", "git:s8054ab09dc74", "git:s9a6802adec89"], "status": "REASONED"},
-    "permissions": {"text": "Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
-    "temporary": {"text": "Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
-    "encryption": {"text": "Public-domain SQLite has no file encryption; SEE is licensed and SQLCipher is a third-party alternative, otherwise use filesystem or volume encryption.", "components": ["see", "cipher"], "sources": ["see:sda3d8876503d", "cipher:s57d83a42a74a"], "status": "REASONED"},
-    "encryption-keys": {"text": "Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak.", "components": ["see", "sqlite-rolling"], "sources": ["see:sda3d8876503d", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
-    "turso-http": {"text": "Turso serves libSQL over HTTPS at the database/organization turso.io URL using bearer authentication; TURSO_DATABASE_URL and TURSO_AUTH_TOKEN belong in application configuration, never a client bundle or git.", "components": ["turso"], "sources": ["turso:sb32fd9c679e1"], "status": "REASONED"},
-    "turso-scope": {"text": "db tokens create --read-only scopes away writes; --expiration accepts never or durations such as 7d3h. Prefer scoped, expiring tokens.", "components": ["turso"], "sources": ["turso:sfec4e734f423"], "status": "REASONED"},
-    "replicas": {"text": "Litestream replicates to supported object stores; scope AWS credentials and IAM to the required bucket/prefix, keep replicas private, and restore with scoped credentials.", "components": ["litestream"], "sources": ["litestream:sec3d72af1447", "litestream:s87fa51accafc"], "status": "REASONED"},
-    "metrics": {"text": "Litestream addr metrics listener defaults disabled; leave off unless needed, otherwise bind loopback, for example 127.0.0.1:9090.", "components": ["litestream"], "sources": ["litestream:sa5dddf04652c"], "status": "REASONED"},
-    "mcp": {"text": "Litestream MCP mcp-addr is documented for v0.5.0 and later, defaults disabled and has no built-in authentication; protect information and restore access with an authenticated tunnel/proxy, for example at loopback:3001.", "components": ["mcp"], "sources": ["mcp:sa5dddf04652c"], "status": "REASONED"},
-    "litefs-backups": {"text": "LiteFS replicates among cluster nodes; its pre-1.0 documentation recommends separate off-site backups with private destinations.", "components": ["litefs-docs"], "sources": ["litefs-docs:s13b9e92d9996"], "status": "REASONED"},
-    "litefs-transport": {"text": "LiteFS v0.5.14 routes have no credential gate; the server accepts cleartext HTTP/1 and h2c, and its client uses h2c. Litefs-Id comparisons reject self-connections, not unauthenticated callers.", "components": ["litefs", "go"], "sources": ["litefs:s694a6ba8eafa", "litefs:s864cacb8e7cc", "litefs:s16da1761d6cc", "go:s6c5be8454523"], "status": "REASONED"},
-    "litefs-bind": {"text": "http.addr defaults to host-less :20202, including the example; an empty address still listens on all interfaces at a system-chosen port.", "components": ["litefs", "go"], "sources": ["litefs:sf0e982d0e36a", "litefs:s9389d639da6b", "go:s37204ff1b27c", "litefs:s82103ee03d64"], "status": "REASONED"},
-    "litefs-config": {"text": "Set API bind in the config file; no direct address flag. Search working directory, available home directory, then /etc/litefs.yml; -config overrides and -no-expand-env disables ${VAR} expansion.", "components": ["litefs"], "sources": ["litefs:s475c28fd949e", "litefs:s055e15e84ba5", "litefs:s0b0bac964067"], "status": "REASONED"},
-    "import": {"text": "POST /import creates or replaces a named database on the primary only; replicas return 503 before creation without forwarding, and DB.Import also checks primary status.", "components": ["litefs"], "sources": ["litefs:s326a1007e5c2", "litefs:s4547cc32557d", "litefs:s85ece0e83d43"], "status": "REASONED"},
-    "export": {"text": "GET /export returns the full existing local database, including applicable WAL pages, on either role; missing databases return 404.", "components": ["litefs"], "sources": ["litefs:sa467eeb47f34", "litefs:s5ffa5c20fc78"], "status": "REASONED"},
-    "stream": {"text": "POST /stream requires primary, HTTP/2 and a valid position map; replicas return 503. Unfiltered streams cover every database, filters narrow them, and fresh positions receive snapshots.", "components": ["litefs"], "sources": ["litefs:s02908966756d", "litefs:sd63fa776fbc1", "litefs:s1c51b7efc42d", "litefs:scd0168363c1a"], "status": "REASONED"},
-    "tx": {"text": "POST /tx applies a validated LTX file to an existing local database on either role without forwarding, primary or halt-owner checks; non-snapshots must match next transaction/checksum, missing databases return 404.", "components": ["litefs"], "sources": ["litefs:s298808a10d50", "litefs:s7269cca8b0ea", "litefs:sbd59a1af784e"], "status": "REASONED"},
-    "halt": {"text": "POST /halt on either role creates the database if absent and acquires write locks with a nonzero id, stalling primary writes or replica updates; DELETE releases an existing lock for a matching id.", "components": ["litefs"], "sources": ["litefs:sa199174f541b", "litefs:s750403129022", "litefs:s5009045b97e1"], "status": "REASONED"},
-    "halt-ttl": {"text": "LiteFS halt-lock TTL defaults to 30 seconds.", "components": ["litefs"], "sources": ["litefs:se2add54cf935", "litefs:s59a2dfccd853"], "status": "REASONED"},
-    "promote": {"text": "POST /promote needs an eligible candidate, succeeds unchanged for an existing primary, and asks a known primary for handoff from a candidate replica; no database name is required.", "components": ["litefs"], "sources": ["litefs:s246e6ad0d330", "litefs:sae4ece3fbc87"], "status": "REASONED"},
-    "handoff": {"text": "POST /handoff requires primary, a connected target subscriber and a handoff-capable lease; static leases refuse it and no database name is required.", "components": ["litefs"], "sources": ["litefs:s246e6ad0d330", "litefs:s7bcb006d6884"], "status": "REASONED"},
-    "information": {"text": "GET /info, /events and /metrics disclose node, cluster and database state on either role without a named database.", "components": ["litefs"], "sources": ["litefs:s694a6ba8eafa", "litefs:se1a41376a98d", "litefs:s93c0ad91a567"], "status": "REASONED"},
-    "debug": {"text": "Unconditional /debug/pprof/ exposes command line and live profiles; /debug/vars exposes command line, memory and store database/lock state on either role without a database name.", "components": ["litefs", "go"], "sources": ["litefs:s694a6ba8eafa", "litefs:s36792457dd64", "litefs:s7234e34af9ef", "go:se49529035a0c", "go:s0246034dddd1"], "status": "REASONED"},
-    "debug-rand": {"text": "/debug/rand streams deterministic pseudo-random data; its minute timeout is checked between writes and no server write timeout bounds a slow or non-reading client.", "components": ["litefs"], "sources": ["litefs:s694a6ba8eafa", "litefs:s864cacb8e7cc"], "status": "REASONED"},
-    "cluster-private": {"text": "Bind each LiteFS API to its private node address and restrict reachability to cluster nodes; never publish 20202 through an internet-facing mapping or proxy.", "components": ["litefs", "litefs-docs"], "sources": ["litefs:s694a6ba8eafa", "litefs-docs:sd7c0ba136b25"], "status": "REASONED"},
-    "consul-url": {"text": "Consul lease.advertise-url names each node private API; when unset it derives http:// plus lease.hostname or OS hostname and the actual listening port.", "components": ["litefs"], "sources": ["litefs:s4cebe21e711d"], "status": "REASONED"},
-    "static-url": {"text": "Static leasing uses lease.advertise-url as configured: the primary points at itself and each replica at the primary private API.", "components": ["litefs"], "sources": ["litefs:s8dfa3f10f3d3", "litefs:s83d8bd834347", "litefs:sb43f5d78723c"], "status": "REASONED"},
-    "container": {"text": "LiteFS image supplies no configuration or EXPOSE; default wildcard binding applies within its namespace. Peers, host/shared networking, routing, firewall and publication determine reachability.", "components": ["litefs", "docker"], "sources": ["litefs:s3284d1a3ecad", "docker:s881082f899b2", "docker:s6732393fd414", "docker:s00095bd02553"], "status": "REASONED"},
-    "proxy": {"text": "LiteFS application proxy is separate: proxy.target enables attempted startup, proxy.db and proxy.addr must be nonempty, example :8080; application TLS and authentication remain necessary.", "components": ["litefs"], "sources": ["litefs:s2b80fdf8adbe", "litefs:sc0568fe7e0ee", "litefs:sf0d31f900082"], "status": "REASONED"},
-    "verify-download": {"text": "Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available.", "components": ["sqlite-rolling", "bash", "curl"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994", "bash:s3711969be580", "bash:s7fec9b923488", "bash:s77b19e384d70", "bash:se4f37e01a249", "bash:s07f77f16f9f5", "bash:sbed8cd562a35", "bash:s7c9e44003867", "bash:s223b5c4d9a28", "bash:se02ece9163d4", "bash:s6067b2b1f78a", "bash:sa506f1abd6a1", "bash:s7d29125b4005", "bash:s8962e63cfb20", "bash:s8a27e686ddfb", "curl:s5b71321b79ea", "curl:sc405a4bffc27", "curl:s345ec65025b0", "curl:sc9973c4ceec1", "curl:s7b6dca376156", "curl:s156481f6b726", "curl:s07916104bf60", "curl:sa937dbe5dd4a", "curl:s021603e35e68", "curl:s5e1383feef7d", "curl:s39402f9cb25c", "curl:sf2dcd83157a6", "curl:s13f463154cea", "curl:s2f1ff2f6cacd"], "status": "REASONED", "verify": [1]},
-    "verify-bundle": {"text": "Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths.", "components": ["turso", "bash", "grep-docs"], "sources": ["turso:sb32fd9c679e1", "bash:s3711969be580", "bash:s7fec9b923488", "bash:s77b19e384d70", "bash:se4f37e01a249", "bash:s07f77f16f9f5", "bash:sbed8cd562a35", "bash:s7c9e44003867", "bash:s223b5c4d9a28", "bash:se02ece9163d4", "bash:s6067b2b1f78a", "bash:sa506f1abd6a1", "bash:s7d29125b4005", "bash:s8a27e686ddfb", "bash:s213f6d8d1f07", "bash:sf9757e9fd6e8", "bash:s8cbc1b4709e2", "bash:s3255eca7e496", "bash:s252aa2e81179", "bash:s8447036b2114", "bash:s5cab49305f3d", "bash:s6e8ae812c1c3", "bash:sb38bf74a89b0", "bash:s260459961fbc", "bash:s8c59508bd4c8", "bash:s8016d1aecfca", "bash:se62fd3ad4fc3", "bash:s2df39d2c9c1c", "bash:s80e3246e96d8", "grep-docs:s1733b640052b", "grep-docs:s99f121f5426a", "grep-docs:sbc8d05ab659b", "grep-docs:sfdd7a73eab39", "grep-docs:s7f9dc35e81c5", "grep-docs:s5170317ddea8", "grep-docs:sc08d6af4d642", "grep-docs:scd528c854b46", "grep-docs:sb8be8b716426", "grep-docs:s5d5af9297df2", "grep-docs:se99a83dba3c5"], "status": "DEMONSTRATED", "evidence": "A bundle carrying the placeholder printed `dist/app.js` before `token-literal exit: 0` and again before `jwt-shape exit: 0`, and a clean bundle printed `1` for both.", "verify": [2]},
-    "verify-git": {"text": "Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "DEMONSTRATED", "evidence": "With `app.db` committed before an `app.db*` ignore rule was added, `git check-ignore -v` listed the sidecars but not the tracked `app.db`. `git ls-files` printed `app.db`, and `git log` printed its commit.", "verify": [3]},
-    "verify-modes": {"text": "SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised.", "components": ["sqlite-rolling", "coreutils"], "sources": ["sqlite-rolling:sf3d7f8391994", "coreutils:s247df4545dc0", "coreutils:sfd49553ab6e5", "coreutils:sbd6f7cad7bf4", "coreutils:s3e55a7242c33"], "status": "REASONED", "verify": [4]},
-    "verify-listeners": {"text": "Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available.", "components": ["litefs", "litestream", "mcp", "bash", "curl"], "sources": ["litefs:s694a6ba8eafa", "litestream:sa5dddf04652c", "mcp:sa5dddf04652c", "bash:s3711969be580", "bash:s7fec9b923488", "bash:s77b19e384d70", "bash:se4f37e01a249", "bash:s07f77f16f9f5", "bash:sbed8cd562a35", "bash:s7c9e44003867", "bash:s223b5c4d9a28", "bash:se02ece9163d4", "bash:s6067b2b1f78a", "bash:sa506f1abd6a1", "bash:s7d29125b4005", "curl:s5b71321b79ea", "curl:sc405a4bffc27", "curl:s345ec65025b0", "curl:sc9973c4ceec1", "curl:s7b6dca376156", "curl:s156481f6b726", "curl:s07916104bf60", "curl:sa937dbe5dd4a", "curl:s021603e35e68", "curl:s5e1383feef7d", "curl:s39402f9cb25c", "curl:sf2dcd83157a6", "curl:s13f463154cea", "curl:s2f1ff2f6cacd"], "status": "REASONED", "verify": [5]},
-    "verify-turso": {"text": "Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available.", "components": ["turso", "bash", "curl"], "sources": ["turso:se409838a474a", "bash:s3711969be580", "bash:s7fec9b923488", "bash:s77b19e384d70", "bash:se4f37e01a249", "bash:s07f77f16f9f5", "bash:sbed8cd562a35", "bash:s7c9e44003867", "bash:s223b5c4d9a28", "bash:se02ece9163d4", "bash:s6067b2b1f78a", "bash:sa506f1abd6a1", "bash:s7d29125b4005", "bash:s8962e63cfb20", "bash:s8a27e686ddfb", "bash:s213f6d8d1f07", "bash:sf9757e9fd6e8", "bash:s8cbc1b4709e2", "bash:s3255eca7e496", "bash:s252aa2e81179", "bash:s8447036b2114", "bash:s5cab49305f3d", "bash:s6e8ae812c1c3", "bash:sb38bf74a89b0", "bash:s260459961fbc", "bash:s8c59508bd4c8", "bash:s8016d1aecfca", "bash:se62fd3ad4fc3", "bash:s2df39d2c9c1c", "bash:s80e3246e96d8", "curl:s5b71321b79ea", "curl:sc405a4bffc27", "curl:s345ec65025b0", "curl:sc9973c4ceec1", "curl:s7b6dca376156", "curl:s156481f6b726", "curl:s07916104bf60", "curl:sa937dbe5dd4a", "curl:s021603e35e68", "curl:s5e1383feef7d", "curl:s39402f9cb25c", "curl:sf2dcd83157a6", "curl:s13f463154cea", "curl:sd3b039bafbf6", "curl:s3db522258e44"], "status": "REASONED", "verify": [6]},
-    "halt-expiration": {"text": "LiteFS checks halt-lock expiration every 5 seconds.", "components": ["litefs"], "sources": ["litefs:se2add54cf935", "litefs:s59a2dfccd853"], "status": "REASONED"}
-  }
-}
----
 # SQLite in deployment: the file is the exposure (plus Turso and Litestream)
 
-<!-- version-basis:start -->
-**Version basis**
+Written against SQLite documentation (rolling) (no recorded version), Litestream MCP minimum v0.5.0, LiteFS source v0.5.14, Git documentation v2.56.0, GNU Coreutils stat manual v9.7, GNU Bash reference manual bash-5.3, curl curl-8_14_1, and GNU grep documentation v3.12; 7 further sources carry no recorded version. Metadata reviewed 2026-10-17; documentation checked September 2026. The guide records 40 claims: 2 demonstrated by a check that ran and 38 reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- see: SQLite Encryption Extension (unknown)
-- cipher: SQLCipher (unknown)
-- turso: Turso documentation (unknown)
-- litestream: Litestream documentation (unknown)
-- mcp: Litestream MCP minimum (v0.5.0)
-- litefs: LiteFS source (v0.5.14)
-- litefs-docs: LiteFS documentation (unknown)
-- go: Go library documentation (unknown)
-- docker: Docker documentation (unknown)
-- sqlite-rolling: SQLite documentation (rolling) (unknown)
-- git: Git documentation (v2.56.0)
-- coreutils: GNU Coreutils stat manual (v9.7)
-- bash: GNU Bash reference manual (bash-5.3)
-- curl: curl (curl-8_14_1)
-- grep-docs: GNU grep documentation (v3.12)
-
-Claims (full source mapping in the front matter):
-
-- filesystem (REASONED; sqlite-rolling): No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect.
-- extensions (REASONED; sqlite-rolling): Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries.
-- web-files (REASONED; sqlite-rolling): Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names.
-- git-files (REASONED; sqlite-rolling, git): Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. This guide assesses committed database rows as permanently available to anyone who clones, even after a later deletion commit.
-- permissions (REASONED; sqlite-rolling): Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation.
-- temporary (REASONED; sqlite-rolling): Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions.
-- encryption (REASONED; see, cipher): Public-domain SQLite has no file encryption; SEE is licensed and SQLCipher is a third-party alternative, otherwise use filesystem or volume encryption.
-- encryption-keys (REASONED; see, sqlite-rolling): Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak.
-- turso-http (REASONED; turso): Turso serves libSQL over HTTPS at the database/organization turso.io URL using bearer authentication; TURSO_DATABASE_URL and TURSO_AUTH_TOKEN belong in application configuration, never a client bundle or git.
-- turso-scope (REASONED; turso): db tokens create --read-only scopes away writes; --expiration accepts never or durations such as 7d3h. Prefer scoped, expiring tokens.
-- replicas (REASONED; litestream): Litestream replicates to supported object stores; scope AWS credentials and IAM to the required bucket/prefix, keep replicas private, and restore with scoped credentials.
-- metrics (REASONED; litestream): Litestream addr metrics listener defaults disabled; leave off unless needed, otherwise bind loopback, for example 127.0.0.1:9090.
-- mcp (REASONED; mcp): Litestream MCP mcp-addr is documented for v0.5.0 and later, defaults disabled and has no built-in authentication; protect information and restore access with an authenticated tunnel/proxy, for example at loopback:3001.
-- litefs-backups (REASONED; litefs-docs): LiteFS replicates among cluster nodes; its pre-1.0 documentation recommends separate off-site backups with private destinations.
-- litefs-transport (REASONED; litefs, go): LiteFS v0.5.14 routes have no credential gate; the server accepts cleartext HTTP/1 and h2c, and its client uses h2c. Litefs-Id comparisons reject self-connections, not unauthenticated callers.
-- litefs-bind (REASONED; litefs, go): http.addr defaults to host-less :20202, including the example; an empty address still listens on all interfaces at a system-chosen port.
-- litefs-config (REASONED; litefs): Set API bind in the config file; no direct address flag. Search working directory, available home directory, then /etc/litefs.yml; -config overrides and -no-expand-env disables ${VAR} expansion.
-- import (REASONED; litefs): POST /import creates or replaces a named database on the primary only; replicas return 503 before creation without forwarding, and DB.Import also checks primary status.
-- export (REASONED; litefs): GET /export returns the full existing local database, including applicable WAL pages, on either role; missing databases return 404.
-- stream (REASONED; litefs): POST /stream requires primary, HTTP/2 and a valid position map; replicas return 503. Unfiltered streams cover every database, filters narrow them, and fresh positions receive snapshots.
-- tx (REASONED; litefs): POST /tx applies a validated LTX file to an existing local database on either role without forwarding, primary or halt-owner checks; non-snapshots must match next transaction/checksum, missing databases return 404.
-- halt (REASONED; litefs): POST /halt on either role creates the database if absent and acquires write locks with a nonzero id, stalling primary writes or replica updates; DELETE releases an existing lock for a matching id.
-- halt-ttl (REASONED; litefs): LiteFS halt-lock TTL defaults to 30 seconds.
-- promote (REASONED; litefs): POST /promote needs an eligible candidate, succeeds unchanged for an existing primary, and asks a known primary for handoff from a candidate replica; no database name is required.
-- handoff (REASONED; litefs): POST /handoff requires primary, a connected target subscriber and a handoff-capable lease; static leases refuse it and no database name is required.
-- information (REASONED; litefs): GET /info, /events and /metrics disclose node, cluster and database state on either role without a named database.
-- debug (REASONED; litefs, go): Unconditional /debug/pprof/ exposes command line and live profiles; /debug/vars exposes command line, memory and store database/lock state on either role without a database name.
-- debug-rand (REASONED; litefs): /debug/rand streams deterministic pseudo-random data; its minute timeout is checked between writes and no server write timeout bounds a slow or non-reading client.
-- cluster-private (REASONED; litefs, litefs-docs): Bind each LiteFS API to its private node address and restrict reachability to cluster nodes; never publish 20202 through an internet-facing mapping or proxy.
-- consul-url (REASONED; litefs): Consul lease.advertise-url names each node private API; when unset it derives http:// plus lease.hostname or OS hostname and the actual listening port.
-- static-url (REASONED; litefs): Static leasing uses lease.advertise-url as configured: the primary points at itself and each replica at the primary private API.
-- container (REASONED; litefs, docker): LiteFS image supplies no configuration or EXPOSE; default wildcard binding applies within its namespace. Peers, host/shared networking, routing, firewall and publication determine reachability.
-- proxy (REASONED; litefs): LiteFS application proxy is separate: proxy.target enables attempted startup, proxy.db and proxy.addr must be nonempty, example :8080; application TLS and authentication remain necessary.
-- verify-download (REASONED; sqlite-rolling, bash, curl): Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available.
-- verify-bundle (DEMONSTRATED; turso, bash, grep-docs): Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths.
-- verify-git (DEMONSTRATED; sqlite-rolling): Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded.
-- verify-modes (REASONED; sqlite-rolling, coreutils): SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised.
-- verify-listeners (REASONED; litefs, litestream, mcp, bash, curl): Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available.
-- verify-turso (REASONED; turso, bash, curl): Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available.
-- halt-expiration (REASONED; litefs): LiteFS checks halt-lock expiration every 5 seconds.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 SQLite has no server process and no network listener: "there are no other processes, threads, machines, or other mechanisms (apart from host computer OS and filesystem) to help provide database services" ([SQLite: serverless](https://www.sqlite.org/serverless.html)), so there is no database-side authentication and the only access control is the filesystem's. Its security page warns that "any database file which might have ever been writable by an agent in a different security domain should be treated as suspect." So the deployment exposure is rarely a flaw in SQLite itself; it is wherever the database file ends up: under a web root, inside a git repository, readable by another local account, or replicated to a public bucket. Run the application with access only to the files it needs, since `ATTACH` opens further databases under the process's filesystem authority; keep extension loading disabled unless required (core SQLite disables it by default, though the SQLite CLI enables it) and load only trusted extension libraries. Application-level SQL-injection prevention is outside this guide's scope.
 
@@ -600,3 +267,362 @@ Applicability checked on 2026-09-18: SQLite 3.x documentation (local file tests 
 - GNU grep documentation v3.12 (checked October 2026): [-f reads one pattern per line; - means stdin (197-207)](https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n197); [-l prints matching file names and stops at the first match per file (342-351)](https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n342); [default binary handling, suppression and matching limits (621-668)](https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n621); [-r recurses, follows command-line symlinks and skips encountered symlinks (757-769)](https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n757); [-- terminates options (788-794)](https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n788); [exit 0 for a match, 1 for none, 2 for error, with the -q exception (1110-1115)](https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1110).
 - GNU grep documentation v3.12 (checked October 2026): [-E selects extended regular expressions (1142-1148)](https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1142); [-F selects fixed strings (1150-1156)](https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1150); [ordinary regexp characters (1274-1277)](https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1274); [{n,} repeats at least n times (1316-1320)](https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1316); [bracket expressions match one listed character (1363-1373)](https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1363).
 - curl curl-8_14_1 behaviour used by this guide's probes: the cited `-q`, `-g` and `--noproxy '*'` controls suppress curlrc, URL globbing and proxies; `--connect-timeout 5` bounds connection setup and `--max-time 20` bounds each transfer. The cited `-sS` combination hides progress while retaining errors, `-o /dev/null` suppresses bodies, and `-w` prints the response code, transfer exit code and error text even on failure. HTTP status is separate from transfer success. For Turso, the cited `--data` selects POST and `-H 'Content-Type: application/json'` replaces curl's default content type; the request payload and the required anonymous/authorized outcomes remain this guide's procedure using the Turso reference, not curl's guarantee. The cited default TLS checks support the requirement never to add `-k`.
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/sqlite.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- sqlite-rolling: SQLite documentation (rolling) (unknown)
+- mcp: Litestream MCP minimum (v0.5.0)
+- see: SQLite Encryption Extension (unknown)
+- turso: Turso documentation (unknown)
+- litestream: Litestream documentation (unknown)
+- cipher: SQLCipher (unknown)
+- litefs: LiteFS source (v0.5.14)
+- litefs-docs: LiteFS documentation (unknown)
+- go: Go library documentation (unknown)
+- docker: Docker documentation (unknown)
+- git: Git documentation (v2.56.0)
+- coreutils: GNU Coreutils stat manual (v9.7)
+- bash: GNU Bash reference manual (bash-5.3)
+- curl: curl (curl-8_14_1)
+- grep-docs: GNU grep documentation (v3.12)
+
+Claims (full source mapping in the JSON block below):
+
+- filesystem (REASONED; sqlite-rolling): No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect.
+- extensions (REASONED; sqlite-rolling): Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries.
+- web-files (REASONED; sqlite-rolling): Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names.
+- git-files (REASONED; sqlite-rolling, git): Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. This guide assesses committed database rows as permanently available to anyone who clones, even after a later deletion commit.
+- permissions (REASONED; sqlite-rolling): Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation.
+- temporary (REASONED; sqlite-rolling): Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions.
+- encryption (REASONED; see, cipher): Public-domain SQLite has no file encryption; SEE is licensed and SQLCipher is a third-party alternative, otherwise use filesystem or volume encryption.
+- encryption-keys (REASONED; see, sqlite-rolling): Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak.
+- turso-http (REASONED; turso): Turso serves libSQL over HTTPS at the database/organization turso.io URL using bearer authentication; TURSO_DATABASE_URL and TURSO_AUTH_TOKEN belong in application configuration, never a client bundle or git.
+- turso-scope (REASONED; turso): db tokens create --read-only scopes away writes; --expiration accepts never or durations such as 7d3h. Prefer scoped, expiring tokens.
+- replicas (REASONED; litestream): Litestream replicates to supported object stores; scope AWS credentials and IAM to the required bucket/prefix, keep replicas private, and restore with scoped credentials.
+- metrics (REASONED; litestream): Litestream addr metrics listener defaults disabled; leave off unless needed, otherwise bind loopback, for example 127.0.0.1:9090.
+- mcp (REASONED; mcp): Litestream MCP mcp-addr is documented for v0.5.0 and later, defaults disabled and has no built-in authentication; protect information and restore access with an authenticated tunnel/proxy, for example at loopback:3001.
+- litefs-backups (REASONED; litefs-docs): LiteFS replicates among cluster nodes; its pre-1.0 documentation recommends separate off-site backups with private destinations.
+- litefs-transport (REASONED; litefs, go): LiteFS v0.5.14 routes have no credential gate; the server accepts cleartext HTTP/1 and h2c, and its client uses h2c. Litefs-Id comparisons reject self-connections, not unauthenticated callers.
+- litefs-bind (REASONED; litefs, go): http.addr defaults to host-less :20202, including the example; an empty address still listens on all interfaces at a system-chosen port.
+- litefs-config (REASONED; litefs): Set API bind in the config file; no direct address flag. Search working directory, available home directory, then /etc/litefs.yml; -config overrides and -no-expand-env disables ${VAR} expansion.
+- import (REASONED; litefs): POST /import creates or replaces a named database on the primary only; replicas return 503 before creation without forwarding, and DB.Import also checks primary status.
+- export (REASONED; litefs): GET /export returns the full existing local database, including applicable WAL pages, on either role; missing databases return 404.
+- stream (REASONED; litefs): POST /stream requires primary, HTTP/2 and a valid position map; replicas return 503. Unfiltered streams cover every database, filters narrow them, and fresh positions receive snapshots.
+- tx (REASONED; litefs): POST /tx applies a validated LTX file to an existing local database on either role without forwarding, primary or halt-owner checks; non-snapshots must match next transaction/checksum, missing databases return 404.
+- halt (REASONED; litefs): POST /halt on either role creates the database if absent and acquires write locks with a nonzero id, stalling primary writes or replica updates; DELETE releases an existing lock for a matching id.
+- halt-ttl (REASONED; litefs): LiteFS halt-lock TTL defaults to 30 seconds.
+- promote (REASONED; litefs): POST /promote needs an eligible candidate, succeeds unchanged for an existing primary, and asks a known primary for handoff from a candidate replica; no database name is required.
+- handoff (REASONED; litefs): POST /handoff requires primary, a connected target subscriber and a handoff-capable lease; static leases refuse it and no database name is required.
+- information (REASONED; litefs): GET /info, /events and /metrics disclose node, cluster and database state on either role without a named database.
+- debug (REASONED; litefs, go): Unconditional /debug/pprof/ exposes command line and live profiles; /debug/vars exposes command line, memory and store database/lock state on either role without a database name.
+- debug-rand (REASONED; litefs): /debug/rand streams deterministic pseudo-random data; its minute timeout is checked between writes and no server write timeout bounds a slow or non-reading client.
+- cluster-private (REASONED; litefs, litefs-docs): Bind each LiteFS API to its private node address and restrict reachability to cluster nodes; never publish 20202 through an internet-facing mapping or proxy.
+- consul-url (REASONED; litefs): Consul lease.advertise-url names each node private API; when unset it derives http:// plus lease.hostname or OS hostname and the actual listening port.
+- static-url (REASONED; litefs): Static leasing uses lease.advertise-url as configured: the primary points at itself and each replica at the primary private API.
+- container (REASONED; litefs, docker): LiteFS image supplies no configuration or EXPOSE; default wildcard binding applies within its namespace. Peers, host/shared networking, routing, firewall and publication determine reachability.
+- proxy (REASONED; litefs): LiteFS application proxy is separate: proxy.target enables attempted startup, proxy.db and proxy.addr must be nonempty, example :8080; application TLS and authentication remain necessary.
+- verify-download (REASONED; sqlite-rolling, bash, curl): Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available.
+- verify-bundle (DEMONSTRATED; turso, bash, grep-docs): Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths.
+- verify-git (DEMONSTRATED; sqlite-rolling): Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded.
+- verify-modes (REASONED; sqlite-rolling, coreutils): SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised.
+- verify-listeners (REASONED; litefs, litestream, mcp, bash, curl): Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available.
+- verify-turso (REASONED; turso, bash, curl): Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available.
+- halt-expiration (REASONED; litefs): LiteFS checks halt-lock expiration every 5 seconds.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-17",
+  "documentation_checked": "2026-09",
+  "body_sha256": "1df2b900bb4797e8f2561a2cb2066c6c74bf8505a9043279c660e1d96229198f",
+  "components": {
+    "sqlite-rolling": {
+      "name": "SQLite documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s2721da91f8d2": "https://www.sqlite.org/serverless.html",
+        "sf3d7f8391994": "https://www.sqlite.org/tempfiles.html",
+        "s742deb3338bb": "https://sqlite.org/loadext.html",
+        "sadf0431c1271": "https://www.sqlite.org/security.html"
+      }
+    },
+    "mcp": {
+      "name": "Litestream MCP minimum",
+      "basis": "v0.5.0",
+      "sources": {
+        "sa5dddf04652c": "https://litestream.io/reference/config/"
+      }
+    },
+    "see": {
+      "name": "SQLite Encryption Extension",
+      "basis": "unknown",
+      "sources": {
+        "sda3d8876503d": "https://www.sqlite.org/see/doc/trunk/www/readme.wiki"
+      }
+    },
+    "turso": {
+      "name": "Turso documentation",
+      "basis": "unknown",
+      "sources": {
+        "sb32fd9c679e1": "https://docs.turso.tech/sdk/http/quickstart",
+        "sfec4e734f423": "https://docs.turso.tech/cli/db/tokens/create",
+        "se409838a474a": "https://docs.turso.tech/sdk/http/reference"
+      }
+    },
+    "litestream": {
+      "name": "Litestream documentation",
+      "basis": "unknown",
+      "sources": {
+        "sec3d72af1447": "https://litestream.io/guides/",
+        "s87fa51accafc": "https://litestream.io/guides/s3/",
+        "sa5dddf04652c": "https://litestream.io/reference/config/"
+      }
+    },
+    "cipher": {
+      "name": "SQLCipher",
+      "basis": "unknown",
+      "sources": {
+        "s57d83a42a74a": "https://www.zetetic.net/sqlcipher/"
+      }
+    },
+    "litefs": {
+      "name": "LiteFS source",
+      "basis": "v0.5.14",
+      "sources": {
+        "s694a6ba8eafa": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L134-L268",
+        "s864cacb8e7cc": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L76-L99",
+        "s16da1761d6cc": "https://github.com/superfly/litefs/blob/v0.5.14/http/client.go#L32-L43",
+        "sf0e982d0e36a": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L57",
+        "s9389d639da6b": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/etc/litefs.yml#L54-L58",
+        "s475c28fd949e": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L76-L110",
+        "s055e15e84ba5": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L219-L233",
+        "s0b0bac964067": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/config.go#L288-L333",
+        "s326a1007e5c2": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L294-L318",
+        "s4547cc32557d": "https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2779-L2811",
+        "s85ece0e83d43": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1904-L1910",
+        "sa467eeb47f34": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L320-L346",
+        "s5ffa5c20fc78": "https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2682-L2776",
+        "s02908966756d": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L495-L520",
+        "sd63fa776fbc1": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L526-L585",
+        "s1c51b7efc42d": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L686-L699",
+        "scd0168363c1a": "https://github.com/superfly/litefs/blob/v0.5.14/http/http.go#L15-L43",
+        "s298808a10d50": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L461-L493",
+        "s7269cca8b0ea": "https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2387-L2448",
+        "sbd59a1af784e": "https://github.com/superfly/litefs/blob/v0.5.14/db.go#L2452-L2609",
+        "sa199174f541b": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L348-L407",
+        "s750403129022": "https://github.com/superfly/litefs/blob/v0.5.14/db.go#L215-L325",
+        "s5009045b97e1": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1525-L1531",
+        "se2add54cf935": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L39-L41",
+        "s59a2dfccd853": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1455-L1465",
+        "s246e6ad0d330": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L409-L459",
+        "sae4ece3fbc87": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L408-L432",
+        "s7bcb006d6884": "https://github.com/superfly/litefs/blob/v0.5.14/lease.go#L168-L170",
+        "se1a41376a98d": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L271-L292",
+        "s93c0ad91a567": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L779-L803",
+        "s36792457dd64": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L487-L488",
+        "s7234e34af9ef": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1661-L1713",
+        "s4cebe21e711d": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L329-L348",
+        "sb43f5d78723c": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L241-L244",
+        "s8dfa3f10f3d3": "https://github.com/superfly/litefs/blob/v0.5.14/lease.go#L99-L131",
+        "s83d8bd834347": "https://github.com/superfly/litefs/blob/v0.5.14/store.go#L1384-L1387",
+        "s3284d1a3ecad": "https://github.com/superfly/litefs/blob/v0.5.14/Dockerfile",
+        "s2b80fdf8adbe": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/mount_linux.go#L519-L524",
+        "sc0568fe7e0ee": "https://github.com/superfly/litefs/blob/v0.5.14/http/proxy_server.go#L131-L144",
+        "sf0d31f900082": "https://github.com/superfly/litefs/blob/v0.5.14/cmd/litefs/etc/litefs.yml#L60-L68",
+        "s82103ee03d64": "https://github.com/superfly/litefs/blob/v0.5.14/http/server.go#L32-L35"
+      }
+    },
+    "litefs-docs": {
+      "name": "LiteFS documentation",
+      "basis": "unknown",
+      "sources": {
+        "s13b9e92d9996": "https://fly.io/docs/litefs/",
+        "sd7c0ba136b25": "https://fly.io/docs/litefs/config/"
+      }
+    },
+    "go": {
+      "name": "Go library documentation",
+      "basis": "unknown",
+      "sources": {
+        "s6c5be8454523": "https://pkg.go.dev/github.com/golang/net/http2/h2c#NewHandler",
+        "s37204ff1b27c": "https://pkg.go.dev/net#Listen",
+        "se49529035a0c": "https://pkg.go.dev/expvar",
+        "s0246034dddd1": "https://pkg.go.dev/net/http/pprof"
+      }
+    },
+    "docker": {
+      "name": "Docker documentation",
+      "basis": "unknown",
+      "sources": {
+        "s881082f899b2": "https://docs.docker.com/engine/network/drivers/bridge/",
+        "s6732393fd414": "https://docs.docker.com/engine/network/drivers/host/",
+        "s00095bd02553": "https://docs.docker.com/engine/network/#container-networks"
+      }
+    },
+    "git": {
+      "name": "Git documentation",
+      "basis": "v2.56.0",
+      "sources": {
+        "s12aad6467212": "https://github.com/git/git/blob/v2.56.0/Documentation/gitignore.adoc#L15-L18",
+        "s8054ab09dc74": "https://github.com/git/git/blob/v2.56.0/Documentation/git-rm.adoc#L17-L28",
+        "s9a6802adec89": "https://github.com/git/git/blob/v2.56.0/Documentation/git-log.adoc#L16-L16"
+      }
+    },
+    "coreutils": {
+      "name": "GNU Coreutils stat manual",
+      "basis": "v9.7",
+      "sources": {
+        "s247df4545dc0": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L12989-L12995",
+        "sfd49553ab6e5": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13046",
+        "sbd6f7cad7bf4": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13062",
+        "s3e55a7242c33": "https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L13073"
+      }
+    },
+    "bash": {
+      "name": "GNU Bash reference manual",
+      "basis": "bash-5.3",
+      "sources": {
+        "s3711969be580": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n450",
+        "s7fec9b923488": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n769",
+        "s77b19e384d70": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n1397",
+        "se4f37e01a249": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n1866",
+        "s07f77f16f9f5": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n2288",
+        "sbed8cd562a35": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n2993",
+        "s7c9e44003867": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3131",
+        "s223b5c4d9a28": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4350",
+        "se02ece9163d4": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4582",
+        "s6067b2b1f78a": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5216",
+        "sa506f1abd6a1": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6182",
+        "s7d29125b4005": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n8232",
+        "s8962e63cfb20": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n2580",
+        "s8a27e686ddfb": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5466",
+        "s213f6d8d1f07": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3280",
+        "sf9757e9fd6e8": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n3872",
+        "s8cbc1b4709e2": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4737",
+        "s3255eca7e496": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n4852",
+        "s252aa2e81179": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5156",
+        "s8447036b2114": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5161",
+        "s5cab49305f3d": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5548",
+        "s6e8ae812c1c3": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5625",
+        "sb38bf74a89b0": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5629",
+        "s260459961fbc": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5659",
+        "s8c59508bd4c8": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5917",
+        "s8016d1aecfca": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n5929",
+        "se62fd3ad4fc3": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6122",
+        "s2df39d2c9c1c": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n6194",
+        "s80e3246e96d8": "https://git.savannah.gnu.org/cgit/bash.git/tree/doc/bashref.texi?h=bash-5.3#n7274"
+      }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s5b71321b79ea": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/disable.md#L4-L20",
+        "sc405a4bffc27": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/globoff.md#L4-L22",
+        "s345ec65025b0": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/noproxy.md#L18-L28",
+        "sc9973c4ceec1": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/connect-timeout.md#L19-L28",
+        "s7b6dca376156": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/max-time.md#L21-L27",
+        "s156481f6b726": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/silent.md#L4-L25",
+        "s07916104bf60": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/show-error.md#L4-L19",
+        "sa937dbe5dd4a": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L4-L33",
+        "s021603e35e68": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L49-L53",
+        "s5e1383feef7d": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79",
+        "s39402f9cb25c": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L105-L107",
+        "sf2dcd83157a6": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/insecure.md#L4-L30",
+        "s13f463154cea": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/fail.md#L24-L28",
+        "s2f1ff2f6cacd": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/output.md#L4-L53",
+        "sd3b039bafbf6": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data.md#L4-L49",
+        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md"
+      }
+    },
+    "grep-docs": {
+      "name": "GNU grep documentation",
+      "basis": "v3.12",
+      "sources": {
+        "s1733b640052b": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n197",
+        "s99f121f5426a": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n342",
+        "sbc8d05ab659b": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n621",
+        "sfdd7a73eab39": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n757",
+        "s7f9dc35e81c5": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n788",
+        "s5170317ddea8": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1110",
+        "sc08d6af4d642": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1142",
+        "scd528c854b46": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1150",
+        "sb8be8b716426": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1274",
+        "s5d5af9297df2": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1316",
+        "se99a83dba3c5": "https://git.savannah.gnu.org/cgit/grep.git/tree/doc/grep.texi?h=v3.12#n1363"
+      }
+    }
+  },
+  "claims": {
+    "filesystem": {"text": "No server, network listener or database-side authentication; filesystem authority controls access, including ATTACH. Treat files writable across security domains as suspect.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sadf0431c1271"], "status": "REASONED"},
+    "extensions": {"text": "Core extension loading defaults off, while the CLI enables it; enable only when required and load trusted libraries.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s742deb3338bb"], "status": "REASONED"},
+    "web-files": {"text": "Keep databases, sidecars, temporary files, exports and backups outside web-served paths; inspect aliases, symlinks, download routes and publishing, and do not rely on hidden names.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
+    "git-files": {"text": "Ignore database extensions and each -wal, -shm and -journal suffix before committing; ignore rules do not remove tracked files or history. This guide assesses committed database rows as permanently available to anyone who clones, even after a later deletion commit.", "components": ["sqlite-rolling", "git"], "sources": ["sqlite-rolling:sf3d7f8391994", "git:s12aad6467212", "git:s8054ab09dc74", "git:s9a6802adec89"], "status": "REASONED"},
+    "permissions": {"text": "Dedicated account, directory 700, database and existing sidecars 600, and launch umask 077; same-account processes and privileged users remain outside this isolation.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
+    "temporary": {"text": "Protect temporary files and backups; Unix SQLITE_TMPDIR needs an existing private directory and may fall back elsewhere. Do not delete live sidecars to repair permissions.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
+    "encryption": {"text": "Public-domain SQLite has no file encryption; SEE is licensed and SQLCipher is a third-party alternative, otherwise use filesystem or volume encryption.", "components": ["see", "cipher"], "sources": ["see:sda3d8876503d", "cipher:s57d83a42a74a"], "status": "REASONED"},
+    "encryption-keys": {"text": "Keep keys outside databases and backups; SEE TEMP tables can be unencrypted. Treat credential-bearing copies as secrets and rotate credentials after a leak.", "components": ["see", "sqlite-rolling"], "sources": ["see:sda3d8876503d", "sqlite-rolling:sf3d7f8391994"], "status": "REASONED"},
+    "turso-http": {"text": "Turso serves libSQL over HTTPS at the database/organization turso.io URL using bearer authentication; TURSO_DATABASE_URL and TURSO_AUTH_TOKEN belong in application configuration, never a client bundle or git.", "components": ["turso"], "sources": ["turso:sb32fd9c679e1"], "status": "REASONED"},
+    "turso-scope": {"text": "db tokens create --read-only scopes away writes; --expiration accepts never or durations such as 7d3h. Prefer scoped, expiring tokens.", "components": ["turso"], "sources": ["turso:sfec4e734f423"], "status": "REASONED"},
+    "replicas": {"text": "Litestream replicates to supported object stores; scope AWS credentials and IAM to the required bucket/prefix, keep replicas private, and restore with scoped credentials.", "components": ["litestream"], "sources": ["litestream:sec3d72af1447", "litestream:s87fa51accafc"], "status": "REASONED"},
+    "metrics": {"text": "Litestream addr metrics listener defaults disabled; leave off unless needed, otherwise bind loopback, for example 127.0.0.1:9090.", "components": ["litestream"], "sources": ["litestream:sa5dddf04652c"], "status": "REASONED"},
+    "mcp": {"text": "Litestream MCP mcp-addr is documented for v0.5.0 and later, defaults disabled and has no built-in authentication; protect information and restore access with an authenticated tunnel/proxy, for example at loopback:3001.", "components": ["mcp"], "sources": ["mcp:sa5dddf04652c"], "status": "REASONED"},
+    "litefs-backups": {"text": "LiteFS replicates among cluster nodes; its pre-1.0 documentation recommends separate off-site backups with private destinations.", "components": ["litefs-docs"], "sources": ["litefs-docs:s13b9e92d9996"], "status": "REASONED"},
+    "litefs-transport": {"text": "LiteFS v0.5.14 routes have no credential gate; the server accepts cleartext HTTP/1 and h2c, and its client uses h2c. Litefs-Id comparisons reject self-connections, not unauthenticated callers.", "components": ["litefs", "go"], "sources": ["litefs:s694a6ba8eafa", "litefs:s864cacb8e7cc", "litefs:s16da1761d6cc", "go:s6c5be8454523"], "status": "REASONED"},
+    "litefs-bind": {"text": "http.addr defaults to host-less :20202, including the example; an empty address still listens on all interfaces at a system-chosen port.", "components": ["litefs", "go"], "sources": ["litefs:sf0e982d0e36a", "litefs:s9389d639da6b", "go:s37204ff1b27c", "litefs:s82103ee03d64"], "status": "REASONED"},
+    "litefs-config": {"text": "Set API bind in the config file; no direct address flag. Search working directory, available home directory, then /etc/litefs.yml; -config overrides and -no-expand-env disables ${VAR} expansion.", "components": ["litefs"], "sources": ["litefs:s475c28fd949e", "litefs:s055e15e84ba5", "litefs:s0b0bac964067"], "status": "REASONED"},
+    "import": {"text": "POST /import creates or replaces a named database on the primary only; replicas return 503 before creation without forwarding, and DB.Import also checks primary status.", "components": ["litefs"], "sources": ["litefs:s326a1007e5c2", "litefs:s4547cc32557d", "litefs:s85ece0e83d43"], "status": "REASONED"},
+    "export": {"text": "GET /export returns the full existing local database, including applicable WAL pages, on either role; missing databases return 404.", "components": ["litefs"], "sources": ["litefs:sa467eeb47f34", "litefs:s5ffa5c20fc78"], "status": "REASONED"},
+    "stream": {"text": "POST /stream requires primary, HTTP/2 and a valid position map; replicas return 503. Unfiltered streams cover every database, filters narrow them, and fresh positions receive snapshots.", "components": ["litefs"], "sources": ["litefs:s02908966756d", "litefs:sd63fa776fbc1", "litefs:s1c51b7efc42d", "litefs:scd0168363c1a"], "status": "REASONED"},
+    "tx": {"text": "POST /tx applies a validated LTX file to an existing local database on either role without forwarding, primary or halt-owner checks; non-snapshots must match next transaction/checksum, missing databases return 404.", "components": ["litefs"], "sources": ["litefs:s298808a10d50", "litefs:s7269cca8b0ea", "litefs:sbd59a1af784e"], "status": "REASONED"},
+    "halt": {"text": "POST /halt on either role creates the database if absent and acquires write locks with a nonzero id, stalling primary writes or replica updates; DELETE releases an existing lock for a matching id.", "components": ["litefs"], "sources": ["litefs:sa199174f541b", "litefs:s750403129022", "litefs:s5009045b97e1"], "status": "REASONED"},
+    "halt-ttl": {"text": "LiteFS halt-lock TTL defaults to 30 seconds.", "components": ["litefs"], "sources": ["litefs:se2add54cf935", "litefs:s59a2dfccd853"], "status": "REASONED"},
+    "promote": {"text": "POST /promote needs an eligible candidate, succeeds unchanged for an existing primary, and asks a known primary for handoff from a candidate replica; no database name is required.", "components": ["litefs"], "sources": ["litefs:s246e6ad0d330", "litefs:sae4ece3fbc87"], "status": "REASONED"},
+    "handoff": {"text": "POST /handoff requires primary, a connected target subscriber and a handoff-capable lease; static leases refuse it and no database name is required.", "components": ["litefs"], "sources": ["litefs:s246e6ad0d330", "litefs:s7bcb006d6884"], "status": "REASONED"},
+    "information": {"text": "GET /info, /events and /metrics disclose node, cluster and database state on either role without a named database.", "components": ["litefs"], "sources": ["litefs:s694a6ba8eafa", "litefs:se1a41376a98d", "litefs:s93c0ad91a567"], "status": "REASONED"},
+    "debug": {"text": "Unconditional /debug/pprof/ exposes command line and live profiles; /debug/vars exposes command line, memory and store database/lock state on either role without a database name.", "components": ["litefs", "go"], "sources": ["litefs:s694a6ba8eafa", "litefs:s36792457dd64", "litefs:s7234e34af9ef", "go:se49529035a0c", "go:s0246034dddd1"], "status": "REASONED"},
+    "debug-rand": {"text": "/debug/rand streams deterministic pseudo-random data; its minute timeout is checked between writes and no server write timeout bounds a slow or non-reading client.", "components": ["litefs"], "sources": ["litefs:s694a6ba8eafa", "litefs:s864cacb8e7cc"], "status": "REASONED"},
+    "cluster-private": {"text": "Bind each LiteFS API to its private node address and restrict reachability to cluster nodes; never publish 20202 through an internet-facing mapping or proxy.", "components": ["litefs", "litefs-docs"], "sources": ["litefs:s694a6ba8eafa", "litefs-docs:sd7c0ba136b25"], "status": "REASONED"},
+    "consul-url": {"text": "Consul lease.advertise-url names each node private API; when unset it derives http:// plus lease.hostname or OS hostname and the actual listening port.", "components": ["litefs"], "sources": ["litefs:s4cebe21e711d"], "status": "REASONED"},
+    "static-url": {"text": "Static leasing uses lease.advertise-url as configured: the primary points at itself and each replica at the primary private API.", "components": ["litefs"], "sources": ["litefs:s8dfa3f10f3d3", "litefs:s83d8bd834347", "litefs:sb43f5d78723c"], "status": "REASONED"},
+    "container": {"text": "LiteFS image supplies no configuration or EXPOSE; default wildcard binding applies within its namespace. Peers, host/shared networking, routing, firewall and publication determine reachability.", "components": ["litefs", "docker"], "sources": ["litefs:s3284d1a3ecad", "docker:s881082f899b2", "docker:s6732393fd414", "docker:s00095bd02553"], "status": "REASONED"},
+    "proxy": {"text": "LiteFS application proxy is separate: proxy.target enables attempted startup, proxy.db and proxy.addr must be nonempty, example :8080; application TLS and authentication remain necessary.", "components": ["litefs"], "sources": ["litefs:s2b80fdf8adbe", "litefs:sc0568fe7e0ee", "litefs:sf0d31f900082"], "status": "REASONED"},
+    "verify-download": {"text": "Probe actual database/sidecar paths only after a successful application control; timeouts, DNS and proxy failures do not establish non-publication. No served application was available.", "components": ["sqlite-rolling", "bash", "curl"], "sources": ["sqlite-rolling:s2721da91f8d2", "sqlite-rolling:sf3d7f8391994", "bash:s3711969be580", "bash:s7fec9b923488", "bash:s77b19e384d70", "bash:se4f37e01a249", "bash:s07f77f16f9f5", "bash:sbed8cd562a35", "bash:s7c9e44003867", "bash:s223b5c4d9a28", "bash:se02ece9163d4", "bash:s6067b2b1f78a", "bash:sa506f1abd6a1", "bash:s7d29125b4005", "bash:s8962e63cfb20", "bash:s8a27e686ddfb", "curl:s5b71321b79ea", "curl:sc405a4bffc27", "curl:s345ec65025b0", "curl:sc9973c4ceec1", "curl:s7b6dca376156", "curl:s156481f6b726", "curl:s07916104bf60", "curl:sa937dbe5dd4a", "curl:s021603e35e68", "curl:s5e1383feef7d", "curl:s39402f9cb25c", "curl:sf2dcd83157a6", "curl:s13f463154cea", "curl:s2f1ff2f6cacd"], "status": "REASONED", "verify": [1]},
+    "verify-bundle": {"text": "Local placeholder-token scan distinguished exposed and clean bundles and refused absent directories; readonly, nameref, lowercase and IFS cases are recorded. A clean scan covers only the searched forms and paths.", "components": ["turso", "bash", "grep-docs"], "sources": ["turso:sb32fd9c679e1", "bash:s3711969be580", "bash:s7fec9b923488", "bash:s77b19e384d70", "bash:se4f37e01a249", "bash:s07f77f16f9f5", "bash:sbed8cd562a35", "bash:s7c9e44003867", "bash:s223b5c4d9a28", "bash:se02ece9163d4", "bash:s6067b2b1f78a", "bash:sa506f1abd6a1", "bash:s7d29125b4005", "bash:s8a27e686ddfb", "bash:s213f6d8d1f07", "bash:sf9757e9fd6e8", "bash:s8cbc1b4709e2", "bash:s3255eca7e496", "bash:s252aa2e81179", "bash:s8447036b2114", "bash:s5cab49305f3d", "bash:s6e8ae812c1c3", "bash:sb38bf74a89b0", "bash:s260459961fbc", "bash:s8c59508bd4c8", "bash:s8016d1aecfca", "bash:se62fd3ad4fc3", "bash:s2df39d2c9c1c", "bash:s80e3246e96d8", "grep-docs:s1733b640052b", "grep-docs:s99f121f5426a", "grep-docs:sbc8d05ab659b", "grep-docs:sfdd7a73eab39", "grep-docs:s7f9dc35e81c5", "grep-docs:s5170317ddea8", "grep-docs:sc08d6af4d642", "grep-docs:scd528c854b46", "grep-docs:sb8be8b716426", "grep-docs:s5d5af9297df2", "grep-docs:se99a83dba3c5"], "status": "DEMONSTRATED", "evidence": "A bundle carrying the placeholder printed `dist/app.js` before `token-literal exit: 0` and again before `jwt-shape exit: 0`, and a clean bundle printed `1` for both.", "verify": [2]},
+    "verify-git": {"text": "Local throwaway repositories showed tracked/history copies survive ignore rules and index removal; a never-committed ignored file produced only rule matches. Git version is unrecorded.", "components": ["sqlite-rolling"], "sources": ["sqlite-rolling:sf3d7f8391994"], "status": "DEMONSTRATED", "evidence": "With `app.db` committed before an `app.db*` ignore rule was added, `git check-ignore -v` listed the sidecars but not the tracked `app.db`. `git ls-files` printed `app.db`, and `git log` printed its commit.", "verify": [3]},
+    "verify-modes": {"text": "SQLite 3.46.1 local WAL and rollback-journal runs showed umask 022 versus 077 modes; every file belonged to the test account, and separate application-account ownership was not exercised.", "components": ["sqlite-rolling", "coreutils"], "sources": ["sqlite-rolling:sf3d7f8391994", "coreutils:s247df4545dc0", "coreutils:sfd49553ab6e5", "coreutils:sbd6f7cad7bf4", "coreutils:s3e55a7242c33"], "status": "REASONED", "verify": [4]},
+    "verify-listeners": {"text": "Compare authorized private control with untrusted reachability for LiteFS or enabled Litestream metrics/MCP; any HTTP response shows a listener, not every backend route. Transport errors and failed controls are inconclusive; no isolated listener environment was available.", "components": ["litefs", "litestream", "mcp", "bash", "curl"], "sources": ["litefs:s694a6ba8eafa", "litestream:sa5dddf04652c", "mcp:sa5dddf04652c", "bash:s3711969be580", "bash:s7fec9b923488", "bash:s77b19e384d70", "bash:se4f37e01a249", "bash:s07f77f16f9f5", "bash:sbed8cd562a35", "bash:s7c9e44003867", "bash:s223b5c4d9a28", "bash:se02ece9163d4", "bash:s6067b2b1f78a", "bash:sa506f1abd6a1", "bash:s7d29125b4005", "curl:s5b71321b79ea", "curl:sc405a4bffc27", "curl:s345ec65025b0", "curl:sc9973c4ceec1", "curl:s7b6dca376156", "curl:s156481f6b726", "curl:s07916104bf60", "curl:sa937dbe5dd4a", "curl:s021603e35e68", "curl:s5e1383feef7d", "curl:s39402f9cb25c", "curl:sf2dcd83157a6", "curl:s13f463154cea", "curl:s2f1ff2f6cacd"], "status": "REASONED", "verify": [5]},
+    "verify-turso": {"text": "Turso /v2/pipeline must return SELECT 1 with a valid bearer token and no successful result anonymously; HTTP 200 alone is insufficient and transport failure inconclusive. No database/token was available.", "components": ["turso", "bash", "curl"], "sources": ["turso:se409838a474a", "bash:s3711969be580", "bash:s7fec9b923488", "bash:s77b19e384d70", "bash:se4f37e01a249", "bash:s07f77f16f9f5", "bash:sbed8cd562a35", "bash:s7c9e44003867", "bash:s223b5c4d9a28", "bash:se02ece9163d4", "bash:s6067b2b1f78a", "bash:sa506f1abd6a1", "bash:s7d29125b4005", "bash:s8962e63cfb20", "bash:s8a27e686ddfb", "bash:s213f6d8d1f07", "bash:sf9757e9fd6e8", "bash:s8cbc1b4709e2", "bash:s3255eca7e496", "bash:s252aa2e81179", "bash:s8447036b2114", "bash:s5cab49305f3d", "bash:s6e8ae812c1c3", "bash:sb38bf74a89b0", "bash:s260459961fbc", "bash:s8c59508bd4c8", "bash:s8016d1aecfca", "bash:se62fd3ad4fc3", "bash:s2df39d2c9c1c", "bash:s80e3246e96d8", "curl:s5b71321b79ea", "curl:sc405a4bffc27", "curl:s345ec65025b0", "curl:sc9973c4ceec1", "curl:s7b6dca376156", "curl:s156481f6b726", "curl:s07916104bf60", "curl:sa937dbe5dd4a", "curl:s021603e35e68", "curl:s5e1383feef7d", "curl:s39402f9cb25c", "curl:sf2dcd83157a6", "curl:s13f463154cea", "curl:sd3b039bafbf6", "curl:s3db522258e44"], "status": "REASONED", "verify": [6]},
+    "halt-expiration": {"text": "LiteFS checks halt-lock expiration every 5 seconds.", "components": ["litefs"], "sources": ["litefs:se2add54cf935", "litefs:s59a2dfccd853"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->

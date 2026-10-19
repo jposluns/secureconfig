@@ -1,187 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-09-26",
-  "documentation_checked": "2026-09",
-  "body_sha256": "3bdad54327114894a6f45d5d5adb334b0b4fbc9bf784629b0385e6e2c4063461",
-  "components": {
-    "next": {
-      "name": "Next.js documentation",
-      "basis": "unknown",
-      "sources": {
-        "s066f8a176a52": "https://nextjs.org/docs/app/api-reference/cli/next",
-        "scd5749a71a79": "https://nextjs.org/docs/app/api-reference/file-conventions/proxy",
-        "sc2a39ce10fe1": "https://nextjs.org/docs/app/api-reference/file-conventions/route",
-        "sfbc4364fb5cc": "https://nextjs.org/docs/app/api-reference/functions/cookies",
-        "sa45045bebccb": "https://nextjs.org/docs/app/guides/authentication",
-        "s23a087193901": "https://nextjs.org/docs/app/guides/data-security",
-        "s964651d4eed4": "https://nextjs.org/docs/app/guides/environment-variables",
-        "s353c30dff99f": "https://nextjs.org/docs/app/guides/self-hosting"
-      }
-    },
-    "next-pin": {
-      "name": "Next.js listener source",
-      "basis": "v16.3.6",
-      "sources": {
-        "s11ffc231f0c3": "https://github.com/vercel/next.js/blob/v16.3.6/packages/next/package.json#L246",
-        "s3b0feef8ec0f": "https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/bin/next.ts#L436-L458",
-        "s0ef9150d51e4": "https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/cli/next-start.ts#L44",
-        "sefdefa3425c6": "https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/cli/next-start.ts#L84-L87",
-        "s66bd2ed9c346": "https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/server/lib/start-server.ts#L187-L196",
-        "s2b4479b3c1d2": "https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/server/lib/start-server.ts#L309"
-      }
-    },
-    "node": {
-      "name": "Node.js listener source",
-      "basis": "v22.22.1",
-      "sources": {
-        "sfb3e306c102d": "https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md"
-      }
-    },
-    "commander": {
-      "name": "Commander",
-      "basis": "12.1.0",
-      "sources": {
-        "s408eb603ae2e": "https://github.com/tj/commander.js/blob/v12.1.0/Readme.md#L203-L205"
-      }
-    },
-    "authjs": {
-      "name": "Auth.js",
-      "basis": "unknown",
-      "sources": {
-        "sb4ac5f50ec66": "https://authjs.dev/getting-started/deployment",
-        "s42365460cb4c": "https://authjs.dev/getting-started/installation",
-        "s46bb80456d4f": "https://authjs.dev/getting-started/session-management/protecting"
-      }
-    },
-    "better": {
-      "name": "Better Auth",
-      "basis": "unknown",
-      "sources": {
-        "s981751bcb554": "https://better-auth.com/docs/installation",
-        "s2ac2e0926f25": "https://better-auth.com/docs/integrations/next",
-        "sdd3d825cc3a4": "https://better-auth.com/docs/introduction",
-        "s8677a74455a1": "https://better-auth.com/docs/plugins/2fa",
-        "s4b3a514c43d9": "https://better-auth.com/docs/reference/options"
-      }
-    },
-    "vercel": {
-      "name": "Vercel documentation",
-      "basis": "unknown",
-      "sources": {
-        "s7836e043434a": "https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan",
-        "se6089d5c4e96": "https://vercel.com/docs/deployment-protection"
-      }
-    },
-    "curl": {
-      "name": "curl",
-      "basis": "unknown",
-      "sources": {
-        "s5345a985007a": "https://curl.se/docs/manpage.html#-H"
-      }
-    },
-    "grep": {
-      "name": "GNU grep",
-      "basis": "unknown",
-      "sources": {
-        "sea43e82b0753": "https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html",
-        "s2c1251092e66": "https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html",
-        "sd00017f70dae": "https://www.gnu.org/software/grep/manual/html_node/Matching-Control.html"
-      }
-    }
-  },
-  "claims": {
-    "entrypoints": {"text": "Pages, layouts, handlers and exported Actions are distinct entry points; Actions accept direct POST. Next.js 16 renamed middleware.ts to proxy.ts; session primitives are not login.", "components": ["next"], "sources": ["next:scd5749a71a79", "next:sc2a39ce10fe1", "next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED"},
-    "start-default": {"text": "v16.3.6 next start defaults 3000 and no hostname: Node binds :: when available, else 0.0.0.0 despite -H help. Pinned Commander leaves unspecified value options undefined.", "components": ["next-pin", "node", "commander"], "sources": ["next-pin:s3b0feef8ec0f", "next-pin:s0ef9150d51e4", "next-pin:sefdefa3425c6", "next-pin:s66bd2ed9c346", "next-pin:s2b4479b3c1d2", "node:sfb3e306c102d", "commander:s408eb603ae2e", "next-pin:s11ffc231f0c3"], "status": "REASONED"},
-    "private-tls": {"text": "Build then next start -H 127.0.0.1 -p 3000 with TLS proxy; PORT cannot be set in .env. Hosted TLS comes from the platform.", "components": ["next"], "sources": ["next:s066f8a176a52", "next:s353c30dff99f"], "status": "REASONED"},
-    "dal": {"text": "Call DAL verifySession for every data request, handler and Action; authorize resource ownership and return only needed fields.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED"},
-    "layouts": {"text": "Layouts do not rerender on every navigation; returning null does not stop nested segments or Actions.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED"},
-    "proxy": {"text": "Proxy is an optimistic cookie-only redirect layer, not sole authorization; avoid database lookups and account for matcher changes.", "components": ["next"], "sources": ["next:scd5749a71a79", "next:sa45045bebccb"], "status": "REASONED"},
-    "role": {"text": "Handler/action examples independently require admin; sensitive roles come from trusted user storage. Fragments need imports, data calls and real success responses.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED"},
-    "session-secret": {"text": "Generate a 32-byte random SESSION_SECRET in server environment, never NEXT_PUBLIC_.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s964651d4eed4"], "status": "REASONED"},
-    "session-jwt": {"text": "jose session signs HS256 with seven-day expiry; decrypt verifies only HS256 and returns payload/undefined. User ID/role only, no PII; sensitive work uses database-verified sessions.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED"},
-    "session-cookie": {"text": "Set HttpOnly, Secure, SameSite=Lax, path / and seven-day expiry; only Server Functions/handlers set/delete cookies, with logout deleting session.", "components": ["next"], "sources": ["next:sfbc4364fb5cc", "next:sa45045bebccb"], "status": "REASONED"},
-    "public-env": {"text": "NEXT_PUBLIC_ is inlined at build; next.config.js env is client-inlined regardless of prefix. Read secrets only in DAL and ignore .env files.", "components": ["next"], "sources": ["next:s964651d4eed4", "next:s23a087193901"], "status": "REASONED"},
-    "action-key": {"text": "Self-hosted instances share NEXT_SERVER_ACTIONS_ENCRYPTION_KEY at build, base64 decoding to 16/24/32 bytes; closure encryption is not secret protection.", "components": ["next"], "sources": ["next:s353c30dff99f", "next:s23a087193901"], "status": "REASONED"},
-    "action-origin": {"text": "Actions abort when Origin mismatches Host/X-Forwarded-Host; proxies can configure experimental.serverActions.allowedOrigins.", "components": ["next"], "sources": ["next:s23a087193901", "next:s353c30dff99f"], "status": "REASONED"},
-    "authjs-secret": {"text": "AUTH_SECRET is mandatory; npx auth secret writes .env.local.", "components": ["authjs"], "sources": ["authjs:sb4ac5f50ec66", "authjs:s42365460cb4c"], "status": "REASONED"},
-    "authjs-providers": {"text": "Configure provider ID/SECRET and OIDC ISSUER variables, real providers and linked allowlist checks.", "components": ["authjs"], "sources": ["authjs:sb4ac5f50ec66", "authjs:s42365460cb4c"], "status": "REASONED"},
-    "authjs-trust": {"text": "Set AUTH_TRUST_HOST=true behind a reverse proxy; Vercel sets trust automatically.", "components": ["authjs"], "sources": ["authjs:sb4ac5f50ec66"], "status": "REASONED"},
-    "authjs-route": {"text": "auth() reads sessions; wrapped handlers only populate req.auth and must deny missing sessions and failed authorization before data.", "components": ["authjs"], "sources": ["authjs:s46bb80456d4f"], "status": "REASONED"},
-    "authjs-proxy": {"text": "auth as proxy with empty providers and no authorized callback permits all requests; add callback/wrapper and resource checks. Enforce MFA at the identity provider.", "components": ["authjs"], "sources": ["authjs:s46bb80456d4f"], "status": "REASONED"},
-    "better-secret": {"text": "BETTER_AUTH_SECRET needs 32+ characters; production rejects the placeholder default. Set BETTER_AUTH_URL/baseURL explicitly, not request inference.", "components": ["better"], "sources": ["better:s981751bcb554", "better:s4b3a514c43d9"], "status": "REASONED"},
-    "better-origins": {"text": "trustedOrigins scopes origin/CSRF and callbackURL checks, not app-route access; general checks skip GET/HEAD/OPTIONS with endpoint-specific GET callback checks.", "components": ["better"], "sources": ["better:s4b3a514c43d9"], "status": "REASONED"},
-    "better-password": {"text": "Better Auth emailAndPassword defaults disabled; enable explicitly when used.", "components": ["better"], "sources": ["better:s4b3a514c43d9"], "status": "REASONED"},
-    "better-next": {"text": "nextCookies enables Action session-cookie writes; toNextJsHandler exports auth GET/POST routes.", "components": ["better"], "sources": ["better:s2ac2e0926f25"], "status": "REASONED"},
-    "better-session": {"text": "Reject missing getSession before authorization: handler 401, component redirect/throw, action redirect/throw/serializable error. Discarding results or checking cookie existence gates nothing.", "components": ["better"], "sources": ["better:s2ac2e0926f25"], "status": "REASONED"},
-    "better-mfa": {"text": "twoFactor makes TOTP, emailed/SMS OTP and backups available, not enrolled/enforced; OTP needs sendOTP, client needs twoFactorClient and migration, operations need separate 2FA checks.", "components": ["better"], "sources": ["better:s8677a74455a1"], "status": "REASONED"},
-    "vercel-methods": {"text": "Deployment Protection admits project-authorized Vercel users; Passport, Password Protection and Trusted IPs need Enterprise/paid add-ons, not app-user authentication.", "components": ["vercel"], "sources": ["vercel:se6089d5c4e96"], "status": "REASONED"},
-    "vercel-scope": {"text": "Standard Protection excludes production domains; enable All Deployments. Cited 9 September 2026 announcement makes Vercel Authentication production scope free on all plans including Hobby.", "components": ["vercel"], "sources": ["vercel:s7836e043434a", "vercel:se6089d5c4e96"], "status": "REASONED"},
-    "verify-bind": {"text": "ss inventories loopback 3000; it does not prove firewall/platform ingress isolation.", "components": ["next"], "sources": ["next:s066f8a176a52", "next:s353c30dff99f"], "status": "REASONED", "verify": [1]},
-    "verify-anonymous": {"text": "Anonymous admin/dashboard must contain no protected data: login 3xx, chosen 401/403, or streamed 200 redirect shell require reading saved bodies.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [1]},
-    "verify-authorized": {"text": "Authorized dashboard/admin controls must return real content; non-admin must deny admin data, meaningful only after admin success.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [1]},
-    "verify-cookie-input": {"text": "Prompt cookie values without echo and send through curl stdin; hidden prompt and set +x keep them from argv, history and tracing, not the account owner or root; assumes clean shell and separate subshell pastes.", "components": ["curl"], "sources": ["curl:s5345a985007a"], "status": "REASONED", "verify": [1]},
-    "verify-secret": {"text": "Require .next/static, prompt full literal secret and send to grep stdin: 0 leak, 1 no literal match, other codes inconclusive. Encoded/split secrets can escape.", "components": ["next", "grep"], "sources": ["next:s964651d4eed4", "grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae"], "status": "REASONED", "verify": [1]},
-    "verify-action": {"text": "Fresh disposable record per Action attempt; authorized mutation changes store, anonymous/unauthorized replays deny without changes, not merely not-found.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # Next.js: authentication that actually gates Route Handlers, Server Actions, and data
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Next.js listener source v16.3.6, Node.js listener source v22.22.1, and Commander 12.1.0; 6 further sources carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 32 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- next: Next.js documentation (unknown)
-- next-pin: Next.js listener source (v16.3.6)
-- node: Node.js listener source (v22.22.1)
-- commander: Commander (12.1.0)
-- authjs: Auth.js (unknown)
-- better: Better Auth (unknown)
-- vercel: Vercel documentation (unknown)
-- curl: curl (unknown)
-- grep: GNU grep (unknown)
-
-Claims (full source mapping in the front matter):
-
-- entrypoints (REASONED; next): Pages, layouts, handlers and exported Actions are distinct entry points; Actions accept direct POST. Next.js 16 renamed middleware.ts to proxy.ts; session primitives are not login.
-- start-default (REASONED; next-pin, node, commander): v16.3.6 next start defaults 3000 and no hostname: Node binds :: when available, else 0.0.0.0 despite -H help. Pinned Commander leaves unspecified value options undefined.
-- private-tls (REASONED; next): Build then next start -H 127.0.0.1 -p 3000 with TLS proxy; PORT cannot be set in .env. Hosted TLS comes from the platform.
-- dal (REASONED; next): Call DAL verifySession for every data request, handler and Action; authorize resource ownership and return only needed fields.
-- layouts (REASONED; next): Layouts do not rerender on every navigation; returning null does not stop nested segments or Actions.
-- proxy (REASONED; next): Proxy is an optimistic cookie-only redirect layer, not sole authorization; avoid database lookups and account for matcher changes.
-- role (REASONED; next): Handler/action examples independently require admin; sensitive roles come from trusted user storage. Fragments need imports, data calls and real success responses.
-- session-secret (REASONED; next): Generate a 32-byte random SESSION_SECRET in server environment, never NEXT_PUBLIC_.
-- session-jwt (REASONED; next): jose session signs HS256 with seven-day expiry; decrypt verifies only HS256 and returns payload/undefined. User ID/role only, no PII; sensitive work uses database-verified sessions.
-- session-cookie (REASONED; next): Set HttpOnly, Secure, SameSite=Lax, path / and seven-day expiry; only Server Functions/handlers set/delete cookies, with logout deleting session.
-- public-env (REASONED; next): NEXT_PUBLIC_ is inlined at build; next.config.js env is client-inlined regardless of prefix. Read secrets only in DAL and ignore .env files.
-- action-key (REASONED; next): Self-hosted instances share NEXT_SERVER_ACTIONS_ENCRYPTION_KEY at build, base64 decoding to 16/24/32 bytes; closure encryption is not secret protection.
-- action-origin (REASONED; next): Actions abort when Origin mismatches Host/X-Forwarded-Host; proxies can configure experimental.serverActions.allowedOrigins.
-- authjs-secret (REASONED; authjs): AUTH_SECRET is mandatory; npx auth secret writes .env.local.
-- authjs-providers (REASONED; authjs): Configure provider ID/SECRET and OIDC ISSUER variables, real providers and linked allowlist checks.
-- authjs-trust (REASONED; authjs): Set AUTH_TRUST_HOST=true behind a reverse proxy; Vercel sets trust automatically.
-- authjs-route (REASONED; authjs): auth() reads sessions; wrapped handlers only populate req.auth and must deny missing sessions and failed authorization before data.
-- authjs-proxy (REASONED; authjs): auth as proxy with empty providers and no authorized callback permits all requests; add callback/wrapper and resource checks. Enforce MFA at the identity provider.
-- better-secret (REASONED; better): BETTER_AUTH_SECRET needs 32+ characters; production rejects the placeholder default. Set BETTER_AUTH_URL/baseURL explicitly, not request inference.
-- better-origins (REASONED; better): trustedOrigins scopes origin/CSRF and callbackURL checks, not app-route access; general checks skip GET/HEAD/OPTIONS with endpoint-specific GET callback checks.
-- better-password (REASONED; better): Better Auth emailAndPassword defaults disabled; enable explicitly when used.
-- better-next (REASONED; better): nextCookies enables Action session-cookie writes; toNextJsHandler exports auth GET/POST routes.
-- better-session (REASONED; better): Reject missing getSession before authorization: handler 401, component redirect/throw, action redirect/throw/serializable error. Discarding results or checking cookie existence gates nothing.
-- better-mfa (REASONED; better): twoFactor makes TOTP, emailed/SMS OTP and backups available, not enrolled/enforced; OTP needs sendOTP, client needs twoFactorClient and migration, operations need separate 2FA checks.
-- vercel-methods (REASONED; vercel): Deployment Protection admits project-authorized Vercel users; Passport, Password Protection and Trusted IPs need Enterprise/paid add-ons, not app-user authentication.
-- vercel-scope (REASONED; vercel): Standard Protection excludes production domains; enable All Deployments. Cited 9 September 2026 announcement makes Vercel Authentication production scope free on all plans including Hobby.
-- verify-bind (REASONED; next): ss inventories loopback 3000; it does not prove firewall/platform ingress isolation.
-- verify-anonymous (REASONED; next): Anonymous admin/dashboard must contain no protected data: login 3xx, chosen 401/403, or streamed 200 redirect shell require reading saved bodies.
-- verify-authorized (REASONED; next): Authorized dashboard/admin controls must return real content; non-admin must deny admin data, meaningful only after admin success.
-- verify-cookie-input (REASONED; curl): Prompt cookie values without echo and send through curl stdin; hidden prompt and set +x keep them from argv, history and tracing, not the account owner or root; assumes clean shell and separate subshell pastes.
-- verify-secret (REASONED; next, grep): Require .next/static, prompt full literal secret and send to grep stdin: 0 leak, 1 no literal match, other codes inconclusive. Encoded/split secrets can escape.
-- verify-action (REASONED; next): Fresh disposable record per Action attempt; authorized mutation changes store, anonymous/unauthorized replays deny without changes, not merely not-found.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 A Next.js app has many entry points: pages, layouts, Route Handlers (`app/**/route.ts`), and every exported Server Action, which the Next.js docs describe as reachable by a direct POST whether or not your UI calls it. A check that lives only in a layout or in `proxy.ts` (the file Next.js 16 renamed from `middleware.ts`) leaves open the entry points it does not cover (a layout guards no Route Handler or Server Action; a `proxy.ts` matcher guards only the paths it matches), and authorization still belongs next to the data. Next.js supplies cookies and sessions as primitives, not a login system; the login is yours or a library's.
 
@@ -422,3 +243,208 @@ curl -q -sS --noproxy '*' -o dash-nocookie.txt  -w 'http=%{http_code} loc=%{redi
 - Commander 12.1.0 (the version Next.js v16.3.6 pins): an option that takes a value is `undefined` unless specified on the command line: https://github.com/tj/commander.js/blob/v12.1.0/Readme.md#L203-L205
 - Next.js v16.3.6 pins `commander` at `12.1.0` (pinned tag v16.3.6): https://github.com/vercel/next.js/blob/v16.3.6/packages/next/package.json#L246
 - curl `--header @-` (header lines read from stdin): https://curl.se/docs/manpage.html#-H ; GNU grep `-f -` ("When file is '-', read patterns from standard input"), `-l` ("print the name of each input file from which output would normally have been printed") and its exit status (0 if a line is selected, 1 if none, 2 on error): https://www.gnu.org/software/grep/manual/html_node/Matching-Control.html , https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html and https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/nextjs.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- next-pin: Next.js listener source (v16.3.6)
+- next: Next.js documentation (unknown)
+- node: Node.js listener source (v22.22.1)
+- commander: Commander (12.1.0)
+- authjs: Auth.js (unknown)
+- better: Better Auth (unknown)
+- vercel: Vercel documentation (unknown)
+- curl: curl (unknown)
+- grep: GNU grep (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- entrypoints (REASONED; next): Pages, layouts, handlers and exported Actions are distinct entry points; Actions accept direct POST. Next.js 16 renamed middleware.ts to proxy.ts; session primitives are not login.
+- start-default (REASONED; next-pin, node, commander): v16.3.6 next start defaults 3000 and no hostname: Node binds :: when available, else 0.0.0.0 despite -H help. Pinned Commander leaves unspecified value options undefined.
+- private-tls (REASONED; next): Build then next start -H 127.0.0.1 -p 3000 with TLS proxy; PORT cannot be set in .env. Hosted TLS comes from the platform.
+- dal (REASONED; next): Call DAL verifySession for every data request, handler and Action; authorize resource ownership and return only needed fields.
+- layouts (REASONED; next): Layouts do not rerender on every navigation; returning null does not stop nested segments or Actions.
+- proxy (REASONED; next): Proxy is an optimistic cookie-only redirect layer, not sole authorization; avoid database lookups and account for matcher changes.
+- role (REASONED; next): Handler/action examples independently require admin; sensitive roles come from trusted user storage. Fragments need imports, data calls and real success responses.
+- session-secret (REASONED; next): Generate a 32-byte random SESSION_SECRET in server environment, never NEXT_PUBLIC_.
+- session-jwt (REASONED; next): jose session signs HS256 with seven-day expiry; decrypt verifies only HS256 and returns payload/undefined. User ID/role only, no PII; sensitive work uses database-verified sessions.
+- session-cookie (REASONED; next): Set HttpOnly, Secure, SameSite=Lax, path / and seven-day expiry; only Server Functions/handlers set/delete cookies, with logout deleting session.
+- public-env (REASONED; next): NEXT_PUBLIC_ is inlined at build; next.config.js env is client-inlined regardless of prefix. Read secrets only in DAL and ignore .env files.
+- action-key (REASONED; next): Self-hosted instances share NEXT_SERVER_ACTIONS_ENCRYPTION_KEY at build, base64 decoding to 16/24/32 bytes; closure encryption is not secret protection.
+- action-origin (REASONED; next): Actions abort when Origin mismatches Host/X-Forwarded-Host; proxies can configure experimental.serverActions.allowedOrigins.
+- authjs-secret (REASONED; authjs): AUTH_SECRET is mandatory; npx auth secret writes .env.local.
+- authjs-providers (REASONED; authjs): Configure provider ID/SECRET and OIDC ISSUER variables, real providers and linked allowlist checks.
+- authjs-trust (REASONED; authjs): Set AUTH_TRUST_HOST=true behind a reverse proxy; Vercel sets trust automatically.
+- authjs-route (REASONED; authjs): auth() reads sessions; wrapped handlers only populate req.auth and must deny missing sessions and failed authorization before data.
+- authjs-proxy (REASONED; authjs): auth as proxy with empty providers and no authorized callback permits all requests; add callback/wrapper and resource checks. Enforce MFA at the identity provider.
+- better-secret (REASONED; better): BETTER_AUTH_SECRET needs 32+ characters; production rejects the placeholder default. Set BETTER_AUTH_URL/baseURL explicitly, not request inference.
+- better-origins (REASONED; better): trustedOrigins scopes origin/CSRF and callbackURL checks, not app-route access; general checks skip GET/HEAD/OPTIONS with endpoint-specific GET callback checks.
+- better-password (REASONED; better): Better Auth emailAndPassword defaults disabled; enable explicitly when used.
+- better-next (REASONED; better): nextCookies enables Action session-cookie writes; toNextJsHandler exports auth GET/POST routes.
+- better-session (REASONED; better): Reject missing getSession before authorization: handler 401, component redirect/throw, action redirect/throw/serializable error. Discarding results or checking cookie existence gates nothing.
+- better-mfa (REASONED; better): twoFactor makes TOTP, emailed/SMS OTP and backups available, not enrolled/enforced; OTP needs sendOTP, client needs twoFactorClient and migration, operations need separate 2FA checks.
+- vercel-methods (REASONED; vercel): Deployment Protection admits project-authorized Vercel users; Passport, Password Protection and Trusted IPs need Enterprise/paid add-ons, not app-user authentication.
+- vercel-scope (REASONED; vercel): Standard Protection excludes production domains; enable All Deployments. Cited 9 September 2026 announcement makes Vercel Authentication production scope free on all plans including Hobby.
+- verify-bind (REASONED; next): ss inventories loopback 3000; it does not prove firewall/platform ingress isolation.
+- verify-anonymous (REASONED; next): Anonymous admin/dashboard must contain no protected data: login 3xx, chosen 401/403, or streamed 200 redirect shell require reading saved bodies.
+- verify-authorized (REASONED; next): Authorized dashboard/admin controls must return real content; non-admin must deny admin data, meaningful only after admin success.
+- verify-cookie-input (REASONED; curl): Prompt cookie values without echo and send through curl stdin; hidden prompt and set +x keep them from argv, history and tracing, not the account owner or root; assumes clean shell and separate subshell pastes.
+- verify-secret (REASONED; next, grep): Require .next/static, prompt full literal secret and send to grep stdin: 0 leak, 1 no literal match, other codes inconclusive. Encoded/split secrets can escape.
+- verify-action (REASONED; next): Fresh disposable record per Action attempt; authorized mutation changes store, anonymous/unauthorized replays deny without changes, not merely not-found.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "3bdad54327114894a6f45d5d5adb334b0b4fbc9bf784629b0385e6e2c4063461",
+  "components": {
+    "next-pin": {
+      "name": "Next.js listener source",
+      "basis": "v16.3.6",
+      "sources": {
+        "s11ffc231f0c3": "https://github.com/vercel/next.js/blob/v16.3.6/packages/next/package.json#L246",
+        "s3b0feef8ec0f": "https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/bin/next.ts#L436-L458",
+        "s0ef9150d51e4": "https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/cli/next-start.ts#L44",
+        "sefdefa3425c6": "https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/cli/next-start.ts#L84-L87",
+        "s66bd2ed9c346": "https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/server/lib/start-server.ts#L187-L196",
+        "s2b4479b3c1d2": "https://github.com/vercel/next.js/blob/v16.3.6/packages/next/src/server/lib/start-server.ts#L309"
+      }
+    },
+    "next": {
+      "name": "Next.js documentation",
+      "basis": "unknown",
+      "sources": {
+        "s066f8a176a52": "https://nextjs.org/docs/app/api-reference/cli/next",
+        "scd5749a71a79": "https://nextjs.org/docs/app/api-reference/file-conventions/proxy",
+        "sc2a39ce10fe1": "https://nextjs.org/docs/app/api-reference/file-conventions/route",
+        "sfbc4364fb5cc": "https://nextjs.org/docs/app/api-reference/functions/cookies",
+        "sa45045bebccb": "https://nextjs.org/docs/app/guides/authentication",
+        "s23a087193901": "https://nextjs.org/docs/app/guides/data-security",
+        "s964651d4eed4": "https://nextjs.org/docs/app/guides/environment-variables",
+        "s353c30dff99f": "https://nextjs.org/docs/app/guides/self-hosting"
+      }
+    },
+    "node": {
+      "name": "Node.js listener source",
+      "basis": "v22.22.1",
+      "sources": {
+        "sfb3e306c102d": "https://github.com/nodejs/node/blob/v22.22.1/doc/api/net.md"
+      }
+    },
+    "commander": {
+      "name": "Commander",
+      "basis": "12.1.0",
+      "sources": {
+        "s408eb603ae2e": "https://github.com/tj/commander.js/blob/v12.1.0/Readme.md#L203-L205"
+      }
+    },
+    "authjs": {
+      "name": "Auth.js",
+      "basis": "unknown",
+      "sources": {
+        "sb4ac5f50ec66": "https://authjs.dev/getting-started/deployment",
+        "s42365460cb4c": "https://authjs.dev/getting-started/installation",
+        "s46bb80456d4f": "https://authjs.dev/getting-started/session-management/protecting"
+      }
+    },
+    "better": {
+      "name": "Better Auth",
+      "basis": "unknown",
+      "sources": {
+        "s981751bcb554": "https://better-auth.com/docs/installation",
+        "s2ac2e0926f25": "https://better-auth.com/docs/integrations/next",
+        "sdd3d825cc3a4": "https://better-auth.com/docs/introduction",
+        "s8677a74455a1": "https://better-auth.com/docs/plugins/2fa",
+        "s4b3a514c43d9": "https://better-auth.com/docs/reference/options"
+      }
+    },
+    "vercel": {
+      "name": "Vercel documentation",
+      "basis": "unknown",
+      "sources": {
+        "s7836e043434a": "https://vercel.com/changelog/protect-production-deployments-for-free-on-every-plan",
+        "se6089d5c4e96": "https://vercel.com/docs/deployment-protection"
+      }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "unknown",
+      "sources": {
+        "s5345a985007a": "https://curl.se/docs/manpage.html#-H"
+      }
+    },
+    "grep": {
+      "name": "GNU grep",
+      "basis": "unknown",
+      "sources": {
+        "sea43e82b0753": "https://www.gnu.org/software/grep/manual/html_node/Exit-Status.html",
+        "s2c1251092e66": "https://www.gnu.org/software/grep/manual/html_node/General-Output-Control.html",
+        "sd00017f70dae": "https://www.gnu.org/software/grep/manual/html_node/Matching-Control.html"
+      }
+    }
+  },
+  "claims": {
+    "entrypoints": {"text": "Pages, layouts, handlers and exported Actions are distinct entry points; Actions accept direct POST. Next.js 16 renamed middleware.ts to proxy.ts; session primitives are not login.", "components": ["next"], "sources": ["next:scd5749a71a79", "next:sc2a39ce10fe1", "next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED"},
+    "start-default": {"text": "v16.3.6 next start defaults 3000 and no hostname: Node binds :: when available, else 0.0.0.0 despite -H help. Pinned Commander leaves unspecified value options undefined.", "components": ["next-pin", "node", "commander"], "sources": ["next-pin:s3b0feef8ec0f", "next-pin:s0ef9150d51e4", "next-pin:sefdefa3425c6", "next-pin:s66bd2ed9c346", "next-pin:s2b4479b3c1d2", "node:sfb3e306c102d", "commander:s408eb603ae2e", "next-pin:s11ffc231f0c3"], "status": "REASONED"},
+    "private-tls": {"text": "Build then next start -H 127.0.0.1 -p 3000 with TLS proxy; PORT cannot be set in .env. Hosted TLS comes from the platform.", "components": ["next"], "sources": ["next:s066f8a176a52", "next:s353c30dff99f"], "status": "REASONED"},
+    "dal": {"text": "Call DAL verifySession for every data request, handler and Action; authorize resource ownership and return only needed fields.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED"},
+    "layouts": {"text": "Layouts do not rerender on every navigation; returning null does not stop nested segments or Actions.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED"},
+    "proxy": {"text": "Proxy is an optimistic cookie-only redirect layer, not sole authorization; avoid database lookups and account for matcher changes.", "components": ["next"], "sources": ["next:scd5749a71a79", "next:sa45045bebccb"], "status": "REASONED"},
+    "role": {"text": "Handler/action examples independently require admin; sensitive roles come from trusted user storage. Fragments need imports, data calls and real success responses.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED"},
+    "session-secret": {"text": "Generate a 32-byte random SESSION_SECRET in server environment, never NEXT_PUBLIC_.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s964651d4eed4"], "status": "REASONED"},
+    "session-jwt": {"text": "jose session signs HS256 with seven-day expiry; decrypt verifies only HS256 and returns payload/undefined. User ID/role only, no PII; sensitive work uses database-verified sessions.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED"},
+    "session-cookie": {"text": "Set HttpOnly, Secure, SameSite=Lax, path / and seven-day expiry; only Server Functions/handlers set/delete cookies, with logout deleting session.", "components": ["next"], "sources": ["next:sfbc4364fb5cc", "next:sa45045bebccb"], "status": "REASONED"},
+    "public-env": {"text": "NEXT_PUBLIC_ is inlined at build; next.config.js env is client-inlined regardless of prefix. Read secrets only in DAL and ignore .env files.", "components": ["next"], "sources": ["next:s964651d4eed4", "next:s23a087193901"], "status": "REASONED"},
+    "action-key": {"text": "Self-hosted instances share NEXT_SERVER_ACTIONS_ENCRYPTION_KEY at build, base64 decoding to 16/24/32 bytes; closure encryption is not secret protection.", "components": ["next"], "sources": ["next:s353c30dff99f", "next:s23a087193901"], "status": "REASONED"},
+    "action-origin": {"text": "Actions abort when Origin mismatches Host/X-Forwarded-Host; proxies can configure experimental.serverActions.allowedOrigins.", "components": ["next"], "sources": ["next:s23a087193901", "next:s353c30dff99f"], "status": "REASONED"},
+    "authjs-secret": {"text": "AUTH_SECRET is mandatory; npx auth secret writes .env.local.", "components": ["authjs"], "sources": ["authjs:sb4ac5f50ec66", "authjs:s42365460cb4c"], "status": "REASONED"},
+    "authjs-providers": {"text": "Configure provider ID/SECRET and OIDC ISSUER variables, real providers and linked allowlist checks.", "components": ["authjs"], "sources": ["authjs:sb4ac5f50ec66", "authjs:s42365460cb4c"], "status": "REASONED"},
+    "authjs-trust": {"text": "Set AUTH_TRUST_HOST=true behind a reverse proxy; Vercel sets trust automatically.", "components": ["authjs"], "sources": ["authjs:sb4ac5f50ec66"], "status": "REASONED"},
+    "authjs-route": {"text": "auth() reads sessions; wrapped handlers only populate req.auth and must deny missing sessions and failed authorization before data.", "components": ["authjs"], "sources": ["authjs:s46bb80456d4f"], "status": "REASONED"},
+    "authjs-proxy": {"text": "auth as proxy with empty providers and no authorized callback permits all requests; add callback/wrapper and resource checks. Enforce MFA at the identity provider.", "components": ["authjs"], "sources": ["authjs:s46bb80456d4f"], "status": "REASONED"},
+    "better-secret": {"text": "BETTER_AUTH_SECRET needs 32+ characters; production rejects the placeholder default. Set BETTER_AUTH_URL/baseURL explicitly, not request inference.", "components": ["better"], "sources": ["better:s981751bcb554", "better:s4b3a514c43d9"], "status": "REASONED"},
+    "better-origins": {"text": "trustedOrigins scopes origin/CSRF and callbackURL checks, not app-route access; general checks skip GET/HEAD/OPTIONS with endpoint-specific GET callback checks.", "components": ["better"], "sources": ["better:s4b3a514c43d9"], "status": "REASONED"},
+    "better-password": {"text": "Better Auth emailAndPassword defaults disabled; enable explicitly when used.", "components": ["better"], "sources": ["better:s4b3a514c43d9"], "status": "REASONED"},
+    "better-next": {"text": "nextCookies enables Action session-cookie writes; toNextJsHandler exports auth GET/POST routes.", "components": ["better"], "sources": ["better:s2ac2e0926f25"], "status": "REASONED"},
+    "better-session": {"text": "Reject missing getSession before authorization: handler 401, component redirect/throw, action redirect/throw/serializable error. Discarding results or checking cookie existence gates nothing.", "components": ["better"], "sources": ["better:s2ac2e0926f25"], "status": "REASONED"},
+    "better-mfa": {"text": "twoFactor makes TOTP, emailed/SMS OTP and backups available, not enrolled/enforced; OTP needs sendOTP, client needs twoFactorClient and migration, operations need separate 2FA checks.", "components": ["better"], "sources": ["better:s8677a74455a1"], "status": "REASONED"},
+    "vercel-methods": {"text": "Deployment Protection admits project-authorized Vercel users; Passport, Password Protection and Trusted IPs need Enterprise/paid add-ons, not app-user authentication.", "components": ["vercel"], "sources": ["vercel:se6089d5c4e96"], "status": "REASONED"},
+    "vercel-scope": {"text": "Standard Protection excludes production domains; enable All Deployments. Cited 9 September 2026 announcement makes Vercel Authentication production scope free on all plans including Hobby.", "components": ["vercel"], "sources": ["vercel:s7836e043434a", "vercel:se6089d5c4e96"], "status": "REASONED"},
+    "verify-bind": {"text": "ss inventories loopback 3000; it does not prove firewall/platform ingress isolation.", "components": ["next"], "sources": ["next:s066f8a176a52", "next:s353c30dff99f"], "status": "REASONED", "verify": [1]},
+    "verify-anonymous": {"text": "Anonymous admin/dashboard must contain no protected data: login 3xx, chosen 401/403, or streamed 200 redirect shell require reading saved bodies.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [1]},
+    "verify-authorized": {"text": "Authorized dashboard/admin controls must return real content; non-admin must deny admin data, meaningful only after admin success.", "components": ["next"], "sources": ["next:sa45045bebccb"], "status": "REASONED", "verify": [1]},
+    "verify-cookie-input": {"text": "Prompt cookie values without echo and send through curl stdin; hidden prompt and set +x keep them from argv, history and tracing, not the account owner or root; assumes clean shell and separate subshell pastes.", "components": ["curl"], "sources": ["curl:s5345a985007a"], "status": "REASONED", "verify": [1]},
+    "verify-secret": {"text": "Require .next/static, prompt full literal secret and send to grep stdin: 0 leak, 1 no literal match, other codes inconclusive. Encoded/split secrets can escape.", "components": ["next", "grep"], "sources": ["next:s964651d4eed4", "grep:sea43e82b0753", "grep:s2c1251092e66", "grep:sd00017f70dae"], "status": "REASONED", "verify": [1]},
+    "verify-action": {"text": "Fresh disposable record per Action attempt; authorized mutation changes store, anonymous/unauthorized replays deny without changes, not merely not-found.", "components": ["next"], "sources": ["next:sa45045bebccb", "next:s23a087193901"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->
