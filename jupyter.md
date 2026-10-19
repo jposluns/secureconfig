@@ -1,303 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-09-26",
-  "documentation_checked": "2026-09",
-  "body_sha256": "1bdfe2f4964c65f610a2748bb78167f6ccd9ceac240202250ca83181182816d5",
-  "components": {
-    "server": {
-      "name": "Jupyter Server",
-      "basis": "2.18.0",
-      "sources": {
-        "s238865cddff5": "https://raw.githubusercontent.com/jupyter-server/jupyter_server/v2.18.0/jupyter_server/serverapp.py"
-      }
-    },
-    "startup": {
-      "name": "Jupyter Server startup source",
-      "basis": "9a4d6eea2b16815a493b11fffe0b51b1fe55a81b",
-      "sources": {
-        "sb604ab4922ea": "https://raw.githubusercontent.com/jupyter-server/jupyter_server/9a4d6eea2b16815a493b11fffe0b51b1fe55a81b/jupyter_server/serverapp.py"
-      }
-    },
-    "port": {
-      "name": "Jupyter Server port source",
-      "basis": "c5c452c3d5f3060557e57caaadce8f2fffc1c417",
-      "sources": {
-        "s8aa622e78b6c": "https://raw.githubusercontent.com/jupyter-server/jupyter_server/c5c452c3d5f3060557e57caaadce8f2fffc1c417/jupyter_server/__init__.py"
-      }
-    },
-    "identity": {
-      "name": "Jupyter Server identity source",
-      "basis": "3df9a70b8aea53557ad04510a63c95ce9d4c3abc",
-      "sources": {
-        "s42f6fa67bb40": "https://raw.githubusercontent.com/jupyter-server/jupyter_server/3df9a70b8aea53557ad04510a63c95ce9d4c3abc/jupyter_server/auth/identity.py"
-      }
-    },
-    "handlers": {
-      "name": "Jupyter Server handler source",
-      "basis": "00d45c80eeb0f50f191b236ee47cc1d82a7db9ca",
-      "sources": {
-        "sd60a21dc05be": "https://github.com/jupyter-server/jupyter_server/blob/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py",
-        "s6ad33bf43289": "https://raw.githubusercontent.com/jupyter-server/jupyter_server/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py"
-      }
-    },
-    "kernels": {
-      "name": "Jupyter Server kernel source",
-      "basis": "c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac",
-      "sources": {
-        "sd5917e37102f": "https://raw.githubusercontent.com/jupyter-server/jupyter_server/c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac/jupyter_server/services/kernels/handlers.py"
-      }
-    },
-    "hub": {
-      "name": "JupyterHub",
-      "basis": "5.5.2",
-      "sources": {
-        "sf42536766925": "https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html",
-        "sbff5ae556021": "https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html",
-        "s6a157547975b": "https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/docs/source/reference/changelog.md",
-        "safc0d6318afc": "https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py",
-        "s62add5267d20": "https://jupyterhub.readthedocs.io/en/5.5.2/reference/api/auth.html",
-        "s390accdb1835": "https://jupyterhub.readthedocs.io/en/5.5.2/reference/spawners.html"
-      }
-    },
-    "proxy": {
-      "name": "configurable-http-proxy",
-      "basis": "5.3.0",
-      "sources": {
-        "sd16e1a3c1c99": "https://raw.githubusercontent.com/jupyterhub/configurable-http-proxy/5.3.0/bin/configurable-http-proxy"
-      }
-    },
-    "native": {
-      "name": "NativeAuthenticator",
-      "basis": "1.3.0",
-      "sources": {
-        "s7e8115fc47c7": "https://raw.githubusercontent.com/jupyterhub/nativeauthenticator/1.3.0/nativeauthenticator/nativeauthenticator.py",
-        "s1cc87f8d9e78": "https://native-authenticator.readthedocs.io/en/1.3.0/quickstart.html",
-        "s0bd461b12e33": "https://raw.githubusercontent.com/jupyterhub/nativeauthenticator/1.3.0/nativeauthenticator/handlers.py"
-      }
-    },
-    "client": {
-      "name": "jupyter_client",
-      "basis": "8.6.3",
-      "sources": {
-        "s254bb75e8fcd": "https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst",
-        "s4a4cbff2fc52": "https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/jupyter_client/connect.py"
-      }
-    },
-    "lab": {
-      "name": "JupyterLab documentation",
-      "basis": "unknown",
-      "sources": {
-        "s8021535e4b8f": "https://jupyterlab.readthedocs.io/en/stable/user/running.html"
-      }
-    },
-    "tornado": {
-      "name": "Tornado documentation",
-      "basis": "unknown",
-      "sources": {
-        "s0f3c220a61fa": "https://www.tornadoweb.org/en/stable/guide/security.html"
-      }
-    },
-    "curl": {
-      "name": "curl documentation",
-      "basis": "unknown",
-      "sources": {
-        "s0dc5c76f65b4": "https://curl.se/docs/sslcerts.html",
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
-      }
-    },
-    "server-docs": {
-      "name": "Jupyter Server documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s7e2219e89598": "https://jupyter-server.readthedocs.io/en/latest/operators/public-server.html",
-        "sc703a8030c8f": "https://jupyter-server.readthedocs.io/en/latest/operators/security.html",
-        "se96d81c5de5a": "https://jupyter-server.readthedocs.io/en/latest/other/full-config.html",
-        "s030744ca2941": "https://jupyter-server.readthedocs.io/en/latest/operators/migrate-from-nbserver.html",
-        "s3036d65c135e": "https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.html",
-        "s0d0d3fa341e9": "https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.auth.html",
-        "s2e77936fa221": "https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html",
-        "s3f8d489dcf1a": "https://jupyter-server.readthedocs.io/en/stable/other/changelog.html"
-      }
-    },
-    "notebook-docs": {
-      "name": "Notebook documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s0650d57213a3": "https://jupyter-notebook.readthedocs.io/en/stable/configuring/config_overview.html"
-      }
-    },
-    "hub-docs": {
-      "name": "JupyterHub documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s1a8d05a8cf13": "https://jupyterhub.readthedocs.io/en/stable/reference/authenticators.html",
-        "s06a88ed8ee36": "https://jupyterhub.readthedocs.io/en/stable/explanation/websecurity.html",
-        "sad07061feaf6": "https://jupyterhub.readthedocs.io/en/stable/reference/api/spawner.html"
-      }
-    }
-  },
-  "claims": {
-    "native-auth": {"text": "Generated tokens enable authentication by default; a password replaces the generated token by default, and configured token/password alternatives are not MFA.", "components": ["server-docs"], "sources": ["server-docs:sc703a8030c8f"], "status": "REASONED"},
-    "password": {"text": "Standalone Server password prompt stores a hash in jupyter_server_config.json; generate-config writes jupyter_server_config.py under the operating account.", "components": ["server-docs"], "sources": ["server-docs:s7e2219e89598", "server-docs:se96d81c5de5a"], "status": "REASONED"},
-    "endpoint-auth": {"text": "Set allow_unauthenticated_access=False for unclassified Jupyter handlers; explicitly public handlers and third-party authentication need separate review.", "components": ["handlers", "server-docs"], "sources": ["server-docs:s3036d65c135e", "handlers:s6ad33bf43289"], "status": "REASONED"},
-    "endpoint-default": {"text": "Reference lists allow_unauthenticated_access=True; feature appears under 2.13.0 and 2.18.0, with 2.18+ the guide baseline, not introduction date.", "components": ["server-docs"], "sources": ["server-docs:se96d81c5de5a", "server-docs:s3f8d489dcf1a"], "status": "REASONED"},
-    "metrics-auth": {"text": "authenticate_prometheus=True independently requires authentication for metrics.", "components": ["handlers", "server-docs"], "sources": ["handlers:sd60a21dc05be", "server-docs:s3036d65c135e"], "status": "REASONED"},
-    "migration": {"text": "Notebook 7 uses Server; migrate NotebookApp to ServerApp and Server 2 password/token traits to PasswordIdentityProvider and IdentityProvider; avoid credential argv.", "components": ["server-docs", "notebook-docs"], "sources": ["server-docs:s030744ca2941", "server-docs:s0d0d3fa341e9", "notebook-docs:s0650d57213a3"], "status": "REASONED"},
-    "root": {"text": "allow_root=False refuses Unix root startup; use a dedicated unprivileged account for server and kernels; it neither changes UID nor sandboxes execution.", "components": ["startup"], "sources": ["startup:sb604ab4922ea"], "status": "REASONED"},
-    "terminals": {"text": "terminals_enabled=False removes terminals but not kernel shell execution; reference False differs from the implementation's dynamic True subject to availability.", "components": ["startup", "server-docs"], "sources": ["server-docs:se96d81c5de5a", "startup:sb604ab4922ea"], "status": "REASONED"},
-    "native-tls": {"text": "certfile/keyfile or --certfile/--keyfile enable native HTTPS; that listener no longer serves ordinary plaintext HTTP.", "components": ["server", "server-docs"], "sources": ["server-docs:s7e2219e89598", "server:s238865cddff5"], "status": "REASONED"},
-    "private-bind": {"text": "Retain loopback; do not expose 0.0.0.0 without authentication and HTTPS; disabling both password and token removes native authentication.", "components": ["server-docs"], "sources": ["server-docs:s7e2219e89598", "server-docs:sc703a8030c8f", "server-docs:se96d81c5de5a"], "status": "REASONED"},
-    "proxy-tls": {"text": "An authenticated HTTPS proxy before a loopback server can replace native TLS; authentication alone does not encrypt transport.", "components": ["hub"], "sources": ["hub:sf42536766925"], "status": "REASONED"},
-    "mfa": {"text": "Standalone password is single-factor; fronting authentication or a Hub provider adds MFA only when explicitly enforced.", "components": ["server-docs", "hub-docs"], "sources": ["server-docs:sc703a8030c8f", "hub-docs:s1a8d05a8cf13"], "status": "REASONED"},
-    "origins": {"text": "Same-origin settings keep allow_origin and allow_origin_pat empty and allow_credentials=False; cross-origin clients require reviewed exceptions.", "components": ["server-docs"], "sources": ["server-docs:s3036d65c135e"], "status": "REASONED"},
-    "xsrf": {"text": "Keep disable_check_xsrf=False; disabling it removes browser-session request-forgery protection.", "components": ["handlers", "server-docs"], "sources": ["server-docs:s3036d65c135e", "handlers:s6ad33bf43289"], "status": "REASONED"},
-    "host": {"text": "allow_remote_access=False retains Host checks; local_hostnames permits actual standalone hostnames; Hub servers need their generated hostnames.", "components": ["handlers", "server-docs"], "sources": ["server-docs:se96d81c5de5a", "handlers:s6ad33bf43289"], "status": "REASONED"},
-    "token-exception": {"text": "Token-authenticated requests bypass origin and XSRF checks; test browser protections with a cookie session and no token.", "components": ["identity", "handlers"], "sources": ["identity:s42f6fa67bb40", "handlers:s6ad33bf43289"], "status": "REASONED"},
-    "hub-admission": {"text": "Hub 5+ PAM example disables allow_all and allow_existing_users, lists allowed_users and empties allowed_groups; other authenticators need separate review.", "components": ["hub", "hub-docs"], "sources": ["hub:s62add5267d20", "hub-docs:s1a8d05a8cf13"], "status": "REASONED"},
-    "hub-accounts": {"text": "LocalProcessSpawner needs matching Unix accounts; use separate users/servers, and avoid SimpleLocalProcessSpawner, which provides no user isolation.", "components": ["server-docs", "hub-docs"], "sources": ["server-docs:s7e2219e89598", "hub-docs:sad07061feaf6"], "status": "REASONED"},
-    "hub-limits": {"text": "Local processes are not containers; LocalProcessSpawner does not enforce generic CPU/memory limits, and PAM does not automatically provide MFA.", "components": ["hub", "hub-docs"], "sources": ["hub-docs:s1a8d05a8cf13", "hub:s390accdb1835"], "status": "REASONED"},
-    "hub-domains": {"text": "For mutually untrusted Hub users, subdomain_host separates browser origins; provide HTTPS/DNS for every user domain on a separate application domain.", "components": ["hub", "hub-docs"], "sources": ["hub-docs:s06a88ed8ee36", "hub:sbff5ae556021"], "status": "REASONED"},
-    "hub-cookies": {"text": "cookie_host_prefix_enabled requires Hub 4.1+, HTTPS and per-user domains; combined example targets Hub 5+.", "components": ["hub", "hub-docs"], "sources": ["hub:sbff5ae556021", "hub-docs:s06a88ed8ee36"], "status": "REASONED"},
-    "hub-user-config": {"text": "disable_user_config ignores home configuration; administrator-controlled server executables, environments and launch paths prevent replacement; kernel environments may remain writable.", "components": ["hub-docs"], "sources": ["hub-docs:sad07061feaf6", "hub-docs:s06a88ed8ee36"], "status": "REASONED"},
-    "server-prefix": {"text": "Server base_url defaults to /; configure /jupyter/ consistently with the proxy so registered routes remain within the intended boundary.", "components": ["server"], "sources": ["server:s238865cddff5"], "status": "REASONED"},
-    "hub-prefix": {"text": "Hub prefix defaults to /; bind_url=http://127.0.0.1:8000/jupyter/ sets both listener and base_url; conflicting URL settings or proxy prefix flags are not an auth boundary.", "components": ["hub", "proxy"], "sources": ["hub:sf42536766925", "proxy:sd16e1a3c1c99", "hub:sbff5ae556021"], "status": "REASONED"},
-    "server-headers": {"text": "Server trust_xheaders defaults False; enable only behind a private, sanitizing ingress owning forwarded address and scheme headers.", "components": ["server"], "sources": ["server:s238865cddff5"], "status": "REASONED"},
-    "hub-headers": {"text": "Hub enables forwarded-header trust; hub_ip and trusted_downstream_ips constrain address selection, not which peers may send headers; empty trusted hops do not disable trust.", "components": ["hub"], "sources": ["hub:sbff5ae556021", "hub:safc0d6318afc"], "status": "REASONED"},
-    "forwarded-scheme": {"text": "Ingress must normalize Forwarded and both X- address/scheme forms and reject unintended Host values; Hub reads Forwarded first; public_url and host-prefixed cookies guard specified scheme paths.", "components": ["hub"], "sources": ["hub:sbff5ae556021", "hub:safc0d6318afc"], "status": "REASONED"},
-    "forwarded-host": {"text": "Forwarded-header handling rewrites address/scheme, not Host; Hub 5 ignores X-Forwarded-Host and its forwarded_host_header trait is inert.", "components": ["hub"], "sources": ["hub:sbff5ae556021", "hub:safc0d6318afc"], "status": "REASONED"},
-    "internal-tls": {"text": "internal_ssl defaults False; enable it with protected persistent internal_certs_location for mutual TLS on Hub/proxy/single-user and spawn-readiness connections.", "components": ["hub"], "sources": ["hub:sbff5ae556021", "hub:safc0d6318afc"], "status": "REASONED"},
-    "internal-certs": {"text": "Spawners must deliver certificates and trust bundles; LocalProcessSpawner relocates them, remote spawners need move_certs, and ssl_alt_names must match connection names.", "components": ["hub", "hub-docs"], "sources": ["hub-docs:sad07061feaf6", "hub:sbff5ae556021"], "status": "REASONED"},
-    "internal-hostnames": {"text": "Internal hostname verification defaults on from Hub 5.4, checked against 5.5.2; earlier 5.x left it disabled.", "components": ["hub"], "sources": ["hub:s6a157547975b", "hub:safc0d6318afc"], "status": "REASONED"},
-    "kernel-transport": {"text": "Hub internal_ssl excludes server-to-kernel ZeroMQ; HMAC authenticates without encryption, local kernels bind loopback, and remote kernels need separate encrypted transport.", "components": ["client"], "sources": ["client:s254bb75e8fcd", "client:s4a4cbff2fc52"], "status": "REASONED"},
-    "native-store": {"text": "NativeAuthenticator replaces PAM credentials with bcrypt hashes in the Hub database, not the spawner's Unix account requirement; protect database/backups.", "components": ["native", "hub-docs"], "sources": ["hub-docs:sad07061feaf6", "native:s7e8115fc47c7", "native:s1cc87f8d9e78"], "status": "REASONED"},
-    "native-length": {"text": "minimum_password_length effectively defaults 0 despite tag(default=1); set 12; zero admits empty passwords.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
-    "native-common": {"text": "check_common_password defaults False; True checks the bundled 10,000-entry list, not a breach corpus.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
-    "native-lockout": {"text": "allowed_failed_logins defaults 0, disabling lockout; set 5 consecutive failures per account.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
-    "native-cooldown": {"text": "seconds_before_next_try effectively defaults 0 despite the 600 annotation/help; set 1200 and distinguish by a correct password about two seconds after failure.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
-    "native-counters": {"text": "Failure counters are in memory and reset on restart; timedelta.seconds ignores days and can re-block at 24-hour multiples until success or restart.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
-    "native-oracle": {"text": "Pending accounts still disclose a distinct correct-password authorization-pending message during lockout; rate-limit the actual prefixed /hub/login route.", "components": ["native"], "sources": ["native:s7e8115fc47c7", "native:s0bd461b12e33"], "status": "REASONED"},
-    "native-policy-scope": {"text": "Password strength applies at signup/password change; raising policy does not recheck existing passwords.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
-    "native-approval": {"text": "open_signup defaults False; new pending users need /hub/authorize approval; True pre-authorizes signup, still subject to Hub admission.", "components": ["native"], "sources": ["native:s7e8115fc47c7", "native:s0bd461b12e33"], "status": "REASONED"},
-    "native-preauthorization": {"text": "allowed_users/admin_users names are pre-authorized at first signup even with open_signup=False; deliberate registration is required; later allowlisting does not approve an existing pending record.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
-    "native-signup": {"text": "enable_signup defaults True; False refuses signup GET/POST with 404; restrict signup to trusted users.", "components": ["native"], "sources": ["native:s7e8115fc47c7", "native:s0bd461b12e33"], "status": "REASONED"},
-    "verify-tls": {"text": "Validated HTTPS must complete with exit=0; transport failures alone prove nothing; use real hostname and CA, retaining certificate validation.", "components": ["curl"], "sources": ["curl:s0dc5c76f65b4", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-api": {"text": "Anonymous /api/kernels returns native 403 with auth, authenticated kernel JSON returns 200; fronting login may redirect, and password-only deployments need a browser positive control.", "components": ["handlers", "server-docs"], "sources": ["server-docs:sc703a8030c8f", "handlers:s6ad33bf43289", "server-docs:s2e77936fa221"], "status": "REASONED", "verify": [1]},
-    "verify-host": {"text": "Wrong-Host token request is refused with native 403 while normal Host succeeds; a fronting rejection alone does not demonstrate Server Host checks.", "components": ["handlers"], "sources": ["handlers:s6ad33bf43289"], "status": "REASONED", "verify": [1]},
-    "verify-metrics": {"text": "Compare anonymous metrics with authenticate_prometheus off/on and authenticated metrics content; absent routes or generic errors are inconclusive.", "components": ["handlers"], "sources": ["handlers:sd60a21dc05be"], "status": "REASONED", "verify": [1]},
-    "verify-extension": {"text": "Compare an actual unclassified extension route with allow_unauthenticated_access True/False and its authenticated content; protected kernel routes do not substitute.", "components": ["handlers", "server-docs"], "sources": ["server-docs:s3036d65c135e", "handlers:s6ad33bf43289"], "status": "REASONED", "verify": [1]},
-    "verify-xsrf": {"text": "Cookie-session same-origin POST without XSRF creates a kernel when checks are disabled; fixed missing header gives 403, matching header gives 201 with successful cookie GET.", "components": ["handlers", "kernels", "tornado"], "sources": ["handlers:s6ad33bf43289", "kernels:sd5917e37102f", "tornado:s0f3c220a61fa"], "status": "REASONED", "verify": [2]},
-    "verify-origin": {"text": "Wrong-Origin cookie GET returns kernel JSON with allow_origin=*; fixed APIHandler rejects with 404 while same-origin returns 200; also inspect browser CORS headers.", "components": ["handlers", "server-docs"], "sources": ["server-docs:s3036d65c135e", "handlers:s6ad33bf43289"], "status": "REASONED", "verify": [2]},
-    "verify-cleanup": {"text": "Record and shut down every disposable kernel created in either state through the authenticated UI.", "components": ["lab"], "sources": ["lab:s8021535e4b8f"], "status": "REASONED"},
-    "verify-root": {"text": "Compare allowed versus refused root startup and inspect server/kernel ownership; fixed unprivileged execution must retain its intended nonzero UID.", "components": ["startup"], "sources": ["startup:sb604ab4922ea"], "status": "REASONED"},
-    "verify-terminals": {"text": "Compare authenticated /api/terminals enabled/disabled, retaining a working /api/kernels positive control and kernel shell execution.", "components": ["startup", "server-docs"], "sources": ["server-docs:se96d81c5de5a", "startup:sb604ab4922ea"], "status": "REASONED"},
-    "verify-hub-admission": {"text": "Compare valid extra and historical users against the allowlist, with allowed-user login and spawn as positive controls.", "components": ["hub", "hub-docs"], "sources": ["hub:s62add5267d20", "hub-docs:s1a8d05a8cf13"], "status": "REASONED"},
-    "verify-hub-accounts": {"text": "Two users' server/kernel UIDs must differ as intended, compared with a shared-account fixture.", "components": ["hub-docs"], "sources": ["hub-docs:sad07061feaf6"], "status": "REASONED"},
-    "verify-hub-origins": {"text": "Compare shared versus distinct user origins and inspect __Host- cookies for Secure, path / and no Domain attribute.", "components": ["hub", "hub-docs"], "sources": ["hub:sbff5ae556021", "hub-docs:s06a88ed8ee36"], "status": "REASONED"},
-    "verify-hub-config": {"text": "Compare a user terminal override loading versus being ignored, deny server-environment writes, and retain a working notebook.", "components": ["hub-docs"], "sources": ["hub-docs:sad07061feaf6", "hub-docs:s06a88ed8ee36"], "status": "REASONED"},
-    "verify-listeners": {"text": "ss inventories local binds, not firewall/NAT; confirm actual private listener and external entry point with a working positive control; failed netlink inventory proves no absence.", "components": ["startup", "port"], "sources": ["startup:sb604ab4922ea", "port:s8aa622e78b6c"], "status": "REASONED", "verify": [3]},
-    "port-default": {"text": "Standalone port starts at 8888 but configuration and retries can change it; inventory the actual listener.", "components": ["startup", "port"], "sources": ["startup:sb604ab4922ea", "port:s8aa622e78b6c"], "status": "REASONED"},
-    "verify-prefix": {"text": "Probe prefixed and unprefixed Server/Hub routes; require no application alias outside the boundary and working authenticated prefixed access and kernel WebSocket.", "components": ["hub", "server"], "sources": ["hub:sf42536766925", "server:s238865cddff5"], "status": "REASONED"},
-    "verify-headers": {"text": "Compare spoofed address/scheme/Forwarded headers through real ingress and direct backend access; inspect logs, redirects and cookies with login/WebSocket controls; test real Host separately.", "components": ["hub", "server"], "sources": ["hub:sbff5ae556021", "server:s238865cddff5", "hub:safc0d6318afc"], "status": "REASONED"},
-    "verify-internal-tls": {"text": "Compare each internal connection with TLS off/on; trusted client certificates succeed, untrusted certificates and wrong hostnames fail on Hub 5.4+; keep kernel ZeroMQ excluded.", "components": ["hub", "client"], "sources": ["hub:s6a157547975b", "hub:safc0d6318afc", "client:s254bb75e8fcd"], "status": "REASONED"},
-    "verify-native": {"text": "Test length/common-password, threshold/cooldown and pending-account oracle independently; compare approval with allow_all and empty allowed_users, first-signup preauthorization, disabled signup and stored bcrypt.", "components": ["native"], "sources": ["native:s7e8115fc47c7", "native:s0bd461b12e33"], "status": "REASONED"}
-  }
-}
----
 # Jupyter: password and TLS
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Jupyter Server 2.18.0, JupyterHub 5.5.2, jupyter_client 8.6.3, configurable-http-proxy 5.3.0, and NativeAuthenticator 1.3.0; 5 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 63 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- server: Jupyter Server (2.18.0)
-- startup: Jupyter Server startup source (9a4d6eea2b16815a493b11fffe0b51b1fe55a81b)
-- port: Jupyter Server port source (c5c452c3d5f3060557e57caaadce8f2fffc1c417)
-- identity: Jupyter Server identity source (3df9a70b8aea53557ad04510a63c95ce9d4c3abc)
-- handlers: Jupyter Server handler source (00d45c80eeb0f50f191b236ee47cc1d82a7db9ca)
-- kernels: Jupyter Server kernel source (c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac)
-- hub: JupyterHub (5.5.2)
-- proxy: configurable-http-proxy (5.3.0)
-- native: NativeAuthenticator (1.3.0)
-- client: jupyter_client (8.6.3)
-- lab: JupyterLab documentation (unknown)
-- tornado: Tornado documentation (unknown)
-- curl: curl documentation (unknown)
-- server-docs: Jupyter Server documentation (rolling) (unknown)
-- notebook-docs: Notebook documentation (rolling) (unknown)
-- hub-docs: JupyterHub documentation (rolling) (unknown)
-
-Claims (full source mapping in the front matter):
-
-- native-auth (REASONED; server-docs): Generated tokens enable authentication by default; a password replaces the generated token by default, and configured token/password alternatives are not MFA.
-- password (REASONED; server-docs): Standalone Server password prompt stores a hash in jupyter_server_config.json; generate-config writes jupyter_server_config.py under the operating account.
-- endpoint-auth (REASONED; handlers, server-docs): Set allow_unauthenticated_access=False for unclassified Jupyter handlers; explicitly public handlers and third-party authentication need separate review.
-- endpoint-default (REASONED; server-docs): Reference lists allow_unauthenticated_access=True; feature appears under 2.13.0 and 2.18.0, with 2.18+ the guide baseline, not introduction date.
-- metrics-auth (REASONED; handlers, server-docs): authenticate_prometheus=True independently requires authentication for metrics.
-- migration (REASONED; server-docs, notebook-docs): Notebook 7 uses Server; migrate NotebookApp to ServerApp and Server 2 password/token traits to PasswordIdentityProvider and IdentityProvider; avoid credential argv.
-- root (REASONED; startup): allow_root=False refuses Unix root startup; use a dedicated unprivileged account for server and kernels; it neither changes UID nor sandboxes execution.
-- terminals (REASONED; startup, server-docs): terminals_enabled=False removes terminals but not kernel shell execution; reference False differs from the implementation's dynamic True subject to availability.
-- native-tls (REASONED; server, server-docs): certfile/keyfile or --certfile/--keyfile enable native HTTPS; that listener no longer serves ordinary plaintext HTTP.
-- private-bind (REASONED; server-docs): Retain loopback; do not expose 0.0.0.0 without authentication and HTTPS; disabling both password and token removes native authentication.
-- proxy-tls (REASONED; hub): An authenticated HTTPS proxy before a loopback server can replace native TLS; authentication alone does not encrypt transport.
-- mfa (REASONED; server-docs, hub-docs): Standalone password is single-factor; fronting authentication or a Hub provider adds MFA only when explicitly enforced.
-- origins (REASONED; server-docs): Same-origin settings keep allow_origin and allow_origin_pat empty and allow_credentials=False; cross-origin clients require reviewed exceptions.
-- xsrf (REASONED; handlers, server-docs): Keep disable_check_xsrf=False; disabling it removes browser-session request-forgery protection.
-- host (REASONED; handlers, server-docs): allow_remote_access=False retains Host checks; local_hostnames permits actual standalone hostnames; Hub servers need their generated hostnames.
-- token-exception (REASONED; identity, handlers): Token-authenticated requests bypass origin and XSRF checks; test browser protections with a cookie session and no token.
-- hub-admission (REASONED; hub, hub-docs): Hub 5+ PAM example disables allow_all and allow_existing_users, lists allowed_users and empties allowed_groups; other authenticators need separate review.
-- hub-accounts (REASONED; server-docs, hub-docs): LocalProcessSpawner needs matching Unix accounts; use separate users/servers, and avoid SimpleLocalProcessSpawner, which provides no user isolation.
-- hub-limits (REASONED; hub, hub-docs): Local processes are not containers; LocalProcessSpawner does not enforce generic CPU/memory limits, and PAM does not automatically provide MFA.
-- hub-domains (REASONED; hub, hub-docs): For mutually untrusted Hub users, subdomain_host separates browser origins; provide HTTPS/DNS for every user domain on a separate application domain.
-- hub-cookies (REASONED; hub, hub-docs): cookie_host_prefix_enabled requires Hub 4.1+, HTTPS and per-user domains; combined example targets Hub 5+.
-- hub-user-config (REASONED; hub-docs): disable_user_config ignores home configuration; administrator-controlled server executables, environments and launch paths prevent replacement; kernel environments may remain writable.
-- server-prefix (REASONED; server): Server base_url defaults to /; configure /jupyter/ consistently with the proxy so registered routes remain within the intended boundary.
-- hub-prefix (REASONED; hub, proxy): Hub prefix defaults to /; bind_url=http://127.0.0.1:8000/jupyter/ sets both listener and base_url; conflicting URL settings or proxy prefix flags are not an auth boundary.
-- server-headers (REASONED; server): Server trust_xheaders defaults False; enable only behind a private, sanitizing ingress owning forwarded address and scheme headers.
-- hub-headers (REASONED; hub): Hub enables forwarded-header trust; hub_ip and trusted_downstream_ips constrain address selection, not which peers may send headers; empty trusted hops do not disable trust.
-- forwarded-scheme (REASONED; hub): Ingress must normalize Forwarded and both X- address/scheme forms and reject unintended Host values; Hub reads Forwarded first; public_url and host-prefixed cookies guard specified scheme paths.
-- forwarded-host (REASONED; hub): Forwarded-header handling rewrites address/scheme, not Host; Hub 5 ignores X-Forwarded-Host and its forwarded_host_header trait is inert.
-- internal-tls (REASONED; hub): internal_ssl defaults False; enable it with protected persistent internal_certs_location for mutual TLS on Hub/proxy/single-user and spawn-readiness connections.
-- internal-certs (REASONED; hub, hub-docs): Spawners must deliver certificates and trust bundles; LocalProcessSpawner relocates them, remote spawners need move_certs, and ssl_alt_names must match connection names.
-- internal-hostnames (REASONED; hub): Internal hostname verification defaults on from Hub 5.4, checked against 5.5.2; earlier 5.x left it disabled.
-- kernel-transport (REASONED; client): Hub internal_ssl excludes server-to-kernel ZeroMQ; HMAC authenticates without encryption, local kernels bind loopback, and remote kernels need separate encrypted transport.
-- native-store (REASONED; native, hub-docs): NativeAuthenticator replaces PAM credentials with bcrypt hashes in the Hub database, not the spawner's Unix account requirement; protect database/backups.
-- native-length (REASONED; native): minimum_password_length effectively defaults 0 despite tag(default=1); set 12; zero admits empty passwords.
-- native-common (REASONED; native): check_common_password defaults False; True checks the bundled 10,000-entry list, not a breach corpus.
-- native-lockout (REASONED; native): allowed_failed_logins defaults 0, disabling lockout; set 5 consecutive failures per account.
-- native-cooldown (REASONED; native): seconds_before_next_try effectively defaults 0 despite the 600 annotation/help; set 1200 and distinguish by a correct password about two seconds after failure.
-- native-counters (REASONED; native): Failure counters are in memory and reset on restart; timedelta.seconds ignores days and can re-block at 24-hour multiples until success or restart.
-- native-oracle (REASONED; native): Pending accounts still disclose a distinct correct-password authorization-pending message during lockout; rate-limit the actual prefixed /hub/login route.
-- native-policy-scope (REASONED; native): Password strength applies at signup/password change; raising policy does not recheck existing passwords.
-- native-approval (REASONED; native): open_signup defaults False; new pending users need /hub/authorize approval; True pre-authorizes signup, still subject to Hub admission.
-- native-preauthorization (REASONED; native): allowed_users/admin_users names are pre-authorized at first signup even with open_signup=False; deliberate registration is required; later allowlisting does not approve an existing pending record.
-- native-signup (REASONED; native): enable_signup defaults True; False refuses signup GET/POST with 404; restrict signup to trusted users.
-- verify-tls (REASONED; curl): Validated HTTPS must complete with exit=0; transport failures alone prove nothing; use real hostname and CA, retaining certificate validation.
-- verify-api (REASONED; handlers, server-docs): Anonymous /api/kernels returns native 403 with auth, authenticated kernel JSON returns 200; fronting login may redirect, and password-only deployments need a browser positive control.
-- verify-host (REASONED; handlers): Wrong-Host token request is refused with native 403 while normal Host succeeds; a fronting rejection alone does not demonstrate Server Host checks.
-- verify-metrics (REASONED; handlers): Compare anonymous metrics with authenticate_prometheus off/on and authenticated metrics content; absent routes or generic errors are inconclusive.
-- verify-extension (REASONED; handlers, server-docs): Compare an actual unclassified extension route with allow_unauthenticated_access True/False and its authenticated content; protected kernel routes do not substitute.
-- verify-xsrf (REASONED; handlers, kernels, tornado): Cookie-session same-origin POST without XSRF creates a kernel when checks are disabled; fixed missing header gives 403, matching header gives 201 with successful cookie GET.
-- verify-origin (REASONED; handlers, server-docs): Wrong-Origin cookie GET returns kernel JSON with allow_origin=*; fixed APIHandler rejects with 404 while same-origin returns 200; also inspect browser CORS headers.
-- verify-cleanup (REASONED; lab): Record and shut down every disposable kernel created in either state through the authenticated UI.
-- verify-root (REASONED; startup): Compare allowed versus refused root startup and inspect server/kernel ownership; fixed unprivileged execution must retain its intended nonzero UID.
-- verify-terminals (REASONED; startup, server-docs): Compare authenticated /api/terminals enabled/disabled, retaining a working /api/kernels positive control and kernel shell execution.
-- verify-hub-admission (REASONED; hub, hub-docs): Compare valid extra and historical users against the allowlist, with allowed-user login and spawn as positive controls.
-- verify-hub-accounts (REASONED; hub-docs): Two users' server/kernel UIDs must differ as intended, compared with a shared-account fixture.
-- verify-hub-origins (REASONED; hub, hub-docs): Compare shared versus distinct user origins and inspect __Host- cookies for Secure, path / and no Domain attribute.
-- verify-hub-config (REASONED; hub-docs): Compare a user terminal override loading versus being ignored, deny server-environment writes, and retain a working notebook.
-- verify-listeners (REASONED; startup, port): ss inventories local binds, not firewall/NAT; confirm actual private listener and external entry point with a working positive control; failed netlink inventory proves no absence.
-- port-default (REASONED; startup, port): Standalone port starts at 8888 but configuration and retries can change it; inventory the actual listener.
-- verify-prefix (REASONED; hub, server): Probe prefixed and unprefixed Server/Hub routes; require no application alias outside the boundary and working authenticated prefixed access and kernel WebSocket.
-- verify-headers (REASONED; hub, server): Compare spoofed address/scheme/Forwarded headers through real ingress and direct backend access; inspect logs, redirects and cookies with login/WebSocket controls; test real Host separately.
-- verify-internal-tls (REASONED; hub, client): Compare each internal connection with TLS off/on; trusted client certificates succeed, untrusted certificates and wrong hostnames fail on Hub 5.4+; keep kernel ZeroMQ excluded.
-- verify-native (REASONED; native): Test length/common-password, threshold/cooldown and pending-account oracle independently; compare approval with allow_all and empty allowed_users, first-signup preauthorization, disabled signup and stored bcrypt.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 An unauthenticated Jupyter server gives anyone who can reach it arbitrary code execution with the permissions of its server and kernel processes. Running those processes with administrative privileges gives an authenticated attacker those privileges too. Jupyter Server ships with authentication on through a generated token; keep authentication enabled. Setting a password replaces the automatically generated token by default. A token and a password can coexist as alternatives, but neither is a second factor. [Jupyter Server security](https://jupyter-server.readthedocs.io/en/latest/operators/security.html).
 
@@ -838,3 +543,324 @@ Keep `open_signup` at its default `False`: with it off, a pending account waits 
 - JupyterHub 5.5.2 application (internal_ssl and forwarded-header trust): https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py
 - Jupyter messaging protocol (jupyter_client 8.6.3): https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst
 - Jupyter kernel connection defaults (jupyter_client 8.6.3): https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/jupyter_client/connect.py
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/jupyter.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- server: Jupyter Server (2.18.0)
+- hub: JupyterHub (5.5.2)
+- client: jupyter_client (8.6.3)
+- startup: Jupyter Server startup source (9a4d6eea2b16815a493b11fffe0b51b1fe55a81b)
+- port: Jupyter Server port source (c5c452c3d5f3060557e57caaadce8f2fffc1c417)
+- identity: Jupyter Server identity source (3df9a70b8aea53557ad04510a63c95ce9d4c3abc)
+- handlers: Jupyter Server handler source (00d45c80eeb0f50f191b236ee47cc1d82a7db9ca)
+- kernels: Jupyter Server kernel source (c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac)
+- lab: JupyterLab documentation (unknown)
+- server-docs: Jupyter Server documentation (rolling) (unknown)
+- notebook-docs: Notebook documentation (rolling) (unknown)
+- hub-docs: JupyterHub documentation (rolling) (unknown)
+- proxy: configurable-http-proxy (5.3.0)
+- native: NativeAuthenticator (1.3.0)
+- tornado: Tornado documentation (unknown)
+- curl: curl documentation (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- native-auth (REASONED; server-docs): Generated tokens enable authentication by default; a password replaces the generated token by default, and configured token/password alternatives are not MFA.
+- password (REASONED; server-docs): Standalone Server password prompt stores a hash in jupyter_server_config.json; generate-config writes jupyter_server_config.py under the operating account.
+- endpoint-auth (REASONED; handlers, server-docs): Set allow_unauthenticated_access=False for unclassified Jupyter handlers; explicitly public handlers and third-party authentication need separate review.
+- endpoint-default (REASONED; server-docs): Reference lists allow_unauthenticated_access=True; feature appears under 2.13.0 and 2.18.0, with 2.18+ the guide baseline, not introduction date.
+- metrics-auth (REASONED; handlers, server-docs): authenticate_prometheus=True independently requires authentication for metrics.
+- migration (REASONED; server-docs, notebook-docs): Notebook 7 uses Server; migrate NotebookApp to ServerApp and Server 2 password/token traits to PasswordIdentityProvider and IdentityProvider; avoid credential argv.
+- root (REASONED; startup): allow_root=False refuses Unix root startup; use a dedicated unprivileged account for server and kernels; it neither changes UID nor sandboxes execution.
+- terminals (REASONED; startup, server-docs): terminals_enabled=False removes terminals but not kernel shell execution; reference False differs from the implementation's dynamic True subject to availability.
+- native-tls (REASONED; server, server-docs): certfile/keyfile or --certfile/--keyfile enable native HTTPS; that listener no longer serves ordinary plaintext HTTP.
+- private-bind (REASONED; server-docs): Retain loopback; do not expose 0.0.0.0 without authentication and HTTPS; disabling both password and token removes native authentication.
+- proxy-tls (REASONED; hub): An authenticated HTTPS proxy before a loopback server can replace native TLS; authentication alone does not encrypt transport.
+- mfa (REASONED; server-docs, hub-docs): Standalone password is single-factor; fronting authentication or a Hub provider adds MFA only when explicitly enforced.
+- origins (REASONED; server-docs): Same-origin settings keep allow_origin and allow_origin_pat empty and allow_credentials=False; cross-origin clients require reviewed exceptions.
+- xsrf (REASONED; handlers, server-docs): Keep disable_check_xsrf=False; disabling it removes browser-session request-forgery protection.
+- host (REASONED; handlers, server-docs): allow_remote_access=False retains Host checks; local_hostnames permits actual standalone hostnames; Hub servers need their generated hostnames.
+- token-exception (REASONED; identity, handlers): Token-authenticated requests bypass origin and XSRF checks; test browser protections with a cookie session and no token.
+- hub-admission (REASONED; hub, hub-docs): Hub 5+ PAM example disables allow_all and allow_existing_users, lists allowed_users and empties allowed_groups; other authenticators need separate review.
+- hub-accounts (REASONED; server-docs, hub-docs): LocalProcessSpawner needs matching Unix accounts; use separate users/servers, and avoid SimpleLocalProcessSpawner, which provides no user isolation.
+- hub-limits (REASONED; hub, hub-docs): Local processes are not containers; LocalProcessSpawner does not enforce generic CPU/memory limits, and PAM does not automatically provide MFA.
+- hub-domains (REASONED; hub, hub-docs): For mutually untrusted Hub users, subdomain_host separates browser origins; provide HTTPS/DNS for every user domain on a separate application domain.
+- hub-cookies (REASONED; hub, hub-docs): cookie_host_prefix_enabled requires Hub 4.1+, HTTPS and per-user domains; combined example targets Hub 5+.
+- hub-user-config (REASONED; hub-docs): disable_user_config ignores home configuration; administrator-controlled server executables, environments and launch paths prevent replacement; kernel environments may remain writable.
+- server-prefix (REASONED; server): Server base_url defaults to /; configure /jupyter/ consistently with the proxy so registered routes remain within the intended boundary.
+- hub-prefix (REASONED; hub, proxy): Hub prefix defaults to /; bind_url=http://127.0.0.1:8000/jupyter/ sets both listener and base_url; conflicting URL settings or proxy prefix flags are not an auth boundary.
+- server-headers (REASONED; server): Server trust_xheaders defaults False; enable only behind a private, sanitizing ingress owning forwarded address and scheme headers.
+- hub-headers (REASONED; hub): Hub enables forwarded-header trust; hub_ip and trusted_downstream_ips constrain address selection, not which peers may send headers; empty trusted hops do not disable trust.
+- forwarded-scheme (REASONED; hub): Ingress must normalize Forwarded and both X- address/scheme forms and reject unintended Host values; Hub reads Forwarded first; public_url and host-prefixed cookies guard specified scheme paths.
+- forwarded-host (REASONED; hub): Forwarded-header handling rewrites address/scheme, not Host; Hub 5 ignores X-Forwarded-Host and its forwarded_host_header trait is inert.
+- internal-tls (REASONED; hub): internal_ssl defaults False; enable it with protected persistent internal_certs_location for mutual TLS on Hub/proxy/single-user and spawn-readiness connections.
+- internal-certs (REASONED; hub, hub-docs): Spawners must deliver certificates and trust bundles; LocalProcessSpawner relocates them, remote spawners need move_certs, and ssl_alt_names must match connection names.
+- internal-hostnames (REASONED; hub): Internal hostname verification defaults on from Hub 5.4, checked against 5.5.2; earlier 5.x left it disabled.
+- kernel-transport (REASONED; client): Hub internal_ssl excludes server-to-kernel ZeroMQ; HMAC authenticates without encryption, local kernels bind loopback, and remote kernels need separate encrypted transport.
+- native-store (REASONED; native, hub-docs): NativeAuthenticator replaces PAM credentials with bcrypt hashes in the Hub database, not the spawner's Unix account requirement; protect database/backups.
+- native-length (REASONED; native): minimum_password_length effectively defaults 0 despite tag(default=1); set 12; zero admits empty passwords.
+- native-common (REASONED; native): check_common_password defaults False; True checks the bundled 10,000-entry list, not a breach corpus.
+- native-lockout (REASONED; native): allowed_failed_logins defaults 0, disabling lockout; set 5 consecutive failures per account.
+- native-cooldown (REASONED; native): seconds_before_next_try effectively defaults 0 despite the 600 annotation/help; set 1200 and distinguish by a correct password about two seconds after failure.
+- native-counters (REASONED; native): Failure counters are in memory and reset on restart; timedelta.seconds ignores days and can re-block at 24-hour multiples until success or restart.
+- native-oracle (REASONED; native): Pending accounts still disclose a distinct correct-password authorization-pending message during lockout; rate-limit the actual prefixed /hub/login route.
+- native-policy-scope (REASONED; native): Password strength applies at signup/password change; raising policy does not recheck existing passwords.
+- native-approval (REASONED; native): open_signup defaults False; new pending users need /hub/authorize approval; True pre-authorizes signup, still subject to Hub admission.
+- native-preauthorization (REASONED; native): allowed_users/admin_users names are pre-authorized at first signup even with open_signup=False; deliberate registration is required; later allowlisting does not approve an existing pending record.
+- native-signup (REASONED; native): enable_signup defaults True; False refuses signup GET/POST with 404; restrict signup to trusted users.
+- verify-tls (REASONED; curl): Validated HTTPS must complete with exit=0; transport failures alone prove nothing; use real hostname and CA, retaining certificate validation.
+- verify-api (REASONED; handlers, server-docs): Anonymous /api/kernels returns native 403 with auth, authenticated kernel JSON returns 200; fronting login may redirect, and password-only deployments need a browser positive control.
+- verify-host (REASONED; handlers): Wrong-Host token request is refused with native 403 while normal Host succeeds; a fronting rejection alone does not demonstrate Server Host checks.
+- verify-metrics (REASONED; handlers): Compare anonymous metrics with authenticate_prometheus off/on and authenticated metrics content; absent routes or generic errors are inconclusive.
+- verify-extension (REASONED; handlers, server-docs): Compare an actual unclassified extension route with allow_unauthenticated_access True/False and its authenticated content; protected kernel routes do not substitute.
+- verify-xsrf (REASONED; handlers, kernels, tornado): Cookie-session same-origin POST without XSRF creates a kernel when checks are disabled; fixed missing header gives 403, matching header gives 201 with successful cookie GET.
+- verify-origin (REASONED; handlers, server-docs): Wrong-Origin cookie GET returns kernel JSON with allow_origin=*; fixed APIHandler rejects with 404 while same-origin returns 200; also inspect browser CORS headers.
+- verify-cleanup (REASONED; lab): Record and shut down every disposable kernel created in either state through the authenticated UI.
+- verify-root (REASONED; startup): Compare allowed versus refused root startup and inspect server/kernel ownership; fixed unprivileged execution must retain its intended nonzero UID.
+- verify-terminals (REASONED; startup, server-docs): Compare authenticated /api/terminals enabled/disabled, retaining a working /api/kernels positive control and kernel shell execution.
+- verify-hub-admission (REASONED; hub, hub-docs): Compare valid extra and historical users against the allowlist, with allowed-user login and spawn as positive controls.
+- verify-hub-accounts (REASONED; hub-docs): Two users' server/kernel UIDs must differ as intended, compared with a shared-account fixture.
+- verify-hub-origins (REASONED; hub, hub-docs): Compare shared versus distinct user origins and inspect __Host- cookies for Secure, path / and no Domain attribute.
+- verify-hub-config (REASONED; hub-docs): Compare a user terminal override loading versus being ignored, deny server-environment writes, and retain a working notebook.
+- verify-listeners (REASONED; startup, port): ss inventories local binds, not firewall/NAT; confirm actual private listener and external entry point with a working positive control; failed netlink inventory proves no absence.
+- port-default (REASONED; startup, port): Standalone port starts at 8888 but configuration and retries can change it; inventory the actual listener.
+- verify-prefix (REASONED; hub, server): Probe prefixed and unprefixed Server/Hub routes; require no application alias outside the boundary and working authenticated prefixed access and kernel WebSocket.
+- verify-headers (REASONED; hub, server): Compare spoofed address/scheme/Forwarded headers through real ingress and direct backend access; inspect logs, redirects and cookies with login/WebSocket controls; test real Host separately.
+- verify-internal-tls (REASONED; hub, client): Compare each internal connection with TLS off/on; trusted client certificates succeed, untrusted certificates and wrong hostnames fail on Hub 5.4+; keep kernel ZeroMQ excluded.
+- verify-native (REASONED; native): Test length/common-password, threshold/cooldown and pending-account oracle independently; compare approval with allow_all and empty allowed_users, first-signup preauthorization, disabled signup and stored bcrypt.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "1bdfe2f4964c65f610a2748bb78167f6ccd9ceac240202250ca83181182816d5",
+  "components": {
+    "server": {
+      "name": "Jupyter Server",
+      "basis": "2.18.0",
+      "sources": {
+        "s238865cddff5": "https://raw.githubusercontent.com/jupyter-server/jupyter_server/v2.18.0/jupyter_server/serverapp.py"
+      }
+    },
+    "hub": {
+      "name": "JupyterHub",
+      "basis": "5.5.2",
+      "sources": {
+        "sf42536766925": "https://jupyterhub.readthedocs.io/en/5.5.2/howto/configuration/config-proxy.html",
+        "sbff5ae556021": "https://jupyterhub.readthedocs.io/en/5.5.2/reference/config-reference.html",
+        "s6a157547975b": "https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/docs/source/reference/changelog.md",
+        "safc0d6318afc": "https://raw.githubusercontent.com/jupyterhub/jupyterhub/5.5.2/jupyterhub/app.py",
+        "s62add5267d20": "https://jupyterhub.readthedocs.io/en/5.5.2/reference/api/auth.html",
+        "s390accdb1835": "https://jupyterhub.readthedocs.io/en/5.5.2/reference/spawners.html"
+      }
+    },
+    "client": {
+      "name": "jupyter_client",
+      "basis": "8.6.3",
+      "sources": {
+        "s254bb75e8fcd": "https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/docs/messaging.rst",
+        "s4a4cbff2fc52": "https://raw.githubusercontent.com/jupyter/jupyter_client/v8.6.3/jupyter_client/connect.py"
+      }
+    },
+    "startup": {
+      "name": "Jupyter Server startup source",
+      "basis": "9a4d6eea2b16815a493b11fffe0b51b1fe55a81b",
+      "sources": {
+        "sb604ab4922ea": "https://raw.githubusercontent.com/jupyter-server/jupyter_server/9a4d6eea2b16815a493b11fffe0b51b1fe55a81b/jupyter_server/serverapp.py"
+      }
+    },
+    "port": {
+      "name": "Jupyter Server port source",
+      "basis": "c5c452c3d5f3060557e57caaadce8f2fffc1c417",
+      "sources": {
+        "s8aa622e78b6c": "https://raw.githubusercontent.com/jupyter-server/jupyter_server/c5c452c3d5f3060557e57caaadce8f2fffc1c417/jupyter_server/__init__.py"
+      }
+    },
+    "identity": {
+      "name": "Jupyter Server identity source",
+      "basis": "3df9a70b8aea53557ad04510a63c95ce9d4c3abc",
+      "sources": {
+        "s42f6fa67bb40": "https://raw.githubusercontent.com/jupyter-server/jupyter_server/3df9a70b8aea53557ad04510a63c95ce9d4c3abc/jupyter_server/auth/identity.py"
+      }
+    },
+    "handlers": {
+      "name": "Jupyter Server handler source",
+      "basis": "00d45c80eeb0f50f191b236ee47cc1d82a7db9ca",
+      "sources": {
+        "sd60a21dc05be": "https://github.com/jupyter-server/jupyter_server/blob/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py",
+        "s6ad33bf43289": "https://raw.githubusercontent.com/jupyter-server/jupyter_server/00d45c80eeb0f50f191b236ee47cc1d82a7db9ca/jupyter_server/base/handlers.py"
+      }
+    },
+    "kernels": {
+      "name": "Jupyter Server kernel source",
+      "basis": "c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac",
+      "sources": {
+        "sd5917e37102f": "https://raw.githubusercontent.com/jupyter-server/jupyter_server/c8bbb1a77a1d482816bac0dfe5c14c08d37b59ac/jupyter_server/services/kernels/handlers.py"
+      }
+    },
+    "lab": {
+      "name": "JupyterLab documentation",
+      "basis": "unknown",
+      "sources": {
+        "s8021535e4b8f": "https://jupyterlab.readthedocs.io/en/stable/user/running.html"
+      }
+    },
+    "server-docs": {
+      "name": "Jupyter Server documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s7e2219e89598": "https://jupyter-server.readthedocs.io/en/latest/operators/public-server.html",
+        "sc703a8030c8f": "https://jupyter-server.readthedocs.io/en/latest/operators/security.html",
+        "se96d81c5de5a": "https://jupyter-server.readthedocs.io/en/latest/other/full-config.html",
+        "s030744ca2941": "https://jupyter-server.readthedocs.io/en/latest/operators/migrate-from-nbserver.html",
+        "s3036d65c135e": "https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.html",
+        "s0d0d3fa341e9": "https://jupyter-server.readthedocs.io/en/stable/api/jupyter_server.auth.html",
+        "s2e77936fa221": "https://jupyter-server.readthedocs.io/en/stable/developers/rest-api.html",
+        "s3f8d489dcf1a": "https://jupyter-server.readthedocs.io/en/stable/other/changelog.html"
+      }
+    },
+    "notebook-docs": {
+      "name": "Notebook documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s0650d57213a3": "https://jupyter-notebook.readthedocs.io/en/stable/configuring/config_overview.html"
+      }
+    },
+    "hub-docs": {
+      "name": "JupyterHub documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s1a8d05a8cf13": "https://jupyterhub.readthedocs.io/en/stable/reference/authenticators.html",
+        "s06a88ed8ee36": "https://jupyterhub.readthedocs.io/en/stable/explanation/websecurity.html",
+        "sad07061feaf6": "https://jupyterhub.readthedocs.io/en/stable/reference/api/spawner.html"
+      }
+    },
+    "proxy": {
+      "name": "configurable-http-proxy",
+      "basis": "5.3.0",
+      "sources": {
+        "sd16e1a3c1c99": "https://raw.githubusercontent.com/jupyterhub/configurable-http-proxy/5.3.0/bin/configurable-http-proxy"
+      }
+    },
+    "native": {
+      "name": "NativeAuthenticator",
+      "basis": "1.3.0",
+      "sources": {
+        "s7e8115fc47c7": "https://raw.githubusercontent.com/jupyterhub/nativeauthenticator/1.3.0/nativeauthenticator/nativeauthenticator.py",
+        "s1cc87f8d9e78": "https://native-authenticator.readthedocs.io/en/1.3.0/quickstart.html",
+        "s0bd461b12e33": "https://raw.githubusercontent.com/jupyterhub/nativeauthenticator/1.3.0/nativeauthenticator/handlers.py"
+      }
+    },
+    "tornado": {
+      "name": "Tornado documentation",
+      "basis": "unknown",
+      "sources": {
+        "s0f3c220a61fa": "https://www.tornadoweb.org/en/stable/guide/security.html"
+      }
+    },
+    "curl": {
+      "name": "curl documentation",
+      "basis": "unknown",
+      "sources": {
+        "s0dc5c76f65b4": "https://curl.se/docs/sslcerts.html",
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    }
+  },
+  "claims": {
+    "native-auth": {"text": "Generated tokens enable authentication by default; a password replaces the generated token by default, and configured token/password alternatives are not MFA.", "components": ["server-docs"], "sources": ["server-docs:sc703a8030c8f"], "status": "REASONED"},
+    "password": {"text": "Standalone Server password prompt stores a hash in jupyter_server_config.json; generate-config writes jupyter_server_config.py under the operating account.", "components": ["server-docs"], "sources": ["server-docs:s7e2219e89598", "server-docs:se96d81c5de5a"], "status": "REASONED"},
+    "endpoint-auth": {"text": "Set allow_unauthenticated_access=False for unclassified Jupyter handlers; explicitly public handlers and third-party authentication need separate review.", "components": ["handlers", "server-docs"], "sources": ["server-docs:s3036d65c135e", "handlers:s6ad33bf43289"], "status": "REASONED"},
+    "endpoint-default": {"text": "Reference lists allow_unauthenticated_access=True; feature appears under 2.13.0 and 2.18.0, with 2.18+ the guide baseline, not introduction date.", "components": ["server-docs"], "sources": ["server-docs:se96d81c5de5a", "server-docs:s3f8d489dcf1a"], "status": "REASONED"},
+    "metrics-auth": {"text": "authenticate_prometheus=True independently requires authentication for metrics.", "components": ["handlers", "server-docs"], "sources": ["handlers:sd60a21dc05be", "server-docs:s3036d65c135e"], "status": "REASONED"},
+    "migration": {"text": "Notebook 7 uses Server; migrate NotebookApp to ServerApp and Server 2 password/token traits to PasswordIdentityProvider and IdentityProvider; avoid credential argv.", "components": ["server-docs", "notebook-docs"], "sources": ["server-docs:s030744ca2941", "server-docs:s0d0d3fa341e9", "notebook-docs:s0650d57213a3"], "status": "REASONED"},
+    "root": {"text": "allow_root=False refuses Unix root startup; use a dedicated unprivileged account for server and kernels; it neither changes UID nor sandboxes execution.", "components": ["startup"], "sources": ["startup:sb604ab4922ea"], "status": "REASONED"},
+    "terminals": {"text": "terminals_enabled=False removes terminals but not kernel shell execution; reference False differs from the implementation's dynamic True subject to availability.", "components": ["startup", "server-docs"], "sources": ["server-docs:se96d81c5de5a", "startup:sb604ab4922ea"], "status": "REASONED"},
+    "native-tls": {"text": "certfile/keyfile or --certfile/--keyfile enable native HTTPS; that listener no longer serves ordinary plaintext HTTP.", "components": ["server", "server-docs"], "sources": ["server-docs:s7e2219e89598", "server:s238865cddff5"], "status": "REASONED"},
+    "private-bind": {"text": "Retain loopback; do not expose 0.0.0.0 without authentication and HTTPS; disabling both password and token removes native authentication.", "components": ["server-docs"], "sources": ["server-docs:s7e2219e89598", "server-docs:sc703a8030c8f", "server-docs:se96d81c5de5a"], "status": "REASONED"},
+    "proxy-tls": {"text": "An authenticated HTTPS proxy before a loopback server can replace native TLS; authentication alone does not encrypt transport.", "components": ["hub"], "sources": ["hub:sf42536766925"], "status": "REASONED"},
+    "mfa": {"text": "Standalone password is single-factor; fronting authentication or a Hub provider adds MFA only when explicitly enforced.", "components": ["server-docs", "hub-docs"], "sources": ["server-docs:sc703a8030c8f", "hub-docs:s1a8d05a8cf13"], "status": "REASONED"},
+    "origins": {"text": "Same-origin settings keep allow_origin and allow_origin_pat empty and allow_credentials=False; cross-origin clients require reviewed exceptions.", "components": ["server-docs"], "sources": ["server-docs:s3036d65c135e"], "status": "REASONED"},
+    "xsrf": {"text": "Keep disable_check_xsrf=False; disabling it removes browser-session request-forgery protection.", "components": ["handlers", "server-docs"], "sources": ["server-docs:s3036d65c135e", "handlers:s6ad33bf43289"], "status": "REASONED"},
+    "host": {"text": "allow_remote_access=False retains Host checks; local_hostnames permits actual standalone hostnames; Hub servers need their generated hostnames.", "components": ["handlers", "server-docs"], "sources": ["server-docs:se96d81c5de5a", "handlers:s6ad33bf43289"], "status": "REASONED"},
+    "token-exception": {"text": "Token-authenticated requests bypass origin and XSRF checks; test browser protections with a cookie session and no token.", "components": ["identity", "handlers"], "sources": ["identity:s42f6fa67bb40", "handlers:s6ad33bf43289"], "status": "REASONED"},
+    "hub-admission": {"text": "Hub 5+ PAM example disables allow_all and allow_existing_users, lists allowed_users and empties allowed_groups; other authenticators need separate review.", "components": ["hub", "hub-docs"], "sources": ["hub:s62add5267d20", "hub-docs:s1a8d05a8cf13"], "status": "REASONED"},
+    "hub-accounts": {"text": "LocalProcessSpawner needs matching Unix accounts; use separate users/servers, and avoid SimpleLocalProcessSpawner, which provides no user isolation.", "components": ["server-docs", "hub-docs"], "sources": ["server-docs:s7e2219e89598", "hub-docs:sad07061feaf6"], "status": "REASONED"},
+    "hub-limits": {"text": "Local processes are not containers; LocalProcessSpawner does not enforce generic CPU/memory limits, and PAM does not automatically provide MFA.", "components": ["hub", "hub-docs"], "sources": ["hub-docs:s1a8d05a8cf13", "hub:s390accdb1835"], "status": "REASONED"},
+    "hub-domains": {"text": "For mutually untrusted Hub users, subdomain_host separates browser origins; provide HTTPS/DNS for every user domain on a separate application domain.", "components": ["hub", "hub-docs"], "sources": ["hub-docs:s06a88ed8ee36", "hub:sbff5ae556021"], "status": "REASONED"},
+    "hub-cookies": {"text": "cookie_host_prefix_enabled requires Hub 4.1+, HTTPS and per-user domains; combined example targets Hub 5+.", "components": ["hub", "hub-docs"], "sources": ["hub:sbff5ae556021", "hub-docs:s06a88ed8ee36"], "status": "REASONED"},
+    "hub-user-config": {"text": "disable_user_config ignores home configuration; administrator-controlled server executables, environments and launch paths prevent replacement; kernel environments may remain writable.", "components": ["hub-docs"], "sources": ["hub-docs:sad07061feaf6", "hub-docs:s06a88ed8ee36"], "status": "REASONED"},
+    "server-prefix": {"text": "Server base_url defaults to /; configure /jupyter/ consistently with the proxy so registered routes remain within the intended boundary.", "components": ["server"], "sources": ["server:s238865cddff5"], "status": "REASONED"},
+    "hub-prefix": {"text": "Hub prefix defaults to /; bind_url=http://127.0.0.1:8000/jupyter/ sets both listener and base_url; conflicting URL settings or proxy prefix flags are not an auth boundary.", "components": ["hub", "proxy"], "sources": ["hub:sf42536766925", "proxy:sd16e1a3c1c99", "hub:sbff5ae556021"], "status": "REASONED"},
+    "server-headers": {"text": "Server trust_xheaders defaults False; enable only behind a private, sanitizing ingress owning forwarded address and scheme headers.", "components": ["server"], "sources": ["server:s238865cddff5"], "status": "REASONED"},
+    "hub-headers": {"text": "Hub enables forwarded-header trust; hub_ip and trusted_downstream_ips constrain address selection, not which peers may send headers; empty trusted hops do not disable trust.", "components": ["hub"], "sources": ["hub:sbff5ae556021", "hub:safc0d6318afc"], "status": "REASONED"},
+    "forwarded-scheme": {"text": "Ingress must normalize Forwarded and both X- address/scheme forms and reject unintended Host values; Hub reads Forwarded first; public_url and host-prefixed cookies guard specified scheme paths.", "components": ["hub"], "sources": ["hub:sbff5ae556021", "hub:safc0d6318afc"], "status": "REASONED"},
+    "forwarded-host": {"text": "Forwarded-header handling rewrites address/scheme, not Host; Hub 5 ignores X-Forwarded-Host and its forwarded_host_header trait is inert.", "components": ["hub"], "sources": ["hub:sbff5ae556021", "hub:safc0d6318afc"], "status": "REASONED"},
+    "internal-tls": {"text": "internal_ssl defaults False; enable it with protected persistent internal_certs_location for mutual TLS on Hub/proxy/single-user and spawn-readiness connections.", "components": ["hub"], "sources": ["hub:sbff5ae556021", "hub:safc0d6318afc"], "status": "REASONED"},
+    "internal-certs": {"text": "Spawners must deliver certificates and trust bundles; LocalProcessSpawner relocates them, remote spawners need move_certs, and ssl_alt_names must match connection names.", "components": ["hub", "hub-docs"], "sources": ["hub-docs:sad07061feaf6", "hub:sbff5ae556021"], "status": "REASONED"},
+    "internal-hostnames": {"text": "Internal hostname verification defaults on from Hub 5.4, checked against 5.5.2; earlier 5.x left it disabled.", "components": ["hub"], "sources": ["hub:s6a157547975b", "hub:safc0d6318afc"], "status": "REASONED"},
+    "kernel-transport": {"text": "Hub internal_ssl excludes server-to-kernel ZeroMQ; HMAC authenticates without encryption, local kernels bind loopback, and remote kernels need separate encrypted transport.", "components": ["client"], "sources": ["client:s254bb75e8fcd", "client:s4a4cbff2fc52"], "status": "REASONED"},
+    "native-store": {"text": "NativeAuthenticator replaces PAM credentials with bcrypt hashes in the Hub database, not the spawner's Unix account requirement; protect database/backups.", "components": ["native", "hub-docs"], "sources": ["hub-docs:sad07061feaf6", "native:s7e8115fc47c7", "native:s1cc87f8d9e78"], "status": "REASONED"},
+    "native-length": {"text": "minimum_password_length effectively defaults 0 despite tag(default=1); set 12; zero admits empty passwords.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
+    "native-common": {"text": "check_common_password defaults False; True checks the bundled 10,000-entry list, not a breach corpus.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
+    "native-lockout": {"text": "allowed_failed_logins defaults 0, disabling lockout; set 5 consecutive failures per account.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
+    "native-cooldown": {"text": "seconds_before_next_try effectively defaults 0 despite the 600 annotation/help; set 1200 and distinguish by a correct password about two seconds after failure.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
+    "native-counters": {"text": "Failure counters are in memory and reset on restart; timedelta.seconds ignores days and can re-block at 24-hour multiples until success or restart.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
+    "native-oracle": {"text": "Pending accounts still disclose a distinct correct-password authorization-pending message during lockout; rate-limit the actual prefixed /hub/login route.", "components": ["native"], "sources": ["native:s7e8115fc47c7", "native:s0bd461b12e33"], "status": "REASONED"},
+    "native-policy-scope": {"text": "Password strength applies at signup/password change; raising policy does not recheck existing passwords.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
+    "native-approval": {"text": "open_signup defaults False; new pending users need /hub/authorize approval; True pre-authorizes signup, still subject to Hub admission.", "components": ["native"], "sources": ["native:s7e8115fc47c7", "native:s0bd461b12e33"], "status": "REASONED"},
+    "native-preauthorization": {"text": "allowed_users/admin_users names are pre-authorized at first signup even with open_signup=False; deliberate registration is required; later allowlisting does not approve an existing pending record.", "components": ["native"], "sources": ["native:s7e8115fc47c7"], "status": "REASONED"},
+    "native-signup": {"text": "enable_signup defaults True; False refuses signup GET/POST with 404; restrict signup to trusted users.", "components": ["native"], "sources": ["native:s7e8115fc47c7", "native:s0bd461b12e33"], "status": "REASONED"},
+    "verify-tls": {"text": "Validated HTTPS must complete with exit=0; transport failures alone prove nothing; use real hostname and CA, retaining certificate validation.", "components": ["curl"], "sources": ["curl:s0dc5c76f65b4", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-api": {"text": "Anonymous /api/kernels returns native 403 with auth, authenticated kernel JSON returns 200; fronting login may redirect, and password-only deployments need a browser positive control.", "components": ["handlers", "server-docs"], "sources": ["server-docs:sc703a8030c8f", "handlers:s6ad33bf43289", "server-docs:s2e77936fa221"], "status": "REASONED", "verify": [1]},
+    "verify-host": {"text": "Wrong-Host token request is refused with native 403 while normal Host succeeds; a fronting rejection alone does not demonstrate Server Host checks.", "components": ["handlers"], "sources": ["handlers:s6ad33bf43289"], "status": "REASONED", "verify": [1]},
+    "verify-metrics": {"text": "Compare anonymous metrics with authenticate_prometheus off/on and authenticated metrics content; absent routes or generic errors are inconclusive.", "components": ["handlers"], "sources": ["handlers:sd60a21dc05be"], "status": "REASONED", "verify": [1]},
+    "verify-extension": {"text": "Compare an actual unclassified extension route with allow_unauthenticated_access True/False and its authenticated content; protected kernel routes do not substitute.", "components": ["handlers", "server-docs"], "sources": ["server-docs:s3036d65c135e", "handlers:s6ad33bf43289"], "status": "REASONED", "verify": [1]},
+    "verify-xsrf": {"text": "Cookie-session same-origin POST without XSRF creates a kernel when checks are disabled; fixed missing header gives 403, matching header gives 201 with successful cookie GET.", "components": ["handlers", "kernels", "tornado"], "sources": ["handlers:s6ad33bf43289", "kernels:sd5917e37102f", "tornado:s0f3c220a61fa"], "status": "REASONED", "verify": [2]},
+    "verify-origin": {"text": "Wrong-Origin cookie GET returns kernel JSON with allow_origin=*; fixed APIHandler rejects with 404 while same-origin returns 200; also inspect browser CORS headers.", "components": ["handlers", "server-docs"], "sources": ["server-docs:s3036d65c135e", "handlers:s6ad33bf43289"], "status": "REASONED", "verify": [2]},
+    "verify-cleanup": {"text": "Record and shut down every disposable kernel created in either state through the authenticated UI.", "components": ["lab"], "sources": ["lab:s8021535e4b8f"], "status": "REASONED"},
+    "verify-root": {"text": "Compare allowed versus refused root startup and inspect server/kernel ownership; fixed unprivileged execution must retain its intended nonzero UID.", "components": ["startup"], "sources": ["startup:sb604ab4922ea"], "status": "REASONED"},
+    "verify-terminals": {"text": "Compare authenticated /api/terminals enabled/disabled, retaining a working /api/kernels positive control and kernel shell execution.", "components": ["startup", "server-docs"], "sources": ["server-docs:se96d81c5de5a", "startup:sb604ab4922ea"], "status": "REASONED"},
+    "verify-hub-admission": {"text": "Compare valid extra and historical users against the allowlist, with allowed-user login and spawn as positive controls.", "components": ["hub", "hub-docs"], "sources": ["hub:s62add5267d20", "hub-docs:s1a8d05a8cf13"], "status": "REASONED"},
+    "verify-hub-accounts": {"text": "Two users' server/kernel UIDs must differ as intended, compared with a shared-account fixture.", "components": ["hub-docs"], "sources": ["hub-docs:sad07061feaf6"], "status": "REASONED"},
+    "verify-hub-origins": {"text": "Compare shared versus distinct user origins and inspect __Host- cookies for Secure, path / and no Domain attribute.", "components": ["hub", "hub-docs"], "sources": ["hub:sbff5ae556021", "hub-docs:s06a88ed8ee36"], "status": "REASONED"},
+    "verify-hub-config": {"text": "Compare a user terminal override loading versus being ignored, deny server-environment writes, and retain a working notebook.", "components": ["hub-docs"], "sources": ["hub-docs:sad07061feaf6", "hub-docs:s06a88ed8ee36"], "status": "REASONED"},
+    "verify-listeners": {"text": "ss inventories local binds, not firewall/NAT; confirm actual private listener and external entry point with a working positive control; failed netlink inventory proves no absence.", "components": ["startup", "port"], "sources": ["startup:sb604ab4922ea", "port:s8aa622e78b6c"], "status": "REASONED", "verify": [3]},
+    "port-default": {"text": "Standalone port starts at 8888 but configuration and retries can change it; inventory the actual listener.", "components": ["startup", "port"], "sources": ["startup:sb604ab4922ea", "port:s8aa622e78b6c"], "status": "REASONED"},
+    "verify-prefix": {"text": "Probe prefixed and unprefixed Server/Hub routes; require no application alias outside the boundary and working authenticated prefixed access and kernel WebSocket.", "components": ["hub", "server"], "sources": ["hub:sf42536766925", "server:s238865cddff5"], "status": "REASONED"},
+    "verify-headers": {"text": "Compare spoofed address/scheme/Forwarded headers through real ingress and direct backend access; inspect logs, redirects and cookies with login/WebSocket controls; test real Host separately.", "components": ["hub", "server"], "sources": ["hub:sbff5ae556021", "server:s238865cddff5", "hub:safc0d6318afc"], "status": "REASONED"},
+    "verify-internal-tls": {"text": "Compare each internal connection with TLS off/on; trusted client certificates succeed, untrusted certificates and wrong hostnames fail on Hub 5.4+; keep kernel ZeroMQ excluded.", "components": ["hub", "client"], "sources": ["hub:s6a157547975b", "hub:safc0d6318afc", "client:s254bb75e8fcd"], "status": "REASONED"},
+    "verify-native": {"text": "Test length/common-password, threshold/cooldown and pending-account oracle independently; compare approval with allow_all and empty allowed_users, first-signup preauthorization, disabled signup and stored bcrypt.", "components": ["native"], "sources": ["native:s7e8115fc47c7", "native:s0bd461b12e33"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->

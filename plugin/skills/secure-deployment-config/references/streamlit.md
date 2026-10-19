@@ -1,208 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-05",
-  "documentation_checked": "2026-10",
-  "body_sha256": "8f1af50b58ec9e65f321989751e1ee7d32e9d068e8bbd945a9fe571806ce9449",
-  "components": {
-    "streamlit": {
-      "name": "Streamlit",
-      "basis": "1.64.0",
-      "sources": {
-        "s208ef00c9507": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/config.py#L1016-L1036",
-        "s7e4fdd54875d": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L80-L98",
-        "s41a3660b1c7b": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L139-L160",
-        "s50b333f0759f": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400",
-        "sa98504c29424": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server_config.py#L55-L57",
-        "s9d96cdf36131": "https://pypi.org/project/streamlit/1.64.0/",
-        "s4d7021a05403": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/auth_util.py#L415-L431",
-        "s8373238b25cd": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_auth_routes.py#L596-L620",
-        "s5f9a6992d213": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/user_info.py#L550-L560"
-      }
-    },
-    "google-oidc": {
-      "name": "Google OpenID Connect documentation",
-      "basis": "rolling documentation, checked 2026-10-15",
-      "sources": {
-        "s4f815acc2976": "https://developers.google.com/identity/openid-connect/openid-connect"
-      }
-    },
-    "ssrf": {
-      "name": "OWASP SSRF guidance",
-      "basis": "unknown",
-      "sources": {
-        "s7eb820e1e53b": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html"
-      }
-    },
-    "curl": {
-      "name": "curl minimum write-out version",
-      "basis": "7.75.0",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
-      }
-    },
-    "authlib": {
-      "name": "Authlib minimum",
-      "basis": "1.3.2",
-      "sources": {
-        "s9d96cdf36131": "https://pypi.org/project/streamlit/1.64.0/"
-      }
-    },
-    "httpx": {
-      "name": "httpx minimum",
-      "basis": "0.24.1",
-      "sources": {
-        "s9d96cdf36131": "https://pypi.org/project/streamlit/1.64.0/"
-      }
-    },
-    "streamlit-rolling": {
-      "name": "Streamlit documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s560ba59f10f9": "https://docs.streamlit.io/develop/api-reference/configuration/config.toml",
-        "s5b7392df2d3a": "https://docs.streamlit.io/develop/concepts/connections/authentication",
-        "s3f8bf05ddb38": "https://docs.streamlit.io/develop/api-reference/user/st.user",
-        "s1322a5f1d6a0": "https://docs.streamlit.io/develop/api-reference/user/st.login",
-        "s91c471ec9924": "https://docs.streamlit.io/develop/concepts/configuration/options",
-        "s6f8f2b27ef37": "https://docs.streamlit.io/develop/concepts/configuration/serving-static-files",
-        "sd09e0d235dd6": "https://docs.streamlit.io/develop/api-reference/widgets/st.file_uploader",
-        "s720555b11b6e": "https://docs.streamlit.io/develop/concepts/connections/security-reminders",
-        "s66e514173b37": "https://docs.streamlit.io/deploy/tutorials/docker"
-      }
-    },
-    "release-notes": {
-      "name": "Streamlit release notes",
-      "basis": "unknown",
-      "sources": {
-        "s6f6f9b0b14c2": "https://docs.streamlit.io/develop/quick-reference/release-notes",
-        "se2c98289aac5": "https://docs.streamlit.io/develop/quick-reference/release-notes/2025#version-1420"
-      }
-    },
-    "caddy": {
-      "name": "Caddy",
-      "basis": "v2.11.4",
-      "sources": {
-        "sb0b62262df7b": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88",
-        "s9702adeb8c11": "https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go",
-        "s6b8d900baeb9": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/caddyauth/caddyfile.go#L29-L36"
-      }
-    },
-    "oauth2-proxy": {
-      "name": "oauth2-proxy",
-      "basis": "v7.15.4",
-      "sources": {
-        "s088c1baa445d": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/options.go#L141"
-      }
-    },
-    "keycloak": {
-      "name": "Keycloak",
-      "basis": "26.7.4",
-      "sources": {
-        "sf802dc9c4313": "https://raw.githubusercontent.com/keycloak/keycloak/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc",
-        "se52072c97d20": "https://github.com/keycloak/keycloak/blob/26.7.4/services/src/main/java/org/keycloak/protocol/oidc/mappers/UserAttributeMapper.java#L96-L104"
-      }
-    }
-  },
-  "claims": {
-    "bind-default": {"text": "server.address is unset and binds wildcard: try :: when IPv6 is supported, then 0.0.0.0 if unavailable; wildcard behavior was not demonstrated.", "components": ["streamlit"], "sources": ["streamlit:s208ef00c9507", "streamlit:s7e4fdd54875d", "streamlit:s41a3660b1c7b"], "status": "REASONED"},
-    "port-default": {"text": "server.port defaults 8501 and may try 100 following ports when not explicitly set; explicitly configure 8501 to prevent that fallback.", "components": ["streamlit"], "sources": ["streamlit:s208ef00c9507", "streamlit:s50b333f0759f", "streamlit:sa98504c29424"], "status": "REASONED"},
-    "private-bind": {"text": "Loopback proxy configuration keeps Streamlit on 127.0.0.1:8501; observed inventory is local, not proof of external isolation.", "components": ["streamlit", "streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9", "streamlit:s208ef00c9507"], "status": "DEMONSTRATED", "evidence": "On the loopback runs, with `server.address` set to `127.0.0.1`, `ss` showed Streamlit only on `127.0.0.1:8501`."},
-    "proxy-websocket": {"text": "Proxy authentication must cover WebSocket upgrades as well as HTTP; a separately unprotected /_stcore/stream can expose app output despite index/health 401.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s66e514173b37"], "status": "DEMONSTRATED", "evidence": "the index and the health route still returned `401`, but an anonymous client that opened `/_stcore/stream` and asked for a script run received the app's output, the canary."},
-    "native-tls": {"text": "sslCertFile/sslKeyFile provide native TLS for development; vendor recommends a production reverse proxy, with WebSocket upgrade and browser Origin preserved.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
-    "xsrf": {"text": "enableXsrfProtection defaults true; it does not enable CORS or require a token when opening a WebSocket.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
-    "cors": {"text": "enableCORS defaults true; disabling it permits cross-origin WebSockets even with XSRF; use corsAllowedOrigins and allowedHosts, and native auth separately enables both protections.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
-    "config": {"text": "Effective precedence is CLI, environment, project config relative to working directory, then global; restart for server changes and restrict deployment writes.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s91c471ec9924"], "status": "REASONED"},
-    "toolbar": {"text": "client.toolbarMode affects menu visibility, not authorization.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
-    "oidc-versions": {"text": "st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib>=1.3.2 and httpx>=0.24.1.", "components": ["streamlit", "authlib", "httpx", "streamlit-rolling", "release-notes"], "sources": ["release-notes:s6f6f9b0b14c2", "release-notes:se2c98289aac5", "streamlit-rolling:s1322a5f1d6a0", "streamlit:s9d96cdf36131", "authlib:s9d96cdf36131", "httpx:s9d96cdf36131"], "status": "REASONED"},
-    "oidc-dependencies": {"text": "Recorded loopback login with Authlib but without httpx failed; install the complete auth extra.", "components": ["streamlit"], "sources": ["streamlit:s9d96cdf36131"], "status": "DEMONSTRATED", "evidence": "every browser login attempt got `Internal Server Error`, with `ModuleNotFoundError: No module named 'httpx'` in Streamlit's log."},
-    "oidc-config": {"text": "secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; the Google metadata URL is its discovery-document URI. Streamlit copies [auth] client_kwargs into its default provider configuration and its callback stores returned userinfo without a domain check, so st.login alone does not authorize a hosted domain; st.login authenticates identity, not resource authorization.", "components": ["streamlit-rolling", "streamlit", "google-oidc"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s1322a5f1d6a0", "streamlit:s4d7021a05403", "streamlit:s8373238b25cd", "google-oidc:s4f815acc2976"], "status": "REASONED"},
-    "page-gates": {"text": "Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
-    "native-gate": {"text": "In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users.", "components": ["streamlit-rolling", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s3f8bf05ddb38", "keycloak:se52072c97d20"], "status": "DEMONSTRATED", "evidence": "The user in another domain, and the user with no `hd` attribute, saw \"This account is not authorized for this app.\""},
-    "email-gate": {"text": "Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users.", "components": ["streamlit-rolling", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s3f8bf05ddb38", "keycloak:se52072c97d20"], "status": "DEMONSTRATED", "evidence": "The unverified user saw \"This account's email is not verified.\""},
-    "claims": {"text": "Streamlit 1.64.0 surfaces ID-token attributes on st.user. Google says hd names the Workspace or Cloud organization domain, is provided only for a Google Cloud organization account, and its absence indicates that an account does not belong to a Google hosted domain. The hd request parameter only optimizes account selection; access restrictions by hosted domain must check the returned claim. Explicit address allowlisting is an alternative for a fixed set.", "components": ["streamlit-rolling", "streamlit", "google-oidc"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s3f8bf05ddb38", "streamlit:s5f9a6992d213", "google-oidc:s4f815acc2976"], "status": "REASONED"},
-    "cookie": {"text": "Native identity cookie lasts 30 days and the lifetime is not configurable.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
-    "secrets": {"text": "Keep secrets.toml out of Git, build contexts and served directories; restrict access, never render/log st.secrets, and rotate exposed client/cookie secrets.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s720555b11b6e"], "status": "REASONED"},
-    "errors": {"text": "showErrorDetails defaults full; stacktrace/type/none are alternatives, deprecated true/false map to full/stacktrace; none hides browser details while console logs retain them.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
-    "mfa": {"text": "OIDC MFA must be enforced at the provider; Basic auth or emailed PIN alone is not MFA, and alternative login paths/direct origin must not bypass policy.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
-    "password-widget": {"text": "A plain text_input password comparison provides no session management, hashing or rate limiting.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
-    "uploads": {"text": "file_uploader defaults 200 MB per file via maxUploadSize; widget max_upload_size overrides it; filters are best-effort, not content validation; rate-limit and never execute uploads.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9", "streamlit-rolling:sd09e0d235dd6"], "status": "REASONED"},
-    "static-default": {"text": "enableStaticServing defaults false; enabled /app/static/ is served outside script login, so static/ must contain only public files.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9", "streamlit-rolling:s6f8f2b27ef37"], "status": "REASONED"},
-    "static-test": {"text": "Recorded static serving bypassed st.stop; enabled returned marker text and disabled returned app HTML, both 200, so inspect the body.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s6f8f2b27ef37"], "status": "DEMONSTRATED", "evidence": "with `server.enableStaticServing` on, the script called `st.stop()` at once, yet `/app/static/public.txt` returned the file with `200` and `text/plain`. With it off, the same path returned `200` with the app's HTML page, not the file."},
-    "execution-egress": {"text": "TLS/login do not sandbox Python; use least privilege and minimal credentials, avoid executing inputs, and restrict URL-fetch egress including metadata/internal networks.", "components": ["ssrf", "streamlit-rolling"], "sources": ["streamlit-rolling:s720555b11b6e", "ssrf:s7eb820e1e53b"], "status": "REASONED"},
-    "verify-tls": {"text": "Recorded native TLS returned 200 with the trusted test CA and failed trust with exit 60; never use -k.", "components": ["curl", "streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9", "curl:s2b2686afaf41"], "status": "DEMONSTRATED", "evidence": "**Block 1 against native TLS:** `tls=200` with the test CA trusted. With curl not trusting the certificate it stopped at `tls=000 exit=60`."},
-    "verify-proxy": {"text": "Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary.", "components": ["streamlit-rolling", "caddy"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s66e514173b37", "caddy:sb0b62262df7b", "caddy:s9702adeb8c11", "caddy:s6b8d900baeb9"], "status": "DEMONSTRATED", "evidence": "Block 1 got `401` on both requests, and a wrong credential also got `401`."},
-    "verify-oidc-proxy": {"text": "Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403.", "components": ["streamlit-rolling", "oauth2-proxy", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "oauth2-proxy:s088c1baa445d", "keycloak:sf802dc9c4313"], "status": "DEMONSTRATED", "evidence": "The anonymous health request got a `302`, and an anonymous websocket upgrade was redirected to the provider's authorization endpoint instead of upgraded."},
-    "verify-native-browser": {"text": "Native anonymous index is intentionally 200; browser comparisons must check protected content, valid users, domain/email denial and MFA rather than index status.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "DEMONSTRATED", "evidence": "The anonymous index returned `200` by design, and the anonymous browser was sent to the provider's sign-in page."},
-    "verify-mfa": {"text": "Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google.", "components": ["streamlit-rolling", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "keycloak:sf802dc9c4313"], "status": "DEMONSTRATED", "evidence": "The allowed user rendered the canary after enrolling and then entering TOTP codes; a wrong code kept them at the one-time-code prompt."},
-    "verify-external": {"text": "From another host any direct 8501 HTTP response is an exposure; refusal/no-route is not proof and DNS/local errors/timeouts are inconclusive; second-host vantage was unavailable.", "components": ["streamlit", "curl", "streamlit-rolling"], "sources": ["streamlit:s208ef00c9507", "streamlit:s7e4fdd54875d", "streamlit-rolling:s66e514173b37", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-local-reachability": {"text": "Recorded same-host probe distinguished a listening address from another loopback address; it does not demonstrate the external scenario.", "components": ["curl", "streamlit-rolling"], "sources": ["streamlit-rolling:s66e514173b37", "curl:s2b2686afaf41"], "status": "DEMONSTRATED", "evidence": "**Block 3 from the same host:** `http=200` against the address Streamlit listened on, and `exit=7` against another loopback address."},
-    "verify-pages": {"text": "Test every protected page and operation with anonymous, allowed and disallowed users, restoring an isolated exposed canary comparison; broken WebSockets or blank pages are not positive controls.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
-    "curl-version": {"text": "Use curl 7.75.0+ for diagnostic variables and keep certificate validation enabled.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED"},
-    "verify-fence": {"text": "Combined fence remains REASONED because wildcard binding and second-host isolation were unavailable; the recorded loopback sub-results are separate historical demonstrated claims.", "components": ["streamlit", "curl", "streamlit-rolling"], "sources": ["streamlit:s208ef00c9507", "streamlit:s7e4fdd54875d", "streamlit-rolling:s66e514173b37", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]}
-  }
-}
----
 # Streamlit: TLS and authentication
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Streamlit 1.64.0, Google OpenID Connect documentation rolling documentation, checked 2026-10-15, Authlib minimum 1.3.2, httpx minimum 0.24.1, Caddy v2.11.4, oauth2-proxy v7.15.4, Keycloak 26.7.4, and curl minimum write-out version 7.75.0; 3 further sources carry no recorded version. Metadata reviewed 2026-10-05; documentation checked October 2026. The guide records 35 claims: 12 demonstrated by a check that ran and 23 reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- streamlit: Streamlit (1.64.0)
-- google-oidc: Google OpenID Connect documentation (rolling documentation, checked 2026-10-15)
-- ssrf: OWASP SSRF guidance (unknown)
-- curl: curl minimum write-out version (7.75.0)
-- authlib: Authlib minimum (1.3.2)
-- httpx: httpx minimum (0.24.1)
-- streamlit-rolling: Streamlit documentation (rolling) (unknown)
-- release-notes: Streamlit release notes (unknown)
-- caddy: Caddy (v2.11.4)
-- oauth2-proxy: oauth2-proxy (v7.15.4)
-- keycloak: Keycloak (26.7.4)
-
-Claims (full source mapping in the front matter):
-
-- bind-default (REASONED; streamlit): server.address is unset and binds wildcard: try :: when IPv6 is supported, then 0.0.0.0 if unavailable; wildcard behavior was not demonstrated.
-- port-default (REASONED; streamlit): server.port defaults 8501 and may try 100 following ports when not explicitly set; explicitly configure 8501 to prevent that fallback.
-- private-bind (DEMONSTRATED; streamlit, streamlit-rolling): Loopback proxy configuration keeps Streamlit on 127.0.0.1:8501; observed inventory is local, not proof of external isolation.
-- proxy-websocket (DEMONSTRATED; streamlit-rolling): Proxy authentication must cover WebSocket upgrades as well as HTTP; a separately unprotected /_stcore/stream can expose app output despite index/health 401.
-- native-tls (REASONED; streamlit-rolling): sslCertFile/sslKeyFile provide native TLS for development; vendor recommends a production reverse proxy, with WebSocket upgrade and browser Origin preserved.
-- xsrf (REASONED; streamlit-rolling): enableXsrfProtection defaults true; it does not enable CORS or require a token when opening a WebSocket.
-- cors (REASONED; streamlit-rolling): enableCORS defaults true; disabling it permits cross-origin WebSockets even with XSRF; use corsAllowedOrigins and allowedHosts, and native auth separately enables both protections.
-- config (REASONED; streamlit-rolling): Effective precedence is CLI, environment, project config relative to working directory, then global; restart for server changes and restrict deployment writes.
-- toolbar (REASONED; streamlit-rolling): client.toolbarMode affects menu visibility, not authorization.
-- oidc-versions (REASONED; streamlit, authlib, httpx, streamlit-rolling, release-notes): st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib&gt;=1.3.2 and httpx&gt;=0.24.1.
-- oidc-dependencies (DEMONSTRATED; streamlit): Recorded loopback login with Authlib but without httpx failed; install the complete auth extra.
-- oidc-config (REASONED; streamlit-rolling, streamlit, google-oidc): secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; the Google metadata URL is its discovery-document URI. Streamlit copies [auth] client_kwargs into its default provider configuration and its callback stores returned userinfo without a domain check, so st.login alone does not authorize a hosted domain; st.login authenticates identity, not resource authorization.
-- page-gates (REASONED; streamlit-rolling): Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks.
-- native-gate (DEMONSTRATED; streamlit-rolling, keycloak): In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users.
-- email-gate (DEMONSTRATED; streamlit-rolling, keycloak): Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users.
-- claims (REASONED; streamlit-rolling, streamlit, google-oidc): Streamlit 1.64.0 surfaces ID-token attributes on st.user. Google says hd names the Workspace or Cloud organization domain, is provided only for a Google Cloud organization account, and its absence indicates that an account does not belong to a Google hosted domain. The hd request parameter only optimizes account selection; access restrictions by hosted domain must check the returned claim. Explicit address allowlisting is an alternative for a fixed set.
-- cookie (REASONED; streamlit-rolling): Native identity cookie lasts 30 days and the lifetime is not configurable.
-- secrets (REASONED; streamlit-rolling): Keep secrets.toml out of Git, build contexts and served directories; restrict access, never render/log st.secrets, and rotate exposed client/cookie secrets.
-- errors (REASONED; streamlit-rolling): showErrorDetails defaults full; stacktrace/type/none are alternatives, deprecated true/false map to full/stacktrace; none hides browser details while console logs retain them.
-- mfa (REASONED; streamlit-rolling): OIDC MFA must be enforced at the provider; Basic auth or emailed PIN alone is not MFA, and alternative login paths/direct origin must not bypass policy.
-- password-widget (REASONED; streamlit-rolling): A plain text_input password comparison provides no session management, hashing or rate limiting.
-- uploads (REASONED; streamlit-rolling): file_uploader defaults 200 MB per file via maxUploadSize; widget max_upload_size overrides it; filters are best-effort, not content validation; rate-limit and never execute uploads.
-- static-default (REASONED; streamlit-rolling): enableStaticServing defaults false; enabled /app/static/ is served outside script login, so static/ must contain only public files.
-- static-test (DEMONSTRATED; streamlit-rolling): Recorded static serving bypassed st.stop; enabled returned marker text and disabled returned app HTML, both 200, so inspect the body.
-- execution-egress (REASONED; ssrf, streamlit-rolling): TLS/login do not sandbox Python; use least privilege and minimal credentials, avoid executing inputs, and restrict URL-fetch egress including metadata/internal networks.
-- verify-tls (DEMONSTRATED; curl, streamlit-rolling): Recorded native TLS returned 200 with the trusted test CA and failed trust with exit 60; never use -k.
-- verify-proxy (DEMONSTRATED; streamlit-rolling, caddy): Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary.
-- verify-oidc-proxy (DEMONSTRATED; streamlit-rolling, oauth2-proxy, keycloak): Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403.
-- verify-native-browser (DEMONSTRATED; streamlit-rolling): Native anonymous index is intentionally 200; browser comparisons must check protected content, valid users, domain/email denial and MFA rather than index status.
-- verify-mfa (DEMONSTRATED; streamlit-rolling, keycloak): Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google.
-- verify-external (REASONED; streamlit, curl, streamlit-rolling): From another host any direct 8501 HTTP response is an exposure; refusal/no-route is not proof and DNS/local errors/timeouts are inconclusive; second-host vantage was unavailable.
-- verify-local-reachability (DEMONSTRATED; curl, streamlit-rolling): Recorded same-host probe distinguished a listening address from another loopback address; it does not demonstrate the external scenario.
-- verify-pages (REASONED; streamlit-rolling): Test every protected page and operation with anonymous, allowed and disallowed users, restoring an isolated exposed canary comparison; broken WebSockets or blank pages are not positive controls.
-- curl-version (REASONED; curl): Use curl 7.75.0+ for diagnostic variables and keep certificate validation enabled.
-- verify-fence (REASONED; streamlit, curl, streamlit-rolling): Combined fence remains REASONED because wildcard binding and second-host isolation were unavailable; the recorded loopback sub-results are separate historical demonstrated claims.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Streamlit apps have no access control unless you add it, and `streamlit run` listens on all interfaces on port `8501` by default (as of 1.64.0: `server.address` unset, which falls back to `0.0.0.0` and tries `::` first when Python supports IPv6, falling back to `0.0.0.0` if IPv6 is unavailable; `server.port` `8501`, and when that port is busy and was not set explicitly, Streamlit tries up to 100 following ports). Decide both layers before exposing an app.
 
@@ -410,3 +210,229 @@ Source-checked on 2026-09-18 against Streamlit 1.64.0, the current release at th
 - Caddy basic_auth configuration and default bcrypt hashing (pinned tag v2.11.4): https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/caddyauth/caddyfile.go#L29-L36
 - oauth2-proxy email-domain restriction and wildcard configuration (pinned tag v7.15.4): https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/options.go#L141
 - Keycloak TOTP policy and user-attribute-to-token-claim mapper used by the recorded fixture (pinned tag 26.7.4): https://raw.githubusercontent.com/keycloak/keycloak/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc, https://github.com/keycloak/keycloak/blob/26.7.4/services/src/main/java/org/keycloak/protocol/oidc/mappers/UserAttributeMapper.java#L96-L104
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/streamlit.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- streamlit: Streamlit (1.64.0)
+- streamlit-rolling: Streamlit documentation (rolling) (unknown)
+- release-notes: Streamlit release notes (unknown)
+- google-oidc: Google OpenID Connect documentation (rolling documentation, checked 2026-10-15)
+- authlib: Authlib minimum (1.3.2)
+- httpx: httpx minimum (0.24.1)
+- caddy: Caddy (v2.11.4)
+- oauth2-proxy: oauth2-proxy (v7.15.4)
+- keycloak: Keycloak (26.7.4)
+- ssrf: OWASP SSRF guidance (unknown)
+- curl: curl minimum write-out version (7.75.0)
+
+Claims (full source mapping in the JSON block below):
+
+- bind-default (REASONED; streamlit): server.address is unset and binds wildcard: try :: when IPv6 is supported, then 0.0.0.0 if unavailable; wildcard behavior was not demonstrated.
+- port-default (REASONED; streamlit): server.port defaults 8501 and may try 100 following ports when not explicitly set; explicitly configure 8501 to prevent that fallback.
+- private-bind (DEMONSTRATED; streamlit, streamlit-rolling): Loopback proxy configuration keeps Streamlit on 127.0.0.1:8501; observed inventory is local, not proof of external isolation.
+- proxy-websocket (DEMONSTRATED; streamlit-rolling): Proxy authentication must cover WebSocket upgrades as well as HTTP; a separately unprotected /_stcore/stream can expose app output despite index/health 401.
+- native-tls (REASONED; streamlit-rolling): sslCertFile/sslKeyFile provide native TLS for development; vendor recommends a production reverse proxy, with WebSocket upgrade and browser Origin preserved.
+- xsrf (REASONED; streamlit-rolling): enableXsrfProtection defaults true; it does not enable CORS or require a token when opening a WebSocket.
+- cors (REASONED; streamlit-rolling): enableCORS defaults true; disabling it permits cross-origin WebSockets even with XSRF; use corsAllowedOrigins and allowedHosts, and native auth separately enables both protections.
+- config (REASONED; streamlit-rolling): Effective precedence is CLI, environment, project config relative to working directory, then global; restart for server changes and restrict deployment writes.
+- toolbar (REASONED; streamlit-rolling): client.toolbarMode affects menu visibility, not authorization.
+- oidc-versions (REASONED; streamlit, authlib, httpx, streamlit-rolling, release-notes): st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib&gt;=1.3.2 and httpx&gt;=0.24.1.
+- oidc-dependencies (DEMONSTRATED; streamlit): Recorded loopback login with Authlib but without httpx failed; install the complete auth extra.
+- oidc-config (REASONED; streamlit-rolling, streamlit, google-oidc): secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; the Google metadata URL is its discovery-document URI. Streamlit copies [auth] client_kwargs into its default provider configuration and its callback stores returned userinfo without a domain check, so st.login alone does not authorize a hosted domain; st.login authenticates identity, not resource authorization.
+- page-gates (REASONED; streamlit-rolling): Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks.
+- native-gate (DEMONSTRATED; streamlit-rolling, keycloak): In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users.
+- email-gate (DEMONSTRATED; streamlit-rolling, keycloak): Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users.
+- claims (REASONED; streamlit-rolling, streamlit, google-oidc): Streamlit 1.64.0 surfaces ID-token attributes on st.user. Google says hd names the Workspace or Cloud organization domain, is provided only for a Google Cloud organization account, and its absence indicates that an account does not belong to a Google hosted domain. The hd request parameter only optimizes account selection; access restrictions by hosted domain must check the returned claim. Explicit address allowlisting is an alternative for a fixed set.
+- cookie (REASONED; streamlit-rolling): Native identity cookie lasts 30 days and the lifetime is not configurable.
+- secrets (REASONED; streamlit-rolling): Keep secrets.toml out of Git, build contexts and served directories; restrict access, never render/log st.secrets, and rotate exposed client/cookie secrets.
+- errors (REASONED; streamlit-rolling): showErrorDetails defaults full; stacktrace/type/none are alternatives, deprecated true/false map to full/stacktrace; none hides browser details while console logs retain them.
+- mfa (REASONED; streamlit-rolling): OIDC MFA must be enforced at the provider; Basic auth or emailed PIN alone is not MFA, and alternative login paths/direct origin must not bypass policy.
+- password-widget (REASONED; streamlit-rolling): A plain text_input password comparison provides no session management, hashing or rate limiting.
+- uploads (REASONED; streamlit-rolling): file_uploader defaults 200 MB per file via maxUploadSize; widget max_upload_size overrides it; filters are best-effort, not content validation; rate-limit and never execute uploads.
+- static-default (REASONED; streamlit-rolling): enableStaticServing defaults false; enabled /app/static/ is served outside script login, so static/ must contain only public files.
+- static-test (DEMONSTRATED; streamlit-rolling): Recorded static serving bypassed st.stop; enabled returned marker text and disabled returned app HTML, both 200, so inspect the body.
+- execution-egress (REASONED; ssrf, streamlit-rolling): TLS/login do not sandbox Python; use least privilege and minimal credentials, avoid executing inputs, and restrict URL-fetch egress including metadata/internal networks.
+- verify-tls (DEMONSTRATED; curl, streamlit-rolling): Recorded native TLS returned 200 with the trusted test CA and failed trust with exit 60; never use -k.
+- verify-proxy (DEMONSTRATED; streamlit-rolling, caddy): Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary.
+- verify-oidc-proxy (DEMONSTRATED; streamlit-rolling, oauth2-proxy, keycloak): Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403.
+- verify-native-browser (DEMONSTRATED; streamlit-rolling): Native anonymous index is intentionally 200; browser comparisons must check protected content, valid users, domain/email denial and MFA rather than index status.
+- verify-mfa (DEMONSTRATED; streamlit-rolling, keycloak): Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google.
+- verify-external (REASONED; streamlit, curl, streamlit-rolling): From another host any direct 8501 HTTP response is an exposure; refusal/no-route is not proof and DNS/local errors/timeouts are inconclusive; second-host vantage was unavailable.
+- verify-local-reachability (DEMONSTRATED; curl, streamlit-rolling): Recorded same-host probe distinguished a listening address from another loopback address; it does not demonstrate the external scenario.
+- verify-pages (REASONED; streamlit-rolling): Test every protected page and operation with anonymous, allowed and disallowed users, restoring an isolated exposed canary comparison; broken WebSockets or blank pages are not positive controls.
+- curl-version (REASONED; curl): Use curl 7.75.0+ for diagnostic variables and keep certificate validation enabled.
+- verify-fence (REASONED; streamlit, curl, streamlit-rolling): Combined fence remains REASONED because wildcard binding and second-host isolation were unavailable; the recorded loopback sub-results are separate historical demonstrated claims.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-05",
+  "documentation_checked": "2026-10",
+  "body_sha256": "8f1af50b58ec9e65f321989751e1ee7d32e9d068e8bbd945a9fe571806ce9449",
+  "components": {
+    "streamlit": {
+      "name": "Streamlit",
+      "basis": "1.64.0",
+      "sources": {
+        "s208ef00c9507": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/config.py#L1016-L1036",
+        "s7e4fdd54875d": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L80-L98",
+        "s41a3660b1c7b": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L139-L160",
+        "s50b333f0759f": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server.py#L363-L400",
+        "sa98504c29424": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_server_config.py#L55-L57",
+        "s9d96cdf36131": "https://pypi.org/project/streamlit/1.64.0/",
+        "s4d7021a05403": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/auth_util.py#L415-L431",
+        "s8373238b25cd": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/web/server/starlette/starlette_auth_routes.py#L596-L620",
+        "s5f9a6992d213": "https://github.com/streamlit/streamlit/blob/1.64.0/lib/streamlit/user_info.py#L550-L560"
+      }
+    },
+    "streamlit-rolling": {
+      "name": "Streamlit documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s560ba59f10f9": "https://docs.streamlit.io/develop/api-reference/configuration/config.toml",
+        "s5b7392df2d3a": "https://docs.streamlit.io/develop/concepts/connections/authentication",
+        "s3f8bf05ddb38": "https://docs.streamlit.io/develop/api-reference/user/st.user",
+        "s1322a5f1d6a0": "https://docs.streamlit.io/develop/api-reference/user/st.login",
+        "s91c471ec9924": "https://docs.streamlit.io/develop/concepts/configuration/options",
+        "s6f8f2b27ef37": "https://docs.streamlit.io/develop/concepts/configuration/serving-static-files",
+        "sd09e0d235dd6": "https://docs.streamlit.io/develop/api-reference/widgets/st.file_uploader",
+        "s720555b11b6e": "https://docs.streamlit.io/develop/concepts/connections/security-reminders",
+        "s66e514173b37": "https://docs.streamlit.io/deploy/tutorials/docker"
+      }
+    },
+    "release-notes": {
+      "name": "Streamlit release notes",
+      "basis": "unknown",
+      "sources": {
+        "s6f6f9b0b14c2": "https://docs.streamlit.io/develop/quick-reference/release-notes",
+        "se2c98289aac5": "https://docs.streamlit.io/develop/quick-reference/release-notes/2025#version-1420"
+      }
+    },
+    "google-oidc": {
+      "name": "Google OpenID Connect documentation",
+      "basis": "rolling documentation, checked 2026-10-15",
+      "sources": {
+        "s4f815acc2976": "https://developers.google.com/identity/openid-connect/openid-connect"
+      }
+    },
+    "authlib": {
+      "name": "Authlib minimum",
+      "basis": "1.3.2",
+      "sources": {
+        "s9d96cdf36131": "https://pypi.org/project/streamlit/1.64.0/"
+      }
+    },
+    "httpx": {
+      "name": "httpx minimum",
+      "basis": "0.24.1",
+      "sources": {
+        "s9d96cdf36131": "https://pypi.org/project/streamlit/1.64.0/"
+      }
+    },
+    "caddy": {
+      "name": "Caddy",
+      "basis": "v2.11.4",
+      "sources": {
+        "sb0b62262df7b": "https://github.com/caddyserver/caddy/blob/v2.11.4/caddyconfig/httpcaddyfile/builtins.go#L58-L88",
+        "s9702adeb8c11": "https://raw.githubusercontent.com/caddyserver/caddy/v2.11.4/modules/caddyhttp/reverseproxy/caddyfile.go",
+        "s6b8d900baeb9": "https://github.com/caddyserver/caddy/blob/v2.11.4/modules/caddyhttp/caddyauth/caddyfile.go#L29-L36"
+      }
+    },
+    "oauth2-proxy": {
+      "name": "oauth2-proxy",
+      "basis": "v7.15.4",
+      "sources": {
+        "s088c1baa445d": "https://github.com/oauth2-proxy/oauth2-proxy/blob/v7.15.4/pkg/apis/options/options.go#L141"
+      }
+    },
+    "keycloak": {
+      "name": "Keycloak",
+      "basis": "26.7.4",
+      "sources": {
+        "sf802dc9c4313": "https://raw.githubusercontent.com/keycloak/keycloak/26.7.4/docs/documentation/server_admin/topics/authentication/otp-policies.adoc",
+        "se52072c97d20": "https://github.com/keycloak/keycloak/blob/26.7.4/services/src/main/java/org/keycloak/protocol/oidc/mappers/UserAttributeMapper.java#L96-L104"
+      }
+    },
+    "ssrf": {
+      "name": "OWASP SSRF guidance",
+      "basis": "unknown",
+      "sources": {
+        "s7eb820e1e53b": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html"
+      }
+    },
+    "curl": {
+      "name": "curl minimum write-out version",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    }
+  },
+  "claims": {
+    "bind-default": {"text": "server.address is unset and binds wildcard: try :: when IPv6 is supported, then 0.0.0.0 if unavailable; wildcard behavior was not demonstrated.", "components": ["streamlit"], "sources": ["streamlit:s208ef00c9507", "streamlit:s7e4fdd54875d", "streamlit:s41a3660b1c7b"], "status": "REASONED"},
+    "port-default": {"text": "server.port defaults 8501 and may try 100 following ports when not explicitly set; explicitly configure 8501 to prevent that fallback.", "components": ["streamlit"], "sources": ["streamlit:s208ef00c9507", "streamlit:s50b333f0759f", "streamlit:sa98504c29424"], "status": "REASONED"},
+    "private-bind": {"text": "Loopback proxy configuration keeps Streamlit on 127.0.0.1:8501; observed inventory is local, not proof of external isolation.", "components": ["streamlit", "streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9", "streamlit:s208ef00c9507"], "status": "DEMONSTRATED", "evidence": "On the loopback runs, with `server.address` set to `127.0.0.1`, `ss` showed Streamlit only on `127.0.0.1:8501`."},
+    "proxy-websocket": {"text": "Proxy authentication must cover WebSocket upgrades as well as HTTP; a separately unprotected /_stcore/stream can expose app output despite index/health 401.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s66e514173b37"], "status": "DEMONSTRATED", "evidence": "the index and the health route still returned `401`, but an anonymous client that opened `/_stcore/stream` and asked for a script run received the app's output, the canary."},
+    "native-tls": {"text": "sslCertFile/sslKeyFile provide native TLS for development; vendor recommends a production reverse proxy, with WebSocket upgrade and browser Origin preserved.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
+    "xsrf": {"text": "enableXsrfProtection defaults true; it does not enable CORS or require a token when opening a WebSocket.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
+    "cors": {"text": "enableCORS defaults true; disabling it permits cross-origin WebSockets even with XSRF; use corsAllowedOrigins and allowedHosts, and native auth separately enables both protections.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
+    "config": {"text": "Effective precedence is CLI, environment, project config relative to working directory, then global; restart for server changes and restrict deployment writes.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s91c471ec9924"], "status": "REASONED"},
+    "toolbar": {"text": "client.toolbarMode affects menu visibility, not authorization.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
+    "oidc-versions": {"text": "st.login/st.logout date from 1.42.0; st.user from 1.45.0 replaces experimental_user; 1.64.0 auth extra needs Authlib>=1.3.2 and httpx>=0.24.1.", "components": ["streamlit", "authlib", "httpx", "streamlit-rolling", "release-notes"], "sources": ["release-notes:s6f6f9b0b14c2", "release-notes:se2c98289aac5", "streamlit-rolling:s1322a5f1d6a0", "streamlit:s9d96cdf36131", "authlib:s9d96cdf36131", "httpx:s9d96cdf36131"], "status": "REASONED"},
+    "oidc-dependencies": {"text": "Recorded loopback login with Authlib but without httpx failed; install the complete auth extra.", "components": ["streamlit"], "sources": ["streamlit:s9d96cdf36131"], "status": "DEMONSTRATED", "evidence": "every browser login attempt got `Internal Server Error`, with `ModuleNotFoundError: No module named 'httpx'` in Streamlit's log."},
+    "oidc-config": {"text": "secrets.toml auth config supplies redirect_uri, cookie_secret, client_id/client_secret and metadata URL; the Google metadata URL is its discovery-document URI. Streamlit copies [auth] client_kwargs into its default provider configuration and its callback stores returned userinfo without a domain check, so st.login alone does not authorize a hosted domain; st.login authenticates identity, not resource authorization.", "components": ["streamlit-rolling", "streamlit", "google-oidc"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s1322a5f1d6a0", "streamlit:s4d7021a05403", "streamlit:s8373238b25cd", "google-oidc:s4f815acc2976"], "status": "REASONED"},
+    "page-gates": {"text": "Gate protected pages before rendering/side effects, before st.navigation page execution, and recheck authorization inside privileged callbacks.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
+    "native-gate": {"text": "In the recorded Keycloak claim fixture, native login plus hd/email_verified checks admitted the allowed user and denied other-domain, missing-hd and unverified users.", "components": ["streamlit-rolling", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s3f8bf05ddb38", "keycloak:se52072c97d20"], "status": "DEMONSTRATED", "evidence": "The user in another domain, and the user with no `hd` attribute, saw \"This account is not authorized for this app.\""},
+    "email-gate": {"text": "Recorded native gate denied unverified email; login without hd/email checks allowed the exposed fixture's other-domain and unverified users.", "components": ["streamlit-rolling", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s3f8bf05ddb38", "keycloak:se52072c97d20"], "status": "DEMONSTRATED", "evidence": "The unverified user saw \"This account's email is not verified.\""},
+    "claims": {"text": "Streamlit 1.64.0 surfaces ID-token attributes on st.user. Google says hd names the Workspace or Cloud organization domain, is provided only for a Google Cloud organization account, and its absence indicates that an account does not belong to a Google hosted domain. The hd request parameter only optimizes account selection; access restrictions by hosted domain must check the returned claim. Explicit address allowlisting is an alternative for a fixed set.", "components": ["streamlit-rolling", "streamlit", "google-oidc"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s3f8bf05ddb38", "streamlit:s5f9a6992d213", "google-oidc:s4f815acc2976"], "status": "REASONED"},
+    "cookie": {"text": "Native identity cookie lasts 30 days and the lifetime is not configurable.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
+    "secrets": {"text": "Keep secrets.toml out of Git, build contexts and served directories; restrict access, never render/log st.secrets, and rotate exposed client/cookie secrets.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s720555b11b6e"], "status": "REASONED"},
+    "errors": {"text": "showErrorDetails defaults full; stacktrace/type/none are alternatives, deprecated true/false map to full/stacktrace; none hides browser details while console logs retain them.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9"], "status": "REASONED"},
+    "mfa": {"text": "OIDC MFA must be enforced at the provider; Basic auth or emailed PIN alone is not MFA, and alternative login paths/direct origin must not bypass policy.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
+    "password-widget": {"text": "A plain text_input password comparison provides no session management, hashing or rate limiting.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
+    "uploads": {"text": "file_uploader defaults 200 MB per file via maxUploadSize; widget max_upload_size overrides it; filters are best-effort, not content validation; rate-limit and never execute uploads.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9", "streamlit-rolling:sd09e0d235dd6"], "status": "REASONED"},
+    "static-default": {"text": "enableStaticServing defaults false; enabled /app/static/ is served outside script login, so static/ must contain only public files.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9", "streamlit-rolling:s6f8f2b27ef37"], "status": "REASONED"},
+    "static-test": {"text": "Recorded static serving bypassed st.stop; enabled returned marker text and disabled returned app HTML, both 200, so inspect the body.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s6f8f2b27ef37"], "status": "DEMONSTRATED", "evidence": "with `server.enableStaticServing` on, the script called `st.stop()` at once, yet `/app/static/public.txt` returned the file with `200` and `text/plain`. With it off, the same path returned `200` with the app's HTML page, not the file."},
+    "execution-egress": {"text": "TLS/login do not sandbox Python; use least privilege and minimal credentials, avoid executing inputs, and restrict URL-fetch egress including metadata/internal networks.", "components": ["ssrf", "streamlit-rolling"], "sources": ["streamlit-rolling:s720555b11b6e", "ssrf:s7eb820e1e53b"], "status": "REASONED"},
+    "verify-tls": {"text": "Recorded native TLS returned 200 with the trusted test CA and failed trust with exit 60; never use -k.", "components": ["curl", "streamlit-rolling"], "sources": ["streamlit-rolling:s560ba59f10f9", "curl:s2b2686afaf41"], "status": "DEMONSTRATED", "evidence": "**Block 1 against native TLS:** `tls=200` with the test CA trusted. With curl not trusting the certificate it stopped at `tls=000 exit=60`."},
+    "verify-proxy": {"text": "Recorded Caddy loopback Basic-auth comparison returned exposed health 200/ok versus fixed 401; wrong credentials also failed and valid sessions received the canary.", "components": ["streamlit-rolling", "caddy"], "sources": ["streamlit-rolling:s5b7392df2d3a", "streamlit-rolling:s66e514173b37", "caddy:sb0b62262df7b", "caddy:s9702adeb8c11", "caddy:s6b8d900baeb9"], "status": "DEMONSTRATED", "evidence": "Block 1 got `401` on both requests, and a wrong credential also got `401`."},
+    "verify-oidc-proxy": {"text": "Recorded oauth2-proxy/Keycloak fixture redirected anonymous health and WebSocket requests; an allowed user reached the canary after password/TOTP, with other-domain 403.", "components": ["streamlit-rolling", "oauth2-proxy", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "oauth2-proxy:s088c1baa445d", "keycloak:sf802dc9c4313"], "status": "DEMONSTRATED", "evidence": "The anonymous health request got a `302`, and an anonymous websocket upgrade was redirected to the provider's authorization endpoint instead of upgraded."},
+    "verify-native-browser": {"text": "Native anonymous index is intentionally 200; browser comparisons must check protected content, valid users, domain/email denial and MFA rather than index status.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "DEMONSTRATED", "evidence": "The anonymous index returned `200` by design, and the anonymous browser was sent to the provider's sign-in page."},
+    "verify-mfa": {"text": "Recorded allowed native user reached the canary after TOTP; wrong code retained the provider's code prompt, using a loopback Keycloak fixture rather than Google.", "components": ["streamlit-rolling", "keycloak"], "sources": ["streamlit-rolling:s5b7392df2d3a", "keycloak:sf802dc9c4313"], "status": "DEMONSTRATED", "evidence": "The allowed user rendered the canary after enrolling and then entering TOTP codes; a wrong code kept them at the one-time-code prompt."},
+    "verify-external": {"text": "From another host any direct 8501 HTTP response is an exposure; refusal/no-route is not proof and DNS/local errors/timeouts are inconclusive; second-host vantage was unavailable.", "components": ["streamlit", "curl", "streamlit-rolling"], "sources": ["streamlit:s208ef00c9507", "streamlit:s7e4fdd54875d", "streamlit-rolling:s66e514173b37", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-local-reachability": {"text": "Recorded same-host probe distinguished a listening address from another loopback address; it does not demonstrate the external scenario.", "components": ["curl", "streamlit-rolling"], "sources": ["streamlit-rolling:s66e514173b37", "curl:s2b2686afaf41"], "status": "DEMONSTRATED", "evidence": "**Block 3 from the same host:** `http=200` against the address Streamlit listened on, and `exit=7` against another loopback address."},
+    "verify-pages": {"text": "Test every protected page and operation with anonymous, allowed and disallowed users, restoring an isolated exposed canary comparison; broken WebSockets or blank pages are not positive controls.", "components": ["streamlit-rolling"], "sources": ["streamlit-rolling:s5b7392df2d3a"], "status": "REASONED"},
+    "curl-version": {"text": "Use curl 7.75.0+ for diagnostic variables and keep certificate validation enabled.", "components": ["curl"], "sources": ["curl:s2b2686afaf41"], "status": "REASONED"},
+    "verify-fence": {"text": "Combined fence remains REASONED because wildcard binding and second-host isolation were unavailable; the recorded loopback sub-results are separate historical demonstrated claims.", "components": ["streamlit", "curl", "streamlit-rolling"], "sources": ["streamlit:s208ef00c9507", "streamlit:s7e4fdd54875d", "streamlit-rolling:s66e514173b37", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]}
+  }
+}
+````
+<!-- version-basis:end -->

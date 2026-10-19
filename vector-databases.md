@@ -1,496 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-15",
-  "documentation_checked": "2026-09",
-  "body_sha256": "83c865153d5158fab30da3bb303117817f1cd6c1b1471dc48e0fbac05ec35363",
-  "components": {
-    "q": {
-      "name": "Qdrant source",
-      "basis": "v1.19.1",
-      "sources": {
-        "s7548c65a0e83": "https://github.com/qdrant/qdrant/blob/v1.19.1/src/settings.rs#L292-L329",
-        "sd309f5848ac4": "https://github.com/qdrant/qdrant/blob/v1.19.1/config/config.yaml#L330-L334",
-        "s6b9ad7f6f7ac": "https://github.com/qdrant/qdrant/blob/v1.19.1/config/development.yaml#L13-L15",
-        "sc0a948c10fcb": "https://github.com/qdrant/qdrant/blob/v1.19.1/config/production.yaml#L3-L5",
-        "s6463d266f693": "https://github.com/qdrant/qdrant/blob/v1.19.1/Dockerfile#L225-L246",
-        "sfbd6a604b16a": "https://github.com/qdrant/qdrant/blob/v1.19.1/tools/entrypoint.sh#L21"
-      }
-    },
-    "qd": {
-      "name": "Qdrant security documentation",
-      "basis": "unknown",
-      "sources": {
-        "s753402e46eed": "https://qdrant.tech/documentation/security/"
-      }
-    },
-    "w": {
-      "name": "Weaviate source",
-      "basis": "v1.39.6",
-      "sources": {
-        "s8c45722d725f": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/config_handler.go#L1305-L1340",
-        "sb916723717de": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L1898-L1914",
-        "s7c30e1e2c554": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L1926-L1942",
-        "s85b7b3e8fa18": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L1050-L1054",
-        "s8c05965785ea": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L2145-L2188",
-        "s4d2b119da409": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/grpc/server.go#L475-L477",
-        "sa1cbcde2f024": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L47-L53",
-        "s122708a42282": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L89-L90",
-        "s5b7738072d06": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L97-L100",
-        "s71035079ef45": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L303-L310",
-        "s7b8a55a31a45": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L345-L349",
-        "sc6fc7e030ce0": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/embedded_spec.go#L39-L41",
-        "se5771dfe00cc": "https://github.com/weaviate/weaviate/blob/v1.39.6/Dockerfile#L57-L63",
-        "sd53f51213b12": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/handlers_debug_gate.go#L23-L33",
-        "sae4bd165c1f1": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L329-L336",
-        "s3d7fe59cb2c4": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L223-L275",
-        "sc1473599ecd1": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L2613-L2657",
-        "s909e461943ae": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L95-L98",
-        "s8c15def0d8e9": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/cluster/state.go#L431-L446",
-        "sc8c8851851c6": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/clusterapi/serve.go#L47-L49",
-        "seb97c68c0964": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/clusterapi/serve.go#L140",
-        "saad31a8dae9a": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/cluster/state.go#L695-L705",
-        "s8ea0dac76b07": "https://github.com/weaviate/weaviate/blob/v1.39.6/cluster/store.go#L591-L592",
-        "sa9c8ff5a4ecc": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L2059-L2061",
-        "se2bd8d167284": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/cluster/state.go#L662-L673",
-        "s73dc4c7a4cae": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L1804",
-        "s09fef29a3bb4": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L822-L823",
-        "s59b824177541": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L37-L38",
-        "sd40da03c7dea": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L636",
-        "sdbd8b8fd06da": "https://github.com/weaviate/weaviate/blob/v1.39.6/cluster/service.go#L152",
-        "saed4c2fc8f8f": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L2029",
-        "s1ec8942ab969": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L1664",
-        "s1a45453a69cc": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/grpc.go#L27-L33",
-        "s8e5bf5d887cc": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L86",
-        "s839d0ae4019e": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L502-L509",
-        "sbd0d3c32cae6": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L733-L736",
-        "s8a57e655e250": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/config_handler.go#L1333-L1336",
-        "s0ba20e752b37": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L1736-L1739"
-      }
-    },
-    "wd": {
-      "name": "Weaviate documentation",
-      "basis": "unknown",
-      "sources": {
-        "sa066265b9009": "https://docs.weaviate.io/deploy/installation-guides/docker-installation",
-        "s51c9c4c6b4c0": "https://docs.weaviate.io/deploy/configuration/authentication",
-        "se90546c311e1": "https://docs.weaviate.io/deploy/configuration/env-vars",
-        "sb87f55ae205e": "https://docs.weaviate.io/deploy/configuration/authorization",
-        "sd5185e505828": "https://docs.weaviate.io/deploy/configuration/configuring-rbac"
-      }
-    },
-    "m2": {
-      "name": "Milvus",
-      "basis": "v2.6.24",
-      "sources": {
-        "sd95a54e97bc1": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/base_table.go#L69-L72",
-        "s111382ba0af1": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/base_table.go#L145-L153",
-        "s53bae912db23": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L1036-L1043",
-        "se872a9171898": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/grpc_param.go#L112-L139",
-        "s978d2f09057a": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/deployments/docker/standalone/docker-compose.yml#L39-L66",
-        "s928648b5a0c7": "https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/netutil/listener.go#L11-L35",
-        "s53b67fa99640": "https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/interceptor/cluster_interceptor.go#L34-L48",
-        "sc4e9500fac07": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/utils/util.go#L41-L66",
-        "s0d83ff967a6a": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/deployments/docker/standalone/docker-compose.yml#L21-L32",
-        "s1b67d9a3bc81": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/service_param.go#L1452-L1477",
-        "se914c00355d3": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/server.go#L215-L260",
-        "s55fd199759d6": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/server.go#L38-L40",
-        "sdf3b1d2a44c0": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/server.go#L77-L120",
-        "sb3d4b78cb7bd": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/proxy/management.go#L42-L97",
-        "s4443790570be": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/proxy/management.go#L594-L620",
-        "s27c6b28106f1": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/restful_mgr_routes.go#L36-L74",
-        "s979e91a520e3": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/http_param.go#L71-L78",
-        "se193bc422269": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/eventlog/grpc.go#L113-L146",
-        "s30534039814b": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/component_param.go#L974-L979",
-        "s034ff211eece": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/healthz/healthz_handler.go#L89-L130",
-        "sff33760fd71e": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L397",
-        "se804dabe7939": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L623",
-        "sd6463e757c5d": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L880",
-        "sb59cad3a88b8": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L309",
-        "s2694c200b326": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L1322",
-        "s21047b546d82": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/querynode/service.go#L93-L96",
-        "s12f9ee326259": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/datanode/service.go#L83-L86",
-        "seef04c76c2b8": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/streamingnode/service.go#L108-L111",
-        "s772289a1421c": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/mixcoord/service.go#L99-L102",
-        "s6b6cbec16ce7": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/proxy/listener_manager.go#L58-L60",
-        "s97dca4df88c8": "https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/netutil/listener.go#L92-L103",
-        "s3c9efe526b6a": "https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/interceptor/server_id_interceptor.go#L36-L54",
-        "s60f9b3f68379": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/querynode/service.go#L187-L197",
-        "saa07bc24b066": "https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/proto/query_coord.proto#L107-L145",
-        "sae3c1aa56572": "https://github.com/milvus-io/milvus/blob/v2.6.24/cmd/milvus/util.go#L143-L148",
-        "s3596dd04baa9": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L1046",
-        "s3b24a2cd0b31": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/distributed/proxy/service.go#L169-L186",
-        "se0e67967c9b1": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/rootcoord/root_coord.go#L3180-L3219",
-        "s2772deea0984": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/util/hookutil/cipher.go#L390-L401",
-        "s34db97d6f273": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/util/hookutil/ez.go#L113-L125",
-        "s42ca1740d269": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/mix_coord.go#L237-L240",
-        "s2fd8c4230f47": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/metrics/metrics.go#L21",
-        "s108ca53f9ce3": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/eventlog/handler.go#L50-L65",
-        "s04a87c32f315": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/restful_mgr_routes.go#L881-L890",
-        "s597603dbaae3": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/restful_mgr_routes.go#L943-L1010"
-      }
-    },
-    "m3": {
-      "name": "Milvus",
-      "basis": "v3.0.2",
-      "sources": {
-        "sb8bac089fe22": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/base_table.go#L69-L72",
-        "s3631fa007c49": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/base_table.go#L145-L153",
-        "s230001e47ba1": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/build/docker/milvus/ubuntu22.04/Dockerfile#L39",
-        "s555248062673": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/build/docker/milvus/ubuntu22.04/Dockerfile#L58-L59",
-        "sbc585d4a0f5f": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/build/docker/milvus/ubuntu22.04/Dockerfile#L16",
-        "s920151033b49": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L1155-L1162",
-        "s3f8acf8e1aaa": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/grpc_param.go#L111-L138",
-        "sdb5a4b72da10": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/deployments/docker/standalone/docker-compose.yml#L39-L66",
-        "s6d67ee7d0093": "https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/netutil/listener.go#L11-L35",
-        "s0d6581756200": "https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/interceptor/cluster_interceptor.go#L34-L48",
-        "s67a44fa31c3b": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/utils/util.go#L39-L63",
-        "s8b30122d1f5e": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/deployments/docker/standalone/docker-compose.yml#L21-L32",
-        "s189b72ec8e6e": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/service_param.go#L1633-L1658",
-        "sa564af191a43": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/server.go#L230-L275",
-        "s16eac6dca2d2": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/server.go#L37-L39",
-        "sc84510615bb1": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/server.go#L82-L127",
-        "sb4e87e123555": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L42-L105",
-        "sdf2c156e0507": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L427-L447",
-        "sf06bcf9fe36d": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L198-L244",
-        "s88758dbdf1b1": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L700-L726",
-        "s76a0048c7418": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/restful_mgr_routes.go#L33-L71",
-        "s0fc696e65913": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/http_param.go#L76-L83",
-        "s50ffed832d11": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/eventlog/grpc.go#L113-L146",
-        "s4ba2dd6f35d6": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/component_param.go#L1046-L1051",
-        "s75885eaffe8b": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/healthz/healthz_handler.go#L87-L128",
-        "s4c186d02c419": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L458",
-        "sab931fc3f694": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L690",
-        "scd5cdecb245f": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L978",
-        "s8c703481eb0e": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L357",
-        "s71ed576f40a9": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L1442",
-        "s9c1acba22ba3": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/querynode/service.go#L123-L126",
-        "sfac072fc812f": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/datanode/service.go#L82-L85",
-        "s05cdfe25ef69": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/streamingnode/service.go#L106-L109",
-        "s9ffc165c5ec5": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/mixcoord/service.go#L97-L100",
-        "s1c628a483c2b": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/proxy/listener_manager.go#L56-L58",
-        "sd4eef5612d16": "https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/netutil/listener.go#L92-L103",
-        "s0bd5a9e54516": "https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/interceptor/server_id_interceptor.go#L36-L54",
-        "sc65c390b68f2": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/querynode/service.go#L243-L253",
-        "sb7153655e68f": "https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/proto/query_coord.proto#L109-L147",
-        "sdb1c13daa780": "https://github.com/milvus-io/milvus/blob/v3.0.2/cmd/milvus/util.go#L142-L147",
-        "s23e57360bafb": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L1165",
-        "s806e169e81b5": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/distributed/proxy/service.go#L168-L185",
-        "s701b77eb1c17": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/rootcoord/root_coord.go#L3464-L3503",
-        "sba379e1f515b": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/util/hookutil/cipher.go#L389-L400",
-        "s3ad0c01cfa7d": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/util/hookutil/ez.go#L113-L125",
-        "s353616d9b3b2": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/mix_coord.go#L242-L245",
-        "sc8496db1fb6e": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/metrics/metrics.go#L21",
-        "s19e44f8baa1c": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/eventlog/handler.go#L48-L63",
-        "s3d76ecf148e0": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/restful_mgr_routes.go#L878-L887",
-        "s794c4122f3a1": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/restful_mgr_routes.go#L940-L1007"
-      }
-    },
-    "chroma": {
-      "name": "Chroma source",
-      "basis": "1.5.9",
-      "sources": {
-        "s7eb7610f68c1": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L60-L73",
-        "s6d6708278bef": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L140-L146",
-        "s59912a4c7e11": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/sample_configs/docker_single_node.yaml",
-        "sed8aad199780": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L39-L45",
-        "s3a1c76cdd7f8": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L114-L134",
-        "s09652c32f56a": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179",
-        "s784a0e779949": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229",
-        "se936b62a1a3d": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L139-L142",
-        "sbc1dd27a9bf2": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/auth/mod.rs#L102-L164",
-        "s50b8158f3388": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L229-L255",
-        "s6eb0ff350d15": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/lib.rs#L60-L156",
-        "s62cd8db9e61a": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L457-L486"
-      }
-    },
-    "pc": {
-      "name": "Pinecone organization documentation",
-      "basis": "unknown",
-      "sources": {
-        "s1696db54b028": "https://docs.pinecone.io/guides/organizations/understanding-organizations"
-      }
-    },
-    "qc": {
-      "name": "Qdrant Cloud documentation",
-      "basis": "unknown",
-      "sources": {
-        "sc72e09d8f7e6": "https://qdrant.tech/documentation/cloud/"
-      }
-    },
-    "cd": {
-      "name": "Chroma migration documentation",
-      "basis": "v1.0.0",
-      "sources": {
-        "s60ad33c4b715": "https://docs.trychroma.com/docs/overview/migration"
-      }
-    },
-    "pg": {
-      "name": "PostgreSQL documentation",
-      "basis": "unknown",
-      "sources": {
-        "se9846041ce1f": "https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
-      }
-    },
-    "docker": {
-      "name": "Docker documentation",
-      "basis": "unknown",
-      "sources": {
-        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/",
-        "s1dcef979ee57": "https://docs.docker.com/reference/compose-file/services/#env_file",
-        "s8f518c10ba0d": "https://docs.docker.com/compose/how-tos/use-secrets/",
-        "s7d4675617251": "https://docs.docker.com/reference/dockerfile/#healthcheck"
-      }
-    },
-    "k8s": {
-      "name": "Kubernetes documentation",
-      "basis": "unknown",
-      "sources": {
-        "s953450b4076f": "https://kubernetes.io/docs/concepts/services-networking/network-policies/"
-      }
-    },
-    "grpc2": {
-      "name": "grpc-go (Milvus v2.6.24 go.mod)",
-      "basis": "v1.82.1",
-      "sources": {
-        "sa23456a265f8": "https://github.com/grpc/grpc-go/blob/v1.82.1/internal/transport/http2_server.go#L151-L167",
-        "s75406e3b5c45": "https://github.com/grpc/grpc-go/blob/v1.82.1/credentials/tls.go#L222-L257",
-        "s4e9b30536409": "https://github.com/grpc/grpc-go/blob/v1.82.1/credentials/tls.go#L302-L308"
-      }
-    },
-    "grpc3": {
-      "name": "grpc-go (Milvus v3.0.2 go.mod)",
-      "basis": "v1.82.2",
-      "sources": {
-        "sc8c1b3aca796": "https://github.com/grpc/grpc-go/blob/v1.82.2/internal/transport/http2_server.go#L151-L167",
-        "sbf5d079c575d": "https://github.com/grpc/grpc-go/blob/v1.82.2/credentials/tls.go#L222-L257",
-        "s0fb595ac53b7": "https://github.com/grpc/grpc-go/blob/v1.82.2/credentials/tls.go#L302-L308"
-      }
-    },
-    "ml": {
-      "name": "memberlist (Weaviate v1.39.6 go.mod)",
-      "basis": "v0.5.4",
-      "sources": {
-        "s06affccfd439": "https://github.com/hashicorp/memberlist/blob/v0.5.4/config.go#L302-L307",
-        "s207b294bb8b4": "https://github.com/hashicorp/memberlist/blob/v0.5.4/net_transport.go#L96-L110",
-        "s8b9a9e831368": "https://github.com/hashicorp/memberlist/blob/v0.5.4/net_transport.go#L140-L160"
-      }
-    },
-    "goflags": {
-      "name": "go-flags",
-      "basis": "v1.6.1",
-      "sources": {
-        "sbd8f9e746696": "https://github.com/jessevdk/go-flags/blob/v1.6.1/option.go#L328-L343"
-      }
-    },
-    "gostd2": {
-      "name": "Go standard library",
-      "basis": "go1.25.8",
-      "sources": {
-        "s2e6578103750": "https://github.com/golang/go/blob/go1.25.8/src/crypto/tls/common.go#L335-L341",
-        "s0e02efe6f050": "https://github.com/golang/go/blob/go1.25.8/src/crypto/tls/common.go#L681-L683"
-      }
-    },
-    "gostd3": {
-      "name": "Go standard library",
-      "basis": "go1.26.6",
-      "sources": {
-        "s4bd44f1715ab": "https://github.com/golang/go/blob/go1.26.6/src/crypto/tls/common.go#L348-L354",
-        "s2809ee3d22bb": "https://github.com/golang/go/blob/go1.26.6/src/crypto/tls/common.go#L698-L700"
-      }
-    },
-    "curl-docs": {
-      "name": "curl documentation (rolling)",
-      "basis": "unknown",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html",
-        "s596c6f706038": "https://curl.se/docs/manpage.html#-f"
-      }
-    },
-    "milvus-helm": {
-      "name": "Milvus Helm chart",
-      "basis": "5.0.30",
-      "sources": {
-        "s03d63e5e72b6": "https://github.com/zilliztech/milvus-helm/blob/milvus-5.0.30/charts/milvus/Chart.yaml#L1-L6",
-        "s65da7040fa71": "https://github.com/zilliztech/milvus-helm/blob/milvus-5.0.30/charts/milvus/values.yaml#L115-L136",
-        "sc9c86596c55c": "https://github.com/zilliztech/milvus-helm/blob/milvus-5.0.30/charts/milvus/values.yaml#L169-L194",
-        "s5218b8a9a776": "https://github.com/zilliztech/milvus-helm/blob/milvus-5.0.30/charts/milvus/templates/service.yaml#L1-L60",
-        "s533d9f94c237": "https://github.com/zilliztech/milvus-helm/blob/milvus-5.0.30/charts/milvus/templates/standalone-deployment.yaml#L83-L110",
-        "s8b7f45ad4f54": "https://github.com/zilliztech/milvus-helm/blob/milvus-5.0.30/charts/milvus/templates/proxy-deployment.yaml#L98-L125"
-      }
-    },
-    "milvus-operator": {
-      "name": "Milvus Operator",
-      "basis": "v1.3.11",
-      "sources": {
-        "s11cd8aea4a46": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/pkg/controllers/components.go#L20-L69",
-        "scaa2f4b8f5b3": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/pkg/controllers/components.go#L450-L487",
-        "se5839563f89c": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/pkg/controllers/services.go#L15-L47",
-        "s58da9e232a84": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/pkg/controllers/services.go#L101-L107",
-        "s585ae37fd0ca": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/apis/milvus.io/v1beta1/components_types.go#L500-L525",
-        "sca0e4a51219f": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/pkg/controllers/podmonitor.go#L91-L100"
-      }
-    },
-    "pgvector-source": {
-      "name": "pgvector source",
-      "basis": "v0.8.2",
-      "sources": {
-        "saab3b3092223": "https://github.com/pgvector/pgvector/blob/v0.8.2/README.md"
-      }
-    }
-  },
-  "claims": {
-    "private-publication": {"text": "Bind privately and publish only a TLS proxy, tunnel or tailnet; Docker loopback mapping avoids default wildcard publication.", "components": ["docker"], "sources": ["docker:s1e53417c513d"], "status": "REASONED"},
-    "qdrant-ports": {"text": "Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
-    "qdrant-bind": {"text": "Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order.", "components": ["q"], "sources": ["q:s7548c65a0e83", "q:sd309f5848ac4"], "status": "REASONED"},
-    "qdrant-image": {"text": "Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments.", "components": ["q"], "sources": ["q:s6b9ad7f6f7ac", "q:sc0a948c10fcb", "q:s6463d266f693", "q:sfbd6a604b16a"], "status": "REASONED"},
-    "qdrant-client-auth": {"text": "Self-deployed Qdrant defaults insecure; api_key and read_only_api_key gate client REST/gRPC through api-key or Bearer headers, with QDRANT__SERVICE__ environment equivalents.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
-    "qdrant-client-tls": {"text": "service.enable_tls with tls.cert/key enables client TLS; keys without TLS are insecure.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
-    "qdrant-peer-auth": {"text": "Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, off by default and deferred through rolling upgrades; retain peer-only network restriction.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
-    "qdrant-peer-tls": {"text": "cluster.p2p.enable_tls is separate from client TLS and needs a provisioned tls.ca_cert; compiled default path is not a substitute for provisioning.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
-    "qdrant-rotation": {"text": "alt_api_key accepts an additional client key from v1.17.0; rotate peer-by-peer, with internal use only under enforce_internal_auth from v1.18.0.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
-    "weaviate-precedence": {"text": "File, environment then flags override settings; environment reapplies gRPC/Raft port defaults when unset/empty and gossip/API defaults when unset; empty cluster port variables fail startup.", "components": ["w"], "sources": ["w:s8c45722d725f", "w:sb916723717de", "w:s7c30e1e2c554", "w:s85b7b3e8fa18", "w:s8c05965785ea", "w:sbd0d3c32cae6", "w:s8a57e655e250", "w:s0ba20e752b37"], "status": "REASONED"},
-    "weaviate-rest": {"text": "Default scheme is HTTPS requiring certificates or startup fails; TLS host falls back to host and TLS port is random. HTTP host defaults localhost unless HOST is exported empty; port defaults random; unix uses socket-path.", "components": ["w", "goflags"], "sources": ["w:sa1cbcde2f024", "w:s122708a42282", "w:s5b7738072d06", "w:s71035079ef45", "w:s7b8a55a31a45", "w:sc6fc7e030ce0", "w:s8e5bf5d887cc", "goflags:sbd8f9e746696"], "status": "REASONED"},
-    "weaviate-image": {"text": "Official image selects HTTP on 0.0.0.0:8080; documented proxy forwards both 8080 and gRPC 50051 with TLS at the proxy.", "components": ["w", "wd"], "sources": ["w:se5771dfe00cc", "wd:sa066265b9009"], "status": "REASONED"},
-    "weaviate-grpc": {"text": "gRPC always starts on a wildcard address with default port 50051 (configurable via GRPC_PORT) and ignores REST host; keep it unpublished except through the intended proxy.", "components": ["w"], "sources": ["w:s4d2b119da409", "w:s85b7b3e8fa18", "w:saed4c2fc8f8f", "w:s1ec8942ab969", "w:s1a45453a69cc"], "status": "REASONED"},
-    "weaviate-debug": {"text": "Debug HTTP defaults wildcard 6060 unless GO_PROFILING_DISABLE is true; debug endpoints return 404 until enabled.", "components": ["w"], "sources": ["w:sd53f51213b12", "w:sae4bd165c1f1", "w:sc1473599ecd1", "w:s839d0ae4019e"], "status": "REASONED"},
-    "weaviate-metrics": {"text": "Enabled Prometheus listener exposes metrics and tenant-activity on wildcard, default 2112 when enabled through environment; admit only scraper traffic.", "components": ["w"], "sources": ["w:s909e461943ae", "w:s3d7fe59cb2c4"], "status": "REASONED"},
-    "weaviate-gossip": {"text": "Even one node opens TCP/UDP gossip 7946 at CLUSTER_BIND_ADDR, defaulting to wildcard when unset/empty; admit only peers.", "components": ["w", "ml"], "sources": ["w:s8c05965785ea", "w:saad31a8dae9a", "w:sa9c8ff5a4ecc", "w:se2bd8d167284", "w:s73dc4c7a4cae", "ml:s06affccfd439", "ml:s207b294bb8b4"], "status": "REASONED"},
-    "weaviate-cluster-api": {"text": "Internal cluster API binds wildcard 7947, default gossip port plus one, independently of REST host.", "components": ["w"], "sources": ["w:sc8c8851851c6", "w:seb97c68c0964", "w:s8c05965785ea", "w:sa9c8ff5a4ecc", "w:s09fef29a3bb4"], "status": "REASONED"},
-    "weaviate-raft": {"text": "Raft 8300 and RPC 8301 bind nonempty CLUSTER_BIND_ADDR, then CLUSTER_ADVERTISE_ADDR, then memberlist private advertise address; keep peer-only.", "components": ["w", "ml"], "sources": ["w:s8c05965785ea", "w:s8ea0dac76b07", "w:s8c15def0d8e9", "w:s59b824177541", "w:sd40da03c7dea", "w:sdbd8b8fd06da", "ml:s8b9a9e831368"], "status": "REASONED"},
-    "weaviate-auth": {"text": "Anonymous access defaults true; disable it and enable API keys with positional key-to-user mapping.", "components": ["wd"], "sources": ["wd:s51c9c4c6b4c0", "wd:se90546c311e1"], "status": "REASONED"},
-    "weaviate-rbac": {"text": "Enable RBAC, root only the admin, and scope app roles to collections; RBAC is stated generally available from v1.29 and cannot combine with admin-list authorization.", "components": ["wd"], "sources": ["wd:sb87f55ae205e", "wd:sd5185e505828"], "status": "REASONED"},
-    "weaviate-oidc": {"text": "OIDC issuer/client settings delegate human authentication to the IdP, where MFA can be enforced; authentication alone is not authorization.", "components": ["wd"], "sources": ["wd:s51c9c4c6b4c0"], "status": "REASONED"},
-    "milvus-config": {"text": "Compose mounts only data; mount user.yaml and TLS files read-only under /milvus, accounting for MILVUSCONF and milvus.yaml/_test.yaml/default.yaml/user.yaml precedence.", "components": ["m2", "m3"], "sources": ["m2:sd95a54e97bc1", "m3:sb8bac089fe22"], "status": "REASONED"},
-    "milvus-env": {"text": "Environment formatter lowercases, strips leading milvus. and removes slash/underscore/dot; use COMMON_SECURITY_* and TLS_* names, remove conflicting sources and recreate changed mounts/environment.", "components": ["m2", "m3"], "sources": ["m2:s111382ba0af1", "m3:s3631fa007c49"], "status": "REASONED"},
-    "milvus-user": {"text": "v3.0.2 Ubuntu image runs as milvus; make config/certificates readable and restrict the private key to the service and trusted administrators.", "components": ["m3"], "sources": ["m3:s230001e47ba1", "m3:s555248062673", "m3:sbc585d4a0f5f"], "status": "REASONED"},
-    "milvus-auth": {"text": "Enable common.security.authorizationEnabled, replace built-in root/Milvus and create a per-app user; proxy auth does not protect internal services.", "components": ["m2", "m3"], "sources": ["m2:s53bae912db23", "m3:s920151033b49"], "status": "REASONED"},
-    "milvus-tls": {"text": "tls server/key/CA paths and common.security.tlsMode 1 enable server TLS; mode 2 requires client certificates; enable authentication independently.", "components": ["m2", "m3"], "sources": ["m2:se872a9171898", "m3:s3f8acf8e1aaa"], "status": "REASONED"},
-    "milvus-client": {"text": "External client gRPC uses 19530; publish only that port privately, apart from the optional loopback management mapping.", "components": ["m2", "m3"], "sources": ["m2:s978d2f09057a", "m3:sdb5a4b72da10"], "status": "REASONED"},
-    "milvus-internal": {"text": "Internal proxy 19529, query 21123, data 21124, mix coordinator 22125 and streaming 22222 bind wildcard; node ports can fall back randomly and advertised ip is not a bind.", "components": ["m2", "m3"], "sources": ["m2:s928648b5a0c7", "m3:s6d67ee7d0093", "m2:sff33760fd71e", "m2:se804dabe7939", "m2:sd6463e757c5d", "m2:sb59cad3a88b8", "m2:s2694c200b326", "m2:s21047b546d82", "m2:s12f9ee326259", "m2:seef04c76c2b8", "m2:s772289a1421c", "m2:s6b6cbec16ce7", "m2:s97dca4df88c8", "m3:s4c186d02c419", "m3:sab931fc3f694", "m3:scd5cdecb245f", "m3:s8c703481eb0e", "m3:s71ed576f40a9", "m3:s9c1acba22ba3", "m3:sfac072fc812f", "m3:s05cdfe25ef69", "m3:s9ffc165c5ec5", "m3:s1c628a483c2b", "m3:sd4eef5612d16"], "status": "REASONED"},
-    "milvus-internal-auth": {"text": "Internal routing interceptors pass calls without metadata and do not authenticate Search/Query; standalone runs all five components.", "components": ["m2", "m3"], "sources": ["m2:s53b67fa99640", "m3:s0d6581756200", "m2:s3c9efe526b6a", "m2:s60f9b3f68379", "m2:saa07bc24b066", "m2:sae3c1aa56572", "m3:s0bd5a9e54516", "m3:sc65c390b68f2", "m3:sb7153655e68f", "m3:sdb1c13daa780"], "status": "REASONED"},
-    "milvus-internal-tls": {"text": "internaltlsEnabled defaults off; internal TLS is one-way and failed certificate/key loading logs a warning then serves plaintext.", "components": ["m2", "m3", "grpc2", "grpc3", "gostd2", "gostd3"], "sources": ["m2:sc4e9500fac07", "m3:s67a44fa31c3b", "m2:s3596dd04baa9", "m3:s23e57360bafb", "grpc2:sa23456a265f8", "grpc3:sc8c1b3aca796", "grpc2:s4e9b30536409", "grpc3:s0fb595ac53b7", "grpc2:s75406e3b5c45", "grpc3:sbf5d079c575d", "gostd2:s2e6578103750", "gostd2:s0e02efe6f050", "gostd3:s4bd44f1715ab", "gostd3:s2809ee3d22bb"], "status": "REASONED"},
-    "milvus-isolation": {"text": "Use a dedicated network, no host/shared namespace, and default-deny rules admitting peers by source including random fallback ports; exclude untrusted workloads/users from component hosts.", "components": ["docker", "k8s"], "sources": ["docker:s1e53417c513d", "k8s:s953450b4076f"], "status": "REASONED"},
-    "milvus-minio-ports": {"text": "Bundled MinIO publishes wildcard 9000 API and 9001 console while etcd remains internal; restrict both and replace default credentials.", "components": ["m2", "m3"], "sources": ["m2:s0d83ff967a6a", "m3:s8b30122d1f5e"], "status": "REASONED"},
-    "milvus-storage-credentials": {"text": "Pinned Compose selects MinIO RELEASE.2024-05-28T17-19-04Z with MINIO_ACCESS_KEY/SECRET_KEY=minioadmin; Milvus uses MINIO_ACCESS_KEY_ID/SECRET_ACCESS_KEY; rotate matching pairs together.", "components": ["m2", "m3"], "sources": ["m2:s1b67d9a3bc81", "m3:s189b72ec8e6e"], "status": "REASONED"},
-    "milvus-env-files": {"text": "Use protected untracked env-files, delete overriding Compose environment credential entries, retain ETCD_ENDPOINTS/MINIO_ADDRESS/MINIO_REGION and recreate both services; container environment remains inspectable.", "components": ["docker"], "sources": ["docker:s1dcef979ee57", "docker:s8f518c10ba0d"], "status": "REASONED"},
-    "milvus-compose-images": {"text": "Compose at v2.6.24 and v3.0.2 selects older Milvus images v2.6.23 and v3.0.1; explicitly choose and recheck the intended image.", "components": ["m2", "m3"], "sources": ["m2:s978d2f09057a", "m3:sdb5a4b72da10"], "status": "REASONED"},
-    "milvus-management": {"text": "Management HTTP defaults wildcard 9091 with no bind-address control; METRICS_PORT parse failures fall back, 0 chooses random and other out-of-range values fail listen without stopping Milvus.", "components": ["m2", "m3"], "sources": ["m2:se914c00355d3", "m2:s55fd199759d6", "m2:sdf3b1d2a44c0", "m3:sa564af191a43", "m3:s16eac6dca2d2", "m3:sc84510615bb1"], "status": "REASONED"},
-    "milvus-control": {"text": "Management routes bypass proxy authorization: log-level changes, process-role stop, GC/balancing/node controls and transfers remain exposed even with WebUI disabled.", "components": ["m2", "m3"], "sources": ["m2:sb3d4b78cb7bd", "m3:sb4e87e123555", "m2:sdf3b1d2a44c0", "m2:se914c00355d3", "m2:s3b24a2cd0b31", "m3:sc84510615bb1", "m3:sa564af191a43", "m3:s806e169e81b5"], "status": "REASONED"},
-    "milvus-key-backup": {"text": "Management encryption-zone backup returns the plugin backup for eligible databases; v3.0.2 also adds queued-read clearing and path-supplied backfill commit.", "components": ["m2", "m3"], "sources": ["m2:sb3d4b78cb7bd", "m2:s4443790570be", "m3:sf06bcf9fe36d", "m3:sb4e87e123555", "m3:sdf2c156e0507", "m3:s88758dbdf1b1", "m2:se0e67967c9b1", "m2:s2772deea0984", "m2:s34db97d6f273", "m3:s701b77eb1c17", "m3:sba379e1f515b", "m3:s3ad0c01cfa7d"], "status": "REASONED"},
-    "milvus-coordinator": {"text": "Activated mix coordinator adds mutable configuration and WAL changes alongside GC, balancing, suspension and transfer controls.", "components": ["m2", "m3"], "sources": ["m2:s27c6b28106f1", "m3:s76a0048c7418", "m2:s42ca1740d269", "m3:s353616d9b3b2", "m2:s04a87c32f315", "m2:s597603dbaae3", "m3:s3d76ecf148e0", "m3:s794c4122f3a1"], "status": "REASONED"},
-    "milvus-profiling": {"text": "proxy.http.enablePprof defaults true; disabling profiling omits pprof but leaves control routes registered.", "components": ["m2", "m3"], "sources": ["m2:s979e91a520e3", "m3:s0fc696e65913", "m2:se914c00355d3", "m2:s2fd8c4230f47", "m3:sa564af191a43", "m3:sc8496db1fb6e"], "status": "REASONED"},
-    "milvus-eventlog": {"text": "First successful eventlog request opens an unauthenticated, non-TLS wildcard gRPC listener on a random port; repeat inventory after requests.", "components": ["m2", "m3"], "sources": ["m2:se193bc422269", "m3:s50ffed832d11", "m2:s108ca53f9ce3", "m3:s19e44f8baa1c"], "status": "REASONED"},
-    "milvus-health": {"text": "Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings.", "components": ["m2", "m3"], "sources": ["m2:s978d2f09057a", "m3:sdb5a4b72da10"], "status": "REASONED"},
-    "chroma-bind": {"text": "Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000.", "components": ["chroma"], "sources": ["chroma:s7eb7610f68c1", "chroma:s6d6708278bef", "chroma:s59912a4c7e11", "chroma:sed8aad199780", "chroma:s3a1c76cdd7f8", "chroma:s09652c32f56a", "chroma:s784a0e779949"], "status": "REASONED"},
-    "chroma-auth": {"text": "Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting.", "components": ["cd", "chroma"], "sources": ["cd:s60ad33c4b715", "chroma:se936b62a1a3d", "chroma:sbc1dd27a9bf2", "chroma:s62cd8db9e61a", "chroma:s50b8158f3388", "chroma:s6eb0ff350d15"], "status": "REASONED"},
-    "pgvector": {"text": "pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.", "components": ["pgvector-source"], "sources": ["pgvector-source:saab3b3092223"], "status": "REASONED"},
-    "pgvector-rls": {"text": "Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k.", "components": ["pg"], "sources": ["pg:se9846041ce1f"], "status": "REASONED"},
-    "hosted-mfa": {"text": "Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity management solution on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it.", "components": ["qc", "pc", "wd"], "sources": ["qc:sc72e09d8f7e6", "pc:s1696db54b028", "wd:s51c9c4c6b4c0"], "status": "REASONED"},
-    "verify-inventory": {"text": "Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure.", "components": ["qd", "docker"], "sources": ["qd:s753402e46eed", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]},
-    "verify-peer": {"text": "Probe real backend 6333/6334/6335 from non-peers; require connection failure with filtering evidence and a positive peer control for 6335; auth/TLS rejection is still reachability.", "components": ["qd", "curl-docs"], "sources": ["qd:s753402e46eed", "curl-docs:s2b2686afaf41", "curl-docs:s596c6f706038"], "status": "REASONED", "verify": [2]},
-    "verify-curl": {"text": "exit 3/6 is invalid input; 7 or a five-second 28 needs corroboration; nonzero HTTP, 52/56 or a twenty-second 28 indicates reachability, including HTTP 000 cases.", "components": ["curl-docs"], "sources": ["curl-docs:s2b2686afaf41", "curl-docs:s596c6f706038"], "status": "REASONED", "verify": [2]},
-    "verify-qdrant-auth": {"text": "Frontend collections check expects anonymous 401/403 and keyed 200 over verified TLS; both can pass while peer port 6335 is exposed.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED", "verify": [3]},
-    "verify-fronting": {"text": "Weaviate schema rejects anonymous access and allows a valid key; Chroma requires fronting denial and authorized success because it has no native auth.", "components": ["wd", "cd"], "sources": ["wd:s51c9c4c6b4c0", "cd:s60ad33c4b715"], "status": "REASONED", "verify": [4]},
-    "verify-milvus-auth": {"text": "MilvusClient without a token must fail after authorization is enabled, while the same operation with the application identity succeeds.", "components": ["m2", "m3"], "sources": ["m2:s30534039814b", "m3:s4ba2dd6f35d6"], "status": "REASONED"},
-    "verify-milvus-management": {"text": "Outside-admin reachability fails; private control needs healthy Compose status and the milvus-owned listener, since healthz can pass before registration and bind failure is nonfatal.", "components": ["m2", "m3", "docker"], "sources": ["m2:s034ff211eece", "m3:s75885eaffe8b", "m2:se914c00355d3", "m3:sa564af191a43", "docker:s7d4675617251"], "status": "REASONED", "verify": [1, 2]},
-    "milvus-kubernetes-service": {"text": "Helm chart 5.0.30 and Operator v1.3.11 place metrics 9091 on the client Service, with a declared ClusterIP default; the port list includes both ports whatever the Service type unless Helm metrics.enabled is false. Helm removes only the Service metrics port; Operator disableMetric skips PodMonitor reconciliation, not the Service port. Chart appVersion 3.0.1 is separate from the audited Milvus versions.", "components": ["milvus-helm", "milvus-operator"], "sources": ["milvus-helm:s03d63e5e72b6", "milvus-helm:s65da7040fa71", "milvus-helm:sc9c86596c55c", "milvus-helm:s5218b8a9a776", "milvus-helm:s533d9f94c237", "milvus-helm:s8b7f45ad4f54", "milvus-operator:s11cd8aea4a46", "milvus-operator:scaa2f4b8f5b3", "milvus-operator:se5839563f89c", "milvus-operator:s58da9e232a84", "milvus-operator:s585ae37fd0ca", "milvus-operator:sca0e4a51219f"], "status": "REASONED"}
-  }
-}
----
 # Vector databases: Qdrant, Weaviate, Milvus, Chroma, pgvector
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Qdrant source v1.19.1, Weaviate source v1.39.6, Milvus v2.6.24 and v3.0.2, Milvus Helm chart 5.0.30, Milvus Operator v1.3.11, Chroma source 1.5.9, Chroma migration documentation v1.0.0, and pgvector source v0.8.2, plus 5 more recorded bases; 8 further sources carry no recorded version. Metadata reviewed 2026-10-15; documentation checked September 2026. The guide records 55 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- q: Qdrant source (v1.19.1)
-- qd: Qdrant security documentation (unknown)
-- w: Weaviate source (v1.39.6)
-- wd: Weaviate documentation (unknown)
-- m2: Milvus (v2.6.24)
-- m3: Milvus (v3.0.2)
-- chroma: Chroma source (1.5.9)
-- pc: Pinecone organization documentation (unknown)
-- qc: Qdrant Cloud documentation (unknown)
-- cd: Chroma migration documentation (v1.0.0)
-- pg: PostgreSQL documentation (unknown)
-- docker: Docker documentation (unknown)
-- k8s: Kubernetes documentation (unknown)
-- grpc2: grpc-go (Milvus v2.6.24 go.mod) (v1.82.1)
-- grpc3: grpc-go (Milvus v3.0.2 go.mod) (v1.82.2)
-- ml: memberlist (Weaviate v1.39.6 go.mod) (v0.5.4)
-- goflags: go-flags (v1.6.1)
-- gostd2: Go standard library (go1.25.8)
-- gostd3: Go standard library (go1.26.6)
-- curl-docs: curl documentation (rolling) (unknown)
-- milvus-helm: Milvus Helm chart (5.0.30)
-- milvus-operator: Milvus Operator (v1.3.11)
-- pgvector-source: pgvector source (v0.8.2)
-
-Claims (full source mapping in the front matter):
-
-- private-publication (REASONED; docker): Bind privately and publish only a TLS proxy, tunnel or tailnet; Docker loopback mapping avoids default wildcard publication.
-- qdrant-ports (REASONED; qd): Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer.
-- qdrant-bind (REASONED; q): Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order.
-- qdrant-image (REASONED; q): Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments.
-- qdrant-client-auth (REASONED; qd): Self-deployed Qdrant defaults insecure; api_key and read_only_api_key gate client REST/gRPC through api-key or Bearer headers, with QDRANT__SERVICE__ environment equivalents.
-- qdrant-client-tls (REASONED; qd): service.enable_tls with tls.cert/key enables client TLS; keys without TLS are insecure.
-- qdrant-peer-auth (REASONED; qd): Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, off by default and deferred through rolling upgrades; retain peer-only network restriction.
-- qdrant-peer-tls (REASONED; qd): cluster.p2p.enable_tls is separate from client TLS and needs a provisioned tls.ca_cert; compiled default path is not a substitute for provisioning.
-- qdrant-rotation (REASONED; qd): alt_api_key accepts an additional client key from v1.17.0; rotate peer-by-peer, with internal use only under enforce_internal_auth from v1.18.0.
-- weaviate-precedence (REASONED; w): File, environment then flags override settings; environment reapplies gRPC/Raft port defaults when unset/empty and gossip/API defaults when unset; empty cluster port variables fail startup.
-- weaviate-rest (REASONED; w, goflags): Default scheme is HTTPS requiring certificates or startup fails; TLS host falls back to host and TLS port is random. HTTP host defaults localhost unless HOST is exported empty; port defaults random; unix uses socket-path.
-- weaviate-image (REASONED; w, wd): Official image selects HTTP on 0.0.0.0:8080; documented proxy forwards both 8080 and gRPC 50051 with TLS at the proxy.
-- weaviate-grpc (REASONED; w): gRPC always starts on a wildcard address with default port 50051 (configurable via GRPC_PORT) and ignores REST host; keep it unpublished except through the intended proxy.
-- weaviate-debug (REASONED; w): Debug HTTP defaults wildcard 6060 unless GO_PROFILING_DISABLE is true; debug endpoints return 404 until enabled.
-- weaviate-metrics (REASONED; w): Enabled Prometheus listener exposes metrics and tenant-activity on wildcard, default 2112 when enabled through environment; admit only scraper traffic.
-- weaviate-gossip (REASONED; w, ml): Even one node opens TCP/UDP gossip 7946 at CLUSTER_BIND_ADDR, defaulting to wildcard when unset/empty; admit only peers.
-- weaviate-cluster-api (REASONED; w): Internal cluster API binds wildcard 7947, default gossip port plus one, independently of REST host.
-- weaviate-raft (REASONED; w, ml): Raft 8300 and RPC 8301 bind nonempty CLUSTER_BIND_ADDR, then CLUSTER_ADVERTISE_ADDR, then memberlist private advertise address; keep peer-only.
-- weaviate-auth (REASONED; wd): Anonymous access defaults true; disable it and enable API keys with positional key-to-user mapping.
-- weaviate-rbac (REASONED; wd): Enable RBAC, root only the admin, and scope app roles to collections; RBAC is stated generally available from v1.29 and cannot combine with admin-list authorization.
-- weaviate-oidc (REASONED; wd): OIDC issuer/client settings delegate human authentication to the IdP, where MFA can be enforced; authentication alone is not authorization.
-- milvus-config (REASONED; m2, m3): Compose mounts only data; mount user.yaml and TLS files read-only under /milvus, accounting for MILVUSCONF and milvus.yaml/_test.yaml/default.yaml/user.yaml precedence.
-- milvus-env (REASONED; m2, m3): Environment formatter lowercases, strips leading milvus. and removes slash/underscore/dot; use COMMON_SECURITY_* and TLS_* names, remove conflicting sources and recreate changed mounts/environment.
-- milvus-user (REASONED; m3): v3.0.2 Ubuntu image runs as milvus; make config/certificates readable and restrict the private key to the service and trusted administrators.
-- milvus-auth (REASONED; m2, m3): Enable common.security.authorizationEnabled, replace built-in root/Milvus and create a per-app user; proxy auth does not protect internal services.
-- milvus-tls (REASONED; m2, m3): tls server/key/CA paths and common.security.tlsMode 1 enable server TLS; mode 2 requires client certificates; enable authentication independently.
-- milvus-client (REASONED; m2, m3): External client gRPC uses 19530; publish only that port privately, apart from the optional loopback management mapping.
-- milvus-internal (REASONED; m2, m3): Internal proxy 19529, query 21123, data 21124, mix coordinator 22125 and streaming 22222 bind wildcard; node ports can fall back randomly and advertised ip is not a bind.
-- milvus-internal-auth (REASONED; m2, m3): Internal routing interceptors pass calls without metadata and do not authenticate Search/Query; standalone runs all five components.
-- milvus-internal-tls (REASONED; m2, m3, grpc2, grpc3, gostd2, gostd3): internaltlsEnabled defaults off; internal TLS is one-way and failed certificate/key loading logs a warning then serves plaintext.
-- milvus-isolation (REASONED; docker, k8s): Use a dedicated network, no host/shared namespace, and default-deny rules admitting peers by source including random fallback ports; exclude untrusted workloads/users from component hosts.
-- milvus-minio-ports (REASONED; m2, m3): Bundled MinIO publishes wildcard 9000 API and 9001 console while etcd remains internal; restrict both and replace default credentials.
-- milvus-storage-credentials (REASONED; m2, m3): Pinned Compose selects MinIO RELEASE.2024-05-28T17-19-04Z with MINIO_ACCESS_KEY/SECRET_KEY=minioadmin; Milvus uses MINIO_ACCESS_KEY_ID/SECRET_ACCESS_KEY; rotate matching pairs together.
-- milvus-env-files (REASONED; docker): Use protected untracked env-files, delete overriding Compose environment credential entries, retain ETCD_ENDPOINTS/MINIO_ADDRESS/MINIO_REGION and recreate both services; container environment remains inspectable.
-- milvus-compose-images (REASONED; m2, m3): Compose at v2.6.24 and v3.0.2 selects older Milvus images v2.6.23 and v3.0.1; explicitly choose and recheck the intended image.
-- milvus-management (REASONED; m2, m3): Management HTTP defaults wildcard 9091 with no bind-address control; METRICS_PORT parse failures fall back, 0 chooses random and other out-of-range values fail listen without stopping Milvus.
-- milvus-control (REASONED; m2, m3): Management routes bypass proxy authorization: log-level changes, process-role stop, GC/balancing/node controls and transfers remain exposed even with WebUI disabled.
-- milvus-key-backup (REASONED; m2, m3): Management encryption-zone backup returns the plugin backup for eligible databases; v3.0.2 also adds queued-read clearing and path-supplied backfill commit.
-- milvus-coordinator (REASONED; m2, m3): Activated mix coordinator adds mutable configuration and WAL changes alongside GC, balancing, suspension and transfer controls.
-- milvus-profiling (REASONED; m2, m3): proxy.http.enablePprof defaults true; disabling profiling omits pprof but leaves control routes registered.
-- milvus-eventlog (REASONED; m2, m3): First successful eventlog request opens an unauthenticated, non-TLS wildcard gRPC listener on a random port; repeat inventory after requests.
-- milvus-health (REASONED; m2, m3): Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings.
-- chroma-bind (REASONED; chroma): Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000.
-- chroma-auth (REASONED; cd, chroma): Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting.
-- pgvector (REASONED; pgvector-source): pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.
-- pgvector-rls (REASONED; pg): Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k.
-- hosted-mfa (REASONED; qc, pc, wd): Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity management solution on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it.
-- verify-inventory (REASONED; qd, docker): Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure.
-- verify-peer (REASONED; qd, curl-docs): Probe real backend 6333/6334/6335 from non-peers; require connection failure with filtering evidence and a positive peer control for 6335; auth/TLS rejection is still reachability.
-- verify-curl (REASONED; curl-docs): exit 3/6 is invalid input; 7 or a five-second 28 needs corroboration; nonzero HTTP, 52/56 or a twenty-second 28 indicates reachability, including HTTP 000 cases.
-- verify-qdrant-auth (REASONED; qd): Frontend collections check expects anonymous 401/403 and keyed 200 over verified TLS; both can pass while peer port 6335 is exposed.
-- verify-fronting (REASONED; wd, cd): Weaviate schema rejects anonymous access and allows a valid key; Chroma requires fronting denial and authorized success because it has no native auth.
-- verify-milvus-auth (REASONED; m2, m3): MilvusClient without a token must fail after authorization is enabled, while the same operation with the application identity succeeds.
-- verify-milvus-management (REASONED; m2, m3, docker): Outside-admin reachability fails; private control needs healthy Compose status and the milvus-owned listener, since healthz can pass before registration and bind failure is nonfatal.
-- milvus-kubernetes-service (REASONED; milvus-helm, milvus-operator): Helm chart 5.0.30 and Operator v1.3.11 place metrics 9091 on the client Service, with a declared ClusterIP default; the port list includes both ports whatever the Service type unless Helm metrics.enabled is false. Helm removes only the Service metrics port; Operator disableMetric skips PodMonitor reconciliation, not the Service port. Chart appVersion 3.0.1 is separate from the audited Milvus versions.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 A RAG store holds every document the application was given, often including private data, and it answers similarity queries that reconstruct that text. Several of these servers ship with no authentication enabled and none of them serves TLS out of the box, so an exposed default install is a searchable copy of your corpus. Keep the store on a private interface, turn on the native key or account control where one exists, and put TLS in front or on the server before any client crosses a network.
 
@@ -761,3 +273,517 @@ REASONED: tenant isolation and bypass positive control. A live PostgreSQL with p
 - pgvector (`CREATE EXTENSION vector`, PostgreSQL 13 and later; v0.8.2 README): https://github.com/pgvector/pgvector/blob/v0.8.2/README.md
 - PostgreSQL row security policies (a superuser and a `BYPASSRLS` role always bypass; the table owner bypasses unless the table has `FORCE ROW LEVEL SECURITY`): https://www.postgresql.org/docs/current/ddl-rowsecurity.html
 - curl manual (the `exitcode` and `errormsg` write-out variables, both added in curl 7.75.0; rolling documentation, checked September 2026): https://curl.se/docs/manpage.html
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/vector-databases.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- q: Qdrant source (v1.19.1)
+- w: Weaviate source (v1.39.6)
+- m2: Milvus (v2.6.24)
+- m3: Milvus (v3.0.2)
+- milvus-helm: Milvus Helm chart (5.0.30)
+- milvus-operator: Milvus Operator (v1.3.11)
+- chroma: Chroma source (1.5.9)
+- cd: Chroma migration documentation (v1.0.0)
+- pgvector-source: pgvector source (v0.8.2)
+- qd: Qdrant security documentation (unknown)
+- qc: Qdrant Cloud documentation (unknown)
+- wd: Weaviate documentation (unknown)
+- pg: PostgreSQL documentation (unknown)
+- docker: Docker documentation (unknown)
+- k8s: Kubernetes documentation (unknown)
+- grpc2: grpc-go (Milvus v2.6.24 go.mod) (v1.82.1)
+- grpc3: grpc-go (Milvus v3.0.2 go.mod) (v1.82.2)
+- ml: memberlist (Weaviate v1.39.6 go.mod) (v0.5.4)
+- goflags: go-flags (v1.6.1)
+- gostd2: Go standard library (go1.25.8)
+- gostd3: Go standard library (go1.26.6)
+- pc: Pinecone organization documentation (unknown)
+- curl-docs: curl documentation (rolling) (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- private-publication (REASONED; docker): Bind privately and publish only a TLS proxy, tunnel or tailnet; Docker loopback mapping avoids default wildcard publication.
+- qdrant-ports (REASONED; qd): Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer.
+- qdrant-bind (REASONED; q): Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order.
+- qdrant-image (REASONED; q): Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments.
+- qdrant-client-auth (REASONED; qd): Self-deployed Qdrant defaults insecure; api_key and read_only_api_key gate client REST/gRPC through api-key or Bearer headers, with QDRANT__SERVICE__ environment equivalents.
+- qdrant-client-tls (REASONED; qd): service.enable_tls with tls.cert/key enables client TLS; keys without TLS are insecure.
+- qdrant-peer-auth (REASONED; qd): Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, off by default and deferred through rolling upgrades; retain peer-only network restriction.
+- qdrant-peer-tls (REASONED; qd): cluster.p2p.enable_tls is separate from client TLS and needs a provisioned tls.ca_cert; compiled default path is not a substitute for provisioning.
+- qdrant-rotation (REASONED; qd): alt_api_key accepts an additional client key from v1.17.0; rotate peer-by-peer, with internal use only under enforce_internal_auth from v1.18.0.
+- weaviate-precedence (REASONED; w): File, environment then flags override settings; environment reapplies gRPC/Raft port defaults when unset/empty and gossip/API defaults when unset; empty cluster port variables fail startup.
+- weaviate-rest (REASONED; w, goflags): Default scheme is HTTPS requiring certificates or startup fails; TLS host falls back to host and TLS port is random. HTTP host defaults localhost unless HOST is exported empty; port defaults random; unix uses socket-path.
+- weaviate-image (REASONED; w, wd): Official image selects HTTP on 0.0.0.0:8080; documented proxy forwards both 8080 and gRPC 50051 with TLS at the proxy.
+- weaviate-grpc (REASONED; w): gRPC always starts on a wildcard address with default port 50051 (configurable via GRPC_PORT) and ignores REST host; keep it unpublished except through the intended proxy.
+- weaviate-debug (REASONED; w): Debug HTTP defaults wildcard 6060 unless GO_PROFILING_DISABLE is true; debug endpoints return 404 until enabled.
+- weaviate-metrics (REASONED; w): Enabled Prometheus listener exposes metrics and tenant-activity on wildcard, default 2112 when enabled through environment; admit only scraper traffic.
+- weaviate-gossip (REASONED; w, ml): Even one node opens TCP/UDP gossip 7946 at CLUSTER_BIND_ADDR, defaulting to wildcard when unset/empty; admit only peers.
+- weaviate-cluster-api (REASONED; w): Internal cluster API binds wildcard 7947, default gossip port plus one, independently of REST host.
+- weaviate-raft (REASONED; w, ml): Raft 8300 and RPC 8301 bind nonempty CLUSTER_BIND_ADDR, then CLUSTER_ADVERTISE_ADDR, then memberlist private advertise address; keep peer-only.
+- weaviate-auth (REASONED; wd): Anonymous access defaults true; disable it and enable API keys with positional key-to-user mapping.
+- weaviate-rbac (REASONED; wd): Enable RBAC, root only the admin, and scope app roles to collections; RBAC is stated generally available from v1.29 and cannot combine with admin-list authorization.
+- weaviate-oidc (REASONED; wd): OIDC issuer/client settings delegate human authentication to the IdP, where MFA can be enforced; authentication alone is not authorization.
+- milvus-config (REASONED; m2, m3): Compose mounts only data; mount user.yaml and TLS files read-only under /milvus, accounting for MILVUSCONF and milvus.yaml/_test.yaml/default.yaml/user.yaml precedence.
+- milvus-env (REASONED; m2, m3): Environment formatter lowercases, strips leading milvus. and removes slash/underscore/dot; use COMMON_SECURITY_* and TLS_* names, remove conflicting sources and recreate changed mounts/environment.
+- milvus-user (REASONED; m3): v3.0.2 Ubuntu image runs as milvus; make config/certificates readable and restrict the private key to the service and trusted administrators.
+- milvus-auth (REASONED; m2, m3): Enable common.security.authorizationEnabled, replace built-in root/Milvus and create a per-app user; proxy auth does not protect internal services.
+- milvus-tls (REASONED; m2, m3): tls server/key/CA paths and common.security.tlsMode 1 enable server TLS; mode 2 requires client certificates; enable authentication independently.
+- milvus-client (REASONED; m2, m3): External client gRPC uses 19530; publish only that port privately, apart from the optional loopback management mapping.
+- milvus-internal (REASONED; m2, m3): Internal proxy 19529, query 21123, data 21124, mix coordinator 22125 and streaming 22222 bind wildcard; node ports can fall back randomly and advertised ip is not a bind.
+- milvus-internal-auth (REASONED; m2, m3): Internal routing interceptors pass calls without metadata and do not authenticate Search/Query; standalone runs all five components.
+- milvus-internal-tls (REASONED; m2, m3, grpc2, grpc3, gostd2, gostd3): internaltlsEnabled defaults off; internal TLS is one-way and failed certificate/key loading logs a warning then serves plaintext.
+- milvus-isolation (REASONED; docker, k8s): Use a dedicated network, no host/shared namespace, and default-deny rules admitting peers by source including random fallback ports; exclude untrusted workloads/users from component hosts.
+- milvus-minio-ports (REASONED; m2, m3): Bundled MinIO publishes wildcard 9000 API and 9001 console while etcd remains internal; restrict both and replace default credentials.
+- milvus-storage-credentials (REASONED; m2, m3): Pinned Compose selects MinIO RELEASE.2024-05-28T17-19-04Z with MINIO_ACCESS_KEY/SECRET_KEY=minioadmin; Milvus uses MINIO_ACCESS_KEY_ID/SECRET_ACCESS_KEY; rotate matching pairs together.
+- milvus-env-files (REASONED; docker): Use protected untracked env-files, delete overriding Compose environment credential entries, retain ETCD_ENDPOINTS/MINIO_ADDRESS/MINIO_REGION and recreate both services; container environment remains inspectable.
+- milvus-compose-images (REASONED; m2, m3): Compose at v2.6.24 and v3.0.2 selects older Milvus images v2.6.23 and v3.0.1; explicitly choose and recheck the intended image.
+- milvus-management (REASONED; m2, m3): Management HTTP defaults wildcard 9091 with no bind-address control; METRICS_PORT parse failures fall back, 0 chooses random and other out-of-range values fail listen without stopping Milvus.
+- milvus-control (REASONED; m2, m3): Management routes bypass proxy authorization: log-level changes, process-role stop, GC/balancing/node controls and transfers remain exposed even with WebUI disabled.
+- milvus-key-backup (REASONED; m2, m3): Management encryption-zone backup returns the plugin backup for eligible databases; v3.0.2 also adds queued-read clearing and path-supplied backfill commit.
+- milvus-coordinator (REASONED; m2, m3): Activated mix coordinator adds mutable configuration and WAL changes alongside GC, balancing, suspension and transfer controls.
+- milvus-profiling (REASONED; m2, m3): proxy.http.enablePprof defaults true; disabling profiling omits pprof but leaves control routes registered.
+- milvus-eventlog (REASONED; m2, m3): First successful eventlog request opens an unauthenticated, non-TLS wildcard gRPC listener on a random port; repeat inventory after requests.
+- milvus-health (REASONED; m2, m3): Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings.
+- chroma-bind (REASONED; chroma): Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000.
+- chroma-auth (REASONED; cd, chroma): Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting.
+- pgvector (REASONED; pgvector-source): pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.
+- pgvector-rls (REASONED; pg): Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k.
+- hosted-mfa (REASONED; qc, pc, wd): Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity management solution on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it.
+- verify-inventory (REASONED; qd, docker): Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure.
+- verify-peer (REASONED; qd, curl-docs): Probe real backend 6333/6334/6335 from non-peers; require connection failure with filtering evidence and a positive peer control for 6335; auth/TLS rejection is still reachability.
+- verify-curl (REASONED; curl-docs): exit 3/6 is invalid input; 7 or a five-second 28 needs corroboration; nonzero HTTP, 52/56 or a twenty-second 28 indicates reachability, including HTTP 000 cases.
+- verify-qdrant-auth (REASONED; qd): Frontend collections check expects anonymous 401/403 and keyed 200 over verified TLS; both can pass while peer port 6335 is exposed.
+- verify-fronting (REASONED; wd, cd): Weaviate schema rejects anonymous access and allows a valid key; Chroma requires fronting denial and authorized success because it has no native auth.
+- verify-milvus-auth (REASONED; m2, m3): MilvusClient without a token must fail after authorization is enabled, while the same operation with the application identity succeeds.
+- verify-milvus-management (REASONED; m2, m3, docker): Outside-admin reachability fails; private control needs healthy Compose status and the milvus-owned listener, since healthz can pass before registration and bind failure is nonfatal.
+- milvus-kubernetes-service (REASONED; milvus-helm, milvus-operator): Helm chart 5.0.30 and Operator v1.3.11 place metrics 9091 on the client Service, with a declared ClusterIP default; the port list includes both ports whatever the Service type unless Helm metrics.enabled is false. Helm removes only the Service metrics port; Operator disableMetric skips PodMonitor reconciliation, not the Service port. Chart appVersion 3.0.1 is separate from the audited Milvus versions.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-15",
+  "documentation_checked": "2026-09",
+  "body_sha256": "83c865153d5158fab30da3bb303117817f1cd6c1b1471dc48e0fbac05ec35363",
+  "components": {
+    "q": {
+      "name": "Qdrant source",
+      "basis": "v1.19.1",
+      "sources": {
+        "s7548c65a0e83": "https://github.com/qdrant/qdrant/blob/v1.19.1/src/settings.rs#L292-L329",
+        "sd309f5848ac4": "https://github.com/qdrant/qdrant/blob/v1.19.1/config/config.yaml#L330-L334",
+        "s6b9ad7f6f7ac": "https://github.com/qdrant/qdrant/blob/v1.19.1/config/development.yaml#L13-L15",
+        "sc0a948c10fcb": "https://github.com/qdrant/qdrant/blob/v1.19.1/config/production.yaml#L3-L5",
+        "s6463d266f693": "https://github.com/qdrant/qdrant/blob/v1.19.1/Dockerfile#L225-L246",
+        "sfbd6a604b16a": "https://github.com/qdrant/qdrant/blob/v1.19.1/tools/entrypoint.sh#L21"
+      }
+    },
+    "w": {
+      "name": "Weaviate source",
+      "basis": "v1.39.6",
+      "sources": {
+        "s8c45722d725f": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/config_handler.go#L1305-L1340",
+        "sb916723717de": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L1898-L1914",
+        "s7c30e1e2c554": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L1926-L1942",
+        "s85b7b3e8fa18": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L1050-L1054",
+        "s8c05965785ea": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L2145-L2188",
+        "s4d2b119da409": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/grpc/server.go#L475-L477",
+        "sa1cbcde2f024": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L47-L53",
+        "s122708a42282": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L89-L90",
+        "s5b7738072d06": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L97-L100",
+        "s71035079ef45": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L303-L310",
+        "s7b8a55a31a45": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L345-L349",
+        "sc6fc7e030ce0": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/embedded_spec.go#L39-L41",
+        "se5771dfe00cc": "https://github.com/weaviate/weaviate/blob/v1.39.6/Dockerfile#L57-L63",
+        "sd53f51213b12": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/handlers_debug_gate.go#L23-L33",
+        "sae4bd165c1f1": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L329-L336",
+        "s3d7fe59cb2c4": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L223-L275",
+        "sc1473599ecd1": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L2613-L2657",
+        "s909e461943ae": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L95-L98",
+        "s8c15def0d8e9": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/cluster/state.go#L431-L446",
+        "sc8c8851851c6": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/clusterapi/serve.go#L47-L49",
+        "seb97c68c0964": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/clusterapi/serve.go#L140",
+        "saad31a8dae9a": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/cluster/state.go#L695-L705",
+        "s8ea0dac76b07": "https://github.com/weaviate/weaviate/blob/v1.39.6/cluster/store.go#L591-L592",
+        "sa9c8ff5a4ecc": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L2059-L2061",
+        "se2bd8d167284": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/cluster/state.go#L662-L673",
+        "s73dc4c7a4cae": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L1804",
+        "s09fef29a3bb4": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L822-L823",
+        "s59b824177541": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L37-L38",
+        "sd40da03c7dea": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L636",
+        "sdbd8b8fd06da": "https://github.com/weaviate/weaviate/blob/v1.39.6/cluster/service.go#L152",
+        "saed4c2fc8f8f": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L2029",
+        "s1ec8942ab969": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L1664",
+        "s1a45453a69cc": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/grpc.go#L27-L33",
+        "s8e5bf5d887cc": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/server.go#L86",
+        "s839d0ae4019e": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L502-L509",
+        "sbd0d3c32cae6": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/environment.go#L733-L736",
+        "s8a57e655e250": "https://github.com/weaviate/weaviate/blob/v1.39.6/usecases/config/config_handler.go#L1333-L1336",
+        "s0ba20e752b37": "https://github.com/weaviate/weaviate/blob/v1.39.6/adapters/handlers/rest/configure_api.go#L1736-L1739"
+      }
+    },
+    "m2": {
+      "name": "Milvus",
+      "basis": "v2.6.24",
+      "sources": {
+        "sd95a54e97bc1": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/base_table.go#L69-L72",
+        "s111382ba0af1": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/base_table.go#L145-L153",
+        "s53bae912db23": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L1036-L1043",
+        "se872a9171898": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/grpc_param.go#L112-L139",
+        "s978d2f09057a": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/deployments/docker/standalone/docker-compose.yml#L39-L66",
+        "s928648b5a0c7": "https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/netutil/listener.go#L11-L35",
+        "s53b67fa99640": "https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/interceptor/cluster_interceptor.go#L34-L48",
+        "sc4e9500fac07": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/utils/util.go#L41-L66",
+        "s0d83ff967a6a": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/deployments/docker/standalone/docker-compose.yml#L21-L32",
+        "s1b67d9a3bc81": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/service_param.go#L1452-L1477",
+        "se914c00355d3": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/server.go#L215-L260",
+        "s55fd199759d6": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/server.go#L38-L40",
+        "sdf3b1d2a44c0": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/server.go#L77-L120",
+        "sb3d4b78cb7bd": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/proxy/management.go#L42-L97",
+        "s4443790570be": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/proxy/management.go#L594-L620",
+        "s27c6b28106f1": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/restful_mgr_routes.go#L36-L74",
+        "s979e91a520e3": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/http_param.go#L71-L78",
+        "se193bc422269": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/eventlog/grpc.go#L113-L146",
+        "s30534039814b": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/component_param.go#L974-L979",
+        "s034ff211eece": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/http/healthz/healthz_handler.go#L89-L130",
+        "sff33760fd71e": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L397",
+        "se804dabe7939": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L623",
+        "sd6463e757c5d": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L880",
+        "sb59cad3a88b8": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L309",
+        "s2694c200b326": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L1322",
+        "s21047b546d82": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/querynode/service.go#L93-L96",
+        "s12f9ee326259": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/datanode/service.go#L83-L86",
+        "seef04c76c2b8": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/streamingnode/service.go#L108-L111",
+        "s772289a1421c": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/mixcoord/service.go#L99-L102",
+        "s6b6cbec16ce7": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/proxy/listener_manager.go#L58-L60",
+        "s97dca4df88c8": "https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/netutil/listener.go#L92-L103",
+        "s3c9efe526b6a": "https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/util/interceptor/server_id_interceptor.go#L36-L54",
+        "s60f9b3f68379": "https://github.com/milvus-io/milvus/blob/v2.6.24/internal/distributed/querynode/service.go#L187-L197",
+        "saa07bc24b066": "https://github.com/milvus-io/milvus/blob/v2.6.24/pkg/proto/query_coord.proto#L107-L145",
+        "sae3c1aa56572": "https://github.com/milvus-io/milvus/blob/v2.6.24/cmd/milvus/util.go#L143-L148",
+        "s3596dd04baa9": "https://github.com/milvus-io/milvus/blob/v2.6.24/configs/milvus.yaml#L1046",
+        "s3b24a2cd0b31": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/distributed/proxy/service.go#L169-L186",
+        "se0e67967c9b1": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/rootcoord/root_coord.go#L3180-L3219",
+        "s2772deea0984": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/util/hookutil/cipher.go#L390-L401",
+        "s34db97d6f273": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/util/hookutil/ez.go#L113-L125",
+        "s42ca1740d269": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/mix_coord.go#L237-L240",
+        "s2fd8c4230f47": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/metrics/metrics.go#L21",
+        "s108ca53f9ce3": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/eventlog/handler.go#L50-L65",
+        "s04a87c32f315": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/restful_mgr_routes.go#L881-L890",
+        "s597603dbaae3": "https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/internal/coordinator/restful_mgr_routes.go#L943-L1010"
+      }
+    },
+    "m3": {
+      "name": "Milvus",
+      "basis": "v3.0.2",
+      "sources": {
+        "sb8bac089fe22": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/base_table.go#L69-L72",
+        "s3631fa007c49": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/base_table.go#L145-L153",
+        "s230001e47ba1": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/build/docker/milvus/ubuntu22.04/Dockerfile#L39",
+        "s555248062673": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/build/docker/milvus/ubuntu22.04/Dockerfile#L58-L59",
+        "sbc585d4a0f5f": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/build/docker/milvus/ubuntu22.04/Dockerfile#L16",
+        "s920151033b49": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L1155-L1162",
+        "s3f8acf8e1aaa": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/grpc_param.go#L111-L138",
+        "sdb5a4b72da10": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/deployments/docker/standalone/docker-compose.yml#L39-L66",
+        "s6d67ee7d0093": "https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/netutil/listener.go#L11-L35",
+        "s0d6581756200": "https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/interceptor/cluster_interceptor.go#L34-L48",
+        "s67a44fa31c3b": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/utils/util.go#L39-L63",
+        "s8b30122d1f5e": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/deployments/docker/standalone/docker-compose.yml#L21-L32",
+        "s189b72ec8e6e": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/service_param.go#L1633-L1658",
+        "sa564af191a43": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/server.go#L230-L275",
+        "s16eac6dca2d2": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/server.go#L37-L39",
+        "sc84510615bb1": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/server.go#L82-L127",
+        "sb4e87e123555": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L42-L105",
+        "sdf2c156e0507": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L427-L447",
+        "sf06bcf9fe36d": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L198-L244",
+        "s88758dbdf1b1": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/proxy/management.go#L700-L726",
+        "s76a0048c7418": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/restful_mgr_routes.go#L33-L71",
+        "s0fc696e65913": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/http_param.go#L76-L83",
+        "s50ffed832d11": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/eventlog/grpc.go#L113-L146",
+        "s4ba2dd6f35d6": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/component_param.go#L1046-L1051",
+        "s75885eaffe8b": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/http/healthz/healthz_handler.go#L87-L128",
+        "s4c186d02c419": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L458",
+        "sab931fc3f694": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L690",
+        "scd5cdecb245f": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L978",
+        "s8c703481eb0e": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L357",
+        "s71ed576f40a9": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L1442",
+        "s9c1acba22ba3": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/querynode/service.go#L123-L126",
+        "sfac072fc812f": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/datanode/service.go#L82-L85",
+        "s05cdfe25ef69": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/streamingnode/service.go#L106-L109",
+        "s9ffc165c5ec5": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/mixcoord/service.go#L97-L100",
+        "s1c628a483c2b": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/proxy/listener_manager.go#L56-L58",
+        "sd4eef5612d16": "https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/netutil/listener.go#L92-L103",
+        "s0bd5a9e54516": "https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/util/interceptor/server_id_interceptor.go#L36-L54",
+        "sc65c390b68f2": "https://github.com/milvus-io/milvus/blob/v3.0.2/internal/distributed/querynode/service.go#L243-L253",
+        "sb7153655e68f": "https://github.com/milvus-io/milvus/blob/v3.0.2/pkg/proto/query_coord.proto#L109-L147",
+        "sdb1c13daa780": "https://github.com/milvus-io/milvus/blob/v3.0.2/cmd/milvus/util.go#L142-L147",
+        "s23e57360bafb": "https://github.com/milvus-io/milvus/blob/v3.0.2/configs/milvus.yaml#L1165",
+        "s806e169e81b5": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/distributed/proxy/service.go#L168-L185",
+        "s701b77eb1c17": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/rootcoord/root_coord.go#L3464-L3503",
+        "sba379e1f515b": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/util/hookutil/cipher.go#L389-L400",
+        "s3ad0c01cfa7d": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/util/hookutil/ez.go#L113-L125",
+        "s353616d9b3b2": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/mix_coord.go#L242-L245",
+        "sc8496db1fb6e": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/metrics/metrics.go#L21",
+        "s19e44f8baa1c": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/eventlog/handler.go#L48-L63",
+        "s3d76ecf148e0": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/restful_mgr_routes.go#L878-L887",
+        "s794c4122f3a1": "https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/internal/coordinator/restful_mgr_routes.go#L940-L1007"
+      }
+    },
+    "milvus-helm": {
+      "name": "Milvus Helm chart",
+      "basis": "5.0.30",
+      "sources": {
+        "s03d63e5e72b6": "https://github.com/zilliztech/milvus-helm/blob/milvus-5.0.30/charts/milvus/Chart.yaml#L1-L6",
+        "s65da7040fa71": "https://github.com/zilliztech/milvus-helm/blob/milvus-5.0.30/charts/milvus/values.yaml#L115-L136",
+        "sc9c86596c55c": "https://github.com/zilliztech/milvus-helm/blob/milvus-5.0.30/charts/milvus/values.yaml#L169-L194",
+        "s5218b8a9a776": "https://github.com/zilliztech/milvus-helm/blob/milvus-5.0.30/charts/milvus/templates/service.yaml#L1-L60",
+        "s533d9f94c237": "https://github.com/zilliztech/milvus-helm/blob/milvus-5.0.30/charts/milvus/templates/standalone-deployment.yaml#L83-L110",
+        "s8b7f45ad4f54": "https://github.com/zilliztech/milvus-helm/blob/milvus-5.0.30/charts/milvus/templates/proxy-deployment.yaml#L98-L125"
+      }
+    },
+    "milvus-operator": {
+      "name": "Milvus Operator",
+      "basis": "v1.3.11",
+      "sources": {
+        "s11cd8aea4a46": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/pkg/controllers/components.go#L20-L69",
+        "scaa2f4b8f5b3": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/pkg/controllers/components.go#L450-L487",
+        "se5839563f89c": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/pkg/controllers/services.go#L15-L47",
+        "s58da9e232a84": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/pkg/controllers/services.go#L101-L107",
+        "s585ae37fd0ca": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/apis/milvus.io/v1beta1/components_types.go#L500-L525",
+        "sca0e4a51219f": "https://github.com/zilliztech/milvus-operator/blob/v1.3.11/pkg/controllers/podmonitor.go#L91-L100"
+      }
+    },
+    "chroma": {
+      "name": "Chroma source",
+      "basis": "1.5.9",
+      "sources": {
+        "s7eb7610f68c1": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L60-L73",
+        "s6d6708278bef": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L140-L146",
+        "s59912a4c7e11": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/sample_configs/docker_single_node.yaml",
+        "sed8aad199780": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L39-L45",
+        "s3a1c76cdd7f8": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L114-L134",
+        "s09652c32f56a": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179",
+        "s784a0e779949": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229",
+        "se936b62a1a3d": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L139-L142",
+        "sbc1dd27a9bf2": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/auth/mod.rs#L102-L164",
+        "s50b8158f3388": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L229-L255",
+        "s6eb0ff350d15": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/lib.rs#L60-L156",
+        "s62cd8db9e61a": "https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L457-L486"
+      }
+    },
+    "cd": {
+      "name": "Chroma migration documentation",
+      "basis": "v1.0.0",
+      "sources": {
+        "s60ad33c4b715": "https://docs.trychroma.com/docs/overview/migration"
+      }
+    },
+    "pgvector-source": {
+      "name": "pgvector source",
+      "basis": "v0.8.2",
+      "sources": {
+        "saab3b3092223": "https://github.com/pgvector/pgvector/blob/v0.8.2/README.md"
+      }
+    },
+    "qd": {
+      "name": "Qdrant security documentation",
+      "basis": "unknown",
+      "sources": {
+        "s753402e46eed": "https://qdrant.tech/documentation/security/"
+      }
+    },
+    "qc": {
+      "name": "Qdrant Cloud documentation",
+      "basis": "unknown",
+      "sources": {
+        "sc72e09d8f7e6": "https://qdrant.tech/documentation/cloud/"
+      }
+    },
+    "wd": {
+      "name": "Weaviate documentation",
+      "basis": "unknown",
+      "sources": {
+        "sa066265b9009": "https://docs.weaviate.io/deploy/installation-guides/docker-installation",
+        "s51c9c4c6b4c0": "https://docs.weaviate.io/deploy/configuration/authentication",
+        "se90546c311e1": "https://docs.weaviate.io/deploy/configuration/env-vars",
+        "sb87f55ae205e": "https://docs.weaviate.io/deploy/configuration/authorization",
+        "sd5185e505828": "https://docs.weaviate.io/deploy/configuration/configuring-rbac"
+      }
+    },
+    "pg": {
+      "name": "PostgreSQL documentation",
+      "basis": "unknown",
+      "sources": {
+        "se9846041ce1f": "https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
+      }
+    },
+    "docker": {
+      "name": "Docker documentation",
+      "basis": "unknown",
+      "sources": {
+        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/",
+        "s1dcef979ee57": "https://docs.docker.com/reference/compose-file/services/#env_file",
+        "s8f518c10ba0d": "https://docs.docker.com/compose/how-tos/use-secrets/",
+        "s7d4675617251": "https://docs.docker.com/reference/dockerfile/#healthcheck"
+      }
+    },
+    "k8s": {
+      "name": "Kubernetes documentation",
+      "basis": "unknown",
+      "sources": {
+        "s953450b4076f": "https://kubernetes.io/docs/concepts/services-networking/network-policies/"
+      }
+    },
+    "grpc2": {
+      "name": "grpc-go (Milvus v2.6.24 go.mod)",
+      "basis": "v1.82.1",
+      "sources": {
+        "sa23456a265f8": "https://github.com/grpc/grpc-go/blob/v1.82.1/internal/transport/http2_server.go#L151-L167",
+        "s75406e3b5c45": "https://github.com/grpc/grpc-go/blob/v1.82.1/credentials/tls.go#L222-L257",
+        "s4e9b30536409": "https://github.com/grpc/grpc-go/blob/v1.82.1/credentials/tls.go#L302-L308"
+      }
+    },
+    "grpc3": {
+      "name": "grpc-go (Milvus v3.0.2 go.mod)",
+      "basis": "v1.82.2",
+      "sources": {
+        "sc8c1b3aca796": "https://github.com/grpc/grpc-go/blob/v1.82.2/internal/transport/http2_server.go#L151-L167",
+        "sbf5d079c575d": "https://github.com/grpc/grpc-go/blob/v1.82.2/credentials/tls.go#L222-L257",
+        "s0fb595ac53b7": "https://github.com/grpc/grpc-go/blob/v1.82.2/credentials/tls.go#L302-L308"
+      }
+    },
+    "ml": {
+      "name": "memberlist (Weaviate v1.39.6 go.mod)",
+      "basis": "v0.5.4",
+      "sources": {
+        "s06affccfd439": "https://github.com/hashicorp/memberlist/blob/v0.5.4/config.go#L302-L307",
+        "s207b294bb8b4": "https://github.com/hashicorp/memberlist/blob/v0.5.4/net_transport.go#L96-L110",
+        "s8b9a9e831368": "https://github.com/hashicorp/memberlist/blob/v0.5.4/net_transport.go#L140-L160"
+      }
+    },
+    "goflags": {
+      "name": "go-flags",
+      "basis": "v1.6.1",
+      "sources": {
+        "sbd8f9e746696": "https://github.com/jessevdk/go-flags/blob/v1.6.1/option.go#L328-L343"
+      }
+    },
+    "gostd2": {
+      "name": "Go standard library",
+      "basis": "go1.25.8",
+      "sources": {
+        "s2e6578103750": "https://github.com/golang/go/blob/go1.25.8/src/crypto/tls/common.go#L335-L341",
+        "s0e02efe6f050": "https://github.com/golang/go/blob/go1.25.8/src/crypto/tls/common.go#L681-L683"
+      }
+    },
+    "gostd3": {
+      "name": "Go standard library",
+      "basis": "go1.26.6",
+      "sources": {
+        "s4bd44f1715ab": "https://github.com/golang/go/blob/go1.26.6/src/crypto/tls/common.go#L348-L354",
+        "s2809ee3d22bb": "https://github.com/golang/go/blob/go1.26.6/src/crypto/tls/common.go#L698-L700"
+      }
+    },
+    "pc": {
+      "name": "Pinecone organization documentation",
+      "basis": "unknown",
+      "sources": {
+        "s1696db54b028": "https://docs.pinecone.io/guides/organizations/understanding-organizations"
+      }
+    },
+    "curl-docs": {
+      "name": "curl documentation (rolling)",
+      "basis": "unknown",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html",
+        "s596c6f706038": "https://curl.se/docs/manpage.html#-f"
+      }
+    }
+  },
+  "claims": {
+    "private-publication": {"text": "Bind privately and publish only a TLS proxy, tunnel or tailnet; Docker loopback mapping avoids default wildcard publication.", "components": ["docker"], "sources": ["docker:s1e53417c513d"], "status": "REASONED"},
+    "qdrant-ports": {"text": "Qdrant REST 6333 and gRPC 6334 are client ports; internal gRPC 6335 opens only in distributed mode, including an initial single peer.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
+    "qdrant-bind": {"text": "Compiled host is 0.0.0.0; config/config, RUN_MODE (development default), config/local, deb config, config-path and QDRANT__ variables overlay in that order.", "components": ["q"], "sources": ["q:s7548c65a0e83", "q:sd309f5848ac4"], "status": "REASONED"},
+    "qdrant-image": {"text": "Development overlay binds 127.0.0.1; official image sets RUN_MODE=production, keeps 0.0.0.0 and starts qdrant without arguments.", "components": ["q"], "sources": ["q:s6b9ad7f6f7ac", "q:sc0a948c10fcb", "q:s6463d266f693", "q:sfbd6a604b16a"], "status": "REASONED"},
+    "qdrant-client-auth": {"text": "Self-deployed Qdrant defaults insecure; api_key and read_only_api_key gate client REST/gRPC through api-key or Bearer headers, with QDRANT__SERVICE__ environment equivalents.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
+    "qdrant-client-tls": {"text": "service.enable_tls with tls.cert/key enables client TLS; keys without TLS are insecure.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
+    "qdrant-peer-auth": {"text": "Through v1.17.x keys do not gate 6335; v1.18.0 adds enforce_internal_auth, off by default and deferred through rolling upgrades; retain peer-only network restriction.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
+    "qdrant-peer-tls": {"text": "cluster.p2p.enable_tls is separate from client TLS and needs a provisioned tls.ca_cert; compiled default path is not a substitute for provisioning.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
+    "qdrant-rotation": {"text": "alt_api_key accepts an additional client key from v1.17.0; rotate peer-by-peer, with internal use only under enforce_internal_auth from v1.18.0.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED"},
+    "weaviate-precedence": {"text": "File, environment then flags override settings; environment reapplies gRPC/Raft port defaults when unset/empty and gossip/API defaults when unset; empty cluster port variables fail startup.", "components": ["w"], "sources": ["w:s8c45722d725f", "w:sb916723717de", "w:s7c30e1e2c554", "w:s85b7b3e8fa18", "w:s8c05965785ea", "w:sbd0d3c32cae6", "w:s8a57e655e250", "w:s0ba20e752b37"], "status": "REASONED"},
+    "weaviate-rest": {"text": "Default scheme is HTTPS requiring certificates or startup fails; TLS host falls back to host and TLS port is random. HTTP host defaults localhost unless HOST is exported empty; port defaults random; unix uses socket-path.", "components": ["w", "goflags"], "sources": ["w:sa1cbcde2f024", "w:s122708a42282", "w:s5b7738072d06", "w:s71035079ef45", "w:s7b8a55a31a45", "w:sc6fc7e030ce0", "w:s8e5bf5d887cc", "goflags:sbd8f9e746696"], "status": "REASONED"},
+    "weaviate-image": {"text": "Official image selects HTTP on 0.0.0.0:8080; documented proxy forwards both 8080 and gRPC 50051 with TLS at the proxy.", "components": ["w", "wd"], "sources": ["w:se5771dfe00cc", "wd:sa066265b9009"], "status": "REASONED"},
+    "weaviate-grpc": {"text": "gRPC always starts on a wildcard address with default port 50051 (configurable via GRPC_PORT) and ignores REST host; keep it unpublished except through the intended proxy.", "components": ["w"], "sources": ["w:s4d2b119da409", "w:s85b7b3e8fa18", "w:saed4c2fc8f8f", "w:s1ec8942ab969", "w:s1a45453a69cc"], "status": "REASONED"},
+    "weaviate-debug": {"text": "Debug HTTP defaults wildcard 6060 unless GO_PROFILING_DISABLE is true; debug endpoints return 404 until enabled.", "components": ["w"], "sources": ["w:sd53f51213b12", "w:sae4bd165c1f1", "w:sc1473599ecd1", "w:s839d0ae4019e"], "status": "REASONED"},
+    "weaviate-metrics": {"text": "Enabled Prometheus listener exposes metrics and tenant-activity on wildcard, default 2112 when enabled through environment; admit only scraper traffic.", "components": ["w"], "sources": ["w:s909e461943ae", "w:s3d7fe59cb2c4"], "status": "REASONED"},
+    "weaviate-gossip": {"text": "Even one node opens TCP/UDP gossip 7946 at CLUSTER_BIND_ADDR, defaulting to wildcard when unset/empty; admit only peers.", "components": ["w", "ml"], "sources": ["w:s8c05965785ea", "w:saad31a8dae9a", "w:sa9c8ff5a4ecc", "w:se2bd8d167284", "w:s73dc4c7a4cae", "ml:s06affccfd439", "ml:s207b294bb8b4"], "status": "REASONED"},
+    "weaviate-cluster-api": {"text": "Internal cluster API binds wildcard 7947, default gossip port plus one, independently of REST host.", "components": ["w"], "sources": ["w:sc8c8851851c6", "w:seb97c68c0964", "w:s8c05965785ea", "w:sa9c8ff5a4ecc", "w:s09fef29a3bb4"], "status": "REASONED"},
+    "weaviate-raft": {"text": "Raft 8300 and RPC 8301 bind nonempty CLUSTER_BIND_ADDR, then CLUSTER_ADVERTISE_ADDR, then memberlist private advertise address; keep peer-only.", "components": ["w", "ml"], "sources": ["w:s8c05965785ea", "w:s8ea0dac76b07", "w:s8c15def0d8e9", "w:s59b824177541", "w:sd40da03c7dea", "w:sdbd8b8fd06da", "ml:s8b9a9e831368"], "status": "REASONED"},
+    "weaviate-auth": {"text": "Anonymous access defaults true; disable it and enable API keys with positional key-to-user mapping.", "components": ["wd"], "sources": ["wd:s51c9c4c6b4c0", "wd:se90546c311e1"], "status": "REASONED"},
+    "weaviate-rbac": {"text": "Enable RBAC, root only the admin, and scope app roles to collections; RBAC is stated generally available from v1.29 and cannot combine with admin-list authorization.", "components": ["wd"], "sources": ["wd:sb87f55ae205e", "wd:sd5185e505828"], "status": "REASONED"},
+    "weaviate-oidc": {"text": "OIDC issuer/client settings delegate human authentication to the IdP, where MFA can be enforced; authentication alone is not authorization.", "components": ["wd"], "sources": ["wd:s51c9c4c6b4c0"], "status": "REASONED"},
+    "milvus-config": {"text": "Compose mounts only data; mount user.yaml and TLS files read-only under /milvus, accounting for MILVUSCONF and milvus.yaml/_test.yaml/default.yaml/user.yaml precedence.", "components": ["m2", "m3"], "sources": ["m2:sd95a54e97bc1", "m3:sb8bac089fe22"], "status": "REASONED"},
+    "milvus-env": {"text": "Environment formatter lowercases, strips leading milvus. and removes slash/underscore/dot; use COMMON_SECURITY_* and TLS_* names, remove conflicting sources and recreate changed mounts/environment.", "components": ["m2", "m3"], "sources": ["m2:s111382ba0af1", "m3:s3631fa007c49"], "status": "REASONED"},
+    "milvus-user": {"text": "v3.0.2 Ubuntu image runs as milvus; make config/certificates readable and restrict the private key to the service and trusted administrators.", "components": ["m3"], "sources": ["m3:s230001e47ba1", "m3:s555248062673", "m3:sbc585d4a0f5f"], "status": "REASONED"},
+    "milvus-auth": {"text": "Enable common.security.authorizationEnabled, replace built-in root/Milvus and create a per-app user; proxy auth does not protect internal services.", "components": ["m2", "m3"], "sources": ["m2:s53bae912db23", "m3:s920151033b49"], "status": "REASONED"},
+    "milvus-tls": {"text": "tls server/key/CA paths and common.security.tlsMode 1 enable server TLS; mode 2 requires client certificates; enable authentication independently.", "components": ["m2", "m3"], "sources": ["m2:se872a9171898", "m3:s3f8acf8e1aaa"], "status": "REASONED"},
+    "milvus-client": {"text": "External client gRPC uses 19530; publish only that port privately, apart from the optional loopback management mapping.", "components": ["m2", "m3"], "sources": ["m2:s978d2f09057a", "m3:sdb5a4b72da10"], "status": "REASONED"},
+    "milvus-internal": {"text": "Internal proxy 19529, query 21123, data 21124, mix coordinator 22125 and streaming 22222 bind wildcard; node ports can fall back randomly and advertised ip is not a bind.", "components": ["m2", "m3"], "sources": ["m2:s928648b5a0c7", "m3:s6d67ee7d0093", "m2:sff33760fd71e", "m2:se804dabe7939", "m2:sd6463e757c5d", "m2:sb59cad3a88b8", "m2:s2694c200b326", "m2:s21047b546d82", "m2:s12f9ee326259", "m2:seef04c76c2b8", "m2:s772289a1421c", "m2:s6b6cbec16ce7", "m2:s97dca4df88c8", "m3:s4c186d02c419", "m3:sab931fc3f694", "m3:scd5cdecb245f", "m3:s8c703481eb0e", "m3:s71ed576f40a9", "m3:s9c1acba22ba3", "m3:sfac072fc812f", "m3:s05cdfe25ef69", "m3:s9ffc165c5ec5", "m3:s1c628a483c2b", "m3:sd4eef5612d16"], "status": "REASONED"},
+    "milvus-internal-auth": {"text": "Internal routing interceptors pass calls without metadata and do not authenticate Search/Query; standalone runs all five components.", "components": ["m2", "m3"], "sources": ["m2:s53b67fa99640", "m3:s0d6581756200", "m2:s3c9efe526b6a", "m2:s60f9b3f68379", "m2:saa07bc24b066", "m2:sae3c1aa56572", "m3:s0bd5a9e54516", "m3:sc65c390b68f2", "m3:sb7153655e68f", "m3:sdb1c13daa780"], "status": "REASONED"},
+    "milvus-internal-tls": {"text": "internaltlsEnabled defaults off; internal TLS is one-way and failed certificate/key loading logs a warning then serves plaintext.", "components": ["m2", "m3", "grpc2", "grpc3", "gostd2", "gostd3"], "sources": ["m2:sc4e9500fac07", "m3:s67a44fa31c3b", "m2:s3596dd04baa9", "m3:s23e57360bafb", "grpc2:sa23456a265f8", "grpc3:sc8c1b3aca796", "grpc2:s4e9b30536409", "grpc3:s0fb595ac53b7", "grpc2:s75406e3b5c45", "grpc3:sbf5d079c575d", "gostd2:s2e6578103750", "gostd2:s0e02efe6f050", "gostd3:s4bd44f1715ab", "gostd3:s2809ee3d22bb"], "status": "REASONED"},
+    "milvus-isolation": {"text": "Use a dedicated network, no host/shared namespace, and default-deny rules admitting peers by source including random fallback ports; exclude untrusted workloads/users from component hosts.", "components": ["docker", "k8s"], "sources": ["docker:s1e53417c513d", "k8s:s953450b4076f"], "status": "REASONED"},
+    "milvus-minio-ports": {"text": "Bundled MinIO publishes wildcard 9000 API and 9001 console while etcd remains internal; restrict both and replace default credentials.", "components": ["m2", "m3"], "sources": ["m2:s0d83ff967a6a", "m3:s8b30122d1f5e"], "status": "REASONED"},
+    "milvus-storage-credentials": {"text": "Pinned Compose selects MinIO RELEASE.2024-05-28T17-19-04Z with MINIO_ACCESS_KEY/SECRET_KEY=minioadmin; Milvus uses MINIO_ACCESS_KEY_ID/SECRET_ACCESS_KEY; rotate matching pairs together.", "components": ["m2", "m3"], "sources": ["m2:s1b67d9a3bc81", "m3:s189b72ec8e6e"], "status": "REASONED"},
+    "milvus-env-files": {"text": "Use protected untracked env-files, delete overriding Compose environment credential entries, retain ETCD_ENDPOINTS/MINIO_ADDRESS/MINIO_REGION and recreate both services; container environment remains inspectable.", "components": ["docker"], "sources": ["docker:s1dcef979ee57", "docker:s8f518c10ba0d"], "status": "REASONED"},
+    "milvus-compose-images": {"text": "Compose at v2.6.24 and v3.0.2 selects older Milvus images v2.6.23 and v3.0.1; explicitly choose and recheck the intended image.", "components": ["m2", "m3"], "sources": ["m2:s978d2f09057a", "m3:sdb5a4b72da10"], "status": "REASONED"},
+    "milvus-management": {"text": "Management HTTP defaults wildcard 9091 with no bind-address control; METRICS_PORT parse failures fall back, 0 chooses random and other out-of-range values fail listen without stopping Milvus.", "components": ["m2", "m3"], "sources": ["m2:se914c00355d3", "m2:s55fd199759d6", "m2:sdf3b1d2a44c0", "m3:sa564af191a43", "m3:s16eac6dca2d2", "m3:sc84510615bb1"], "status": "REASONED"},
+    "milvus-control": {"text": "Management routes bypass proxy authorization: log-level changes, process-role stop, GC/balancing/node controls and transfers remain exposed even with WebUI disabled.", "components": ["m2", "m3"], "sources": ["m2:sb3d4b78cb7bd", "m3:sb4e87e123555", "m2:sdf3b1d2a44c0", "m2:se914c00355d3", "m2:s3b24a2cd0b31", "m3:sc84510615bb1", "m3:sa564af191a43", "m3:s806e169e81b5"], "status": "REASONED"},
+    "milvus-key-backup": {"text": "Management encryption-zone backup returns the plugin backup for eligible databases; v3.0.2 also adds queued-read clearing and path-supplied backfill commit.", "components": ["m2", "m3"], "sources": ["m2:sb3d4b78cb7bd", "m2:s4443790570be", "m3:sf06bcf9fe36d", "m3:sb4e87e123555", "m3:sdf2c156e0507", "m3:s88758dbdf1b1", "m2:se0e67967c9b1", "m2:s2772deea0984", "m2:s34db97d6f273", "m3:s701b77eb1c17", "m3:sba379e1f515b", "m3:s3ad0c01cfa7d"], "status": "REASONED"},
+    "milvus-coordinator": {"text": "Activated mix coordinator adds mutable configuration and WAL changes alongside GC, balancing, suspension and transfer controls.", "components": ["m2", "m3"], "sources": ["m2:s27c6b28106f1", "m3:s76a0048c7418", "m2:s42ca1740d269", "m3:s353616d9b3b2", "m2:s04a87c32f315", "m2:s597603dbaae3", "m3:s3d76ecf148e0", "m3:s794c4122f3a1"], "status": "REASONED"},
+    "milvus-profiling": {"text": "proxy.http.enablePprof defaults true; disabling profiling omits pprof but leaves control routes registered.", "components": ["m2", "m3"], "sources": ["m2:s979e91a520e3", "m3:s0fc696e65913", "m2:se914c00355d3", "m2:s2fd8c4230f47", "m3:sa564af191a43", "m3:sc8496db1fb6e"], "status": "REASONED"},
+    "milvus-eventlog": {"text": "First successful eventlog request opens an unauthenticated, non-TLS wildcard gRPC listener on a random port; repeat inventory after requests.", "components": ["m2", "m3"], "sources": ["m2:se193bc422269", "m3:s50ffed832d11", "m2:s108ca53f9ce3", "m3:s19e44f8baa1c"], "status": "REASONED"},
+    "milvus-health": {"text": "Delete wildcard 9091 publication; in-container healthcheck needs none. Optional 127.0.0.1:9091 mapping still needs isolation; changed METRICS_PORT must update healthcheck and mappings.", "components": ["m2", "m3"], "sources": ["m2:s978d2f09057a", "m3:sdb5a4b72da10"], "status": "REASONED"},
+    "chroma-bind": {"text": "Without a file chroma run defaults localhost; a config file defaults listen_address to 0.0.0.0 after CHROMA_ merges; official config sets only persist_path, yielding wildcard 8000.", "components": ["chroma"], "sources": ["chroma:s7eb7610f68c1", "chroma:s6d6708278bef", "chroma:s59912a4c7e11", "chroma:sed8aad199780", "chroma:s3a1c76cdd7f8", "chroma:s09652c32f56a", "chroma:s784a0e779949"], "status": "REASONED"},
+    "chroma-auth": {"text": "Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting.", "components": ["cd", "chroma"], "sources": ["cd:s60ad33c4b715", "chroma:se936b62a1a3d", "chroma:sbc1dd27a9bf2", "chroma:s62cd8db9e61a", "chroma:s50b8158f3388", "chroma:s6eb0ff350d15"], "status": "REASONED"},
+    "pgvector": {"text": "pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.", "components": ["pgvector-source"], "sources": ["pgvector-source:saab3b3092223"], "status": "REASONED"},
+    "pgvector-rls": {"text": "Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k.", "components": ["pg"], "sources": ["pg:se9846041ce1f"], "status": "REASONED"},
+    "hosted-mfa": {"text": "Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity management solution on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it.", "components": ["qc", "pc", "wd"], "sources": ["qc:sc72e09d8f7e6", "pc:s1696db54b028", "wd:s51c9c4c6b4c0"], "status": "REASONED"},
+    "verify-inventory": {"text": "Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure.", "components": ["qd", "docker"], "sources": ["qd:s753402e46eed", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]},
+    "verify-peer": {"text": "Probe real backend 6333/6334/6335 from non-peers; require connection failure with filtering evidence and a positive peer control for 6335; auth/TLS rejection is still reachability.", "components": ["qd", "curl-docs"], "sources": ["qd:s753402e46eed", "curl-docs:s2b2686afaf41", "curl-docs:s596c6f706038"], "status": "REASONED", "verify": [2]},
+    "verify-curl": {"text": "exit 3/6 is invalid input; 7 or a five-second 28 needs corroboration; nonzero HTTP, 52/56 or a twenty-second 28 indicates reachability, including HTTP 000 cases.", "components": ["curl-docs"], "sources": ["curl-docs:s2b2686afaf41", "curl-docs:s596c6f706038"], "status": "REASONED", "verify": [2]},
+    "verify-qdrant-auth": {"text": "Frontend collections check expects anonymous 401/403 and keyed 200 over verified TLS; both can pass while peer port 6335 is exposed.", "components": ["qd"], "sources": ["qd:s753402e46eed"], "status": "REASONED", "verify": [3]},
+    "verify-fronting": {"text": "Weaviate schema rejects anonymous access and allows a valid key; Chroma requires fronting denial and authorized success because it has no native auth.", "components": ["wd", "cd"], "sources": ["wd:s51c9c4c6b4c0", "cd:s60ad33c4b715"], "status": "REASONED", "verify": [4]},
+    "verify-milvus-auth": {"text": "MilvusClient without a token must fail after authorization is enabled, while the same operation with the application identity succeeds.", "components": ["m2", "m3"], "sources": ["m2:s30534039814b", "m3:s4ba2dd6f35d6"], "status": "REASONED"},
+    "verify-milvus-management": {"text": "Outside-admin reachability fails; private control needs healthy Compose status and the milvus-owned listener, since healthz can pass before registration and bind failure is nonfatal.", "components": ["m2", "m3", "docker"], "sources": ["m2:s034ff211eece", "m3:s75885eaffe8b", "m2:se914c00355d3", "m3:sa564af191a43", "docker:s7d4675617251"], "status": "REASONED", "verify": [1, 2]},
+    "milvus-kubernetes-service": {"text": "Helm chart 5.0.30 and Operator v1.3.11 place metrics 9091 on the client Service, with a declared ClusterIP default; the port list includes both ports whatever the Service type unless Helm metrics.enabled is false. Helm removes only the Service metrics port; Operator disableMetric skips PodMonitor reconciliation, not the Service port. Chart appVersion 3.0.1 is separate from the audited Milvus versions.", "components": ["milvus-helm", "milvus-operator"], "sources": ["milvus-helm:s03d63e5e72b6", "milvus-helm:s65da7040fa71", "milvus-helm:sc9c86596c55c", "milvus-helm:s5218b8a9a776", "milvus-helm:s533d9f94c237", "milvus-helm:s8b7f45ad4f54", "milvus-operator:s11cd8aea4a46", "milvus-operator:scaa2f4b8f5b3", "milvus-operator:se5839563f89c", "milvus-operator:s58da9e232a84", "milvus-operator:s585ae37fd0ca", "milvus-operator:sca0e4a51219f"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->
