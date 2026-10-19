@@ -1,274 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-19",
-  "documentation_checked": "2026-09",
-  "body_sha256": "908b108054ff323b7d30f6ec6652728a0d065571804b124943b579b8f09f77cc",
-  "components": {
-    "argo": {
-      "name": "Argo CD v3.5.3 source",
-      "basis": "c9c369efcc5b2a0bd720803f8d14a1c3eaddf579",
-      "sources": {
-        "sddf4853ad503": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-service.yaml#L9-L20",
-        "s6e8c96d23e05": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-server/commands/argocd_server.go#L307-L323",
-        "s96065cc09776": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L512-L535",
-        "s7cc690d1bf69": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L668-L677",
-        "s028a4769d6c3": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/metrics/metrics.go#L74-L100",
-        "sc52bbd14bff4": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/profile/profile.go#L11-L30",
-        "s98b27313f615": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-repo-server/commands/argocd_repo_server.go#L180-L212",
-        "sb0648e746fb9": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-deployment.yaml#L406-L408",
-        "s2f5af86c62d1": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-deployment.yaml#L475-L481",
-        "s9bca471ac6d9": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-repo-server/commands/argocd_repo_server.go#L257-L280",
-        "s4bbc848d9923": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/repo-server/argocd-repo-server-deployment.yaml#L367-L384",
-        "sf98b6bc4f5dc": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/application-controller/argocd-application-controller-statefulset.yaml#L360-L365",
-        "sf4dd846c82c4": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/common/common.go#L75-L92",
-        "s49a7c83d9371": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-applicationset-controller/commands/applicationset_controller.go#L294-L296",
-        "s97a588d8a83f": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/applicationset-controller/argocd-applicationset-controller-service.yaml#L9-L20",
-        "s0a85b38dfca8": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-notification/commands/argocd_notification.go#L149-L154",
-        "s5e141e32ed9c": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/notification/argocd-notifications-controller-metrics-service.yaml#L9-L16",
-        "s8efcc66f9cb4": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-dex/commands/argocd_dex.go#L82-L119",
-        "s30c391d9dc23": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-dex/commands/argocd_dex.go#L143-L146",
-        "se477de2fdfa0": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/dex/config.go#L16-L152",
-        "s56c41c02ba8b": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/dex/argocd-dex-server-service.yaml#L9-L25",
-        "s996c72c5db28": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/redis/argocd-redis-deployment.yaml#L18-L58",
-        "s34909d7a1932": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/cache/cache.go#L233-L238",
-        "s1a13cc06db6d": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/repo-server/argocd-repo-server-network-policy.yaml#L9-L35",
-        "s4bbf38e83770": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/redis/argocd-redis-network-policy.yaml#L9-L28",
-        "sadccbbcffcd8": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/dex/argocd-dex-server-network-policy.yaml#L9-L29",
-        "s743c8187cbd7": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-network-policy.yaml#L9-L16",
-        "s49f63c21c3cd": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/application-controller/argocd-application-controller-network-policy.yaml#L9-L19",
-        "sa258c4109d24": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/applicationset-controller/argocd-applicationset-controller-network-policy.yaml#L9-L22",
-        "sa49c30e332ed": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/notification/argocd-notifications-controller-network-policy.yaml#L9-L20",
-        "s68b67007da6b": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/settings/settings.go#L1631-L1638",
-        "s01a52daf078f": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-deployment.yaml#L121-L126",
-        "s210b24f04535": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/config/argocd-cmd-params-cm.yaml#L1-L7",
-        "s0f7f1b3404d9": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/config/argocd-rbac-cm.yaml#L1-L7",
-        "s85445da68ce7": "https://github.com/argoproj/argo-cd/blob/v3.5.3/common/common.go#L89-L90",
-        "s357d253fc789": "https://github.com/argoproj/argo-cd/blob/v3.5.3/cmd/argocd-repo-server/commands/argocd_repo_server.go#L257-L260",
-        "s9df1243dde48": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-application-controller/commands/argocd_application_controller.go#L192-L209",
-        "s0abbc26d61e4": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-application-controller/commands/argocd_application_controller.go#L272-L273",
-        "sfcaf2e03154d": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/server.go#L49-L85",
-        "s25a5da2c5e7c": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/server.go#L94-L150",
-        "s73653423b85d": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/tls/tls.go#L428-L506",
-        "s7c7bf274e3ef": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/dex/argocd-dex-server-deployment.yaml#L38-L42",
-        "s08939ffb906f": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd/commands/admin/redis_initial_password.go#L22-L89",
-        "s3fcdf1601776": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L454-L467",
-        "se987196f20c7": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L539-L547",
-        "s3cb98aa5348d": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L399-L425",
-        "s9bfcf07a6bcc": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L314-L346",
-        "s32323471d785": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L35-L42"
-      }
-    },
-    "dex": {
-      "name": "Dex v2.45.1 source",
-      "basis": "v2.45.1",
-      "sources": {
-        "s3b9512b79dea": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L151-L199",
-        "s46eb2feaa84f": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L553-L572",
-        "s55b453f266f3": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/config.go#L255-L265"
-      }
-    },
-    "redis-image": {
-      "name": "docker-library-redis v8.2.3 source",
-      "basis": "bcbc692165ce2241e194035041c5b5e01d2e1a5f",
-      "sources": {
-        "s67a2f7553c9a": "https://github.com/redis/docker-library-redis/blob/bcbc692165ce2241e194035041c5b5e01d2e1a5f/alpine/Dockerfile#L81-L87",
-        "s30643c91686d": "https://github.com/redis/docker-library-redis/blob/bcbc692165ce2241e194035041c5b5e01d2e1a5f/alpine/Dockerfile#L151-L154",
-        "sd04db8453288": "https://github.com/redis/docker-library-redis/blob/bcbc692165ce2241e194035041c5b5e01d2e1a5f/alpine/docker-entrypoint.sh#L93-L111"
-      }
-    },
-    "redis-source": {
-      "name": "Redis 8.2.3 source",
-      "basis": "8.2.3",
-      "sources": {
-        "s667fc16bf18f": "https://github.com/redis/redis/blob/8.2.3/src/server.h#L142-L143",
-        "saa497d27f72f": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2199-L2221",
-        "s0f96763525b7": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2638-L2673",
-        "s9b50a7c52721": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2983-L2996"
-      }
-    },
-    "argo-docs": {
-      "name": "Argo CD documentation",
-      "basis": "unknown",
-      "sources": {
-        "s51e21b74ece6": "https://argo-cd.readthedocs.io/en/stable/operator-manual/security/",
-        "s02463a4fb268": "https://argo-cd.readthedocs.io/en/stable/operator-manual/secret-management/",
-        "s2efb9ee633af": "https://argo-cd.readthedocs.io/en/stable/getting_started/",
-        "sc2590df86f4e": "https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/",
-        "sf5f1c41f89bd": "https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/",
-        "s3767d400e364": "https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/",
-        "sdac90731b97d": "https://argo-cd.readthedocs.io/en/stable/operator-manual/webhook/",
-        "s9357e3b59e84": "https://argo-cd.readthedocs.io/en/stable/user-guide/projects/"
-      }
-    },
-    "curl": {
-      "name": "curl",
-      "basis": "curl-8_14_1",
-      "sources": {
-        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md",
-        "s9537bb790553": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data-binary.md#L4-L32",
-        "sd3b039bafbf6": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data.md#L4-L49"
-      }
-    },
-    "flux": {
-      "name": "Flux documentation",
-      "basis": "unknown",
-      "sources": {
-        "s493859f3b848": "https://fluxcd.io/flux/security/best-practices/",
-        "s4dcd744a2444": "https://fluxcd.io/flux/guides/mozilla-sops/",
-        "sd8618bbbc628": "https://fluxcd.io/flux/components/source/ocirepositories/#secret-reference",
-        "sf3f80d9941c8": "https://fluxcd.io/flux/installation/configuration/multitenancy/",
-        "s0669b973542c": "https://fluxcd.io/flux/security/#controller-permissions",
-        "s13bd7f0204b0": "https://fluxcd.io/flux/installation/bootstrap/github/",
-        "s8759854c1bdf": "https://fluxcd.io/flux/components/image/imageupdateautomations/",
-        "s0acf42beed45": "https://fluxcd.io/flux/guides/webhook-receivers/",
-        "s35bb9a844dcf": "https://fluxcd.io/flux/components/notification/receivers/"
-      }
-    },
-    "flux-oidc": {
-      "name": "Flux OIDC introduction",
-      "basis": "v2.9",
-      "sources": {
-        "s1ea193b2b3cc": "https://fluxcd.io/blog/2026/06/flux-v2.9.0/"
-      }
-    },
-    "python": {
-      "name": "Python documentation",
-      "basis": "unknown",
-      "sources": {
-        "s7a54556e5dac": "https://docs.python.org/3/library/hmac.html",
-        "s31fccd7d50e5": "https://docs.python.org/3/library/sys.html#sys.stdin"
-      }
-    }
-  },
-  "claims": {
-    "git-boundary": {"text": "Repository writers exercise reconciliation permissions; review platform changes, separate tenants and scope credentials.", "components": ["argo-docs", "flux"], "sources": ["argo-docs:s51e21b74ece6", "flux:s493859f3b848"], "status": "REASONED"},
-    "secret-storage": {"text": "Protect bootstrap, registry, cluster, webhook and decryption credentials; commit only encrypted secrets and keep SOPS/age keys out of Git.", "components": ["argo-docs", "flux"], "sources": ["argo-docs:s02463a4fb268", "flux:s4dcd744a2444", "flux:sd8618bbbc628"], "status": "REASONED"},
-    "egress": {"text": "Restrict fetch, API, identity and notification egress; Argo repository allowlists do not constrain remote bases or Helm dependencies.", "components": ["argo-docs", "flux"], "sources": ["argo-docs:s51e21b74ece6", "flux:sf3f80d9941c8"], "status": "REASONED"},
-    "argo-bootstrap": {"text": "Rotate the initial admin password before deleting argocd-initial-admin-secret; deletion alone does not rotate it.", "components": ["argo-docs"], "sources": ["argo-docs:s2efb9ee633af", "argo-docs:sc2590df86f4e"], "status": "REASONED"},
-    "argo-sso": {"text": "The built-in admin is unrestricted; configure named SSO roles and IdP MFA, then set admin.enabled=false.", "components": ["argo-docs"], "sources": ["argo-docs:sc2590df86f4e", "argo-docs:sf5f1c41f89bd"], "status": "REASONED"},
-    "argo-origin": {"text": "Keep the ClusterIP origin private behind authenticated TLS and protect both REST/browser and CLI/gRPC routes.", "components": ["argo-docs", "argo"], "sources": ["argo-docs:s2efb9ee633af", "argo-docs:s3767d400e364", "argo:sddf4853ad503"], "status": "REASONED"},
-    "argo-server": {"text": "Server defaults to 0.0.0.0:8080; the Service maps 80 and 443 to it.", "components": ["argo"], "sources": ["argo:s6e8c96d23e05", "argo:sddf4853ad503", "argo:sf4dd846c82c4"], "status": "REASONED"},
-    "argo-tls": {"text": "Server --insecure/server.insecure defaults false and disables backend TLS, not authentication; use only behind protected TLS termination.", "components": ["argo", "argo-docs"], "sources": ["argo:s6e8c96d23e05", "argo-docs:s3767d400e364"], "status": "REASONED"},
-    "argo-client-tls": {"text": "argocd login --insecure skips client certificate verification; the server initially uses a self-signed certificate.", "components": ["argo-docs"], "sources": ["argo-docs:s2efb9ee633af", "argo-docs:s3767d400e364"], "status": "REASONED"},
-    "argo-metrics": {"text": "Server HTTP metrics on 8083 are unauthenticated and bind to --address, not --metrics-address.", "components": ["argo"], "sources": ["argo:s96065cc09776", "argo:s7cc690d1bf69", "argo:s028a4769d6c3", "argo:sf4dd846c82c4", "argo:s6e8c96d23e05"], "status": "REASONED"},
-    "argo-profiler": {"text": "Server and repo-server pprof paths return 401 unless the profiler file contains exactly true with no newline; enabled profiling has no caller authentication.", "components": ["argo"], "sources": ["argo:sc52bbd14bff4", "argo:s028a4769d6c3", "argo:s98b27313f615"], "status": "REASONED"},
-    "argo-profiler-file": {"text": "ARGOCD_ENABLE_PROFILER_FILE_PATH defaults to /home/argocd/params/profiler.enabled; the server mounts ConfigMap key server.profile.enabled there.", "components": ["argo"], "sources": ["argo:sc52bbd14bff4", "argo:sb0648e746fb9", "argo:s2f5af86c62d1"], "status": "REASONED"},
-    "repo-grpc": {"text": "Repo-server gRPC binds 0.0.0.0:8081 with TLS by default; mTLS is skipped without the client CA, separate from the serving certificate.", "components": ["argo"], "sources": ["argo:s9bca471ac6d9", "argo:s4bbc848d9923", "argo:sf4dd846c82c4", "argo:s85445da68ce7", "argo:s357d253fc789"], "status": "REASONED"},
-    "repo-http": {"text": "Repo-server HTTP metrics and health bind 0.0.0.0:8084 without an authentication wrapper.", "components": ["argo"], "sources": ["argo:s98b27313f615", "argo:s9bca471ac6d9", "argo:sf4dd846c82c4", "argo:s85445da68ce7", "argo:s357d253fc789"], "status": "REASONED"},
-    "repo-limits": {"text": "Repo-server requires verified client certificates with a loaded client CA; missing or unstatable serving files trigger a session self-signed certificate, while an invalid present pair errors. No authorization interceptor appears; service method authorization is unverified.", "components": ["argo"], "sources": ["argo:sfcaf2e03154d", "argo:s25a5da2c5e7c", "argo:s73653423b85d"], "status": "REASONED"},
-    "controller-metrics": {"text": "Application-controller metrics and health use 8082; the command passes that port to the controller, but the fetched files do not establish the bind address.", "components": ["argo"], "sources": ["argo:sf98b6bc4f5dc", "argo:s9df1243dde48", "argo:s0abbc26d61e4", "argo:sf4dd846c82c4"], "status": "REASONED"},
-    "applicationset-webhook": {"text": "ApplicationSet webhook binds :7000; its container and Service declare 7000.", "components": ["argo"], "sources": ["argo:s49a7c83d9371", "argo:s97a588d8a83f"], "status": "REASONED"},
-    "applicationset-metrics": {"text": "ApplicationSet metrics bind :8080; its container and Service declare 8080.", "components": ["argo"], "sources": ["argo:s49a7c83d9371", "argo:s97a588d8a83f"], "status": "REASONED"},
-    "applicationset-health": {"text": "ApplicationSet health probes bind :8081 without a container or Service port declaration; missing declarations do not close sockets.", "components": ["argo"], "sources": ["argo:s49a7c83d9371"], "status": "REASONED"},
-    "notifications": {"text": "Notifications HTTP metrics bind 0.0.0.0:9001 without authentication; a metrics Service and TCP liveness probe exist without containerPort.", "components": ["argo"], "sources": ["argo:s0a85b38dfca8", "argo:s5e141e32ed9c"], "status": "REASONED"},
-    "dex-http": {"text": "Dex starts only with nonempty generated configuration; HTTP defaults to TLS on 0.0.0.0:5556 using /tmp/tls.crt and /tmp/tls.key.", "components": ["argo"], "sources": ["argo:s8efcc66f9cb4", "argo:s30c391d9dc23", "argo:se477de2fdfa0"], "status": "REASONED"},
-    "dex-grpc": {"text": "Generated Dex gRPC uses 0.0.0.0:5557 without TLS or client-auth settings; Dex v2.45.1 source sets no transport credentials or authentication interceptor for this configuration, while API method authorization is unverified; this assumes the deployed ghcr.io/dexidp/dex:v2.45.1 tag was built from Dex v2.45.1.", "components": ["argo", "dex"], "sources": ["argo:se477de2fdfa0", "argo:s56c41c02ba8b", "argo:s7c7bf274e3ef", "dex:s3b9512b79dea", "dex:s46eb2feaa84f", "dex:s55b453f266f3"], "status": "REASONED"},
-    "dex-telemetry": {"text": "Dex telemetry uses HTTP on 0.0.0.0:5558; all three Dex ports have Services.", "components": ["argo"], "sources": ["argo:se477de2fdfa0", "argo:s56c41c02ba8b"], "status": "REASONED"},
-    "redis-password": {"text": "Redis receives --requirepass from argocd-redis/auth; secret-init generates and checks that Secret. The redis:8.2.3-alpine tag, taken as built from docker-library-redis v8.2.3, uses Redis wildcard bind defaults and patches protected mode off.", "components": ["argo", "redis-image", "redis-source"], "sources": ["argo:s996c72c5db28", "argo:s08939ffb906f", "redis-image:s67a2f7553c9a", "redis-image:s30643c91686d", "redis-image:sd04db8453288", "redis-source:s667fc16bf18f", "redis-source:saa497d27f72f", "redis-source:s0f96763525b7", "redis-source:s9b50a7c52721"], "status": "REASONED"},
-    "redis-tls": {"text": "Base manifests configure no Redis TLS and the Argo Redis client defaults --redis-use-tls=false; protect traffic, Secret and cache.", "components": ["argo"], "sources": ["argo:s996c72c5db28", "argo:s34909d7a1932"], "status": "REASONED"},
-    "component-policies": {"text": "Base policies restrict repo gRPC, Redis and Dex callers by component; enforcement needs a supporting CNI.", "components": ["argo"], "sources": ["argo:s1a13cc06db6d", "argo:s4bbf38e83770", "argo:sadccbbcffcd8"], "status": "REASONED"},
-    "broad-policies": {"text": "Server policy allows all ingress; other metrics and ApplicationSet webhook allowances admit every namespace. Narrow existing additive allowances and egress separately.", "components": ["argo"], "sources": ["argo:s743c8187cbd7", "argo:s49f63c21c3cd", "argo:sa258c4109d24", "argo:sa49c30e332ed"], "status": "REASONED"},
-    "argo-anonymous": {"text": "users.anonymous.enabled defaults off; anonymous callers otherwise inherit policy.default.", "components": ["argo", "argo-docs"], "sources": ["argo:s68b67007da6b", "argo-docs:sf5f1c41f89bd"], "status": "REASONED"},
-    "argo-disable-auth": {"text": "server.disable.auth defaults false; inspect effective args and environment because anonymous-off does not compensate for disabled authentication.", "components": ["argo"], "sources": ["argo:s6e8c96d23e05", "argo:s01a52daf078f", "argo:s210b24f04535"], "status": "REASONED"},
-    "argo-default-role": {"text": "Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings. Server-side wiring remains unverified.", "components": ["argo", "argo-docs"], "sources": ["argo:s0f7f1b3404d9", "argo:s3fcdf1601776", "argo:se987196f20c7", "argo:s3cb98aa5348d", "argo:s9bfcf07a6bcc", "argo:s32323471d785", "argo-docs:sf5f1c41f89bd"], "status": "REASONED"},
-    "argo-webhook": {"text": "/api/webhook accepts unauthenticated refresh events without a shared secret; configure one to limit spoofed reconciliation and resource exhaustion.", "components": ["argo-docs"], "sources": ["argo-docs:sdac90731b97d"], "status": "REASONED"},
-    "argo-projects": {"text": "Restrict AppProjects including the built-in default project; project constraints do not reduce a compromised controller's Kubernetes credentials.", "components": ["argo-docs"], "sources": ["argo-docs:s9357e3b59e84", "argo-docs:s51e21b74ece6"], "status": "REASONED"},
-    "argo-cluster-rbac": {"text": "Reduce controller and registered-cluster argocd-manager write permissions to needed namespaces/resources while retaining required read access.", "components": ["argo-docs"], "sources": ["argo-docs:s51e21b74ece6"], "status": "REASONED"},
-    "flux-api": {"text": "Flux has no standalone management login/API; Kubernetes authenticates its custom-resource operations, while separate dashboards need their own controls.", "components": ["flux"], "sources": ["flux:s493859f3b848", "flux:s0669b973542c"], "status": "REASONED"},
-    "flux-bootstrap": {"text": "GitHub bootstrap --token-auth retains a PAT in flux-system; --token-auth=false creates a read-only SSH deploy key by default. Protect bootstrap input and Secrets.", "components": ["flux"], "sources": ["flux:s13bd7f0204b0"], "status": "REASONED"},
-    "flux-writeback": {"text": "Image automation needs Git write access, including --read-write-key=true for the bootstrap key; scope the repository and protect update branches and objects.", "components": ["flux"], "sources": ["flux:s13bd7f0204b0", "flux:s8759854c1bdf"], "status": "REASONED"},
-    "flux-artifacts": {"text": "Source-controller serves fetched artifacts over internal HTTP; enforced NetworkPolicy, not ClusterIP alone, isolates them.", "components": ["flux"], "sources": ["flux:s493859f3b848"], "status": "REASONED"},
-    "flux-receiver-port": {"text": "Webhook receiver listens on 9292 behind Service port 80; external exposure needs a route and TLS termination.", "components": ["flux"], "sources": ["flux:s0acf42beed45"], "status": "REASONED"},
-    "flux-receiver-types": {"text": "generic validates nothing; generic-hmac, GitHub, Bitbucket and Nexus use HMAC, while gitlab compares X-Gitlab-Token.", "components": ["flux"], "sources": ["flux:s35bb9a844dcf"], "status": "REASONED"},
-    "flux-oidc": {"text": "generic-oidc, introduced in Flux 2.9, rejects secretRef and validates bearer tokens; constrain issuer validations and audience, whose default is notification-controller.", "components": ["flux", "flux-oidc"], "sources": ["flux:s35bb9a844dcf", "flux-oidc:s1ea193b2b3cc"], "status": "REASONED"},
-    "flux-rbac": {"text": "Only kustomize-controller and helm-controller hold cluster-admin; other controllers still have meaningful permissions including Secret access.", "components": ["flux"], "sources": ["flux:s0669b973542c"], "status": "REASONED"},
-    "flux-lockdown": {"text": "Use scoped reconciliation ServiceAccounts, --no-cross-namespace-refs and --no-remote-bases; --default-service-account fills an omission, not an explicit serviceAccountName.", "components": ["flux"], "sources": ["flux:sf3f80d9941c8"], "status": "REASONED"},
-    "verify-argo": {"text": "Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC.", "components": ["argo-docs", "argo", "curl"], "sources": ["argo-docs:sf5f1c41f89bd", "argo:s6e8c96d23e05", "curl:s3db522258e44"], "status": "REASONED", "verify": [1]},
-    "verify-bootstrap": {"text": "Absence of the bootstrap Secret proves removal of that material, not password rotation.", "components": ["argo-docs"], "sources": ["argo-docs:s2efb9ee633af"], "status": "REASONED", "verify": [1]},
-    "verify-inventory": {"text": "Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation.", "components": ["argo", "flux"], "sources": ["argo:s743c8187cbd7", "flux:s493859f3b848"], "status": "REASONED", "verify": [1]},
-    "verify-repo-metrics": {"text": "Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control.", "components": ["argo"], "sources": ["argo:s98b27313f615", "argo:s1a13cc06db6d"], "status": "REASONED", "verify": [2]},
-    "verify-server-metrics": {"text": "Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive.", "components": ["argo"], "sources": ["argo:s028a4769d6c3", "argo:s743c8187cbd7"], "status": "REASONED"},
-    "verify-profiler": {"text": "From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control.", "components": ["argo"], "sources": ["argo:sc52bbd14bff4", "argo:s028a4769d6c3"], "status": "REASONED"},
-    "verify-flux": {"text": "Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. The cited curl curl-8_14_1 lines show --data-binary posting data exactly as specified, preserving newlines and carriage returns that --data strips from @file input, reading @- from stdin and @filename from a file, and posting like --data's POST request.", "components": ["flux", "python", "curl"], "sources": ["flux:s35bb9a844dcf", "python:s7a54556e5dac", "python:s31fccd7d50e5", "curl:s3db522258e44", "curl:s9537bb790553", "curl:sd3b039bafbf6"], "status": "REASONED", "verify": [3]},
-    "verify-receiver-status": {"text": "Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection.", "components": ["flux"], "sources": ["flux:s35bb9a844dcf"], "status": "REASONED"}
-  }
-}
----
 # GitOps controllers: Argo CD and Flux
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Argo CD v3.5.3 source (pinned to a commit), Flux OIDC introduction v2.9, Dex v2.45.1 source v2.45.1, Redis 8.2.3 source 8.2.3, and curl curl-8_14_1; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 50 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- argo: Argo CD v3.5.3 source (c9c369efcc5b2a0bd720803f8d14a1c3eaddf579)
-- dex: Dex v2.45.1 source (v2.45.1)
-- redis-image: docker-library-redis v8.2.3 source (bcbc692165ce2241e194035041c5b5e01d2e1a5f)
-- redis-source: Redis 8.2.3 source (8.2.3)
-- argo-docs: Argo CD documentation (unknown)
-- curl: curl (curl-8_14_1)
-- flux: Flux documentation (unknown)
-- flux-oidc: Flux OIDC introduction (v2.9)
-- python: Python documentation (unknown)
-
-Claims (full source mapping in the front matter):
-
-- git-boundary (REASONED; argo-docs, flux): Repository writers exercise reconciliation permissions; review platform changes, separate tenants and scope credentials.
-- secret-storage (REASONED; argo-docs, flux): Protect bootstrap, registry, cluster, webhook and decryption credentials; commit only encrypted secrets and keep SOPS/age keys out of Git.
-- egress (REASONED; argo-docs, flux): Restrict fetch, API, identity and notification egress; Argo repository allowlists do not constrain remote bases or Helm dependencies.
-- argo-bootstrap (REASONED; argo-docs): Rotate the initial admin password before deleting argocd-initial-admin-secret; deletion alone does not rotate it.
-- argo-sso (REASONED; argo-docs): The built-in admin is unrestricted; configure named SSO roles and IdP MFA, then set admin.enabled=false.
-- argo-origin (REASONED; argo-docs, argo): Keep the ClusterIP origin private behind authenticated TLS and protect both REST/browser and CLI/gRPC routes.
-- argo-server (REASONED; argo): Server defaults to 0.0.0.0:8080; the Service maps 80 and 443 to it.
-- argo-tls (REASONED; argo, argo-docs): Server --insecure/server.insecure defaults false and disables backend TLS, not authentication; use only behind protected TLS termination.
-- argo-client-tls (REASONED; argo-docs): argocd login --insecure skips client certificate verification; the server initially uses a self-signed certificate.
-- argo-metrics (REASONED; argo): Server HTTP metrics on 8083 are unauthenticated and bind to --address, not --metrics-address.
-- argo-profiler (REASONED; argo): Server and repo-server pprof paths return 401 unless the profiler file contains exactly true with no newline; enabled profiling has no caller authentication.
-- argo-profiler-file (REASONED; argo): ARGOCD_ENABLE_PROFILER_FILE_PATH defaults to /home/argocd/params/profiler.enabled; the server mounts ConfigMap key server.profile.enabled there.
-- repo-grpc (REASONED; argo): Repo-server gRPC binds 0.0.0.0:8081 with TLS by default; mTLS is skipped without the client CA, separate from the serving certificate.
-- repo-http (REASONED; argo): Repo-server HTTP metrics and health bind 0.0.0.0:8084 without an authentication wrapper.
-- repo-limits (REASONED; argo): Repo-server requires verified client certificates with a loaded client CA; missing or unstatable serving files trigger a session self-signed certificate, while an invalid present pair errors. No authorization interceptor appears; service method authorization is unverified.
-- controller-metrics (REASONED; argo): Application-controller metrics and health use 8082; the command passes that port to the controller, but the fetched files do not establish the bind address.
-- applicationset-webhook (REASONED; argo): ApplicationSet webhook binds :7000; its container and Service declare 7000.
-- applicationset-metrics (REASONED; argo): ApplicationSet metrics bind :8080; its container and Service declare 8080.
-- applicationset-health (REASONED; argo): ApplicationSet health probes bind :8081 without a container or Service port declaration; missing declarations do not close sockets.
-- notifications (REASONED; argo): Notifications HTTP metrics bind 0.0.0.0:9001 without authentication; a metrics Service and TCP liveness probe exist without containerPort.
-- dex-http (REASONED; argo): Dex starts only with nonempty generated configuration; HTTP defaults to TLS on 0.0.0.0:5556 using /tmp/tls.crt and /tmp/tls.key.
-- dex-grpc (REASONED; argo, dex): Generated Dex gRPC uses 0.0.0.0:5557 without TLS or client-auth settings; Dex v2.45.1 source sets no transport credentials or authentication interceptor for this configuration, while API method authorization is unverified; this assumes the deployed ghcr.io/dexidp/dex:v2.45.1 tag was built from Dex v2.45.1.
-- dex-telemetry (REASONED; argo): Dex telemetry uses HTTP on 0.0.0.0:5558; all three Dex ports have Services.
-- redis-password (REASONED; argo, redis-image, redis-source): Redis receives --requirepass from argocd-redis/auth; secret-init generates and checks that Secret. The redis:8.2.3-alpine tag, taken as built from docker-library-redis v8.2.3, uses Redis wildcard bind defaults and patches protected mode off.
-- redis-tls (REASONED; argo): Base manifests configure no Redis TLS and the Argo Redis client defaults --redis-use-tls=false; protect traffic, Secret and cache.
-- component-policies (REASONED; argo): Base policies restrict repo gRPC, Redis and Dex callers by component; enforcement needs a supporting CNI.
-- broad-policies (REASONED; argo): Server policy allows all ingress; other metrics and ApplicationSet webhook allowances admit every namespace. Narrow existing additive allowances and egress separately.
-- argo-anonymous (REASONED; argo, argo-docs): users.anonymous.enabled defaults off; anonymous callers otherwise inherit policy.default.
-- argo-disable-auth (REASONED; argo): server.disable.auth defaults false; inspect effective args and environment because anonymous-off does not compensate for disabled authentication.
-- argo-default-role (REASONED; argo, argo-docs): Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings. Server-side wiring remains unverified.
-- argo-webhook (REASONED; argo-docs): /api/webhook accepts unauthenticated refresh events without a shared secret; configure one to limit spoofed reconciliation and resource exhaustion.
-- argo-projects (REASONED; argo-docs): Restrict AppProjects including the built-in default project; project constraints do not reduce a compromised controller's Kubernetes credentials.
-- argo-cluster-rbac (REASONED; argo-docs): Reduce controller and registered-cluster argocd-manager write permissions to needed namespaces/resources while retaining required read access.
-- flux-api (REASONED; flux): Flux has no standalone management login/API; Kubernetes authenticates its custom-resource operations, while separate dashboards need their own controls.
-- flux-bootstrap (REASONED; flux): GitHub bootstrap --token-auth retains a PAT in flux-system; --token-auth=false creates a read-only SSH deploy key by default. Protect bootstrap input and Secrets.
-- flux-writeback (REASONED; flux): Image automation needs Git write access, including --read-write-key=true for the bootstrap key; scope the repository and protect update branches and objects.
-- flux-artifacts (REASONED; flux): Source-controller serves fetched artifacts over internal HTTP; enforced NetworkPolicy, not ClusterIP alone, isolates them.
-- flux-receiver-port (REASONED; flux): Webhook receiver listens on 9292 behind Service port 80; external exposure needs a route and TLS termination.
-- flux-receiver-types (REASONED; flux): generic validates nothing; generic-hmac, GitHub, Bitbucket and Nexus use HMAC, while gitlab compares X-Gitlab-Token.
-- flux-oidc (REASONED; flux, flux-oidc): generic-oidc, introduced in Flux 2.9, rejects secretRef and validates bearer tokens; constrain issuer validations and audience, whose default is notification-controller.
-- flux-rbac (REASONED; flux): Only kustomize-controller and helm-controller hold cluster-admin; other controllers still have meaningful permissions including Secret access.
-- flux-lockdown (REASONED; flux): Use scoped reconciliation ServiceAccounts, --no-cross-namespace-refs and --no-remote-bases; --default-service-account fills an omission, not an explicit serviceAccountName.
-- verify-argo (REASONED; argo-docs, argo, curl): Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC.
-- verify-bootstrap (REASONED; argo-docs): Absence of the bootstrap Secret proves removal of that material, not password rotation.
-- verify-inventory (REASONED; argo, flux): Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation.
-- verify-repo-metrics (REASONED; argo): Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control.
-- verify-server-metrics (REASONED; argo): Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive.
-- verify-profiler (REASONED; argo): From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control.
-- verify-flux (REASONED; flux, python, curl): Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. The cited curl curl-8_14_1 lines show --data-binary posting data exactly as specified, preserving newlines and carriage returns that --data strips from @file input, reading @- from stdin and @filename from a file, and posting like --data's POST request.
-- verify-receiver-status (REASONED; flux): Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Argo CD and Flux reconcile a git repository into a Kubernetes cluster, so both hold
 cluster-admin-equivalent power: whoever can drive the controller, or change what it reconciles, can
@@ -729,3 +463,295 @@ they were not rechecked online. Remaining source limits are identified above.
 - Argo CD Redis password initializer command (v3.5.3; commit c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; checked October 2026): https://github.com/argoproj/argo-cd/blob/v3.5.3/cmd/argocd/commands/admin/redis_initial_password.go#L41-L42
 - Argo CD additive default-role enforcement (v3.5.3; commit c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; checked October 2026): https://github.com/argoproj/argo-cd/blob/v3.5.3/util/rbac/rbac.go#L401-L406
 - Argo CD default-role ConfigMap loading (v3.5.3; commit c9c369efcc5b2a0bd720803f8d14a1c3eaddf579; checked October 2026): https://github.com/argoproj/argo-cd/blob/v3.5.3/util/rbac/rbac.go#L540-L541
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/gitops-controllers.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- argo: Argo CD v3.5.3 source (c9c369efcc5b2a0bd720803f8d14a1c3eaddf579)
+- flux-oidc: Flux OIDC introduction (v2.9)
+- argo-docs: Argo CD documentation (unknown)
+- flux: Flux documentation (unknown)
+- dex: Dex v2.45.1 source (v2.45.1)
+- redis-image: docker-library-redis v8.2.3 source (bcbc692165ce2241e194035041c5b5e01d2e1a5f)
+- redis-source: Redis 8.2.3 source (8.2.3)
+- curl: curl (curl-8_14_1)
+- python: Python documentation (unknown)
+
+Claims (full source mapping in the JSON block below):
+
+- git-boundary (REASONED; argo-docs, flux): Repository writers exercise reconciliation permissions; review platform changes, separate tenants and scope credentials.
+- secret-storage (REASONED; argo-docs, flux): Protect bootstrap, registry, cluster, webhook and decryption credentials; commit only encrypted secrets and keep SOPS/age keys out of Git.
+- egress (REASONED; argo-docs, flux): Restrict fetch, API, identity and notification egress; Argo repository allowlists do not constrain remote bases or Helm dependencies.
+- argo-bootstrap (REASONED; argo-docs): Rotate the initial admin password before deleting argocd-initial-admin-secret; deletion alone does not rotate it.
+- argo-sso (REASONED; argo-docs): The built-in admin is unrestricted; configure named SSO roles and IdP MFA, then set admin.enabled=false.
+- argo-origin (REASONED; argo-docs, argo): Keep the ClusterIP origin private behind authenticated TLS and protect both REST/browser and CLI/gRPC routes.
+- argo-server (REASONED; argo): Server defaults to 0.0.0.0:8080; the Service maps 80 and 443 to it.
+- argo-tls (REASONED; argo, argo-docs): Server --insecure/server.insecure defaults false and disables backend TLS, not authentication; use only behind protected TLS termination.
+- argo-client-tls (REASONED; argo-docs): argocd login --insecure skips client certificate verification; the server initially uses a self-signed certificate.
+- argo-metrics (REASONED; argo): Server HTTP metrics on 8083 are unauthenticated and bind to --address, not --metrics-address.
+- argo-profiler (REASONED; argo): Server and repo-server pprof paths return 401 unless the profiler file contains exactly true with no newline; enabled profiling has no caller authentication.
+- argo-profiler-file (REASONED; argo): ARGOCD_ENABLE_PROFILER_FILE_PATH defaults to /home/argocd/params/profiler.enabled; the server mounts ConfigMap key server.profile.enabled there.
+- repo-grpc (REASONED; argo): Repo-server gRPC binds 0.0.0.0:8081 with TLS by default; mTLS is skipped without the client CA, separate from the serving certificate.
+- repo-http (REASONED; argo): Repo-server HTTP metrics and health bind 0.0.0.0:8084 without an authentication wrapper.
+- repo-limits (REASONED; argo): Repo-server requires verified client certificates with a loaded client CA; missing or unstatable serving files trigger a session self-signed certificate, while an invalid present pair errors. No authorization interceptor appears; service method authorization is unverified.
+- controller-metrics (REASONED; argo): Application-controller metrics and health use 8082; the command passes that port to the controller, but the fetched files do not establish the bind address.
+- applicationset-webhook (REASONED; argo): ApplicationSet webhook binds :7000; its container and Service declare 7000.
+- applicationset-metrics (REASONED; argo): ApplicationSet metrics bind :8080; its container and Service declare 8080.
+- applicationset-health (REASONED; argo): ApplicationSet health probes bind :8081 without a container or Service port declaration; missing declarations do not close sockets.
+- notifications (REASONED; argo): Notifications HTTP metrics bind 0.0.0.0:9001 without authentication; a metrics Service and TCP liveness probe exist without containerPort.
+- dex-http (REASONED; argo): Dex starts only with nonempty generated configuration; HTTP defaults to TLS on 0.0.0.0:5556 using /tmp/tls.crt and /tmp/tls.key.
+- dex-grpc (REASONED; argo, dex): Generated Dex gRPC uses 0.0.0.0:5557 without TLS or client-auth settings; Dex v2.45.1 source sets no transport credentials or authentication interceptor for this configuration, while API method authorization is unverified; this assumes the deployed ghcr.io/dexidp/dex:v2.45.1 tag was built from Dex v2.45.1.
+- dex-telemetry (REASONED; argo): Dex telemetry uses HTTP on 0.0.0.0:5558; all three Dex ports have Services.
+- redis-password (REASONED; argo, redis-image, redis-source): Redis receives --requirepass from argocd-redis/auth; secret-init generates and checks that Secret. The redis:8.2.3-alpine tag, taken as built from docker-library-redis v8.2.3, uses Redis wildcard bind defaults and patches protected mode off.
+- redis-tls (REASONED; argo): Base manifests configure no Redis TLS and the Argo Redis client defaults --redis-use-tls=false; protect traffic, Secret and cache.
+- component-policies (REASONED; argo): Base policies restrict repo gRPC, Redis and Dex callers by component; enforcement needs a supporting CNI.
+- broad-policies (REASONED; argo): Server policy allows all ingress; other metrics and ApplicationSet webhook allowances admit every namespace. Narrow existing additive allowances and egress separately.
+- argo-anonymous (REASONED; argo, argo-docs): users.anonymous.enabled defaults off; anonymous callers otherwise inherit policy.default.
+- argo-disable-auth (REASONED; argo): server.disable.auth defaults false; inspect effective args and environment because anonymous-off does not compensate for disabled authentication.
+- argo-default-role (REASONED; argo, argo-docs): Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings. Server-side wiring remains unverified.
+- argo-webhook (REASONED; argo-docs): /api/webhook accepts unauthenticated refresh events without a shared secret; configure one to limit spoofed reconciliation and resource exhaustion.
+- argo-projects (REASONED; argo-docs): Restrict AppProjects including the built-in default project; project constraints do not reduce a compromised controller's Kubernetes credentials.
+- argo-cluster-rbac (REASONED; argo-docs): Reduce controller and registered-cluster argocd-manager write permissions to needed namespaces/resources while retaining required read access.
+- flux-api (REASONED; flux): Flux has no standalone management login/API; Kubernetes authenticates its custom-resource operations, while separate dashboards need their own controls.
+- flux-bootstrap (REASONED; flux): GitHub bootstrap --token-auth retains a PAT in flux-system; --token-auth=false creates a read-only SSH deploy key by default. Protect bootstrap input and Secrets.
+- flux-writeback (REASONED; flux): Image automation needs Git write access, including --read-write-key=true for the bootstrap key; scope the repository and protect update branches and objects.
+- flux-artifacts (REASONED; flux): Source-controller serves fetched artifacts over internal HTTP; enforced NetworkPolicy, not ClusterIP alone, isolates them.
+- flux-receiver-port (REASONED; flux): Webhook receiver listens on 9292 behind Service port 80; external exposure needs a route and TLS termination.
+- flux-receiver-types (REASONED; flux): generic validates nothing; generic-hmac, GitHub, Bitbucket and Nexus use HMAC, while gitlab compares X-Gitlab-Token.
+- flux-oidc (REASONED; flux, flux-oidc): generic-oidc, introduced in Flux 2.9, rejects secretRef and validates bearer tokens; constrain issuer validations and audience, whose default is notification-controller.
+- flux-rbac (REASONED; flux): Only kustomize-controller and helm-controller hold cluster-admin; other controllers still have meaningful permissions including Secret access.
+- flux-lockdown (REASONED; flux): Use scoped reconciliation ServiceAccounts, --no-cross-namespace-refs and --no-remote-bases; --default-service-account fills an omission, not an explicit serviceAccountName.
+- verify-argo (REASONED; argo-docs, argo, curl): Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC.
+- verify-bootstrap (REASONED; argo-docs): Absence of the bootstrap Secret proves removal of that material, not password rotation.
+- verify-inventory (REASONED; argo, flux): Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation.
+- verify-repo-metrics (REASONED; argo): Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control.
+- verify-server-metrics (REASONED; argo): Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive.
+- verify-profiler (REASONED; argo): From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control.
+- verify-flux (REASONED; flux, python, curl): Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. The cited curl curl-8_14_1 lines show --data-binary posting data exactly as specified, preserving newlines and carriage returns that --data strips from @file input, reading @- from stdin and @filename from a file, and posting like --data's POST request.
+- verify-receiver-status (REASONED; flux): Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-19",
+  "documentation_checked": "2026-09",
+  "body_sha256": "908b108054ff323b7d30f6ec6652728a0d065571804b124943b579b8f09f77cc",
+  "components": {
+    "argo": {
+      "name": "Argo CD v3.5.3 source",
+      "basis": "c9c369efcc5b2a0bd720803f8d14a1c3eaddf579",
+      "sources": {
+        "sddf4853ad503": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-service.yaml#L9-L20",
+        "s6e8c96d23e05": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-server/commands/argocd_server.go#L307-L323",
+        "s96065cc09776": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L512-L535",
+        "s7cc690d1bf69": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L668-L677",
+        "s028a4769d6c3": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/metrics/metrics.go#L74-L100",
+        "sc52bbd14bff4": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/profile/profile.go#L11-L30",
+        "s98b27313f615": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-repo-server/commands/argocd_repo_server.go#L180-L212",
+        "sb0648e746fb9": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-deployment.yaml#L406-L408",
+        "s2f5af86c62d1": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-deployment.yaml#L475-L481",
+        "s9bca471ac6d9": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-repo-server/commands/argocd_repo_server.go#L257-L280",
+        "s4bbc848d9923": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/repo-server/argocd-repo-server-deployment.yaml#L367-L384",
+        "sf98b6bc4f5dc": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/application-controller/argocd-application-controller-statefulset.yaml#L360-L365",
+        "sf4dd846c82c4": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/common/common.go#L75-L92",
+        "s49a7c83d9371": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-applicationset-controller/commands/applicationset_controller.go#L294-L296",
+        "s97a588d8a83f": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/applicationset-controller/argocd-applicationset-controller-service.yaml#L9-L20",
+        "s0a85b38dfca8": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-notification/commands/argocd_notification.go#L149-L154",
+        "s5e141e32ed9c": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/notification/argocd-notifications-controller-metrics-service.yaml#L9-L16",
+        "s8efcc66f9cb4": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-dex/commands/argocd_dex.go#L82-L119",
+        "s30c391d9dc23": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-dex/commands/argocd_dex.go#L143-L146",
+        "se477de2fdfa0": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/dex/config.go#L16-L152",
+        "s56c41c02ba8b": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/dex/argocd-dex-server-service.yaml#L9-L25",
+        "s996c72c5db28": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/redis/argocd-redis-deployment.yaml#L18-L58",
+        "s34909d7a1932": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/cache/cache.go#L233-L238",
+        "s1a13cc06db6d": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/repo-server/argocd-repo-server-network-policy.yaml#L9-L35",
+        "s4bbf38e83770": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/redis/argocd-redis-network-policy.yaml#L9-L28",
+        "sadccbbcffcd8": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/dex/argocd-dex-server-network-policy.yaml#L9-L29",
+        "s743c8187cbd7": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-network-policy.yaml#L9-L16",
+        "s49f63c21c3cd": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/application-controller/argocd-application-controller-network-policy.yaml#L9-L19",
+        "sa258c4109d24": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/applicationset-controller/argocd-applicationset-controller-network-policy.yaml#L9-L22",
+        "sa49c30e332ed": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/notification/argocd-notifications-controller-network-policy.yaml#L9-L20",
+        "s68b67007da6b": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/settings/settings.go#L1631-L1638",
+        "s01a52daf078f": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-deployment.yaml#L121-L126",
+        "s210b24f04535": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/config/argocd-cmd-params-cm.yaml#L1-L7",
+        "s0f7f1b3404d9": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/config/argocd-rbac-cm.yaml#L1-L7",
+        "s85445da68ce7": "https://github.com/argoproj/argo-cd/blob/v3.5.3/common/common.go#L89-L90",
+        "s357d253fc789": "https://github.com/argoproj/argo-cd/blob/v3.5.3/cmd/argocd-repo-server/commands/argocd_repo_server.go#L257-L260",
+        "s9df1243dde48": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-application-controller/commands/argocd_application_controller.go#L192-L209",
+        "s0abbc26d61e4": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-application-controller/commands/argocd_application_controller.go#L272-L273",
+        "sfcaf2e03154d": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/server.go#L49-L85",
+        "s25a5da2c5e7c": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/server.go#L94-L150",
+        "s73653423b85d": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/tls/tls.go#L428-L506",
+        "s7c7bf274e3ef": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/dex/argocd-dex-server-deployment.yaml#L38-L42",
+        "s08939ffb906f": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd/commands/admin/redis_initial_password.go#L22-L89",
+        "s3fcdf1601776": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L454-L467",
+        "se987196f20c7": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L539-L547",
+        "s3cb98aa5348d": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L399-L425",
+        "s9bfcf07a6bcc": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L314-L346",
+        "s32323471d785": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L35-L42"
+      }
+    },
+    "flux-oidc": {
+      "name": "Flux OIDC introduction",
+      "basis": "v2.9",
+      "sources": {
+        "s1ea193b2b3cc": "https://fluxcd.io/blog/2026/06/flux-v2.9.0/"
+      }
+    },
+    "argo-docs": {
+      "name": "Argo CD documentation",
+      "basis": "unknown",
+      "sources": {
+        "s51e21b74ece6": "https://argo-cd.readthedocs.io/en/stable/operator-manual/security/",
+        "s02463a4fb268": "https://argo-cd.readthedocs.io/en/stable/operator-manual/secret-management/",
+        "s2efb9ee633af": "https://argo-cd.readthedocs.io/en/stable/getting_started/",
+        "sc2590df86f4e": "https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/",
+        "sf5f1c41f89bd": "https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/",
+        "s3767d400e364": "https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/",
+        "sdac90731b97d": "https://argo-cd.readthedocs.io/en/stable/operator-manual/webhook/",
+        "s9357e3b59e84": "https://argo-cd.readthedocs.io/en/stable/user-guide/projects/"
+      }
+    },
+    "flux": {
+      "name": "Flux documentation",
+      "basis": "unknown",
+      "sources": {
+        "s493859f3b848": "https://fluxcd.io/flux/security/best-practices/",
+        "s4dcd744a2444": "https://fluxcd.io/flux/guides/mozilla-sops/",
+        "sd8618bbbc628": "https://fluxcd.io/flux/components/source/ocirepositories/#secret-reference",
+        "sf3f80d9941c8": "https://fluxcd.io/flux/installation/configuration/multitenancy/",
+        "s0669b973542c": "https://fluxcd.io/flux/security/#controller-permissions",
+        "s13bd7f0204b0": "https://fluxcd.io/flux/installation/bootstrap/github/",
+        "s8759854c1bdf": "https://fluxcd.io/flux/components/image/imageupdateautomations/",
+        "s0acf42beed45": "https://fluxcd.io/flux/guides/webhook-receivers/",
+        "s35bb9a844dcf": "https://fluxcd.io/flux/components/notification/receivers/"
+      }
+    },
+    "dex": {
+      "name": "Dex v2.45.1 source",
+      "basis": "v2.45.1",
+      "sources": {
+        "s3b9512b79dea": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L151-L199",
+        "s46eb2feaa84f": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L553-L572",
+        "s55b453f266f3": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/config.go#L255-L265"
+      }
+    },
+    "redis-image": {
+      "name": "docker-library-redis v8.2.3 source",
+      "basis": "bcbc692165ce2241e194035041c5b5e01d2e1a5f",
+      "sources": {
+        "s67a2f7553c9a": "https://github.com/redis/docker-library-redis/blob/bcbc692165ce2241e194035041c5b5e01d2e1a5f/alpine/Dockerfile#L81-L87",
+        "s30643c91686d": "https://github.com/redis/docker-library-redis/blob/bcbc692165ce2241e194035041c5b5e01d2e1a5f/alpine/Dockerfile#L151-L154",
+        "sd04db8453288": "https://github.com/redis/docker-library-redis/blob/bcbc692165ce2241e194035041c5b5e01d2e1a5f/alpine/docker-entrypoint.sh#L93-L111"
+      }
+    },
+    "redis-source": {
+      "name": "Redis 8.2.3 source",
+      "basis": "8.2.3",
+      "sources": {
+        "s667fc16bf18f": "https://github.com/redis/redis/blob/8.2.3/src/server.h#L142-L143",
+        "saa497d27f72f": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2199-L2221",
+        "s0f96763525b7": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2638-L2673",
+        "s9b50a7c52721": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2983-L2996"
+      }
+    },
+    "curl": {
+      "name": "curl",
+      "basis": "curl-8_14_1",
+      "sources": {
+        "s3db522258e44": "https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md",
+        "s9537bb790553": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data-binary.md#L4-L32",
+        "sd3b039bafbf6": "https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data.md#L4-L49"
+      }
+    },
+    "python": {
+      "name": "Python documentation",
+      "basis": "unknown",
+      "sources": {
+        "s7a54556e5dac": "https://docs.python.org/3/library/hmac.html",
+        "s31fccd7d50e5": "https://docs.python.org/3/library/sys.html#sys.stdin"
+      }
+    }
+  },
+  "claims": {
+    "git-boundary": {"text": "Repository writers exercise reconciliation permissions; review platform changes, separate tenants and scope credentials.", "components": ["argo-docs", "flux"], "sources": ["argo-docs:s51e21b74ece6", "flux:s493859f3b848"], "status": "REASONED"},
+    "secret-storage": {"text": "Protect bootstrap, registry, cluster, webhook and decryption credentials; commit only encrypted secrets and keep SOPS/age keys out of Git.", "components": ["argo-docs", "flux"], "sources": ["argo-docs:s02463a4fb268", "flux:s4dcd744a2444", "flux:sd8618bbbc628"], "status": "REASONED"},
+    "egress": {"text": "Restrict fetch, API, identity and notification egress; Argo repository allowlists do not constrain remote bases or Helm dependencies.", "components": ["argo-docs", "flux"], "sources": ["argo-docs:s51e21b74ece6", "flux:sf3f80d9941c8"], "status": "REASONED"},
+    "argo-bootstrap": {"text": "Rotate the initial admin password before deleting argocd-initial-admin-secret; deletion alone does not rotate it.", "components": ["argo-docs"], "sources": ["argo-docs:s2efb9ee633af", "argo-docs:sc2590df86f4e"], "status": "REASONED"},
+    "argo-sso": {"text": "The built-in admin is unrestricted; configure named SSO roles and IdP MFA, then set admin.enabled=false.", "components": ["argo-docs"], "sources": ["argo-docs:sc2590df86f4e", "argo-docs:sf5f1c41f89bd"], "status": "REASONED"},
+    "argo-origin": {"text": "Keep the ClusterIP origin private behind authenticated TLS and protect both REST/browser and CLI/gRPC routes.", "components": ["argo-docs", "argo"], "sources": ["argo-docs:s2efb9ee633af", "argo-docs:s3767d400e364", "argo:sddf4853ad503"], "status": "REASONED"},
+    "argo-server": {"text": "Server defaults to 0.0.0.0:8080; the Service maps 80 and 443 to it.", "components": ["argo"], "sources": ["argo:s6e8c96d23e05", "argo:sddf4853ad503", "argo:sf4dd846c82c4"], "status": "REASONED"},
+    "argo-tls": {"text": "Server --insecure/server.insecure defaults false and disables backend TLS, not authentication; use only behind protected TLS termination.", "components": ["argo", "argo-docs"], "sources": ["argo:s6e8c96d23e05", "argo-docs:s3767d400e364"], "status": "REASONED"},
+    "argo-client-tls": {"text": "argocd login --insecure skips client certificate verification; the server initially uses a self-signed certificate.", "components": ["argo-docs"], "sources": ["argo-docs:s2efb9ee633af", "argo-docs:s3767d400e364"], "status": "REASONED"},
+    "argo-metrics": {"text": "Server HTTP metrics on 8083 are unauthenticated and bind to --address, not --metrics-address.", "components": ["argo"], "sources": ["argo:s96065cc09776", "argo:s7cc690d1bf69", "argo:s028a4769d6c3", "argo:sf4dd846c82c4", "argo:s6e8c96d23e05"], "status": "REASONED"},
+    "argo-profiler": {"text": "Server and repo-server pprof paths return 401 unless the profiler file contains exactly true with no newline; enabled profiling has no caller authentication.", "components": ["argo"], "sources": ["argo:sc52bbd14bff4", "argo:s028a4769d6c3", "argo:s98b27313f615"], "status": "REASONED"},
+    "argo-profiler-file": {"text": "ARGOCD_ENABLE_PROFILER_FILE_PATH defaults to /home/argocd/params/profiler.enabled; the server mounts ConfigMap key server.profile.enabled there.", "components": ["argo"], "sources": ["argo:sc52bbd14bff4", "argo:sb0648e746fb9", "argo:s2f5af86c62d1"], "status": "REASONED"},
+    "repo-grpc": {"text": "Repo-server gRPC binds 0.0.0.0:8081 with TLS by default; mTLS is skipped without the client CA, separate from the serving certificate.", "components": ["argo"], "sources": ["argo:s9bca471ac6d9", "argo:s4bbc848d9923", "argo:sf4dd846c82c4", "argo:s85445da68ce7", "argo:s357d253fc789"], "status": "REASONED"},
+    "repo-http": {"text": "Repo-server HTTP metrics and health bind 0.0.0.0:8084 without an authentication wrapper.", "components": ["argo"], "sources": ["argo:s98b27313f615", "argo:s9bca471ac6d9", "argo:sf4dd846c82c4", "argo:s85445da68ce7", "argo:s357d253fc789"], "status": "REASONED"},
+    "repo-limits": {"text": "Repo-server requires verified client certificates with a loaded client CA; missing or unstatable serving files trigger a session self-signed certificate, while an invalid present pair errors. No authorization interceptor appears; service method authorization is unverified.", "components": ["argo"], "sources": ["argo:sfcaf2e03154d", "argo:s25a5da2c5e7c", "argo:s73653423b85d"], "status": "REASONED"},
+    "controller-metrics": {"text": "Application-controller metrics and health use 8082; the command passes that port to the controller, but the fetched files do not establish the bind address.", "components": ["argo"], "sources": ["argo:sf98b6bc4f5dc", "argo:s9df1243dde48", "argo:s0abbc26d61e4", "argo:sf4dd846c82c4"], "status": "REASONED"},
+    "applicationset-webhook": {"text": "ApplicationSet webhook binds :7000; its container and Service declare 7000.", "components": ["argo"], "sources": ["argo:s49a7c83d9371", "argo:s97a588d8a83f"], "status": "REASONED"},
+    "applicationset-metrics": {"text": "ApplicationSet metrics bind :8080; its container and Service declare 8080.", "components": ["argo"], "sources": ["argo:s49a7c83d9371", "argo:s97a588d8a83f"], "status": "REASONED"},
+    "applicationset-health": {"text": "ApplicationSet health probes bind :8081 without a container or Service port declaration; missing declarations do not close sockets.", "components": ["argo"], "sources": ["argo:s49a7c83d9371"], "status": "REASONED"},
+    "notifications": {"text": "Notifications HTTP metrics bind 0.0.0.0:9001 without authentication; a metrics Service and TCP liveness probe exist without containerPort.", "components": ["argo"], "sources": ["argo:s0a85b38dfca8", "argo:s5e141e32ed9c"], "status": "REASONED"},
+    "dex-http": {"text": "Dex starts only with nonempty generated configuration; HTTP defaults to TLS on 0.0.0.0:5556 using /tmp/tls.crt and /tmp/tls.key.", "components": ["argo"], "sources": ["argo:s8efcc66f9cb4", "argo:s30c391d9dc23", "argo:se477de2fdfa0"], "status": "REASONED"},
+    "dex-grpc": {"text": "Generated Dex gRPC uses 0.0.0.0:5557 without TLS or client-auth settings; Dex v2.45.1 source sets no transport credentials or authentication interceptor for this configuration, while API method authorization is unverified; this assumes the deployed ghcr.io/dexidp/dex:v2.45.1 tag was built from Dex v2.45.1.", "components": ["argo", "dex"], "sources": ["argo:se477de2fdfa0", "argo:s56c41c02ba8b", "argo:s7c7bf274e3ef", "dex:s3b9512b79dea", "dex:s46eb2feaa84f", "dex:s55b453f266f3"], "status": "REASONED"},
+    "dex-telemetry": {"text": "Dex telemetry uses HTTP on 0.0.0.0:5558; all three Dex ports have Services.", "components": ["argo"], "sources": ["argo:se477de2fdfa0", "argo:s56c41c02ba8b"], "status": "REASONED"},
+    "redis-password": {"text": "Redis receives --requirepass from argocd-redis/auth; secret-init generates and checks that Secret. The redis:8.2.3-alpine tag, taken as built from docker-library-redis v8.2.3, uses Redis wildcard bind defaults and patches protected mode off.", "components": ["argo", "redis-image", "redis-source"], "sources": ["argo:s996c72c5db28", "argo:s08939ffb906f", "redis-image:s67a2f7553c9a", "redis-image:s30643c91686d", "redis-image:sd04db8453288", "redis-source:s667fc16bf18f", "redis-source:saa497d27f72f", "redis-source:s0f96763525b7", "redis-source:s9b50a7c52721"], "status": "REASONED"},
+    "redis-tls": {"text": "Base manifests configure no Redis TLS and the Argo Redis client defaults --redis-use-tls=false; protect traffic, Secret and cache.", "components": ["argo"], "sources": ["argo:s996c72c5db28", "argo:s34909d7a1932"], "status": "REASONED"},
+    "component-policies": {"text": "Base policies restrict repo gRPC, Redis and Dex callers by component; enforcement needs a supporting CNI.", "components": ["argo"], "sources": ["argo:s1a13cc06db6d", "argo:s4bbf38e83770", "argo:sadccbbcffcd8"], "status": "REASONED"},
+    "broad-policies": {"text": "Server policy allows all ingress; other metrics and ApplicationSet webhook allowances admit every namespace. Narrow existing additive allowances and egress separately.", "components": ["argo"], "sources": ["argo:s743c8187cbd7", "argo:s49f63c21c3cd", "argo:sa258c4109d24", "argo:sa49c30e332ed"], "status": "REASONED"},
+    "argo-anonymous": {"text": "users.anonymous.enabled defaults off; anonymous callers otherwise inherit policy.default.", "components": ["argo", "argo-docs"], "sources": ["argo:s68b67007da6b", "argo-docs:sf5f1c41f89bd"], "status": "REASONED"},
+    "argo-disable-auth": {"text": "server.disable.auth defaults false; inspect effective args and environment because anonymous-off does not compensate for disabled authentication.", "components": ["argo"], "sources": ["argo:s6e8c96d23e05", "argo:s01a52daf078f", "argo:s210b24f04535"], "status": "REASONED"},
+    "argo-default-role": {"text": "Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings. Server-side wiring remains unverified.", "components": ["argo", "argo-docs"], "sources": ["argo:s0f7f1b3404d9", "argo:s3fcdf1601776", "argo:se987196f20c7", "argo:s3cb98aa5348d", "argo:s9bfcf07a6bcc", "argo:s32323471d785", "argo-docs:sf5f1c41f89bd"], "status": "REASONED"},
+    "argo-webhook": {"text": "/api/webhook accepts unauthenticated refresh events without a shared secret; configure one to limit spoofed reconciliation and resource exhaustion.", "components": ["argo-docs"], "sources": ["argo-docs:sdac90731b97d"], "status": "REASONED"},
+    "argo-projects": {"text": "Restrict AppProjects including the built-in default project; project constraints do not reduce a compromised controller's Kubernetes credentials.", "components": ["argo-docs"], "sources": ["argo-docs:s9357e3b59e84", "argo-docs:s51e21b74ece6"], "status": "REASONED"},
+    "argo-cluster-rbac": {"text": "Reduce controller and registered-cluster argocd-manager write permissions to needed namespaces/resources while retaining required read access.", "components": ["argo-docs"], "sources": ["argo-docs:s51e21b74ece6"], "status": "REASONED"},
+    "flux-api": {"text": "Flux has no standalone management login/API; Kubernetes authenticates its custom-resource operations, while separate dashboards need their own controls.", "components": ["flux"], "sources": ["flux:s493859f3b848", "flux:s0669b973542c"], "status": "REASONED"},
+    "flux-bootstrap": {"text": "GitHub bootstrap --token-auth retains a PAT in flux-system; --token-auth=false creates a read-only SSH deploy key by default. Protect bootstrap input and Secrets.", "components": ["flux"], "sources": ["flux:s13bd7f0204b0"], "status": "REASONED"},
+    "flux-writeback": {"text": "Image automation needs Git write access, including --read-write-key=true for the bootstrap key; scope the repository and protect update branches and objects.", "components": ["flux"], "sources": ["flux:s13bd7f0204b0", "flux:s8759854c1bdf"], "status": "REASONED"},
+    "flux-artifacts": {"text": "Source-controller serves fetched artifacts over internal HTTP; enforced NetworkPolicy, not ClusterIP alone, isolates them.", "components": ["flux"], "sources": ["flux:s493859f3b848"], "status": "REASONED"},
+    "flux-receiver-port": {"text": "Webhook receiver listens on 9292 behind Service port 80; external exposure needs a route and TLS termination.", "components": ["flux"], "sources": ["flux:s0acf42beed45"], "status": "REASONED"},
+    "flux-receiver-types": {"text": "generic validates nothing; generic-hmac, GitHub, Bitbucket and Nexus use HMAC, while gitlab compares X-Gitlab-Token.", "components": ["flux"], "sources": ["flux:s35bb9a844dcf"], "status": "REASONED"},
+    "flux-oidc": {"text": "generic-oidc, introduced in Flux 2.9, rejects secretRef and validates bearer tokens; constrain issuer validations and audience, whose default is notification-controller.", "components": ["flux", "flux-oidc"], "sources": ["flux:s35bb9a844dcf", "flux-oidc:s1ea193b2b3cc"], "status": "REASONED"},
+    "flux-rbac": {"text": "Only kustomize-controller and helm-controller hold cluster-admin; other controllers still have meaningful permissions including Secret access.", "components": ["flux"], "sources": ["flux:s0669b973542c"], "status": "REASONED"},
+    "flux-lockdown": {"text": "Use scoped reconciliation ServiceAccounts, --no-cross-namespace-refs and --no-remote-bases; --default-service-account fills an omission, not an explicit serviceAccountName.", "components": ["flux"], "sources": ["flux:sf3f80d9941c8"], "status": "REASONED"},
+    "verify-argo": {"text": "Anonymous application listing should fail with 401 while a valid token lists the expected application; repeat at origin and CLI/gRPC and inspect effective RBAC.", "components": ["argo-docs", "argo", "curl"], "sources": ["argo-docs:sf5f1c41f89bd", "argo:s6e8c96d23e05", "curl:s3db522258e44"], "status": "REASONED", "verify": [1]},
+    "verify-bootstrap": {"text": "Absence of the bootstrap Secret proves removal of that material, not password rotation.", "components": ["argo-docs"], "sources": ["argo-docs:s2efb9ee633af"], "status": "REASONED", "verify": [1]},
+    "verify-inventory": {"text": "Inventory Services, routes, host ports, policies and component sockets; node-local ss and policy objects alone do not establish cluster isolation.", "components": ["argo", "flux"], "sources": ["argo:s743c8187cbd7", "flux:s493859f3b848"], "status": "REASONED", "verify": [1]},
+    "verify-repo-metrics": {"text": "Base policy permits HTTP 200 metrics to monitoring and unrelated pods; narrowed policy should admit only monitoring, with a successful positive control.", "components": ["argo"], "sources": ["argo:s98b27313f615", "argo:s1a13cc06db6d"], "status": "REASONED", "verify": [2]},
+    "verify-server-metrics": {"text": "Repeat on server 8083: only authorized monitoring should receive metrics after narrowing ingress; a failed control is inconclusive.", "components": ["argo"], "sources": ["argo:s028a4769d6c3", "argo:s743c8187cbd7"], "status": "REASONED"},
+    "verify-profiler": {"text": "From an allowed pod, pprof cmdline should return 401 disabled, 200 for exact true, then 401 for true plus newline; keep metrics as control.", "components": ["argo"], "sources": ["argo:sc52bbd14bff4", "argo:s028a4769d6c3"], "status": "REASONED"},
+    "verify-flux": {"text": "Identical generic-hmac bodies without and with X-Signature should be rejected and accepted with reconciliation; status is type/version dependent. The cited curl curl-8_14_1 lines show --data-binary posting data exactly as specified, preserving newlines and carriage returns that --data strips from @file input, reading @- from stdin and @filename from a file, and posting like --data's POST request.", "components": ["flux", "python", "curl"], "sources": ["flux:s35bb9a844dcf", "python:s7a54556e5dac", "python:s31fccd7d50e5", "curl:s3db522258e44", "curl:s9537bb790553", "curl:sd3b039bafbf6"], "status": "REASONED", "verify": [3]},
+    "verify-receiver-status": {"text": "Read receiver name and Ready condition without exposing webhookPath or condition messages; origin checks distinguish receiver rejection from proxy rejection.", "components": ["flux"], "sources": ["flux:s35bb9a844dcf"], "status": "REASONED"}
+  }
+}
+````
+<!-- version-basis:end -->

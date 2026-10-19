@@ -1,6 +1,6 @@
 # Self-hosted observability components: node_exporter, Alertmanager, Pushgateway, Jaeger, and Loki
 
-Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded bases; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 59 claims: 14 demonstrated by a check that ran and 45 reasoned from cited sources.
+Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 59 claims: 14 demonstrated by a check that ran and 45 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 

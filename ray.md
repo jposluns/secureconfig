@@ -1,307 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-09-26",
-  "documentation_checked": "2026-09",
-  "body_sha256": "286cb3508e87ad0658bd57c73270ab3b4100681250bae339f4d71a573e537bfb",
-  "components": {
-    "ray": {
-      "name": "Ray pinned source",
-      "basis": "ray-2.58.0",
-      "sources": {
-        "sed3f197cc1ef": "https://github.com/ray-project/ray/blob/ray-2.58.0/doc/source/ray-security/token-auth.md",
-        "s08d31327265a": "https://raw.githubusercontent.com/ray-project/ray/ray-2.58.0/docker/base-deps/Dockerfile",
-        "s2740a1880e2b": "https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/rpc/grpc_server.cc#L67-L68",
-        "s958054ab801b": "https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/util/network_util.h#L111-L113",
-        "sa3d2966f536b": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/scripts/scripts.py#L601-L617",
-        "s050b349f5bbd": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/ray_constants.py#L185",
-        "sd7d2d0d963d0": "https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/util/network_util.cc#L257-L278",
-        "s329ab4e0ed63": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/_private/replica.py#L1778",
-        "s3eb2c2cb2cbb": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/util/client/server/server.py#L799-L801",
-        "sae1bb5af6e35": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/util/client/server/proxier.py#L929-L931",
-        "s207ba00c4e86": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L1572-L1575",
-        "s3efda42d7913": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L2464-L2471",
-        "s9a060fe08a53": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/ray_constants.py#L189",
-        "sb1935b32e677": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/scripts/scripts.py#L618-L635",
-        "se9af8ec90932": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/scripts/scripts.py#L687-L692",
-        "s17bc66b5543e": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L20-L23",
-        "s7df4fce455ca": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L54-L66",
-        "sc96f32b8a459": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L107-L113",
-        "sbca5ef4de0bb": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/authentication/http_token_authentication.py#L28-L80",
-        "scdfff3ba79f6": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/optional_utils.py#L132-L209",
-        "s528944bdec23": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_agent.py#L32-L196",
-        "s4796e2ca38da": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_head.py#L123-L144",
-        "s1d86b2f31870": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_head.py#L267-L280",
-        "s9976ecf5b1f1": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L245-L249",
-        "sa542601368d1": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L264-L307",
-        "sd12bacfbc3c7": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L345-L414",
-        "s7ef1edbcda5c": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/reporter/reporter_agent.py#L570-L638",
-        "s6f5310eb313d": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/agent.py#L144-L169",
-        "s8f508c7e2c94": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/agent.py#L182-L187",
-        "s48b3469099a3": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/agent.py#L100-L117",
-        "s532a98227d6d": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L372-L377",
-        "s33a5ff7c987b": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L1660-L1669",
-        "s1a19fd793b8f": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L1768",
-        "s8f1ebe4bd911": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L1381-L1387",
-        "s7682a13e83a2": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L1862-L1883",
-        "s9237e74ea054": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L1918-L1929",
-        "s4ce6fe077ba9": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L2022-L2031",
-        "s7f27125f73b7": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/reporter/reporter_agent.py#L504-L516",
-        "sf921a5d6a898": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/prometheus_exporter.py#L326-L334",
-        "s434c7b4364dc": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/runtime_env/agent/main.py#L218-L224",
-        "s08aa128e5d70": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/runtime_env/agent/main.py#L243-L248",
-        "sdd8960062a9c": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/includes/network_util.pxi#L103-L110",
-        "s51476b743c19": "https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/util/network_util.cc#L280-L289",
-        "s7451c8e00be3": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/scripts/scripts.py#L850-L854",
-        "s6c7faadf88a4": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L786-L821",
-        "s3625ec280c5e": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/worker.py#L1835-L1836",
-        "sd3a18ab2a112": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/ray_constants.py#L507-L514",
-        "sba3f67581471": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/parameter.py#L165-L167",
-        "s994d0ddb6a7d": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/worker.py#L1884-L1912",
-        "sd4d44da36278": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/utils.py#L1128-L1142",
-        "s5a9d9c171f49": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L1909-L1913",
-        "s9cd95d66d32a": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/utils.py#L322-L351",
-        "s762672f680e9": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/reporter/reporter_agent.py#L2099-L2101",
-        "s28e3a1076d01": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/runtime_env/agent/main.py#L23-L33",
-        "s883e3e00e4df": "https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/common/ray_config_def.h#L618-L619",
-        "sdb1c4564137b": "https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/raylet/node_manager.cc#L3527-L3530",
-        "sa7d4f677aadb": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_agent.py#L198-L203",
-        "sa5873642c8a2": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_manager.py#L421-L463",
-        "s2d562f0e7567": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_manager.py#L565-L609",
-        "s3a079f7e3d82": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/prometheus_exporter.py#L10",
-        "sefae1a66c0dd": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L102-L114",
-        "scc7af6be456e": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/config.py#L955-L963"
-      }
-    },
-    "docs": {
-      "name": "Ray documentation",
-      "basis": "unknown",
-      "sources": {
-        "sa5e2c2d58c12": "https://docs.ray.io/en/latest/ray-security/index.html",
-        "s6f0aa11f549a": "https://docs.ray.io/en/latest/ray-security/token-auth.html",
-        "s56c7c98ab722": "https://docs.ray.io/en/latest/cluster/cli.html",
-        "s261570b2672b": "https://docs.ray.io/en/latest/ray-core/configure.html",
-        "sc375ff2ca01f": "https://docs.ray.io/en/latest/ray-core/handling-dependencies.html",
-        "sb7a1d0b7dfb3": "https://docs.ray.io/en/latest/ray-core/api/doc/ray.runtime_env.RuntimeEnv.html",
-        "scd3f7d8a9b02": "https://docs.ray.io/en/latest/serve/api/doc/ray.serve.config.HTTPOptions.html",
-        "s15aa6ec80fb8": "https://docs.ray.io/en/latest/serve/api/doc/ray.serve.schema.HTTPOptionsSchema.html",
-        "s045d75fbdecc": "https://docs.ray.io/en/latest/serve/api/doc/ray.serve.schema.ServeDeploySchema.html",
-        "sc98a37c2b157": "https://docs.ray.io/en/latest/serve/http-guide.html",
-        "s54ed4b890b65": "https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-gcs-ft.html"
-      }
-    },
-    "token-min": {
-      "name": "Ray token authentication introduction",
-      "basis": "2.52.0",
-      "sources": {
-        "sa5e2c2d58c12": "https://docs.ray.io/en/latest/ray-security/index.html"
-      }
-    },
-    "redis-history": {
-      "name": "Ray Redis history announcement",
-      "basis": "unknown",
-      "sources": {
-        "sb5afda59324d": "https://www.anyscale.com/blog/redis-in-ray-past-and-future"
-      }
-    },
-    "docker": {
-      "name": "Docker publishing documentation",
-      "basis": "unknown",
-      "sources": {
-        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
-      }
-    },
-    "kuberay-auth": {
-      "name": "KubeRay authentication documentation",
-      "basis": "unknown",
-      "sources": {
-        "saf5247262bc7": "https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-auth.html"
-      }
-    },
-    "kuberay": {
-      "name": "KubeRay chart",
-      "basis": "v1.7.0",
-      "sources": {
-        "s76e45858aa01": "https://github.com/ray-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml"
-      }
-    },
-    "kubernetes": {
-      "name": "Kubernetes security contexts",
-      "basis": "unknown",
-      "sources": {
-        "sb78ea91d0308": "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"
-      }
-    },
-    "python": {
-      "name": "CPython WSGI server",
-      "basis": "v3.11.0",
-      "sources": {
-        "sdd5a8e2ab59c": "https://github.com/python/cpython/blob/v3.11.0/Lib/wsgiref/simple_server.py#L1-L160",
-        "se4933ce3da65": "https://github.com/python/cpython/blob/v3.11.0/Lib/http/server.py#L120-L145",
-        "s0020052d7267": "https://github.com/python/cpython/blob/v3.11.0/Lib/socketserver.py#L400-L480"
-      }
-    },
-    "curl": {
-      "name": "curl minimum write-out version",
-      "basis": "7.75.0",
-      "sources": {
-        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
-      }
-    },
-    "docker-release": {
-      "name": "Docker Engine release notes",
-      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
-      "sources": {
-        "sd733f57ded23": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/release-notes/28.md#L768-L768"
-      }
-    },
-    "kuberay-auth-source": {
-      "name": "KubeRay authentication source",
-      "basis": "v1.6.0",
-      "sources": {
-        "s9a9f9edcc07e": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L17-L19",
-        "s51c84c0bc3b4": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L81-L107",
-        "s61e750cdc2e0": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/raycluster_controller.go#L369-L433",
-        "s6171707b3edb": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L194-L220",
-        "s408a3a202322": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L234-L236",
-        "s8505add03e5a": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L253-L271",
-        "s1cb4f972131a": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L296-L336",
-        "sd1b672bc4edd": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L460-L462",
-        "se37635162dc9": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/utils/util.go#L760-L766"
-      }
-    },
-    "kuberay-auth-prior": {
-      "name": "KubeRay prior RayCluster types",
-      "basis": "v1.5.0",
-      "sources": {
-        "s04c5ce0b599d": "https://github.com/ray-project/kuberay/blob/v1.5.0/ray-operator/apis/ray/v1/raycluster_types.go#L12-L47"
-      }
-    }
-  },
-  "claims": {
-    "boundary": {"text": "Dashboard, Jobs and Client access permits arbitrary code execution; use an isolated cluster network and separate clusters for mutually untrusted jobs.", "components": ["docs"], "sources": ["docs:sa5e2c2d58c12"], "status": "REASONED"},
-    "dashboard": {"text": "Dashboard defaults to resolved localhost, IPv4 before IPv6 then 127.0.0.1, on port 8265; state loopback explicitly.", "components": ["ray"], "sources": ["ray:sa3d2966f536b", "ray:s050b349f5bbd", "ray:sd7d2d0d963d0"], "status": "REASONED"},
-    "docker": {"text": "Bridge publishing uses host loopback and container-interface bind; this guide assesses Docker 28.0.0 or later with normal NAT as the loopback-isolation minimum because the 28.0.0 release notes record a fix for neighbour hosts reaching loopback-mapped ports.", "components": ["docker", "docker-release"], "sources": ["docker:s1e53417c513d", "docker-release:sd733f57ded23"], "status": "REASONED"},
-    "access": {"text": "Reach Dashboard/Jobs through loopback SSH forwarding, launcher forwarding, KubeRay forwarding or a private tailnet; public browser access needs an authenticating TLS proxy.", "components": ["docs", "kuberay-auth"], "sources": ["docs:sa5e2c2d58c12", "docs:s56c7c98ab722", "kuberay-auth:saf5247262bc7"], "status": "REASONED"},
-    "head-ports": {"text": "Head GCS uses 6379 and Client 10001; worker ports default 10002-19999 plus randomized listeners.", "components": ["docs"], "sources": ["docs:s56c7c98ab722", "docs:s261570b2672b"], "status": "REASONED"},
-    "core-bind": {"text": "Core gRPC source binds all interfaces unless node address is exactly 127.0.0.1, ::1 or localhost; private node IP does not imply private bind.", "components": ["ray"], "sources": ["ray:s2740a1880e2b", "ray:s958054ab801b"], "status": "REASONED"},
-    "gcs-observation": {"text": "Four attempted Ray 2.58.0 loopback starts still showed GCS *:6379; the cause was not established and the watcher stopped the runs.", "components": ["ray"], "sources": ["ray:s2740a1880e2b", "ray:s958054ab801b"], "status": "DEMONSTRATED", "evidence": "in each of four runs using `ray start --head --node-ip-address=127.0.0.1 --port=6379 --dashboard-host=127.0.0.1`, `ss` still showed the GCS listener as `*:6379`."},
-    "client-bind": {"text": "Ray Client server/proxier listen on the supplied node address plus loopback; restrict access and prefer Jobs over publishing Client.", "components": ["ray"], "sources": ["ray:s3eb2c2cb2cbb", "ray:sae1bb5af6e35", "ray:s207ba00c4e86", "ray:s3efda42d7913"], "status": "REASONED"},
-    "serve-replica": {"text": "Serve inter-deployment gRPC binds [::] on an OS-chosen port; this is source reasoning, not a run.", "components": ["ray"], "sources": ["ray:s329ab4e0ed63"], "status": "REASONED"},
-    "agents": {"text": "--include-dashboard=false does not stop dashboard/runtime-env agents; head dashboard itself is reduced to usage stats.", "components": ["ray"], "sources": ["ray:s33a5ff7c987b", "ray:s1a19fd793b8f", "ray:s8f1ebe4bd911", "ray:s7682a13e83a2", "ray:s9237e74ea054", "ray:s4ce6fe077ba9"], "status": "REASONED"},
-    "minimal": {"text": "Missing optional imports select minimal mode: no agent HTTP/gRPC or metrics reporter; runtime-env HTTP remains. Base installs may have full dependencies.", "components": ["ray"], "sources": ["ray:s48b3469099a3", "ray:sd4d44da36278", "ray:s5a9d9c171f49", "ray:s9cd95d66d32a", "ray:s762672f680e9", "ray:s28e3a1076d01"], "status": "REASONED"},
-    "agent-http": {"text": "Non-minimal agent HTTP defaults 52365, including ray.init; --dashboard-agent-listen-port changes it, with node-IP plus conditional localhost binds.", "components": ["ray"], "sources": ["ray:s9a060fe08a53", "ray:sb1935b32e677", "ray:s7df4fce455ca", "ray:sba3f67581471", "ray:s994d0ddb6a7d"], "status": "REASONED"},
-    "agent-jobs": {"text": "Direct /api/job_agent/jobs/ submission and stop/delete/log routes bypass a proxy on 8265; head forwarding reaches its agent job manager.", "components": ["ray"], "sources": ["ray:s528944bdec23", "ray:s4796e2ca38da", "ray:s1d86b2f31870"], "status": "REASONED"},
-    "agent-placement": {"text": "Worker agents accept cluster submissions with their own managers; drivers normally use the head unless resources, labels or worker-placement override permit workers.", "components": ["ray"], "sources": ["ray:sa7d4f677aadb", "ray:sa5873642c8a2", "ray:s2d562f0e7567"], "status": "REASONED"},
-    "agent-logs": {"text": "Agent static /logs exposes the node log directory and index.", "components": ["ray"], "sources": ["ray:s9976ecf5b1f1"], "status": "REASONED"},
-    "agent-http-auth": {"text": "Without token mode a browser heuristic is the only filter; token mode guards all agent HTTP paths except two health endpoints.", "components": ["ray"], "sources": ["ray:s17bc66b5543e", "ray:sc96f32b8a459", "ray:sbca5ef4de0bb", "ray:scdfff3ba79f6"], "status": "REASONED"},
-    "agent-grpc": {"text": "Agent gRPC defaults OS-assigned with --dashboard-agent-grpc-port override; localhost or wildcard bind serves log/profiling RPCs with optional token interception.", "components": ["ray"], "sources": ["ray:sb1935b32e677", "ray:sa542601368d1", "ray:sd12bacfbc3c7", "ray:s7ef1edbcda5c", "ray:s6f5310eb313d", "ray:s8f508c7e2c94", "ray:s532a98227d6d"], "status": "REASONED"},
-    "runtime-agent": {"text": "Runtime-env HTTP defaults OS-assigned on node IP with --runtime-env-agent-port override; create/delete installs packages, and token middleware exempts no route.", "components": ["ray"], "sources": ["ray:s532a98227d6d", "ray:s434c7b4364dc", "ray:s08aa128e5d70", "ray:sb1935b32e677"], "status": "REASONED"},
-    "metrics-agent": {"text": "Metrics default enabled; non-minimal reporter uses an OS-assigned port or --metrics-export-port, outside all token middleware.", "components": ["ray"], "sources": ["ray:s532a98227d6d", "ray:s7f27125f73b7", "ray:sf921a5d6a898", "ray:s883e3e00e4df", "ray:sdb1c4564137b", "ray:se9af8ec90932"], "status": "REASONED"},
-    "metrics-ipv4": {"text": "WSGI metrics uses AF_INET: empty address is IPv4 wildcard, localhost is used for local node addresses, and resolved ::1 cannot bind this socket.", "components": ["ray", "python"], "sources": ["ray:s7f27125f73b7", "ray:sf921a5d6a898", "ray:s3a079f7e3d82", "python:sdd5a8e2ab59c", "python:se4933ce3da65", "python:s0020052d7267"], "status": "REASONED"},
-    "node-normalization": {"text": "Both CLI and ray.init normalize localhost node arguments to a discovered address; cluster-mode setting changes whole-node selection, not independent agent binds.", "components": ["ray"], "sources": ["ray:s7451c8e00be3", "ray:s6c7faadf88a4", "ray:s3625ec280c5e", "ray:sd3a18ab2a112"], "status": "REASONED"},
-    "agent-family": {"text": "Agent gRPC wildcard selection is 0.0.0.0 or :: based on resolved localhost, independently of node address family.", "components": ["ray"], "sources": ["ray:sdd8960062a9c", "ray:s51476b743c19"], "status": "REASONED"},
-    "gcs-not-redis": {"text": "6379 is GCS, not Redis; Redis stopped being launched by default in 1.11.", "components": ["redis-history", "docs"], "sources": ["redis-history:sb5afda59324d", "docs:s56c7c98ab722"], "status": "REASONED"},
-    "redis-backend": {"text": "External Redis is opt-in GCS fault-tolerance storage; Redis credentials do not authenticate GCS clients and RAY_REDIS_PASSWORD is not a head flag substitute.", "components": ["docs"], "sources": ["docs:s56c7c98ab722", "docs:s54ed4b890b65"], "status": "REASONED"},
-    "token-default": {"text": "Shared token authentication exists since 2.52.0 but is disabled by default as of 2.58.0; it supplements network isolation and does not protect Serve apps.", "components": ["token-min", "ray"], "sources": ["token-min:sa5e2c2d58c12", "ray:sed3f197cc1ef"], "status": "REASONED"},
-    "token-input": {"text": "Enable RAY_AUTH_MODE=token; precedence is RAY_AUTH_TOKEN, RAY_AUTH_TOKEN_PATH then ~/.ray/auth_token, shared by every node/client.", "components": ["ray"], "sources": ["ray:sed3f197cc1ef"], "status": "REASONED"},
-    "token-storage": {"text": "Generate/protect token files and copy before startup; tokens are plaintext, do not expire and must never be committed.", "components": ["ray"], "sources": ["ray:sed3f197cc1ef"], "status": "REASONED"},
-    "token-transport": {"text": "Token HTTP headers require a trusted tunnel or TLS; plaintext HTTP exposes them on the network.", "components": ["docs", "ray"], "sources": ["docs:s6f0aa11f549a", "ray:sed3f197cc1ef"], "status": "REASONED"},
-    "kuberay-token": {"text": "KubeRay v1.6.0 defines authOptions; v1.5.0 RayClusterSpec lacks it. With token mode enabled, the controller creates a random-token Secret when Kubernetes ServiceAccount token authentication is off, SecretName is null or empty, and the generated-name Secret does not already exist; it leaves an existing generated-name Secret or a supplied named Secret in place and creates no Secret in ServiceAccount mode. The pod builder sets RAY_AUTH_MODE when unset on head and worker Ray containers, on the wait-gcs-ready init container when present, and on the head autoscaler when autoscaling is enabled; outside ServiceAccount mode it adds RAY_AUTH_TOKEN from the selected Secret when unset, and in ServiceAccount mode it does not add RAY_AUTH_TOKEN. This guide infers support in v1.6.0 and later from the compared tags; later releases have not been checked.", "components": ["kuberay-auth", "kuberay-auth-source", "kuberay-auth-prior"], "sources": ["kuberay-auth:saf5247262bc7", "kuberay-auth-source:s9a9f9edcc07e", "kuberay-auth-source:s51c84c0bc3b4", "kuberay-auth-source:s61e750cdc2e0", "kuberay-auth-source:s6171707b3edb", "kuberay-auth-source:s408a3a202322", "kuberay-auth-source:s8505add03e5a", "kuberay-auth-source:s1cb4f972131a", "kuberay-auth-source:sd1b672bc4edd", "kuberay-auth-source:se37635162dc9", "kuberay-auth-prior:s04c5ce0b599d"], "status": "REASONED"},
-    "mfa": {"text": "Ray has no user accounts; MFA belongs on SSH, tailnet or identity-aware proxy access.", "components": ["docs"], "sources": ["docs:sa5e2c2d58c12"], "status": "REASONED"},
-    "grpc-tls": {"text": "RAY_USE_TLS defaults 0; export it and server certificate/key/CA variables on every node before startup for internal gRPC mutual TLS.", "components": ["docs"], "sources": ["docs:s261570b2672b"], "status": "REASONED"},
-    "tls-scope": {"text": "gRPC TLS can cost performance and does not replace isolation or the dashboard/Jobs HTTP TLS proxy.", "components": ["docs"], "sources": ["docs:sa5e2c2d58c12", "docs:s261570b2672b"], "status": "REASONED"},
-    "runtime-code": {"text": "Job runtime_env installs before entrypoint; ray.init environments apply to child tasks/actors. Packages, archives, py_executable and setup hooks execute submitted code.", "components": ["docs"], "sources": ["docs:sc375ff2ca01f"], "status": "REASONED"},
-    "runtime-policy": {"text": "No built-in package/URI/hook admission policy; eager_install and setup_timeout_seconds control timing, not trust. Prebuild reviewed dependencies.", "components": ["docs"], "sources": ["docs:sc375ff2ca01f", "docs:sb7a1d0b7dfb3"], "status": "REASONED"},
-    "serve-bind": {"text": "Serve HTTP defaults port 8000, Python host 127.0.0.1 but config-file host 0.0.0.0; EveryNode puts proxies on nodes with replicas.", "components": ["docs"], "sources": ["docs:scd3f7d8a9b02", "docs:s15aa6ec80fb8", "docs:s045d75fbdecc"], "status": "REASONED"},
-    "serve-auth": {"text": "Serve apps have no built-in application auth and are outside cluster token mode; restrict origins and add proxy or FastAPI authentication.", "components": ["docs"], "sources": ["docs:sa5e2c2d58c12", "docs:sc98a37c2b157"], "status": "REASONED"},
-    "serve-tls": {"text": "Serve ssl_keyfile/ssl_certfile/ssl_ca_certs default None; supplying a CA does not itself require client certificates.", "components": ["docs"], "sources": ["docs:scd3f7d8a9b02"], "status": "REASONED"},
-    "serve-grpc": {"text": "Optional Serve gRPC uses 9000 only with configured servicer functions.", "components": ["docs", "ray"], "sources": ["docs:s045d75fbdecc", "ray:scc7af6be456e"], "status": "REASONED"},
-    "image-privilege": {"text": "Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation.", "components": ["ray"], "sources": ["ray:s08d31327265a"], "status": "REASONED"},
-    "pod-security": {"text": "KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp.", "components": ["kuberay", "kubernetes"], "sources": ["kuberay:s76e45858aa01", "kubernetes:sb78ea91d0308"], "status": "REASONED"},
-    "verify-inventory": {"text": "Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available.", "components": ["ray"], "sources": ["ray:s9a060fe08a53", "ray:s6f5310eb313d", "ray:s532a98227d6d", "ray:s7f27125f73b7", "ray:s434c7b4364dc"], "status": "REASONED", "verify": [1]},
-    "verify-external": {"text": "Probe every routed IPv4/IPv6 origin and inventoried port; completed TCP, even HTTP 401 or non-HTTP, proves exposure. Resolver/local errors are inconclusive.", "components": ["docs", "curl"], "sources": ["docs:sa5e2c2d58c12", "docs:s261570b2672b", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
-    "verify-jobs": {"text": "Through the trusted tunnel valid-token submission must succeed and token-free submission must fail authentication with 401, not a connection error.", "components": ["ray", "kuberay-auth"], "sources": ["ray:sed3f197cc1ef", "kuberay-auth:saf5247262bc7"], "status": "REASONED", "verify": [1]},
-    "verify-grpc-tls": {"text": "ray health-check must pass with the correct CA and fail certificate verification with a wrong CA/name; local config errors are inconclusive.", "components": ["docs"], "sources": ["docs:s261570b2672b"], "status": "REASONED", "verify": [1]},
-    "verify-agent": {"text": "Direct non-browser /logs/ must expose an index with token mode off, allow a valid token with it on and reject absent tokens with 401; health exemptions cannot discriminate.", "components": ["ray"], "sources": ["ray:s9976ecf5b1f1", "ray:s17bc66b5543e", "ray:sbca5ef4de0bb", "ray:sefae1a66c0dd"], "status": "REASONED", "verify": [2]},
-    "verify-token-secret": {"text": "Trusted-path hidden prompt and stdin header avoid new token argv/history exposure and set +x avoids tracing; account owner/root can still read memory.", "components": ["ray", "curl"], "sources": ["ray:sed3f197cc1ef", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]}
-  }
-}
----
 # Ray: dashboard, Jobs, and Client ports execute code
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Ray pinned source ray-2.58.0, Ray token authentication introduction 2.52.0, KubeRay chart v1.7.0, KubeRay authentication source v1.6.0, KubeRay prior RayCluster types v1.5.0, CPython WSGI server v3.11.0, and curl minimum write-out version 7.75.0; 1 further source is pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 46 claims: 1 demonstrated by a check that ran and 45 reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- ray: Ray pinned source (ray-2.58.0)
-- docs: Ray documentation (unknown)
-- token-min: Ray token authentication introduction (2.52.0)
-- redis-history: Ray Redis history announcement (unknown)
-- docker: Docker publishing documentation (unknown)
-- kuberay-auth: KubeRay authentication documentation (unknown)
-- kuberay: KubeRay chart (v1.7.0)
-- kubernetes: Kubernetes security contexts (unknown)
-- python: CPython WSGI server (v3.11.0)
-- curl: curl minimum write-out version (7.75.0)
-- docker-release: Docker Engine release notes (4e9a5751518ed8223a8dcde53693badddd72604f)
-- kuberay-auth-source: KubeRay authentication source (v1.6.0)
-- kuberay-auth-prior: KubeRay prior RayCluster types (v1.5.0)
-
-Claims (full source mapping in the front matter):
-
-- boundary (REASONED; docs): Dashboard, Jobs and Client access permits arbitrary code execution; use an isolated cluster network and separate clusters for mutually untrusted jobs.
-- dashboard (REASONED; ray): Dashboard defaults to resolved localhost, IPv4 before IPv6 then 127.0.0.1, on port 8265; state loopback explicitly.
-- docker (REASONED; docker, docker-release): Bridge publishing uses host loopback and container-interface bind; this guide assesses Docker 28.0.0 or later with normal NAT as the loopback-isolation minimum because the 28.0.0 release notes record a fix for neighbour hosts reaching loopback-mapped ports.
-- access (REASONED; docs, kuberay-auth): Reach Dashboard/Jobs through loopback SSH forwarding, launcher forwarding, KubeRay forwarding or a private tailnet; public browser access needs an authenticating TLS proxy.
-- head-ports (REASONED; docs): Head GCS uses 6379 and Client 10001; worker ports default 10002-19999 plus randomized listeners.
-- core-bind (REASONED; ray): Core gRPC source binds all interfaces unless node address is exactly 127.0.0.1, ::1 or localhost; private node IP does not imply private bind.
-- gcs-observation (DEMONSTRATED; ray): Four attempted Ray 2.58.0 loopback starts still showed GCS *:6379; the cause was not established and the watcher stopped the runs.
-- client-bind (REASONED; ray): Ray Client server/proxier listen on the supplied node address plus loopback; restrict access and prefer Jobs over publishing Client.
-- serve-replica (REASONED; ray): Serve inter-deployment gRPC binds [::] on an OS-chosen port; this is source reasoning, not a run.
-- agents (REASONED; ray): --include-dashboard=false does not stop dashboard/runtime-env agents; head dashboard itself is reduced to usage stats.
-- minimal (REASONED; ray): Missing optional imports select minimal mode: no agent HTTP/gRPC or metrics reporter; runtime-env HTTP remains. Base installs may have full dependencies.
-- agent-http (REASONED; ray): Non-minimal agent HTTP defaults 52365, including ray.init; --dashboard-agent-listen-port changes it, with node-IP plus conditional localhost binds.
-- agent-jobs (REASONED; ray): Direct /api/job_agent/jobs/ submission and stop/delete/log routes bypass a proxy on 8265; head forwarding reaches its agent job manager.
-- agent-placement (REASONED; ray): Worker agents accept cluster submissions with their own managers; drivers normally use the head unless resources, labels or worker-placement override permit workers.
-- agent-logs (REASONED; ray): Agent static /logs exposes the node log directory and index.
-- agent-http-auth (REASONED; ray): Without token mode a browser heuristic is the only filter; token mode guards all agent HTTP paths except two health endpoints.
-- agent-grpc (REASONED; ray): Agent gRPC defaults OS-assigned with --dashboard-agent-grpc-port override; localhost or wildcard bind serves log/profiling RPCs with optional token interception.
-- runtime-agent (REASONED; ray): Runtime-env HTTP defaults OS-assigned on node IP with --runtime-env-agent-port override; create/delete installs packages, and token middleware exempts no route.
-- metrics-agent (REASONED; ray): Metrics default enabled; non-minimal reporter uses an OS-assigned port or --metrics-export-port, outside all token middleware.
-- metrics-ipv4 (REASONED; ray, python): WSGI metrics uses AF_INET: empty address is IPv4 wildcard, localhost is used for local node addresses, and resolved ::1 cannot bind this socket.
-- node-normalization (REASONED; ray): Both CLI and ray.init normalize localhost node arguments to a discovered address; cluster-mode setting changes whole-node selection, not independent agent binds.
-- agent-family (REASONED; ray): Agent gRPC wildcard selection is 0.0.0.0 or :: based on resolved localhost, independently of node address family.
-- gcs-not-redis (REASONED; redis-history, docs): 6379 is GCS, not Redis; Redis stopped being launched by default in 1.11.
-- redis-backend (REASONED; docs): External Redis is opt-in GCS fault-tolerance storage; Redis credentials do not authenticate GCS clients and RAY_REDIS_PASSWORD is not a head flag substitute.
-- token-default (REASONED; token-min, ray): Shared token authentication exists since 2.52.0 but is disabled by default as of 2.58.0; it supplements network isolation and does not protect Serve apps.
-- token-input (REASONED; ray): Enable RAY_AUTH_MODE=token; precedence is RAY_AUTH_TOKEN, RAY_AUTH_TOKEN_PATH then ~/.ray/auth_token, shared by every node/client.
-- token-storage (REASONED; ray): Generate/protect token files and copy before startup; tokens are plaintext, do not expire and must never be committed.
-- token-transport (REASONED; docs, ray): Token HTTP headers require a trusted tunnel or TLS; plaintext HTTP exposes them on the network.
-- kuberay-token (REASONED; kuberay-auth, kuberay-auth-source, kuberay-auth-prior): KubeRay v1.6.0 defines authOptions; v1.5.0 RayClusterSpec lacks it. With token mode enabled, the controller creates a random-token Secret when Kubernetes ServiceAccount token authentication is off, SecretName is null or empty, and the generated-name Secret does not already exist; it leaves an existing generated-name Secret or a supplied named Secret in place and creates no Secret in ServiceAccount mode. The pod builder sets RAY_AUTH_MODE when unset on head and worker Ray containers, on the wait-gcs-ready init container when present, and on the head autoscaler when autoscaling is enabled; outside ServiceAccount mode it adds RAY_AUTH_TOKEN from the selected Secret when unset, and in ServiceAccount mode it does not add RAY_AUTH_TOKEN. This guide infers support in v1.6.0 and later from the compared tags; later releases have not been checked.
-- mfa (REASONED; docs): Ray has no user accounts; MFA belongs on SSH, tailnet or identity-aware proxy access.
-- grpc-tls (REASONED; docs): RAY_USE_TLS defaults 0; export it and server certificate/key/CA variables on every node before startup for internal gRPC mutual TLS.
-- tls-scope (REASONED; docs): gRPC TLS can cost performance and does not replace isolation or the dashboard/Jobs HTTP TLS proxy.
-- runtime-code (REASONED; docs): Job runtime_env installs before entrypoint; ray.init environments apply to child tasks/actors. Packages, archives, py_executable and setup hooks execute submitted code.
-- runtime-policy (REASONED; docs): No built-in package/URI/hook admission policy; eager_install and setup_timeout_seconds control timing, not trust. Prebuild reviewed dependencies.
-- serve-bind (REASONED; docs): Serve HTTP defaults port 8000, Python host 127.0.0.1 but config-file host 0.0.0.0; EveryNode puts proxies on nodes with replicas.
-- serve-auth (REASONED; docs): Serve apps have no built-in application auth and are outside cluster token mode; restrict origins and add proxy or FastAPI authentication.
-- serve-tls (REASONED; docs): Serve ssl_keyfile/ssl_certfile/ssl_ca_certs default None; supplying a CA does not itself require client certificates.
-- serve-grpc (REASONED; docs, ray): Optional Serve gRPC uses 9000 only with configured servicer functions.
-- image-privilege (REASONED; ray): Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation.
-- pod-security (REASONED; kuberay, kubernetes): KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp.
-- verify-inventory (REASONED; ray): Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available.
-- verify-external (REASONED; docs, curl): Probe every routed IPv4/IPv6 origin and inventoried port; completed TCP, even HTTP 401 or non-HTTP, proves exposure. Resolver/local errors are inconclusive.
-- verify-jobs (REASONED; ray, kuberay-auth): Through the trusted tunnel valid-token submission must succeed and token-free submission must fail authentication with 401, not a connection error.
-- verify-grpc-tls (REASONED; docs): ray health-check must pass with the correct CA and fail certificate verification with a wrong CA/name; local config errors are inconclusive.
-- verify-agent (REASONED; ray): Direct non-browser /logs/ must expose an index with token mode off, allow a valid token with it on and reject absent tokens with 401; health exemptions cannot discriminate.
-- verify-token-secret (REASONED; ray, curl): Trusted-path hidden prompt and stdin header avoid new token argv/history exposure and set +x avoids tracing; account owner/root can still read memory.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Ray's own security page is blunt: if you expose the Ray Dashboard, Ray Jobs, or Ray Client services, "anybody who can access the associated ports can execute arbitrary code on your Ray Cluster", explicitly by submitting a Job or connecting a Client, indirectly through the Dashboard REST API, and implicitly because Ray deserializes arbitrary Python objects with cloudpickle. Ray "doesn't implement access controls for developers interacting with a given cluster"; security and isolation "must be enforced outside of the Ray Cluster". The head ports in question are the dashboard (and Jobs API) on `8265`, the Ray Client server on `10001`, and the head node port `6379`, all plain HTTP or gRPC with no login of their own unless you enable token authentication (step 3). The per-node agent listeners in step 2 add independent paths to job submission, logs, profiling, runtime environments and metrics.
 
@@ -598,3 +299,328 @@ REASONED: mixed historical listener observations and unrun service comparisons f
 - Kubernetes security contexts (runAsNonRoot, drop capabilities, seccomp): https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 - KubeRay ray-cluster Helm chart values (head/worker podSecurityContext and securityContext, default {}): https://github.com/ray-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml
 - [Ray ray-2.58.0 Serve gRPC default port and servicer-function requirement (checked October 2026)](https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/config.py#L955-L963).
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/ray.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- ray: Ray pinned source (ray-2.58.0)
+- token-min: Ray token authentication introduction (2.52.0)
+- docs: Ray documentation (unknown)
+- redis-history: Ray Redis history announcement (unknown)
+- kuberay-auth: KubeRay authentication documentation (unknown)
+- kuberay: KubeRay chart (v1.7.0)
+- kuberay-auth-source: KubeRay authentication source (v1.6.0)
+- kuberay-auth-prior: KubeRay prior RayCluster types (v1.5.0)
+- docker: Docker publishing documentation (unknown)
+- kubernetes: Kubernetes security contexts (unknown)
+- docker-release: Docker Engine release notes (4e9a5751518ed8223a8dcde53693badddd72604f)
+- python: CPython WSGI server (v3.11.0)
+- curl: curl minimum write-out version (7.75.0)
+
+Claims (full source mapping in the JSON block below):
+
+- boundary (REASONED; docs): Dashboard, Jobs and Client access permits arbitrary code execution; use an isolated cluster network and separate clusters for mutually untrusted jobs.
+- dashboard (REASONED; ray): Dashboard defaults to resolved localhost, IPv4 before IPv6 then 127.0.0.1, on port 8265; state loopback explicitly.
+- docker (REASONED; docker, docker-release): Bridge publishing uses host loopback and container-interface bind; this guide assesses Docker 28.0.0 or later with normal NAT as the loopback-isolation minimum because the 28.0.0 release notes record a fix for neighbour hosts reaching loopback-mapped ports.
+- access (REASONED; docs, kuberay-auth): Reach Dashboard/Jobs through loopback SSH forwarding, launcher forwarding, KubeRay forwarding or a private tailnet; public browser access needs an authenticating TLS proxy.
+- head-ports (REASONED; docs): Head GCS uses 6379 and Client 10001; worker ports default 10002-19999 plus randomized listeners.
+- core-bind (REASONED; ray): Core gRPC source binds all interfaces unless node address is exactly 127.0.0.1, ::1 or localhost; private node IP does not imply private bind.
+- gcs-observation (DEMONSTRATED; ray): Four attempted Ray 2.58.0 loopback starts still showed GCS *:6379; the cause was not established and the watcher stopped the runs.
+- client-bind (REASONED; ray): Ray Client server/proxier listen on the supplied node address plus loopback; restrict access and prefer Jobs over publishing Client.
+- serve-replica (REASONED; ray): Serve inter-deployment gRPC binds [::] on an OS-chosen port; this is source reasoning, not a run.
+- agents (REASONED; ray): --include-dashboard=false does not stop dashboard/runtime-env agents; head dashboard itself is reduced to usage stats.
+- minimal (REASONED; ray): Missing optional imports select minimal mode: no agent HTTP/gRPC or metrics reporter; runtime-env HTTP remains. Base installs may have full dependencies.
+- agent-http (REASONED; ray): Non-minimal agent HTTP defaults 52365, including ray.init; --dashboard-agent-listen-port changes it, with node-IP plus conditional localhost binds.
+- agent-jobs (REASONED; ray): Direct /api/job_agent/jobs/ submission and stop/delete/log routes bypass a proxy on 8265; head forwarding reaches its agent job manager.
+- agent-placement (REASONED; ray): Worker agents accept cluster submissions with their own managers; drivers normally use the head unless resources, labels or worker-placement override permit workers.
+- agent-logs (REASONED; ray): Agent static /logs exposes the node log directory and index.
+- agent-http-auth (REASONED; ray): Without token mode a browser heuristic is the only filter; token mode guards all agent HTTP paths except two health endpoints.
+- agent-grpc (REASONED; ray): Agent gRPC defaults OS-assigned with --dashboard-agent-grpc-port override; localhost or wildcard bind serves log/profiling RPCs with optional token interception.
+- runtime-agent (REASONED; ray): Runtime-env HTTP defaults OS-assigned on node IP with --runtime-env-agent-port override; create/delete installs packages, and token middleware exempts no route.
+- metrics-agent (REASONED; ray): Metrics default enabled; non-minimal reporter uses an OS-assigned port or --metrics-export-port, outside all token middleware.
+- metrics-ipv4 (REASONED; ray, python): WSGI metrics uses AF_INET: empty address is IPv4 wildcard, localhost is used for local node addresses, and resolved ::1 cannot bind this socket.
+- node-normalization (REASONED; ray): Both CLI and ray.init normalize localhost node arguments to a discovered address; cluster-mode setting changes whole-node selection, not independent agent binds.
+- agent-family (REASONED; ray): Agent gRPC wildcard selection is 0.0.0.0 or :: based on resolved localhost, independently of node address family.
+- gcs-not-redis (REASONED; redis-history, docs): 6379 is GCS, not Redis; Redis stopped being launched by default in 1.11.
+- redis-backend (REASONED; docs): External Redis is opt-in GCS fault-tolerance storage; Redis credentials do not authenticate GCS clients and RAY_REDIS_PASSWORD is not a head flag substitute.
+- token-default (REASONED; token-min, ray): Shared token authentication exists since 2.52.0 but is disabled by default as of 2.58.0; it supplements network isolation and does not protect Serve apps.
+- token-input (REASONED; ray): Enable RAY_AUTH_MODE=token; precedence is RAY_AUTH_TOKEN, RAY_AUTH_TOKEN_PATH then ~/.ray/auth_token, shared by every node/client.
+- token-storage (REASONED; ray): Generate/protect token files and copy before startup; tokens are plaintext, do not expire and must never be committed.
+- token-transport (REASONED; docs, ray): Token HTTP headers require a trusted tunnel or TLS; plaintext HTTP exposes them on the network.
+- kuberay-token (REASONED; kuberay-auth, kuberay-auth-source, kuberay-auth-prior): KubeRay v1.6.0 defines authOptions; v1.5.0 RayClusterSpec lacks it. With token mode enabled, the controller creates a random-token Secret when Kubernetes ServiceAccount token authentication is off, SecretName is null or empty, and the generated-name Secret does not already exist; it leaves an existing generated-name Secret or a supplied named Secret in place and creates no Secret in ServiceAccount mode. The pod builder sets RAY_AUTH_MODE when unset on head and worker Ray containers, on the wait-gcs-ready init container when present, and on the head autoscaler when autoscaling is enabled; outside ServiceAccount mode it adds RAY_AUTH_TOKEN from the selected Secret when unset, and in ServiceAccount mode it does not add RAY_AUTH_TOKEN. This guide infers support in v1.6.0 and later from the compared tags; later releases have not been checked.
+- mfa (REASONED; docs): Ray has no user accounts; MFA belongs on SSH, tailnet or identity-aware proxy access.
+- grpc-tls (REASONED; docs): RAY_USE_TLS defaults 0; export it and server certificate/key/CA variables on every node before startup for internal gRPC mutual TLS.
+- tls-scope (REASONED; docs): gRPC TLS can cost performance and does not replace isolation or the dashboard/Jobs HTTP TLS proxy.
+- runtime-code (REASONED; docs): Job runtime_env installs before entrypoint; ray.init environments apply to child tasks/actors. Packages, archives, py_executable and setup hooks execute submitted code.
+- runtime-policy (REASONED; docs): No built-in package/URI/hook admission policy; eager_install and setup_timeout_seconds control timing, not trust. Prebuild reviewed dependencies.
+- serve-bind (REASONED; docs): Serve HTTP defaults port 8000, Python host 127.0.0.1 but config-file host 0.0.0.0; EveryNode puts proxies on nodes with replicas.
+- serve-auth (REASONED; docs): Serve apps have no built-in application auth and are outside cluster token mode; restrict origins and add proxy or FastAPI authentication.
+- serve-tls (REASONED; docs): Serve ssl_keyfile/ssl_certfile/ssl_ca_certs default None; supplying a CA does not itself require client certificates.
+- serve-grpc (REASONED; docs, ray): Optional Serve gRPC uses 9000 only with configured servicer functions.
+- image-privilege (REASONED; ray): Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation.
+- pod-security (REASONED; kuberay, kubernetes): KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp.
+- verify-inventory (REASONED; ray): Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available.
+- verify-external (REASONED; docs, curl): Probe every routed IPv4/IPv6 origin and inventoried port; completed TCP, even HTTP 401 or non-HTTP, proves exposure. Resolver/local errors are inconclusive.
+- verify-jobs (REASONED; ray, kuberay-auth): Through the trusted tunnel valid-token submission must succeed and token-free submission must fail authentication with 401, not a connection error.
+- verify-grpc-tls (REASONED; docs): ray health-check must pass with the correct CA and fail certificate verification with a wrong CA/name; local config errors are inconclusive.
+- verify-agent (REASONED; ray): Direct non-browser /logs/ must expose an index with token mode off, allow a valid token with it on and reject absent tokens with 401; health exemptions cannot discriminate.
+- verify-token-secret (REASONED; ray, curl): Trusted-path hidden prompt and stdin header avoid new token argv/history exposure and set +x avoids tracing; account owner/root can still read memory.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "286cb3508e87ad0658bd57c73270ab3b4100681250bae339f4d71a573e537bfb",
+  "components": {
+    "ray": {
+      "name": "Ray pinned source",
+      "basis": "ray-2.58.0",
+      "sources": {
+        "sed3f197cc1ef": "https://github.com/ray-project/ray/blob/ray-2.58.0/doc/source/ray-security/token-auth.md",
+        "s08d31327265a": "https://raw.githubusercontent.com/ray-project/ray/ray-2.58.0/docker/base-deps/Dockerfile",
+        "s2740a1880e2b": "https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/rpc/grpc_server.cc#L67-L68",
+        "s958054ab801b": "https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/util/network_util.h#L111-L113",
+        "sa3d2966f536b": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/scripts/scripts.py#L601-L617",
+        "s050b349f5bbd": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/ray_constants.py#L185",
+        "sd7d2d0d963d0": "https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/util/network_util.cc#L257-L278",
+        "s329ab4e0ed63": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/_private/replica.py#L1778",
+        "s3eb2c2cb2cbb": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/util/client/server/server.py#L799-L801",
+        "sae1bb5af6e35": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/util/client/server/proxier.py#L929-L931",
+        "s207ba00c4e86": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L1572-L1575",
+        "s3efda42d7913": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L2464-L2471",
+        "s9a060fe08a53": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/ray_constants.py#L189",
+        "sb1935b32e677": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/scripts/scripts.py#L618-L635",
+        "se9af8ec90932": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/scripts/scripts.py#L687-L692",
+        "s17bc66b5543e": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L20-L23",
+        "s7df4fce455ca": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L54-L66",
+        "sc96f32b8a459": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L107-L113",
+        "sbca5ef4de0bb": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/authentication/http_token_authentication.py#L28-L80",
+        "scdfff3ba79f6": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/optional_utils.py#L132-L209",
+        "s528944bdec23": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_agent.py#L32-L196",
+        "s4796e2ca38da": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_head.py#L123-L144",
+        "s1d86b2f31870": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_head.py#L267-L280",
+        "s9976ecf5b1f1": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L245-L249",
+        "sa542601368d1": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L264-L307",
+        "sd12bacfbc3c7": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/log/log_agent.py#L345-L414",
+        "s7ef1edbcda5c": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/reporter/reporter_agent.py#L570-L638",
+        "s6f5310eb313d": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/agent.py#L144-L169",
+        "s8f508c7e2c94": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/agent.py#L182-L187",
+        "s48b3469099a3": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/agent.py#L100-L117",
+        "s532a98227d6d": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L372-L377",
+        "s33a5ff7c987b": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L1660-L1669",
+        "s1a19fd793b8f": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/node.py#L1768",
+        "s8f1ebe4bd911": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L1381-L1387",
+        "s7682a13e83a2": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L1862-L1883",
+        "s9237e74ea054": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L1918-L1929",
+        "s4ce6fe077ba9": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L2022-L2031",
+        "s7f27125f73b7": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/reporter/reporter_agent.py#L504-L516",
+        "sf921a5d6a898": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/prometheus_exporter.py#L326-L334",
+        "s434c7b4364dc": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/runtime_env/agent/main.py#L218-L224",
+        "s08aa128e5d70": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/runtime_env/agent/main.py#L243-L248",
+        "sdd8960062a9c": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/includes/network_util.pxi#L103-L110",
+        "s51476b743c19": "https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/util/network_util.cc#L280-L289",
+        "s7451c8e00be3": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/scripts/scripts.py#L850-L854",
+        "s6c7faadf88a4": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L786-L821",
+        "s3625ec280c5e": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/worker.py#L1835-L1836",
+        "sd3a18ab2a112": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/ray_constants.py#L507-L514",
+        "sba3f67581471": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/parameter.py#L165-L167",
+        "s994d0ddb6a7d": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/worker.py#L1884-L1912",
+        "sd4d44da36278": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/utils.py#L1128-L1142",
+        "s5a9d9c171f49": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/services.py#L1909-L1913",
+        "s9cd95d66d32a": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/utils.py#L322-L351",
+        "s762672f680e9": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/reporter/reporter_agent.py#L2099-L2101",
+        "s28e3a1076d01": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/runtime_env/agent/main.py#L23-L33",
+        "s883e3e00e4df": "https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/common/ray_config_def.h#L618-L619",
+        "sdb1c4564137b": "https://github.com/ray-project/ray/blob/ray-2.58.0/src/ray/raylet/node_manager.cc#L3527-L3530",
+        "sa7d4f677aadb": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_agent.py#L198-L203",
+        "sa5873642c8a2": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_manager.py#L421-L463",
+        "s2d562f0e7567": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/modules/job/job_manager.py#L565-L609",
+        "s3a079f7e3d82": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/_private/prometheus_exporter.py#L10",
+        "sefae1a66c0dd": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/dashboard/http_server_agent.py#L102-L114",
+        "scc7af6be456e": "https://github.com/ray-project/ray/blob/ray-2.58.0/python/ray/serve/config.py#L955-L963"
+      }
+    },
+    "token-min": {
+      "name": "Ray token authentication introduction",
+      "basis": "2.52.0",
+      "sources": {
+        "sa5e2c2d58c12": "https://docs.ray.io/en/latest/ray-security/index.html"
+      }
+    },
+    "docs": {
+      "name": "Ray documentation",
+      "basis": "unknown",
+      "sources": {
+        "sa5e2c2d58c12": "https://docs.ray.io/en/latest/ray-security/index.html",
+        "s6f0aa11f549a": "https://docs.ray.io/en/latest/ray-security/token-auth.html",
+        "s56c7c98ab722": "https://docs.ray.io/en/latest/cluster/cli.html",
+        "s261570b2672b": "https://docs.ray.io/en/latest/ray-core/configure.html",
+        "sc375ff2ca01f": "https://docs.ray.io/en/latest/ray-core/handling-dependencies.html",
+        "sb7a1d0b7dfb3": "https://docs.ray.io/en/latest/ray-core/api/doc/ray.runtime_env.RuntimeEnv.html",
+        "scd3f7d8a9b02": "https://docs.ray.io/en/latest/serve/api/doc/ray.serve.config.HTTPOptions.html",
+        "s15aa6ec80fb8": "https://docs.ray.io/en/latest/serve/api/doc/ray.serve.schema.HTTPOptionsSchema.html",
+        "s045d75fbdecc": "https://docs.ray.io/en/latest/serve/api/doc/ray.serve.schema.ServeDeploySchema.html",
+        "sc98a37c2b157": "https://docs.ray.io/en/latest/serve/http-guide.html",
+        "s54ed4b890b65": "https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-gcs-ft.html"
+      }
+    },
+    "redis-history": {
+      "name": "Ray Redis history announcement",
+      "basis": "unknown",
+      "sources": {
+        "sb5afda59324d": "https://www.anyscale.com/blog/redis-in-ray-past-and-future"
+      }
+    },
+    "kuberay-auth": {
+      "name": "KubeRay authentication documentation",
+      "basis": "unknown",
+      "sources": {
+        "saf5247262bc7": "https://docs.ray.io/en/latest/cluster/kubernetes/user-guides/kuberay-auth.html"
+      }
+    },
+    "kuberay": {
+      "name": "KubeRay chart",
+      "basis": "v1.7.0",
+      "sources": {
+        "s76e45858aa01": "https://github.com/ray-project/kuberay/blob/v1.7.0/helm-chart/ray-cluster/values.yaml"
+      }
+    },
+    "kuberay-auth-source": {
+      "name": "KubeRay authentication source",
+      "basis": "v1.6.0",
+      "sources": {
+        "s9a9f9edcc07e": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L17-L19",
+        "s51c84c0bc3b4": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/apis/ray/v1/raycluster_types.go#L81-L107",
+        "s61e750cdc2e0": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/raycluster_controller.go#L369-L433",
+        "s6171707b3edb": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L194-L220",
+        "s408a3a202322": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L234-L236",
+        "s8505add03e5a": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L253-L271",
+        "s1cb4f972131a": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L296-L336",
+        "sd1b672bc4edd": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/common/pod.go#L460-L462",
+        "se37635162dc9": "https://github.com/ray-project/kuberay/blob/v1.6.0/ray-operator/controllers/ray/utils/util.go#L760-L766"
+      }
+    },
+    "kuberay-auth-prior": {
+      "name": "KubeRay prior RayCluster types",
+      "basis": "v1.5.0",
+      "sources": {
+        "s04c5ce0b599d": "https://github.com/ray-project/kuberay/blob/v1.5.0/ray-operator/apis/ray/v1/raycluster_types.go#L12-L47"
+      }
+    },
+    "docker": {
+      "name": "Docker publishing documentation",
+      "basis": "unknown",
+      "sources": {
+        "s1e53417c513d": "https://docs.docker.com/engine/network/port-publishing/"
+      }
+    },
+    "kubernetes": {
+      "name": "Kubernetes security contexts",
+      "basis": "unknown",
+      "sources": {
+        "sb78ea91d0308": "https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"
+      }
+    },
+    "docker-release": {
+      "name": "Docker Engine release notes",
+      "basis": "4e9a5751518ed8223a8dcde53693badddd72604f",
+      "sources": {
+        "sd733f57ded23": "https://github.com/docker/docs/blob/4e9a5751518ed8223a8dcde53693badddd72604f/content/manuals/engine/release-notes/28.md#L768-L768"
+      }
+    },
+    "python": {
+      "name": "CPython WSGI server",
+      "basis": "v3.11.0",
+      "sources": {
+        "sdd5a8e2ab59c": "https://github.com/python/cpython/blob/v3.11.0/Lib/wsgiref/simple_server.py#L1-L160",
+        "se4933ce3da65": "https://github.com/python/cpython/blob/v3.11.0/Lib/http/server.py#L120-L145",
+        "s0020052d7267": "https://github.com/python/cpython/blob/v3.11.0/Lib/socketserver.py#L400-L480"
+      }
+    },
+    "curl": {
+      "name": "curl minimum write-out version",
+      "basis": "7.75.0",
+      "sources": {
+        "s2b2686afaf41": "https://curl.se/docs/manpage.html"
+      }
+    }
+  },
+  "claims": {
+    "boundary": {"text": "Dashboard, Jobs and Client access permits arbitrary code execution; use an isolated cluster network and separate clusters for mutually untrusted jobs.", "components": ["docs"], "sources": ["docs:sa5e2c2d58c12"], "status": "REASONED"},
+    "dashboard": {"text": "Dashboard defaults to resolved localhost, IPv4 before IPv6 then 127.0.0.1, on port 8265; state loopback explicitly.", "components": ["ray"], "sources": ["ray:sa3d2966f536b", "ray:s050b349f5bbd", "ray:sd7d2d0d963d0"], "status": "REASONED"},
+    "docker": {"text": "Bridge publishing uses host loopback and container-interface bind; this guide assesses Docker 28.0.0 or later with normal NAT as the loopback-isolation minimum because the 28.0.0 release notes record a fix for neighbour hosts reaching loopback-mapped ports.", "components": ["docker", "docker-release"], "sources": ["docker:s1e53417c513d", "docker-release:sd733f57ded23"], "status": "REASONED"},
+    "access": {"text": "Reach Dashboard/Jobs through loopback SSH forwarding, launcher forwarding, KubeRay forwarding or a private tailnet; public browser access needs an authenticating TLS proxy.", "components": ["docs", "kuberay-auth"], "sources": ["docs:sa5e2c2d58c12", "docs:s56c7c98ab722", "kuberay-auth:saf5247262bc7"], "status": "REASONED"},
+    "head-ports": {"text": "Head GCS uses 6379 and Client 10001; worker ports default 10002-19999 plus randomized listeners.", "components": ["docs"], "sources": ["docs:s56c7c98ab722", "docs:s261570b2672b"], "status": "REASONED"},
+    "core-bind": {"text": "Core gRPC source binds all interfaces unless node address is exactly 127.0.0.1, ::1 or localhost; private node IP does not imply private bind.", "components": ["ray"], "sources": ["ray:s2740a1880e2b", "ray:s958054ab801b"], "status": "REASONED"},
+    "gcs-observation": {"text": "Four attempted Ray 2.58.0 loopback starts still showed GCS *:6379; the cause was not established and the watcher stopped the runs.", "components": ["ray"], "sources": ["ray:s2740a1880e2b", "ray:s958054ab801b"], "status": "DEMONSTRATED", "evidence": "in each of four runs using `ray start --head --node-ip-address=127.0.0.1 --port=6379 --dashboard-host=127.0.0.1`, `ss` still showed the GCS listener as `*:6379`."},
+    "client-bind": {"text": "Ray Client server/proxier listen on the supplied node address plus loopback; restrict access and prefer Jobs over publishing Client.", "components": ["ray"], "sources": ["ray:s3eb2c2cb2cbb", "ray:sae1bb5af6e35", "ray:s207ba00c4e86", "ray:s3efda42d7913"], "status": "REASONED"},
+    "serve-replica": {"text": "Serve inter-deployment gRPC binds [::] on an OS-chosen port; this is source reasoning, not a run.", "components": ["ray"], "sources": ["ray:s329ab4e0ed63"], "status": "REASONED"},
+    "agents": {"text": "--include-dashboard=false does not stop dashboard/runtime-env agents; head dashboard itself is reduced to usage stats.", "components": ["ray"], "sources": ["ray:s33a5ff7c987b", "ray:s1a19fd793b8f", "ray:s8f1ebe4bd911", "ray:s7682a13e83a2", "ray:s9237e74ea054", "ray:s4ce6fe077ba9"], "status": "REASONED"},
+    "minimal": {"text": "Missing optional imports select minimal mode: no agent HTTP/gRPC or metrics reporter; runtime-env HTTP remains. Base installs may have full dependencies.", "components": ["ray"], "sources": ["ray:s48b3469099a3", "ray:sd4d44da36278", "ray:s5a9d9c171f49", "ray:s9cd95d66d32a", "ray:s762672f680e9", "ray:s28e3a1076d01"], "status": "REASONED"},
+    "agent-http": {"text": "Non-minimal agent HTTP defaults 52365, including ray.init; --dashboard-agent-listen-port changes it, with node-IP plus conditional localhost binds.", "components": ["ray"], "sources": ["ray:s9a060fe08a53", "ray:sb1935b32e677", "ray:s7df4fce455ca", "ray:sba3f67581471", "ray:s994d0ddb6a7d"], "status": "REASONED"},
+    "agent-jobs": {"text": "Direct /api/job_agent/jobs/ submission and stop/delete/log routes bypass a proxy on 8265; head forwarding reaches its agent job manager.", "components": ["ray"], "sources": ["ray:s528944bdec23", "ray:s4796e2ca38da", "ray:s1d86b2f31870"], "status": "REASONED"},
+    "agent-placement": {"text": "Worker agents accept cluster submissions with their own managers; drivers normally use the head unless resources, labels or worker-placement override permit workers.", "components": ["ray"], "sources": ["ray:sa7d4f677aadb", "ray:sa5873642c8a2", "ray:s2d562f0e7567"], "status": "REASONED"},
+    "agent-logs": {"text": "Agent static /logs exposes the node log directory and index.", "components": ["ray"], "sources": ["ray:s9976ecf5b1f1"], "status": "REASONED"},
+    "agent-http-auth": {"text": "Without token mode a browser heuristic is the only filter; token mode guards all agent HTTP paths except two health endpoints.", "components": ["ray"], "sources": ["ray:s17bc66b5543e", "ray:sc96f32b8a459", "ray:sbca5ef4de0bb", "ray:scdfff3ba79f6"], "status": "REASONED"},
+    "agent-grpc": {"text": "Agent gRPC defaults OS-assigned with --dashboard-agent-grpc-port override; localhost or wildcard bind serves log/profiling RPCs with optional token interception.", "components": ["ray"], "sources": ["ray:sb1935b32e677", "ray:sa542601368d1", "ray:sd12bacfbc3c7", "ray:s7ef1edbcda5c", "ray:s6f5310eb313d", "ray:s8f508c7e2c94", "ray:s532a98227d6d"], "status": "REASONED"},
+    "runtime-agent": {"text": "Runtime-env HTTP defaults OS-assigned on node IP with --runtime-env-agent-port override; create/delete installs packages, and token middleware exempts no route.", "components": ["ray"], "sources": ["ray:s532a98227d6d", "ray:s434c7b4364dc", "ray:s08aa128e5d70", "ray:sb1935b32e677"], "status": "REASONED"},
+    "metrics-agent": {"text": "Metrics default enabled; non-minimal reporter uses an OS-assigned port or --metrics-export-port, outside all token middleware.", "components": ["ray"], "sources": ["ray:s532a98227d6d", "ray:s7f27125f73b7", "ray:sf921a5d6a898", "ray:s883e3e00e4df", "ray:sdb1c4564137b", "ray:se9af8ec90932"], "status": "REASONED"},
+    "metrics-ipv4": {"text": "WSGI metrics uses AF_INET: empty address is IPv4 wildcard, localhost is used for local node addresses, and resolved ::1 cannot bind this socket.", "components": ["ray", "python"], "sources": ["ray:s7f27125f73b7", "ray:sf921a5d6a898", "ray:s3a079f7e3d82", "python:sdd5a8e2ab59c", "python:se4933ce3da65", "python:s0020052d7267"], "status": "REASONED"},
+    "node-normalization": {"text": "Both CLI and ray.init normalize localhost node arguments to a discovered address; cluster-mode setting changes whole-node selection, not independent agent binds.", "components": ["ray"], "sources": ["ray:s7451c8e00be3", "ray:s6c7faadf88a4", "ray:s3625ec280c5e", "ray:sd3a18ab2a112"], "status": "REASONED"},
+    "agent-family": {"text": "Agent gRPC wildcard selection is 0.0.0.0 or :: based on resolved localhost, independently of node address family.", "components": ["ray"], "sources": ["ray:sdd8960062a9c", "ray:s51476b743c19"], "status": "REASONED"},
+    "gcs-not-redis": {"text": "6379 is GCS, not Redis; Redis stopped being launched by default in 1.11.", "components": ["redis-history", "docs"], "sources": ["redis-history:sb5afda59324d", "docs:s56c7c98ab722"], "status": "REASONED"},
+    "redis-backend": {"text": "External Redis is opt-in GCS fault-tolerance storage; Redis credentials do not authenticate GCS clients and RAY_REDIS_PASSWORD is not a head flag substitute.", "components": ["docs"], "sources": ["docs:s56c7c98ab722", "docs:s54ed4b890b65"], "status": "REASONED"},
+    "token-default": {"text": "Shared token authentication exists since 2.52.0 but is disabled by default as of 2.58.0; it supplements network isolation and does not protect Serve apps.", "components": ["token-min", "ray"], "sources": ["token-min:sa5e2c2d58c12", "ray:sed3f197cc1ef"], "status": "REASONED"},
+    "token-input": {"text": "Enable RAY_AUTH_MODE=token; precedence is RAY_AUTH_TOKEN, RAY_AUTH_TOKEN_PATH then ~/.ray/auth_token, shared by every node/client.", "components": ["ray"], "sources": ["ray:sed3f197cc1ef"], "status": "REASONED"},
+    "token-storage": {"text": "Generate/protect token files and copy before startup; tokens are plaintext, do not expire and must never be committed.", "components": ["ray"], "sources": ["ray:sed3f197cc1ef"], "status": "REASONED"},
+    "token-transport": {"text": "Token HTTP headers require a trusted tunnel or TLS; plaintext HTTP exposes them on the network.", "components": ["docs", "ray"], "sources": ["docs:s6f0aa11f549a", "ray:sed3f197cc1ef"], "status": "REASONED"},
+    "kuberay-token": {"text": "KubeRay v1.6.0 defines authOptions; v1.5.0 RayClusterSpec lacks it. With token mode enabled, the controller creates a random-token Secret when Kubernetes ServiceAccount token authentication is off, SecretName is null or empty, and the generated-name Secret does not already exist; it leaves an existing generated-name Secret or a supplied named Secret in place and creates no Secret in ServiceAccount mode. The pod builder sets RAY_AUTH_MODE when unset on head and worker Ray containers, on the wait-gcs-ready init container when present, and on the head autoscaler when autoscaling is enabled; outside ServiceAccount mode it adds RAY_AUTH_TOKEN from the selected Secret when unset, and in ServiceAccount mode it does not add RAY_AUTH_TOKEN. This guide infers support in v1.6.0 and later from the compared tags; later releases have not been checked.", "components": ["kuberay-auth", "kuberay-auth-source", "kuberay-auth-prior"], "sources": ["kuberay-auth:saf5247262bc7", "kuberay-auth-source:s9a9f9edcc07e", "kuberay-auth-source:s51c84c0bc3b4", "kuberay-auth-source:s61e750cdc2e0", "kuberay-auth-source:s6171707b3edb", "kuberay-auth-source:s408a3a202322", "kuberay-auth-source:s8505add03e5a", "kuberay-auth-source:s1cb4f972131a", "kuberay-auth-source:sd1b672bc4edd", "kuberay-auth-source:se37635162dc9", "kuberay-auth-prior:s04c5ce0b599d"], "status": "REASONED"},
+    "mfa": {"text": "Ray has no user accounts; MFA belongs on SSH, tailnet or identity-aware proxy access.", "components": ["docs"], "sources": ["docs:sa5e2c2d58c12"], "status": "REASONED"},
+    "grpc-tls": {"text": "RAY_USE_TLS defaults 0; export it and server certificate/key/CA variables on every node before startup for internal gRPC mutual TLS.", "components": ["docs"], "sources": ["docs:s261570b2672b"], "status": "REASONED"},
+    "tls-scope": {"text": "gRPC TLS can cost performance and does not replace isolation or the dashboard/Jobs HTTP TLS proxy.", "components": ["docs"], "sources": ["docs:sa5e2c2d58c12", "docs:s261570b2672b"], "status": "REASONED"},
+    "runtime-code": {"text": "Job runtime_env installs before entrypoint; ray.init environments apply to child tasks/actors. Packages, archives, py_executable and setup hooks execute submitted code.", "components": ["docs"], "sources": ["docs:sc375ff2ca01f"], "status": "REASONED"},
+    "runtime-policy": {"text": "No built-in package/URI/hook admission policy; eager_install and setup_timeout_seconds control timing, not trust. Prebuild reviewed dependencies.", "components": ["docs"], "sources": ["docs:sc375ff2ca01f", "docs:sb7a1d0b7dfb3"], "status": "REASONED"},
+    "serve-bind": {"text": "Serve HTTP defaults port 8000, Python host 127.0.0.1 but config-file host 0.0.0.0; EveryNode puts proxies on nodes with replicas.", "components": ["docs"], "sources": ["docs:scd3f7d8a9b02", "docs:s15aa6ec80fb8", "docs:s045d75fbdecc"], "status": "REASONED"},
+    "serve-auth": {"text": "Serve apps have no built-in application auth and are outside cluster token mode; restrict origins and add proxy or FastAPI authentication.", "components": ["docs"], "sources": ["docs:sa5e2c2d58c12", "docs:sc98a37c2b157"], "status": "REASONED"},
+    "serve-tls": {"text": "Serve ssl_keyfile/ssl_certfile/ssl_ca_certs default None; supplying a CA does not itself require client certificates.", "components": ["docs"], "sources": ["docs:scd3f7d8a9b02"], "status": "REASONED"},
+    "serve-grpc": {"text": "Optional Serve gRPC uses 9000 only with configured servicer functions.", "components": ["docs", "ray"], "sources": ["docs:s045d75fbdecc", "ray:scc7af6be456e"], "status": "REASONED"},
+    "image-privilege": {"text": "Official image ray UID 1000/GID 100 has passwordless sudo; non-root startup alone does not prevent root escalation.", "components": ["ray"], "sources": ["ray:s08d31327265a"], "status": "REASONED"},
+    "pod-security": {"text": "KubeRay v1.7.0 head/worker pod/container contexts default empty; enforce non-root UID/GID, no privilege escalation, dropped capabilities and RuntimeDefault seccomp.", "components": ["kuberay", "kubernetes"], "sources": ["kuberay:s76e45858aa01", "kubernetes:sb78ea91d0308"], "status": "REASONED"},
+    "verify-inventory": {"text": "Inventory every head/worker and actual randomized agent ports after restarts; expected missing listeners need explanation. No isolated multi-node cluster was available.", "components": ["ray"], "sources": ["ray:s9a060fe08a53", "ray:s6f5310eb313d", "ray:s532a98227d6d", "ray:s7f27125f73b7", "ray:s434c7b4364dc"], "status": "REASONED", "verify": [1]},
+    "verify-external": {"text": "Probe every routed IPv4/IPv6 origin and inventoried port; completed TCP, even HTTP 401 or non-HTTP, proves exposure. Resolver/local errors are inconclusive.", "components": ["docs", "curl"], "sources": ["docs:sa5e2c2d58c12", "docs:s261570b2672b", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [1]},
+    "verify-jobs": {"text": "Through the trusted tunnel valid-token submission must succeed and token-free submission must fail authentication with 401, not a connection error.", "components": ["ray", "kuberay-auth"], "sources": ["ray:sed3f197cc1ef", "kuberay-auth:saf5247262bc7"], "status": "REASONED", "verify": [1]},
+    "verify-grpc-tls": {"text": "ray health-check must pass with the correct CA and fail certificate verification with a wrong CA/name; local config errors are inconclusive.", "components": ["docs"], "sources": ["docs:s261570b2672b"], "status": "REASONED", "verify": [1]},
+    "verify-agent": {"text": "Direct non-browser /logs/ must expose an index with token mode off, allow a valid token with it on and reject absent tokens with 401; health exemptions cannot discriminate.", "components": ["ray"], "sources": ["ray:s9976ecf5b1f1", "ray:s17bc66b5543e", "ray:sbca5ef4de0bb", "ray:sefae1a66c0dd"], "status": "REASONED", "verify": [2]},
+    "verify-token-secret": {"text": "Trusted-path hidden prompt and stdin header avoid new token argv/history exposure and set +x avoids tracing; account owner/root can still read memory.", "components": ["ray", "curl"], "sources": ["ray:sed3f197cc1ef", "curl:s2b2686afaf41"], "status": "REASONED", "verify": [2]}
+  }
+}
+````
+<!-- version-basis:end -->

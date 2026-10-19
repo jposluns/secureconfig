@@ -1,201 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-10-18",
-  "documentation_checked": "2026-09",
-  "body_sha256": "645f3f5ab27a4df2af69e0680ac8e98f85ca416fe85a078c95075598e9b33f4d",
-  "components": {
-    "apache": {
-      "name": "Apache HTTP Server",
-      "basis": "2.4",
-      "sources": {
-        "sde155f1667f3": "https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html",
-        "s99dcb49d86a4": "https://httpd.apache.org/docs/2.4/howto/auth.html",
-        "sc07f97af99e3": "https://httpd.apache.org/docs/2.4/vhosts/name-based.html",
-        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy",
-        "s7c302c734a0d": "https://httpd.apache.org/docs/2.4/vhosts/details.html",
-        "s1dbb2636d050": "https://httpd.apache.org/docs/2.4/mod/mod_headers.html"
-      }
-    },
-    "policy": {
-      "name": "Mozilla TLS policy",
-      "basis": "unknown",
-      "sources": {
-        "s529b0eabe2ed": "https://ssl-config.mozilla.org/"
-      }
-    },
-    "tls-min": {
-      "name": "Apache TLSv1.3 minimum",
-      "basis": "2.4.36+",
-      "sources": {
-        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
-      }
-    },
-    "sni-min": {
-      "name": "Apache per-vhost protocol minimum",
-      "basis": "2.4.42+",
-      "sources": {
-        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
-      }
-    },
-    "openssl": {
-      "name": "OpenSSL qualification",
-      "basis": "1.1.1+",
-      "sources": {
-        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
-      }
-    },
-    "chain-min": {
-      "name": "Apache chain-file minimum",
-      "basis": "2.4.8",
-      "sources": {
-        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
-      }
-    },
-    "certbot": {
-      "name": "Certbot Apache installation",
-      "basis": "v2.3.0",
-      "sources": {
-        "sc74fcd0167d8": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L104-L106",
-        "sa453a66e4130": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L646",
-        "sacf90ffa5a6d": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L674-L677",
-        "s74412ad87016": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/constants.py#L66-L68"
-      }
-    },
-    "debian-packaging": {
-      "name": "Debian apache2 packaging",
-      "basis": "2.4.69-1",
-      "sources": {
-        "s1c05297f1ef0": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.install#L1-7",
-        "s32bd234fb40a": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/config-dir/sites-available/default-ssl.conf#L1-4",
-        "sc9b152b1a444": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.links#L7",
-        "sd1c9de6b39aa": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-102",
-        "s62f6ed2866ab": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1"
-      }
-    },
-    "fedora-packaging": {
-      "name": "Fedora f44 httpd packaging",
-      "basis": "commit 6df70d39",
-      "sources": {
-        "s7d73f140a3fe": "https://src.fedoraproject.org/rpms/httpd/blob/6df70d392dace11a7c01ceffc5d8a929de0b7a35/f/httpd.spec#_204-212",
-        "s4479577a2e6a": "https://src.fedoraproject.org/rpms/httpd/blob/6df70d392dace11a7c01ceffc5d8a929de0b7a35/f/httpd.spec#_819-824"
-      }
-    },
-    "htpasswd": {
-      "name": "httpd htpasswd",
-      "basis": "2.4.69",
-      "sources": {
-        "s309ecdd34379": "https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128",
-        "s7850e1e9dfa1": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L43-L45",
-        "s1c1a101a70e7": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295"
-      }
-    },
-    "owasp": {
-      "name": "OWASP password storage cheat sheet",
-      "basis": "commit 72865b1e",
-      "sources": {
-        "s4531e65b6502": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13"
-      }
-    },
-    "authelia": {
-      "name": "Authelia proxy support",
-      "basis": "v4.39.28",
-      "sources": {
-        "s1de7fe72d011": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L112-L115"
-      }
-    },
-    "cloudflare-access": {
-      "name": "Cloudflare Access documentation",
-      "basis": "commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
-      "sources": {
-        "sfddb92e438ca": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16",
-        "s7cafe1b17afd": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54",
-        "s603bdb6b24ab": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L45-L45",
-        "s863803bd9a1f": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L48-L48",
-        "sdcac732541da": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81"
-      }
-    },
-    "openidc": {
-      "name": "mod_auth_openidc",
-      "basis": "v2.4.20.3",
-      "sources": {
-        "s01e183d16f03": "https://github.com/OpenIDC/mod_auth_openidc/blob/v2.4.20.3/README.md#L11-L20"
-      }
-    }
-  },
-  "claims": {
-    "certbot": {"text": "The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off.", "components": ["apache", "certbot"], "sources": ["apache:sde155f1667f3", "certbot:sc74fcd0167d8", "certbot:sa453a66e4130", "certbot:sacf90ffa5a6d", "certbot:s74412ad87016"], "status": "REASONED"},
-    "modules": {"text": "Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; pinned packaging shows a2enmod, a2ensite (a link to a2enmod), default-ssl, and Fedora package names.", "components": ["apache", "debian-packaging", "fedora-packaging"], "sources": ["apache:sde155f1667f3", "debian-packaging:s62f6ed2866ab", "debian-packaging:s1c05297f1ef0", "debian-packaging:sc9b152b1a444", "debian-packaging:s32bd234fb40a", "fedora-packaging:s7d73f140a3fe"], "status": "REASONED"},
-    "tls": {"text": "The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only.", "components": ["apache"], "sources": ["apache:sde155f1667f3", "apache:scf804f4940d7"], "status": "REASONED"},
-    "tls-version": {"text": "TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1.", "components": ["apache", "tls-min", "openssl"], "sources": ["apache:scf804f4940d7", "tls-min:scf804f4940d7", "openssl:scf804f4940d7"], "status": "REASONED"},
-    "vhost-floor": {"text": "Independent per-vhost SSLProtocol needs Apache 2.4.42+, OpenSSL 1.1.1+ and client SNI; older builds also need the floor in global/base config.", "components": ["apache", "sni-min", "openssl"], "sources": ["apache:scf804f4940d7", "apache:s7c302c734a0d", "sni-min:scf804f4940d7", "openssl:scf804f4940d7"], "status": "REASONED"},
-    "chain": {"text": "Apache 2.4.8+ permits the chain in SSLCertificateFile; SSLCertificateChainFile is deprecated.", "components": ["apache", "chain-min"], "sources": ["apache:scf804f4940d7", "chain-min:scf804f4940d7"], "status": "REASONED"},
-    "hsts": {"text": "Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere.", "components": ["apache"], "sources": ["apache:sde155f1667f3", "apache:s1dbb2636d050"], "status": "REASONED"},
-    "cipher-policy": {"text": "Generate explicit cipher policy with Mozilla rather than copying old lists.", "components": ["policy"], "sources": ["policy:s529b0eabe2ed"], "status": "REASONED"},
-    "redirect": {"text": "The 80 vhost sends a permanent redirect to the canonical HTTPS host; retain only redirects and needed ACME HTTP-01 paths.", "components": ["apache"], "sources": ["apache:sc07f97af99e3", "apache:sde155f1667f3"], "status": "REASONED"},
-    "password-file": {"text": "Create a bcrypt htpasswd file with cost 12 and -c only for its first user; httpd 2.4.69 defaults bcrypt cost to 5 and OWASP recommends at least 10 for legacy bcrypt. Both password-file paths are guide choices.", "components": ["apache", "debian-packaging", "fedora-packaging", "htpasswd", "owasp"], "sources": ["apache:s99dcb49d86a4", "debian-packaging:s62f6ed2866ab", "debian-packaging:sd1c9de6b39aa", "fedora-packaging:s4479577a2e6a", "htpasswd:s309ecdd34379", "htpasswd:s7850e1e9dfa1", "htpasswd:s1c1a101a70e7", "owasp:s4531e65b6502"], "status": "REASONED"},
-    "basic": {"text": "AuthType Basic, AuthName, AuthUserFile and Require valid-user protect the chosen site/path over TLS; enumerate every public path.", "components": ["apache"], "sources": ["apache:s99dcb49d86a4"], "status": "REASONED"},
-    "mtls": {"text": "A separate machine-client 443 vhost requires a trusted certificate with SSLVerifyClient require and depth 2; SSLCACertificateFile is server/vhost scoped.", "components": ["apache"], "sources": ["apache:scf804f4940d7"], "status": "REASONED"},
-    "mfa": {"text": "Basic is single-factor; Authelia v4.39.28 says Apache is unsupported for its proxy integration, and mod_auth_openidc v2.4.20.3 is an OIDC relying party. Provider MFA is guide advice; Cloudflare Access documents self-hosted application and MFA policy controls; fronting an Apache origin is this guide's suggested option and assessment. This guide assesses that an Apache origin reachable without passing through Access is not protected by it.", "components": ["apache", "authelia", "openidc", "cloudflare-access"], "sources": ["apache:s99dcb49d86a4", "authelia:s1de7fe72d011", "openidc:s01e183d16f03", "cloudflare-access:sfddb92e438ca", "cloudflare-access:s7cafe1b17afd", "cloudflare-access:sdcac732541da", "cloudflare-access:s603bdb6b24ab", "cloudflare-access:s863803bd9a1f"], "status": "REASONED"},
-    "key-permissions": {"text": "Keep private keys root-owned and mode 0600.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED"},
-    "verify-config": {"text": "Run apachectl configtest before service reload; no outcome is recorded.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED", "verify": [1]},
-    "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["apache"], "sources": ["apache:sc07f97af99e3"], "status": "REASONED", "verify": [1]},
-    "verify-auth": {"text": "Read printed status: curl can exit 0 for 200 or 401; expect 200 before auth and 401 after it.", "components": ["apache"], "sources": ["apache:s99dcb49d86a4"], "status": "REASONED", "verify": [1]},
-    "verify-listeners": {"text": "Inspect the entire listener table, without filtering away unexpected ports.", "components": ["apache"], "sources": ["apache:sc07f97af99e3"], "status": "REASONED", "verify": [1]},
-    "verify-unmatched": {"text": "Use an unconfigured certificate-covered URL name for both SNI and Host; 401 passes, 200 exposes a protected resource through another vhost. Host-only probes can misleadingly give 401 or 421.", "components": ["apache"], "sources": ["apache:sc07f97af99e3", "apache:scf804f4940d7", "apache:s7c302c734a0d"], "status": "REASONED", "verify": [1]},
-    "verify-vhost-review": {"text": "If no spare certificate-covered name exists, use apachectl -S and review that the first matching vhost cannot serve the protected DocumentRoot.", "components": ["apache"], "sources": ["apache:sc07f97af99e3", "apache:s7c302c734a0d"], "status": "REASONED", "verify": [2]}
-  }
-}
----
 # Apache HTTP Server: TLS and authentication
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Apache HTTP Server 2.4, Apache TLSv1.3 minimum 2.4.36+, Apache per-vhost protocol minimum 2.4.42+, Apache chain-file minimum 2.4.8, httpd htpasswd 2.4.69, OpenSSL qualification 1.1.1+, Certbot Apache installation v2.3.0, and Debian apache2 packaging 2.4.69-1, plus 5 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-18; documentation checked September 2026. The guide records 20 claims, all reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- apache: Apache HTTP Server (2.4)
-- policy: Mozilla TLS policy (unknown)
-- tls-min: Apache TLSv1.3 minimum (2.4.36+)
-- sni-min: Apache per-vhost protocol minimum (2.4.42+)
-- openssl: OpenSSL qualification (1.1.1+)
-- chain-min: Apache chain-file minimum (2.4.8)
-- certbot: Certbot Apache installation (v2.3.0)
-- debian-packaging: Debian apache2 packaging (2.4.69-1)
-- fedora-packaging: Fedora f44 httpd packaging (commit 6df70d39)
-- htpasswd: httpd htpasswd (2.4.69)
-- owasp: OWASP password storage cheat sheet (commit 72865b1e)
-- authelia: Authelia proxy support (v4.39.28)
-- cloudflare-access: Cloudflare Access documentation (commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
-- openidc: mod_auth_openidc (v2.4.20.3)
-
-Claims (full source mapping in the front matter):
-
-- certbot (REASONED; apache, certbot): The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off.
-- modules (REASONED; apache, debian-packaging, fedora-packaging): Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; pinned packaging shows a2enmod, a2ensite (a link to a2enmod), default-ssl, and Fedora package names.
-- tls (REASONED; apache): The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only.
-- tls-version (REASONED; apache, tls-min, openssl): TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1.
-- vhost-floor (REASONED; apache, sni-min, openssl): Independent per-vhost SSLProtocol needs Apache 2.4.42+, OpenSSL 1.1.1+ and client SNI; older builds also need the floor in global/base config.
-- chain (REASONED; apache, chain-min): Apache 2.4.8+ permits the chain in SSLCertificateFile; SSLCertificateChainFile is deprecated.
-- hsts (REASONED; apache): Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere.
-- cipher-policy (REASONED; policy): Generate explicit cipher policy with Mozilla rather than copying old lists.
-- redirect (REASONED; apache): The 80 vhost sends a permanent redirect to the canonical HTTPS host; retain only redirects and needed ACME HTTP-01 paths.
-- password-file (REASONED; apache, debian-packaging, fedora-packaging, htpasswd, owasp): Create a bcrypt htpasswd file with cost 12 and -c only for its first user; httpd 2.4.69 defaults bcrypt cost to 5 and OWASP recommends at least 10 for legacy bcrypt. Both password-file paths are guide choices.
-- basic (REASONED; apache): AuthType Basic, AuthName, AuthUserFile and Require valid-user protect the chosen site/path over TLS; enumerate every public path.
-- mtls (REASONED; apache): A separate machine-client 443 vhost requires a trusted certificate with SSLVerifyClient require and depth 2; SSLCACertificateFile is server/vhost scoped.
-- mfa (REASONED; apache, authelia, openidc, cloudflare-access): Basic is single-factor; Authelia v4.39.28 says Apache is unsupported for its proxy integration, and mod_auth_openidc v2.4.20.3 is an OIDC relying party. Provider MFA is guide advice; Cloudflare Access documents self-hosted application and MFA policy controls; fronting an Apache origin is this guide's suggested option and assessment. This guide assesses that an Apache origin reachable without passing through Access is not protected by it.
-- key-permissions (REASONED; apache): Keep private keys root-owned and mode 0600.
-- verify-config (REASONED; apache): Run apachectl configtest before service reload; no outcome is recorded.
-- verify-redirect (REASONED; apache): HTTP should return 301 with an HTTPS Location.
-- verify-auth (REASONED; apache): Read printed status: curl can exit 0 for 200 or 401; expect 200 before auth and 401 after it.
-- verify-listeners (REASONED; apache): Inspect the entire listener table, without filtering away unexpected ports.
-- verify-unmatched (REASONED; apache): Use an unconfigured certificate-covered URL name for both SNI and Host; 401 passes, 200 exposes a protected resource through another vhost. Host-only probes can misleadingly give 401 or 421.
-- verify-vhost-review (REASONED; apache): If no spare certificate-covered name exists, use apachectl -S and review that the first matching vhost cannot serve the protected DocumentRoot.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Applies to Apache 2.4. Get a certificate first: [free-certificates.md](free-certificates.md) for a public host (note that `certbot --apache` obtains and installs the certificate and, at the time of writing, enables the HTTP-to-HTTPS redirect by default (`--redirect` requests it explicitly), but review its generated TLS config against steps 1 to 3 and add HSTS yourself, since certbot's `--hsts` is off by default), or [self-signed.md](self-signed.md) for internal use.
 
@@ -353,3 +160,222 @@ sudo apachectl -S                       # the vhost list, in Apache's own matchi
 - Cloudflare Access origin reachability at commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104 (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L45-L45 ; https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L48-L48
 - Cloudflare Access MFA policy controls at commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104 (checked October 2026): https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81
 - mod_auth_openidc v2.4.20.3 relying-party description: https://github.com/OpenIDC/mod_auth_openidc/blob/v2.4.20.3/README.md#L11-L20
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/apache.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- apache: Apache HTTP Server (2.4)
+- tls-min: Apache TLSv1.3 minimum (2.4.36+)
+- sni-min: Apache per-vhost protocol minimum (2.4.42+)
+- chain-min: Apache chain-file minimum (2.4.8)
+- htpasswd: httpd htpasswd (2.4.69)
+- openssl: OpenSSL qualification (1.1.1+)
+- certbot: Certbot Apache installation (v2.3.0)
+- debian-packaging: Debian apache2 packaging (2.4.69-1)
+- fedora-packaging: Fedora f44 httpd packaging (commit 6df70d39)
+- authelia: Authelia proxy support (v4.39.28)
+- cloudflare-access: Cloudflare Access documentation (commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- openidc: mod_auth_openidc (v2.4.20.3)
+- policy: Mozilla TLS policy (unknown)
+- owasp: OWASP password storage cheat sheet (commit 72865b1e)
+
+Claims (full source mapping in the JSON block below):
+
+- certbot (REASONED; apache, certbot): The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off.
+- modules (REASONED; apache, debian-packaging, fedora-packaging): Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; pinned packaging shows a2enmod, a2ensite (a link to a2enmod), default-ssl, and Fedora package names.
+- tls (REASONED; apache): The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only.
+- tls-version (REASONED; apache, tls-min, openssl): TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1.
+- vhost-floor (REASONED; apache, sni-min, openssl): Independent per-vhost SSLProtocol needs Apache 2.4.42+, OpenSSL 1.1.1+ and client SNI; older builds also need the floor in global/base config.
+- chain (REASONED; apache, chain-min): Apache 2.4.8+ permits the chain in SSLCertificateFile; SSLCertificateChainFile is deprecated.
+- hsts (REASONED; apache): Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere.
+- cipher-policy (REASONED; policy): Generate explicit cipher policy with Mozilla rather than copying old lists.
+- redirect (REASONED; apache): The 80 vhost sends a permanent redirect to the canonical HTTPS host; retain only redirects and needed ACME HTTP-01 paths.
+- password-file (REASONED; apache, debian-packaging, fedora-packaging, htpasswd, owasp): Create a bcrypt htpasswd file with cost 12 and -c only for its first user; httpd 2.4.69 defaults bcrypt cost to 5 and OWASP recommends at least 10 for legacy bcrypt. Both password-file paths are guide choices.
+- basic (REASONED; apache): AuthType Basic, AuthName, AuthUserFile and Require valid-user protect the chosen site/path over TLS; enumerate every public path.
+- mtls (REASONED; apache): A separate machine-client 443 vhost requires a trusted certificate with SSLVerifyClient require and depth 2; SSLCACertificateFile is server/vhost scoped.
+- mfa (REASONED; apache, authelia, openidc, cloudflare-access): Basic is single-factor; Authelia v4.39.28 says Apache is unsupported for its proxy integration, and mod_auth_openidc v2.4.20.3 is an OIDC relying party. Provider MFA is guide advice; Cloudflare Access documents self-hosted application and MFA policy controls; fronting an Apache origin is this guide's suggested option and assessment. This guide assesses that an Apache origin reachable without passing through Access is not protected by it.
+- key-permissions (REASONED; apache): Keep private keys root-owned and mode 0600.
+- verify-config (REASONED; apache): Run apachectl configtest before service reload; no outcome is recorded.
+- verify-redirect (REASONED; apache): HTTP should return 301 with an HTTPS Location.
+- verify-auth (REASONED; apache): Read printed status: curl can exit 0 for 200 or 401; expect 200 before auth and 401 after it.
+- verify-listeners (REASONED; apache): Inspect the entire listener table, without filtering away unexpected ports.
+- verify-unmatched (REASONED; apache): Use an unconfigured certificate-covered URL name for both SNI and Host; 401 passes, 200 exposes a protected resource through another vhost. Host-only probes can misleadingly give 401 or 421.
+- verify-vhost-review (REASONED; apache): If no spare certificate-covered name exists, use apachectl -S and review that the first matching vhost cannot serve the protected DocumentRoot.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-10-18",
+  "documentation_checked": "2026-09",
+  "body_sha256": "645f3f5ab27a4df2af69e0680ac8e98f85ca416fe85a078c95075598e9b33f4d",
+  "components": {
+    "apache": {
+      "name": "Apache HTTP Server",
+      "basis": "2.4",
+      "sources": {
+        "sde155f1667f3": "https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html",
+        "s99dcb49d86a4": "https://httpd.apache.org/docs/2.4/howto/auth.html",
+        "sc07f97af99e3": "https://httpd.apache.org/docs/2.4/vhosts/name-based.html",
+        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy",
+        "s7c302c734a0d": "https://httpd.apache.org/docs/2.4/vhosts/details.html",
+        "s1dbb2636d050": "https://httpd.apache.org/docs/2.4/mod/mod_headers.html"
+      }
+    },
+    "tls-min": {
+      "name": "Apache TLSv1.3 minimum",
+      "basis": "2.4.36+",
+      "sources": {
+        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
+      }
+    },
+    "sni-min": {
+      "name": "Apache per-vhost protocol minimum",
+      "basis": "2.4.42+",
+      "sources": {
+        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
+      }
+    },
+    "chain-min": {
+      "name": "Apache chain-file minimum",
+      "basis": "2.4.8",
+      "sources": {
+        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
+      }
+    },
+    "htpasswd": {
+      "name": "httpd htpasswd",
+      "basis": "2.4.69",
+      "sources": {
+        "s309ecdd34379": "https://github.com/apache/httpd/blob/2.4.69/support/htpasswd.c#L100-L128",
+        "s7850e1e9dfa1": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.h#L43-L45",
+        "s1c1a101a70e7": "https://github.com/apache/httpd/blob/2.4.69/support/passwd_common.c#L290-L295"
+      }
+    },
+    "openssl": {
+      "name": "OpenSSL qualification",
+      "basis": "1.1.1+",
+      "sources": {
+        "scf804f4940d7": "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslvhostsnipolicy"
+      }
+    },
+    "certbot": {
+      "name": "Certbot Apache installation",
+      "basis": "v2.3.0",
+      "sources": {
+        "sc74fcd0167d8": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/docs/using.rst#L104-L106",
+        "sa453a66e4130": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L646",
+        "sacf90ffa5a6d": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/client.py#L674-L677",
+        "s74412ad87016": "https://github.com/certbot/certbot/blob/v2.3.0/certbot/certbot/_internal/constants.py#L66-L68"
+      }
+    },
+    "debian-packaging": {
+      "name": "Debian apache2 packaging",
+      "basis": "2.4.69-1",
+      "sources": {
+        "s1c05297f1ef0": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.install#L1-7",
+        "s32bd234fb40a": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/config-dir/sites-available/default-ssl.conf#L1-4",
+        "sc9b152b1a444": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/apache2.links#L7",
+        "sd1c9de6b39aa": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/control#L92-102",
+        "s62f6ed2866ab": "https://salsa.debian.org/apache-team/apache2/-/blob/fc6e58fa5248fc058591097c94ac8fde34283519/debian/changelog#L1"
+      }
+    },
+    "fedora-packaging": {
+      "name": "Fedora f44 httpd packaging",
+      "basis": "commit 6df70d39",
+      "sources": {
+        "s7d73f140a3fe": "https://src.fedoraproject.org/rpms/httpd/blob/6df70d392dace11a7c01ceffc5d8a929de0b7a35/f/httpd.spec#_204-212",
+        "s4479577a2e6a": "https://src.fedoraproject.org/rpms/httpd/blob/6df70d392dace11a7c01ceffc5d8a929de0b7a35/f/httpd.spec#_819-824"
+      }
+    },
+    "authelia": {
+      "name": "Authelia proxy support",
+      "basis": "v4.39.28",
+      "sources": {
+        "s1de7fe72d011": "https://github.com/authelia/authelia/blob/v4.39.28/docs/content/integration/proxies/support.md#L112-L115"
+      }
+    },
+    "cloudflare-access": {
+      "name": "Cloudflare Access documentation",
+      "basis": "commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104",
+      "sources": {
+        "sfddb92e438ca": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L14-L16",
+        "s7cafe1b17afd": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L40-L54",
+        "s603bdb6b24ab": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L45-L45",
+        "s863803bd9a1f": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app.mdx#L48-L48",
+        "sdcac732541da": "https://github.com/cloudflare/cloudflare-docs/blob/c896795b8e8bab68d05ae78d64c9cbcda1fdb104/src/content/docs/cloudflare-one/access-controls/policies/mfa-requirements.mdx#L35-L81"
+      }
+    },
+    "openidc": {
+      "name": "mod_auth_openidc",
+      "basis": "v2.4.20.3",
+      "sources": {
+        "s01e183d16f03": "https://github.com/OpenIDC/mod_auth_openidc/blob/v2.4.20.3/README.md#L11-L20"
+      }
+    },
+    "policy": {
+      "name": "Mozilla TLS policy",
+      "basis": "unknown",
+      "sources": {
+        "s529b0eabe2ed": "https://ssl-config.mozilla.org/"
+      }
+    },
+    "owasp": {
+      "name": "OWASP password storage cheat sheet",
+      "basis": "commit 72865b1e",
+      "sources": {
+        "s4531e65b6502": "https://github.com/OWASP/CheatSheetSeries/blob/72865b1e3b5754246a101778dc00b37f9c233373/cheatsheets/Password_Storage_Cheat_Sheet.md#L13"
+      }
+    }
+  },
+  "claims": {
+    "certbot": {"text": "The guide says certbot --apache installs certificates and redirects by default; --redirect is explicit and --hsts defaults off.", "components": ["apache", "certbot"], "sources": ["apache:sde155f1667f3", "certbot:sc74fcd0167d8", "certbot:sa453a66e4130", "certbot:sacf90ffa5a6d", "certbot:s74412ad87016"], "status": "REASONED"},
+    "modules": {"text": "Enable ssl/headers and a 443 vhost on Debian/Ubuntu, or install mod_ssl/httpd-tools on RHEL/Fedora; pinned packaging shows a2enmod, a2ensite (a link to a2enmod), default-ssl, and Fedora package names.", "components": ["apache", "debian-packaging", "fedora-packaging"], "sources": ["apache:sde155f1667f3", "debian-packaging:s62f6ed2866ab", "debian-packaging:s1c05297f1ef0", "debian-packaging:sc9b152b1a444", "debian-packaging:s32bd234fb40a", "fedora-packaging:s7d73f140a3fe"], "status": "REASONED"},
+    "tls": {"text": "The 443 vhost enables TLS with a certificate chain and private key and TLSv1.2/TLSv1.3 only.", "components": ["apache"], "sources": ["apache:sde155f1667f3", "apache:scf804f4940d7"], "status": "REASONED"},
+    "tls-version": {"text": "TLSv1.3 needs Apache 2.4.36+ with OpenSSL 1.1.1+; older builds use SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1.", "components": ["apache", "tls-min", "openssl"], "sources": ["apache:scf804f4940d7", "tls-min:scf804f4940d7", "openssl:scf804f4940d7"], "status": "REASONED"},
+    "vhost-floor": {"text": "Independent per-vhost SSLProtocol needs Apache 2.4.42+, OpenSSL 1.1.1+ and client SNI; older builds also need the floor in global/base config.", "components": ["apache", "sni-min", "openssl"], "sources": ["apache:scf804f4940d7", "apache:s7c302c734a0d", "sni-min:scf804f4940d7", "openssl:scf804f4940d7"], "status": "REASONED"},
+    "chain": {"text": "Apache 2.4.8+ permits the chain in SSLCertificateFile; SSLCertificateChainFile is deprecated.", "components": ["apache", "chain-min"], "sources": ["apache:scf804f4940d7", "chain-min:scf804f4940d7"], "status": "REASONED"},
+    "hsts": {"text": "Header always sets HSTS after HTTPS works; includeSubDomains requires valid HTTPS everywhere.", "components": ["apache"], "sources": ["apache:sde155f1667f3", "apache:s1dbb2636d050"], "status": "REASONED"},
+    "cipher-policy": {"text": "Generate explicit cipher policy with Mozilla rather than copying old lists.", "components": ["policy"], "sources": ["policy:s529b0eabe2ed"], "status": "REASONED"},
+    "redirect": {"text": "The 80 vhost sends a permanent redirect to the canonical HTTPS host; retain only redirects and needed ACME HTTP-01 paths.", "components": ["apache"], "sources": ["apache:sc07f97af99e3", "apache:sde155f1667f3"], "status": "REASONED"},
+    "password-file": {"text": "Create a bcrypt htpasswd file with cost 12 and -c only for its first user; httpd 2.4.69 defaults bcrypt cost to 5 and OWASP recommends at least 10 for legacy bcrypt. Both password-file paths are guide choices.", "components": ["apache", "debian-packaging", "fedora-packaging", "htpasswd", "owasp"], "sources": ["apache:s99dcb49d86a4", "debian-packaging:s62f6ed2866ab", "debian-packaging:sd1c9de6b39aa", "fedora-packaging:s4479577a2e6a", "htpasswd:s309ecdd34379", "htpasswd:s7850e1e9dfa1", "htpasswd:s1c1a101a70e7", "owasp:s4531e65b6502"], "status": "REASONED"},
+    "basic": {"text": "AuthType Basic, AuthName, AuthUserFile and Require valid-user protect the chosen site/path over TLS; enumerate every public path.", "components": ["apache"], "sources": ["apache:s99dcb49d86a4"], "status": "REASONED"},
+    "mtls": {"text": "A separate machine-client 443 vhost requires a trusted certificate with SSLVerifyClient require and depth 2; SSLCACertificateFile is server/vhost scoped.", "components": ["apache"], "sources": ["apache:scf804f4940d7"], "status": "REASONED"},
+    "mfa": {"text": "Basic is single-factor; Authelia v4.39.28 says Apache is unsupported for its proxy integration, and mod_auth_openidc v2.4.20.3 is an OIDC relying party. Provider MFA is guide advice; Cloudflare Access documents self-hosted application and MFA policy controls; fronting an Apache origin is this guide's suggested option and assessment. This guide assesses that an Apache origin reachable without passing through Access is not protected by it.", "components": ["apache", "authelia", "openidc", "cloudflare-access"], "sources": ["apache:s99dcb49d86a4", "authelia:s1de7fe72d011", "openidc:s01e183d16f03", "cloudflare-access:sfddb92e438ca", "cloudflare-access:s7cafe1b17afd", "cloudflare-access:sdcac732541da", "cloudflare-access:s603bdb6b24ab", "cloudflare-access:s863803bd9a1f"], "status": "REASONED"},
+    "key-permissions": {"text": "Keep private keys root-owned and mode 0600.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED"},
+    "verify-config": {"text": "Run apachectl configtest before service reload; no outcome is recorded.", "components": ["apache"], "sources": ["apache:sde155f1667f3"], "status": "REASONED", "verify": [1]},
+    "verify-redirect": {"text": "HTTP should return 301 with an HTTPS Location.", "components": ["apache"], "sources": ["apache:sc07f97af99e3"], "status": "REASONED", "verify": [1]},
+    "verify-auth": {"text": "Read printed status: curl can exit 0 for 200 or 401; expect 200 before auth and 401 after it.", "components": ["apache"], "sources": ["apache:s99dcb49d86a4"], "status": "REASONED", "verify": [1]},
+    "verify-listeners": {"text": "Inspect the entire listener table, without filtering away unexpected ports.", "components": ["apache"], "sources": ["apache:sc07f97af99e3"], "status": "REASONED", "verify": [1]},
+    "verify-unmatched": {"text": "Use an unconfigured certificate-covered URL name for both SNI and Host; 401 passes, 200 exposes a protected resource through another vhost. Host-only probes can misleadingly give 401 or 421.", "components": ["apache"], "sources": ["apache:sc07f97af99e3", "apache:scf804f4940d7", "apache:s7c302c734a0d"], "status": "REASONED", "verify": [1]},
+    "verify-vhost-review": {"text": "If no spare certificate-covered name exists, use apachectl -S and review that the first matching vhost cannot serve the protected DocumentRoot.", "components": ["apache"], "sources": ["apache:sc07f97af99e3", "apache:s7c302c734a0d"], "status": "REASONED", "verify": [2]}
+  }
+}
+````
+<!-- version-basis:end -->

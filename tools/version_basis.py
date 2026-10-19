@@ -894,7 +894,8 @@ def versions_sentence(data):
     for keep in range(min(8, len(entries)), 0, -1):
         sentence = 'Written against ' + joined(entries[:keep])
         if keep < len(entries):
-            sentence += f', plus {len(entries) - keep} more recorded bases'
+            omitted = len(entries) - keep
+            sentence += f', plus {omitted} more recorded ' + ('basis' if omitted == 1 else 'bases')
         if folded:
             sentence += '; ' + ' and '.join(folded)
         sentence += '.'

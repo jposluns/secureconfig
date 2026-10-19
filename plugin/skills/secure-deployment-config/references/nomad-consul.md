@@ -1,149 +1,8 @@
----
-version_basis: {
-  "schema": 1,
-  "checked": "2026-09-26",
-  "documentation_checked": "2026-09",
-  "body_sha256": "05ae6961d3225ec0e28ef043428dfeea38f86a7be4cfd93f6a6d58b4990f084a",
-  "components": {
-    "nomad": {
-      "name": "Nomad Community Edition",
-      "basis": "2.0.7",
-      "sources": {
-        "s52d80d2821ed": "https://github.com/hashicorp/nomad/blob/v2.0.7/command/agent/config.go",
-        "sa1c2951d3ca6": "https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/config/ui.go",
-        "s553448c7957c": "https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/auth/auth.go",
-        "s7496bcf129dc": "https://github.com/hashicorp/nomad/blob/v2.0.7/acl/acl.go",
-        "sd665f15bc452": "https://github.com/hashicorp/nomad/blob/v2.0.7/drivers/exec/driver.go",
-        "sd5c86223bdf5": "https://github.com/hashicorp/nomad/blob/v2.0.7/client/config/config.go",
-        "sd5f2c389c6ae": "https://github.com/hashicorp/nomad/blob/v2.0.7/drivers/rawexec/driver.go",
-        "se7ba8e4262dc": "https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/config/tls.go",
-        "sc3e36e830b67": "https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/acl_endpoint.go",
-        "s754c582b7565": "https://github.com/hashicorp/nomad/blob/v2.0.7/command/agent/agent.go",
-        "s8193264e48c2": "https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/acl.go",
-        "sba39c1a9119a": "https://github.com/hashicorp/nomad/blob/v2.0.7/command/meta.go#L96",
-        "sa04bf8c95cb6": "https://github.com/hashicorp/nomad/blob/v2.0.7/api/api.go#L388-L389"
-      }
-    },
-    "consul": {
-      "name": "Consul Community Edition",
-      "basis": "2.0.4",
-      "sources": {
-        "s679a306e1b08": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/config/default.go",
-        "s8a0b5abac641": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/config/builder.go",
-        "sc4fb30ca3702": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/consul/acl.go",
-        "s35b783d75794": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/acl_endpoint.go",
-        "sa77598ec3695": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/consul/acl_endpoint.go",
-        "s00748de44382": "https://github.com/hashicorp/consul/blob/v2.0.4/acl/acl.go",
-        "sab8a5866d9c9": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/http.go",
-        "sfeb50129fc10": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/token/persistence.go"
-      }
-    }
-  },
-  "claims": {
-    "nomad-bind": {"text": "Nomad defaults bind_addr=0.0.0.0 and all three listeners fall back to it; setting only addresses.http leaves RPC and gossip on bind_addr.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed"], "status": "REASONED"},
-    "nomad-http": {"text": "Nomad HTTP API/UI uses 4646; UI defaults enabled at /ui/.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed", "nomad:sa1c2951d3ca6"], "status": "REASONED"},
-    "nomad-rpc": {"text": "Nomad RPC uses 4647; keep it on private or management addresses.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed"], "status": "REASONED"},
-    "nomad-gossip": {"text": "Nomad Serf uses 4648 TCP/UDP; gossip is unencrypted until encrypt is configured.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed"], "status": "REASONED"},
-    "nomad-dev": {"text": "Linux -dev binds 127.0.0.1 except -dev-connect, which binds 0.0.0.0. Wildcard behavior was not observed.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed"], "status": "REASONED"},
-    "nomad-acl-default": {"text": "ACLs default disabled; enable acl.enabled on every agent before exposing the API.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed", "nomad:s553448c7957c", "nomad:s7496bcf129dc"], "status": "REASONED"},
-    "nomad-debug": {"text": "Debug endpoints still require enable_debug with ACLs off; -dev enables it.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed", "nomad:s7496bcf129dc"], "status": "REASONED"},
-    "nomad-exec": {"text": "On a root Linux client, exec uses a chroot and task user, default nobody, with root refused by the default exec denylist; no client job was run.", "components": ["nomad"], "sources": ["nomad:sd665f15bc452", "nomad:sd5c86223bdf5"], "status": "REASONED"},
-    "nomad-raw-exec": {"text": "raw_exec has no isolation and defaults off, but -dev enables it.", "components": ["nomad"], "sources": ["nomad:sd5f2c389c6ae", "nomad:s52d80d2821ed"], "status": "REASONED"},
-    "nomad-remote-exec": {"text": "Remote task execution defaults enabled through disable_remote_exec=false.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed"], "status": "REASONED"},
-    "nomad-tls": {"text": "HTTP/RPC TLS defaults off; enable both tls.http and tls.rpc.", "components": ["nomad"], "sources": ["nomad:se7ba8e4262dc"], "status": "REASONED"},
-    "nomad-bootstrap-reset": {"text": "Unauthenticated PUT /v1/acl/bootstrap claims the first management token after ACL enablement; repeat is blocked until the operator reset file in data_dir/server.", "components": ["nomad"], "sources": ["nomad:sc3e36e830b67", "nomad:s754c582b7565"], "status": "REASONED"},
-    "consul-client-bind": {"text": "Consul client_addr defaults 127.0.0.1; widening it or addresses.http makes the API reachable.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
-    "consul-http": {"text": "Consul HTTP API is 8500; UI defaults off and -dev enables /ui/ on that port.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
-    "consul-dns": {"text": "Consul DNS uses 8600 TCP/UDP on client_addr.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
-    "consul-rpc": {"text": "Consul server RPC uses 8300 on bind_addr, default 0.0.0.0.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
-    "consul-lan": {"text": "Consul LAN Serf uses 8301 TCP/UDP on bind_addr.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
-    "consul-wan": {"text": "Consul WAN Serf uses 8302 TCP/UDP on bind_addr.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
-    "consul-https": {"text": "Consul HTTPS defaults disabled.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
-    "consul-grpc": {"text": "Plaintext gRPC defaults disabled; servers open TLS gRPC on 8503 on client_addr.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
-    "consul-acl-default": {"text": "Consul ACLs default off and disabled ACL resolution grants management rights; with ACLs enabled default_policy still defaults allow.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641", "consul:sc4fb30ca3702"], "status": "REASONED"},
-    "consul-bootstrap-reset": {"text": "Bootstrap is unauthenticated and one-time until an operator writes acl-bootstrap-reset; bootstrap privately before exposing the API.", "components": ["consul"], "sources": ["consul:s35b783d75794", "consul:sa77598ec3695"], "status": "REASONED"},
-    "consul-script": {"text": "enable_script_checks defaults off; enabling without ACLs or allow_write_http_from only warns. Prefer enable_local_script_checks if needed.", "components": ["consul"], "sources": ["consul:s8a0b5abac641"], "status": "REASONED"},
-    "consul-remote-exec": {"text": "consul exec defaults disabled through disable_remote_exec=true.", "components": ["consul"], "sources": ["consul:s679a306e1b08"], "status": "REASONED"},
-    "consul-tls-gossip": {"text": "TLS verification defaults off and gossip is unencrypted without encrypt.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
-    "verify-inventory": {"text": "Inventory TCP/UDP on private or management addresses; wildcard exposed binds and actual external isolation remain reasoned.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [1]},
-    "loopback-listeners": {"text": "Loopback runs used substitute TCP/Serf UDP ports; Consul DNS, WAN and gRPC were disabled, so their live listeners were not demonstrated.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "DEMONSTRATED", "evidence": "On the loopback run, the agents listened on TCP on test ports standing in for Nomad's 4646, 4647 and 4648 and Consul's 8500, 8300 and 8301 (the runs turned off Consul's DNS, Serf WAN and gRPC), and on UDP on the two Serf ports."},
-    "nomad-acl-probe": {"text": "Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403.", "components": ["nomad"], "sources": ["nomad:s553448c7957c", "nomad:s7496bcf129dc", "nomad:s8193264e48c2"], "status": "DEMONSTRATED", "evidence": "All of these outcomes were observed with the curl probe block and these commands, on agents listening on test ports.", "verify": [2]},
-    "nomad-agent-acl": {"text": "Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed", "nomad:s7496bcf129dc"], "status": "DEMONSTRATED", "evidence": "In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with `acl { enabled = false }` answered the first two paths with the ACLs-on results and `/v1/agent/self` with `200`, while the server answered it with `403`.", "verify": [2]},
-    "nomad-bootstrap-run": {"text": "ACL probe rejection did not prove bootstrap complete; first bootstrap issued management credentials and the second returned already-done.", "components": ["nomad"], "sources": ["nomad:sc3e36e830b67"], "status": "DEMONSTRATED", "evidence": "Before bootstrap, the probe already printed the ACLs-on results; the first `nomad acl bootstrap` printed a management token and the second failed with `Unexpected response code: 400 (ACL bootstrap already done ...)`."},
-    "nomad-anonymous-policy": {"text": "Anonymous rights come from the named anonymous policy; historical exported-token inspection found it absent, then present with submit-job despite unchanged probe results.", "components": ["nomad"], "sources": ["nomad:s8193264e48c2"], "status": "DEMONSTRATED", "evidence": "After an `anonymous` policy granting only `submit-job` was applied, the probe's results did not change, an anonymous job registration returned `200`, and `nomad acl policy info anonymous`, run in the same earlier form, showed the policy."},
-    "nomad-job-registration": {"text": "Anonymous registration succeeded with ACLs off and failed with ACLs on and no anonymous policy; registration is not a demonstrated job execution.", "components": ["nomad"], "sources": ["nomad:s553448c7957c", "nomad:s7496bcf129dc"], "status": "DEMONSTRATED", "evidence": "With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous` policy, it returned `403`."},
-    "nomad-token-input": {"text": "CLI accepts -token or NOMAD_TOKEN, not stdin; the current prompted one-command prefix avoids argv/history but retains same-user/root environment visibility. That form has no recorded live Nomad run.", "components": ["nomad"], "sources": ["nomad:sba39c1a9119a", "nomad:sa04bf8c95cb6"], "status": "REASONED", "verify": [3]},
-    "consul-acl-probe": {"text": "Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text.", "components": ["consul"], "sources": ["consul:sc4fb30ca3702", "consul:s8a0b5abac641"], "status": "DEMONSTRATED", "evidence": "All of these outcomes were observed with this block and these commands, on agents listening on test ports.", "verify": [4]},
-    "consul-agent-acl": {"text": "Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs.", "components": ["consul"], "sources": ["consul:s8a0b5abac641", "consul:sc4fb30ca3702"], "status": "DEMONSTRATED", "evidence": "with the server on the `allow` policy and the client on `deny`, it printed `200` on `/v1/agent/self` against the server and the deny results against the client.", "verify": [4]},
-    "consul-bootstrap-run": {"text": "Deny results appeared before bootstrap; first bootstrap issued a token and the second refused with bootstrap no longer allowed.", "components": ["consul"], "sources": ["consul:s35b783d75794", "consul:sa77598ec3695"], "status": "DEMONSTRATED", "evidence": "the first `consul acl bootstrap` printed a token and the second failed with `Unexpected response code: 403 (Permission denied: ACL bootstrap no longer allowed ...)`"},
-    "consul-anonymous-token": {"text": "Inspect anonymous accessor 00000000-0000-0000-0000-000000000002 for policies, roles and identities; its recorded read listed none.", "components": ["consul"], "sources": ["consul:s00748de44382"], "status": "DEMONSTRATED", "evidence": "the anonymous token's read listed none of those sections."},
-    "consul-default-token": {"text": "An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write.", "components": ["consul"], "sources": ["consul:sab8a5866d9c9", "consul:sfeb50129fc10"], "status": "DEMONSTRATED", "evidence": "On the loopback run, a default token holding key write, set through the agent's token API on a deny-policy agent, made the block print `200` on `/v1/acl/token/self` and a `403` on `/v1/agent/self` without the anonymous-token message, while a key-value write without a token succeeded.", "verify": [4]},
-    "consul-kv": {"text": "Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny.", "components": ["consul"], "sources": ["consul:sc4fb30ca3702", "consul:s679a306e1b08"], "status": "DEMONSTRATED", "evidence": "On the same runs an anonymous key-value write succeeded in both exposed states and was refused with `403` with the deny policy"},
-    "consul-script-run": {"text": "With default script-check settings, remote script registration was refused.", "components": ["consul"], "sources": ["consul:s8a0b5abac641"], "status": "DEMONSTRATED", "evidence": "with script checks at their default, registering a script check through the API was refused with \"Scripts are disabled on this agent from remote calls\"."},
-    "verify-tcp": {"text": "Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run; UDP is not tested.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [5]},
-    "verify-address-limits": {"text": "TCP guard refuses zero/dotted-IPv6 forms but permits loopback and some hex forms reaching the probing host; use public addresses and corroborate surprising connections with host sockets.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [5]}
-  }
-}
----
 # Nomad and Consul: the scheduler and service-mesh APIs
 
-<!-- version-basis:start -->
-**Version basis**
+Written against Nomad Community Edition 2.0.7 and Consul Community Edition 2.0.4. Metadata reviewed 2026-09-26; documentation checked September 2026. The guide records 42 claims: 13 demonstrated by a check that ran and 29 reasoned from cited sources.
 
-AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
-
-Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
-
-Components (recorded basis):
-
-- nomad: Nomad Community Edition (2.0.7)
-- consul: Consul Community Edition (2.0.4)
-
-Claims (full source mapping in the front matter):
-
-- nomad-bind (REASONED; nomad): Nomad defaults bind_addr=0.0.0.0 and all three listeners fall back to it; setting only addresses.http leaves RPC and gossip on bind_addr.
-- nomad-http (REASONED; nomad): Nomad HTTP API/UI uses 4646; UI defaults enabled at /ui/.
-- nomad-rpc (REASONED; nomad): Nomad RPC uses 4647; keep it on private or management addresses.
-- nomad-gossip (REASONED; nomad): Nomad Serf uses 4648 TCP/UDP; gossip is unencrypted until encrypt is configured.
-- nomad-dev (REASONED; nomad): Linux -dev binds 127.0.0.1 except -dev-connect, which binds 0.0.0.0. Wildcard behavior was not observed.
-- nomad-acl-default (REASONED; nomad): ACLs default disabled; enable acl.enabled on every agent before exposing the API.
-- nomad-debug (REASONED; nomad): Debug endpoints still require enable_debug with ACLs off; -dev enables it.
-- nomad-exec (REASONED; nomad): On a root Linux client, exec uses a chroot and task user, default nobody, with root refused by the default exec denylist; no client job was run.
-- nomad-raw-exec (REASONED; nomad): raw_exec has no isolation and defaults off, but -dev enables it.
-- nomad-remote-exec (REASONED; nomad): Remote task execution defaults enabled through disable_remote_exec=false.
-- nomad-tls (REASONED; nomad): HTTP/RPC TLS defaults off; enable both tls.http and tls.rpc.
-- nomad-bootstrap-reset (REASONED; nomad): Unauthenticated PUT /v1/acl/bootstrap claims the first management token after ACL enablement; repeat is blocked until the operator reset file in data_dir/server.
-- consul-client-bind (REASONED; consul): Consul client_addr defaults 127.0.0.1; widening it or addresses.http makes the API reachable.
-- consul-http (REASONED; consul): Consul HTTP API is 8500; UI defaults off and -dev enables /ui/ on that port.
-- consul-dns (REASONED; consul): Consul DNS uses 8600 TCP/UDP on client_addr.
-- consul-rpc (REASONED; consul): Consul server RPC uses 8300 on bind_addr, default 0.0.0.0.
-- consul-lan (REASONED; consul): Consul LAN Serf uses 8301 TCP/UDP on bind_addr.
-- consul-wan (REASONED; consul): Consul WAN Serf uses 8302 TCP/UDP on bind_addr.
-- consul-https (REASONED; consul): Consul HTTPS defaults disabled.
-- consul-grpc (REASONED; consul): Plaintext gRPC defaults disabled; servers open TLS gRPC on 8503 on client_addr.
-- consul-acl-default (REASONED; consul): Consul ACLs default off and disabled ACL resolution grants management rights; with ACLs enabled default_policy still defaults allow.
-- consul-bootstrap-reset (REASONED; consul): Bootstrap is unauthenticated and one-time until an operator writes acl-bootstrap-reset; bootstrap privately before exposing the API.
-- consul-script (REASONED; consul): enable_script_checks defaults off; enabling without ACLs or allow_write_http_from only warns. Prefer enable_local_script_checks if needed.
-- consul-remote-exec (REASONED; consul): consul exec defaults disabled through disable_remote_exec=true.
-- consul-tls-gossip (REASONED; consul): TLS verification defaults off and gossip is unencrypted without encrypt.
-- verify-inventory (REASONED; nomad, consul): Inventory TCP/UDP on private or management addresses; wildcard exposed binds and actual external isolation remain reasoned.
-- loopback-listeners (DEMONSTRATED; nomad, consul): Loopback runs used substitute TCP/Serf UDP ports; Consul DNS, WAN and gRPC were disabled, so their live listeners were not demonstrated.
-- nomad-acl-probe (DEMONSTRATED; nomad): Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403.
-- nomad-agent-acl (DEMONSTRATED; nomad): Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403.
-- nomad-bootstrap-run (DEMONSTRATED; nomad): ACL probe rejection did not prove bootstrap complete; first bootstrap issued management credentials and the second returned already-done.
-- nomad-anonymous-policy (DEMONSTRATED; nomad): Anonymous rights come from the named anonymous policy; historical exported-token inspection found it absent, then present with submit-job despite unchanged probe results.
-- nomad-job-registration (DEMONSTRATED; nomad): Anonymous registration succeeded with ACLs off and failed with ACLs on and no anonymous policy; registration is not a demonstrated job execution.
-- nomad-token-input (REASONED; nomad): CLI accepts -token or NOMAD_TOKEN, not stdin; the current prompted one-command prefix avoids argv/history but retains same-user/root environment visibility. That form has no recorded live Nomad run.
-- consul-acl-probe (DEMONSTRATED; consul): Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text.
-- consul-agent-acl (DEMONSTRATED; consul): Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs.
-- consul-bootstrap-run (DEMONSTRATED; consul): Deny results appeared before bootstrap; first bootstrap issued a token and the second refused with bootstrap no longer allowed.
-- consul-anonymous-token (DEMONSTRATED; consul): Inspect anonymous accessor 00000000-0000-0000-0000-000000000002 for policies, roles and identities; its recorded read listed none.
-- consul-default-token (DEMONSTRATED; consul): An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write.
-- consul-kv (DEMONSTRATED; consul): Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny.
-- consul-script-run (DEMONSTRATED; consul): With default script-check settings, remote script registration was refused.
-- verify-tcp (REASONED; nomad, consul): Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run; UDP is not tested.
-- verify-address-limits (REASONED; nomad, consul): TCP guard refuses zero/dotted-IPv6 forms but permits loopback and some hex forms reaching the probing host; use public addresses and corroborate surprising connections with host sockets.
-<!-- version-basis:end -->
+A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
 Nomad schedules and runs workloads, and Consul holds a cluster's service catalog, health checks and
 key-value store. Both are controlled through an HTTP API that also serves a web UI, and both ship
@@ -449,3 +308,170 @@ give the host's public address. A "connected" on a port you did not mean to expo
 - Consul 2.0.4 default token for requests without one (`acl.tokens.default`, agent token API): https://github.com/hashicorp/consul/blob/v2.0.4/agent/http.go and https://github.com/hashicorp/consul/blob/v2.0.4/agent/token/persistence.go
 - Nomad 2.0.7 agent debug endpoints when ACLs are disabled (`enable_debug`): https://github.com/hashicorp/nomad/blob/v2.0.7/acl/acl.go
 - Consul 2.0.4 ACL bootstrap: https://github.com/hashicorp/consul/blob/v2.0.4/agent/acl_endpoint.go and https://github.com/hashicorp/consul/blob/v2.0.4/agent/consul/acl_endpoint.go
+
+
+<!-- version-basis:start -->
+## About the AI assistant section below
+
+The rest of this file is generated by the repository's tooling and written for AI assistants rather than for people. It records the versions this guide was written against, the guide's claims with a status for each (demonstrated by a check that ran, or reasoned from the cited sources), and the mapping from each claim to its sources. You are welcome to read it, but it is dense and can be hard to take in.
+
+If an AI assistant is helping you secure a deployment, give it the prompt below:
+
+```text
+Read the secureconfig guide at
+https://raw.githubusercontent.com/jposluns/secureconfig/main/nomad-consul.md
+in full, including the section for AI assistants at the end. Then, for my
+deployment: state which of its recommendations apply and the exact changes
+to make; compare the versions the guide was written against with the
+releases I am running and with the vendor's current releases, and flag any
+guidance a newer release may have changed; and run or adapt the guide's
+Verify steps where you can. List separately every item you could not
+verify instead of reporting it as passed.
+```
+
+This guide is guidance to verify against your own deployment, not a certification, an audit, or a guarantee of compliance with any standard.
+
+**Version basis**
+
+AI assistants must compare the versions listed below with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
+
+DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+
+Components (recorded basis):
+
+- nomad: Nomad Community Edition (2.0.7)
+- consul: Consul Community Edition (2.0.4)
+
+Claims (full source mapping in the JSON block below):
+
+- nomad-bind (REASONED; nomad): Nomad defaults bind_addr=0.0.0.0 and all three listeners fall back to it; setting only addresses.http leaves RPC and gossip on bind_addr.
+- nomad-http (REASONED; nomad): Nomad HTTP API/UI uses 4646; UI defaults enabled at /ui/.
+- nomad-rpc (REASONED; nomad): Nomad RPC uses 4647; keep it on private or management addresses.
+- nomad-gossip (REASONED; nomad): Nomad Serf uses 4648 TCP/UDP; gossip is unencrypted until encrypt is configured.
+- nomad-dev (REASONED; nomad): Linux -dev binds 127.0.0.1 except -dev-connect, which binds 0.0.0.0. Wildcard behavior was not observed.
+- nomad-acl-default (REASONED; nomad): ACLs default disabled; enable acl.enabled on every agent before exposing the API.
+- nomad-debug (REASONED; nomad): Debug endpoints still require enable_debug with ACLs off; -dev enables it.
+- nomad-exec (REASONED; nomad): On a root Linux client, exec uses a chroot and task user, default nobody, with root refused by the default exec denylist; no client job was run.
+- nomad-raw-exec (REASONED; nomad): raw_exec has no isolation and defaults off, but -dev enables it.
+- nomad-remote-exec (REASONED; nomad): Remote task execution defaults enabled through disable_remote_exec=false.
+- nomad-tls (REASONED; nomad): HTTP/RPC TLS defaults off; enable both tls.http and tls.rpc.
+- nomad-bootstrap-reset (REASONED; nomad): Unauthenticated PUT /v1/acl/bootstrap claims the first management token after ACL enablement; repeat is blocked until the operator reset file in data_dir/server.
+- consul-client-bind (REASONED; consul): Consul client_addr defaults 127.0.0.1; widening it or addresses.http makes the API reachable.
+- consul-http (REASONED; consul): Consul HTTP API is 8500; UI defaults off and -dev enables /ui/ on that port.
+- consul-dns (REASONED; consul): Consul DNS uses 8600 TCP/UDP on client_addr.
+- consul-rpc (REASONED; consul): Consul server RPC uses 8300 on bind_addr, default 0.0.0.0.
+- consul-lan (REASONED; consul): Consul LAN Serf uses 8301 TCP/UDP on bind_addr.
+- consul-wan (REASONED; consul): Consul WAN Serf uses 8302 TCP/UDP on bind_addr.
+- consul-https (REASONED; consul): Consul HTTPS defaults disabled.
+- consul-grpc (REASONED; consul): Plaintext gRPC defaults disabled; servers open TLS gRPC on 8503 on client_addr.
+- consul-acl-default (REASONED; consul): Consul ACLs default off and disabled ACL resolution grants management rights; with ACLs enabled default_policy still defaults allow.
+- consul-bootstrap-reset (REASONED; consul): Bootstrap is unauthenticated and one-time until an operator writes acl-bootstrap-reset; bootstrap privately before exposing the API.
+- consul-script (REASONED; consul): enable_script_checks defaults off; enabling without ACLs or allow_write_http_from only warns. Prefer enable_local_script_checks if needed.
+- consul-remote-exec (REASONED; consul): consul exec defaults disabled through disable_remote_exec=true.
+- consul-tls-gossip (REASONED; consul): TLS verification defaults off and gossip is unencrypted without encrypt.
+- verify-inventory (REASONED; nomad, consul): Inventory TCP/UDP on private or management addresses; wildcard exposed binds and actual external isolation remain reasoned.
+- loopback-listeners (DEMONSTRATED; nomad, consul): Loopback runs used substitute TCP/Serf UDP ports; Consul DNS, WAN and gRPC were disabled, so their live listeners were not demonstrated.
+- nomad-acl-probe (DEMONSTRATED; nomad): Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403.
+- nomad-agent-acl (DEMONSTRATED; nomad): Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403.
+- nomad-bootstrap-run (DEMONSTRATED; nomad): ACL probe rejection did not prove bootstrap complete; first bootstrap issued management credentials and the second returned already-done.
+- nomad-anonymous-policy (DEMONSTRATED; nomad): Anonymous rights come from the named anonymous policy; historical exported-token inspection found it absent, then present with submit-job despite unchanged probe results.
+- nomad-job-registration (DEMONSTRATED; nomad): Anonymous registration succeeded with ACLs off and failed with ACLs on and no anonymous policy; registration is not a demonstrated job execution.
+- nomad-token-input (REASONED; nomad): CLI accepts -token or NOMAD_TOKEN, not stdin; the current prompted one-command prefix avoids argv/history but retains same-user/root environment visibility. That form has no recorded live Nomad run.
+- consul-acl-probe (DEMONSTRATED; consul): Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text.
+- consul-agent-acl (DEMONSTRATED; consul): Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs.
+- consul-bootstrap-run (DEMONSTRATED; consul): Deny results appeared before bootstrap; first bootstrap issued a token and the second refused with bootstrap no longer allowed.
+- consul-anonymous-token (DEMONSTRATED; consul): Inspect anonymous accessor 00000000-0000-0000-0000-000000000002 for policies, roles and identities; its recorded read listed none.
+- consul-default-token (DEMONSTRATED; consul): An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write.
+- consul-kv (DEMONSTRATED; consul): Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny.
+- consul-script-run (DEMONSTRATED; consul): With default script-check settings, remote script registration was refused.
+- verify-tcp (REASONED; nomad, consul): Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run; UDP is not tested.
+- verify-address-limits (REASONED; nomad, consul): TCP guard refuses zero/dotted-IPv6 forms but permits loopback and some hex forms reaching the probing host; use public addresses and corroborate surprising connections with host sockets.
+
+````json
+{
+  "schema": 1,
+  "checked": "2026-09-26",
+  "documentation_checked": "2026-09",
+  "body_sha256": "05ae6961d3225ec0e28ef043428dfeea38f86a7be4cfd93f6a6d58b4990f084a",
+  "components": {
+    "nomad": {
+      "name": "Nomad Community Edition",
+      "basis": "2.0.7",
+      "sources": {
+        "s52d80d2821ed": "https://github.com/hashicorp/nomad/blob/v2.0.7/command/agent/config.go",
+        "sa1c2951d3ca6": "https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/config/ui.go",
+        "s553448c7957c": "https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/auth/auth.go",
+        "s7496bcf129dc": "https://github.com/hashicorp/nomad/blob/v2.0.7/acl/acl.go",
+        "sd665f15bc452": "https://github.com/hashicorp/nomad/blob/v2.0.7/drivers/exec/driver.go",
+        "sd5c86223bdf5": "https://github.com/hashicorp/nomad/blob/v2.0.7/client/config/config.go",
+        "sd5f2c389c6ae": "https://github.com/hashicorp/nomad/blob/v2.0.7/drivers/rawexec/driver.go",
+        "se7ba8e4262dc": "https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/config/tls.go",
+        "sc3e36e830b67": "https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/acl_endpoint.go",
+        "s754c582b7565": "https://github.com/hashicorp/nomad/blob/v2.0.7/command/agent/agent.go",
+        "s8193264e48c2": "https://github.com/hashicorp/nomad/blob/v2.0.7/nomad/structs/acl.go",
+        "sba39c1a9119a": "https://github.com/hashicorp/nomad/blob/v2.0.7/command/meta.go#L96",
+        "sa04bf8c95cb6": "https://github.com/hashicorp/nomad/blob/v2.0.7/api/api.go#L388-L389"
+      }
+    },
+    "consul": {
+      "name": "Consul Community Edition",
+      "basis": "2.0.4",
+      "sources": {
+        "s679a306e1b08": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/config/default.go",
+        "s8a0b5abac641": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/config/builder.go",
+        "sc4fb30ca3702": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/consul/acl.go",
+        "s35b783d75794": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/acl_endpoint.go",
+        "sa77598ec3695": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/consul/acl_endpoint.go",
+        "s00748de44382": "https://github.com/hashicorp/consul/blob/v2.0.4/acl/acl.go",
+        "sab8a5866d9c9": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/http.go",
+        "sfeb50129fc10": "https://github.com/hashicorp/consul/blob/v2.0.4/agent/token/persistence.go"
+      }
+    }
+  },
+  "claims": {
+    "nomad-bind": {"text": "Nomad defaults bind_addr=0.0.0.0 and all three listeners fall back to it; setting only addresses.http leaves RPC and gossip on bind_addr.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed"], "status": "REASONED"},
+    "nomad-http": {"text": "Nomad HTTP API/UI uses 4646; UI defaults enabled at /ui/.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed", "nomad:sa1c2951d3ca6"], "status": "REASONED"},
+    "nomad-rpc": {"text": "Nomad RPC uses 4647; keep it on private or management addresses.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed"], "status": "REASONED"},
+    "nomad-gossip": {"text": "Nomad Serf uses 4648 TCP/UDP; gossip is unencrypted until encrypt is configured.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed"], "status": "REASONED"},
+    "nomad-dev": {"text": "Linux -dev binds 127.0.0.1 except -dev-connect, which binds 0.0.0.0. Wildcard behavior was not observed.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed"], "status": "REASONED"},
+    "nomad-acl-default": {"text": "ACLs default disabled; enable acl.enabled on every agent before exposing the API.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed", "nomad:s553448c7957c", "nomad:s7496bcf129dc"], "status": "REASONED"},
+    "nomad-debug": {"text": "Debug endpoints still require enable_debug with ACLs off; -dev enables it.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed", "nomad:s7496bcf129dc"], "status": "REASONED"},
+    "nomad-exec": {"text": "On a root Linux client, exec uses a chroot and task user, default nobody, with root refused by the default exec denylist; no client job was run.", "components": ["nomad"], "sources": ["nomad:sd665f15bc452", "nomad:sd5c86223bdf5"], "status": "REASONED"},
+    "nomad-raw-exec": {"text": "raw_exec has no isolation and defaults off, but -dev enables it.", "components": ["nomad"], "sources": ["nomad:sd5f2c389c6ae", "nomad:s52d80d2821ed"], "status": "REASONED"},
+    "nomad-remote-exec": {"text": "Remote task execution defaults enabled through disable_remote_exec=false.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed"], "status": "REASONED"},
+    "nomad-tls": {"text": "HTTP/RPC TLS defaults off; enable both tls.http and tls.rpc.", "components": ["nomad"], "sources": ["nomad:se7ba8e4262dc"], "status": "REASONED"},
+    "nomad-bootstrap-reset": {"text": "Unauthenticated PUT /v1/acl/bootstrap claims the first management token after ACL enablement; repeat is blocked until the operator reset file in data_dir/server.", "components": ["nomad"], "sources": ["nomad:sc3e36e830b67", "nomad:s754c582b7565"], "status": "REASONED"},
+    "consul-client-bind": {"text": "Consul client_addr defaults 127.0.0.1; widening it or addresses.http makes the API reachable.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
+    "consul-http": {"text": "Consul HTTP API is 8500; UI defaults off and -dev enables /ui/ on that port.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
+    "consul-dns": {"text": "Consul DNS uses 8600 TCP/UDP on client_addr.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
+    "consul-rpc": {"text": "Consul server RPC uses 8300 on bind_addr, default 0.0.0.0.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
+    "consul-lan": {"text": "Consul LAN Serf uses 8301 TCP/UDP on bind_addr.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
+    "consul-wan": {"text": "Consul WAN Serf uses 8302 TCP/UDP on bind_addr.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
+    "consul-https": {"text": "Consul HTTPS defaults disabled.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
+    "consul-grpc": {"text": "Plaintext gRPC defaults disabled; servers open TLS gRPC on 8503 on client_addr.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
+    "consul-acl-default": {"text": "Consul ACLs default off and disabled ACL resolution grants management rights; with ACLs enabled default_policy still defaults allow.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641", "consul:sc4fb30ca3702"], "status": "REASONED"},
+    "consul-bootstrap-reset": {"text": "Bootstrap is unauthenticated and one-time until an operator writes acl-bootstrap-reset; bootstrap privately before exposing the API.", "components": ["consul"], "sources": ["consul:s35b783d75794", "consul:sa77598ec3695"], "status": "REASONED"},
+    "consul-script": {"text": "enable_script_checks defaults off; enabling without ACLs or allow_write_http_from only warns. Prefer enable_local_script_checks if needed.", "components": ["consul"], "sources": ["consul:s8a0b5abac641"], "status": "REASONED"},
+    "consul-remote-exec": {"text": "consul exec defaults disabled through disable_remote_exec=true.", "components": ["consul"], "sources": ["consul:s679a306e1b08"], "status": "REASONED"},
+    "consul-tls-gossip": {"text": "TLS verification defaults off and gossip is unencrypted without encrypt.", "components": ["consul"], "sources": ["consul:s679a306e1b08", "consul:s8a0b5abac641"], "status": "REASONED"},
+    "verify-inventory": {"text": "Inventory TCP/UDP on private or management addresses; wildcard exposed binds and actual external isolation remain reasoned.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [1]},
+    "loopback-listeners": {"text": "Loopback runs used substitute TCP/Serf UDP ports; Consul DNS, WAN and gRPC were disabled, so their live listeners were not demonstrated.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "DEMONSTRATED", "evidence": "On the loopback run, the agents listened on TCP on test ports standing in for Nomad's 4646, 4647 and 4648 and Consul's 8500, 8300 and 8301 (the runs turned off Consul's DNS, Serf WAN and gRPC), and on UDP on the two Serf ports."},
+    "nomad-acl-probe": {"text": "Loopback anonymous self/jobs/agent probes distinguished ACLs-off from ACLs-on; self remains 200 but changes AccessorID, while jobs and agent become 403.", "components": ["nomad"], "sources": ["nomad:s553448c7957c", "nomad:s7496bcf129dc", "nomad:s8193264e48c2"], "status": "DEMONSTRATED", "evidence": "All of these outcomes were observed with the curl probe block and these commands, on agents listening on test ports.", "verify": [2]},
+    "nomad-agent-acl": {"text": "Server-handled paths can conceal a client with ACLs off; local /v1/agent/self exposed that client with 200 while the server returned 403.", "components": ["nomad"], "sources": ["nomad:s52d80d2821ed", "nomad:s7496bcf129dc"], "status": "DEMONSTRATED", "evidence": "In a cluster whose server had ACLs on and was bootstrapped, a client agent configured with `acl { enabled = false }` answered the first two paths with the ACLs-on results and `/v1/agent/self` with `200`, while the server answered it with `403`.", "verify": [2]},
+    "nomad-bootstrap-run": {"text": "ACL probe rejection did not prove bootstrap complete; first bootstrap issued management credentials and the second returned already-done.", "components": ["nomad"], "sources": ["nomad:sc3e36e830b67"], "status": "DEMONSTRATED", "evidence": "Before bootstrap, the probe already printed the ACLs-on results; the first `nomad acl bootstrap` printed a management token and the second failed with `Unexpected response code: 400 (ACL bootstrap already done ...)`."},
+    "nomad-anonymous-policy": {"text": "Anonymous rights come from the named anonymous policy; historical exported-token inspection found it absent, then present with submit-job despite unchanged probe results.", "components": ["nomad"], "sources": ["nomad:s8193264e48c2"], "status": "DEMONSTRATED", "evidence": "After an `anonymous` policy granting only `submit-job` was applied, the probe's results did not change, an anonymous job registration returned `200`, and `nomad acl policy info anonymous`, run in the same earlier form, showed the policy."},
+    "nomad-job-registration": {"text": "Anonymous registration succeeded with ACLs off and failed with ACLs on and no anonymous policy; registration is not a demonstrated job execution.", "components": ["nomad"], "sources": ["nomad:s553448c7957c", "nomad:s7496bcf129dc"], "status": "DEMONSTRATED", "evidence": "With ACLs off, an anonymous job registration also returned `200`; with ACLs on and no `anonymous` policy, it returned `403`."},
+    "nomad-token-input": {"text": "CLI accepts -token or NOMAD_TOKEN, not stdin; the current prompted one-command prefix avoids argv/history but retains same-user/root environment visibility. That form has no recorded live Nomad run.", "components": ["nomad"], "sources": ["nomad:sba39c1a9119a", "nomad:sa04bf8c95cb6"], "status": "REASONED", "verify": [3]},
+    "consul-acl-probe": {"text": "Loopback ACLs-off gave self 401/agent 200; enabled allow gave self 403/agent 200; enabled deny gave agent 403 with anonymous-permission text.", "components": ["consul"], "sources": ["consul:sc4fb30ca3702", "consul:s8a0b5abac641"], "status": "DEMONSTRATED", "evidence": "All of these outcomes were observed with this block and these commands, on agents listening on test ports.", "verify": [4]},
+    "consul-agent-acl": {"text": "Each agent applies its own enabled/default_policy; mixed server/client configurations gave different results on their own APIs.", "components": ["consul"], "sources": ["consul:s8a0b5abac641", "consul:sc4fb30ca3702"], "status": "DEMONSTRATED", "evidence": "with the server on the `allow` policy and the client on `deny`, it printed `200` on `/v1/agent/self` against the server and the deny results against the client.", "verify": [4]},
+    "consul-bootstrap-run": {"text": "Deny results appeared before bootstrap; first bootstrap issued a token and the second refused with bootstrap no longer allowed.", "components": ["consul"], "sources": ["consul:s35b783d75794", "consul:sa77598ec3695"], "status": "DEMONSTRATED", "evidence": "the first `consul acl bootstrap` printed a token and the second failed with `Unexpected response code: 403 (Permission denied: ACL bootstrap no longer allowed ...)`"},
+    "consul-anonymous-token": {"text": "Inspect anonymous accessor 00000000-0000-0000-0000-000000000002 for policies, roles and identities; its recorded read listed none.", "components": ["consul"], "sources": ["consul:s00748de44382"], "status": "DEMONSTRATED", "evidence": "the anonymous token's read listed none of those sections."},
+    "consul-default-token": {"text": "An agent default token substitutes for anonymous requests; recorded key-write default token yielded self 200 and agent 403 yet allowed an unauthenticated KV write.", "components": ["consul"], "sources": ["consul:sab8a5866d9c9", "consul:sfeb50129fc10"], "status": "DEMONSTRATED", "evidence": "On the loopback run, a default token holding key write, set through the agent's token API on a deny-policy agent, made the block print `200` on `/v1/acl/token/self` and a `403` on `/v1/agent/self` without the anonymous-token message, while a key-value write without a token succeeded.", "verify": [4]},
+    "consul-kv": {"text": "Anonymous KV writes succeeded with ACLs off and allow policy, and were refused under deny.", "components": ["consul"], "sources": ["consul:sc4fb30ca3702", "consul:s679a306e1b08"], "status": "DEMONSTRATED", "evidence": "On the same runs an anonymous key-value write succeeded in both exposed states and was refused with `403` with the deny policy"},
+    "consul-script-run": {"text": "With default script-check settings, remote script registration was refused.", "components": ["consul"], "sources": ["consul:s8a0b5abac641"], "status": "DEMONSTRATED", "evidence": "with script checks at their default, registering a script check through the API was refused with \"Scripts are disabled on this agent from remote calls\"."},
+    "verify-tcp": {"text": "Probe each actual public IP with a known-open control; connected establishes reachability, refused/timeout only local nonreachability. This guide cross-references another guide's run; UDP is not tested.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [5]},
+    "verify-address-limits": {"text": "TCP guard refuses zero/dotted-IPv6 forms but permits loopback and some hex forms reaching the probing host; use public addresses and corroborate surprising connections with host sockets.", "components": ["nomad", "consul"], "sources": ["nomad:s52d80d2821ed", "consul:s679a306e1b08"], "status": "REASONED", "verify": [5]}
+  }
+}
+````
+<!-- version-basis:end -->
