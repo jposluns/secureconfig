@@ -124,9 +124,9 @@ curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.ex
 - Vercel Functions runtimes (checked October 2026): https://vercel.com/docs/functions/runtimes
 - Heroku certificate automation and limitations (checked October 2026): https://devcenter.heroku.com/articles/automated-certificate-management
 - Heroku HTTP routing (checked October 2026): https://devcenter.heroku.com/articles/http-routing
-- Heroku custom-domain prerequisites (checked October 2026): https://devcenter.heroku.com/articles/custom-domains
+- Heroku custom-domain prerequisites (checked October 2026): https://devcenter.heroku.com/articles/custom-domains. The article states: "For security purposes, you must verify your Heroku account to add domains to apps." This guide's assessment: this sentence establishes the account prerequisite, not the verification procedure or certificate eligibility.
 - Heroku web-process port assignment (checked October 2026): https://devcenter.heroku.com/articles/runtime-principles
-- Heroku Fir Private Spaces networking and listener recommendation (checked October 2026): https://devcenter.heroku.com/articles/generations
+- Heroku Fir Private Spaces networking and listener recommendation (checked October 2026): https://devcenter.heroku.com/articles/generations. The article states: "Fir utilizes IPv6 as the default and recommended connection protocol for networking within Heroku Private Spaces." It warns: "If you designed your application, its dependencies, or connected services within a space assuming only IPv4 connectivity, they don’t bind properly on Fir." It recommends: "Ensure IPv6 compatibility by correctly binding to an IPv6 listener or the dual-stack address listener in your app’s language (typically ::) to leverage Fir’s networking configuration." This guide's assessment: these sentences concern networking within Heroku Private Spaces; they do not establish Cedar's listener address or a deployed application's listener configuration.
 - Fly TCP passthrough (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97
 - Fly TLS termination (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176
 - Fly domain verification for issuance and renewal (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/custom-domain.mdx#L39-L44
@@ -205,7 +205,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "b15b19ec1a2ecdc6d952996b240f9e17283d07f22eeac2a0dd7fee8f0c2eb06f",
+  "body_sha256": "d275102ba0803b4b426425a4b6a96ad3ff1feea7bde1fdad64a80d76259931b2",
   "components": {
     "render": {
       "name": "Render documentation",
