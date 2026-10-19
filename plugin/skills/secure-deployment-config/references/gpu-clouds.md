@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against RunPod documentation (no recorded version), Jupyter Server contents authentication v2.18.0, Ollama v0.34.2, iproute2 ss manual v6.12.0, and Linux network namespaces manual man-pages-5.13; 1 further source is pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 35 claims, all reasoned from cited sources.
+Written against RunPod documentation (no recorded version), Jupyter Server contents authentication v2.18.0, Ollama v0.34.2, iproute2 ss manual v6.12.0, and Linux network namespaces manual man-pages-5.13; 3 further sources are pinned to a commit and 5 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 35 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -58,7 +58,13 @@ Where proxy auth is enabled, callers authenticate with a Token ID and Token Secr
 
 The platform's own controls (RunPod's proxy TLS, Vast.ai's portal token, Lambda's firewall rules, Modal's proxy auth) are necessary but not sufficient on their own. How to bind the model server depends on which kind of proxy is in front of it. RunPod's HTTP proxy reaches the pod over its exposed network interface rather than through a local backend, so the service must bind `0.0.0.0` inside the pod; RunPod's own troubleshooting guidance is explicit that binding to `localhost` only will keep the proxy from reaching it. Vast.ai's Instance Portal is the opposite case: it is a local reverse proxy (Caddy) running on the instance itself, so the app it forwards to can stay on loopback behind it, the same pattern as an authenticating proxy on your own hardware. Whichever binding the platform's proxy needs, add the listener's OWN authentication where it supports one; where it does not, keep the unauthenticated backend private and put an authenticating gateway in front, so the gateway and not the bare listener is what the platform exposes, exactly as [ollama.md](ollama.md) and [model-servers.md](model-servers.md) describe. At Ollama v0.34.2, the cited local API route setup installs CORS and host filtering without an inbound credential check. Cloud sign-in and OLLAMA_AUTH client outbound signing are separate from local inbound authentication. A platform-level control that changes later, a firewall rule widened to a broader source range, a template rebuilt without a flag, should not be the only thing standing between the listener and the internet (deleting a Lambda allow rule, by contrast, closes the port rather than opening it).
 
-MFA: this guide cites no platform feature that adds a second factor to the workload itself, so workload authentication must be verified separately. This guide's advice is to enable MFA on each RunPod, Vast.ai, Lambda, and Modal platform account ([mfa.md](mfa.md)); no account-security source for these platforms is cited here. In this guide's reasoning, an API key or proxy-auth token secures a machine client and is a separate control from the platform login.
+MFA: this guide cites no platform feature that adds a second factor to the workload itself, so workload authentication must be verified separately.
+
+RunPod's quickstart recommends setting up two-factor authentication; its account-management page documents Basic, Billing, Dev and Admin team roles, but these passages do not show factor methods, setup steps or enforcement. Vast.ai's two-factor authentication page requires configuring at least one authenticator-app (TOTP) or SMS method to use 2FA; email is a backup, used automatically when setting up the first method, and remains an explicit option at the verification prompt rather than being triggered automatically at login. Lambda's console page says MFA can be set up in User settings and account admins can manage users, roles and workspaces; it does not specify factor methods, setup steps or enforcement.
+
+Modal's Workspaces page notes that accounts can be provisioned through SAML SSO, points to separate SAML SSO documentation, and directs users to contact Modal for Google or other SSO providers. It also documents Owner, Manager and Member roles, with RBAC for more granular permissions. The page does not establish SSO availability for a given workspace or plan. Modal's security page requires phishing-resistant MFA for Modal's own employee accounts; that statement does not establish a customer-account second factor, and neither cited Modal page shows such a control or customer MFA enforcement through SSO.
+
+This guide's advice is to enable MFA on each RunPod, Vast.ai, Lambda, and Modal platform account ([mfa.md](mfa.md)); where your Modal workspace offers SSO, use an identity provider that enforces MFA and verify that enforcement for every member. This guide's advice is to confirm the available factor methods and setup steps with RunPod and Lambda, and verify account MFA enforcement on every platform; the setup and enforcement details missing from these citations (including Vast.ai team-wide enforcement) and Modal SSO availability remain open in TODO.md under 1.264. In this guide's reasoning, an API key or proxy-auth token secures a machine client and is a separate control from the platform login.
 
 SSH: authenticate with your own key, not a password. Lambda requires an SSH key at launch; Vast.ai disables password authentication and uses the key you register; RunPod recommends key auth and offers an optional password you should skip. Keep the private key off the instance, and treat SSH access as a control separate from the platform login above.
 
@@ -225,6 +231,12 @@ REASONED: following block; this guide's test design for the Vast.ai portal's pat
 - Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d linux-desktop x11vnc port and password fallback; does not establish password strength (checked October 2026): https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/ROOT/opt/supervisor-scripts/x11vnc.sh#L22-L24
 - Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d linux-desktop browser and direct connection choices (checked October 2026): https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/README.template.md#L47-L50
 - Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d linux-desktop documented VNC password and override (checked October 2026): https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/README.template.md#L76-L80
+- RunPod account documentation at commit 85a9f105d28e37758a43a44b1e75dca08fc1c33c (quickstart recommendation to set up 2FA; no factor methods, setup steps or enforcement shown) (checked October 2026): https://github.com/runpod/docs/blob/85a9f105d28e37758a43a44b1e75dca08fc1c33c/get-started.mdx#L13-L17
+- RunPod account documentation at commit 85a9f105d28e37758a43a44b1e75dca08fc1c33c (team roles and permission table; not a second-factor control) (checked October 2026): https://github.com/runpod/docs/blob/85a9f105d28e37758a43a44b1e75dca08fc1c33c/accounts-billing/manage-accounts.mdx#L57-L74
+- Vast.ai account authentication at commit 8629af9a05e884dd603b6a24bbb7c39826c1a10d (TOTP/SMS prerequisite and email backup/selection behaviour) (checked October 2026): https://github.com/vast-ai/docs/blob/8629af9a05e884dd603b6a24bbb7c39826c1a10d/guides/reference/two-factor-authentication.mdx#L14-L18
+- Lambda Public Cloud console (User settings MFA and account-admin management; no factor methods, setup steps or enforcement specified) (checked October 2026): https://docs.lambda.ai/public-cloud/console/
+- Modal account security (accounts provisioned through SAML SSO; separate SAML SSO docs linked; contact Modal for Google or other SSO providers; workspace roles and RBAC; no plan availability, customer second-factor control or MFA enforcement shown) (checked October 2026): https://modal.com/docs/guide/workspaces
+- Modal account security (employee MFA and customer access controls; employee MFA does not establish customer MFA) (checked October 2026): https://modal.com/docs/guide/security
 
 
 <!-- version-basis:start -->
@@ -250,6 +262,9 @@ Components (recorded basis):
 - ollama: Ollama (v0.34.2)
 - iproute2: iproute2 ss manual (v6.12.0)
 - network-namespaces: Linux network namespaces manual (man-pages-5.13)
+- runpod-account: RunPod account documentation (85a9f105d28e37758a43a44b1e75dca08fc1c33c)
+- vast-account: Vast.ai account authentication (8629af9a05e884dd603b6a24bbb7c39826c1a10d)
+- modal-account: Modal account security (unknown)
 
 Claims (full source mapping in the JSON block below):
 
@@ -279,7 +294,7 @@ Claims (full source mapping in the JSON block below):
 - modal-credentials (REASONED; modal): Proxy authentication accepts Modal-Key and Modal-Secret or Authorization: Bearer &lt;token_id&gt;.&lt;token_secret&gt;; missing credentials on a protected endpoint return 401.
 - runpod-bind (REASONED; runpod): RunPod HTTP proxy needs the exposed pod interface: bind the exposed service to 0.0.0.0 inside the pod, not localhost.
 - listener-auth (REASONED; runpod, vast, jupyter, ollama): Whichever binding the platform's proxy needs, add the listener's OWN authentication where it supports one; otherwise keep the unauthenticated backend private and put an authenticating gateway in front, so the platform exposes the gateway rather than the bare listener. At Ollama v0.34.2, the cited local API route setup installs CORS and host filtering without an inbound credential check. Cloud sign-in and OLLAMA_AUTH client outbound signing are separate from local inbound authentication.
-- mfa (REASONED; modal, jupyter): MFA: this guide cites no platform feature that adds a second factor to the workload itself, so workload authentication must be verified separately. This guide's advice is to enable MFA on each RunPod, Vast.ai, Lambda, and Modal platform account; no account-security source for these platforms is cited here. In this guide's reasoning, an API key or proxy-auth token secures a machine client and is a separate control from the platform login.
+- mfa (REASONED; modal, jupyter, runpod-account, vast-account, lambda, modal-account): This guide cites no workload second factor; verify workload authentication separately. Advice: account MFA on RunPod, Vast.ai, Lambda and Modal, verifying enforcement; MFA-enforced SSO where Modal offers it (Modal's cited MFA: employees only; customer MFA not shown). In this guide's reasoning, API keys/proxy tokens secure machine clients separately from platform login; setup/enforcement gaps remain.
 - lambda-ssh (REASONED; lambda): Lambda requires an SSH key at launch; keep the private key off the instance.
 - vast-ssh (REASONED; vast): Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance.
 - runpod-ssh (REASONED; runpod): RunPod recommends SSH keys and offers an optional password; use the key and skip the password.
@@ -294,7 +309,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "5232dd66457cba9ab154ef6d650edc3288312da0690bfb3d9a3785a670b1e242",
+  "body_sha256": "25aedcac85a7a331d09e354e5609a90b5900fd5e0277400b737e67917dfd1cb0",
   "components": {
     "runpod": {
       "name": "RunPod documentation",
@@ -347,7 +362,8 @@ Claims (full source mapping in the JSON block below):
       "basis": "unknown",
       "sources": {
         "se22064748974": "https://docs.lambda.ai/public-cloud/firewalls/",
-        "sb12b4a953833": "https://docs.lambda.ai/public-cloud/on-demand/connecting-instance/"
+        "sb12b4a953833": "https://docs.lambda.ai/public-cloud/on-demand/connecting-instance/",
+        "s4d76884333e7": "https://docs.lambda.ai/public-cloud/console/"
       }
     },
     "modal": {
@@ -410,6 +426,29 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s427c923e346f": "https://github.com/mkerrisk/man-pages/blob/man-pages-5.13/man7/network_namespaces.7#L30-L40"
       }
+    },
+    "runpod-account": {
+      "name": "RunPod account documentation",
+      "basis": "85a9f105d28e37758a43a44b1e75dca08fc1c33c",
+      "sources": {
+        "sd631388ab114": "https://github.com/runpod/docs/blob/85a9f105d28e37758a43a44b1e75dca08fc1c33c/get-started.mdx#L13-L17",
+        "se14f2c54dadd": "https://github.com/runpod/docs/blob/85a9f105d28e37758a43a44b1e75dca08fc1c33c/accounts-billing/manage-accounts.mdx#L57-L74"
+      }
+    },
+    "vast-account": {
+      "name": "Vast.ai account authentication",
+      "basis": "8629af9a05e884dd603b6a24bbb7c39826c1a10d",
+      "sources": {
+        "s34d7af02cefb": "https://github.com/vast-ai/docs/blob/8629af9a05e884dd603b6a24bbb7c39826c1a10d/guides/reference/two-factor-authentication.mdx#L14-L18"
+      }
+    },
+    "modal-account": {
+      "name": "Modal account security",
+      "basis": "unknown",
+      "sources": {
+        "sc231ebe09068": "https://modal.com/docs/guide/workspaces",
+        "sbca5146e672b": "https://modal.com/docs/guide/security"
+      }
     }
   },
   "claims": {
@@ -439,7 +478,7 @@ Claims (full source mapping in the JSON block below):
     "modal-credentials": {"text": "Proxy authentication accepts Modal-Key and Modal-Secret or Authorization: Bearer <token_id>.<token_secret>; missing credentials on a protected endpoint return 401.", "components": ["modal"], "sources": ["modal:s7d083f819a21"], "status": "REASONED"},
     "runpod-bind": {"text": "RunPod HTTP proxy needs the exposed pod interface: bind the exposed service to 0.0.0.0 inside the pod, not localhost.", "components": ["runpod"], "sources": ["runpod:s817198f039ee"], "status": "REASONED"},
     "listener-auth": {"text": "Whichever binding the platform's proxy needs, add the listener's OWN authentication where it supports one; otherwise keep the unauthenticated backend private and put an authenticating gateway in front, so the platform exposes the gateway rather than the bare listener. At Ollama v0.34.2, the cited local API route setup installs CORS and host filtering without an inbound credential check. Cloud sign-in and OLLAMA_AUTH client outbound signing are separate from local inbound authentication.", "components": ["runpod", "vast", "jupyter", "ollama"], "sources": ["runpod:s817198f039ee", "vast:s0bdbda534723", "jupyter:sc703a8030c8f", "ollama:s96f77aee8bdd", "ollama:sd146dc5d917d", "ollama:s7478dad099ab", "ollama:s2abe15b73bce"], "status": "REASONED"},
-    "mfa": {"text": "MFA: this guide cites no platform feature that adds a second factor to the workload itself, so workload authentication must be verified separately. This guide's advice is to enable MFA on each RunPod, Vast.ai, Lambda, and Modal platform account; no account-security source for these platforms is cited here. In this guide's reasoning, an API key or proxy-auth token secures a machine client and is a separate control from the platform login.", "components": ["modal", "jupyter"], "sources": ["modal:s7d083f819a21", "jupyter:sc703a8030c8f"], "status": "REASONED"},
+    "mfa": {"text": "This guide cites no workload second factor; verify workload authentication separately. Advice: account MFA on RunPod, Vast.ai, Lambda and Modal, verifying enforcement; MFA-enforced SSO where Modal offers it (Modal's cited MFA: employees only; customer MFA not shown). In this guide's reasoning, API keys/proxy tokens secure machine clients separately from platform login; setup/enforcement gaps remain.", "components": ["modal", "jupyter", "runpod-account", "vast-account", "lambda", "modal-account"], "sources": ["modal:s7d083f819a21", "jupyter:sc703a8030c8f", "runpod-account:sd631388ab114", "runpod-account:se14f2c54dadd", "vast-account:s34d7af02cefb", "lambda:s4d76884333e7", "modal-account:sc231ebe09068", "modal-account:sbca5146e672b"], "status": "REASONED"},
     "lambda-ssh": {"text": "Lambda requires an SSH key at launch; keep the private key off the instance.", "components": ["lambda"], "sources": ["lambda:sb12b4a953833"], "status": "REASONED"},
     "vast-ssh": {"text": "Vast.ai disables SSH password authentication and uses the registered public key; keep the private key off the instance.", "components": ["vast"], "sources": ["vast:s6e0303ef19fe"], "status": "REASONED"},
     "runpod-ssh": {"text": "RunPod recommends SSH keys and offers an optional password; use the key and skip the password.", "components": ["runpod"], "sources": ["runpod:s13c43b856d4f"], "status": "REASONED"},
