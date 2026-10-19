@@ -12040,7 +12040,7 @@ aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
 
 AI assistants must compare these versions with current releases and treat this guide as guidance, re-verifying version-specific defaults when newer releases exist.
 
-Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
+Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown). DEMONSTRATED refers to historical evidence in this guide; REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.
 
 Components (recorded basis):
 
@@ -12072,7 +12072,7 @@ Claims (full source mapping in the front matter):
 - modal-web (REASONED; modal): Web endpoints using modal.fastapi_endpoint, the replacement for @web_endpoint, are public by default; requires_proxy_auth=True enables proxy authentication.
 - modal-dedicated (REASONED; modal): Dedicated Endpoints require proxy authentication by default; --unauthenticated makes them public.
 - modal-server (REASONED; modal): Servers require proxy authentication by default; @app.server(unauthenticated=True) makes them public.
-- modal-shared (REASONED; modal): Shared Endpoints always require a Proxy Token and cannot be made public with the Dedicated Endpoint flag; the cited proxy-auth page does not explicitly document this exception.
+- modal-shared (REASONED; modal): Shared Endpoints always require a Proxy Token; the cited pages document the --unauthenticated option for Dedicated Endpoints only, so, in this guide's assessment, a Shared Endpoint cannot be made public.
 - modal-credentials (REASONED; modal): Proxy authentication accepts Modal-Key and Modal-Secret or Authorization: Bearer &lt;token_id&gt;.&lt;token_secret&gt;; missing credentials on a protected endpoint return 401.
 - runpod-bind (REASONED; runpod): RunPod HTTP proxy needs the exposed pod interface: bind the exposed service to 0.0.0.0 inside the pod, not localhost.
 - listener-auth (REASONED; runpod, vast, jupyter, ollama): Whichever binding the platform's proxy needs, add the listener's OWN authentication where it supports one; otherwise keep the unauthenticated backend private and put an authenticating gateway in front, so the platform exposes the gateway rather than the bare listener. At Ollama v0.34.2, the cited local API route setup installs CORS and host filtering without an inbound credential check. Cloud sign-in and OLLAMA_AUTH client outbound signing are separate from local inbound authentication.
@@ -12110,7 +12110,7 @@ Opening a rule makes the port reachable from whatever source range you allow, wi
 
 ## Modal
 
-Modal's serverless constructs default differently by shape, and the control differs too. Web endpoints (the current decorator is `modal.fastapi_endpoint`, which replaced `@web_endpoint`) are "publicly available by default" and stay public until the function sets `requires_proxy_auth=True`. A Dedicated Endpoint is made public with the `--unauthenticated` flag; a Server sets `unauthenticated=True` on `@app.server(...)` instead of that flag; and a Shared Endpoint always requires a Proxy Token and cannot be made public that way. Name the construct you are deploying and check its actual control rather than assuming one flag covers all of them.
+Modal's serverless constructs default differently by shape, and the control differs too. Web endpoints (the current decorator is `modal.fastapi_endpoint`, which replaced `@web_endpoint`) are "publicly available by default" and stay public until the function sets `requires_proxy_auth=True`. A Dedicated Endpoint is made public with the `--unauthenticated` flag; a Server sets `unauthenticated=True` on `@app.server(...)` instead of that flag; and a Shared Endpoint always requires a Proxy Token: Modal's Shared Endpoints page says "Shared Endpoints always require a proxy token," and its Endpoints page's Proxy tokens section says Shared Endpoints always require one while "Dedicated Endpoints can also be created with `--unauthenticated`." The cited pages document the unauthenticated option for Dedicated Endpoints only, so, in this guide's assessment, a Shared Endpoint cannot be made public. Name the construct you are deploying and check its actual control rather than assuming one flag covers all of them.
 
 Where proxy auth is enabled, callers authenticate with a Token ID and Token Secret pair, either as separate `Modal-Key` and `Modal-Secret` headers or combined as `Authorization: Bearer <token_id>.<token_secret>` (Modal notes this mirrors "the same scheme the OpenAI API uses"). A protected endpoint called without credentials returns 401 with "missing credentials for proxy authorization." Check which default your construct uses before deploying; do not assume a Web Function is private.
 
@@ -12198,6 +12198,8 @@ REASONED: exposure interpretation from the cited platform publication and Jupyte
 - Vast.ai Instance Portal (PORTAL_CONFIG, Caddy reverse proxy, secure-token links): https://docs.vast.ai/guides/instances/connect/instance-portal
 - Lambda Cloud firewalls (default-deny inbound, SSH/ICMP exception, rule types): https://docs.lambda.ai/public-cloud/firewalls/
 - Modal proxy auth for web endpoints (Endpoints/Servers vs Web Functions defaults, headers): https://modal.com/docs/guide/webhook-proxy-auth
+- Modal Shared Endpoints (Shared Endpoints always require a proxy token) (checked October 2026): https://modal.com/docs/guide/shared-endpoints
+- Modal Endpoints, Proxy tokens section (Shared Endpoints always require a Proxy Token; Dedicated Endpoints can also be created with `--unauthenticated`) (checked October 2026): https://modal.com/docs/guide/endpoints
 - Vast.ai base image (portal auth: `OPEN_BUTTON_TOKEN`, `WEB_PASSWORD`, `ENABLE_AUTH`/`AUTH_EXCLUDE`): https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/README.md
 - Jupyter Server security (token authentication; the pinned API handler below establishes the missing-credentials 403): https://jupyter-server.readthedocs.io/en/latest/operators/security.html
 - Jupyter Server v2.18.0 contents handler inheritance, authenticated GET and JSON completion (checked October 2026): https://github.com/jupyter-server/jupyter_server/blob/v2.18.0/jupyter_server/services/contents/handlers.py#L83-L186
@@ -12225,7 +12227,7 @@ REASONED: exposure interpretation from the cited platform publication and Jupyte
 - Ollama v0.34.2 local API route setup, CORS and host filtering; does not establish inbound caller authentication (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/server/routes.go
 - Ollama v0.34.2 client outbound signing, separate from inbound authentication (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/api/client.go
 - Ollama v0.34.2 cloud sign-in command, separate from local inbound authentication (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/cmd/cmd.go
-- Ollama v0.34.2 OLLAMA_AUTH setting consumed by the client (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go
+- Ollama v0.34.2 OLLAMA_AUTH setting definition (client consumption shown by the api/client.go citation) (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/envconfig/config.go
 - Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d linux-desktop x11vnc port and password fallback; does not establish password strength (checked October 2026): https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/ROOT/opt/supervisor-scripts/x11vnc.sh#L22-L24
 - Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d linux-desktop browser and direct connection choices (checked October 2026): https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/README.template.md#L47-L50
 - Vast.ai base-image commit 00064421641881c1f83ff58c55f13cbc10cbea4d linux-desktop documented VNC password and override (checked October 2026): https://github.com/vast-ai/base-image/blob/00064421641881c1f83ff58c55f13cbc10cbea4d/derivatives/linux-desktop/README.template.md#L76-L80

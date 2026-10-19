@@ -88,6 +88,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _walk import walk_files  # noqa: E402  fail-closed tree walk
 from _markdown import Fences  # noqa: E402  one shared definition of a fenced block
+import version_basis as vb  # noqa: E402  authoritative generated-section validation
 
 SKIP_DIRS = {".git", "node_modules", "__pycache__", "site", "tools", "scripts", ".github", ".aiqt"}
 NOT_A_GUIDE = {"CONTRIBUTING.md", "CLAUDE.md", "AGENTS.md", "CHANGELOG.md", "README.sources.md"}
@@ -272,7 +273,7 @@ SCLIENT_HELP = re.compile(r"\s-(?:help|h)\b")
 SCLIENT_BINDS = re.compile(r"""(?:^|[\s'"])-verify_(?:hostname|ip)(?:[\s<>|)=`'";&]|$)""")
 
 
-def logical_lines(text):
+def logical_lines(text, guide="GUIDE.md"):
     """Yield (line_number, joined_command) for every fenced code line in the file.
 
     Scans ALL fenced code blocks, not only those under a Verify heading. Section tracking
@@ -293,6 +294,16 @@ def logical_lines(text):
     `sort` is a separate command. Skipping the comment line joined `sort -k 2` onto the
     curl and reported `curl -k` on legitimate text.
     """
+    # Only canonical, validated EOF metadata is generated prose. On any validation
+    # failure scan the original text, including fake markers and fences after END.
+    # Leave legacy layouts untouched and retain the entire prefix for line numbers.
+    if not text.startswith('---\n') and vb.START in text:
+        try:
+            section = vb.eof_section(text)
+            if vb.updated(text, guide) == text:
+                text = text[:text.index(section)]
+        except (OSError, ValueError, TypeError, KeyError):
+            pass
     fences = Fences()
     bq = False
     buf, buf_line = None, None
@@ -418,7 +429,7 @@ def main() -> int:
         except Exception as exc:
             findings.append(f"{path.name}: unreadable ({exc})")
             continue
-        for lineno, line in logical_lines(text):
+        for lineno, line in logical_lines(text, path.name):
             code = strip_comment(line)
             for label in findings_for(code):
                 findings.append(f"{path.name}:{lineno}: {label}: {code.strip()[:78]}")

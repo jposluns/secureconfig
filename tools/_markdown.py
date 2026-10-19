@@ -82,9 +82,9 @@ class Fences:
 
 
 def body_lines(text):
-    """Mask validated front matter, preserving diagnostic line numbers."""
-    from version_basis import split
-    data, body = split(text)
+    """Mask legacy front matter only; EOF metadata is already fenced Markdown."""
+    from version_basis import split_front_matter
+    data, body = split_front_matter(text)
     if data is None:
         return text.splitlines()
     prefix = text[:len(text) - len(body)]
