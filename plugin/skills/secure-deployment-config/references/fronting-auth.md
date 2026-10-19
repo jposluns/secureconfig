@@ -130,15 +130,15 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- oauth: oauth2-proxy, v7.15.4
-- authelia: Authelia, v4.39.28
-- traefik: Traefik, unknown
-- go: Go net.Listen, unknown
-- pomerium: Pomerium, unknown
-- curl: curl minimum write-out version, 7.75.0
-- oauth-rolling: oauth2-proxy documentation (rolling), unknown
-- authelia-rolling: Authelia documentation (rolling), unknown
-- pomerium-docs: Pomerium policy documentation, 691714e2f0ae74fab47412275e8b64b68acdc0d3
+- oauth: oauth2-proxy (v7.15.4)
+- authelia: Authelia (v4.39.28)
+- traefik: Traefik (unknown)
+- go: Go net.Listen (unknown)
+- pomerium: Pomerium (unknown)
+- curl: curl minimum write-out version (7.75.0)
+- oauth-rolling: oauth2-proxy documentation (rolling) (unknown)
+- authelia-rolling: Authelia documentation (rolling) (unknown)
+- pomerium-docs: Pomerium policy documentation (691714e2f0ae74fab47412275e8b64b68acdc0d3)
 
 Claims (full source mapping in the front matter):
 

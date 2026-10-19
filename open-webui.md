@@ -126,9 +126,9 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- webui: Open WebUI, 0a7c15832fb30b1903753e83f81dc7d27e5b0944
-- docker: Docker Engine localhost boundary, 28.0.0
-- webui-docs: Open WebUI documentation (rolling), unknown
+- webui: Open WebUI (0a7c15832fb30b1903753e83f81dc7d27e5b0944)
+- docker: Docker Engine localhost boundary (28.0.0)
+- webui-docs: Open WebUI documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 

@@ -192,22 +192,22 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- browser: Browser API and living standards, unknown
-- websocket: WebSocket protocol, RFC 6455
-- owasp: OWASP guidance, unknown
-- github: GitHub webhooks documentation, unknown
-- stripe: Stripe webhooks documentation, unknown
-- stripe-node: stripe-node, v18.5.0
-- stripe-python: stripe-python, v12.5.0
-- node: Node.js crypto documentation, unknown
-- traefik: Traefik timeout reference, v3.5
-- proxy: Caddy and nginx timeout documentation, unknown
-- caddy-source: Caddy source, v2.11.4
-- curl: curl minimum write-out version, 7.75.0
-- python: Python os documentation, unknown
-- nginx-source: nginx source, release-1.26.3
-- haproxy: HAProxy, 3.0
-- haproxy-source: HAProxy source, v3.0.0
+- browser: Browser API and living standards (unknown)
+- websocket: WebSocket protocol (RFC 6455)
+- owasp: OWASP guidance (unknown)
+- github: GitHub webhooks documentation (unknown)
+- stripe: Stripe webhooks documentation (unknown)
+- stripe-node: stripe-node (v18.5.0)
+- stripe-python: stripe-python (v12.5.0)
+- node: Node.js crypto documentation (unknown)
+- traefik: Traefik timeout reference (v3.5)
+- proxy: Caddy and nginx timeout documentation (unknown)
+- caddy-source: Caddy source (v2.11.4)
+- curl: curl minimum write-out version (7.75.0)
+- python: Python os documentation (unknown)
+- nginx-source: nginx source (release-1.26.3)
+- haproxy: HAProxy (3.0)
+- haproxy-source: HAProxy source (v3.0.0)
 
 Claims (full source mapping in the front matter):
 

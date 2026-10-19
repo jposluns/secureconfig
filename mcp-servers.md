@@ -116,12 +116,12 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- mcp: MCP, 2026-07-28
-- legacy: MCP legacy, 2025-11-25
-- azure: Azure App Service, unknown
-- nginx: nginx, unknown
-- caddy: Caddy, unknown
-- curl: curl minimum, 7.75.0
+- mcp: MCP (2026-07-28)
+- legacy: MCP legacy (2025-11-25)
+- azure: Azure App Service (unknown)
+- nginx: nginx (unknown)
+- caddy: Caddy (unknown)
+- curl: curl minimum (7.75.0)
 
 Claims (full source mapping in the front matter):
 

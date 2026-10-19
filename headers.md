@@ -136,15 +136,15 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- mdn: MDN HTTP documentation, unknown
-- nginx-source: nginx source, release-1.26.3
-- apache-source: Apache HTTP Server, 2.4.69
-- caddy-source: Caddy source, v2.11.4
-- cloudflare-pages: Cloudflare Pages documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- scanner: Security Headers scanner, unknown
-- helmet: Helmet, v8.1.0
-- django: Django, 5.2
-- curl: curl, 8.23.0
+- mdn: MDN HTTP documentation (unknown)
+- nginx-source: nginx source (release-1.26.3)
+- apache-source: Apache HTTP Server (2.4.69)
+- caddy-source: Caddy source (v2.11.4)
+- cloudflare-pages: Cloudflare Pages documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- scanner: Security Headers scanner (unknown)
+- helmet: Helmet (v8.1.0)
+- django: Django (5.2)
+- curl: curl (8.23.0)
 
 Claims (full source mapping in the front matter):
 
@@ -166,7 +166,7 @@ Claims (full source mapping in the front matter):
 - logout-cookies (REASONED; mdn): Clear-Site-Data cookies clears cookies across the registered domain and all subdomains, plus HTTP authentication credentials; invalidate the server session separately.
 - logout-storage (REASONED; mdn): Clear-Site-Data storage removes origin local/session storage, IndexedDB and service-worker registrations; understand effects on companion applications before clearing.
 - logout-header (REASONED; mdn): The cited MDN logout example includes cache, cookies, storage, executionContexts, prefetchCache and prerenderCache.
-- verify-fetch (REASONED; mdn, curl): Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while &#96;-D -&#96; printing each response's header block, and selecting the last one, are this guide's assessment.
+- verify-fetch (REASONED; mdn, curl): Fetch the final page with redirects restricted to HTTPS, bypass client proxies, discard the body and inspect the last response's headers and final status/URL; curl 8.23.0 documents the command options and write-out fields, while `-D -` printing each response's header block, and selecting the last one, are this guide's assessment.
 - verify-values (REASONED; mdn): Judge header values on the final response, not presence on an earlier hop; missing final headers are findings and a failed fetch is inconclusive.
 - verify-scanner (REASONED; scanner): Use the external Security Headers scanner for a second opinion; the guide states that it fetches with GET.
 - verify-csp (REASONED; mdn): Unexpected console violations must be absent in normal use, but this alone is insufficient; confirm a deliberately disallowed resource is blocked while an allowed one loads.

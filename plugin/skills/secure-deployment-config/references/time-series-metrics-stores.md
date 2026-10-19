@@ -179,16 +179,16 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- influx2: InfluxDB OSS, 2.x
-- influx1: InfluxDB OSS, 1.x
-- single: VictoriaMetrics single-node, v1.152.0
-- cluster: VictoriaMetrics cluster, v1.152.0-cluster
-- rpc: VictoriaMetrics cluster source, e4b1d55683f0da20410dc765787bd4e9b5afa0da
-- proxy: VictoriaMetrics security/vmauth documentation, unknown
-- quest: QuestDB documentation, unknown
-- single-commit: VictoriaMetrics single-node source commit, 540b91da031aa8b7d53d3784693bb451e2be980a
-- image: VictoriaMetrics shipped Compose image, v1.151.0
-- enterprise: QuestDB Enterprise qualification, 4.0.0
+- influx2: InfluxDB OSS (2.x)
+- influx1: InfluxDB OSS (1.x)
+- single: VictoriaMetrics single-node (v1.152.0)
+- cluster: VictoriaMetrics cluster (v1.152.0-cluster)
+- rpc: VictoriaMetrics cluster source (e4b1d55683f0da20410dc765787bd4e9b5afa0da)
+- proxy: VictoriaMetrics security/vmauth documentation (unknown)
+- quest: QuestDB documentation (unknown)
+- single-commit: VictoriaMetrics single-node source commit (540b91da031aa8b7d53d3784693bb451e2be980a)
+- image: VictoriaMetrics shipped Compose image (v1.151.0)
+- enterprise: QuestDB Enterprise qualification (4.0.0)
 
 Claims (full source mapping in the front matter):
 

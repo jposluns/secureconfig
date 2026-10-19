@@ -199,11 +199,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- firebase: Firebase documentation, unknown
-- supabase: Supabase documentation, unknown
-- postgres: PostgreSQL documentation, unknown
-- postgres-view: PostgreSQL invoker-view minimum, 15
-- curl: curl, curl-8_14_1
+- firebase: Firebase documentation (unknown)
+- supabase: Supabase documentation (unknown)
+- postgres: PostgreSQL documentation (unknown)
+- postgres-view: PostgreSQL invoker-view minimum (15)
+- curl: curl (curl-8_14_1)
 
 Claims (full source mapping in the front matter):
 

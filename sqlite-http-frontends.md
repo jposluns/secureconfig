@@ -249,27 +249,27 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- ds-container: Datasette container generator, caf238aac86ebe370959b25384d6e05f6a1e2359
-- ds-cloud: Datasette Cloud Run publisher, e889403d3bbe143854262682161c98a57bdb6594
-- fly: Datasette Fly publishing plugin, unknown
-- passwords: datasette-auth-passwords, 1.1.1
-- github-auth: datasette-auth-github, unknown
-- write: datasette-write, 0.4
-- web: sqlite-web package, 0.8.1
-- web-source: sqlite-web implementation, 825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2
-- web-tag-source: sqlite-web tagged implementation, 0.8.1
-- web-image: sqlite-web Dockerfile, 7f6658b012a789f0b9418cad543e7798ce850130
-- sqlite: SQLite documentation, unknown
-- docker: Docker localhost-publication boundary, 28.0.0
-- cloudrun: Cloud Run documentation, unknown
-- nginx: nginx documentation, unknown
-- iap: Google IAP documentation, unknown
-- access: Cloudflare Access documentation, unknown
-- tailscale: Tailscale documentation, unknown
-- curl: curl minimum write-out version, 7.75.0
-- ss: ss documentation, unknown
-- datasette-docs: Datasette documentation (rolling), unknown
-- caddy-docs: Caddy documentation (rolling), unknown
+- ds-container: Datasette container generator (caf238aac86ebe370959b25384d6e05f6a1e2359)
+- ds-cloud: Datasette Cloud Run publisher (e889403d3bbe143854262682161c98a57bdb6594)
+- fly: Datasette Fly publishing plugin (unknown)
+- passwords: datasette-auth-passwords (1.1.1)
+- github-auth: datasette-auth-github (unknown)
+- write: datasette-write (0.4)
+- web: sqlite-web package (0.8.1)
+- web-source: sqlite-web implementation (825b4a050fe2a04e6c6cf4b8ee1f56eaea4feef2)
+- web-tag-source: sqlite-web tagged implementation (0.8.1)
+- web-image: sqlite-web Dockerfile (7f6658b012a789f0b9418cad543e7798ce850130)
+- sqlite: SQLite documentation (unknown)
+- docker: Docker localhost-publication boundary (28.0.0)
+- cloudrun: Cloud Run documentation (unknown)
+- nginx: nginx documentation (unknown)
+- iap: Google IAP documentation (unknown)
+- access: Cloudflare Access documentation (unknown)
+- tailscale: Tailscale documentation (unknown)
+- curl: curl minimum write-out version (7.75.0)
+- ss: ss documentation (unknown)
+- datasette-docs: Datasette documentation (rolling) (unknown)
+- caddy-docs: Caddy documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 

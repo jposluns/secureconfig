@@ -191,20 +191,20 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- comfy: ComfyUI, v0.37.0
-- webui: AUTOMATIC1111, v1.10.1
-- gradio: Gradio, 3.41.2
-- fooocus: Fooocus, v2.5.5
-- engine: Docker Engine minimum loopback boundary, 28.0
-- compose: Compose Specification, 914ec15d1fa4
-- compose-cli: Docker Compose source, v2.32.4
-- curl: curl minimum write-out version, 7.75.0
-- linux: Linux permissions and tools, unknown
-- comfy-rolling: ComfyUI documentation (rolling), unknown
-- comfy-registry-rolling: ComfyUI Registry documentation (rolling), unknown
-- comfy-advisory: ComfyUI January 2025 security advisory, unknown
-- invoke-rolling: InvokeAI documentation (rolling), unknown
-- comfy-manager-advisory: ComfyUI-Manager security advisory, unknown
+- comfy: ComfyUI (v0.37.0)
+- webui: AUTOMATIC1111 (v1.10.1)
+- gradio: Gradio (3.41.2)
+- fooocus: Fooocus (v2.5.5)
+- engine: Docker Engine minimum loopback boundary (28.0)
+- compose: Compose Specification (914ec15d1fa4)
+- compose-cli: Docker Compose source (v2.32.4)
+- curl: curl minimum write-out version (7.75.0)
+- linux: Linux permissions and tools (unknown)
+- comfy-rolling: ComfyUI documentation (rolling) (unknown)
+- comfy-registry-rolling: ComfyUI Registry documentation (rolling) (unknown)
+- comfy-advisory: ComfyUI January 2025 security advisory (unknown)
+- invoke-rolling: InvokeAI documentation (rolling) (unknown)
+- comfy-manager-advisory: ComfyUI-Manager security advisory (unknown)
 
 Claims (full source mapping in the front matter):
 

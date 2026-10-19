@@ -210,20 +210,20 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- boot: Spring Boot documentation, unknown
-- boot-docs: Spring Boot documentation (rolling), unknown
-- boot41: Spring Boot, 4.1.1
-- boot40: Spring Boot starter migration, 4.0
-- security: Spring Security documentation (rolling), unknown
-- jdk: JDK keytool documentation, 21
-- framework: Spring Framework documentation, unknown
-- security65: Spring Security HSTS, 6.5
-- tomcat: Tomcat HTTP connector, 10.1
-- curl: curl minimum diagnostics version, 7.75.0
-- jdk21u: OpenJDK jdk21u javax.net.ssl sources, jdk-21.0.12.1-ga
-- entra-docs: Microsoft Entra documentation, 231747abc59ae3d50c74e215c1cdd592eb980723
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- authelia-source: Authelia source, v4.39.28
+- boot: Spring Boot documentation (unknown)
+- boot-docs: Spring Boot documentation (rolling) (unknown)
+- boot41: Spring Boot (4.1.1)
+- boot40: Spring Boot starter migration (4.0)
+- security: Spring Security documentation (rolling) (unknown)
+- jdk: JDK keytool documentation (21)
+- framework: Spring Framework documentation (unknown)
+- security65: Spring Security HSTS (6.5)
+- tomcat: Tomcat HTTP connector (10.1)
+- curl: curl minimum diagnostics version (7.75.0)
+- jdk21u: OpenJDK jdk21u javax.net.ssl sources (jdk-21.0.12.1-ga)
+- entra-docs: Microsoft Entra documentation (231747abc59ae3d50c74e215c1cdd592eb980723)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- authelia-source: Authelia source (v4.39.28)
 
 Claims (full source mapping in the front matter):
 

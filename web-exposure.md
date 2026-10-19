@@ -165,20 +165,20 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- nginx: nginx documentation, unknown
-- apache: Apache documentation, 2.4
-- caddy: Caddy documentation, v2.11.4
-- next: Next.js documentation, unknown
-- vite: Vite documentation, unknown
-- cra: Create React App documentation, unknown
-- coreutils: GNU coreutils documentation, unknown
-- grep: GNU grep, 3.12
-- caddy-rolling: Caddy documentation (rolling), unknown
-- acme-http01: ACME HTTP-01, RFC 8555
-- debian-packaging: Debian apache2 packaging, 2.4.69-1
-- ecma426: ECMA-426, c724f0f494b44b21b651fdbd6412d3437eef0e72
-- next-maps: Next.js browser source maps, v16.3.6
-- vite-maps: Vite production source maps, v8.3.1
+- nginx: nginx documentation (unknown)
+- apache: Apache documentation (2.4)
+- caddy: Caddy documentation (v2.11.4)
+- next: Next.js documentation (unknown)
+- vite: Vite documentation (unknown)
+- cra: Create React App documentation (unknown)
+- coreutils: GNU coreutils documentation (unknown)
+- grep: GNU grep (3.12)
+- caddy-rolling: Caddy documentation (rolling) (unknown)
+- acme-http01: ACME HTTP-01 (RFC 8555)
+- debian-packaging: Debian apache2 packaging (2.4.69-1)
+- ecma426: ECMA-426 (c724f0f494b44b21b651fdbd6412d3437eef0e72)
+- next-maps: Next.js browser source maps (v16.3.6)
+- vite-maps: Vite production source maps (v8.3.1)
 
 Claims (full source mapping in the front matter):
 

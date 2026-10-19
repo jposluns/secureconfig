@@ -143,17 +143,17 @@ Metadata reviewed 2026-10-12; documentation checked 2026-10 (exact day unknown).
 
 Components (recorded basis):
 
-- meili: Meilisearch release reference, v1.53.2
-- typesense: Typesense, 30.2
-- curl: curl minimum, 7.75.0
-- nc: OpenBSD-compatible netcat, unknown
-- meili-docs: Meilisearch documentation (rolling), unknown
-- typesense-docs: Typesense documentation (rolling), unknown
-- meili-advisory: Meilisearch SSRF advisory, unknown
-- caddy: Caddy, v2.11.4
-- git-grep: Git grep manual, 2.55.0
-- git-rev-list: Git rev-list manual, 2.56.0
-- git: Git manual, 2.56.0
+- meili: Meilisearch release reference (v1.53.2)
+- typesense: Typesense (30.2)
+- curl: curl minimum (7.75.0)
+- nc: OpenBSD-compatible netcat (unknown)
+- meili-docs: Meilisearch documentation (rolling) (unknown)
+- typesense-docs: Typesense documentation (rolling) (unknown)
+- meili-advisory: Meilisearch SSRF advisory (unknown)
+- caddy: Caddy (v2.11.4)
+- git-grep: Git grep manual (2.55.0)
+- git-rev-list: Git rev-list manual (2.56.0)
+- git: Git manual (2.56.0)
 
 Claims (full source mapping in the front matter):
 

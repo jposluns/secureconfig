@@ -202,7 +202,7 @@ version_basis: {
     "sentinel-auth": {"text": "Password-only Sentinel auth applies throughout 6.0+; ACLs require 6.2+. Provision separate peer/admin and narrow discovery identities; do not combine the two arrangements.", "components": ["docs", "ha"], "sources": ["docs:s426dcab02f8b", "ha:sd23ed315b5f6"], "status": "REASONED"},
     "sentinel-announcement": {"text": "Private bind and network policy restrict Sentinel; announce-ip/port only publish discovery information. Password-only peers share a distinct Sentinel password.", "components": ["ha"], "sources": ["ha:sd23ed315b5f6"], "status": "REASONED"},
     "monitor-auth": {"text": "Sentinel monitored-server credentials start unset and differ from peer credentials; provision every potential primary/replica.", "components": ["ha"], "sources": ["ha:sd23ed315b5f6", "ha:s4de235c7343e"], "status": "REASONED"},
-    "monitor-acl": {"text": "Monitored-server ACLs require 6.0+, channel isolation 6.2+; the 8.10.1-reviewed operational policy permits only __sentinel__:hello publication/subscription.", "components": ["docs", "ha"], "sources": ["docs:s6c549585a510", "ha:s4de235c7343e"], "status": "REASONED"},
+    "monitor-acl": {"text": "Monitored-server ACLs require 6.0+, channel isolation 6.2+; the 8.10.1-reviewed operational policy permits only `__sentinel__:hello` publication/subscription.", "components": ["docs", "ha"], "sources": ["docs:s6c549585a510", "ha:s4de235c7343e"], "status": "REASONED"},
     "cluster-bus": {"text": "Opt-in cluster adds a binary bus, normally data port+10000 (16379); data RESP AUTH is not a bus gate. Restrict node and client paths separately.", "components": ["docs"], "sources": ["docs:s075c67b3e9d7"], "status": "REASONED"},
     "cluster-announcement": {"text": "8.10.1 cluster-port selects the bus listener; announce fields are not firewalls. TLS offset uses tls-port; binds and remapped advertisements must agree.", "components": ["ha"], "sources": ["ha:sf86ee0b4abaa", "ha:s81bf82ed258f"], "status": "REASONED"},
     "ha-tls": {"text": "Client TLS does not enable outgoing replication or cluster TLS; tls-replication and tls-cluster default disabled and must be configured separately.", "components": ["docs", "ha"], "sources": ["docs:s5f24cdfad62f", "ha:s9f433f5e78e3"], "status": "REASONED"},
@@ -238,20 +238,20 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: Redis documentation, unknown
-- r60: Redis configuration, 6.0.20
-- r62: Redis configuration, 6.2.14
-- r620: Redis configuration, 6.2.0
-- r70: Redis configuration, 7.0.15
-- r82: Redis configuration, 8.2.1
-- r86: Redis configuration, 8.6.0
-- ha: Redis HA source, 8.10.1
-- image: Redis image source, 584feaab6cd12a77866c121beff1bb16ff239486
-- image8: Redis image tag, v8.10.2
-- r74: Redis compiled defaults, 7.4.8
-- r8102: Redis compiled defaults, 8.10.2
-- valkey: Valkey documentation, unknown
-- release-notes: Redis release notes, unknown
+- docs: Redis documentation (unknown)
+- r60: Redis configuration (6.0.20)
+- r62: Redis configuration (6.2.14)
+- r620: Redis configuration (6.2.0)
+- r70: Redis configuration (7.0.15)
+- r82: Redis configuration (8.2.1)
+- r86: Redis configuration (8.6.0)
+- ha: Redis HA source (8.10.1)
+- image: Redis image source (584feaab6cd12a77866c121beff1bb16ff239486)
+- image8: Redis image tag (v8.10.2)
+- r74: Redis compiled defaults (7.4.8)
+- r8102: Redis compiled defaults (8.10.2)
+- valkey: Valkey documentation (unknown)
+- release-notes: Redis release notes (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -292,7 +292,7 @@ Claims (full source mapping in the front matter):
 - sentinel-auth (REASONED; docs, ha): Password-only Sentinel auth applies throughout 6.0+; ACLs require 6.2+. Provision separate peer/admin and narrow discovery identities; do not combine the two arrangements.
 - sentinel-announcement (REASONED; ha): Private bind and network policy restrict Sentinel; announce-ip/port only publish discovery information. Password-only peers share a distinct Sentinel password.
 - monitor-auth (REASONED; ha): Sentinel monitored-server credentials start unset and differ from peer credentials; provision every potential primary/replica.
-- monitor-acl (REASONED; docs, ha): Monitored-server ACLs require 6.0+, channel isolation 6.2+; the 8.10.1-reviewed operational policy permits only __sentinel__:hello publication/subscription.
+- monitor-acl (REASONED; docs, ha): Monitored-server ACLs require 6.0+, channel isolation 6.2+; the 8.10.1-reviewed operational policy permits only `__sentinel__:hello` publication/subscription.
 - cluster-bus (REASONED; docs): Opt-in cluster adds a binary bus, normally data port+10000 (16379); data RESP AUTH is not a bus gate. Restrict node and client paths separately.
 - cluster-announcement (REASONED; ha): 8.10.1 cluster-port selects the bus listener; announce fields are not firewalls. TLS offset uses tls-port; binds and remapped advertisements must agree.
 - ha-tls (REASONED; docs, ha): Client TLS does not enable outgoing replication or cluster TLS; tls-replication and tls-cluster default disabled and must be configured separately.

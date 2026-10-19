@@ -158,20 +158,20 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- apache: Apache HTTP Server, 2.4
-- policy: Mozilla TLS policy, unknown
-- tls-min: Apache TLSv1.3 minimum, 2.4.36+
-- sni-min: Apache per-vhost protocol minimum, 2.4.42+
-- openssl: OpenSSL qualification, 1.1.1+
-- chain-min: Apache chain-file minimum, 2.4.8
-- certbot: Certbot Apache installation, v2.3.0
-- debian-packaging: Debian apache2 packaging, 2.4.69-1
-- fedora-packaging: Fedora f44 httpd packaging, commit 6df70d39
-- htpasswd: httpd htpasswd, 2.4.69
-- owasp: OWASP password storage cheat sheet, commit 72865b1e
-- authelia: Authelia proxy support, v4.39.28
-- cloudflare-access: Cloudflare Access documentation, commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- openidc: mod_auth_openidc, v2.4.20.3
+- apache: Apache HTTP Server (2.4)
+- policy: Mozilla TLS policy (unknown)
+- tls-min: Apache TLSv1.3 minimum (2.4.36+)
+- sni-min: Apache per-vhost protocol minimum (2.4.42+)
+- openssl: OpenSSL qualification (1.1.1+)
+- chain-min: Apache chain-file minimum (2.4.8)
+- certbot: Certbot Apache installation (v2.3.0)
+- debian-packaging: Debian apache2 packaging (2.4.69-1)
+- fedora-packaging: Fedora f44 httpd packaging (commit 6df70d39)
+- htpasswd: httpd htpasswd (2.4.69)
+- owasp: OWASP password storage cheat sheet (commit 72865b1e)
+- authelia: Authelia proxy support (v4.39.28)
+- cloudflare-access: Cloudflare Access documentation (commit c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- openidc: mod_auth_openidc (v2.4.20.3)
 
 Claims (full source mapping in the front matter):
 

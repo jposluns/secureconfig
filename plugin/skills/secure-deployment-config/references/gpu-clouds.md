@@ -171,16 +171,16 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- runpod: RunPod documentation, unknown
-- vast: Vast.ai documentation, unknown
-- vast-image: Vast.ai base image, 00064421641881c1f83ff58c55f13cbc10cbea4d
-- lambda: Lambda Public Cloud documentation, unknown
-- modal: Modal proxy authentication, unknown
-- jupyter: Jupyter Server security, unknown
-- jupyter-contents: Jupyter Server contents authentication, v2.18.0
-- iproute2: iproute2 ss manual, v6.12.0
-- network-namespaces: Linux network namespaces manual, man-pages-5.13
-- ollama: Ollama, v0.34.2
+- runpod: RunPod documentation (unknown)
+- vast: Vast.ai documentation (unknown)
+- vast-image: Vast.ai base image (00064421641881c1f83ff58c55f13cbc10cbea4d)
+- lambda: Lambda Public Cloud documentation (unknown)
+- modal: Modal proxy authentication (unknown)
+- jupyter: Jupyter Server security (unknown)
+- jupyter-contents: Jupyter Server contents authentication (v2.18.0)
+- iproute2: iproute2 ss manual (v6.12.0)
+- network-namespaces: Linux network namespaces manual (man-pages-5.13)
+- ollama: Ollama (v0.34.2)
 
 Claims (full source mapping in the front matter):
 

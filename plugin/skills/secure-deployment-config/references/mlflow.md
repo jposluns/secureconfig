@@ -152,17 +152,17 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: MLflow documentation, unknown
-- source: MLflow pinned source, v3.16.1
-- middleware-min: MLflow security middleware minimum, 3.5.0
-- docker: Docker Engine loopback publication minimum, 28.0.0
-- curl: curl minimum write-out version, 7.75.0
-- nginx: nginx proxy implementation, release-1.28.0
-- caddy: Caddy reverse proxy parser, v2.11.4
-- iproute2: iproute2 ss manual, v6.12.0
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- oauth2-proxy-source: oauth2-proxy documentation, v7.15.4
-- authelia-source: Authelia source, v4.39.28
+- docs: MLflow documentation (unknown)
+- source: MLflow pinned source (v3.16.1)
+- middleware-min: MLflow security middleware minimum (3.5.0)
+- docker: Docker Engine loopback publication minimum (28.0.0)
+- curl: curl minimum write-out version (7.75.0)
+- nginx: nginx proxy implementation (release-1.28.0)
+- caddy: Caddy reverse proxy parser (v2.11.4)
+- iproute2: iproute2 ss manual (v6.12.0)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- oauth2-proxy-source: oauth2-proxy documentation (v7.15.4)
+- authelia-source: Authelia source (v4.39.28)
 
 Claims (full source mapping in the front matter):
 

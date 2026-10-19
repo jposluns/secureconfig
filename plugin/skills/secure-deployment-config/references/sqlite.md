@@ -277,21 +277,21 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- see: SQLite Encryption Extension, unknown
-- cipher: SQLCipher, unknown
-- turso: Turso documentation, unknown
-- litestream: Litestream documentation, unknown
-- mcp: Litestream MCP minimum, v0.5.0
-- litefs: LiteFS source, v0.5.14
-- litefs-docs: LiteFS documentation, unknown
-- go: Go library documentation, unknown
-- docker: Docker documentation, unknown
-- sqlite-rolling: SQLite documentation (rolling), unknown
-- git: Git documentation, v2.56.0
-- coreutils: GNU Coreutils stat manual, v9.7
-- bash: GNU Bash reference manual, bash-5.3
-- curl: curl, curl-8_14_1
-- grep-docs: GNU grep documentation, v3.12
+- see: SQLite Encryption Extension (unknown)
+- cipher: SQLCipher (unknown)
+- turso: Turso documentation (unknown)
+- litestream: Litestream documentation (unknown)
+- mcp: Litestream MCP minimum (v0.5.0)
+- litefs: LiteFS source (v0.5.14)
+- litefs-docs: LiteFS documentation (unknown)
+- go: Go library documentation (unknown)
+- docker: Docker documentation (unknown)
+- sqlite-rolling: SQLite documentation (rolling) (unknown)
+- git: Git documentation (v2.56.0)
+- coreutils: GNU Coreutils stat manual (v9.7)
+- bash: GNU Bash reference manual (bash-5.3)
+- curl: curl (curl-8_14_1)
+- grep-docs: GNU grep documentation (v3.12)
 
 Claims (full source mapping in the front matter):
 

@@ -151,17 +151,17 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- ng: nginx documentation, unknown
-- policy: Mozilla TLS policy, unknown
-- certbot: Certbot nginx configurator, v2.3.0
-- hsts: HSTS specification, RFC 6797
-- nginx-source: nginx source, release-1.26.3
-- authelia: Authelia nginx integration, v4.39.28
-- oauth2-proxy: oauth2-proxy nginx integration, v7.15.4
-- cloudflare-access: Cloudflare Access web applications, unknown
-- httpd: Apache httpd source, 2.4.69
-- debian-apache2: Debian apache2 packaging, 2.4.69-1
-- owasp: OWASP Password Storage Cheat Sheet, commit 72865b1e
+- ng: nginx documentation (unknown)
+- policy: Mozilla TLS policy (unknown)
+- certbot: Certbot nginx configurator (v2.3.0)
+- hsts: HSTS specification (RFC 6797)
+- nginx-source: nginx source (release-1.26.3)
+- authelia: Authelia nginx integration (v4.39.28)
+- oauth2-proxy: oauth2-proxy nginx integration (v7.15.4)
+- cloudflare-access: Cloudflare Access web applications (unknown)
+- httpd: Apache httpd source (2.4.69)
+- debian-apache2: Debian apache2 packaging (2.4.69-1)
+- owasp: OWASP Password Storage Cheat Sheet (commit 72865b1e)
 
 Claims (full source mapping in the front matter):
 

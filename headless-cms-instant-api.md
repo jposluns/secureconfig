@@ -184,18 +184,18 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- strapi: Strapi MFA announcement, unknown
-- directus: Directus documentation, unknown
-- directus-bind: Directus listener source, v12.4.1
-- directus-start: Directus quickstart, 12.0.2
-- hasura: Hasura GraphQL Engine documentation, unknown
-- hasura-start: Hasura quickstart image, 2.46.0
-- hasura-status: Hasura authentication-status minimum, 2.48.0
-- postgrest: PostgREST documentation, unknown
-- postgrest-bind: PostgREST listener source, v16.4
-- apollo: Apollo Server documentation (rolling), unknown
-- strapi-signup-source: Strapi Users and Permissions source, v5.58.0
-- strapi-rolling: Strapi documentation (rolling), unknown
+- strapi: Strapi MFA announcement (unknown)
+- directus: Directus documentation (unknown)
+- directus-bind: Directus listener source (v12.4.1)
+- directus-start: Directus quickstart (12.0.2)
+- hasura: Hasura GraphQL Engine documentation (unknown)
+- hasura-start: Hasura quickstart image (2.46.0)
+- hasura-status: Hasura authentication-status minimum (2.48.0)
+- postgrest: PostgREST documentation (unknown)
+- postgrest-bind: PostgREST listener source (v16.4)
+- apollo: Apollo Server documentation (rolling) (unknown)
+- strapi-signup-source: Strapi Users and Permissions source (v5.58.0)
+- strapi-rolling: Strapi documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 

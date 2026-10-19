@@ -132,16 +132,16 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- aws: AWS metadata and networking, unknown
-- gcp: Google Cloud metadata and firewall, unknown
-- azure: Azure IMDS API, 2025-04-07
-- kubernetes: Kubernetes NetworkPolicy, unknown
-- docker: Docker network create, unknown
-- curl: curl documentation, unknown
-- azure-nsg: Azure network security groups, 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f
-- azure-outbound: Azure outbound access, unknown
-- iptables: iptables owner match, v1.8.13
-- nftables: nftables packet filtering, v1.1.7
+- aws: AWS metadata and networking (unknown)
+- gcp: Google Cloud metadata and firewall (unknown)
+- azure: Azure IMDS API (2025-04-07)
+- kubernetes: Kubernetes NetworkPolicy (unknown)
+- docker: Docker network create (unknown)
+- curl: curl documentation (unknown)
+- azure-nsg: Azure network security groups (8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f)
+- azure-outbound: Azure outbound access (unknown)
+- iptables: iptables owner match (v1.8.13)
+- nftables: nftables packet filtering (v1.1.7)
 
 Claims (full source mapping in the front matter):
 

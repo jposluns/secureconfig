@@ -131,9 +131,9 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- aistor: AIStor documentation, unknown
-- console: MinIO console source, f0b91e5504663c4672da451877857b57c3345295
-- aws: AWS signature-condition semantics, unknown
+- aistor: AIStor documentation (unknown)
+- console: MinIO console source (f0b91e5504663c4672da451877857b57c3345295)
+- aws: AWS signature-condition semantics (unknown)
 
 Claims (full source mapping in the front matter):
 

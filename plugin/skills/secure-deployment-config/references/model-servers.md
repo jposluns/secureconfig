@@ -330,22 +330,22 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- llama: llama.cpp, e0dff58475bc9ed68eedcb265ee998f2fcabb3b1
-- vllm: vLLM, v0.30.0
-- vllm-a: vLLM source, dee37d89115db4c94a820a79a78a7828e141c910
-- vllm-b: vLLM second source, 8c1557a79c539ffe82d004d2a0c8d7b5e71159ce
-- tgi: TGI launcher/image, v3.3.7
-- tgi-router: TGI router, 24ee40d143d8d046039f12f76940a85886cbe152
-- tgi-docs: TGI documentation, unknown
-- sglang: SGLang, v0.5.20
-- triton: Triton source, 546a78766fb112128aa0b10a70c55f4f39c3b1df
-- lmstudio: LM Studio documentation, unknown
-- webui: text-generation-webui source, c022565b1257a9c7d9a5128c8b4c03587559cf08
-- webui-api: text-generation-webui API source, 619a2b8ee4b7e48541a9be5c07e04cd31b91b44f
-- webui-docs: text-generation-webui API documentation, ceade2eb1ba3f84518076270df2240b6bbb01da0
-- curl: curl minimum write-out version, 7.75.0
-- sglang-rolling: SGLang documentation (rolling), unknown
-- triton-rolling: Triton documentation (rolling), unknown
+- llama: llama.cpp (e0dff58475bc9ed68eedcb265ee998f2fcabb3b1)
+- vllm: vLLM (v0.30.0)
+- vllm-a: vLLM source (dee37d89115db4c94a820a79a78a7828e141c910)
+- vllm-b: vLLM second source (8c1557a79c539ffe82d004d2a0c8d7b5e71159ce)
+- tgi: TGI launcher/image (v3.3.7)
+- tgi-router: TGI router (24ee40d143d8d046039f12f76940a85886cbe152)
+- tgi-docs: TGI documentation (unknown)
+- sglang: SGLang (v0.5.20)
+- triton: Triton source (546a78766fb112128aa0b10a70c55f4f39c3b1df)
+- lmstudio: LM Studio documentation (unknown)
+- webui: text-generation-webui source (c022565b1257a9c7d9a5128c8b4c03587559cf08)
+- webui-api: text-generation-webui API source (619a2b8ee4b7e48541a9be5c07e04cd31b91b44f)
+- webui-docs: text-generation-webui API documentation (ceade2eb1ba3f84518076270df2240b6bbb01da0)
+- curl: curl minimum write-out version (7.75.0)
+- sglang-rolling: SGLang documentation (rolling) (unknown)
+- triton-rolling: Triton documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 
