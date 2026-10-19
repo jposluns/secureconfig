@@ -180,23 +180,23 @@ Metadata reviewed 2026-10-19; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- http: Go net/http documentation, unknown
-- tls: Go crypto/tls documentation, unknown
-- x509: Go certificate-store qualification, 1.27
-- bcrypt: Go bcrypt documentation, unknown
-- argon: Go Argon2 documentation, unknown
-- rate: Go rate documentation, unknown
-- oidc: go-oidc documentation, v3
-- pprof: Go pprof documentation, unknown
-- headers: Go header-count qualification, 1.27
-- deadlines: Go per-request deadline minimum, 1.20+
-- expvar: Go expvar documentation, unknown
-- linux: Linux port-threshold documentation, unknown
-- request: Go Request.Host source, 1.27.0
-- otp: pquerna/otp, v1.5.0
-- go-env: Go environment source, go1.27.0
-- cf-docs: Cloudflare documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- authelia-source: Authelia source, v4.39.28
+- http: Go net/http documentation (unknown)
+- tls: Go crypto/tls documentation (unknown)
+- x509: Go certificate-store qualification (1.27)
+- bcrypt: Go bcrypt documentation (unknown)
+- argon: Go Argon2 documentation (unknown)
+- rate: Go rate documentation (unknown)
+- oidc: go-oidc documentation (v3)
+- pprof: Go pprof documentation (unknown)
+- headers: Go header-count qualification (1.27)
+- deadlines: Go per-request deadline minimum (1.20+)
+- expvar: Go expvar documentation (unknown)
+- linux: Linux port-threshold documentation (unknown)
+- request: Go Request.Host source (1.27.0)
+- otp: pquerna/otp (v1.5.0)
+- go-env: Go environment source (go1.27.0)
+- cf-docs: Cloudflare documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- authelia-source: Authelia source (v4.39.28)
 
 Claims (full source mapping in the front matter):
 

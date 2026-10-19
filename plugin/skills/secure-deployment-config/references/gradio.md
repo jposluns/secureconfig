@@ -120,11 +120,11 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- gradio: Gradio, 6.28.0
-- fixes: Gradio historical fixes, 6.16.0
-- multipart: Gradio historical fixes, 6.20.0
-- advisory: Gradio security advisories, unknown
-- gradio-rolling: Gradio documentation (rolling), unknown
+- gradio: Gradio (6.28.0)
+- fixes: Gradio historical fixes (6.16.0)
+- multipart: Gradio historical fixes (6.20.0)
+- advisory: Gradio security advisories (unknown)
+- gradio-rolling: Gradio documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 

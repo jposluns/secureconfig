@@ -189,11 +189,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- s3: Amazon S3 documentation, unknown
-- r2: Cloudflare R2 documentation, unknown
-- gcs: Google Cloud Storage documentation, unknown
-- azure: Azure Blob documentation, unknown
-- supabase: Supabase Storage documentation, unknown
+- s3: Amazon S3 documentation (unknown)
+- r2: Cloudflare R2 documentation (unknown)
+- gcs: Google Cloud Storage documentation (unknown)
+- azure: Azure Blob documentation (unknown)
+- supabase: Supabase Storage documentation (unknown)
 
 Claims (full source mapping in the front matter):
 

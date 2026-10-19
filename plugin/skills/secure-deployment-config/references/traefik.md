@@ -138,17 +138,17 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- traefik-docs: Traefik documentation (rolling), unknown
-- docker: Traefik Docker provider, unknown
-- swarm: Traefik Swarm provider, unknown
-- middleware: Traefik middleware documentation, unknown
-- curl: curl write-out minimum, 7.75.0
-- traefik-v3: Traefik v3 documentation, v3.5
-- traefik-source: Traefik ACME storage source, v3.5.0
-- httpd-source: Apache httpd htpasswd source, 2.4.69
-- owasp-source: OWASP Password Storage Cheat Sheet, 72865b1e3b5754246a101778dc00b37f9c233373
-- cloudflare-source: Cloudflare Access MFA documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- traefik-basicauth-source: Traefik BasicAuth source, v3.5.0
+- traefik-docs: Traefik documentation (rolling) (unknown)
+- docker: Traefik Docker provider (unknown)
+- swarm: Traefik Swarm provider (unknown)
+- middleware: Traefik middleware documentation (unknown)
+- curl: curl write-out minimum (7.75.0)
+- traefik-v3: Traefik v3 documentation (v3.5)
+- traefik-source: Traefik ACME storage source (v3.5.0)
+- httpd-source: Apache httpd htpasswd source (2.4.69)
+- owasp-source: OWASP Password Storage Cheat Sheet (72865b1e3b5754246a101778dc00b37f9c233373)
+- cloudflare-source: Cloudflare Access MFA documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- traefik-basicauth-source: Traefik BasicAuth source (v3.5.0)
 
 Claims (full source mapping in the front matter):
 

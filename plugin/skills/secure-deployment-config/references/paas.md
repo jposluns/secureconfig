@@ -160,18 +160,18 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- render: Render documentation, unknown
-- fly: Fly.io documentation, unknown
-- vercel: Vercel documentation, unknown
-- spaces: Hugging Face Spaces documentation, unknown
-- nextjs: Next.js environment variables, 15
-- express: Express request protocol, 5.x
-- django: Django proxy security setting, 6.1
-- mysql-client: MySQL client connection options, 8.4
-- spaces-pinned: Hugging Face Hub documentation, 6fb324369143cb76a723c88a592010514ac1095a
-- heroku: Heroku documentation, unknown
-- fly-pinned: Fly.io pinned documentation, 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9
-- railway: Railway documentation, 72354493198302677fb6be6c692dd75c64cae2c6
+- render: Render documentation (unknown)
+- fly: Fly.io documentation (unknown)
+- vercel: Vercel documentation (unknown)
+- spaces: Hugging Face Spaces documentation (unknown)
+- nextjs: Next.js environment variables (15)
+- express: Express request protocol (5.x)
+- django: Django proxy security setting (6.1)
+- mysql-client: MySQL client connection options (8.4)
+- spaces-pinned: Hugging Face Hub documentation (6fb324369143cb76a723c88a592010514ac1095a)
+- heroku: Heroku documentation (unknown)
+- fly-pinned: Fly.io pinned documentation (2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9)
+- railway: Railway documentation (72354493198302677fb6be6c692dd75c64cae2c6)
 
 Claims (full source mapping in the front matter):
 

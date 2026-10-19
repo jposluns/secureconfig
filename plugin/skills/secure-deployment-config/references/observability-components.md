@@ -260,19 +260,19 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- node: node_exporter, v1.12.1
-- toolkit: Exporter toolkit, v0.17.1
-- security: Prometheus security model, a0d29881382ad1ea20597d34fc4229984b326576
-- alert: Alertmanager, v0.34.1
-- push: Pushgateway, v1.11.3
-- jaeger: Jaeger, v2.21.0
-- jaeger-docs: Jaeger documentation, 4d150659ee4ed3ccc69253ec77c368392f59e625
-- tls: OpenTelemetry configtls, v1.66.0
-- basic: OpenTelemetry basicauth extension, v0.160.0
-- loki: Loki, v3.7.8
-- dskit: dskit, 8d1c6d34bb5a42b04caa982d68403c5a643bb742
-- go: Go documentation, unknown
-- curl: curl, curl-8_14_1
+- node: node_exporter (v1.12.1)
+- toolkit: Exporter toolkit (v0.17.1)
+- security: Prometheus security model (a0d29881382ad1ea20597d34fc4229984b326576)
+- alert: Alertmanager (v0.34.1)
+- push: Pushgateway (v1.11.3)
+- jaeger: Jaeger (v2.21.0)
+- jaeger-docs: Jaeger documentation (4d150659ee4ed3ccc69253ec77c368392f59e625)
+- tls: OpenTelemetry configtls (v1.66.0)
+- basic: OpenTelemetry basicauth extension (v0.160.0)
+- loki: Loki (v3.7.8)
+- dskit: dskit (8d1c6d34bb5a42b04caa982d68403c5a643bb742)
+- go: Go documentation (unknown)
+- curl: curl (curl-8_14_1)
 
 Claims (full source mapping in the front matter):
 

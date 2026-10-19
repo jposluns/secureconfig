@@ -137,15 +137,15 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- next: Next.js documentation, unknown
-- next-pin: Next.js listener source, v16.3.6
-- node: Node.js listener source, v22.22.1
-- commander: Commander, 12.1.0
-- authjs: Auth.js, unknown
-- better: Better Auth, unknown
-- vercel: Vercel documentation, unknown
-- curl: curl, unknown
-- grep: GNU grep, unknown
+- next: Next.js documentation (unknown)
+- next-pin: Next.js listener source (v16.3.6)
+- node: Node.js listener source (v22.22.1)
+- commander: Commander (12.1.0)
+- authjs: Auth.js (unknown)
+- better: Better Auth (unknown)
+- vercel: Vercel documentation (unknown)
+- curl: curl (unknown)
+- grep: GNU grep (unknown)
 
 Claims (full source mapping in the front matter):
 

@@ -302,39 +302,39 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docker-build: Docker build and image history documentation, 4e9a5751518ed8223a8dcde53693badddd72604f
-- oauth: OAuth client credentials, unknown
-- bearer: Bearer token guidance, unknown
-- jwt: JWT access-token profile, unknown
-- python: Python hmac, unknown
-- node: Node.js crypto, unknown
-- entra: Entra External ID, unknown
-- github: GitHub Actions OIDC, unknown
-- aws: AWS IAM and credential action, unknown
-- google: Google Cloud federation and auth action, unknown
-- azure: Azure federation and login, unknown
-- spiffe: SPIFFE and SPIRE, unknown
-- pki: Certificate revocation, unknown
-- nginx-mtls: nginx mTLS, release-1.28.0
-- apache-mtls: Apache mTLS, 2.4
-- postgres-mtls: PostgreSQL client certificates, 17
-- mysql-mtls: MySQL client certificates, 8.4
-- redis-mtls: Redis TLS client authentication, 7.4.2
-- rabbitmq-mtls: RabbitMQ TLS client authentication, 3.13
-- mosquitto-mtls: Mosquitto TLS client authentication, v2.0.21
-- gitleaks: Gitleaks scan commands, v8.19.0
-- vault: HashiCorp Vault, v1.20.0
-- infisical: Infisical, v0.165.16
-- doppler-cli: Doppler CLI, 3.76.6
-- owasp-password: OWASP Password Storage Cheat Sheet, 1a78ae3e443cef156e947f87e892efbcc62876ee
-- owasp-secrets: OWASP Secrets Management Cheat Sheet, 1a78ae3e443cef156e947f87e892efbcc62876ee
-- aws-store: AWS Secrets Manager overview, unknown
-- google-store: Google Cloud Secret Manager overview, unknown
-- azure-store: Azure Key Vault overview, unknown
-- openbao-release: OpenBao README, v2.7.1
-- openbao-site: OpenBao website, unknown
-- onepassword: 1Password Secrets Automation, unknown
-- bitwarden: Bitwarden Secrets Manager, unknown
+- docker-build: Docker build and image history documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
+- oauth: OAuth client credentials (unknown)
+- bearer: Bearer token guidance (unknown)
+- jwt: JWT access-token profile (unknown)
+- python: Python hmac (unknown)
+- node: Node.js crypto (unknown)
+- entra: Entra External ID (unknown)
+- github: GitHub Actions OIDC (unknown)
+- aws: AWS IAM and credential action (unknown)
+- google: Google Cloud federation and auth action (unknown)
+- azure: Azure federation and login (unknown)
+- spiffe: SPIFFE and SPIRE (unknown)
+- pki: Certificate revocation (unknown)
+- nginx-mtls: nginx mTLS (release-1.28.0)
+- apache-mtls: Apache mTLS (2.4)
+- postgres-mtls: PostgreSQL client certificates (17)
+- mysql-mtls: MySQL client certificates (8.4)
+- redis-mtls: Redis TLS client authentication (7.4.2)
+- rabbitmq-mtls: RabbitMQ TLS client authentication (3.13)
+- mosquitto-mtls: Mosquitto TLS client authentication (v2.0.21)
+- gitleaks: Gitleaks scan commands (v8.19.0)
+- vault: HashiCorp Vault (v1.20.0)
+- infisical: Infisical (v0.165.16)
+- doppler-cli: Doppler CLI (3.76.6)
+- owasp-password: OWASP Password Storage Cheat Sheet (1a78ae3e443cef156e947f87e892efbcc62876ee)
+- owasp-secrets: OWASP Secrets Management Cheat Sheet (1a78ae3e443cef156e947f87e892efbcc62876ee)
+- aws-store: AWS Secrets Manager overview (unknown)
+- google-store: Google Cloud Secret Manager overview (unknown)
+- azure-store: Azure Key Vault overview (unknown)
+- openbao-release: OpenBao README (v2.7.1)
+- openbao-site: OpenBao website (unknown)
+- onepassword: 1Password Secrets Automation (unknown)
+- bitwarden: Bitwarden Secrets Manager (unknown)
 
 Claims (full source mapping in the front matter):
 

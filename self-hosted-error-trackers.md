@@ -87,11 +87,11 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- sentry: Sentry and self-hosted distribution, 26.8.0
-- sentry-docs: Sentry documentation, unknown
-- glitchtip: GlitchTip documentation, unknown
-- glitchtip-mfa: GlitchTip MFA announcement, unknown
-- glitchtip-backend: GlitchTip backend, v6.2.6
+- sentry: Sentry and self-hosted distribution (26.8.0)
+- sentry-docs: Sentry documentation (unknown)
+- glitchtip: GlitchTip documentation (unknown)
+- glitchtip-mfa: GlitchTip MFA announcement (unknown)
+- glitchtip-backend: GlitchTip backend (v6.2.6)
 
 Claims (full source mapping in the front matter):
 

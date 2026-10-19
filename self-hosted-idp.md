@@ -215,15 +215,15 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- keycloak: Keycloak documentation, unknown
-- curl: curl documentation, curl-8_23_0
-- keycloak-admin-cli: Keycloak Admin CLI, 26.7.4
-- authentik: authentik source, version/2026.8.3
-- authentik-docs: authentik operational documentation, unknown
-- redis-removal: authentik Redis removal, 2025.10
-- docker-engine: Docker Engine security documentation, unknown
-- nginx: nginx documentation, unknown
-- keycloak-2674: Keycloak source, 26.7.4
+- keycloak: Keycloak documentation (unknown)
+- curl: curl documentation (curl-8_23_0)
+- keycloak-admin-cli: Keycloak Admin CLI (26.7.4)
+- authentik: authentik source (version/2026.8.3)
+- authentik-docs: authentik operational documentation (unknown)
+- redis-removal: authentik Redis removal (2025.10)
+- docker-engine: Docker Engine security documentation (unknown)
+- nginx: nginx documentation (unknown)
+- keycloak-2674: Keycloak source (26.7.4)
 
 Claims (full source mapping in the front matter):
 

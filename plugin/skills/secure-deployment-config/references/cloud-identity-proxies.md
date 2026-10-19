@@ -140,14 +140,14 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- aws: AWS ALB, unknown
-- iap: Google Cloud IAP, unknown
-- azure: Azure authentication, unknown
-- cf: Cloudflare Access, unknown
-- ngrok: ngrok, unknown
-- vercel: Vercel, unknown
-- curl: curl minimum write-out version, 7.75.0
-- vercel-announcement: Vercel production-protection announcement, 2026-09-09
+- aws: AWS ALB (unknown)
+- iap: Google Cloud IAP (unknown)
+- azure: Azure authentication (unknown)
+- cf: Cloudflare Access (unknown)
+- ngrok: ngrok (unknown)
+- vercel: Vercel (unknown)
+- curl: curl minimum write-out version (7.75.0)
+- vercel-announcement: Vercel production-protection announcement (2026-09-09)
 
 Claims (full source mapping in the front matter):
 

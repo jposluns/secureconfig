@@ -178,16 +178,16 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- boot: Spring Boot documentation, unknown
-- boot-docs: Spring Boot documentation (rolling), unknown
-- boot41: Spring Boot, 4.1.1
-- boot40: Spring Boot starter migration, 4.0
-- security: Spring Security documentation (rolling), unknown
-- jdk: JDK keytool documentation, 21
-- framework: Spring Framework documentation, unknown
-- security65: Spring Security HSTS, 6.5
-- tomcat: Tomcat HTTP connector, 10.1
-- curl: curl minimum diagnostics version, 7.75.0
+- boot: Spring Boot documentation (unknown)
+- boot-docs: Spring Boot documentation (rolling) (unknown)
+- boot41: Spring Boot (4.1.1)
+- boot40: Spring Boot starter migration (4.0)
+- security: Spring Security documentation (rolling) (unknown)
+- jdk: JDK keytool documentation (21)
+- framework: Spring Framework documentation (unknown)
+- security65: Spring Security HSTS (6.5)
+- tomcat: Tomcat HTTP connector (10.1)
+- curl: curl minimum diagnostics version (7.75.0)
 
 Claims (full source mapping in the front matter):
 

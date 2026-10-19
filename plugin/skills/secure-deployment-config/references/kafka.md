@@ -141,13 +141,13 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- default: Kafka listener default, 4.3.1
-- docs: Kafka documentation, 4.3
-- kafka-design: Apache Kafka issue tracker and KIPs, unknown
-- source: Kafka source, 4.3.0
-- legacy: Kafka legacy authorization, 3.9
-- redpanda: Redpanda documentation, unknown
-- openssl: OpenSSL documentation, 3.5
+- default: Kafka listener default (4.3.1)
+- docs: Kafka documentation (4.3)
+- kafka-design: Apache Kafka issue tracker and KIPs (unknown)
+- source: Kafka source (4.3.0)
+- legacy: Kafka legacy authorization (3.9)
+- redpanda: Redpanda documentation (unknown)
+- openssl: OpenSSL documentation (3.5)
 
 Claims (full source mapping in the front matter):
 

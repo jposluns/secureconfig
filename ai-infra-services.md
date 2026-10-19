@@ -205,23 +205,23 @@ Metadata reviewed 2026-10-15; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- searx: SearxNG documentation, unknown
-- localai: LocalAI documentation, unknown
-- tei-docs: TEI documentation, unknown
-- tei: TEI HTTP source, v1.9.0
-- langserve: LangServe source, 27e57afeda13007a7f4e007c5d1f5e8489963aa4
-- mem0: Mem0 documentation, unknown
-- mem0-source: Mem0 server source, c7ee362aff94a369af70f13f2b4f853f6793ff4c
-- onyx: Onyx documentation, unknown
-- onyx-compose: Onyx Compose, a0370f232ba4e4625131fae518b86e5530e98ec5
-- docker: Docker, unknown
-- grep: GNU grep, 3.12
-- curl: curl documentation, unknown
-- searx-source: SearxNG source, d4ce87c23431f607162fc5c39ce52c538d64588f
-- onyx-data: Onyx data model, 15ead4ca364e654d40dac842ee9d0bb9e0fe5471
-- tei-grpc: TEI gRPC source, 1bb59202500e5f69dd8be63dd1604f7625124fbe
-- onyx-v43: Onyx v4.3 source, v4.3.13
-- onyx-v44: Onyx v4.4 source, v4.4.0
+- searx: SearxNG documentation (unknown)
+- localai: LocalAI documentation (unknown)
+- tei-docs: TEI documentation (unknown)
+- tei: TEI HTTP source (v1.9.0)
+- langserve: LangServe source (27e57afeda13007a7f4e007c5d1f5e8489963aa4)
+- mem0: Mem0 documentation (unknown)
+- mem0-source: Mem0 server source (c7ee362aff94a369af70f13f2b4f853f6793ff4c)
+- onyx: Onyx documentation (unknown)
+- onyx-compose: Onyx Compose (a0370f232ba4e4625131fae518b86e5530e98ec5)
+- docker: Docker (unknown)
+- grep: GNU grep (3.12)
+- curl: curl documentation (unknown)
+- searx-source: SearxNG source (d4ce87c23431f607162fc5c39ce52c538d64588f)
+- onyx-data: Onyx data model (15ead4ca364e654d40dac842ee9d0bb9e0fe5471)
+- tei-grpc: TEI gRPC source (1bb59202500e5f69dd8be63dd1604f7625124fbe)
+- onyx-v43: Onyx v4.3 source (v4.3.13)
+- onyx-v44: Onyx v4.4 source (v4.4.0)
 
 Claims (full source mapping in the front matter):
 

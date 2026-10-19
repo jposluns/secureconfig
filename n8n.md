@@ -128,14 +128,14 @@ Metadata reviewed 2026-10-17; documentation checked 2026-10 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: n8n documentation, unknown
-- server: n8n listener source, n8n@2.40.6
-- runtime: n8n runtime source, n8n@2.40.6
-- policy: n8n environment policy minimum, 2.18.0
-- ssrf: n8n SSRF filter minimum, 2.12.0
-- v2-default: n8n 2.0 default exclusion source, n8n@2.0.0
-- v1-default: n8n 1.x default exclusion source, n8n@1.123.85
-- v2-docs: n8n 2.0 breaking changes, unknown
+- docs: n8n documentation (unknown)
+- server: n8n listener source (n8n@2.40.6)
+- runtime: n8n runtime source (n8n@2.40.6)
+- policy: n8n environment policy minimum (2.18.0)
+- ssrf: n8n SSRF filter minimum (2.12.0)
+- v2-default: n8n 2.0 default exclusion source (n8n@2.0.0)
+- v1-default: n8n 1.x default exclusion source (n8n@1.123.85)
+- v2-docs: n8n 2.0 breaking changes (unknown)
 
 Claims (full source mapping in the front matter):
 

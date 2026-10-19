@@ -152,15 +152,15 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: RabbitMQ documentation, unknown
-- source: RabbitMQ source, v4.3.6
-- image: RabbitMQ image source, 76efb370838e36e4b120e252e75cf0dac70a7d55
-- admin: rabbitmqadmin, v2
-- otp: Erlang/OTP distribution, 27
-- topic-min: RabbitMQ topic authorization introduction, 3.7.0
-- curl: curl documentation, unknown
-- pika: Pika documentation, unknown
-- management-source: RabbitMQ management documentation source, db23826ebaa810b3cdd525fd290125d65f6c3005
+- docs: RabbitMQ documentation (unknown)
+- source: RabbitMQ source (v4.3.6)
+- image: RabbitMQ image source (76efb370838e36e4b120e252e75cf0dac70a7d55)
+- admin: rabbitmqadmin (v2)
+- otp: Erlang/OTP distribution (27)
+- topic-min: RabbitMQ topic authorization introduction (3.7.0)
+- curl: curl documentation (unknown)
+- pika: Pika documentation (unknown)
+- management-source: RabbitMQ management documentation source (db23826ebaa810b3cdd525fd290125d65f6c3005)
 
 Claims (full source mapping in the front matter):
 

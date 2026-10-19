@@ -162,7 +162,7 @@ version_basis: {
     "mimage-listeners": {"text": "Pinned MariaDB 10.6-13.1 Ubuntu images comment out bind-address; UBI leaves it commented, enabling IPv4 wildcard and IPv6 where available.", "components": ["mimage", "mpackage"], "sources": ["mimage:sccf5a83a982a", "mimage:sda3814070b7b", "mpackage:s6443a34ade90", "mpackage:s4fda00559270", "mpackage:sbd05d481e581", "mpackage:s4afb7d28204b", "mpackage:sb92c4a37622f"], "status": "REASONED"},
     "skip-networking": {"text": "skip_networking stops TCP listeners, including MySQL X; mounted options and mysqlx=OFF can restrict image exposure.", "components": ["package", "mysql", "maria"], "sources": ["package:scf03124d3cd4", "mysql:sa8e974b8e0d7", "maria:s528037737579"], "status": "REASONED"},
     "image-root": {"text": "New-directory initialization defaults root host to %, accepting _FILE; empty files suppress remote root unless MariaDB's preferred variable supplies a value.", "components": ["image", "mimage"], "sources": ["image:s01efe3052035", "mimage:s737f66e148d0", "mimage:s88c31f952d76", "image:s20a475be2b96", "image:se676b35ed40f", "mimage:s192c8bb1613e", "mimage:s2bc107ec67a2"], "status": "REASONED"},
-    "image-root-grants": {"text": "A nonempty non-localhost root host gets ALL on *.* WITH GRANT OPTION; MariaDB also grants PROXY. Prefer localhost and private publication.", "components": ["image", "mimage"], "sources": ["mimage:s192c8bb1613e", "image:s01efe3052035"], "status": "REASONED"},
+    "image-root-grants": {"text": "A nonempty non-localhost root host gets ALL on `*.*` WITH GRANT OPTION; MariaDB also grants PROXY. Prefer localhost and private publication.", "components": ["image", "mimage"], "sources": ["mimage:s192c8bb1613e", "image:s01efe3052035"], "status": "REASONED"},
     "image-empty-password": {"text": "Initialization needs a password/hash, random password or empty-password opt-in; any nonempty opt-in, even no, can create passwordless remote root.", "components": ["image", "mimage"], "sources": ["image:s2b7b9e5f4c61", "mimage:s7594bc3fbc3b", "mimage:s192c8bb1613e", "image:s0a0474927ded", "image:s01efe3052035", "mimage:sad402b095652"], "status": "REASONED"},
     "account-tls": {"text": "REQUIRE SSL or X509 independently constrains existing accounts; match the source address seen by the server and avoid deprecated MySQL host wildcards.", "components": ["mysql", "maria"], "sources": ["mysql:sac4976c6bd73", "mysql:scb682cfeeeca", "maria:s3243686162ad"], "status": "REASONED"},
     "runtime": {"text": "Use separate table-scoped runtime accounts and migration administrators; MySQL caching_sha2_password and MariaDB ed25519 examples require compatible clients.", "components": ["mysql", "maria"], "sources": ["mysql:s4009a8e12cba", "mysql:sd25a34fe4ed0", "maria:s1e467414669c", "maria:s7c876d9fdf39", "maria:scff3a7165e15"], "status": "REASONED"},
@@ -195,7 +195,7 @@ version_basis: {
     "verify-listeners": {"text": "Inspect all classic/X listeners and nondefault ports; fixed interfaces retain permitted-client success. A stopped service is not proof of restriction.", "components": ["mysql"], "sources": ["mysql:s5735e0088e90", "mysql:sf426889734dd"], "status": "REASONED", "verify": [3]},
     "socket-activation": {"text": "MariaDB systemd socket activation can bypass bind_address selection; configure the socket unit or disable activation and inspect listeners.", "components": ["maria"], "sources": ["maria:s141c472ec645"], "status": "REASONED"},
     "verify-roles": {"text": "MySQL SHOW GRANTS omits mandatory roles and unexpanded role privileges; combine mandatory/explicit roles with USING and test SET ROLE ALL.", "components": ["mysql"], "sources": ["mysql:s952465620b96", "mysql:se2551ca67504"], "status": "REASONED"},
-    "verify-maria-roles": {"text": "MariaDB requires recursive role inspection and each role activated separately; PUBLIC applies independently, and USAGE ON *.* grants no data privileges.", "components": ["maria"], "sources": ["maria:sf8dd7e9be0a6", "maria:sc0f88b0f035f", "maria:s4790add18739", "maria:s475fb165ca34"], "status": "REASONED"},
+    "verify-maria-roles": {"text": "MariaDB requires recursive role inspection and each role activated separately; PUBLIC applies independently, and USAGE ON `*.*` grants no data privileges.", "components": ["maria"], "sources": ["maria:sf8dd7e9be0a6", "maria:sc0f88b0f035f", "maria:s4790add18739", "maria:s475fb165ca34"], "status": "REASONED"},
     "verify-grants": {"text": "Existing orders read stays allowed while private_probe changes from success under broad grants to privilege denial; test each available role.", "components": ["mysql", "maria"], "sources": ["mysql:sd25a34fe4ed0", "maria:scff3a7165e15"], "status": "REASONED"},
     "verify-cleanup": {"text": "Before/after inventories must remove unintended anonymous, remote-root and test grants while preserving administrative and runtime positive controls.", "components": ["mysql", "maria"], "sources": ["mysql:sdde2cdb741bf", "mysql:sa14ee7281ad5", "maria:sad2488929b7b", "maria:s38f56f9ab3a3"], "status": "REASONED"},
     "verify-local": {"text": "Disable LOCAL separately at client and server, keeping the other side enabled; a readable fixture loads in the exposed state, is refused fixed, and ordinary insertion succeeds.", "components": ["mysql", "maria"], "sources": ["mysql:s09db2b328d11", "mysql:s37e2128d2672", "maria:se84c2903d176"], "status": "REASONED"},
@@ -220,15 +220,15 @@ Metadata reviewed 2026-09-26; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- mysql: MySQL reference, 8.4
-- mysql8: MySQL reference, 8.0
-- mysql9: MySQL reference, 9.7
-- mysql26: MySQL reference, 26.7
-- maria: MariaDB documentation, unknown
-- image: MySQL image source, 2f988f198f35d25b1454fa2504a0e4c348100549
-- package: MySQL Docker package, mysql-8.4.9
-- mimage: MariaDB image source, 1a4c8e99f7816c8d97df11eee52098522dc770cf
-- mpackage: MariaDB package source, mariadb-11.8.9
+- mysql: MySQL reference (8.4)
+- mysql8: MySQL reference (8.0)
+- mysql9: MySQL reference (9.7)
+- mysql26: MySQL reference (26.7)
+- maria: MariaDB documentation (unknown)
+- image: MySQL image source (2f988f198f35d25b1454fa2504a0e4c348100549)
+- package: MySQL Docker package (mysql-8.4.9)
+- mimage: MariaDB image source (1a4c8e99f7816c8d97df11eee52098522dc770cf)
+- mpackage: MariaDB package source (mariadb-11.8.9)
 
 Claims (full source mapping in the front matter):
 
@@ -243,7 +243,7 @@ Claims (full source mapping in the front matter):
 - mimage-listeners (REASONED; mimage, mpackage): Pinned MariaDB 10.6-13.1 Ubuntu images comment out bind-address; UBI leaves it commented, enabling IPv4 wildcard and IPv6 where available.
 - skip-networking (REASONED; package, mysql, maria): skip_networking stops TCP listeners, including MySQL X; mounted options and mysqlx=OFF can restrict image exposure.
 - image-root (REASONED; image, mimage): New-directory initialization defaults root host to %, accepting _FILE; empty files suppress remote root unless MariaDB's preferred variable supplies a value.
-- image-root-grants (REASONED; image, mimage): A nonempty non-localhost root host gets ALL on *.* WITH GRANT OPTION; MariaDB also grants PROXY. Prefer localhost and private publication.
+- image-root-grants (REASONED; image, mimage): A nonempty non-localhost root host gets ALL on `*.*` WITH GRANT OPTION; MariaDB also grants PROXY. Prefer localhost and private publication.
 - image-empty-password (REASONED; image, mimage): Initialization needs a password/hash, random password or empty-password opt-in; any nonempty opt-in, even no, can create passwordless remote root.
 - account-tls (REASONED; mysql, maria): REQUIRE SSL or X509 independently constrains existing accounts; match the source address seen by the server and avoid deprecated MySQL host wildcards.
 - runtime (REASONED; mysql, maria): Use separate table-scoped runtime accounts and migration administrators; MySQL caching_sha2_password and MariaDB ed25519 examples require compatible clients.
@@ -276,7 +276,7 @@ Claims (full source mapping in the front matter):
 - verify-listeners (REASONED; mysql): Inspect all classic/X listeners and nondefault ports; fixed interfaces retain permitted-client success. A stopped service is not proof of restriction.
 - socket-activation (REASONED; maria): MariaDB systemd socket activation can bypass bind_address selection; configure the socket unit or disable activation and inspect listeners.
 - verify-roles (REASONED; mysql): MySQL SHOW GRANTS omits mandatory roles and unexpanded role privileges; combine mandatory/explicit roles with USING and test SET ROLE ALL.
-- verify-maria-roles (REASONED; maria): MariaDB requires recursive role inspection and each role activated separately; PUBLIC applies independently, and USAGE ON *.* grants no data privileges.
+- verify-maria-roles (REASONED; maria): MariaDB requires recursive role inspection and each role activated separately; PUBLIC applies independently, and USAGE ON `*.*` grants no data privileges.
 - verify-grants (REASONED; mysql, maria): Existing orders read stays allowed while private_probe changes from success under broad grants to privilege denial; test each available role.
 - verify-cleanup (REASONED; mysql, maria): Before/after inventories must remove unintended anonymous, remote-root and test grants while preserving administrative and runtime positive controls.
 - verify-local (REASONED; mysql, maria): Disable LOCAL separately at client and server, keeping the other side enabled; a readable fixture loads in the exposed state, is refused fixed, and ordinary insertion succeeds.

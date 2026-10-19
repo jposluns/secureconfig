@@ -97,12 +97,12 @@ Metadata reviewed 2026-10-05; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- haproxy: HAProxy, 3.0
-- hsts: HAProxy http-after-response minimum, 2.2+
-- docs: Supporting documentation, unknown
-- openssl-cli: OpenSSL password command, 3.0
-- certbot-source: Certbot deploy hook documentation, v2.3.0
-- cloudflare-source: Cloudflare Access MFA documentation, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
+- haproxy: HAProxy (3.0)
+- hsts: HAProxy http-after-response minimum (2.2+)
+- docs: Supporting documentation (unknown)
+- openssl-cli: OpenSSL password command (3.0)
+- certbot-source: Certbot deploy hook documentation (v2.3.0)
+- cloudflare-source: Cloudflare Access MFA documentation (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
 
 Claims (full source mapping in the front matter):
 

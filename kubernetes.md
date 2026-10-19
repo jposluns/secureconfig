@@ -227,23 +227,23 @@ Metadata reviewed 2026-09-27; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- kubernetes: Kubernetes documentation, unknown
-- kubelet: Kubernetes kubelet/kubeadm source, v1.37.1
-- envoy: Envoy Gateway, v1.9.1
-- gateway: Gateway API documentation, unknown
-- cert-manager: cert-manager Gateway support minimum, 1.15
-- apache: Apache htpasswd documentation, unknown
-- authelia: Authelia documentation, unknown
-- eks: Amazon EKS documentation, unknown
-- eks-ami: Amazon EKS AMI bootstrap, 6caf8311a3c6a8da71ac7e5e83f9c2e06287039a
-- gke: GKE documentation, unknown
-- gke-min: GKE new-cluster read-only-port boundary, 1.32
-- aks: AKS documentation, unknown
-- curl: curl documentation, unknown
-- nmap: Nmap documentation, unknown
-- traefik: Traefik documentation, unknown
-- cilium: Cilium documentation, unknown
-- envoy-rolling: Envoy Gateway documentation (rolling), unknown
+- kubernetes: Kubernetes documentation (unknown)
+- kubelet: Kubernetes kubelet/kubeadm source (v1.37.1)
+- envoy: Envoy Gateway (v1.9.1)
+- gateway: Gateway API documentation (unknown)
+- cert-manager: cert-manager Gateway support minimum (1.15)
+- apache: Apache htpasswd documentation (unknown)
+- authelia: Authelia documentation (unknown)
+- eks: Amazon EKS documentation (unknown)
+- eks-ami: Amazon EKS AMI bootstrap (6caf8311a3c6a8da71ac7e5e83f9c2e06287039a)
+- gke: GKE documentation (unknown)
+- gke-min: GKE new-cluster read-only-port boundary (1.32)
+- aks: AKS documentation (unknown)
+- curl: curl documentation (unknown)
+- nmap: Nmap documentation (unknown)
+- traefik: Traefik documentation (unknown)
+- cilium: Cilium documentation (unknown)
+- envoy-rolling: Envoy Gateway documentation (rolling) (unknown)
 
 Claims (full source mapping in the front matter):
 

@@ -293,27 +293,27 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- dify: Dify documentation, unknown
-- dify-console: Dify console/config source, d39d9ddb7430522e0c828c6953afdf773ba6e675
-- dify-compose: Dify Compose source, 8387590ace4a094de812b7847fc6a4c3a27cd52b
-- docker: Docker, unknown
-- docker-merge: Docker Compose merge source, 31d174d090fd7111ca2199ed54a3978e0d4ac74d
-- compose-243: Docker Compose go.mod, v2.24.3
-- compose-244: Docker Compose release source, v2.24.4
-- compose-go-rc2: compose-go loader, v2.0.0-rc.2
-- compose-go-rc3: compose-go reset loader, v2.0.0-rc.3
-- certbot: Dify certbot source, 4c1ad40f8e8a6ee58a958330558f2178b7e47fa7
-- flowise: Flowise documentation, unknown
-- flowise-auth: Flowise account minimum, v3.0.1
-- flowise-compose: Flowise Compose, 4ea391204a499fb6d19747104502362295b4dde3
-- langflow-1126: Langflow settings source, v1.12.6
-- langflow-compose: Langflow Compose, c6dbca308dc85526d5cecb31211821ec4f5e1d05
-- librechat-compose: LibreChat Compose, 1596df724a840f894831fc74f21de8d8df72fcb1
-- langflow: Langflow documentation, unknown
-- librechat: LibreChat documentation, unknown
-- librechat-mfa: LibreChat changelog, v0.7.7
-- daemon: Dify plugin daemon, 0.6.10
-- daemon-source: Dify plugin daemon source, 1310a18b2f6bc6f18768a0a6265484830891433c
+- dify: Dify documentation (unknown)
+- dify-console: Dify console/config source (d39d9ddb7430522e0c828c6953afdf773ba6e675)
+- dify-compose: Dify Compose source (8387590ace4a094de812b7847fc6a4c3a27cd52b)
+- docker: Docker (unknown)
+- docker-merge: Docker Compose merge source (31d174d090fd7111ca2199ed54a3978e0d4ac74d)
+- compose-243: Docker Compose go.mod (v2.24.3)
+- compose-244: Docker Compose release source (v2.24.4)
+- compose-go-rc2: compose-go loader (v2.0.0-rc.2)
+- compose-go-rc3: compose-go reset loader (v2.0.0-rc.3)
+- certbot: Dify certbot source (4c1ad40f8e8a6ee58a958330558f2178b7e47fa7)
+- flowise: Flowise documentation (unknown)
+- flowise-auth: Flowise account minimum (v3.0.1)
+- flowise-compose: Flowise Compose (4ea391204a499fb6d19747104502362295b4dde3)
+- langflow-1126: Langflow settings source (v1.12.6)
+- langflow-compose: Langflow Compose (c6dbca308dc85526d5cecb31211821ec4f5e1d05)
+- librechat-compose: LibreChat Compose (1596df724a840f894831fc74f21de8d8df72fcb1)
+- langflow: Langflow documentation (unknown)
+- librechat: LibreChat documentation (unknown)
+- librechat-mfa: LibreChat changelog (v0.7.7)
+- daemon: Dify plugin daemon (0.6.10)
+- daemon-source: Dify plugin daemon source (1310a18b2f6bc6f18768a0a6265484830891433c)
 
 Claims (full source mapping in the front matter):
 

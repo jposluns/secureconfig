@@ -318,36 +318,36 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- owasp: OWASP authentication and password storage, unknown
-- owasp-p1: OWASP authorization, secrets and session guidance, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
-- oauth: OAuth security BCP, RFC 9700
-- oidc: OpenID Connect Core, 1.0
-- nist: NIST password guidance, SP 800-63B-4
-- htpasswd: Apache htpasswd, unknown
-- bcrypt: Python bcrypt rejection threshold, 5.0.0
-- bcrypt-source: Python bcrypt changelog, 2b4ba9ac84df972e8e81311d09559af8dc82ef33
-- openssl: OpenSSL rand, 3.5
-- python: Python secrets, 3.13
-- gitleaks-source: Gitleaks scanning modes, b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b
-- git: Git ignore rules, v2.49.0
-- owasp-docs: OWASP security guidance, 668ba7db3d0da5868b8a0305c259f7f6914a6ecd
-- api-security: OWASP API Security, 2023
-- google-oidc: Google OpenID Connect, unknown
-- entra-multitenant: Microsoft Entra multitenant token validation, 49b84e07023770128d83039c07eafb84ff1de1df
-- cloudflare-access: Cloudflare Access and origin configuration, c896795b8e8bab68d05ae78d64c9cbcda1fdb104
-- fail2ban-jail: fail2ban, 1.1.1
-- grpc-status: gRPC, v1.84.0
-- websocket-rfc: WebSocket RFC, RFC 6455
-- sse-spec: WHATWG server-sent events, unknown
-- stripe-webhooks: stripe-node, v18.5.0
-- git-log: Git, v2.56.0
-- gitleaks-p3: Gitleaks, v8.30.1
-- entra-docs: Microsoft Entra revocation model, 231747abc59ae3d50c74e215c1cdd592eb980723
-- oauth2-proxy: OAuth2 Proxy, v7.15.4
-- authelia: Authelia, v4.39.28
-- oauth-revocation: OAuth 2.0 Token Revocation RFC, unknown
-- google-iap: Google Identity-Aware Proxy, unknown
-- aws-alb: AWS Application Load Balancer authentication, unknown
+- owasp: OWASP authentication and password storage (unknown)
+- owasp-p1: OWASP authorization, secrets and session guidance (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
+- oauth: OAuth security BCP (RFC 9700)
+- oidc: OpenID Connect Core (1.0)
+- nist: NIST password guidance (SP 800-63B-4)
+- htpasswd: Apache htpasswd (unknown)
+- bcrypt: Python bcrypt rejection threshold (5.0.0)
+- bcrypt-source: Python bcrypt changelog (2b4ba9ac84df972e8e81311d09559af8dc82ef33)
+- openssl: OpenSSL rand (3.5)
+- python: Python secrets (3.13)
+- gitleaks-source: Gitleaks scanning modes (b58d3f102cf3a2c84cb7f923d05c25c9b1aed84b)
+- git: Git ignore rules (v2.49.0)
+- owasp-docs: OWASP security guidance (668ba7db3d0da5868b8a0305c259f7f6914a6ecd)
+- api-security: OWASP API Security (2023)
+- google-oidc: Google OpenID Connect (unknown)
+- entra-multitenant: Microsoft Entra multitenant token validation (49b84e07023770128d83039c07eafb84ff1de1df)
+- cloudflare-access: Cloudflare Access and origin configuration (c896795b8e8bab68d05ae78d64c9cbcda1fdb104)
+- fail2ban-jail: fail2ban (1.1.1)
+- grpc-status: gRPC (v1.84.0)
+- websocket-rfc: WebSocket RFC (RFC 6455)
+- sse-spec: WHATWG server-sent events (unknown)
+- stripe-webhooks: stripe-node (v18.5.0)
+- git-log: Git (v2.56.0)
+- gitleaks-p3: Gitleaks (v8.30.1)
+- entra-docs: Microsoft Entra revocation model (231747abc59ae3d50c74e215c1cdd592eb980723)
+- oauth2-proxy: OAuth2 Proxy (v7.15.4)
+- authelia: Authelia (v4.39.28)
+- oauth-revocation: OAuth 2.0 Token Revocation RFC (unknown)
+- google-iap: Google Identity-Aware Proxy (unknown)
+- aws-alb: AWS Application Load Balancer authentication (unknown)
 
 Claims (full source mapping in the front matter):
 
@@ -399,7 +399,7 @@ Claims (full source mapping in the front matter):
 - verify-default-accounts (REASONED; owasp): Check that the user store has no admin, test or demo account with a known or empty password. This is the guide's recommendation; the OWASP Authentication Cheat Sheet does not list these account names (checked at commit 72865b1e).
 - verify-wrong-tenant (REASONED; oidc, entra-multitenant): Expect a wrong-tenant token to be rejected in an application negative test after issuer and tid validation and the application tenant allowlist. Microsoft documents the validation rules; this guide recommends the allowlist and test, and no deployed rejection was observed.
 - verify-cross-user (REASONED; owasp, owasp-p1): Verify that user A cannot read user B's resources. OWASP describes horizontal privilege escalation and object-specific access checks.
-- verify-origin-isolation (REASONED; owasp, cloudflare-access, oauth2-proxy, authelia, google-iap, aws-alb): Expect the origin to be unreachable except through its fronting layer in a deployment negative test. Cloudflare describes Access policy enforcement, JWT validation and Tunnel access checks, and says a publicly routable origin needs its IP protected by other methods. OAuth2 Proxy documents upstream identity headers and warns that when &#96;--reverse-proxy&#96; is enabled and &#96;--trusted-proxy-ip&#96; is unset, a client that can reach OAuth2 Proxy directly may be able to spoof forwarded headers. Authelia uses session cookies to authorize protected websites. Google IAP says a bypassing attacker can forge unsigned identity headers; its signed-header how-to says to verify the JWT header, payload and signature to secure an app with the IAP JWT, and calls signed headers secondary security; AWS ALB requires verification of its signed claims header and signer ARN. These sources support the guide's origin-isolation test expectation but do not establish that a particular origin is unreachable.
+- verify-origin-isolation (REASONED; owasp, cloudflare-access, oauth2-proxy, authelia, google-iap, aws-alb): Expect the origin to be unreachable except through its fronting layer in a deployment negative test. Cloudflare describes Access policy enforcement, JWT validation and Tunnel access checks, and says a publicly routable origin needs its IP protected by other methods. OAuth2 Proxy documents upstream identity headers and warns that when `--reverse-proxy` is enabled and `--trusted-proxy-ip` is unset, a client that can reach OAuth2 Proxy directly may be able to spoof forwarded headers. Authelia uses session cookies to authorize protected websites. Google IAP says a bypassing attacker can forge unsigned identity headers; its signed-header how-to says to verify the JWT header, payload and signature to secure an app with the IAP JWT, and calls signed headers secondary security; AWS ALB requires verification of its signed claims header and signer ARN. These sources support the guide's origin-isolation test expectation but do not establish that a particular origin is unreachable.
 <!-- version-basis:end -->
 
 TLS without authentication leaves a service open to the whole internet over an encrypted channel. These rules apply to every service in this repository's guides. Each rule is a requirement unless it is marked `should` or phrased as a preference.

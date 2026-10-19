@@ -66,7 +66,8 @@ def ai_json(section):
             'extra heading or fence in AI payload')
     outside = section[len(START) + len('\n## ' + NOTE_TITLE):match.start()] + match[2]
     require(not unsupported_features(outside), 'extra heading or fence in AI section')
-    require(not re.search(r'<[A-Za-z/!?]', outside), 'HTML in AI section')
+    require(not any(re.search(r'<[A-Za-z/!?]', without_code_spans(line))
+                    for line in outside.split('\n')), 'HTML in AI section')
     return match[3]
 
 
@@ -796,6 +797,17 @@ def cell(value):
     return html.escape(value, quote=False).replace('|', '&#124;').replace('`', '&#96;')
 
 
+def claim_text(value):
+    """Preserve balanced code spans; keep cell escaping everywhere else."""
+    from check_verify_marking import code_spans
+    parts, position = [], 0
+    for start, end, _ in code_spans(value):
+        parts.extend((cell(value[position:start]), value[start:end]))
+        position = end
+    parts.append(cell(value[position:]))
+    return ''.join(parts)
+
+
 def joined(values):
     if len(values) < 3:
         return ' and '.join(values)
@@ -906,13 +918,13 @@ def render(data, guide=None):
              'REASONED records source reasoning, not a live demonstration. Unknown means no version recorded.', '',
              'Components (recorded basis):', '']
     for name, component in data['components'].items():
-        lines.append(f"- {name}: {cell(component['name'])}, {cell(component['basis'])}")
+        lines.append(f"- {name}: {cell(component['name'])} ({cell(component['basis'])})")
     mapping = 'front matter' if guide is None else 'JSON block below'
     lines.extend(['', f'Claims (full source mapping in the {mapping}):', ''])
     for name, claim in data['claims'].items():
         # The fixed prefix keeps single-line text from opening Markdown blocks.
         refs = ', '.join(claim['components'])
-        lines.append(f"- {name} ({claim['status']}; {refs}): {cell(claim['text'])}")
+        lines.append(f"- {name} ({claim['status']}; {refs}): {claim_text(claim['text'])}")
     if guide is not None:
         raw = front_matter(data).removeprefix('---\nversion_basis: ').removesuffix('\n---\n')
         require(not re.search(r'(?m)^[ \t]*(?:`{3,}|~{3,})', raw),

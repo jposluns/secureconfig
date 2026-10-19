@@ -210,17 +210,17 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- nocodb: NocoDB, 2026.09.0
-- docker: Docker docs, unknown
-- docker-new: Docker CLI, v27.2.0
-- docker-old: Docker CLI, v27.1.2
-- node: Node.js, v22.22.1
-- baserow: Baserow, 2.3.4
-- appsmith: Appsmith, v2.4.1
-- budibase: Budibase, v3.46.0
-- couchdb: CouchDB, 3.5.2
-- litellm: LiteLLM authentication source, 6ef7b86748118ceecd95271727c2fa167ce55fec
-- windmill: Windmill, v1.817.0
+- nocodb: NocoDB (2026.09.0)
+- docker: Docker docs (unknown)
+- docker-new: Docker CLI (v27.2.0)
+- docker-old: Docker CLI (v27.1.2)
+- node: Node.js (v22.22.1)
+- baserow: Baserow (2.3.4)
+- appsmith: Appsmith (v2.4.1)
+- budibase: Budibase (v3.46.0)
+- couchdb: CouchDB (3.5.2)
+- litellm: LiteLLM authentication source (6ef7b86748118ceecd95271727c2fa167ce55fec)
+- windmill: Windmill (v1.817.0)
 
 Claims (full source mapping in the front matter):
 
@@ -272,7 +272,7 @@ Claims (full source mapping in the front matter):
 - nocodb-key-logic (DEMONSTRATED; docker): A docker exec stand-in exercised set/empty/unset/missing-container branches only; no NocoDB deployment demonstrated.
 - verify-windmill-control (REASONED; windmill): Before trusting default-login 400, confirm real credentials work so a dead service is not treated as fixed.
 - verify-couchdb (REASONED; budibase, couchdb): Sample login at /db/_session?basic=true should return 200 exposed and 401 after replacement; real credentials are the positive control.
-- verify-litellm (REASONED; budibase, litellm): Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-&#96;sk-&#96; keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.
+- verify-litellm (REASONED; budibase, litellm): Sample Bearer budibase at /v1/models should return 200 exposed; fixed, a 401 (or a 400 if the proxy has no database); confirm real credentials. The pinned authentication source rejects non-`sk-` keys with 401 when a database is connected and returns 400 without one; the exposed 200 still requires live comparison. These remain comparison expectations: this guide has not established that litellm.md's source pin corresponds to Compose image docker.io/litellm/litellm:main-v1.83.10-stable.patch.3; no source for that image was fetched.
 - verify-tcp-outcomes (DEMONSTRATED; baserow, budibase, windmill): Loopback observed connected/open, timeout/full accept queue, refused/closed and failed-control stopping; no real firewall demonstrated.
 - verify-tcp-inputs (DEMONSTRATED; baserow, budibase, windmill): Guard tests reject named hosts, malformed IPv4, zero/dotted IPv6, invalid ports and absent timeout; loopback/hex-mapped IPv6 pass. Invalid hex may fail at control.
 <!-- version-basis:end -->

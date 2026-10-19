@@ -270,33 +270,33 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- ssh: OpenSSH documentation, unknown
-- ufw: UFW documentation, unknown
-- aws-ssm: AWS Session Manager, unknown
-- gcp-iap: Google Cloud IAP, unknown
-- azure-docs: Azure documentation snapshot, 8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f
-- tailscale-docs: Tailscale documentation, unknown
-- firewalld: firewalld documentation, unknown
-- fail2ban: fail2ban, unknown
-- crowdsec: CrowdSec, unknown
-- totp: google-authenticator-libpam, unknown
-- duo: Duo Unix, unknown
-- openssh82: OpenSSH 8.2 server manual, V_8_2_P1
-- openssh81: OpenSSH 8.1 server manual, V_8_1_P1
-- openssh99: OpenSSH 9.9 source, V_9_9_P2
-- ubuntu-focal: Ubuntu focal OpenSSH source, 1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc
-- rhel-c9s: CentOS Stream 9 OpenSSH packaging, 0b69a3828606595828fc3b878a7c70652303ad67
-- cloudinit26: cloud-init 26.2, 26.2
-- cloudinit20: cloud-init 20.1, 20.1
-- docker: Docker Engine networking, 4e9a5751518ed8223a8dcde53693badddd72604f
-- ubuntu-uu: Ubuntu noble unattended-upgrades source, 0570be65234e2392d420308470d26920fa4cd21a
-- ubuntu-apt: Ubuntu noble-updates apt source, 835f914ef5657b923fbb8b357f134b00de24c6fd
-- c9s-dnf: CentOS Stream 9 dnf packaging, 3d5ca2af8635e0ef77219625f734d503b9900208
-- dnf4: DNF 4.14.0, 4.14.0
-- iproute2: iproute2 ss manual, v6.12.0
-- ubuntu-nc: Ubuntu noble netcat-openbsd source, c047f1a4572e796c8643fb7e5a719a9d960a677b
-- c9s-nmap: CentOS Stream 9 nmap packaging, 17c2b7795d821cd7fbe311cf3f885be3ea1f122f
-- busybox: BusyBox 1.36.1, 1_36_1
+- ssh: OpenSSH documentation (unknown)
+- ufw: UFW documentation (unknown)
+- aws-ssm: AWS Session Manager (unknown)
+- gcp-iap: Google Cloud IAP (unknown)
+- azure-docs: Azure documentation snapshot (8ef1ae8a3759ddb2ed2e437bf38083aa2268c39f)
+- tailscale-docs: Tailscale documentation (unknown)
+- firewalld: firewalld documentation (unknown)
+- fail2ban: fail2ban (unknown)
+- crowdsec: CrowdSec (unknown)
+- totp: google-authenticator-libpam (unknown)
+- duo: Duo Unix (unknown)
+- openssh82: OpenSSH 8.2 server manual (V_8_2_P1)
+- openssh81: OpenSSH 8.1 server manual (V_8_1_P1)
+- openssh99: OpenSSH 9.9 source (V_9_9_P2)
+- ubuntu-focal: Ubuntu focal OpenSSH source (1b842ea8f368b6c7a913ae9e3f253107fb0aa1cc)
+- rhel-c9s: CentOS Stream 9 OpenSSH packaging (0b69a3828606595828fc3b878a7c70652303ad67)
+- cloudinit26: cloud-init 26.2 (26.2)
+- cloudinit20: cloud-init 20.1 (20.1)
+- docker: Docker Engine networking (4e9a5751518ed8223a8dcde53693badddd72604f)
+- ubuntu-uu: Ubuntu noble unattended-upgrades source (0570be65234e2392d420308470d26920fa4cd21a)
+- ubuntu-apt: Ubuntu noble-updates apt source (835f914ef5657b923fbb8b357f134b00de24c6fd)
+- c9s-dnf: CentOS Stream 9 dnf packaging (3d5ca2af8635e0ef77219625f734d503b9900208)
+- dnf4: DNF 4.14.0 (4.14.0)
+- iproute2: iproute2 ss manual (v6.12.0)
+- ubuntu-nc: Ubuntu noble netcat-openbsd source (c047f1a4572e796c8643fb7e5a719a9d960a677b)
+- c9s-nmap: CentOS Stream 9 nmap packaging (17c2b7795d821cd7fbe311cf3f885be3ea1f122f)
+- busybox: BusyBox 1.36.1 (1_36_1)
 
 Claims (full source mapping in the front matter):
 

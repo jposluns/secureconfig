@@ -126,15 +126,15 @@ Metadata reviewed 2026-10-17; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: SurrealDB documentation (rolling), unknown
-- pinned: SurrealDB CLI and image, v3.2.4
-- defaults: SurrealDB 2.0 release announcement, unknown
-- audience: SurrealDB native AUDIENCE minimum, 3.3
-- bash: GNU Bash reference manual, bash-5.3
-- procfs: Linux procfs manual, man-pages-6.19
-- ptrace: Linux ptrace manual, man-pages-6.19
-- scope-old: SurrealDB SCOPE deprecation, 2.x
-- scope-removed: SurrealDB SCOPE removal, 3.0
+- docs: SurrealDB documentation (rolling) (unknown)
+- pinned: SurrealDB CLI and image (v3.2.4)
+- defaults: SurrealDB 2.0 release announcement (unknown)
+- audience: SurrealDB native AUDIENCE minimum (3.3)
+- bash: GNU Bash reference manual (bash-5.3)
+- procfs: Linux procfs manual (man-pages-6.19)
+- ptrace: Linux ptrace manual (man-pages-6.19)
+- scope-old: SurrealDB SCOPE deprecation (2.x)
+- scope-removed: SurrealDB SCOPE removal (3.0)
 
 Claims (full source mapping in the front matter):
 

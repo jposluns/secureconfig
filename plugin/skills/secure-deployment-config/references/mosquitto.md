@@ -161,13 +161,13 @@ Metadata reviewed 2026-10-05; documentation checked 2026-10 (exact day unknown).
 
 Components (recorded basis):
 
-- docs: Mosquitto documentation, unknown
-- v20: Mosquitto, v2.0.22
-- library: Mosquitto image catalogue, 920b00976e6e8335bab0a3fd293b95b6b2404ce3
-- image: Mosquitto image source, 5b74cce8a4fe2a73b57df6c703bfde2cfd535d60
-- v21: Mosquitto, v2.1.2
-- v16: Mosquitto legacy, v1.6.15
-- release-notes: Mosquitto release announcements, unknown
+- docs: Mosquitto documentation (unknown)
+- v20: Mosquitto (v2.0.22)
+- library: Mosquitto image catalogue (920b00976e6e8335bab0a3fd293b95b6b2404ce3)
+- image: Mosquitto image source (5b74cce8a4fe2a73b57df6c703bfde2cfd535d60)
+- v21: Mosquitto (v2.1.2)
+- v16: Mosquitto legacy (v1.6.15)
+- release-notes: Mosquitto release announcements (unknown)
 
 Claims (full source mapping in the front matter):
 

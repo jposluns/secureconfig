@@ -147,15 +147,15 @@ Metadata reviewed 2026-10-18; documentation checked 2026-09 (exact day unknown).
 
 Components (recorded basis):
 
-- cockpit: Cockpit, 368
-- systemd: systemd, v262
-- webmin: Webmin, 2.670
-- webmin-docs: Webmin docs, 8ceae26c5a074053905cbcc6c0053be573633f3a
-- usermin: Usermin, 2.570
-- pve-docs: Proxmox VE 9.2 docs, 9.2.12
-- pve-manager: pve-manager, 9.2.20
-- pve-http: Proxmox HTTP server, 5119ff9bec08c69584c0c98bea3edd0098179e5f
-- pve-common: libpve-common-perl 9.1.21, 5054082fe492429fc37574985c2ca812af9a3125
+- cockpit: Cockpit (368)
+- systemd: systemd (v262)
+- webmin: Webmin (2.670)
+- webmin-docs: Webmin docs (8ceae26c5a074053905cbcc6c0053be573633f3a)
+- usermin: Usermin (2.570)
+- pve-docs: Proxmox VE 9.2 docs (9.2.12)
+- pve-manager: pve-manager (9.2.20)
+- pve-http: Proxmox HTTP server (5119ff9bec08c69584c0c98bea3edd0098179e5f)
+- pve-common: libpve-common-perl 9.1.21 (5054082fe492429fc37574985c2ca812af9a3125)
 
 Claims (full source mapping in the front matter):
 
