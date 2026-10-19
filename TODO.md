@@ -52,7 +52,7 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
-| 1.264 | `gpu-clouds.md`: remaining account-MFA evidence: establish RunPod factor methods, setup steps and enforcement, Lambda factor methods and enforcement, and Modal customer-account second-factor controls or MFA enforcement through workspace SSO; the cited Modal MFA requirement covers employees only. (M, M) | `[gap]` |
+| 1.264 | `gpu-clouds.md`: remaining account-MFA evidence: establish RunPod factor methods, setup steps and enforcement, Vast.ai team-wide enforcement, Lambda factor methods, setup steps and enforcement, and Modal SSO availability and customer-account second-factor controls or MFA enforcement through workspace SSO; the cited Modal MFA requirement covers employees only. (M, M) | `[gap]` |
 | 1.266 | `paas.md`: remaining managed-tls/listener-port evidence: establish Fly automatic certificate renewal, Heroku Cedar listener address, Vercel Functions listener/port contract, and resolve the ACM Private Spaces wildcard contradiction. (M, M) | `[gap]` |
 | 1.268 | `paas.md`: remaining https-redirect/verify-redirect evidence: establish Render's redirect status, Railway's HEAD redirect behaviour and POST status, and Heroku's redirect policy, configuration/application responsibility and status; cited header descriptions do not establish sanitization. (M, M) | `[gap]` |
 | 1.273 | `nodejs.md`: bind, remaining source gaps: establish Heroku Cedar's listener address. (M, M) | `[gap]` |
