@@ -52,7 +52,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | ID | Item | Tags |
 | --- | --- | --- |
 | 1.211 | `container-hardening.md`: verify-probe: establish what the deployed `busybox:1.36` image actually contains for `nc -z -w 3`; the pinned BusyBox source alone does not map the image. (M, M) | `[gap]` |
-| 1.262 | `gpu-clouds.md`: modal-shared: cite the Shared Endpoints exception. (M, M) | `[gap]` |
 | 1.264 | `gpu-clouds.md`: remaining Vast auth implementation: trace the delegated portal-aio configurator and runtime consumers of OPEN_BUTTON_TOKEN, WEB_PASSWORD, ENABLE_AUTH, AUTH_EXCLUDE and PORTAL_CONFIG, including precedence and route enforcement; account-security sources for RunPod, Vast.ai, Lambda and Modal remain uncited. (M, M) | `[gap]` |
 | 1.266 | `paas.md`: remaining managed-tls/listener-port evidence: establish Fly automatic certificate renewal, Railway TLS termination component and listener address/injected-port contract, Heroku Cedar listener address, Vercel Functions listener/port contract, and resolve the ACM Private Spaces wildcard contradiction. (M, M) | `[gap]` |
 | 1.268 | `paas.md`: remaining https-redirect/verify-redirect evidence: establish Render's redirect status, Railway's HEAD redirect behaviour and POST status, and Heroku's redirect policy, configuration/application responsibility and status; cited header descriptions do not establish sanitization. (M, M) | `[gap]` |
