@@ -7557,7 +7557,7 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 - RabbitMQ 3.13 TLS (`ssl_options.fail_if_no_peer_cert`, peer verification and CA configuration) (checked October 2026): https://www.rabbitmq.com/docs/3.13/ssl
 - Mosquitto v2.0.21 `require_certificate true` (checked October 2026): https://github.com/eclipse-mosquitto/mosquitto/blob/v2.0.21/man/mosquitto.conf.5.xml#L74-L76
 - Gitleaks v8.19.0 Git-history and directory scanning commands (checked October 2026): https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md#L181 ; https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md#L188
-- Trivy v0.76.0 image-file targets and secret-scanner selection, at 531360e5d2a88e732373f1614ba99a38738538b8 (checked October 2026): https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/target/container_image.md#L9-L20 ; https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/references/configuration/cli/trivy_image.md#L3-L7 ; https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/references/configuration/cli/trivy_image.md#L139-L146, https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/references/configuration/cli/trivy_image.md#L160-L161
+- Trivy v0.76.0 image-file targets, secret-scanner selection and `--skip-dirs`/`--skip-files` flags, at 531360e5d2a88e732373f1614ba99a38738538b8 (checked October 2026): https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/target/container_image.md#L9-L20 ; https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/references/configuration/cli/trivy_image.md#L3-L7 ; https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/references/configuration/cli/trivy_image.md#L139-L146 ; https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/references/configuration/cli/trivy_image.md#L160-L161
 - Trivy v0.76.0 secret scanning (plaintext and compiled Python files, allowed paths, base-layer skipping, exclusions, configuration and allow rules), at 531360e5d2a88e732373f1614ba99a38738538b8 (checked October 2026): https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/scanner/secret.md#L3-L21 ; https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/scanner/secret.md#L63-L66 ; https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/scanner/secret.md#L86-L98 ; https://github.com/aquasecurity/trivy/blob/531360e5d2a88e732373f1614ba99a38738538b8/docs/guide/scanner/secret.md#L159-L162
 - HashiCorp Vault v1.20.0 secret storage and access control (checked October 2026): https://github.com/hashicorp/vault/blob/v1.20.0/README.md#L18
 - Infisical v0.165.16 secrets and configuration management (checked October 2026): https://github.com/Infisical/infisical/blob/v0.165.16/README.md#L48
@@ -7662,7 +7662,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "623fbfa345f95fe457549b503f599b82d496c8f8faf0f8b698a3e8f3d6c4b58d",
+  "body_sha256": "d80155660deeba916b047778cada71fb84d68052f1628059ed6726df7e7d0c23",
   "components": {
     "oauth": {
       "name": "OAuth client credentials",
