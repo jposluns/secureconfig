@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-20
 
+- `self-signed.md`: the trust-store commands now also cite Debian bookworm and Ubuntu jammy (`update-ca-certificates`), and CentOS Stream 8 and 10 and the Fedora rawhide development branch (`update-ca-trust`), each labelled for what it is (CentOS Stream is not RHEL; rawhide is not a released Fedora); the Debian trixie, Ubuntu noble and RHEL 9 citations stay, and other releases, including RHEL 8 and 10 and released Fedora, remain this guide's assessment under TODO 1.306 (#716)
 - `docker.md`: the `workload` claim is shortened from 491 to 421 characters in two sentences, labelling its advice explicitly and grouping its two assessments under one label, with its components and sources unchanged (TODO 1.317) (#713)
 
 ## 2026-10-19
