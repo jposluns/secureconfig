@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-20
 
+- `authentication.md`: the transport-authentication rule now cites OWASP's GraphQL, REST and WebSocket cheat sheets (at the pin the guide already uses) for per-transport access control, and the Standard Webhooks specification's message identifiers and deduplication for rejecting webhook repeats within the timestamp window, as guidance rather than established deployment behaviour; the HTML-login boundary for non-HTTP transports and general GraphQL authentication stay open under TODO 1.294 (#714)
 - `docker.md`: the `workload` claim is shortened from 491 to 421 characters in two sentences, labelling its advice explicitly and grouping its two assessments under one label, with its components and sources unchanged (TODO 1.317) (#713)
 
 ## 2026-10-19
