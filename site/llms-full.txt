@@ -44730,7 +44730,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Qdrant source v1.19.1, Weaviate source v1.39.6, Milvus v2.6.24 and v3.0.2, Milvus Helm chart 5.0.30, Milvus Operator v1.3.11, Chroma source 1.5.9, Chroma migration documentation v1.0.0, and pgvector source v0.8.2, plus 5 more recorded bases; 8 further sources carry no recorded version. Metadata reviewed 2026-10-15; documentation checked September 2026. The guide records 55 claims, all reasoned from cited sources.
+Written against Qdrant source v1.19.1, Weaviate source v1.39.6, Milvus v2.6.24 and v3.0.2, Milvus Helm chart 5.0.30, Milvus Operator v1.3.11, Chroma source 1.5.9, Chroma migration documentation v1.0.0, and pgvector source v0.8.2, plus 5 more recorded bases; 2 further sources are pinned to a commit and 8 carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 59 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -44876,7 +44876,15 @@ pgvector is an extension (`CREATE EXTENSION vector;`, PostgreSQL 13 and later), 
 
 ## 7. Hosted services and MFA
 
-Qdrant Cloud documents API keys for requests; treat them as secrets under [secrets.md](secrets.md), use one per environment, never commit them, and rotate them on leak. Pinecone documents organization SSO through an organization's identity management solution on Standard and Enterprise plans; for SSO organizations, console sessions are re-authenticated at least every 24 hours. This does not establish that Pinecone enforces MFA. No page cited here establishes a console MFA arrangement for Qdrant Cloud, Weaviate Cloud, or Zilliz; check each vendor's account security settings. The native API-key configurations described here do not establish human MFA. Weaviate OIDC can delegate authentication to an identity provider where MFA can be enforced; an MFA-capable fronting layer (Access policy or Authelia-style portal) is another option ([mfa.md](mfa.md)).
+Qdrant Cloud documents API keys for requests; this guide's advice is to treat them as secrets under [secrets.md](secrets.md), use one per environment, never commit them, and rotate them on leak. Its account page lists passwordless email, Google, GitHub and enterprise SSO registration; at the time of writing, it documents Premium-tier SSO for Cloud Console sign-in only, with cluster requests still using Database API keys.
+
+At the time of writing, Pinecone documents organization SSO through an organization's identity management solution on Standard and Enterprise plans; for SSO organizations, console sessions are re-authenticated at least every 24 hours. This guide's source assessment: this does not establish that Pinecone enforces MFA, and neither the Qdrant pages nor any page cited here for Zilliz establishes a console MFA control for those services.
+
+At the time of writing, Weaviate Cloud documents per-account MFA (off by default) and organization Owners requiring MFA for all members (available to every organization, off by default). Its MFA page says SSO setup turns MFA enforcement off and SSO sign-ins never ask for a Weaviate Cloud MFA code; the identity provider handles the second factor, including after a member's first SSO sign-in when they also belong to an MFA-enforcing organization. If SSO is later turned off, MFA enforcement stays off until an Owner turns it on again.
+
+This guide's source assessment: these pages do not establish whether any deployed SSO identity provider enforces MFA. This guide's advice: check each vendor's account security settings and require MFA for human console access; where SSO is used, require an MFA-enforcing identity provider and confirm enforcement.
+
+This guide's assessment: the native API-key configurations described here do not establish human MFA. For deployments described here, this guide's advice is to delegate human authentication through Weaviate OIDC to an MFA-enforcing identity provider, or use an MFA-capable fronting layer (Access policy or Authelia-style portal) ([mfa.md](mfa.md)); this does not establish a hosted-console control.
 
 ## Verify
 
@@ -44995,8 +45003,12 @@ REASONED: tenant isolation and bypass positive control. A live PostgreSQL with p
 - Milvus standalone Compose at v2.6.24 and v3.0.2: selected image tags, standalone command, localhost healthcheck, explicit publications of 19530 and 9091, and default network: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/deployments/docker/standalone/docker-compose.yml#L39-L66 and https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/deployments/docker/standalone/docker-compose.yml#L39-L66
 - Milvus log-level handler dependency (zap v1.27.0, GET reads and PUT changes the level): https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/log/log.go#L278-L280, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/mlog/level.go#L72-L74, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/go.mod#L47, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/go.mod#L43 and https://github.com/uber-go/zap/blob/v1.27.0/http_handler.go#L69-L103
 - Docker port publication: default host binding, explicit loopback mapping, same-network and host access, direct-routing and older-engine caveats: https://docs.docker.com/engine/network/port-publishing/
-- Pinecone organization SSO (Standard and Enterprise plans; identity management solution; 24-hour console re-authentication), rolling page captured October 15, 2026: https://docs.pinecone.io/guides/organizations/understanding-organizations
-- Qdrant Cloud API key per request, rolling page captured October 15, 2026: https://qdrant.tech/documentation/cloud/
+- Pinecone organization SSO (Standard and Enterprise plans; identity management solution; 24-hour console re-authentication), rolling documentation, checked October 2026: https://docs.pinecone.io/guides/organizations/understanding-organizations
+- Qdrant Cloud API key per request, rolling documentation, checked October 2026: https://qdrant.tech/documentation/cloud/
+- Qdrant Cloud account registration and Premium-tier console SSO, distinct from cluster API keys (pinned documentation commit 61a5b32ae31009bc49d3c8afa91eb9242e4368df; at the time of writing): https://github.com/qdrant/landing_page/blob/61a5b32ae31009bc49d3c8afa91eb9242e4368df/qdrant-landing/content/documentation/cloud-account-setup.md#L15-L20, https://github.com/qdrant/landing_page/blob/61a5b32ae31009bc49d3c8afa91eb9242e4368df/qdrant-landing/content/documentation/cloud-account-setup.md#L94-L104
+- Qdrant Cloud Database API key on every REST or gRPC request (pinned documentation commit 61a5b32ae31009bc49d3c8afa91eb9242e4368df): https://github.com/qdrant/landing_page/blob/61a5b32ae31009bc49d3c8afa91eb9242e4368df/qdrant-landing/content/documentation/cloud/authentication.md#L68-L69
+- Weaviate Cloud per-account MFA and Owner enforcement for all members, both off by default; enforcement available to every organization (pinned documentation commit 5dcf1d6dcd357a4cfaf613a63d052b932cd2f9c9): https://github.com/weaviate/docs/blob/5dcf1d6dcd357a4cfaf613a63d052b932cd2f9c9/docs/cloud/platform/multi-factor-auth.mdx#L8-L10, https://github.com/weaviate/docs/blob/5dcf1d6dcd357a4cfaf613a63d052b932cd2f9c9/docs/cloud/platform/multi-factor-auth.mdx#L132
+- Weaviate Cloud SSO takes priority over MFA enforcement, including cross-organization sign-ins; disabling SSO leaves enforcement off until an Owner restores it (pinned documentation commit 5dcf1d6dcd357a4cfaf613a63d052b932cd2f9c9): https://github.com/weaviate/docs/blob/5dcf1d6dcd357a4cfaf613a63d052b932cd2f9c9/docs/cloud/platform/multi-factor-auth.mdx#L266-L272, https://github.com/weaviate/docs/blob/5dcf1d6dcd357a4cfaf613a63d052b932cd2f9c9/docs/cloud/platform/multi-factor-auth.mdx#L300
 - Chroma 1.5.9 `chroma run` unit authenticator, default-identity authentication and authorization, and server delegation: https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L139-L142, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/auth/mod.rs#L102-L164 and https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/lib.rs#L60-L156, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L229-L255, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L457-L486
 - Chroma migration notes (v1.0.0 removal of built-in authentication; 2024 auth overhaul variables): https://docs.trychroma.com/docs/overview/migration ; client-server mode (`chroma run --path`, port 8000): https://docs.trychroma.com/docs/run-chroma/client-server
 - Chroma `chroma run`: the `--host` default `localhost` applied only without a config file, the config-file branch, the `listen_address` and `port` defaults `0.0.0.0` and 8000, `CHROMA_` variables merged when a file is loaded, the server's bind of `listen_address:port`, and the release image (`rust/Dockerfile` target `cli`, `chroma run /config.yaml` from `docker_single_node.yaml`) (pinned tag 1.5.9): https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L39-L45, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L60-L73, https://github.com/chroma-core/chroma/blob/1.5.9/rust/cli/src/commands/run.rs#L114-L134, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L140-L146, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L176-L179, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/config.rs#L216-L229, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/src/server.rs#L415-L417, https://github.com/chroma-core/chroma/blob/1.5.9/rust/Dockerfile#L85-L93, https://github.com/chroma-core/chroma/blob/1.5.9/rust/frontend/sample_configs/docker_single_node.yaml and https://github.com/chroma-core/chroma/blob/1.5.9/.github/workflows/_build_release_container.yml#L101-L106
@@ -45041,6 +45053,8 @@ Components (recorded basis):
 - gostd3: Go standard library (go1.26.6)
 - pc: Pinecone organization documentation (unknown)
 - curl-docs: curl documentation (rolling) (unknown)
+- qc-pinned: Qdrant Cloud documentation (61a5b32ae31009bc49d3c8afa91eb9242e4368df)
+- wc: Weaviate Cloud MFA documentation (5dcf1d6dcd357a4cfaf613a63d052b932cd2f9c9)
 
 Claims (full source mapping in the JSON block below):
 
@@ -45090,7 +45104,11 @@ Claims (full source mapping in the JSON block below):
 - chroma-auth (REASONED; cd, chroma): Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting.
 - pgvector (REASONED; pgvector-source): pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.
 - pgvector-rls (REASONED; pg): Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k.
-- hosted-mfa (REASONED; qc, pc, wd): Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity management solution on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it.
+- hosted-mfa (REASONED; qc, pc, wd, qc-pinned): Qdrant Cloud documents API keys; at the time of writing, Pinecone documents organization SSO through an identity management solution on Standard and Enterprise, without establishing MFA enforcement. This guide assesses that the described native API-key configurations do not establish human MFA and advises Weaviate OIDC or MFA-capable fronting for these deployments, not as hosted-console controls.
+- hosted-pinecone (REASONED; pc): At the time of writing, Pinecone documents organization SSO through an organization's identity management solution on Standard and Enterprise plans; SSO console sessions are re-authenticated at least every 24 hours. This guide assesses that this does not establish MFA enforcement and advises requiring and confirming MFA through the SSO identity provider.
+- hosted-qdrant (REASONED; qc-pinned): Qdrant Cloud lists passwordless email, Google, GitHub and enterprise SSO registration; at the time of writing, Premium-tier SSO covers console sign-in only and cluster requests still use Database API keys. This guide assesses that these pages do not establish a console MFA control or MFA enforcement by the SSO identity provider.
+- hosted-weaviate-mfa (REASONED; wc): At the time of writing, Weaviate Cloud documents per-account MFA and Owner enforcement for all members, both off by default, with enforcement available to every organization. SSO takes priority: setup turns enforcement off and SSO sign-ins never ask for a Weaviate Cloud MFA code, leaving the second factor to the identity provider.
+- hosted-weaviate-sso (REASONED; wc): Weaviate Cloud documents that after a member's first SSO sign-in, SSO also applies when they open an MFA-enforcing organization; disabling SSO leaves enforcement off until an Owner restores it. This guide assesses that these pages do not establish deployed IdP MFA enforcement and advises requiring and confirming it.
 - verify-inventory (REASONED; qd, docker): Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure.
 - verify-peer (REASONED; qd, curl-docs): Probe real backend 6333/6334/6335 from non-peers; require connection failure with filtering evidence and a positive peer control for 6335; auth/TLS rejection is still reachability.
 - verify-curl (REASONED; curl-docs): exit 3/6 is invalid input; 7 or a five-second 28 needs corroboration; nonzero HTTP, 52/56 or a twenty-second 28 indicates reachability, including HTTP 000 cases.
@@ -45103,9 +45121,9 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-15",
+  "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "fc2918727d64bf41798db38364a7e8b86163fc4fb056a85b4a6cb21e3f26663b",
+  "body_sha256": "f8ee7b4c3532a788b9dd33f7a1b89641bc49d4b0dd44a87439d11ea97f69dca6",
   "components": {
     "q": {
       "name": "Qdrant source",
@@ -45439,6 +45457,25 @@ Claims (full source mapping in the JSON block below):
         "s2b2686afaf41": "https://curl.se/docs/manpage.html",
         "s596c6f706038": "https://curl.se/docs/manpage.html#-f"
       }
+    },
+    "qc-pinned": {
+      "name": "Qdrant Cloud documentation",
+      "basis": "61a5b32ae31009bc49d3c8afa91eb9242e4368df",
+      "sources": {
+        "s19a1a255e9de": "https://github.com/qdrant/landing_page/blob/61a5b32ae31009bc49d3c8afa91eb9242e4368df/qdrant-landing/content/documentation/cloud-account-setup.md#L15-L20",
+        "sdb4501285ace": "https://github.com/qdrant/landing_page/blob/61a5b32ae31009bc49d3c8afa91eb9242e4368df/qdrant-landing/content/documentation/cloud-account-setup.md#L94-L104",
+        "sac497c4d41f5": "https://github.com/qdrant/landing_page/blob/61a5b32ae31009bc49d3c8afa91eb9242e4368df/qdrant-landing/content/documentation/cloud/authentication.md#L68-L69"
+      }
+    },
+    "wc": {
+      "name": "Weaviate Cloud MFA documentation",
+      "basis": "5dcf1d6dcd357a4cfaf613a63d052b932cd2f9c9",
+      "sources": {
+        "sf898b01ade26": "https://github.com/weaviate/docs/blob/5dcf1d6dcd357a4cfaf613a63d052b932cd2f9c9/docs/cloud/platform/multi-factor-auth.mdx#L8-L10",
+        "s9663f4d166ac": "https://github.com/weaviate/docs/blob/5dcf1d6dcd357a4cfaf613a63d052b932cd2f9c9/docs/cloud/platform/multi-factor-auth.mdx#L132",
+        "s800400caba04": "https://github.com/weaviate/docs/blob/5dcf1d6dcd357a4cfaf613a63d052b932cd2f9c9/docs/cloud/platform/multi-factor-auth.mdx#L266-L272",
+        "sd7dea65bb6d0": "https://github.com/weaviate/docs/blob/5dcf1d6dcd357a4cfaf613a63d052b932cd2f9c9/docs/cloud/platform/multi-factor-auth.mdx#L300"
+      }
     }
   },
   "claims": {
@@ -45488,7 +45525,11 @@ Claims (full source mapping in the JSON block below):
     "chroma-auth": {"text": "Built-in authentication was removed in v1.0.0; chroma run 1.5.9 uses the default identity for authentication and authorization. Obsolete AUTHN variables do not protect the server; use private binding and authenticated TLS fronting.", "components": ["cd", "chroma"], "sources": ["cd:s60ad33c4b715", "chroma:se936b62a1a3d", "chroma:sbc1dd27a9bf2", "chroma:s62cd8db9e61a", "chroma:s50b8158f3388", "chroma:s6eb0ff350d15"], "status": "REASONED"},
     "pgvector": {"text": "pgvector is a PostgreSQL extension on 5432 for PostgreSQL 13+; use PostgreSQL TLS, hostssl/SCRAM, verify-full and least-privilege roles.", "components": ["pgvector-source"], "sources": ["pgvector-source:saab3b3092223"], "status": "REASONED"},
     "pgvector-rls": {"text": "Tenant RLS filters shared embeddings; prove tenant-B isolation with known rows and bypass controls, counting per tenant rather than trusting top-k.", "components": ["pg"], "sources": ["pg:se9846041ce1f"], "status": "REASONED"},
-    "hosted-mfa": {"text": "Qdrant Cloud documents API keys; Pinecone documents organization SSO through an identity management solution on Standard and Enterprise. Described native API-key configurations do not establish human MFA; Weaviate OIDC or fronting can delegate it.", "components": ["qc", "pc", "wd"], "sources": ["qc:sc72e09d8f7e6", "pc:s1696db54b028", "wd:s51c9c4c6b4c0"], "status": "REASONED"},
+    "hosted-mfa": {"text": "Qdrant Cloud documents API keys; at the time of writing, Pinecone documents organization SSO through an identity management solution on Standard and Enterprise, without establishing MFA enforcement. This guide assesses that the described native API-key configurations do not establish human MFA and advises Weaviate OIDC or MFA-capable fronting for these deployments, not as hosted-console controls.", "components": ["qc", "pc", "wd", "qc-pinned"], "sources": ["qc:sc72e09d8f7e6", "pc:s1696db54b028", "wd:s51c9c4c6b4c0", "qc-pinned:sac497c4d41f5"], "status": "REASONED"},
+    "hosted-pinecone": {"text": "At the time of writing, Pinecone documents organization SSO through an organization's identity management solution on Standard and Enterprise plans; SSO console sessions are re-authenticated at least every 24 hours. This guide assesses that this does not establish MFA enforcement and advises requiring and confirming MFA through the SSO identity provider.", "components": ["pc"], "sources": ["pc:s1696db54b028"], "status": "REASONED"},
+    "hosted-qdrant": {"text": "Qdrant Cloud lists passwordless email, Google, GitHub and enterprise SSO registration; at the time of writing, Premium-tier SSO covers console sign-in only and cluster requests still use Database API keys. This guide assesses that these pages do not establish a console MFA control or MFA enforcement by the SSO identity provider.", "components": ["qc-pinned"], "sources": ["qc-pinned:s19a1a255e9de", "qc-pinned:sdb4501285ace", "qc-pinned:sac497c4d41f5"], "status": "REASONED"},
+    "hosted-weaviate-mfa": {"text": "At the time of writing, Weaviate Cloud documents per-account MFA and Owner enforcement for all members, both off by default, with enforcement available to every organization. SSO takes priority: setup turns enforcement off and SSO sign-ins never ask for a Weaviate Cloud MFA code, leaving the second factor to the identity provider.", "components": ["wc"], "sources": ["wc:sf898b01ade26", "wc:s9663f4d166ac", "wc:s800400caba04"], "status": "REASONED"},
+    "hosted-weaviate-sso": {"text": "Weaviate Cloud documents that after a member's first SSO sign-in, SSO also applies when they open an MFA-enforcing organization; disabling SSO leaves enforcement off until an Owner restores it. This guide assesses that these pages do not establish deployed IdP MFA enforcement and advises requiring and confirming it.", "components": ["wc"], "sources": ["wc:s800400caba04", "wc:sd7dea65bb6d0"], "status": "REASONED"},
     "verify-inventory": {"text": "Read all listener rows, container namespaces and publications; expected-port grep and host ss alone can miss exposure.", "components": ["qd", "docker"], "sources": ["qd:s753402e46eed", "docker:s1e53417c513d"], "status": "REASONED", "verify": [1]},
     "verify-peer": {"text": "Probe real backend 6333/6334/6335 from non-peers; require connection failure with filtering evidence and a positive peer control for 6335; auth/TLS rejection is still reachability.", "components": ["qd", "curl-docs"], "sources": ["qd:s753402e46eed", "curl-docs:s2b2686afaf41", "curl-docs:s596c6f706038"], "status": "REASONED", "verify": [2]},
     "verify-curl": {"text": "exit 3/6 is invalid input; 7 or a five-second 28 needs corroboration; nonzero HTTP, 52/56 or a twenty-second 28 indicates reachability, including HTTP 000 cases.", "components": ["curl-docs"], "sources": ["curl-docs:s2b2686afaf41", "curl-docs:s596c6f706038"], "status": "REASONED", "verify": [2]},
