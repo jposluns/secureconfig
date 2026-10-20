@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against OAuth client credentials (no recorded version), nginx mTLS release-1.28.0, Apache mTLS 2.4, PostgreSQL client certificates 17, MySQL client certificates 8.4, Redis TLS client authentication 7.4.2, and RabbitMQ TLS client authentication 3.13, plus 6 more recorded bases; 3 further sources are pinned to a commit and 17 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 37 claims, all reasoned from cited sources.
+Written against OAuth client credentials (no recorded version), nginx mTLS release-1.28.0, Apache mTLS 2.4, PostgreSQL client certificates 17, MySQL client certificates 8.4, Redis TLS client authentication 7.4.2, and RabbitMQ TLS client authentication 3.13, plus 8 more recorded bases; 3 further sources are pinned to a commit and 17 carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 37 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -32,7 +32,9 @@ The simplest machine credential and the one that leaks most. When your service i
 - Give every key an expiry and rotate on a schedule, with a short overlap during which both keys work, so rotation is routine rather than an outage.
 - Send keys only in a header (`Authorization: Bearer ...`) over TLS, never in a URL. RFC 6750 makes TLS mandatory for bearer tokens and says they "SHOULD NOT be passed in page URLs", because URLs land in browser history, proxy logs, and server logs.
 - Compare the presented key in constant time: `hmac.compare_digest()` in Python, `crypto.timingSafeEqual()` in Node.js (both arguments must have the same byte length). A plain `==` stops at the first differing byte and leaks timing.
-- Where the service only needs to verify the key, as this guide's advice, issue a randomly generated key, store a hash of it and compare against the hash of the presented key. As this guide's advice, show the plaintext once at creation; as this guide's inference, a database dump then does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing. Sources has no API-key hash-implementation reference specifying the algorithm, encoding, comparison, or key-generation entropy.
+- Where the service only needs to verify the key, as this guide's advice, issue a randomly generated key, store a hash of it and compare against the hash of the presented key. As this guide's advice, show the plaintext once at creation; as this guide's inference, a database dump then does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing.
+
+  One example implementation, not a standard or requirement, is djangorestframework-api-key v3.1.0: its `Sha512ApiKeyHasher` hashes `password.encode()` with SHA-512, hex-encodes the digest and prefixes it with `sha512$$`, without a salt. The library justifies omitting salt for high-entropy keys and warns that this hasher should never be used in Django's `PASSWORD_HASHERS`. Its `verify` hashes the presented value with the same encoding and calls `constant_time_compare` on the encoded hashes. Its `KeyGenerator` defaults to an 8-character prefix and a 32-character secret, calls Django's `get_random_string` for each, joins them as `prefix.secret` and passes that whole key to its hash method; it returns the key, prefix and hash. The cited Django 5.2.18 helper chooses each character using Python's `secrets.choice` from 62 characters: lowercase ASCII letters, uppercase ASCII letters and digits; `constant_time_compare` calls `secrets.compare_digest` after converting both values with `force_bytes`. With those defaults, this guide calculates `32 * log2(62)`, about 190.5 bits for the secret alone, assuming independent uniform choices. As this guide's advice, fast hashes are suitable only for high-entropy random keys, not passwords; the OWASP password-storage citation remains password guidance, not an API-key implementation. These source lines show the example's code, not a deployed service's storage policy or measured timing.
 
 ## 2. OAuth 2.0 client credentials
 
@@ -104,6 +106,8 @@ API keys, client secrets, and client-certificate keys that cannot be federated a
 - RFC 5280 (certificate revocation): https://www.rfc-editor.org/info/rfc5280/
 - Secret manager vendor pages: linked inline in section 5.
 - OWASP Password Storage Cheat Sheet (hashes can be guessed; password guidance is not an API-key hash implementation), at 1a78ae3e443cef156e947f87e892efbcc62876ee (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/1a78ae3e443cef156e947f87e892efbcc62876ee/cheatsheets/Password_Storage_Cheat_Sheet.md#L21-L47
+- djangorestframework-api-key v3.1.0 example (Django helper imports and prefix-dot-secret format; SHA-512, hexadecimal encoding, no-salt rationale, password warning and hash comparison; default key generation and preferred-hasher dispatch), checked October 2026: https://github.com/florimondmanca/djangorestframework-api-key/blob/v3.1.0/src/rest_framework_api_key/crypto.py#L9-L13 ; https://github.com/florimondmanca/djangorestframework-api-key/blob/v3.1.0/src/rest_framework_api_key/crypto.py#L21-L44 ; https://github.com/florimondmanca/djangorestframework-api-key/blob/v3.1.0/src/rest_framework_api_key/crypto.py#L47-L82
+- Django 5.2.18 crypto helpers (Python secrets import, 62-character alphabet, secrets.choice generation and secrets.compare_digest comparison), checked October 2026: https://github.com/django/django/blob/5.2.18/django/utils/crypto.py#L7-L10 ; https://github.com/django/django/blob/5.2.18/django/utils/crypto.py#L48-L67
 - OWASP Secrets Management Cheat Sheet (central storage and management), at 1a78ae3e443cef156e947f87e892efbcc62876ee (checked October 2026): https://github.com/OWASP/CheatSheetSeries/blob/1a78ae3e443cef156e947f87e892efbcc62876ee/cheatsheets/Secrets_Management_Cheat_Sheet.md#L5-L7
 - AWS Secrets Manager overview (rolling, checked October 2026): https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
 - Google Cloud Secret Manager overview (rolling, checked October 2026): https://docs.cloud.google.com/secret-manager/docs/overview
@@ -171,6 +175,8 @@ Components (recorded basis):
 - docker-build: Docker build and image history documentation (4e9a5751518ed8223a8dcde53693badddd72604f)
 - owasp-password: OWASP Password Storage Cheat Sheet (1a78ae3e443cef156e947f87e892efbcc62876ee)
 - owasp-secrets: OWASP Secrets Management Cheat Sheet (1a78ae3e443cef156e947f87e892efbcc62876ee)
+- drf-api-key: djangorestframework-api-key (v3.1.0)
+- django-crypto: Django crypto helpers (5.2.18)
 
 Claims (full source mapping in the JSON block below):
 
@@ -178,7 +184,7 @@ Claims (full source mapping in the JSON block below):
 - key-lifetime (REASONED; bearer): Give keys expiries and scheduled rotation with a short overlap for continuity.
 - bearer-transport (REASONED; bearer): Send bearer keys in Authorization headers over mandatory TLS; URLs leak through history and logs.
 - constant-time (REASONED; python, node): Use hmac.compare_digest or crypto.timingSafeEqual rather than plain equality; the guide requires equal byte lengths.
-- key-hash (REASONED; bearer, owasp-password, owasp-secrets): As this guide's advice, where only verification is needed, store hashes of randomly generated keys and show plaintext once; as this guide's inference, a database dump does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing. Sources has no API-key hash-implementation reference specifying the algorithm, encoding, comparison, or key-generation entropy.
+- key-hash (REASONED; bearer, owasp-password, owasp-secrets, drf-api-key, django-crypto): As this guide's advice, where only verification is needed, store random-key hashes, compare presented-key hashes and show plaintext once at creation; as this guide's inference, hash-only dumps do not directly reveal plaintext keys with enough entropy to resist offline guessing. The cited SHA-512 code is an example, not a standard or requirement, for high-entropy random keys, not passwords.
 - client-grant (REASONED; oauth): Confidential clients authenticate with grant_type=client_credentials for access tokens; refresh tokens SHOULD NOT be issued, so re-authenticate.
 - token-scope (REASONED; oauth, bearer): Request the narrowest scope or provider audience and bound access-token lifetime and reach.
 - jwt-validation (REASONED; jwt): Validate access-token signature, reject alg none, check exact issuer, API audience and expiry, require at+jwt for JWT access tokens, and enforce scopes.
@@ -215,9 +221,9 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-05",
+  "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "c7580a68279ab052032ace7724e1aca9bbf6f0e363dcb301259459bad15ee9ef",
+  "body_sha256": "2389e3a202e32e72a14b42bc06894be01c386595a22eef3cab52509cad512de5",
   "components": {
     "oauth": {
       "name": "OAuth client credentials",
@@ -462,6 +468,23 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s3acb98020188": "https://github.com/OWASP/CheatSheetSeries/blob/1a78ae3e443cef156e947f87e892efbcc62876ee/cheatsheets/Secrets_Management_Cheat_Sheet.md#L5-L7"
       }
+    },
+    "drf-api-key": {
+      "name": "djangorestframework-api-key",
+      "basis": "v3.1.0",
+      "sources": {
+        "s13cac8efb2c8": "https://github.com/florimondmanca/djangorestframework-api-key/blob/v3.1.0/src/rest_framework_api_key/crypto.py#L9-L13",
+        "s5776d8150ed6": "https://github.com/florimondmanca/djangorestframework-api-key/blob/v3.1.0/src/rest_framework_api_key/crypto.py#L21-L44",
+        "s6b7803ec22e6": "https://github.com/florimondmanca/djangorestframework-api-key/blob/v3.1.0/src/rest_framework_api_key/crypto.py#L47-L82"
+      }
+    },
+    "django-crypto": {
+      "name": "Django crypto helpers",
+      "basis": "5.2.18",
+      "sources": {
+        "sa74f4eec0332": "https://github.com/django/django/blob/5.2.18/django/utils/crypto.py#L7-L10",
+        "sefce580872b0": "https://github.com/django/django/blob/5.2.18/django/utils/crypto.py#L48-L67"
+      }
     }
   },
   "claims": {
@@ -469,7 +492,7 @@ Claims (full source mapping in the JSON block below):
     "key-lifetime": {"text": "Give keys expiries and scheduled rotation with a short overlap for continuity.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
     "bearer-transport": {"text": "Send bearer keys in Authorization headers over mandatory TLS; URLs leak through history and logs.", "components": ["bearer"], "sources": ["bearer:sefd3dd623da3"], "status": "REASONED"},
     "constant-time": {"text": "Use hmac.compare_digest or crypto.timingSafeEqual rather than plain equality; the guide requires equal byte lengths.", "components": ["python", "node"], "sources": ["python:s7a54556e5dac", "node:s96b80e6816a2"], "status": "REASONED"},
-    "key-hash": {"text": "As this guide's advice, where only verification is needed, store hashes of randomly generated keys and show plaintext once; as this guide's inference, a database dump does not directly reveal plaintext keys if only hashes are stored and the keys have enough entropy to resist offline guessing. Sources has no API-key hash-implementation reference specifying the algorithm, encoding, comparison, or key-generation entropy.", "components": ["bearer", "owasp-password", "owasp-secrets"], "sources": ["bearer:sefd3dd623da3", "owasp-password:scfb73a9d1029", "owasp-secrets:s3acb98020188"], "status": "REASONED"},
+    "key-hash": {"text": "As this guide's advice, where only verification is needed, store random-key hashes, compare presented-key hashes and show plaintext once at creation; as this guide's inference, hash-only dumps do not directly reveal plaintext keys with enough entropy to resist offline guessing. The cited SHA-512 code is an example, not a standard or requirement, for high-entropy random keys, not passwords.", "components": ["bearer", "owasp-password", "owasp-secrets", "drf-api-key", "django-crypto"], "sources": ["bearer:sefd3dd623da3", "owasp-password:scfb73a9d1029", "owasp-secrets:s3acb98020188", "drf-api-key:s13cac8efb2c8", "drf-api-key:s5776d8150ed6", "drf-api-key:s6b7803ec22e6", "django-crypto:sa74f4eec0332", "django-crypto:sefce580872b0"], "status": "REASONED"},
     "client-grant": {"text": "Confidential clients authenticate with grant_type=client_credentials for access tokens; refresh tokens SHOULD NOT be issued, so re-authenticate.", "components": ["oauth"], "sources": ["oauth:s65b02b1812cc"], "status": "REASONED"},
     "token-scope": {"text": "Request the narrowest scope or provider audience and bound access-token lifetime and reach.", "components": ["oauth", "bearer"], "sources": ["oauth:s65b02b1812cc", "bearer:sefd3dd623da3"], "status": "REASONED"},
     "jwt-validation": {"text": "Validate access-token signature, reject alg none, check exact issuer, API audience and expiry, require at+jwt for JWT access tokens, and enforce scopes.", "components": ["jwt"], "sources": ["jwt:sc36d79fcad94"], "status": "REASONED"},
