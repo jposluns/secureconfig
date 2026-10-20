@@ -69,7 +69,6 @@ A real surface the guide never covers. Correct as far as it goes, and not far en
 | 1.302 | `ollama.md`: profiling: complete the shipped pprof-handler registration source audit beyond the reviewed first-party router and import paths. (M, M) | `[gap]` |
 | 1.303 | `python.md`: client-ca: establish whether CPython SSL configuration uses the OpenSSL `SSL_CERT_FILE` override beyond the cited files. (M, M) | `[gap]` |
 | 1.304 | `self-hosted-idp.md`: authentik-admin-boundary and authentik-admin-proxy: source the administration listener/permission boundary and complete admin-path restriction scope. (M, M) | `[gap]` |
-| 1.305 | `self-hosted-idp.md`: docker-socket-scope: cite Docker daemon privilege and rootless user-scoped blast radius for the socket-access claim. (M, M) | `[gap]` |
 | 1.306 | `self-signed.md`: debian-trust and rhel-trust: source the Debian/Ubuntu and RHEL/Fedora trust-store commands for the stated releases beyond the cited Debian trixie, Ubuntu noble and RHEL 9 scope. (M, M) | `[gap]` |
 | 1.307 | `identity-providers.md`: provider-authenticators: cite per-provider TOTP compatibility beyond the cited Google prompt and RFC 6238 material. (M, M) | `[gap]` |
 | 1.308 | `n8n.md`: verify-api: source or narrow the public-API 401/200 status guarantees beyond the cited auth registry, retaining the responses as expectations without a live run. (M, M) | `[gap]` |

@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-20
 
+- `self-hosted-idp.md`: the Docker socket scope for authentik's shipped Compose worker now cites the pinned Docker documentation that the daemon requires root unless it runs in rootless mode (where the daemon and containers run without root privileges) and that only trusted users should control it; that ordinary rootful socket access is host-root-equivalent, and that a rootless daemon's blast radius is its user's, remain this guide's assessments (TODO 1.305) (#715)
 - `docker.md`: the `workload` claim is shortened from 491 to 421 characters in two sentences, labelling its advice explicitly and grouping its two assessments under one label, with its components and sources unchanged (TODO 1.317) (#713)
 
 ## 2026-10-19
