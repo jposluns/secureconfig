@@ -878,7 +878,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against OpenSSL documentation (rolling) (no recorded version), Requests TLS documentation v2.32.3, Git ignore documentation v2.43.0, curl command documentation curl-8_12_1, Node.js extra CA certificates v22.19.0, Service identity RFC 9525, Debian ca-certificates trixie, and Ubuntu ca-certificates noble, plus 3 more recorded bases; 1 further source carries no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 24 claims: 1 demonstrated by a check that ran and 23 reasoned from cited sources.
+Written against OpenSSL documentation (rolling) (no recorded version), Requests TLS documentation v2.32.3, Git ignore documentation v2.43.0, curl command documentation curl-8_12_1, Node.js extra CA certificates v22.19.0, Service identity RFC 9525, and Debian ca-certificates trixie and bookworm, plus 4 more recorded bases; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 24 claims: 1 demonstrated by a check that ran and 23 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -941,12 +941,17 @@ This is for development machines only. The generated CA can sign for any name, s
 
 Distribute the certificate (or your internal CA certificate) to clients instead of turning verification off:
 
+Debian trixie and Ubuntu noble remain cited; the Debian bookworm and Ubuntu jammy manpages also document `update-ca-certificates` including `.crt` certificates under `/usr/local/share/ca-certificates` as implicitly trusted (see Sources). Use on other Debian and Ubuntu releases remains this guide's assessment, with release-specific citations absent.
+
+RHEL 9 remains cited; the CentOS Stream 8 and 10 package manuals and Fedora rawhide dist-git manual instruct adding a simple PEM or DER certificate to `/etc/pki/ca-trust/source/anchors/` and running `update-ca-trust extract` (see Sources). CentOS Stream is not RHEL, and rawhide is Fedora's development branch, not a released Fedora; use on other RHEL releases (including 8 and 10), released Fedora and other CentOS Stream releases remains this guide's assessment, with release-specific citations absent.
+
 ```bash
-# Debian trixie/Ubuntu noble system trust store; other releases: this guide's assessment
+# Debian trixie/bookworm and Ubuntu noble/jammy system trust store; other releases: this guide's assessment
 sudo cp server.crt /usr/local/share/ca-certificates/app-internal.crt
 sudo update-ca-certificates
 
-# RHEL 9 system trust store; Fedora and other RHEL releases: this guide's assessment
+# RHEL 9 system trust store; CentOS Stream 8/10 (not RHEL); Fedora rawhide (development, not a release)
+# Other RHEL (including 8/10), released Fedora and other CentOS Stream: this guide's assessment
 sudo cp server.crt /etc/pki/ca-trust/source/anchors/app-internal.crt
 sudo update-ca-trust extract
 
@@ -996,6 +1001,11 @@ Self-signed certificates have no revocation and no third-party accountability, a
 - Debian trixie update-ca-certificates (checked October 2026): https://manpages.debian.org/trixie/ca-certificates/update-ca-certificates.8.en.html#DESCRIPTION
 - Ubuntu noble update-ca-certificates (checked October 2026): https://manpages.ubuntu.com/manpages/noble/man8/update-ca-certificates.8.html#description
 - RHEL 9 shared system certificates (checked October 2026): https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/securing_networks/using-shared-system-certificates_securing-networks#adding-new-certificates_using-shared-system-certificates
+- Debian bookworm update-ca-certificates (checked October 2026): https://manpages.debian.org/bookworm/ca-certificates/update-ca-certificates.8.en.html ; "Furthermore all certificates with a .crt extension found below /usr/local/share/ca-certificates are also included as implicitly trusted."
+- Ubuntu jammy update-ca-certificates (checked October 2026): https://manpages.ubuntu.com/manpages/jammy/man8/update-ca-certificates.8.html ; "Furthermore all certificates with a .crt extension found below /usr/local/share/ca-certificates are also included as implicitly trusted."
+- CentOS Stream 8, not RHEL, ca-certificates commit ad398898923bddb3953d2aa4c8d9d17c901ef3a4, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/ca-certificates/-/blob/ad398898923bddb3953d2aa4c8d9d17c901ef3a4/update-ca-trust.8.txt#L97-L99 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract.
+- CentOS Stream 10, not RHEL, ca-certificates commit 1ab579df1508321342e9ab244fd4ed397ea89b80, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/ca-certificates/-/blob/1ab579df1508321342e9ab244fd4ed397ea89b80/update-ca-trust.8.txt#L97-L99 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract.
+- Fedora rawhide development branch, not a released Fedora, ca-certificates commit 725690846ee1ae1cd46e62c3a336c84820390d27, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://src.fedoraproject.org/rpms/ca-certificates/blob/725690846ee1ae1cd46e62c3a336c84820390d27/f/update-ca-trust.8.txt#_97 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract.
 - GNU coreutils v9.7 `chmod` syntax (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11937-L11942
 - GNU coreutils v9.7 mode argument (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11967-L11968
 - GNU coreutils v9.7 `chown` owner and group (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11614-L11622
@@ -1030,6 +1040,11 @@ Components (recorded basis):
 - rhel-ca: RHEL shared system certificates (RHEL 9)
 - coreutils: GNU coreutils file permissions (v9.7)
 - node-v24: Node.js API documentation (v24.22.0)
+- debian-bookworm: Debian ca-certificates (bookworm)
+- ubuntu-jammy: Ubuntu ca-certificates (jammy)
+- centos-stream-8: CentOS Stream 8 ca-certificates (ad398898923bddb3953d2aa4c8d9d17c901ef3a4)
+- centos-stream-10: CentOS Stream 10 ca-certificates (1ab579df1508321342e9ab244fd4ed397ea89b80)
+- fedora-rawhide: Fedora rawhide ca-certificates (development branch) (725690846ee1ae1cd46e62c3a336c84820390d27)
 
 Claims (full source mapping in the JSON block below):
 
@@ -1045,8 +1060,8 @@ Claims (full source mapping in the JSON block below):
 - key-compromise (REASONED; openssl, git): Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat.
 - mkcert (REASONED; mkcert): mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs.
 - mkcert-custody (REASONED; mkcert): Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.
-- debian-trust (REASONED; mkcert, debian-ca, ubuntu-ca): Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie and Ubuntu noble; use on other Debian and Ubuntu releases is this guide's assessment, with platform-specific Sources entries for those releases absent.
-- rhel-trust (REASONED; mkcert, rhel-ca): Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract on RHEL 9; Fedora and other RHEL releases are this guide's assessment, with platform-specific Sources entries for those releases absent.
+- debian-trust (REASONED; mkcert, debian-ca, ubuntu-ca, debian-bookworm, ubuntu-jammy): Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie/bookworm and Ubuntu noble/jammy; other Debian/Ubuntu releases remain this guide's assessment without release-specific citations.
+- rhel-trust (REASONED; mkcert, rhel-ca, centos-stream-8, centos-stream-10, fedora-rawhide): Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract: RHEL 9 is cited, and the CentOS Stream 8/10 (not RHEL) and Fedora rawhide (development, not a release) manuals give this for simple PEM/DER certificates. Other RHEL (including 8/10), released Fedora and other CentOS Stream releases remain this guide's assessment without release-specific citations.
 - curl-trust (REASONED; openssl, curl-source): curl --cacert server.crt supplies explicit trust for app.internal.
 - requests-trust (REASONED; openssl, requests): REQUESTS_CA_BUNDLE supplies the certificate path to Python requests.
 - node-trust (REASONED; mkcert, node): NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js.
@@ -1061,9 +1076,9 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-19",
+  "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "453ecae4083df53c869dd739de6341ea3f3f84b3860aaae57f24fbe9fbf3f3bf",
+  "body_sha256": "d210ab92ebc8fe64c2b086c32c4a4059b2288d3f15a5f9b1073336d23894018d",
   "components": {
     "openssl": {
       "name": "OpenSSL documentation (rolling)",
@@ -1161,6 +1176,41 @@ Claims (full source mapping in the JSON block below):
         "s684a71cf8b6e": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L1786-L1789",
         "s025a5157269c": "https://github.com/nodejs/node/blob/v24.22.0/doc/api/tls.md#L2250-L2255"
       }
+    },
+    "debian-bookworm": {
+      "name": "Debian ca-certificates",
+      "basis": "bookworm",
+      "sources": {
+        "sa5e706846110": "https://manpages.debian.org/bookworm/ca-certificates/update-ca-certificates.8.en.html"
+      }
+    },
+    "ubuntu-jammy": {
+      "name": "Ubuntu ca-certificates",
+      "basis": "jammy",
+      "sources": {
+        "s73a246e6ccfa": "https://manpages.ubuntu.com/manpages/jammy/man8/update-ca-certificates.8.html"
+      }
+    },
+    "centos-stream-8": {
+      "name": "CentOS Stream 8 ca-certificates",
+      "basis": "ad398898923bddb3953d2aa4c8d9d17c901ef3a4",
+      "sources": {
+        "s448b09073b79": "https://gitlab.com/redhat/centos-stream/rpms/ca-certificates/-/blob/ad398898923bddb3953d2aa4c8d9d17c901ef3a4/update-ca-trust.8.txt#L97-L99"
+      }
+    },
+    "centos-stream-10": {
+      "name": "CentOS Stream 10 ca-certificates",
+      "basis": "1ab579df1508321342e9ab244fd4ed397ea89b80",
+      "sources": {
+        "s2862e6522c85": "https://gitlab.com/redhat/centos-stream/rpms/ca-certificates/-/blob/1ab579df1508321342e9ab244fd4ed397ea89b80/update-ca-trust.8.txt#L97-L99"
+      }
+    },
+    "fedora-rawhide": {
+      "name": "Fedora rawhide ca-certificates (development branch)",
+      "basis": "725690846ee1ae1cd46e62c3a336c84820390d27",
+      "sources": {
+        "s70fd69620a8b": "https://src.fedoraproject.org/rpms/ca-certificates/blob/725690846ee1ae1cd46e62c3a336c84820390d27/f/update-ca-trust.8.txt#_97"
+      }
     }
   },
   "claims": {
@@ -1176,8 +1226,8 @@ Claims (full source mapping in the JSON block below):
     "key-compromise": {"text": "Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat.", "components": ["openssl", "git"], "sources": ["openssl:s211b1e6e4aa4", "git:sf961a2e5b8e1"], "status": "REASONED"},
     "mkcert": {"text": "mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs.", "components": ["mkcert"], "sources": ["mkcert:s41ae17dba4ce"], "status": "REASONED"},
     "mkcert-custody": {"text": "Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.", "components": ["mkcert"], "sources": ["mkcert:s41ae17dba4ce"], "status": "REASONED"},
-    "debian-trust": {"text": "Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie and Ubuntu noble; use on other Debian and Ubuntu releases is this guide's assessment, with platform-specific Sources entries for those releases absent.", "components": ["mkcert", "debian-ca", "ubuntu-ca"], "sources": ["mkcert:s41ae17dba4ce", "debian-ca:s99e100121493", "ubuntu-ca:s4c3728cc6c12"], "status": "REASONED"},
-    "rhel-trust": {"text": "Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract on RHEL 9; Fedora and other RHEL releases are this guide's assessment, with platform-specific Sources entries for those releases absent.", "components": ["mkcert", "rhel-ca"], "sources": ["mkcert:s41ae17dba4ce", "rhel-ca:s876e668e7116"], "status": "REASONED"},
+    "debian-trust": {"text": "Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie/bookworm and Ubuntu noble/jammy; other Debian/Ubuntu releases remain this guide's assessment without release-specific citations.", "components": ["mkcert", "debian-ca", "ubuntu-ca", "debian-bookworm", "ubuntu-jammy"], "sources": ["mkcert:s41ae17dba4ce", "debian-ca:s99e100121493", "ubuntu-ca:s4c3728cc6c12", "debian-bookworm:sa5e706846110", "ubuntu-jammy:s73a246e6ccfa"], "status": "REASONED"},
+    "rhel-trust": {"text": "Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract: RHEL 9 is cited, and the CentOS Stream 8/10 (not RHEL) and Fedora rawhide (development, not a release) manuals give this for simple PEM/DER certificates. Other RHEL (including 8/10), released Fedora and other CentOS Stream releases remain this guide's assessment without release-specific citations.", "components": ["mkcert", "rhel-ca", "centos-stream-8", "centos-stream-10", "fedora-rawhide"], "sources": ["mkcert:s41ae17dba4ce", "rhel-ca:s876e668e7116", "centos-stream-8:s448b09073b79", "centos-stream-10:s2862e6522c85", "fedora-rawhide:s70fd69620a8b"], "status": "REASONED"},
     "curl-trust": {"text": "curl --cacert server.crt supplies explicit trust for app.internal.", "components": ["openssl", "curl-source"], "sources": ["openssl:se5d70578564e", "curl-source:s19ed21fc98f8"], "status": "REASONED"},
     "requests-trust": {"text": "REQUESTS_CA_BUNDLE supplies the certificate path to Python requests.", "components": ["openssl", "requests"], "sources": ["openssl:se5d70578564e", "requests:s21c6be6f6df4"], "status": "REASONED"},
     "node-trust": {"text": "NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js.", "components": ["mkcert", "node"], "sources": ["mkcert:s41ae17dba4ce", "node:s402034f5dcea"], "status": "REASONED"},
