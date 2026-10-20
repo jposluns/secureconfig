@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Render documentation (no recorded version), Next.js pinned documentation v16.4.2, Next.js environment variables 15, Express request protocol 5.x, Django proxy security setting 6.1, and MySQL client connection options 8.4; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
+Written against Render documentation (no recorded version), Next.js pinned documentation v16.4.2, Next.js environment variables 15, Express request protocol 5.x, Django proxy security setting 6.1, and MySQL client connection options 8.4; 3 further sources are pinned to a commit and 4 carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -47,7 +47,7 @@ Each platform provides environment/secret configuration. Set secrets there; neve
   - Fly.io's pinned configuration reference documents `force_https = true` under `[http_service]` in `fly.toml` for apps managed by Fly Launch. The pinned services page says enabling `force_https` returns 301 for all HTTP requests; the option is only valid on HTTP handlers, and deployment fails if it is set on other handlers.
   - Railway's pinned public-networking specifications describe automatic HTTPS redirects for plain HTTP GET requests with 301, and HTTP POST redirects that convert the request to GET ([GET status and POST conversion](https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/public-networking/specs-and-limits.md#L37-L38)). This guide's assessment: these GET/POST statements establish no configurable redirect toggle, POST status code or HEAD response used below.
   - Vercel's encryption page says its CDN automatically redirects HTTP requests to HTTPS with 308 and that this redirection cannot be disabled.
-  - Heroku's ACM page says that, when ACM is enabled, the platform handles `/.well-known/acme-challenge/*` URLs, redirected away from the app, and requires disabling ACM if the app needs those paths. This guide's assessment: that path handling and the cited HTTP routing page establish neither a general HTTP-to-HTTPS redirect policy nor a redirect toggle, an application-only redirect contract, or a status code. This guide's advice: implement application-side redirection unless the deployed ingress is known to enforce it, and verify the result.
+  - Heroku's ACM page says that, when ACM is enabled, the platform handles `/.well-known/acme-challenge/*` URLs, redirected away from the app, and requires disabling ACM if the app needs those paths. This guide's assessment: that path handling and the cited HTTP routing page establish none of the following: a general HTTP-to-HTTPS redirect policy, a redirect toggle, an application-only redirect contract, or a status code. This guide's advice: implement application-side redirection unless the deployed ingress is known to enforce it, and verify the result.
 
   For application-side handling, this guide's advice is to check the platform's forwarded-protocol header only after verifying the framework's proxy trust requirements. Fly's HTTP handler documents `X-Forwarded-Proto` as the original client protocol, `http` or `https`; Railway's public-networking specifications say it always indicates `https`. Heroku's routing page describes it as the originating protocol but explicitly warns that forwarded headers, including `X-Forwarded-Proto`, are not trusted because the order of pre-existing fields is unknown. These descriptions do not establish header sanitization; the cited Render and Vercel TLS pages do not establish a forwarded-protocol header contract. Keep the Express 5.x `trust proxy` and Django 6.1 `SECURE_PROXY_SSL_HEADER` trust requirements in view when implementing this guide's advice.
 - Behind the platform proxy, configure the framework accordingly (`trust proxy` in Express per [nodejs.md](nodejs.md), `SECURE_PROXY_SSL_HEADER` in Django per [python.md](python.md)) so secure cookies and redirects behave.
@@ -124,7 +124,7 @@ curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.ex
 - Vercel TLS termination (checked October 2026): https://vercel.com/docs/cdn-security/encryption
 - Vercel certificate validation and renewal (checked October 2026): https://vercel.com/docs/domains/working-with-ssl
 - Vercel Functions runtimes (checked October 2026): https://vercel.com/docs/functions/runtimes
-- Heroku certificate automation and limitations (checked October 2026): https://devcenter.heroku.com/articles/automated-certificate-management. The page states: "When ACM is enabled the Let’s Encrypt HTTP challenge URLs (/.well-known/acme-challenge/*) are handled by the Heroku Platform, redirected away from your app. If you require use of these paths on your app you must disable ACM." This guide's assessment: this path handling establishes neither a general HTTP-to-HTTPS redirect policy nor a toggle, application-only responsibility or status code for it.
+- Heroku certificate automation and limitations (checked October 2026): https://devcenter.heroku.com/articles/automated-certificate-management. The page states: "When ACM is enabled the Let’s Encrypt HTTP challenge URLs (/.well-known/acme-challenge/*) are handled by the Heroku Platform, redirected away from your app. If you require use of these paths on your app you must disable ACM." This guide's assessment: this path handling establishes none of the following for general HTTP-to-HTTPS redirection: a policy, a toggle, application-only responsibility or a status code.
 - Heroku HTTP routing (checked October 2026): https://devcenter.heroku.com/articles/http-routing
 - Heroku custom-domain prerequisites (checked October 2026): https://devcenter.heroku.com/articles/custom-domains. The article states: "For security purposes, you must verify your Heroku account to add domains to apps." This guide's assessment: this sentence establishes the account prerequisite, not the verification procedure or certificate eligibility.
 - Heroku web-process port assignment (checked October 2026): https://devcenter.heroku.com/articles/runtime-principles
@@ -147,7 +147,7 @@ curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.ex
 - Fly redirect status and HTTP-handler restriction (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L229-L229
 - Fly HTTP handler forwarded-protocol header (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L117-L123
 - Railway public-networking headers and request handling (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/public-networking/specs-and-limits.md#L16-L17
-- Railway GET redirect status and POST conversion (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/public-networking/specs-and-limits.md#L37-L38. The two complete entries state: "Plain HTTP GET requests will be redirected to HTTPS with a `301` response." and "Plain HTTP POST requests will be converted to GET requests." This guide's assessment: these entries state neither HEAD behaviour nor a POST status code or configurable redirect toggle.
+- Railway GET redirect status and POST conversion (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/public-networking/specs-and-limits.md#L37-L38. The two complete entries state: "Plain HTTP GET requests will be redirected to HTTPS with a `301` response." and "Plain HTTP POST requests will be converted to GET requests." This guide's assessment: these entries state none of the following: HEAD behaviour, a POST status code or a configurable redirect toggle.
 
 
 <!-- version-basis:start -->
@@ -205,9 +205,9 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-19",
+  "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "3de154d9842dd2d372040bce9077faabf3674318fbc05a8278ee2340936b41fe",
+  "body_sha256": "b4143fbadb40de2bd0b76f6f4e8b8a1090387a91f7bea1a8a67979dce062d7fa",
   "components": {
     "render": {
       "name": "Render documentation",
