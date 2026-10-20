@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-20
+
+- `docker.md`: the `workload` claim is shortened from 491 to 421 characters in two sentences, labelling its advice explicitly and grouping its two assessments under one label, with its components and sources unchanged (TODO 1.317) (#713)
+
 ## 2026-10-19
 
 - `paas.md`: the HTTPS-redirect evidence now quotes Render's TLS and custom-domains pages, which say HTTP is automatically redirected to HTTPS (no status code stated), separately from Render's static-site redirect rules, whose 301 is a different feature, and Heroku's ACM handling of Let's Encrypt challenge URLs; Railway's GET 301 and POST conversion stay cited, and the claim keeps the advice to redirect in the app unless deployed ingress is known to enforce HTTPS. Render's redirect status, Railway's HEAD redirect behaviour and POST status, Heroku's redirect policy, configuration/application responsibility and status, and header sanitization stay open under TODO 1.268 (#712)
