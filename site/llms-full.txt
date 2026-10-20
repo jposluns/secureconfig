@@ -59909,7 +59909,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against PocketBase v0.40.4, Appwrite 2.2.0, utopia-php/database 7.3.9, and curl curl-8_14_1; 2 further sources carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 75 claims: 2 demonstrated by a check that ran and 73 reasoned from cited sources.
+Written against PocketBase v0.40.4, Appwrite 2.2.0, utopia-php/database 7.3.9, and curl curl-8_14_1; 2 further sources carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 79 claims: 2 demonstrated by a check that ran and 77 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -60267,12 +60267,45 @@ still run, as does query validation when enabled, in the shown `find` entry path
 [role matching](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Validator/Authorization.php#L52-L90), and the
 [find collection check](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Database.php#L8622-L8657).
 
-These excerpts do not show what the adapter's `getDocument` and `find` do with the shared
-authorization instance: any document-permission filtering (with or without a collection grant,
-including the non-skip `find` branch when `documentSecurity` is enabled), and what disabled
-authorization status bypasses there.
-Those internals remain open in SELFHOSTED-BACKEND-SOURCE-1; this guide does not claim complete
-pinned-source verification or a live authorization demonstration.
+At the same pin, `SQL.php` supplies `getDocument` and `find` for MariaDB and Postgres,
+and through MariaDB for MySQL and SQLite; see the
+[MariaDB](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/MariaDB.php),
+[Postgres](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Postgres.php),
+[MySQL](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/MySQL.php), and
+[SQLite](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQLite.php) class declarations.
+SQL `getDocument` selects by ID, includes `getTenantQuery`, decodes stored permissions and
+returns the document; its method contains no shared-authorization status check or permission
+predicate. See the [complete SQL document fetch](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQL.php#L378-L469).
+This guide's reasoning is that, with or without a collection grant, that method adds no
+document-permission filter to the Database-level read checks described above: for non-metadata
+collections, those checks accept collection read roles, plus document read roles only when
+`documentSecurity` is true.
+
+SQL `find` reads roles from the shared authorization instance and defaults to the read action.
+It adds a document-permission predicate only when that instance's status is enabled, alongside
+query conditions and the tenant condition for shared tables. See the
+[SQL find entry](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQL.php#L2978-L2988) and
+[SQL find predicate and query construction](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQL.php#L3074-L3131).
+The base predicate selects document IDs from the collection's `_perms` table where a permission
+matches a requester role and the requested action, and includes `getTenantQuery`; Postgres overrides
+it with OR-ed JSONB containment tests for action-wrapped roles in `_permissions`, returning
+`FALSE` for an empty role list. See the
+[base permission predicate](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQL.php#L1968-L1988) and
+[Postgres override](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Postgres.php#L1824-L1850).
+
+This guide's reasoning from the cited Database dispatch, status controls and SQL predicates is
+that a collection grant runs SQL `find` with authorization disabled and no document-permission
+filter; without that grant, enabled authorization and `documentSecurity` take the non-skip
+branch and apply the document-permission predicate.
+Disabled authorization omits that predicate, while query conditions, shared-table tenant
+conditions, ordering and pagination remain in the shown SQL construction.
+SQL `getDocument` has no adapter authorization check for disabled status to bypass; the
+Database-level read permission checks are bypassed as described above.
+These are source-based conclusions, not a live authorization demonstration.
+
+Mongo, Redis, Memory and Pool were not traced; which adapter a deployment uses is not established.
+Those remaining adapter and deployment gaps stay open in SELFHOSTED-BACKEND-SOURCE-1;
+this guide does not claim complete pinned-source verification or a live authorization demonstration.
 
 Properly scoped server API keys **bypass resource permissions**. A successful server-key test
 does not establish that an ordinary user is authorized. Scopes are selected per key and still
@@ -60580,7 +60613,7 @@ service result or deployed-bundle scan is claimed.
 | Check scope or source-work ID | Procedure and prerequisites | Status |
 | --- | --- | --- |
 | Service comparisons | Demonstrate every REASONED comparison above on PocketBase v0.40.4 and Appwrite 2.2.0, recording binary/image identity, commands, response bodies, denied and allowed identities, disposable-data cleanup, and effective settings. Requires writable service fixtures, a container runtime, controlled accounts and mailboxes, S3 and backup fixtures, ClamAV, function execution, a second-host ingress fixture, and the actual client build. Include all five PocketBase actions, manageRule, file-token issuance versus protected downloads (unrelated-user and unsigned-guest denial, permitted-user bytes), realtime, bootstrap-token handling, MFA, verification, retained-token behavior, additive Appwrite permissions, server-key scopes, registration, console MFA (fresh password-only denial and successful TOTP completion), TLS, proxy trust, limits, encrypted recovery, uploads, and executor privacy. | REASONED: full service-comparison inventory; a live PocketBase or Appwrite stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. This comparison still requires the writable service, container, account, mailbox, S3, backup, scanner, function, second-host ingress, and actual-build prerequisites named in this row. All three Verify shell blocks passed bash -n and ShellCheck 0.11.0 with exit 0 and no output. With curl and grep stubbed, written and embedded placeholders, example.com, angle brackets, empty values, and omitted or shortened set -- lines printed their refusal messages without invoking either stub. The signup JSON parsed as four expected string fields; valid curl stubs printed arguments and protected input separately. The grep stub exercised match, no-match, and error branches; real grep on a disposable marker printed only client.js with exit 0 and, after removal, no output with exit 1. None establishes the listed live outcomes. Exposed public authorization should admit unintended access and fixed authorization should deny or filter it while retaining permitted controls; the other expected outcomes remain those in the individual comparisons, per the guide’s cited PocketBase API rules and filters (rolling documentation, checked September 2026); Appwrite legacy collection/document permissions (rolling documentation, checked October 2026); Appwrite 2.2.0 console registration handler; PocketBase v0.40.4 auth defaults, manageRule validation, and MFA; PocketBase v0.40.4 file-token and download authorization; PocketBase v0.40.4 realtime authorization; PocketBase v0.40.4 authentication and superuser IP middleware; PocketBase v0.40.4 settings, encryption, proxy trust, SMTP, backups, and rate defaults; PocketBase v0.40.4 backup download authorization; PocketBase v0.40.4 rate limiter and exemptions; PocketBase v0.40.4 listener and origin flags; Appwrite 2.2.0 API-key authorization, scopes, MFA enforcement, and abuse exemptions; Appwrite 2.2.0 hostname routing and HTTPS enforcement; Appwrite email delivery (rolling documentation, checked September 2026); Appwrite self-hosted backups and encryption-key preservation (rolling documentation, checked September 2026); Appwrite 2.2.0 bucket defaults and upload controls; Appwrite 2.2.0 function execute roles, execution-key scopes, and enablement; Appwrite 2.2.0 Compose console path, persistent volumes, and Docker socket mounts; PocketBase authentication (rolling documentation, checked September 2026); Appwrite project API keys (rolling documentation, checked September 2026); PocketBase v0.40.4 installer and bootstrap-token lifetime; PocketBase v0.40.4 record CRUD handlers; PocketBase v0.40.4 record authorization and token validation; PocketBase v0.40.4 native TLS and ACME listener; Appwrite console MFA enrollment and recovery codes (rolling documentation, checked September 2026); Appwrite rate limits (rolling documentation, checked September 2026); and Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026). REASONED from the cited vendor documentation and available pinned sources; live behavior is not demonstrated. |
-| SELFHOSTED-BACKEND-SOURCE-1 | Complete pin-specific tracing for the Appwrite document read-authorization internals. The PocketBase CLI wrapper, the `--dev` flag default, the Appwrite requester privileged/API-key classification, and the Appwrite-repository document-read call sites are now cited above, alongside the earlier collection default, document-create permission branch, and backup archive pins. The pinned dependency now cites permission-role extraction and matching, collection/document read checks in `getDocument`, collection checks and adapter dispatch in `find`, and authorization status/skip behavior. Still untraced: what the adapter's `getDocument` and `find` do with the shared authorization instance, including any document-permission filtering (with or without a collection grant, and the non-skip `find` branch when `documentSecurity` is enabled), and what disabled authorization status bypasses there. | REASONED: pinned-source reading of PocketBase v0.40.4, Appwrite 2.2.0 and the utopia-php/database 7.3.9 excerpts above; the adapter internals stay open, complete pinned-source verification is not claimed, and live authorization is not demonstrated. |
+| SELFHOSTED-BACKEND-SOURCE-1 | Complete pin-specific tracing for the Appwrite document read-authorization internals. The PocketBase CLI wrapper, the `--dev` flag default, the Appwrite requester privileged/API-key classification, and the Appwrite-repository document-read call sites are now cited above, alongside the earlier collection default, document-create permission branch, and backup archive pins. The pinned dependency now cites permission-role extraction and matching, collection/document read checks in `getDocument`, collection checks and adapter dispatch in `find`, and authorization status/skip behavior. The SQL base used by MariaDB, MySQL, Postgres and SQLite is now traced: `getDocument` adds no permission filter, while `find` adds its document-permission predicate only with authorization enabled; the collection-grant skip, non-skip document-security branch, disabled-status bypass and Postgres predicate override are described above. Still untraced: Mongo, Redis, Memory and Pool; which adapter a deployment uses is not established. | REASONED: pinned-source reading of PocketBase v0.40.4, Appwrite 2.2.0 and the utopia-php/database 7.3.9 excerpts above; the other-adapter and deployment gaps stay open, complete pinned-source verification is not claimed, and live authorization is not demonstrated. |
 
 ## Sources (checked September 2026)
 
@@ -60620,6 +60653,15 @@ service result or deployed-bundle scan is claimed.
 - [utopia-php/database 7.3.9 find adapter dispatch](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Database.php#L8739-L8760).
 - [utopia-php/database 7.3.9 shared authorization instance](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Database.php#L1143-L1148).
 - [utopia-php/database 7.3.9 authorization status and skip](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Validator/Authorization.php#L135-L211).
+- [utopia-php/database 7.3.9 SQL document fetch](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQL.php#L378-L469).
+- [utopia-php/database 7.3.9 SQL find roles and read default](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQL.php#L2978-L2988).
+- [utopia-php/database 7.3.9 SQL find permission predicate and query constraints](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQL.php#L3074-L3131).
+- [utopia-php/database 7.3.9 SQL permission predicate](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQL.php#L1968-L1988).
+- [utopia-php/database 7.3.9 Postgres permission predicate](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Postgres.php#L1824-L1850).
+- [utopia-php/database 7.3.9 MariaDB SQL inheritance](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/MariaDB.php).
+- [utopia-php/database 7.3.9 MySQL MariaDB inheritance](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/MySQL.php).
+- [utopia-php/database 7.3.9 Postgres SQL inheritance](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Postgres.php).
+- [utopia-php/database 7.3.9 SQLite MariaDB inheritance](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQLite.php).
 - [Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/permissions).
 - [Appwrite legacy collection/document permissions (rolling documentation, checked October 2026)](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions).
 - [Appwrite environment reference and HTTPS deprecation wording (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
@@ -60752,14 +60794,18 @@ Claims (full source mapping in the JSON block below):
 - verify-bundle (REASONED; pb-docs, appwrite-docs): Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning.
 - local-guards (DEMONSTRATED; pb-docs, appwrite-docs): Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning.
 - local-syntax (DEMONSTRATED; appwrite, pb-docs, appwrite-docs): All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body.
-- source-limits (REASONED; appwrite-docs, pb-docs, appwrite, utopia-php-database): PocketBase CLI/--dev and Appwrite requester/call-site pins remain cited; utopia-php/database role matching, Database reads/dispatch and status/skip are cited. Adapter getDocument/find use of shared authorization, any document filtering with/without collection grants (including non-skip find with documentSecurity enabled), and disabled-status bypass remain untraced; live authorization is not demonstrated.
+- source-limits (REASONED; appwrite-docs, pb-docs, appwrite, utopia-php-database): PocketBase CLI/--dev, Appwrite requester/call-site and utopia-php/database role matching, Database reads/dispatch and status/skip pins remain cited. SQL adapter reads are traced; Mongo, Redis, Memory and Pool remain untraced, the deployed adapter is unknown, complete pinned-source verification is not claimed, and live authorization is not demonstrated.
+- source-limits-sql-get (REASONED; utopia-php-database): Pinned MariaDB, MySQL, Postgres and SQLite use SQL getDocument: ID lookup, tenant-query call and permission decoding, with no adapter authorization check. This guide reasons it adds no permission filter with or without collection grants; for non-metadata collections, Database read checks accept collection roles plus document roles only with documentSecurity enabled.
+- source-limits-sql-find (REASONED; utopia-php-database): Pinned SQL find defaults to read, takes shared authorization roles and adds a document-permission predicate only with status enabled. This guide reasons that a collection grant skips that filter; without a grant, enabled authorization with documentSecurity takes the non-skip branch and applies it.
+- source-limits-sql-predicate (REASONED; utopia-php-database): The pinned SQL predicate matches requester roles and action in the collection _perms table and includes getTenantQuery. Postgres overrides it with OR-ed JSONB containment tests for action-wrapped roles in _permissions, returning FALSE for no roles.
+- source-limits-sql-disabled (REASONED; utopia-php-database): This guide reasons from the pinned SQL code that disabled authorization omits find permission filtering while query and shared-table tenant conditions, ordering and pagination remain. SQL getDocument has no adapter authorization check to bypass; this guide also reasons that Database read permission checks are bypassed, with no live authorization demonstration.
 
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-19",
+  "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "fd9e0affef1fd7df9fb791f3226c4b9347ac2799eb585795afe7158cf43bbdc3",
+  "body_sha256": "6a349272345811856c3e23ad44e6a626924037ec52d421c26546e878eb127b01",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -60855,7 +60901,16 @@ Claims (full source mapping in the JSON block below):
         "scf82badc07e5": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Database.php#L8622-L8657",
         "s7cf5a05cf798": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Database.php#L8739-L8760",
         "s3389fa5854d5": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Database.php#L1143-L1148",
-        "s01a8ce8001e0": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Validator/Authorization.php#L135-L211"
+        "s01a8ce8001e0": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Validator/Authorization.php#L135-L211",
+        "s3864f749beea": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQL.php#L378-L469",
+        "s3965be77f402": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQL.php#L2978-L2988",
+        "s386e19ac0f42": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQL.php#L3074-L3131",
+        "s5439a153bbd6": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQL.php#L1968-L1988",
+        "s8b0dbf5677da": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Postgres.php#L1824-L1850",
+        "s35cc05f86ccd": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/MariaDB.php",
+        "s958fb4526355": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/MySQL.php",
+        "s590f2ad87ab9": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Postgres.php",
+        "sabffefbbe8f7": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQLite.php"
       }
     },
     "curl": {
@@ -60943,7 +60998,11 @@ Claims (full source mapping in the JSON block below):
     "verify-bundle": {"text": "Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:s773e441dd51c", "appwrite-docs:saa37bb5d4d7e"], "status": "REASONED", "verify": [3]},
     "local-guards": {"text": "Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite-docs:sa0bd132f7968", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments, and omitted or shortened `set --` lines."},
     "local-syntax": {"text": "All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body.", "components": ["appwrite", "pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite:s2bb21218c5ee", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "All three bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring."},
-    "source-limits": {"text": "PocketBase CLI/--dev and Appwrite requester/call-site pins remain cited; utopia-php/database role matching, Database reads/dispatch and status/skip are cited. Adapter getDocument/find use of shared authorization, any document filtering with/without collection grants (including non-skip find with documentSecurity enabled), and disabled-status bypass remain untraced; live authorization is not demonstrated.", "components": ["appwrite-docs", "pb-docs", "appwrite", "utopia-php-database"], "sources": ["appwrite-docs:s58ad28816c5d", "pb-docs:s9029ab974cf1", "appwrite:s7ba6f9c71972", "utopia-php-database:s44e735a78b9d", "utopia-php-database:sfda128d99ef9", "utopia-php-database:s610f3fb8fa73", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d", "utopia-php-database:scf82badc07e5", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s3389fa5854d5", "utopia-php-database:s01a8ce8001e0"], "status": "REASONED"}
+    "source-limits": {"text": "PocketBase CLI/--dev, Appwrite requester/call-site and utopia-php/database role matching, Database reads/dispatch and status/skip pins remain cited. SQL adapter reads are traced; Mongo, Redis, Memory and Pool remain untraced, the deployed adapter is unknown, complete pinned-source verification is not claimed, and live authorization is not demonstrated.", "components": ["appwrite-docs", "pb-docs", "appwrite", "utopia-php-database"], "sources": ["appwrite-docs:s58ad28816c5d", "pb-docs:s9029ab974cf1", "appwrite:s7ba6f9c71972", "utopia-php-database:s44e735a78b9d", "utopia-php-database:sfda128d99ef9", "utopia-php-database:s610f3fb8fa73", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d", "utopia-php-database:scf82badc07e5", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s3389fa5854d5", "utopia-php-database:s01a8ce8001e0", "utopia-php-database:s3864f749beea", "utopia-php-database:s3965be77f402", "utopia-php-database:s386e19ac0f42", "utopia-php-database:s5439a153bbd6", "utopia-php-database:s8b0dbf5677da", "utopia-php-database:s35cc05f86ccd", "utopia-php-database:s958fb4526355", "utopia-php-database:s590f2ad87ab9", "utopia-php-database:sabffefbbe8f7"], "status": "REASONED"},
+    "source-limits-sql-get": {"text": "Pinned MariaDB, MySQL, Postgres and SQLite use SQL getDocument: ID lookup, tenant-query call and permission decoding, with no adapter authorization check. This guide reasons it adds no permission filter with or without collection grants; for non-metadata collections, Database read checks accept collection roles plus document roles only with documentSecurity enabled.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s3864f749beea", "utopia-php-database:s35cc05f86ccd", "utopia-php-database:s958fb4526355", "utopia-php-database:s590f2ad87ab9", "utopia-php-database:sabffefbbe8f7", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d"], "status": "REASONED"},
+    "source-limits-sql-find": {"text": "Pinned SQL find defaults to read, takes shared authorization roles and adds a document-permission predicate only with status enabled. This guide reasons that a collection grant skips that filter; without a grant, enabled authorization with documentSecurity takes the non-skip branch and applies it.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s3965be77f402", "utopia-php-database:s386e19ac0f42", "utopia-php-database:scf82badc07e5", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s3389fa5854d5", "utopia-php-database:s01a8ce8001e0"], "status": "REASONED"},
+    "source-limits-sql-predicate": {"text": "The pinned SQL predicate matches requester roles and action in the collection _perms table and includes getTenantQuery. Postgres overrides it with OR-ed JSONB containment tests for action-wrapped roles in _permissions, returning FALSE for no roles.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s5439a153bbd6", "utopia-php-database:s8b0dbf5677da"], "status": "REASONED"},
+    "source-limits-sql-disabled": {"text": "This guide reasons from the pinned SQL code that disabled authorization omits find permission filtering while query and shared-table tenant conditions, ordering and pagination remain. SQL getDocument has no adapter authorization check to bypass; this guide also reasons that Database read permission checks are bypassed, with no live authorization demonstration.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s3864f749beea", "utopia-php-database:s386e19ac0f42", "utopia-php-database:s610f3fb8fa73", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d", "utopia-php-database:s01a8ce8001e0"], "status": "REASONED"}
   }
 }
 ````
