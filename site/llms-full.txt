@@ -946,11 +946,11 @@ Debian trixie and Ubuntu noble remain cited; the Debian bookworm and Ubuntu jamm
 RHEL 9 remains cited; the CentOS Stream 8 and 10 package manuals and Fedora rawhide dist-git manual instruct adding a simple PEM or DER certificate to `/etc/pki/ca-trust/source/anchors/` and running `update-ca-trust extract` (see Sources). CentOS Stream is not RHEL, and rawhide is Fedora's development branch, not a released Fedora; use on other RHEL releases (including 8 and 10), released Fedora and other CentOS Stream releases remains this guide's assessment, with release-specific citations absent.
 
 ```bash
-# Debian trixie/bookworm and Ubuntu noble/jammy; other releases: this guide's assessment
+# Debian trixie/bookworm and Ubuntu noble/jammy system trust store; other releases: this guide's assessment
 sudo cp server.crt /usr/local/share/ca-certificates/app-internal.crt
 sudo update-ca-certificates
 
-# RHEL 9; CentOS Stream 8/10 (not RHEL); Fedora rawhide (development, not a release)
+# RHEL 9 system trust store; CentOS Stream 8/10 (not RHEL); Fedora rawhide (development, not a release)
 # Other RHEL (including 8/10), released Fedora and other CentOS Stream: this guide's assessment
 sudo cp server.crt /etc/pki/ca-trust/source/anchors/app-internal.crt
 sudo update-ca-trust extract
@@ -1061,7 +1061,7 @@ Claims (full source mapping in the JSON block below):
 - mkcert (REASONED; mkcert): mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs.
 - mkcert-custody (REASONED; mkcert): Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.
 - debian-trust (REASONED; mkcert, debian-ca, ubuntu-ca, debian-bookworm, ubuntu-jammy): Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie/bookworm and Ubuntu noble/jammy; other Debian/Ubuntu releases remain this guide's assessment without release-specific citations.
-- rhel-trust (REASONED; mkcert, rhel-ca, centos-stream-8, centos-stream-10, fedora-rawhide): For simple PEM/DER certificates, install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract: RHEL 9, CentOS Stream 8/10 (not RHEL) and Fedora rawhide (development, not a release) are cited. Other RHEL (including 8/10), released Fedora and other CentOS Stream releases remain this guide's assessment without release-specific citations.
+- rhel-trust (REASONED; mkcert, rhel-ca, centos-stream-8, centos-stream-10, fedora-rawhide): Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract: RHEL 9 is cited, and the CentOS Stream 8/10 (not RHEL) and Fedora rawhide (development, not a release) manuals give this for simple PEM/DER certificates. Other RHEL (including 8/10), released Fedora and other CentOS Stream releases remain this guide's assessment without release-specific citations.
 - curl-trust (REASONED; openssl, curl-source): curl --cacert server.crt supplies explicit trust for app.internal.
 - requests-trust (REASONED; openssl, requests): REQUESTS_CA_BUNDLE supplies the certificate path to Python requests.
 - node-trust (REASONED; mkcert, node): NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js.
@@ -1078,7 +1078,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "7feabb6ad43c99172bbe8350f3fd695814685e0195854152ce902f9d736c9db6",
+  "body_sha256": "d210ab92ebc8fe64c2b086c32c4a4059b2288d3f15a5f9b1073336d23894018d",
   "components": {
     "openssl": {
       "name": "OpenSSL documentation (rolling)",
@@ -1227,7 +1227,7 @@ Claims (full source mapping in the JSON block below):
     "mkcert": {"text": "mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs.", "components": ["mkcert"], "sources": ["mkcert:s41ae17dba4ce"], "status": "REASONED"},
     "mkcert-custody": {"text": "Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.", "components": ["mkcert"], "sources": ["mkcert:s41ae17dba4ce"], "status": "REASONED"},
     "debian-trust": {"text": "Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie/bookworm and Ubuntu noble/jammy; other Debian/Ubuntu releases remain this guide's assessment without release-specific citations.", "components": ["mkcert", "debian-ca", "ubuntu-ca", "debian-bookworm", "ubuntu-jammy"], "sources": ["mkcert:s41ae17dba4ce", "debian-ca:s99e100121493", "ubuntu-ca:s4c3728cc6c12", "debian-bookworm:sa5e706846110", "ubuntu-jammy:s73a246e6ccfa"], "status": "REASONED"},
-    "rhel-trust": {"text": "For simple PEM/DER certificates, install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract: RHEL 9, CentOS Stream 8/10 (not RHEL) and Fedora rawhide (development, not a release) are cited. Other RHEL (including 8/10), released Fedora and other CentOS Stream releases remain this guide's assessment without release-specific citations.", "components": ["mkcert", "rhel-ca", "centos-stream-8", "centos-stream-10", "fedora-rawhide"], "sources": ["mkcert:s41ae17dba4ce", "rhel-ca:s876e668e7116", "centos-stream-8:s448b09073b79", "centos-stream-10:s2862e6522c85", "fedora-rawhide:s70fd69620a8b"], "status": "REASONED"},
+    "rhel-trust": {"text": "Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract: RHEL 9 is cited, and the CentOS Stream 8/10 (not RHEL) and Fedora rawhide (development, not a release) manuals give this for simple PEM/DER certificates. Other RHEL (including 8/10), released Fedora and other CentOS Stream releases remain this guide's assessment without release-specific citations.", "components": ["mkcert", "rhel-ca", "centos-stream-8", "centos-stream-10", "fedora-rawhide"], "sources": ["mkcert:s41ae17dba4ce", "rhel-ca:s876e668e7116", "centos-stream-8:s448b09073b79", "centos-stream-10:s2862e6522c85", "fedora-rawhide:s70fd69620a8b"], "status": "REASONED"},
     "curl-trust": {"text": "curl --cacert server.crt supplies explicit trust for app.internal.", "components": ["openssl", "curl-source"], "sources": ["openssl:se5d70578564e", "curl-source:s19ed21fc98f8"], "status": "REASONED"},
     "requests-trust": {"text": "REQUESTS_CA_BUNDLE supplies the certificate path to Python requests.", "components": ["openssl", "requests"], "sources": ["openssl:se5d70578564e", "requests:s21c6be6f6df4"], "status": "REASONED"},
     "node-trust": {"text": "NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js.", "components": ["mkcert", "node"], "sources": ["mkcert:s41ae17dba4ce", "node:s402034f5dcea"], "status": "REASONED"},
