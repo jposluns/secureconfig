@@ -241,7 +241,7 @@ def main():
         ("entity closer destination", "[t](https://example.com/__x&#41;)\n", False),
         ("entity closer angle destination", "[t](<https://example.com/__x&#41;y>)\n", False),
         ("entity closer destination beside bare URL", "[t](https://example.com/__x&#41;) and https://example.com/__x\n", True),
-        ("entity closers at digit limits", "[t](https://example.com/__x&#0000041;) [u](https://example.com/__y&#x000029;)\n", False),
+        ("entity closers at digit limits", "[t](https://example.com/__x&#00000041;) [u](https://example.com/__y&#x00000029;)\n", False),
         ("over-long entity closer beside bare URL", "[t](https://example.com/__x&#000000041;) and https://example.com/__x\n", True),
         ("over-long hex closer beside bare URL", "[t](https://example.com/__x&#x000000029;) and https://example.com/__x\n", True),
     )
