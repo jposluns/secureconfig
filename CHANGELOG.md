@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-21
+
+- `README.md`: the section headings "Why it matters" and "Why point your AI at it" are renamed "The gap and the standard" and "Built for AI assistants", per the maintainer's ruling; the section text is unchanged, and the plugin and `llms-full.txt` copies are regenerated (#736)
+
 ## 2026-10-20
 
 - Carried QA notes from earlier PRs: `agent-builders.md` rewords the body sentence on the console permission read to a type-only statement and adds a `debug-permission-read` claim citing Dify's `usePluginPermissionSettings`, which GETs `/workspaces/current/plugin/permission/fetch` typed as `Permissions`, a compile-time type that declares `install_permission` and `debug_permission` but does not prove the runtime fields (claims 63 to 64); `n8n.md` cites the controller-activation code and the controller registry's authentication middleware, which returns 401 `Unauthorized` on every controller route when the auth registry does not authenticate, and adds a `public-controller-order` claim that, as this guide's inference, a controller can respond before the validator's security check without skipping authentication (claims 37 to 38); `paas.md` rewrites three neither/nor constructions with three or more items; the `machine-auth.md` note (cite `crypto.py#L1`) is closed without change because neither the `key-hash` claim nor its body sentence states that import; the `identity-providers.md` Okta wording note stays open because its source was not available to check a rewording (#734)
