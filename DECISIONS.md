@@ -17,6 +17,20 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-10-21 (#737).** The maintainer answered four held questions through AskUser on
+  2026-10-21 (two on the README headings), choosing the recommended option in the first three and an alternative in the
+  fourth. No reasoning was given with the answers; where a reason is recorded below, it is the chosen option's text.
+  - The README section heading "Why it matters" becomes "The gap and the standard" (applied by #736). The chosen
+    option's text: it names what the section covers, the gap in deployment-security guidance and the standard these
+    guides hold to.
+  - The sibling heading "Why point your AI at it" becomes "Built for AI assistants" (applied by #736). The chosen
+    option's text: it removes the second "Why" heading so both read as plain section names.
+  - `DONE.md` may list the same TODO id once per pull request that retires part of it; the pair of id and pull
+    request identifies a row. The chosen option's text: each row stays one PR's completed part.
+  - The remaining TODO evidence rows (1.264, 1.266, 1.268, 1.273, 1.276, 1.312's Pinecone and Zilliz parts, 1.211,
+    1.290 and 1.294), which need vendor statements not published in a repository or a live test, or which state guide
+    requirements, are pursued with vendor documentation pages fetched over the web, accepting unpinned citations where
+    nothing better exists. This was not the recommended option (parking the rows); no rationale was stated for it.
 - **TODO row 1.179 split into individual rows, 2026-10-17 (#621).** The maintainer directed on
   2026-10-17 that row 1.179, a single very long row covering residual unsourced facts across many
   guides, be split into individual tasks with their own TODO numbers. Each piece of work should be
