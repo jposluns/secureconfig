@@ -1,8 +1,10 @@
 # DONE
 
 Closed backlog items, newest first. One line each, in the same shape as `TODO.md`: the permanent
-id, what it was, and how it ended. Ids are never reused. When only part of an item is retired,
-its doable remainder stays in `TODO.md` under the same id; the entry here closes only the retired part.
+id, what it was, and how it ended. Ids are never reused for a different item. When only part of an item is retired,
+its doable remainder stays in `TODO.md` under the same id; the entry here closes only the retired part. An
+id may therefore appear once per pull request that retires part of it: the pair of id and pull request
+identifies a row (maintainer ruling, 2026-10-21).
 
 **Done** means the work shipped. **Dropped** means it was considered and declined. **Retired** means
 a maintainer ruling ended the requirement without claiming the work ran. Each row says why it ended,

@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-21
+
+- `DECISIONS.md` records the maintainer's four rulings of 2026-10-21: the README heading renames (applied in #736), `DONE.md` ids repeating once per pull request, and pursuing the remaining vendor- or test-dependent TODO evidence rows with unpinned web documentation; `DONE.md`'s preamble now says an id may appear once per pull request that retires part of it, with the id and pull request identifying a row (#737)
+
 ## 2026-10-20
 
 - Carried QA notes from earlier PRs: `agent-builders.md` rewords the body sentence on the console permission read to a type-only statement and adds a `debug-permission-read` claim citing Dify's `usePluginPermissionSettings`, which GETs `/workspaces/current/plugin/permission/fetch` typed as `Permissions`, a compile-time type that declares `install_permission` and `debug_permission` but does not prove the runtime fields (claims 63 to 64); `n8n.md` cites the controller-activation code and the controller registry's authentication middleware, which returns 401 `Unauthorized` on every controller route when the auth registry does not authenticate, and adds a `public-controller-order` claim that, as this guide's inference, a controller can respond before the validator's security check without skipping authentication (claims 37 to 38); `paas.md` rewrites three neither/nor constructions with three or more items; the `machine-auth.md` note (cite `crypto.py#L1`) is closed without change because neither the `key-hash` claim nor its body sentence states that import; the `identity-providers.md` Okta wording note stays open because its source was not available to check a rewording (#734)
