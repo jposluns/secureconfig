@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against OpenID Connect Core 1.0, OpenID Connect Discovery 1.0, and OpenID Connect RP-Initiated Logout 1.0; 3 further sources are pinned to a commit and 10 carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 47 claims, all reasoned from cited sources.
+Written against OpenID Connect Core 1.0, OpenID Connect Discovery 1.0, and OpenID Connect RP-Initiated Logout 1.0; 4 further sources are pinned to a commit and 10 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 48 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -103,6 +103,8 @@ The [enterprise administration page](https://github.com/github/docs/blob/cb05161
 
 An active organization membership check establishes membership only; inference from the cited organization and GitHub Enterprise Server policies: membership alone does not prove MFA, because both pages say members without 2FA retain membership; neither establishes the membership API response for such a member. Guide assessment: MFA depends on the organization's effective 2FA requirement and whether it is enabled. Guide advice: verify that requirement before relying on it for MFA. This guide has not established that a member without 2FA fails the app's membership check; test with such an account before relying on it.
 
+GitHub's pinned REST API description says the [list-members endpoint](https://github.com/github/rest-api-description/blob/755ee33b4a81d51f6f07a902cce26cbec3b822f2/descriptions/api.github.com/api.github.com.json#L39346-L39376) (`GET /orgs/{org}/members`) takes a `2fa_disabled` filter, available only to organization owners, that returns only members without two-factor authentication enabled, so the description treats such accounts as members. Its [membership-check endpoint](https://github.com/github/rest-api-description/blob/755ee33b4a81d51f6f07a902cce26cbec3b822f2/descriptions/api.github.com/api.github.com.json#L39435-L39473) (`GET /orgs/{org}/members/{username}`) documents 204 when the requester is an organization member and the user is a member, with no 2FA condition stated. Its [authenticated-user membership endpoint](https://github.com/github/rest-api-description/blob/755ee33b4a81d51f6f07a902cce26cbec3b822f2/descriptions/api.github.com/api.github.com.json#L94998-L95037) (`GET /user/memberships/orgs/{org}`, the check in section 2) returns the authenticated user's membership if they are an active or pending member of the organization, 404 if they are not affiliated with it, and 403 if the request is made by a GitHub App that the organization has blocked, with no 2FA condition stated. This is an API description, not observed API behaviour. Guide assessment: an application that treats organization membership as proof of MFA would accept such a member; whether a given application's check fails for them is unestablished.
+
 ## Verify
 
 REASONED: discovery and anonymous-admin probes follow the Google OIDC and OpenID Connect sources below; the protected-endpoint check needs an application deployment, which was not supplied for this metadata review. The guide records no live outcome; expected anonymous rejection is stated in the block.
@@ -138,6 +140,7 @@ REASONED: preceding block; the discovery and anonymous-admin probes in the block
 - GitHub Enterprise Server 2FA context (pinned commit cb051611377a0d2904411e6157154e9b4953d870, checked October 2026): https://github.com/github/docs/blob/cb051611377a0d2904411e6157154e9b4953d870/content/admin/managing-accounts-and-repositories/managing-organizations-in-your-enterprise/requiring-two-factor-authentication-for-an-organization.md#L15
 - GitHub Enterprise Server required 2FA: members and outside collaborators (pinned commit cb051611377a0d2904411e6157154e9b4953d870, checked October 2026): https://github.com/github/docs/blob/cb051611377a0d2904411e6157154e9b4953d870/content/admin/managing-accounts-and-repositories/managing-organizations-in-your-enterprise/requiring-two-factor-authentication-for-an-organization.md#L30-L32
 - GitHub Enterprise Server 2FA non-compliance removals (pinned commit cb051611377a0d2904411e6157154e9b4953d870, checked October 2026): https://github.com/github/docs/blob/cb051611377a0d2904411e6157154e9b4953d870/content/admin/managing-accounts-and-repositories/managing-organizations-in-your-enterprise/requiring-two-factor-authentication-for-an-organization.md#L45
+- GitHub REST API description, list organization members, check organization membership and get the authenticated user's organization membership (pinned commit 755ee33b4a81d51f6f07a902cce26cbec3b822f2, checked October 2026): https://github.com/github/rest-api-description/blob/755ee33b4a81d51f6f07a902cce26cbec3b822f2/descriptions/api.github.com/api.github.com.json#L39346-L39376 ; https://github.com/github/rest-api-description/blob/755ee33b4a81d51f6f07a902cce26cbec3b822f2/descriptions/api.github.com/api.github.com.json#L39435-L39473 ; https://github.com/github/rest-api-description/blob/755ee33b4a81d51f6f07a902cce26cbec3b822f2/descriptions/api.github.com/api.github.com.json#L94998-L95037
 - Okta: OAuth 2.0 and OpenID Connect overview: https://developer.okta.com/docs/concepts/oauth-openid/ ; OIDC API reference (discovery, issuer, `amr`, `groups`): https://developer.okta.com/docs/api/openapi/okta-oauth/guides/overview
 - Okta: add a groups claim: https://developer.okta.com/docs/guides/customize-tokens-groups-claim/main/ ; sign users in to your web application: https://developer.okta.com/docs/guides/sign-into-web-app-redirect/-/main/ ; policies concept: https://developer.okta.com/docs/concepts/policies/
 - openid-client: https://github.com/panva/openid-client
@@ -173,6 +176,7 @@ Components (recorded basis):
 - entra: Microsoft Entra documentation (unknown)
 - github-2fa: GitHub organization two-factor authentication policy (cb051611377a0d2904411e6157154e9b4953d870)
 - github: GitHub OAuth and REST documentation (unknown)
+- github-rest-api: GitHub REST API description (755ee33b4a81d51f6f07a902cce26cbec3b822f2)
 - okta: Okta documentation (unknown)
 - oauth: OAuth security BCP and PKCE (unknown)
 - openid-client: openid-client (unknown)
@@ -230,15 +234,16 @@ Claims (full source mapping in the JSON block below):
 - browser-token-storage (REASONED; oauth, owasp-docs): Do not store ID or access tokens in localStorage or script-readable cookies; this server-side login recipe has no browser need for them.
 - client-secret-storage (REASONED; oauth, secret-rfc, owasp-docs, docker-build): Keep the web app client secret confidential. Prefer a secret manager (this guide's advice; OWASP lists it as an option). In containers, use an orchestrator-mounted secret or secret-store fetch where possible, and a runtime environment variable only if those are unavailable. Never commit the secret to a repository or bake it into an image (this guide's advice; Docker documents that build ARG and ENV persist in the final image).
 - github-org-mfa (REASONED; github, github-2fa): GitHub OAuth has no ID token; active membership checks establish only membership. Inference: that alone does not prove MFA, as cited policies retain members without 2FA. Guide assessment: MFA depends on the effective org 2FA requirement and whether enabled. Membership API/app-check results for such members are unestablished; guide advice: verify the requirement and test such an account before relying on membership for MFA.
+- github-org-mfa-api (REASONED; github-rest-api): GitHub's pinned REST API description says the list-members 2fa_disabled filter returns members without 2FA and documents 204 from /orgs/&lt;org&gt;/members/&lt;username&gt; for a member, with no 2FA condition; this is an API description, not observed behaviour. Guide assessment: an app treating org membership as MFA proof would accept such a member; whether a given app's check fails for them is unestablished.
 - authjs-session-storage (REASONED; authjs): Auth.js stores an encrypted JWT or database session ID in an HttpOnly cookie; use database sessions or a server blocklist when copied-cookie revocation is required.
 - mfa-session-check (REASONED; entra, okta): An app may additionally refuse an ID-token session showing no second factor only where the provider documents that claim; do not assume a portable MFA claim across providers.
 
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-20",
+  "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "ac108c1688d9ff48af2437b5f25db233ecf63ce1cb5fe2e66ca4e2b36eb6b992",
+  "body_sha256": "50217992ecff80fbc9c0288380408be3f731d8cafde70e472a6b2593d679c93d",
   "components": {
     "core": {
       "name": "OpenID Connect Core",
@@ -300,6 +305,15 @@ Claims (full source mapping in the JSON block below):
         "sf0d89c2d1756": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps",
         "s06cab1763f65": "https://docs.github.com/en/rest/orgs/members",
         "s36328325db87": "https://docs.github.com/en/rest/teams/members"
+      }
+    },
+    "github-rest-api": {
+      "name": "GitHub REST API description",
+      "basis": "755ee33b4a81d51f6f07a902cce26cbec3b822f2",
+      "sources": {
+        "s4d2626e102e2": "https://github.com/github/rest-api-description/blob/755ee33b4a81d51f6f07a902cce26cbec3b822f2/descriptions/api.github.com/api.github.com.json#L39346-L39376",
+        "s54f7eab44fed": "https://github.com/github/rest-api-description/blob/755ee33b4a81d51f6f07a902cce26cbec3b822f2/descriptions/api.github.com/api.github.com.json#L39435-L39473",
+        "s77daa176291b": "https://github.com/github/rest-api-description/blob/755ee33b4a81d51f6f07a902cce26cbec3b822f2/descriptions/api.github.com/api.github.com.json#L94998-L95037"
       }
     },
     "okta": {
@@ -423,6 +437,7 @@ Claims (full source mapping in the JSON block below):
     "browser-token-storage": {"text": "Do not store ID or access tokens in localStorage or script-readable cookies; this server-side login recipe has no browser need for them.", "components": ["oauth", "owasp-docs"], "sources": ["oauth:sde329701b60c", "owasp-docs:s41cb2204a4e2", "owasp-docs:s4f0aa80b1ef6"], "status": "REASONED"},
     "client-secret-storage": {"text": "Keep the web app client secret confidential. Prefer a secret manager (this guide's advice; OWASP lists it as an option). In containers, use an orchestrator-mounted secret or secret-store fetch where possible, and a runtime environment variable only if those are unavailable. Never commit the secret to a repository or bake it into an image (this guide's advice; Docker documents that build ARG and ENV persist in the final image).", "components": ["oauth", "secret-rfc", "owasp-docs", "docker-build"], "sources": ["oauth:sde329701b60c", "secret-rfc:sc01487b5e4ad", "owasp-docs:s6ea90d0c28e9", "owasp-docs:se0eb20386574", "docker-build:s09e6709d8eb4"], "status": "REASONED"},
     "github-org-mfa": {"text": "GitHub OAuth has no ID token; active membership checks establish only membership. Inference: that alone does not prove MFA, as cited policies retain members without 2FA. Guide assessment: MFA depends on the effective org 2FA requirement and whether enabled. Membership API/app-check results for such members are unestablished; guide advice: verify the requirement and test such an account before relying on membership for MFA.", "components": ["github", "github-2fa"], "sources": ["github:sce29d52054f5", "github:s06cab1763f65", "github-2fa:sa57ab4061d3c", "github-2fa:sa28abd053c4f", "github-2fa:sa50e82c6b843", "github-2fa:sce31f83d713d"], "status": "REASONED"},
+    "github-org-mfa-api": {"text": "GitHub's pinned REST API description says the list-members 2fa_disabled filter returns members without 2FA and documents 204 from /orgs/<org>/members/<username> for a member, with no 2FA condition; this is an API description, not observed behaviour. Guide assessment: an app treating org membership as MFA proof would accept such a member; whether a given app's check fails for them is unestablished.", "components": ["github-rest-api"], "sources": ["github-rest-api:s4d2626e102e2", "github-rest-api:s54f7eab44fed", "github-rest-api:s77daa176291b"], "status": "REASONED"},
     "authjs-session-storage": {"text": "Auth.js stores an encrypted JWT or database session ID in an HttpOnly cookie; use database sessions or a server blocklist when copied-cookie revocation is required.", "components": ["authjs"], "sources": ["authjs:s57969fbce700"], "status": "REASONED"},
     "mfa-session-check": {"text": "An app may additionally refuse an ID-token session showing no second factor only where the provider documents that claim; do not assume a portable MFA claim across providers.", "components": ["entra", "okta"], "sources": ["entra:sc592f9f58893", "entra:s46eca003125d", "okta:s380f2ddc93a1"], "status": "REASONED"}
   }
