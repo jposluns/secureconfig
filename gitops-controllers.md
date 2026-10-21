@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Argo CD v3.5.3 source (pinned to a commit), Flux OIDC introduction v2.9, Dex source v2.45.1, Redis source 8.2.3, and curl curl-8_14_1; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 55 claims, all reasoned from cited sources.
+Written against Argo CD v3.5.3 source (pinned to a commit), Flux OIDC introduction v2.9, Dex source v2.45.1, Redis source 8.2.3, curl curl-8_14_1, and go-grpc-middleware source v2.3.3; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 55 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -144,7 +144,7 @@ its absence does not close a pod socket.
 
 For v3.5.3, the base command-parameters ConfigMap omits both server switches; their CLI defaults
 are false. The base RBAC ConfigMap omits `policy.default` rather than declaring a role.
-The fetched RBAC loader passes the ConfigMap `policy.default` value to the enforcer; an omitted key yields an empty string, so this enforcer skips its additive default-role check. In `argocd-server`, the enforcer is built for `argocd-rbac-cm` with the built-in policy and a claims enforcer, and its `EnableEnforce` switch receives the inverse of the server's disable-auth option. The server starts the ConfigMap policy loader. By default, its gRPC interceptor chains authenticate each call with the server's `Authenticate` function unless authentication is disabled, storing the caller's claims (an empty claims value for an anonymous caller when anonymous access is enabled). From this source reading, three services override that authentication function for every method: the session and version services accept unauthenticated callers, and the settings service accepts them only for `Get`, returning any `Authenticate` error for its other methods. For the calls they accept unauthenticated, each attempts authentication to populate claims and ignores its error; the session service's comment says the server's authentication would run without its override. The middleware that applies these overrides was not among the fetched sources. The API services receive the enforcer: for example, application `List` keeps only applications that pass a `get` check, and `Create` checks `create`. Per-handler coverage and effective runtime overrides were not traced or tested.
+The fetched RBAC loader passes the ConfigMap `policy.default` value to the enforcer; an omitted key yields an empty string, so this enforcer skips its additive default-role check. In `argocd-server`, the enforcer is built for `argocd-rbac-cm` with the built-in policy and a claims enforcer, and its `EnableEnforce` switch receives the inverse of the server's disable-auth option. The server starts the ConfigMap policy loader. By default, its gRPC interceptor chains authenticate each call with the server's `Authenticate` function unless authentication is disabled, storing the caller's claims (an empty claims value for an anonymous caller when anonymous access is enabled). From this source reading, three services override that authentication function for every method: the session and version services accept unauthenticated callers, and the settings service accepts them only for `Get`, returning any `Authenticate` error for its other methods. For the calls they accept unauthenticated, each attempts authentication to populate claims and ignores its error; the session service's comment says the server's authentication would run without its override. The server imports its authentication interceptors from `go-grpc-middleware/v2`, which Argo CD's `go.mod` pins at v2.3.3; the `go.sum` module hash was not compared with the fetched v2.3.3 tree. In v2.3.3, the unary and stream server auth interceptors each call a service's `AuthFuncOverride`, with the full method name, in place of the default authentication function when the service value they receive implements it, and return its error before the handler runs; grpc-go, which supplies that service value, was not among the fetched sources. The API services receive the enforcer: for example, application `List` keeps only applications that pass a `get` check, and `Create` checks `create`. Per-handler coverage and effective runtime overrides were not traced or tested.
 Two settings decide who reaches the API without an account. Anonymous access is disabled by default
 (`users.anonymous.enabled`); keep it off, because an anonymous caller is granted whatever role
 `policy.default` names. Leave `policy.default` empty, as in the base
@@ -244,9 +244,9 @@ These stub outputs do not verify Argo CD authorization; the live comparison rema
 401 versus application JSON listing the expected application with a valid token.
 Backlog row 2.28 retains the remaining limits: which build recipe produced the deployed Redis tag,
 whether the published Dex image came from its release workflow, whether Redis's title overwrite
-also clears the `REDIS_PASSWORD` environment copy, whether `go-grpc-middleware/v2` v2.3.3's auth
-interceptor calls a service's `AuthFuncOverride` in place of `Authenticate`, and per-handler RBAC
-coverage in `argocd-server`. Those are not traced here, and the cited source readings are not live
+also clears the `REDIS_PASSWORD` environment copy, per-handler RBAC coverage in `argocd-server`, and
+whether grpc-go passes the registered service to the `go-grpc-middleware/v2` auth interceptors.
+Those are not traced here, and the cited source readings are not live
 observations.
 In the block below, paste the Argo CD bearer token alone at the hidden prompt: a multi-line paste leaves
 every line after the first for your shell to run.
@@ -402,7 +402,7 @@ need the guarded-subshell form so an unsubstituted address cannot time out and r
 - curl curl-8_14_1 (checked October 2026): [--data-binary posts data exactly as specified, with newlines and carriage returns preserved and @- reading stdin (4-32)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data-binary.md#L4-L32); [--data sends a POST request and strips carriage returns and newlines from @file input (4-49)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/data.md#L4-L49).
 
 Argo CD source claims below were checked offline at v3.5.3, commit
-`c9c369efcc5b2a0bd720803f8d14a1c3eaddf579`. Dex v2.45.1, Redis 8.2.3 and docker-library-redis v8.2.3 (commit `bcbc692165ce2241e194035041c5b5e01d2e1a5f`) were checked offline in October 2026. Retained readthedocs links provide operational guidance;
+`c9c369efcc5b2a0bd720803f8d14a1c3eaddf579`. Dex v2.45.1, Redis 8.2.3, docker-library-redis v8.2.3 (commit `bcbc692165ce2241e194035041c5b5e01d2e1a5f`) and go-grpc-middleware v2.3.3 (commit `390bcef25adebe4b0c7dbb365230c0a856737afe`) were checked offline in October 2026. The go-grpc-middleware version is the one Argo CD's `go.mod` pins; the `go.sum` module hash was not compared. Retained readthedocs links provide operational guidance;
 they were not rechecked online. Remaining source limits are identified above.
 
 - Application-controller metrics port handoff: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-application-controller/commands/argocd_application_controller.go#L192-L209
@@ -456,6 +456,10 @@ they were not rechecked online. Remaining source limits are identified above.
 - argocd-server session service authentication override: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/session/session.go#L94-L102
 - argocd-server version service authentication override: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/version/version.go#L75-L82
 - argocd-server settings service authentication override for Get: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/settings/settings.go#L193-L202
+- argocd-server import of the `go-grpc-middleware/v2` auth interceptors: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L37
+- Argo CD `go.mod` pin of `go-grpc-middleware/v2` at v2.3.3 (the `go.sum` module hash was not compared): https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/go.mod#L69
+- go-grpc-middleware v2.3.3 (commit 390bcef25adebe4b0c7dbb365230c0a856737afe; checked October 2026) override interface and unary auth interceptor calling a service's `AuthFuncOverride` in place of the default function: https://github.com/grpc-ecosystem/go-grpc-middleware/blob/v2.3.3/interceptors/auth/auth.go#L26-L50
+- go-grpc-middleware v2.3.3 (commit 390bcef25adebe4b0c7dbb365230c0a856737afe; checked October 2026) stream auth interceptor calling a service's `AuthFuncOverride` in place of the default function: https://github.com/grpc-ecosystem/go-grpc-middleware/blob/v2.3.3/interceptors/auth/auth.go#L52-L70
 - Application List RBAC filter: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/application/application.go#L288-L330
 - Application Create RBAC check: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/application/application.go#L348-L356
 - Argo CD Listener constants: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/common/common.go#L75-L92
@@ -541,6 +545,7 @@ Components (recorded basis):
 - redis-source: Redis source (8.2.3)
 - curl: curl (curl-8_14_1)
 - python: Python documentation (unknown)
+- grpc-middleware: go-grpc-middleware source (v2.3.3)
 
 Claims (full source mapping in the JSON block below):
 
@@ -578,7 +583,7 @@ Claims (full source mapping in the JSON block below):
 - argo-disable-auth (REASONED; argo): server.disable.auth defaults false; inspect effective args and environment because anonymous-off does not compensate for disabled authentication.
 - argo-default-role (REASONED; argo, argo-docs): Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings.
 - argo-rbac-wiring (REASONED; argo): argocd-server builds its enforcer for argocd-rbac-cm with the built-in policy and a claims enforcer, starts the ConfigMap loader, authenticates gRPC calls by default and stores claims, and passes the enforcer to API services; for example, application List filters on get and Create checks create. Per-handler coverage and runtime overrides remain unverified.
-- argo-auth-overrides (REASONED; argo): argocd-server's gRPC interceptors authenticate each call by default unless authentication is disabled, but, from this source reading, the session, version and settings services override that authentication function for every method and accept unauthenticated callers, the settings service only for Get; the middleware that applies these overrides was not among the fetched sources.
+- argo-auth-overrides (REASONED; argo, grpc-middleware): argocd-server's gRPC interceptors authenticate calls by default unless auth is disabled, but, from this source reading, the session, version and settings services override that authentication function for every method and accept unauthenticated callers, the settings service only for Get; pinned go-grpc-middleware v2.3.3 calls an override the service value implements (grpc-go unfetched).
 - argo-webhook (REASONED; argo-docs): /api/webhook accepts unauthenticated refresh events without a shared secret; configure one to limit spoofed reconciliation and resource exhaustion.
 - argo-projects (REASONED; argo-docs): Restrict AppProjects including the built-in default project; project constraints do not reduce a compromised controller's Kubernetes credentials.
 - argo-cluster-rbac (REASONED; argo-docs): Reduce controller and registered-cluster argocd-manager write permissions to needed namespaces/resources while retaining required read access.
@@ -605,7 +610,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "4fa9cc752e5a586dfdb284a750e199b75f1ef0635a6b2e8f39329a7c253251c7",
+  "body_sha256": "41ddc8ea36e65e96629233651748aa6e9a5f2a440990710bf59d1aa3ce745a24",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -678,7 +683,9 @@ Claims (full source mapping in the JSON block below):
         "sdb49a2a191ec": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/settings/settings.go#L193-L202",
         "sa198755acef1": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/repository/repository.go#L87-L106",
         "sdc5ce38b60a4": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/repository/repository.go#L227-L247",
-        "s63b5417fbbd0": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/repository/repository.go#L631-L706"
+        "s63b5417fbbd0": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/repository/repository.go#L631-L706",
+        "s19e9d1a1d4d2": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L37",
+        "sd94bce49cbb4": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/go.mod#L69"
       }
     },
     "flux-oidc": {
@@ -774,6 +781,14 @@ Claims (full source mapping in the JSON block below):
         "s7a54556e5dac": "https://docs.python.org/3/library/hmac.html",
         "s31fccd7d50e5": "https://docs.python.org/3/library/sys.html#sys.stdin"
       }
+    },
+    "grpc-middleware": {
+      "name": "go-grpc-middleware source",
+      "basis": "v2.3.3",
+      "sources": {
+        "s9ec5783f5bab": "https://github.com/grpc-ecosystem/go-grpc-middleware/blob/v2.3.3/interceptors/auth/auth.go#L26-L50",
+        "s4413e7e06e93": "https://github.com/grpc-ecosystem/go-grpc-middleware/blob/v2.3.3/interceptors/auth/auth.go#L52-L70"
+      }
     }
   },
   "claims": {
@@ -811,7 +826,7 @@ Claims (full source mapping in the JSON block below):
     "argo-disable-auth": {"text": "server.disable.auth defaults false; inspect effective args and environment because anonymous-off does not compensate for disabled authentication.", "components": ["argo"], "sources": ["argo:s6e8c96d23e05", "argo:s01a52daf078f", "argo:s210b24f04535"], "status": "REASONED"},
     "argo-default-role": {"text": "Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings.", "components": ["argo", "argo-docs"], "sources": ["argo:s0f7f1b3404d9", "argo:s3fcdf1601776", "argo:se987196f20c7", "argo:s3cb98aa5348d", "argo:s9bfcf07a6bcc", "argo:s32323471d785", "argo-docs:sf5f1c41f89bd"], "status": "REASONED"},
     "argo-rbac-wiring": {"text": "argocd-server builds its enforcer for argocd-rbac-cm with the built-in policy and a claims enforcer, starts the ConfigMap loader, authenticates gRPC calls by default and stores claims, and passes the enforcer to API services; for example, application List filters on get and Create checks create. Per-handler coverage and runtime overrides remain unverified.", "components": ["argo"], "sources": ["argo:s0cfce81f2017", "argo:s19cc383608d3", "argo:s44b42ce894fe", "argo:s751b24797922", "argo:s0a3fee6c3102", "argo:s2bf01b29602c", "argo:s11dddf48ac64", "argo:sab95c8799d63", "argo:s3fcdf1601776", "argo:se987196f20c7"], "status": "REASONED"},
-    "argo-auth-overrides": {"text": "argocd-server's gRPC interceptors authenticate each call by default unless authentication is disabled, but, from this source reading, the session, version and settings services override that authentication function for every method and accept unauthenticated callers, the settings service only for Get; the middleware that applies these overrides was not among the fetched sources.", "components": ["argo"], "sources": ["argo:s751b24797922", "argo:s2bf01b29602c", "argo:s27142bd7b0a7", "argo:sab27d21a6f4f", "argo:sdb49a2a191ec"], "status": "REASONED"},
+    "argo-auth-overrides": {"text": "argocd-server's gRPC interceptors authenticate calls by default unless auth is disabled, but, from this source reading, the session, version and settings services override that authentication function for every method and accept unauthenticated callers, the settings service only for Get; pinned go-grpc-middleware v2.3.3 calls an override the service value implements (grpc-go unfetched).", "components": ["argo", "grpc-middleware"], "sources": ["argo:s751b24797922", "argo:s2bf01b29602c", "argo:s27142bd7b0a7", "argo:sab27d21a6f4f", "argo:sdb49a2a191ec", "argo:s19e9d1a1d4d2", "argo:sd94bce49cbb4", "grpc-middleware:s9ec5783f5bab", "grpc-middleware:s4413e7e06e93"], "status": "REASONED"},
     "argo-webhook": {"text": "/api/webhook accepts unauthenticated refresh events without a shared secret; configure one to limit spoofed reconciliation and resource exhaustion.", "components": ["argo-docs"], "sources": ["argo-docs:sdac90731b97d"], "status": "REASONED"},
     "argo-projects": {"text": "Restrict AppProjects including the built-in default project; project constraints do not reduce a compromised controller's Kubernetes credentials.", "components": ["argo-docs"], "sources": ["argo-docs:s9357e3b59e84", "argo-docs:s51e21b74ece6"], "status": "REASONED"},
     "argo-cluster-rbac": {"text": "Reduce controller and registered-cluster argocd-manager write permissions to needed namespaces/resources while retaining required read access.", "components": ["argo-docs"], "sources": ["argo-docs:s51e21b74ece6"], "status": "REASONED"},
