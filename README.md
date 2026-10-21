@@ -8,11 +8,11 @@ Security guides your AI assistant can follow, verify, and be honest about.
 
 A library of short, generic, copy-ready guides covering the full deployment surface of a modern project: certificates and tunnels; human and machine identity, MFA, and secrets; web servers and proxies; language runtimes and frameworks; containers and Kubernetes; hosts, cloud firewalls, PaaS, and rented GPU clouds; databases, storage, and messaging; the AI stack itself (model servers, vector databases, MCP servers, agent and chat UIs, LLM observability); and the operational controls around a deployment, from first run through teardown. At the time of writing that is 102 guides across the 12 categories indexed below, plus [controls-reference.md](controls-reference.md) for any service that has no guide yet.
 
-## Why it matters
+## The gap and the standard
 
 Publicly reachable services keep shipping with the gap on the deployment surface: services listening on plain HTTP, admin consoles with no login, AI tools exposed on their defaults. These guides close that gap, and they hold themselves to the standard they ask of you. Contributions must take every configuration line from the vendor documentation cited in the guide, and Verify steps declare what they rest on: DEMONSTRATED means the check ran against both the exposed and the fixed state, REASONED means it is derived from cited vendor behaviour and says so, and a reasoned step is never presented as verified. Where a tool has no native control, the guide says so plainly instead of inventing one. Most guides also carry machine-readable front matter recording the sources checked and, where known, the exact versions. An automated gate suite under [tools/](tools/) checks the structure of these declarations on every change, with a recorded list of older steps still being brought in line; whether a demonstration ran or a reasoned step is justified is checked in review, not by the gates.
 
-## Why point your AI at it
+## Built for AI assistants
 
 This repository gives an AI assistant the security steps to apply and a way to be honest about what it verified. The guides are written for machine consumption: stable raw URLs, a machine-readable index at [secureconfig.ai/llms.txt](https://secureconfig.ai/llms.txt), every guide in one file at [secureconfig.ai/llms-full.txt](https://secureconfig.ai/llms-full.txt), baseline rules an assistant can apply directly (next section), a decision guide mapping deployments to guides, and a verification checklist that requires reporting what could not be tested rather than asserting a pass.
 
