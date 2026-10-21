@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-21
 
-- `README.md`: the section headings "Why it matters" and "Why point your AI at it" are renamed "The gap and the standard" and "Built for AI assistants", per the maintainer's ruling; the section text is unchanged, and the plugin and `llms-full.txt` copies are regenerated (#736)
+- `README.md`: the two section headings that asked why the repository matters and why to aim an AI assistant at it are renamed "The gap and the standard" and "Built for AI assistants", per the maintainer's ruling; the section text is unchanged, and the plugin and `llms-full.txt` copies are regenerated (#736)
 
 ## 2026-10-20
 
