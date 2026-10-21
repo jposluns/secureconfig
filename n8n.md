@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against n8n listener source n8n@2.40.6, n8n runtime source n8n@2.40.6, n8n environment policy minimum 2.18.0, n8n SSRF filter minimum 2.12.0, n8n 2.0 default exclusion source n8n@2.0.0, n8n 1.x default exclusion source n8n@1.123.85, and express-openapi-validator v5.5.3, plus 2 more recorded bases; 2 further sources carry no recorded version. Metadata reviewed 2026-10-20; documentation checked October 2026. The guide records 38 claims, all reasoned from cited sources.
+Written against n8n listener source n8n@2.40.6, n8n runtime source n8n@2.40.6, n8n environment policy minimum 2.18.0, n8n SSRF filter minimum 2.12.0, n8n 2.0 default exclusion source n8n@2.0.0, n8n 1.x default exclusion source n8n@1.123.85, and express-openapi-validator v5.5.3, plus 4 more recorded bases; 2 further sources are pinned to a commit and 2 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked October 2026. The guide records 39 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -61,7 +61,7 @@ N8N_SSL_CERT=/path/to/fullchain.pem
 
 ## 5. Code-node isolation and outbound requests
 
-- Workflow editors can run code: the **Code** node executes JavaScript/Python and the **Execute Command** node runs the command through a shell in a child process of the n8n process executing the node. At n8n 2.40.6, `NODES_EXCLUDE` disables Execute Command by default; the commit-pinned n8n 2.0.0 and 2.43.8 defaults exclude Execute Command and Local File Trigger, while the commit-pinned n8n 1.123.85 default on the 1.x line is empty (excludes none). This guide infers from these snapshots a default change between the cited 1.x and 2.x versions; among the cited sources, only the rolling 2.0 changes page, which is unversioned, dates this default to n8n 2.0. This guide's assessment is that comparing these releases establishes neither the default in every intermediate release nor the first introducing release, which remains unverified. Leave it off unless a workflow truly needs it. Run code on hardened EXTERNAL task runners rather than the internal mode, which the vendor calls insecure by design, and keep workflow `$env` access blocked (`N8N_BLOCK_ENV_ACCESS_IN_NODE=true`; at n8n 2.40.6 the `$env` proxy is blocked unless the variable is set to `false`). This guide's assessment is that this guard alone does not establish isolation of every node or Code `process.env`. Allow only the modules a workflow needs, narrowly, and set the allowlist where the RUNNER reads it, not just on the main n8n container (whose values the external launcher overrides): for the JavaScript runner, `NODE_FUNCTION_ALLOW_BUILTIN` and `NODE_FUNCTION_ALLOW_EXTERNAL` under `env-overrides` in the launcher's `/etc/n8n-task-runners.json`; for the Python runner, `N8N_RUNNERS_STDLIB_ALLOW` and `N8N_RUNNERS_EXTERNAL_ALLOW`. An unset-then-`*` allowlist gives arbitrary module access. Because these defaults have shifted across versions and one vendor table is stale, set each value explicitly and confirm it on your installed version.
+- Workflow editors can run code: the **Code** node executes JavaScript/Python and the **Execute Command** node runs the command through a shell in a child process of the n8n process executing the node. At n8n 2.40.6, `NODES_EXCLUDE` disables Execute Command by default; the commit-pinned n8n 2.0.0 and 2.43.8 defaults exclude Execute Command and Local File Trigger, while the commit-pinned n8n 1.123.85 default on the 1.x line is empty (excludes none). Commit a4757cf0 ("chore: Initial V2 changes", 2025-12-01) changed this default from empty to those two node types; n8n 2.0.0-rc.0, the earliest 2.x tag, has that default, while n8n 1.123.0 keeps it empty, and the four later commits to the file through ea8417e2 do not change it. This guide infers from that file history and these tags that the default applies from 2.0.0-rc.0 onward and not in the 1.123.x line; no release was run, the 1.123.x tags between 1.123.0 and 1.123.85 were not read, and a release branch can diverge from the file history, so confirm the default on your installed version. The rolling 2.0 changes page, which is unversioned, also lists both nodes as disabled by default in n8n 2.0. Leave it off unless a workflow truly needs it. Run code on hardened EXTERNAL task runners rather than the internal mode, which the vendor calls insecure by design, and keep workflow `$env` access blocked (`N8N_BLOCK_ENV_ACCESS_IN_NODE=true`; at n8n 2.40.6 the `$env` proxy is blocked unless the variable is set to `false`). This guide's assessment is that this guard alone does not establish isolation of every node or Code `process.env`. Allow only the modules a workflow needs, narrowly, and set the allowlist where the RUNNER reads it, not just on the main n8n container (whose values the external launcher overrides): for the JavaScript runner, `NODE_FUNCTION_ALLOW_BUILTIN` and `NODE_FUNCTION_ALLOW_EXTERNAL` under `env-overrides` in the launcher's `/etc/n8n-task-runners.json`; for the Python runner, `N8N_RUNNERS_STDLIB_ALLOW` and `N8N_RUNNERS_EXTERNAL_ALLOW`. An unset-then-`*` allowlist gives arbitrary module access. Because these defaults have shifted across versions and one vendor table is stale, set each value explicitly and confirm it on your installed version.
 - At n8n 2.40.6, the JS task runner builds a context with module resolution, console, workflow static data, selected native globals, the data proxy, RPC and additional properties. This guide reasons that no direct `process` binding appears in the explicit native list or context; imported modules and injected properties prevent treating that omission as complete `process.env` isolation.
 - At n8n 2.40.6, the JS data proxy receives `envProviderState`; if absent, its fallback is `env: {}`, `isEnvAccessBlocked: false` and `isProcessAvailable: true`. This guide reasons that the fallback avoids using the runner environment for `$env`; the cited consumer does not establish the contents or production of incoming state.
 - At n8n 2.40.6, JS all-items and per-item execution use `runInContext` in secure mode and `runDirectly` in insecure mode. This guide reasons that the latter, using `new Function` with `with(context)`, can resolve ambient `process.env` unless shadowed; this is not a live demonstration or proof of complete isolation in secure mode.
@@ -148,6 +148,10 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 - n8n@1.123.85 commit-pinned `NODES_EXCLUDE` default excludes none (checked October 2026): https://github.com/n8n-io/n8n/blob/8ea1ccdf82fd040f2568a6255ed663f32f0fc41d/packages/%40n8n/config/src/configs/nodes.config.ts#L30-L31
 - n8n@2.0.0 commit-pinned `NODES_EXCLUDE` default excludes Execute Command and Local File Trigger (checked October 2026): https://github.com/n8n-io/n8n/blob/a8ecda44f7627630bc8b78cf671405157ad41c4f/packages/%40n8n/config/src/configs/nodes.config.ts#L35-L36
 - n8n@2.43.8 commit-pinned `NODES_EXCLUDE` default excludes Execute Command and Local File Trigger (checked October 2026): https://github.com/n8n-io/n8n/blob/bf8e523d409b74bceb990a37e9a2dc7ffe1507d7/packages/%40n8n/config/src/configs/nodes.config.ts#L38-L39
+- n8n pinned tag n8n@2.0.0-rc.0, the earliest 2.x tag, `NODES_EXCLUDE` default excludes Execute Command and Local File Trigger (checked October 2026): https://github.com/n8n-io/n8n/blob/n8n%402.0.0-rc.0/packages/%40n8n/config/src/configs/nodes.config.ts#L35-L36
+- n8n pinned tag n8n@1.123.0 `NODES_EXCLUDE` default excludes none (checked October 2026): https://github.com/n8n-io/n8n/blob/n8n%401.123.0/packages/%40n8n/config/src/configs/nodes.config.ts#L30-L31
+- n8n commit a4757cf009839a951e8cd5295cd9d549a21f5714 ("chore: Initial V2 changes (#22553)", 2025-12-01) changes the `NODES_EXCLUDE` default from none to Execute Command and Local File Trigger (checked October 2026): https://github.com/n8n-io/n8n/commit/a4757cf009839a951e8cd5295cd9d549a21f5714 and https://github.com/n8n-io/n8n/blob/a4757cf009839a951e8cd5295cd9d549a21f5714/packages/%40n8n/config/src/configs/nodes.config.ts#L35-L36
+- n8n later `nodes.config.ts` commits through ea8417e29ad6f8b981d9a04b17283d5d77f2b5bb, none changing the `NODES_EXCLUDE` default (checked October 2026): https://github.com/n8n-io/n8n/commit/5ec61a6a1742208bf07e9f717ba2ff4888647d17 and https://github.com/n8n-io/n8n/commit/9e4b4beed92e1df8ca79b9e285efe123e6d4dd31 and https://github.com/n8n-io/n8n/commit/5e376b69edf3eb10dfa7f4a735ddf36a5cb027bf and https://github.com/n8n-io/n8n/commit/ea8417e29ad6f8b981d9a04b17283d5d77f2b5bb
 - n8n pinned tag n8n@2.40.6 owner setup handler (`skipAuth`, owner cookie): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/cli/src/controllers/owner.controller.ts#L22-L29
 - n8n pinned tag n8n@2.40.6 default REST endpoint (`rest`): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/%40n8n/config/src/configs/endpoints.config.ts#L153-L155
 - n8n pinned tag n8n@2.40.6 login controller (`POST /login`): https://github.com/n8n-io/n8n/blob/n8n%402.40.6/packages/cli/src/controllers/auth.controller.ts#L38-L54
@@ -211,6 +215,10 @@ Components (recorded basis):
 - validator: express-openapi-validator (v5.5.3)
 - v2-later-default: n8n later 2.x default exclusion source (n8n@2.43.8)
 - launcher: n8n task-runner launcher (1.5.1)
+- v2-first-default: n8n earliest 2.x tag default exclusion source (n8n@2.0.0-rc.0)
+- v1-first-default: n8n 1.123.0 default exclusion source (n8n@1.123.0)
+- v2-change: n8n default exclusion change commit (a4757cf009839a951e8cd5295cd9d549a21f5714)
+- v2-later-commits: n8n later nodes config commits (ea8417e29ad6f8b981d9a04b17283d5d77f2b5bb)
 
 Claims (full source mapping in the JSON block below):
 
@@ -231,7 +239,8 @@ Claims (full source mapping in the JSON block below):
 - webhook-auth (REASONED; docs): Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential.
 - auth-boundaries (REASONED; docs): Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries.
 - signature (REASONED; docs): A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials.
-- code-execution (REASONED; docs, v2-docs, runtime, v2-default, v1-default, v2-later-default): Code: JavaScript/Python; Execute Command: shell child of n8n, off by default at 2.40.6 and with Local File Trigger at 2.0.0/2.43.8; 1.123.85 (1.x line) excludes none. Inferred: a change between these 1.x and 2.x versions. Of cited sources, only the unversioned rolling 2.0 changes page dates it to 2.0. Assessment: intermediate-release defaults and the first introducing release are not established.
+- code-execution (REASONED; docs, v2-docs, runtime, v2-default, v1-default, v2-later-default): Code runs JavaScript/Python and Execute Command a shell child of n8n; NODES_EXCLUDE turns Execute Command off by default at 2.40.6, and with Local File Trigger at 2.0.0 and 2.43.8, while 1.123.85 (1.x line) excludes none. The unversioned rolling 2.0 changes page also lists both as disabled by default in 2.0.
+- code-execution-introduced (REASONED; v2-change, v2-later-commits, v2-first-default, v1-first-default, v1-default): Commit a4757cf0 (2025-12-01) changed the NODES_EXCLUDE default from none to Execute Command and Local File Trigger; 2.0.0-rc.0, the earliest 2.x tag, has it, 1.123.0 and 1.123.85 do not, and four later file commits keep it. Inferred, without running releases: excluded from 2.0.0-rc.0 onward, not in the 1.123.x line; unread tags and release branches can differ.
 - runners (REASONED; docs): Use hardened external task runners; vendor describes internal mode as insecure by design.
 - environment (REASONED; runtime): At n8n 2.40.6, keep workflow `$env` access blocked with `N8N_BLOCK_ENV_ACCESS_IN_NODE=true`; the proxy is blocked unless it is `false`. This guide's assessment is that this guard alone does not establish isolation of every node or Code `process.env`.
 - environment-js-context (REASONED; runtime): At n8n 2.40.6, the JS task runner builds a context with module resolution, console, workflow static data, selected native globals, the data proxy, RPC and additional properties. This guide reasons that no direct `process` binding appears in the explicit native list or context; imported modules and injected properties prevent treating that omission as complete `process.env` isolation.
@@ -256,9 +265,9 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-20",
+  "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "5ee7d8385aa62183796513ae32540248c4eee6fb8bba0e88c75bf27f7ca54b9a",
+  "body_sha256": "e809d11b3a720badafec47d113e9499a8cf7071d394f9295fae52b60f6b793e8",
   "components": {
     "server": {
       "name": "n8n listener source",
@@ -385,6 +394,38 @@ Claims (full source mapping in the JSON block below):
         "s0354dcddb708": "https://github.com/n8n-io/task-runner-launcher/blob/871cb76bc35c990f368eaa788f0b4ce7b145e143/internal/env/env.go#L13-L142",
         "s6a7cebb18624": "https://github.com/n8n-io/task-runner-launcher/blob/871cb76bc35c990f368eaa788f0b4ce7b145e143/internal/config/config.go#L95-L99"
       }
+    },
+    "v2-first-default": {
+      "name": "n8n earliest 2.x tag default exclusion source",
+      "basis": "n8n@2.0.0-rc.0",
+      "sources": {
+        "saa97fedeb022": "https://github.com/n8n-io/n8n/blob/n8n%402.0.0-rc.0/packages/%40n8n/config/src/configs/nodes.config.ts#L35-L36"
+      }
+    },
+    "v1-first-default": {
+      "name": "n8n 1.123.0 default exclusion source",
+      "basis": "n8n@1.123.0",
+      "sources": {
+        "sb99e9bb32834": "https://github.com/n8n-io/n8n/blob/n8n%401.123.0/packages/%40n8n/config/src/configs/nodes.config.ts#L30-L31"
+      }
+    },
+    "v2-change": {
+      "name": "n8n default exclusion change commit",
+      "basis": "a4757cf009839a951e8cd5295cd9d549a21f5714",
+      "sources": {
+        "sd5273e65f9ae": "https://github.com/n8n-io/n8n/commit/a4757cf009839a951e8cd5295cd9d549a21f5714",
+        "s32c46ff8799b": "https://github.com/n8n-io/n8n/blob/a4757cf009839a951e8cd5295cd9d549a21f5714/packages/%40n8n/config/src/configs/nodes.config.ts#L35-L36"
+      }
+    },
+    "v2-later-commits": {
+      "name": "n8n later nodes config commits",
+      "basis": "ea8417e29ad6f8b981d9a04b17283d5d77f2b5bb",
+      "sources": {
+        "s5781e44679c8": "https://github.com/n8n-io/n8n/commit/5ec61a6a1742208bf07e9f717ba2ff4888647d17",
+        "s879c80d47bb5": "https://github.com/n8n-io/n8n/commit/9e4b4beed92e1df8ca79b9e285efe123e6d4dd31",
+        "s031c835d5cd3": "https://github.com/n8n-io/n8n/commit/5e376b69edf3eb10dfa7f4a735ddf36a5cb027bf",
+        "se440fd8c8db4": "https://github.com/n8n-io/n8n/commit/ea8417e29ad6f8b981d9a04b17283d5d77f2b5bb"
+      }
     }
   },
   "claims": {
@@ -405,7 +446,8 @@ Claims (full source mapping in the JSON block below):
     "webhook-auth": {"text": "Webhook None is open; controlled callers use per-node Basic, Header or JWT auth with the matching credential.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
     "auth-boundaries": {"text": "Editor sessions, /api/v1 with X-N8N-API-KEY and per-node webhook auth are separate boundaries.", "components": ["docs"], "sources": ["docs:s7ce8bf5b35e8", "docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
     "signature": {"text": "A None webhook must validate the provider signature before downstream processing when callers cannot supply native webhook credentials.", "components": ["docs"], "sources": ["docs:sab23639d9b2a", "docs:sa18a30d563bd"], "status": "REASONED"},
-    "code-execution": {"text": "Code: JavaScript/Python; Execute Command: shell child of n8n, off by default at 2.40.6 and with Local File Trigger at 2.0.0/2.43.8; 1.123.85 (1.x line) excludes none. Inferred: a change between these 1.x and 2.x versions. Of cited sources, only the unversioned rolling 2.0 changes page dates it to 2.0. Assessment: intermediate-release defaults and the first introducing release are not established.", "components": ["docs", "v2-docs", "runtime", "v2-default", "v1-default", "v2-later-default"], "sources": ["docs:s290535cad2ea", "v2-docs:s994d1a49cf93", "runtime:s42b6fad131ec", "runtime:s3bfd6e00f52b", "v2-default:s0b6707ff8f67", "v1-default:s10f7d5ae15e5", "v1-default:scd888024007a", "v2-default:sed9acc6f59f6", "v2-later-default:sa172b5ee013d"], "status": "REASONED"},
+    "code-execution": {"text": "Code runs JavaScript/Python and Execute Command a shell child of n8n; NODES_EXCLUDE turns Execute Command off by default at 2.40.6, and with Local File Trigger at 2.0.0 and 2.43.8, while 1.123.85 (1.x line) excludes none. The unversioned rolling 2.0 changes page also lists both as disabled by default in 2.0.", "components": ["docs", "v2-docs", "runtime", "v2-default", "v1-default", "v2-later-default"], "sources": ["docs:s290535cad2ea", "v2-docs:s994d1a49cf93", "runtime:s42b6fad131ec", "runtime:s3bfd6e00f52b", "v2-default:s0b6707ff8f67", "v1-default:s10f7d5ae15e5", "v1-default:scd888024007a", "v2-default:sed9acc6f59f6", "v2-later-default:sa172b5ee013d"], "status": "REASONED"},
+    "code-execution-introduced": {"text": "Commit a4757cf0 (2025-12-01) changed the NODES_EXCLUDE default from none to Execute Command and Local File Trigger; 2.0.0-rc.0, the earliest 2.x tag, has it, 1.123.0 and 1.123.85 do not, and four later file commits keep it. Inferred, without running releases: excluded from 2.0.0-rc.0 onward, not in the 1.123.x line; unread tags and release branches can differ.", "components": ["v2-change", "v2-later-commits", "v2-first-default", "v1-first-default", "v1-default"], "sources": ["v2-change:sd5273e65f9ae", "v2-change:s32c46ff8799b", "v2-later-commits:s5781e44679c8", "v2-later-commits:s879c80d47bb5", "v2-later-commits:s031c835d5cd3", "v2-later-commits:se440fd8c8db4", "v2-first-default:saa97fedeb022", "v1-first-default:sb99e9bb32834", "v1-default:s10f7d5ae15e5", "v1-default:scd888024007a"], "status": "REASONED"},
     "runners": {"text": "Use hardened external task runners; vendor describes internal mode as insecure by design.", "components": ["docs"], "sources": ["docs:s290535cad2ea"], "status": "REASONED"},
     "environment": {"text": "At n8n 2.40.6, keep workflow `$env` access blocked with `N8N_BLOCK_ENV_ACCESS_IN_NODE=true`; the proxy is blocked unless it is `false`. This guide's assessment is that this guard alone does not establish isolation of every node or Code `process.env`.", "components": ["runtime"], "sources": ["runtime:se407529f282f", "runtime:sa8c51cda4320"], "status": "REASONED"},
     "environment-js-context": {"text": "At n8n 2.40.6, the JS task runner builds a context with module resolution, console, workflow static data, selected native globals, the data proxy, RPC and additional properties. This guide reasons that no direct `process` binding appears in the explicit native list or context; imported modules and injected properties prevent treating that omission as complete `process.env` isolation.", "components": ["runtime"], "sources": ["runtime:saa627175e459", "runtime:s873900e97684"], "status": "REASONED"},
