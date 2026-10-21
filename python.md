@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Django documentation 6.1, Python http.server documentation 3.14.4, Python http.server source v3.14.4, Python standard library documentation 3.14, CPython ssl source and documentation v3.14.8, CPython secrets documentation and source v3.14.8, PyOTP v2.9.0, and qrcode v8.2, plus 6 more recorded bases; 5 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources.
+Written against Django documentation 6.1, Python http.server documentation 3.14.4, Python http.server source v3.14.4, Python standard library documentation 3.14, CPython ssl source and documentation v3.14.8, CPython secrets documentation and source v3.14.8, PyOTP v2.9.0, and qrcode v8.2, plus 6 more recorded bases; 5 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -55,7 +55,7 @@ This guide's advice: Bind to `0.0.0.0` only when either (a) the process itself t
 This guide's advice for managed platforms: do not add extra listeners; bind only the listener required by your deployment. The documented HTTP ingress mappings are:
 
 - Render web services must bind `0.0.0.0`. Render recommends the `PORT` environment variable (at the time of writing, default port 10000, configurable), can usually detect another bound port, and requires the public HTTP server to use `PORT` when multiple ports are bound ([web services](https://render.com/docs/web-services)).
-- Heroku assigns each web process its port through `PORT` ([runtime principles](https://devcenter.heroku.com/articles/runtime-principles)). Fir Private Spaces networking uses IPv6 by default; Heroku warns that IPv4-only assumptions do not bind properly and recommends an IPv6 or dual-stack listener, typically `::` ([generations](https://devcenter.heroku.com/articles/generations)). These pages do not establish Cedar's listener address.
+- Heroku assigns each web process its port through `PORT` ([runtime principles](https://devcenter.heroku.com/articles/runtime-principles)), and Heroku's Node.js deployment page says the web process must bind to that port or the dyno does not start ([deploying Node.js](https://devcenter.heroku.com/articles/deploying-nodejs)). Fir Private Spaces networking uses IPv6 by default; Heroku warns that IPv4-only assumptions do not bind properly and recommends an IPv6 or dual-stack listener, typically `::` ([generations](https://devcenter.heroku.com/articles/generations)). Heroku's HTTP routing page lists IPv6 as unsupported in the Cedar generation without naming a listener address ([HTTP routing](https://devcenter.heroku.com/articles/http-routing)). This guide's assessment: none of the Heroku pages checked (runtime principles, HTTP routing, generations, dynos, Procfile, Gunicorn deployment, Node.js deployment, the Python and Node.js getting-started tutorials and Node.js best practices, all listed in Sources) states a listener address for Cedar; apart from the Fir recommendation above, the addresses they show are local-development URLs and sample log output. That absence is not evidence that Heroku accepts any listener address.
 - Fly Proxy HTTP services must be reachable over IPv4: use `0.0.0.0` and match the configured `internal_port` to the app listener ([service binding](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42)). IPv4-mapped IPv6 wildcard behaviour depends on the VM and runtime ([wildcard qualification](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92)).
 - Railway domains route to a detected or selected internal target port ([target ports](https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146)). Railway says web servers should bind `0.0.0.0` and listen on the automatically injected `PORT` ([listener and port](https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/troubleshooting/application-failed-to-respond.md#L46-L51)). Its edge proxy (tcp-proxy) terminates TLS; traffic is then forwarded over Railway's internal network to the deployment ([request flow](https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/edge-networking.md#L40-L43)).
 
@@ -185,8 +185,15 @@ ss -tlnp   # every listener: loopback for a same-host reverse proxy, or the plat
 - OpenSSL SSL_CERT_FILE and SSL_CERT_DIR security-sensitive classification, with the openssl-rehash exception for SSL_CERT_DIR (openssl-4.0.3, checked October 2026): https://github.com/openssl/openssl/blob/openssl-4.0.3/doc/man7/openssl-env.pod#L289-L298
 - Requests verify=False disables certificate verification (v2.32.3, checked October 2026): https://github.com/psf/requests/blob/v2.32.3/docs/user/advanced.rst#L241-L243
 - Render web-service listener and TLS termination (checked October 2026): https://render.com/docs/web-services
-- Heroku HTTP routing (checked October 2026): https://devcenter.heroku.com/articles/http-routing
+- Heroku HTTP routing, including IPv6 unsupported in the Cedar generation (checked October 2026): https://devcenter.heroku.com/articles/http-routing
 - Heroku web-process port assignment (checked October 2026): https://devcenter.heroku.com/articles/runtime-principles
+- Heroku Node.js deployment, web process must bind to PORT or the dyno does not start (checked October 2026): https://devcenter.heroku.com/articles/deploying-nodejs
+- Heroku dynos, one of the pages behind this guide's Cedar listener assessment (checked October 2026): https://devcenter.heroku.com/articles/dynos
+- Heroku Procfile, one of the pages behind this guide's Cedar listener assessment (checked October 2026): https://devcenter.heroku.com/articles/procfile
+- Heroku Gunicorn deployment, one of the pages behind this guide's Cedar listener assessment (checked October 2026): https://devcenter.heroku.com/articles/python-gunicorn
+- Heroku Getting Started with Python, one of the pages behind this guide's Cedar listener assessment (checked October 2026): https://devcenter.heroku.com/articles/getting-started-with-python
+- Heroku Getting Started with Node.js, one of the pages behind this guide's Cedar listener assessment (checked October 2026): https://devcenter.heroku.com/articles/getting-started-with-nodejs
+- Heroku Node.js best practices, one of the pages behind this guide's Cedar listener assessment (checked October 2026): https://devcenter.heroku.com/articles/node-best-practices
 - Heroku Fir Private Spaces networking and listener recommendation (checked October 2026): https://devcenter.heroku.com/articles/generations. The article states: "Fir utilizes IPv6 as the default and recommended connection protocol for networking within Heroku Private Spaces." It warns: "If you designed your application, its dependencies, or connected services within a space assuming only IPv4 connectivity, they don’t bind properly on Fir." It recommends: "Ensure IPv6 compatibility by correctly binding to an IPv6 listener or the dual-stack address listener in your app’s language (typically ::) to leverage Fir’s networking configuration." This guide's assessment: these sentences concern networking within Heroku Private Spaces; they do not establish Cedar's listener address or a deployed application's listener configuration.
 - Fly TCP passthrough (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97
 - Fly TLS termination (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176
@@ -238,7 +245,7 @@ Components (recorded basis):
 
 Claims (full source mapping in the JSON block below):
 
-- bind (REASONED; gunicorn, uvicorn, render, heroku, fly-pinned, railway): This guide advises loopback for same-host TLS proxies, no extra managed listeners, and wildcard only for authenticated direct TLS or private TLS ingress; app auth remains required. Railway advises 0.0.0.0 on injected PORT; its edge proxy terminates TLS. Rules vary by deployment (Fir Private Spaces: IPv6/dual-stack recommended; Fly without handlers: TCP passthrough); Cedar's address is not established.
+- bind (REASONED; gunicorn, uvicorn, render, heroku, fly-pinned, railway): Guide advice: loopback behind same-host TLS proxies, no extra managed listeners, wildcard only for authenticated TLS ingress, direct or private; app auth required. Railway: 0.0.0.0 on injected PORT, edge TLS; Fly w/o handlers: TCP passthrough; Heroku web processes must bind PORT, IPv6/dual-stack advised for Fir Private Spaces; checked pages state no Cedar address (guide's view, not proof any address works).
 - flask-tls (REASONED; werkzeug): Flask development server binds 127.0.0.1:8443 with cert/key ssl_context; adhoc requires cryptography and remains development-only.
 - gunicorn-tls (REASONED; gunicorn): Gunicorn binds 0.0.0.0:8443 with --certfile and --keyfile for direct TLS.
 - uvicorn-tls (REASONED; uvicorn): Uvicorn binds 0.0.0.0:8443 with --ssl-certfile and --ssl-keyfile for direct TLS.
@@ -266,9 +273,9 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-20",
+  "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "e21376e7db41e8ea39732f7cefcb6bb6afd1f25d9078ecff86a3884562de704b",
+  "body_sha256": "42fade11efda2903e3a93affad1de72aacff2d1836f709cf807d650e692682cb",
   "components": {
     "django": {
       "name": "Django documentation",
@@ -451,7 +458,14 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s370d4beec29a": "https://devcenter.heroku.com/articles/runtime-principles",
         "s211f5fe76042": "https://devcenter.heroku.com/articles/generations",
-        "s0c5bf300cef4": "https://devcenter.heroku.com/articles/http-routing"
+        "s0c5bf300cef4": "https://devcenter.heroku.com/articles/http-routing",
+        "s110a083f7129": "https://devcenter.heroku.com/articles/deploying-nodejs",
+        "s41677c652b96": "https://devcenter.heroku.com/articles/dynos",
+        "s9f4dec283014": "https://devcenter.heroku.com/articles/procfile",
+        "s8a2465cbd6c2": "https://devcenter.heroku.com/articles/python-gunicorn",
+        "sb941efbc6dd5": "https://devcenter.heroku.com/articles/getting-started-with-python",
+        "sa2690945ce1c": "https://devcenter.heroku.com/articles/getting-started-with-nodejs",
+        "s3563a06d3934": "https://devcenter.heroku.com/articles/node-best-practices"
       }
     },
     "fly-pinned": {
@@ -475,7 +489,7 @@ Claims (full source mapping in the JSON block below):
     }
   },
   "claims": {
-    "bind": {"text": "This guide advises loopback for same-host TLS proxies, no extra managed listeners, and wildcard only for authenticated direct TLS or private TLS ingress; app auth remains required. Railway advises 0.0.0.0 on injected PORT; its edge proxy terminates TLS. Rules vary by deployment (Fir Private Spaces: IPv6/dual-stack recommended; Fly without handlers: TCP passthrough); Cedar's address is not established.", "components": ["gunicorn", "uvicorn", "render", "heroku", "fly-pinned", "railway"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9", "render:s1820ac471b6c", "heroku:s370d4beec29a", "heroku:s211f5fe76042", "heroku:s0c5bf300cef4", "fly-pinned:s62fec91543a1", "fly-pinned:s61c1e50d2c11", "fly-pinned:s254c8c8a5edd", "fly-pinned:s32999aa4c58c", "railway:sac1383056b65", "railway:s0462eef65b1b", "railway:sa9d326046a7f"], "status": "REASONED"},
+    "bind": {"text": "Guide advice: loopback behind same-host TLS proxies, no extra managed listeners, wildcard only for authenticated TLS ingress, direct or private; app auth required. Railway: 0.0.0.0 on injected PORT, edge TLS; Fly w/o handlers: TCP passthrough; Heroku web processes must bind PORT, IPv6/dual-stack advised for Fir Private Spaces; checked pages state no Cedar address (guide's view, not proof any address works).", "components": ["gunicorn", "uvicorn", "render", "heroku", "fly-pinned", "railway"], "sources": ["gunicorn:s72daf362300c", "uvicorn:s02429a4a09d9", "render:s1820ac471b6c", "heroku:s370d4beec29a", "heroku:s211f5fe76042", "heroku:s0c5bf300cef4", "heroku:s110a083f7129", "heroku:s41677c652b96", "heroku:s9f4dec283014", "heroku:s8a2465cbd6c2", "heroku:sb941efbc6dd5", "heroku:sa2690945ce1c", "heroku:s3563a06d3934", "fly-pinned:s62fec91543a1", "fly-pinned:s61c1e50d2c11", "fly-pinned:s254c8c8a5edd", "fly-pinned:s32999aa4c58c", "railway:sac1383056b65", "railway:s0462eef65b1b", "railway:sa9d326046a7f"], "status": "REASONED"},
     "flask-tls": {"text": "Flask development server binds 127.0.0.1:8443 with cert/key ssl_context; adhoc requires cryptography and remains development-only.", "components": ["werkzeug"], "sources": ["werkzeug:sd5066c63a3ca"], "status": "REASONED"},
     "gunicorn-tls": {"text": "Gunicorn binds 0.0.0.0:8443 with --certfile and --keyfile for direct TLS.", "components": ["gunicorn"], "sources": ["gunicorn:s72daf362300c"], "status": "REASONED"},
     "uvicorn-tls": {"text": "Uvicorn binds 0.0.0.0:8443 with --ssl-certfile and --ssl-keyfile for direct TLS.", "components": ["uvicorn"], "sources": ["uvicorn:s02429a4a09d9"], "status": "REASONED"},
