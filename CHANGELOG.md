@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-21
 
-- `DECISIONS.md` records the maintainer's four rulings of 2026-10-21: the README heading renames (applied in #736), `DONE.md` ids repeating once per pull request, and pursuing the remaining vendor- or test-dependent TODO evidence rows with unpinned web documentation; `DONE.md`'s preamble now says an id may appear once per pull request that retires part of it, with the id and pull request identifying a row (#737)
+- `DECISIONS.md` records the maintainer's rulings of 2026-10-21 on four held questions: the two README heading renames (applied by #736), `DONE.md` ids repeating once per pull request, and pursuing the remaining vendor- or test-dependent TODO evidence rows with unpinned web documentation; `DONE.md`'s preamble now says ids are never reused for a different item, that an id may appear once per pull request that retires part of it (the id and pull request identify a row; older ruling-retired rows by the ruling's date), and "one line per closed part" instead of "one line each" (#737)
 
 ## 2026-10-20
 
