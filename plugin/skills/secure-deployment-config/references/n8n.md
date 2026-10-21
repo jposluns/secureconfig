@@ -191,9 +191,9 @@ curl -q -g -sS --noproxy '*' --connect-timeout 5 --max-time 10 -o /dev/null \
 - n8n workflows list response DTO (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/api-types/src/dto/workflows/workflow-public.dto.ts#L172-L175
 - n8n public API auth strategy registration order (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/server.ts#L188-L198
 - n8n token-exchange scoped JWT strategy registration (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/token-exchange.module.ts#L22-L38
-- n8n API key strategy abstention (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/api-key-auth.strategy.ts#L86-L93 and https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/api-key-auth.strategy.ts#L14-L14
+- n8n API key strategy abstention and `x-n8n-api-key` header name (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/api-key-auth.strategy.ts#L86-L93 and https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/api-key-auth.strategy.ts#L14-L14
 - n8n session cookie strategy abstention and `n8n-auth` cookie name (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/session-cookie-auth.strategy.ts#L31-L33 and https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/constants.ts#L74-L74
-- n8n scoped JWT strategy abstention and token extraction (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/services/scoped-jwt.strategy.ts#L74-L77 and https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/services/scoped-jwt.strategy.ts#L104-L117 and https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/services/scoped-jwt.strategy.ts#L12-L13
+- n8n scoped JWT strategy abstention, token extraction, `Bearer` prefix and `x-n8n-api-key` header name (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/services/scoped-jwt.strategy.ts#L74-L77 and https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/services/scoped-jwt.strategy.ts#L104-L117 and https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/services/scoped-jwt.strategy.ts#L12-L13
 - n8n `@PublicApiController` decorator (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/decorators/src/controller/public-api-controller.ts#L23-L34
 - n8n controller metadata registry (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/decorators/src/controller/controller-registry-metadata.ts#L9-L36
 - n8n route decorators (`@Get`) (pinned n8n@2.40.6): https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/decorators/src/controller/route.ts#L30-L53
@@ -302,7 +302,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "a933c1f34c3664085fadd5b6fd9ed4486353685d8a338430088f1103a0bcdc91",
+  "body_sha256": "f31511bed4866a75d57688f54c97baa18208c31182bb49ec0c46fe04d9c08237",
   "components": {
     "server": {
       "name": "n8n listener source",
