@@ -89,7 +89,6 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.43 | `tools/check_bare_urls.py`: follow up three fail-closed extra findings from #623 QA that CONTRIBUTING does not yet disclose: an angle-bracket destination written with escaped or entity underscores reports a finding because the angle form is compared without unescaping; URL characters directly after an inline link or image, as in `[t](https://example.com/__x)x`, are read as part of a bare URL and report a finding; and a character reference for `)` in a destination, such as `&#41;`, reports a finding. Fix each in code with a regression fixture, or disclose it in CONTRIBUTING with a fixture pinning its outcome. (M, S) | `[gap]` |
 
 ## Decisions
 
