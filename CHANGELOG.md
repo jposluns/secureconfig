@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-21
 
-- `identity-providers.md`: the Okta Custom TOTP wording no longer compresses the source into "Factors API profile"; a new `provider-authenticators-okta-enrolment` claim (213 characters) says that, if Custom TOTP is enabled for the org, the factor and its Factor Profile ID are created in the Admin Console and each token is enrolled through the Okta Factors API by passing `factorProfileId` and `sharedSecret`, citing the Okta Custom TOTP help page the guide already cites; `provider-authenticators-okta` keeps every other qualifier, including that the pages do not show arbitrary app compatibility (398 to 372 characters; claims 43 to 44); this closes the note carried from PRs 721 and 734 (#735)
+- `identity-providers.md`: the Okta Custom TOTP wording no longer compresses the source into "Factors API profile"; a new `provider-authenticators-okta-enrolment` claim (318 characters) says that, in Okta's Classic Engine documentation, if Custom TOTP is enabled for the org, the factor and its Factor Profile ID are created in the Admin Console and each user is enrolled through the Okta Factors API by passing `factorProfileId` and `sharedSecret` for their token, and that the Identity Engine custom OTP page was not checked; it cites the Okta Custom TOTP help page the guide already cites; `provider-authenticators-okta` keeps every other qualifier, including that the pages do not show arbitrary app compatibility (398 to 372 characters; claims 43 to 44); this closes the note carried from PRs 721 and 734 (#735)
 
 ## 2026-10-20
 
