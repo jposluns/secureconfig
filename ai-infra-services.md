@@ -167,7 +167,7 @@ The development mappings include expressions such as `${POSTGRES_HOST_PORT:-5432
 
 Email/password authentication is already enabled. This guide infers from the v4.3.13 and v4.4.0 tag trees that `AUTH_TYPE` no longer selects runtime authentication in v4.4.0; v4.4.0 still reads legacy values for migrations, a one-time legacy SAML import at startup, and a stale-value warning. The version identity rests on the tag names, since neither cited web package manifest records its tag's release version.
 
-The September 2026 documentation record says removal was planned for v4.5; the cited source files do not establish that plan or a documentation-side removal record. At v4.5.0 and v4.9.2, `main.py` still calls `verify_auth_setting()` under a comment describing a warning on stale `AUTH_TYPE` values, and calls `seed_saml_provider_from_conf_dir(db_session)` at startup inside `if not MULTI_TENANT`; its comment describes a legacy SAML import that is a no-op unless `AUTH_TYPE=saml` with no SAML row yet. This guide therefore assesses that those legacy startup calls were not removed in either v4.5.0 or v4.9.2, the latest v4.x tag in this review; the call sites and comments do not establish runtime authentication selection or the helpers' complete behaviour. These tag names are not commit pins. This guide's advice: do not set `AUTH_TYPE` expecting to change authentication.
+The September 2026 documentation record says removal was planned for v4.5; the cited source files do not establish that plan or a documentation-side removal record. At v4.5.0 and v4.9.2, `main.py` still calls `verify_auth_setting()` under a comment describing a warning on stale `AUTH_TYPE` values, and calls `seed_saml_provider_from_conf_dir(db_session)` at startup inside `if not MULTI_TENANT`; its comment describes a legacy SAML import that is a no-op unless `AUTH_TYPE=saml` with no SAML row yet. This guide therefore assesses that those legacy startup calls were not removed in either v4.5.0 or v4.9.2, the latest v4.x tag in this review; the call sites and comments do not establish runtime authentication selection or the helpers' complete behaviour. These citations are pinned to the commits that the v4.5.0 and v4.9.2 tags resolved to. This guide's advice: do not set `AUTH_TYPE` expecting to change authentication.
 
 The Docker documentation also describes access at `localhost:3000`. That is now established from the base Compose file rather than inferred: host 3000 maps to nginx's container port 80, and `web_server` carries no host publication of its own. So `localhost:3000` reaches nginx, not the web process directly, and the web process is not separately published.
 
@@ -471,7 +471,7 @@ If the deployment trusts identity headers from a proxy, follow the direct-origin
 
 The service facts come from the maintainer's vendor-source verification record dated 2026-09-13. This authoring environment had no network; the pages were not reopened here. Docker and probe syntax also follow the cited sources already recorded in the repository's existing guides.
 
-**Citation pinning:** the LangServe README, Mem0 server, Onyx Compose and Onyx data-model citations below use commit pins, and each commit was opened and confirmed to contain the fact it is cited for; the Onyx version-tag citations use tags, which are not commit pins.
+**Citation pinning:** the LangServe README, Mem0 server, Onyx Compose and Onyx data-model citations below use commit pins, and each commit was opened and confirmed to contain the fact it is cited for; the Onyx v4.5.0 and v4.9.2 citations are pinned to the commits those tags resolved to (`055b0c5` and `df49072`), while the Onyx v4.3.13 and v4.4.0 citations use tags, which are not commit pins.
 
 - [SearxNG server settings](https://docs.searxng.org/admin/settings/settings_server.html): `server.bind_address`, `server.port`, and direct defaults.
 - [SearxNG Docker installation](https://docs.searxng.org/admin/installation-docker.html): documented `8888:8080` publication.
@@ -494,10 +494,10 @@ The service facts come from the maintainer's vendor-source verification record d
 - [Onyx v4.4.0 disabled authentication migration](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/backend/alembic/versions/f7ca3e2f45d9_migrate_no_auth_data_to_placeholder.py#L129-L147) (checked October 2026): legacy migration or startup warning handling of `AUTH_TYPE`.
 - [Onyx v4.3.13 web package manifest](https://github.com/onyx-dot-app/onyx/blob/v4.3.13/web/package.json#L3) (checked October 2026): `1.0.0-dev` rather than the tag version.
 - [Onyx v4.4.0 web package manifest](https://github.com/onyx-dot-app/onyx/blob/v4.4.0/web/package.json#L3) (checked October 2026): `1.0.0-dev` rather than the tag version.
-- [Onyx v4.5.0 startup warning](https://github.com/onyx-dot-app/onyx/blob/v4.5.0/backend/onyx/main.py#L378-L379) (checked October 2026): `verify_auth_setting()` call with a comment describing stale `AUTH_TYPE` warnings; this call site does not establish runtime authentication selection.
-- [Onyx v4.5.0 startup SAML import](https://github.com/onyx-dot-app/onyx/blob/v4.5.0/backend/onyx/main.py#L398-L414) (checked October 2026): non-multitenant startup calls the legacy SAML import; its comment says it is a no-op unless `AUTH_TYPE=saml` with no SAML row yet, without establishing the helper's complete behaviour.
-- [Onyx v4.9.2 startup warning](https://github.com/onyx-dot-app/onyx/blob/v4.9.2/backend/onyx/main.py#L394-L395) (checked October 2026): `verify_auth_setting()` call with a comment describing stale `AUTH_TYPE` warnings; this call site does not establish runtime authentication selection.
-- [Onyx v4.9.2 startup SAML import](https://github.com/onyx-dot-app/onyx/blob/v4.9.2/backend/onyx/main.py#L414-L432) (checked October 2026): non-multitenant startup calls the legacy SAML import; its comment says it is a no-op unless `AUTH_TYPE=saml` with no SAML row yet, without establishing the helper's complete behaviour.
+- [Onyx v4.5.0 startup warning](https://github.com/onyx-dot-app/onyx/blob/055b0c5d0e0a1187ef64d109d700ef4e1bcc5796/backend/onyx/main.py#L378-L379) (checked October 2026): `verify_auth_setting()` call with a comment describing stale `AUTH_TYPE` warnings; this call site does not establish runtime authentication selection.
+- [Onyx v4.5.0 startup SAML import](https://github.com/onyx-dot-app/onyx/blob/055b0c5d0e0a1187ef64d109d700ef4e1bcc5796/backend/onyx/main.py#L398-L414) (checked October 2026): non-multitenant startup calls the legacy SAML import; its comment says it is a no-op unless `AUTH_TYPE=saml` with no SAML row yet, without establishing the helper's complete behaviour.
+- [Onyx v4.9.2 startup warning](https://github.com/onyx-dot-app/onyx/blob/df49072cabd57a37c75143f78910023bf1cc4dcb/backend/onyx/main.py#L394-L395) (checked October 2026): `verify_auth_setting()` call with a comment describing stale `AUTH_TYPE` warnings; this call site does not establish runtime authentication selection.
+- [Onyx v4.9.2 startup SAML import](https://github.com/onyx-dot-app/onyx/blob/df49072cabd57a37c75143f78910023bf1cc4dcb/backend/onyx/main.py#L414-L432) (checked October 2026): non-multitenant startup calls the legacy SAML import; its comment says it is a no-op unless `AUTH_TYPE=saml` with no SAML row yet, without establishing the helper's complete behaviour.
 - [Onyx local Docker deployment](https://docs.onyx.app/deployment/local/docker.md): documented access at `localhost:3000`.
 - [Onyx production Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.prod.yml): nginx-only host publications.
 - [Onyx development Compose](https://github.com/onyx-dot-app/onyx/blob/a0370f232ba4e4625131fae518b86e5530e98ec5/deployment/docker_compose/docker-compose.dev.yml): API and backing-service publications, and its own header naming the two-file launch form.
@@ -578,7 +578,7 @@ Claims (full source mapping in the JSON block below):
 - onyx-prod (REASONED; onyx-compose): Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished.
 - onyx-bootstrap (REASONED; onyx): Email/password auth is on and first signup becomes admin; claim privately before exposure.
 - onyx-auth-type (REASONED; onyx, onyx-v43, onyx-v44): Guide inference from v4.3.13/v4.4.0 tags: AUTH_TYPE no longer selects v4.4.0 runtime auth; legacy values remain for migrations, a one-time legacy SAML startup import and a stale-value warning. Version identity rests on tags; cited web manifests lack release versions. Guide advice: do not set AUTH_TYPE to change auth.
-- onyx-auth-type-legacy-startup (REASONED; onyx-v45, onyx-v49): Guide assessment: v4.5.0/v4.9.2 retain the AUTH_TYPE stale-value warning call and, under if not MULTI_TENANT, the legacy SAML startup call (commented no-op unless AUTH_TYPE=saml with no SAML row). Tags are not commit pins; runtime auth selection, full helper behaviour and the September 2026 v4.5 plan/documentation removal record remain unverified.
+- onyx-auth-type-legacy-startup (REASONED; onyx-v45, onyx-v49): Guide assessment: v4.5.0/v4.9.2 retain the AUTH_TYPE stale-value warning call and, under if not MULTI_TENANT, the legacy SAML startup call (commented no-op unless AUTH_TYPE=saml with no SAML row). Citations are pinned to the tags' commits; runtime auth selection, full helper behaviour and the September 2026 v4.5 plan/documentation removal record remain unverified.
 - onyx-base (REASONED; onyx-compose, onyx): Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication.
 - onyx-api (REASONED; onyx-compose): Development override adds API 8080:8080; remove unless deliberately restricted for access.
 - onyx-backing (REASONED; onyx-compose): Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these.
@@ -604,7 +604,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "fa5f14b1b312080ce9204dbbc5d64549390647c29d035017d7d29ba6ce8e7d0a",
+  "body_sha256": "8484cb8e541a88a12d33ed4e9e9ebe74e64b15b5d0b79ea294362657101eacad",
   "components": {
     "searx": {
       "name": "SearxNG documentation",
@@ -647,16 +647,16 @@ Claims (full source mapping in the JSON block below):
       "name": "Onyx v4.5 source",
       "basis": "v4.5.0",
       "sources": {
-        "s1b5108a6a22f": "https://github.com/onyx-dot-app/onyx/blob/v4.5.0/backend/onyx/main.py#L378-L379",
-        "s1e1fbd8be06b": "https://github.com/onyx-dot-app/onyx/blob/v4.5.0/backend/onyx/main.py#L398-L414"
+        "s50116ebcab47": "https://github.com/onyx-dot-app/onyx/blob/055b0c5d0e0a1187ef64d109d700ef4e1bcc5796/backend/onyx/main.py#L378-L379",
+        "sab806f01b340": "https://github.com/onyx-dot-app/onyx/blob/055b0c5d0e0a1187ef64d109d700ef4e1bcc5796/backend/onyx/main.py#L398-L414"
       }
     },
     "onyx-v49": {
       "name": "Onyx v4.9 source",
       "basis": "v4.9.2",
       "sources": {
-        "s5f38357d0eca": "https://github.com/onyx-dot-app/onyx/blob/v4.9.2/backend/onyx/main.py#L394-L395",
-        "s5f63de5a6f92": "https://github.com/onyx-dot-app/onyx/blob/v4.9.2/backend/onyx/main.py#L414-L432"
+        "sba8318be94ea": "https://github.com/onyx-dot-app/onyx/blob/df49072cabd57a37c75143f78910023bf1cc4dcb/backend/onyx/main.py#L394-L395",
+        "sab9b9d5d76ac": "https://github.com/onyx-dot-app/onyx/blob/df49072cabd57a37c75143f78910023bf1cc4dcb/backend/onyx/main.py#L414-L432"
       }
     },
     "searx-source": {
@@ -789,7 +789,7 @@ Claims (full source mapping in the JSON block below):
     "onyx-prod": {"text": "Production Compose publishes only nginx 80:80 and 443:443; backing services remain unpublished.", "components": ["onyx-compose"], "sources": ["onyx-compose:sc35a382f123e"], "status": "REASONED"},
     "onyx-bootstrap": {"text": "Email/password auth is on and first signup becomes admin; claim privately before exposure.", "components": ["onyx"], "sources": ["onyx:sc7649811ee67"], "status": "REASONED"},
     "onyx-auth-type": {"text": "Guide inference from v4.3.13/v4.4.0 tags: AUTH_TYPE no longer selects v4.4.0 runtime auth; legacy values remain for migrations, a one-time legacy SAML startup import and a stale-value warning. Version identity rests on tags; cited web manifests lack release versions. Guide advice: do not set AUTH_TYPE to change auth.", "components": ["onyx", "onyx-v43", "onyx-v44"], "sources": ["onyx:sc7649811ee67", "onyx-v43:s279734512e1b", "onyx-v43:sb03484e56906", "onyx-v44:s799b0a246cf5", "onyx-v44:sac84754b3dd2", "onyx-v44:s9275371ceeec", "onyx-v44:s735ec883db85", "onyx-v44:s520509d43646", "onyx-v44:se5438628cc59", "onyx-v43:seb430888edc4", "onyx-v44:sbc5f578e1c7e"], "status": "REASONED"},
-    "onyx-auth-type-legacy-startup": {"text": "Guide assessment: v4.5.0/v4.9.2 retain the AUTH_TYPE stale-value warning call and, under if not MULTI_TENANT, the legacy SAML startup call (commented no-op unless AUTH_TYPE=saml with no SAML row). Tags are not commit pins; runtime auth selection, full helper behaviour and the September 2026 v4.5 plan/documentation removal record remain unverified.", "components": ["onyx-v45", "onyx-v49"], "sources": ["onyx-v45:s1b5108a6a22f", "onyx-v45:s1e1fbd8be06b", "onyx-v49:s5f38357d0eca", "onyx-v49:s5f63de5a6f92"], "status": "REASONED"},
+    "onyx-auth-type-legacy-startup": {"text": "Guide assessment: v4.5.0/v4.9.2 retain the AUTH_TYPE stale-value warning call and, under if not MULTI_TENANT, the legacy SAML startup call (commented no-op unless AUTH_TYPE=saml with no SAML row). Citations are pinned to the tags' commits; runtime auth selection, full helper behaviour and the September 2026 v4.5 plan/documentation removal record remain unverified.", "components": ["onyx-v45", "onyx-v49"], "sources": ["onyx-v45:s50116ebcab47", "onyx-v45:sab806f01b340", "onyx-v49:sba8318be94ea", "onyx-v49:sab9b9d5d76ac"], "status": "REASONED"},
     "onyx-base": {"text": "Development merges base plus override; base nginx publishes 80:80 and 3000:80, while web_server has no independent host publication.", "components": ["onyx-compose", "onyx"], "sources": ["onyx-compose:sb82664aa67ff", "onyx-compose:s1b87311a0e14", "onyx:scb3a0b1624de"], "status": "REASONED"},
     "onyx-api": {"text": "Development override adds API 8080:8080; remove unless deliberately restricted for access.", "components": ["onyx-compose"], "sources": ["onyx-compose:sb82664aa67ff"], "status": "REASONED"},
     "onyx-backing": {"text": "Development adds Postgres 5432, OpenSearch 9200, inference 9000, Redis 6379, MinIO 9004/9005 and interpreter 8000; application auth does not protect these.", "components": ["onyx-compose"], "sources": ["onyx-compose:sb82664aa67ff"], "status": "REASONED"},
