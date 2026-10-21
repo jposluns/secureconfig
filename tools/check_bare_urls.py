@@ -32,8 +32,9 @@ LIST = re.compile(r"^( {0,3}| {4,})(?:[-+*]|[0-9]{1,9}[.)])([ \t]+)")
 DESTINATION = re.compile(r"[ \t]*(?:<[^>]+>|\S+)")
 ATX = re.compile(r"^ {0,3}#{1,6}(?:[ \t]+|$)")
 SETEXT = re.compile(r"^ {0,3}(?:=+|-+)[ \t]*$")
-# An escaped closing parenthesis or a character reference that decodes to one.
-CLOSER = re.compile(r"(?<!\\)(?:\\\\)*(?:\\\)|&(?:#0*41|#[xX]0*29|rpar);)")
+# An escaped closing parenthesis or a character reference that decodes to one;
+# CommonMark caps numeric references at 7 decimal or 6 hexadecimal digits.
+CLOSER = re.compile(r"(?<!\\)(?:\\\\)*(?:\\\)|&(?:#0{0,5}41|#[xX]0{0,4}29|rpar);)")
 
 
 def visible_lines(lines, prose, starts):
