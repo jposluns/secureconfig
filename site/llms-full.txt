@@ -14147,7 +14147,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against GitHub Actions documentation (no recorded version), GitHub REST API 2026-03-10, and Python tomllib minimum 3.11; 3 further sources carry no recorded version. Metadata reviewed 2026-10-12; documentation checked September 2026. The guide records 37 claims: 1 demonstrated by a check that ran and 36 reasoned from cited sources.
+Written against GitHub Actions documentation (no recorded version), GitHub REST API 2026-03-10, GitLab Runner source v19.5.0, and Python tomllib minimum 3.11; 3 further sources carry no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 37 claims: 1 demonstrated by a check that ran and 36 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -14258,7 +14258,7 @@ REASONED: Both runners are outbound-only job pollers, so most checks are posture
 probes. Every check that needs a live registered runner or worker is reasoned, not demonstrated: the authoring
 environment has no container runtime, registered test runner, or cloud test infrastructure, so those outcomes
 are derived from the cited vendor pages rather than observed. Offline outcomes are recorded below: `tomllib` fixtures,
-jq filters on synthetic REST-shaped JSON, a PyYAML parse of the probe workflow, a stub `glab` run, the canary commands, plain ss -tln without sudo listing this host's listeners, the guarded listener block with stub `sudo` and `curl`, and bash -n and ShellCheck syntax checks; row 2.29 retains finding and verifying a pinned source for `pid_mode`.
+jq filters on synthetic REST-shaped JSON, a PyYAML parse of the probe workflow, a stub `glab` run, the canary commands, plain ss -tln without sudo listing this host's listeners, the guarded listener block with stub `sudo` and `curl`, and bash -n and ShellCheck syntax checks.
 Require successful, complete listings; authentication errors, unavailable endpoints, and incomplete pagination
 are inconclusive. Run the REST and config checks from an administrator workstation using stored CLI credentials.
 
@@ -14397,7 +14397,7 @@ sudo ss -tlnp
 
 ## Sources (checked September 2026)
 
-Version boundary: GitHub.com documentation checked 18 September 2026, with REST examples pinned to API version `2026-03-10`; GitLab documentation is rolling, checked that date. The legacy GitLab registration token was disabled by default in GitLab 17.0 and is currently scheduled for removal in GitLab 20.0, and the Instance and Docker Autoscaler executors became generally available in Runner 17.1; run a currently supported patched release. No live product-version compatibility matrix was exercised.
+Version boundary: GitHub.com documentation checked 18 September 2026, with REST examples pinned to API version `2026-03-10`; GitLab documentation is rolling, checked that date. GitLab Runner source for the `pid_mode` key is pinned to tag v19.5.0, checked October 2026. The legacy GitLab registration token was disabled by default in GitLab 17.0 and is currently scheduled for removal in GitLab 20.0, and the Instance and Docker Autoscaler executors became generally available in Runner 17.1; run a currently supported patched release. No live product-version compatibility matrix was exercised.
 
 - GitHub Actions security hardening and secure use: https://docs.github.com/en/actions/reference/security/secure-use
 - GitHub self-hosted runner groups and access (private-only default): https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/manage-access
@@ -14409,7 +14409,8 @@ Version boundary: GitHub.com documentation checked 18 September 2026, with REST 
 - GitLab CI_JOB_TOKEN and the job-token allowlist: https://docs.gitlab.com/ci/jobs/ci_job_token/
 - GitLab runner authentication tokens and the creation workflow: https://docs.gitlab.com/ci/runners/new_creation_workflow/
 - GitLab Runner monitoring (metrics port 9252, no built-in authorization): https://docs.gitlab.com/runner/monitoring/
-- GitLab Runner advanced configuration (session_server, Docker controls and autoscaler limits): https://docs.gitlab.com/runner/configuration/advanced-configuration/ A partial automated page read dated 2026-10-12, not a recheck of this September 2026 list, corroborated the inspected Docker and autoscaler keys except `pid_mode`, which was reported only from rolling GitLab Runner `common/config.go` on `main`; a pinned vendor source for `pid_mode` remains open (row 2.29).
+- GitLab Runner advanced configuration (session_server, Docker controls and autoscaler limits): https://docs.gitlab.com/runner/configuration/advanced-configuration/ A partial automated page read dated 2026-10-12, not a recheck of this September 2026 list, corroborated the inspected Docker and autoscaler keys except `pid_mode`, which was reported only from rolling GitLab Runner `common/config.go` on `main`; the next item cites `pid_mode` from GitLab Runner source pinned at tag v19.5.0.
+- GitLab Runner `common/config.go` DockerConfig `PidMode` field (toml `pid_mode`, "Run the container in a specific PID space"), tag v19.5.0 at 70f5c12dad80bfd8ab426843f38cae72fddc4e75 (checked October 2026): https://gitlab.com/gitlab-org/gitlab-runner/-/blob/70f5c12dad80bfd8ab426843f38cae72fddc4e75/common/config.go#L330 The same field is at L310 at tag v19.1.0 (5eb085abb18b9c9614ba6e12951ece859d092272). It is absent at tags v18.11.4 (5b1ba4d9a0dec0a0a67ba4b88fa88e7f21b1060f), v19.0.0 (d4bac16c639ce0e7a778f1e88ca05b6d18dde57a), v19.0.1 (c2831b75a3ff0782dca8f64498cbc6f71c76819e), v19.0.2 (02fcb2d71c5d50f2f0ab92f9fd685706d3729b94) and v19.0.3 (e951e4926504fcfce3399542ff56029f77798c5a). No other tag before v19.1.0 was checked, so the tag that introduced the key is not established.
 - GitHub self-hosted runner groups REST API (group visibility, allows_public_repositories, group repositories) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/self-hosted-runner-groups
 - GitHub Actions OIDC (id-token permission, issuer/audience/subject claims): https://docs.github.com/en/actions/reference/security/oidc
 - GitHub workflow-jobs REST API (runner assignment: runner_id, runner_group_id) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/workflow-jobs
@@ -14439,6 +14440,7 @@ Components (recorded basis):
 - github: GitHub Actions documentation (unknown)
 - github-api: GitHub REST API (2026-03-10)
 - gitlab: GitLab rolling documentation (unknown)
+- gitlab-runner: GitLab Runner source (v19.5.0)
 - docker: Docker Engine documentation (unknown)
 - python: Python tomllib minimum (3.11)
 - aws: AWS EC2 documentation (unknown)
@@ -14461,7 +14463,7 @@ Claims (full source mapping in the JSON block below):
 - github-lifecycle (REASONED; github, github-api): Prefer ephemeral/JIT workers and destroy their machines and storage; deregistration does not destroy disks, and labels route rather than authorize jobs.
 - shell-executor (REASONED; gitlab): The GitLab shell executor runs as the runner user without isolation; avoid it for untrusted jobs on shared hosts.
 - docker-executor (REASONED; gitlab, docker): Use unprivileged Docker; privileged=true or services_privileged and host Docker socket/TCP access can expose the host despite privileged=false.
-- executor-host-access (REASONED; gitlab): Deny sensitive host mounts, host PID/network namespaces, unnecessary devices and capabilities; build without the host daemon.
+- executor-host-access (REASONED; gitlab, gitlab-runner): Deny sensitive host mounts, host PID/network namespaces, unnecessary devices and capabilities; build without the host daemon.
 - kubernetes-executor (REASONED; gitlab): Enforce nonprivileged containers, no privilege escalation, scoped ServiceAccounts and no unnecessary token mounting; prevent job overrides.
 - gitlab-disposal (REASONED; gitlab): Containers share the kernel; use disposable separate VMs/nodes as needed and one-job autoscaling workers. Instance and Docker Autoscaler GA is recorded as Runner 17.1.
 - gitlab-registration (REASONED; gitlab): Legacy registration tokens were disabled by default in GitLab 17.0, with removal scheduled for 20.0; use runner authentication tokens.
@@ -14476,7 +14478,7 @@ Claims (full source mapping in the JSON block below):
 - verify-eligibility (REASONED; github-api): Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review.
 - verify-permissions (REASONED; github): Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate.
 - verify-assignment (REASONED; github-api, github): A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive.
-- verify-config (DEMONSTRATED; python, gitlab): Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status.
+- verify-config (DEMONSTRATED; python, gitlab, gitlab-runner): Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status.
 - verify-daemon (REASONED; gitlab, docker): Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone.
 - verify-autoscaler (REASONED; gitlab): For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly as integers; absent or other values are findings.
 - verify-gitlab-api (REASONED; gitlab): Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only.
@@ -14486,9 +14488,9 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-12",
+  "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "b6f0a62c993bb4e0b4f09ddd47a88c26c7f4aa976af303c778de05d1c17f8fd4",
+  "body_sha256": "0ff09ae9c87de8dd7c482cfe570d868a2143cc21f6d714a70324262fb5034217",
   "components": {
     "github": {
       "name": "GitHub Actions documentation",
@@ -14524,6 +14526,13 @@ Claims (full source mapping in the JSON block below):
         "saef0483b7be7": "https://docs.gitlab.com/ci/jobs/ci_job_token/",
         "s699c1c198119": "https://docs.gitlab.com/api/project_job_token_scopes/",
         "sbc009ff2866a": "https://docs.gitlab.com/runner/monitoring/"
+      }
+    },
+    "gitlab-runner": {
+      "name": "GitLab Runner source",
+      "basis": "v19.5.0",
+      "sources": {
+        "s46d58158c809": "https://gitlab.com/gitlab-org/gitlab-runner/-/blob/70f5c12dad80bfd8ab426843f38cae72fddc4e75/common/config.go#L330"
       }
     },
     "docker": {
@@ -14565,7 +14574,7 @@ Claims (full source mapping in the JSON block below):
     "github-lifecycle": {"text": "Prefer ephemeral/JIT workers and destroy their machines and storage; deregistration does not destroy disks, and labels route rather than authorize jobs.", "components": ["github", "github-api"], "sources": ["github:s215dc07e3642", "github:s92e8e4820392", "github-api:s8217448953a4"], "status": "REASONED"},
     "shell-executor": {"text": "The GitLab shell executor runs as the runner user without isolation; avoid it for untrusted jobs on shared hosts.", "components": ["gitlab"], "sources": ["gitlab:seb30e3937183"], "status": "REASONED"},
     "docker-executor": {"text": "Use unprivileged Docker; privileged=true or services_privileged and host Docker socket/TCP access can expose the host despite privileged=false.", "components": ["gitlab", "docker"], "sources": ["gitlab:s265254bc5592", "gitlab:seb30e3937183", "docker:s18f59818e451"], "status": "REASONED"},
-    "executor-host-access": {"text": "Deny sensitive host mounts, host PID/network namespaces, unnecessary devices and capabilities; build without the host daemon.", "components": ["gitlab"], "sources": ["gitlab:s265254bc5592", "gitlab:s47b236d63dc4"], "status": "REASONED"},
+    "executor-host-access": {"text": "Deny sensitive host mounts, host PID/network namespaces, unnecessary devices and capabilities; build without the host daemon.", "components": ["gitlab", "gitlab-runner"], "sources": ["gitlab:s265254bc5592", "gitlab:s47b236d63dc4", "gitlab-runner:s46d58158c809"], "status": "REASONED"},
     "kubernetes-executor": {"text": "Enforce nonprivileged containers, no privilege escalation, scoped ServiceAccounts and no unnecessary token mounting; prevent job overrides.", "components": ["gitlab"], "sources": ["gitlab:s1579c499c75b"], "status": "REASONED"},
     "gitlab-disposal": {"text": "Containers share the kernel; use disposable separate VMs/nodes as needed and one-job autoscaling workers. Instance and Docker Autoscaler GA is recorded as Runner 17.1.", "components": ["gitlab"], "sources": ["gitlab:sde661ff4762e", "gitlab:seb30e3937183"], "status": "REASONED"},
     "gitlab-registration": {"text": "Legacy registration tokens were disabled by default in GitLab 17.0, with removal scheduled for 20.0; use runner authentication tokens.", "components": ["gitlab"], "sources": ["gitlab:sd2cbff5d5d6e"], "status": "REASONED"},
@@ -14580,7 +14589,7 @@ Claims (full source mapping in the JSON block below):
     "verify-eligibility": {"text": "Fully paginate groups, selected repositories and public repositories' own runners; visibility=all alone is not public eligibility, and inherited access needs review.", "components": ["github-api"], "sources": ["github-api:sd36db9ea1031", "github-api:s8217448953a4"], "status": "REASONED", "verify": [1]},
     "verify-permissions": {"text": "Inspect organization and repository workflow-token defaults and PR approval settings; explicit workflow permissions can raise grants and id-token is separate.", "components": ["github"], "sources": ["github:s4561d20e7042", "github:s80fe11d8c90d"], "status": "REASONED", "verify": [2]},
     "verify-assignment": {"text": "A controlled fork workflow should run when exposed and lose assignment when restricted, while an allowed private job still runs; skipped/pending/offline/timeout is inconclusive.", "components": ["github-api", "github"], "sources": ["github-api:sbeee4a47110c", "github:s92e8e4820392"], "status": "REASONED", "verify": [3]},
-    "verify-config": {"text": "Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status.", "components": ["python", "gitlab"], "sources": ["python:s37be9e98ea29", "gitlab:s47b236d63dc4", "gitlab:s1579c499c75b"], "status": "DEMONSTRATED", "verify": [4], "evidence": "the extracted Python program ran without sudo on 20 synthetic config.toml cases using Python 3.14.4. Docker fixtures printed true/true, a socket mount and a TCP host versus false/false, empty volumes and a null host; both exited 0. Autoscaler limits printed null/null, 1/2 and 2/1 versus 1/1, all exit 0. Kubernetes fixtures printed true versus false for the three booleans and the supplied service_account. Wrong-type strings, booleans and floats retained their JSON types; misplaced privileged printed docker.privileged null. Empty and runner-less files printed nothing and exited 0. Missing files, malformed TOML and wrong section types exited 1; the second-runner structure error followed one printed runner. Two valid runners printed indices 0 and 1. The runner token key was omitted; a dummy token copied into service_account was printed. These observations cover file inspection only."},
+    "verify-config": {"text": "Python 3.14.4 synthetic fixtures reported exposed/fixed Docker, Kubernetes and autoscaler values; wrong types passed through, misplaced keys printed null, and empty/error cases differed in output and exit status.", "components": ["python", "gitlab", "gitlab-runner"], "sources": ["python:s37be9e98ea29", "gitlab:s47b236d63dc4", "gitlab:s1579c499c75b", "gitlab-runner:s46d58158c809"], "status": "DEMONSTRATED", "verify": [4], "evidence": "the extracted Python program ran without sudo on 20 synthetic config.toml cases using Python 3.14.4. Docker fixtures printed true/true, a socket mount and a TCP host versus false/false, empty volumes and a null host; both exited 0. Autoscaler limits printed null/null, 1/2 and 2/1 versus 1/1, all exit 0. Kubernetes fixtures printed true versus false for the three booleans and the supplied service_account. Wrong-type strings, booleans and floats retained their JSON types; misplaced privileged printed docker.privileged null. Empty and runner-less files printed nothing and exited 0. Missing files, malformed TOML and wrong section types exited 1; the second-runner structure error followed one printed runner. Two valid runners printed indices 0 and 1. The runner token key was omitted; a dummy token copied into service_account was printed. These observations cover file inspection only."},
     "verify-daemon": {"text": "Resolve docker.host through DOCKER_HOST or the default socket when absent; flag actual job access to a rootful daemon, not tcp:// alone.", "components": ["gitlab", "docker"], "sources": ["gitlab:s265254bc5592", "docker:s18f59818e451"], "status": "REASONED"},
     "verify-autoscaler": {"text": "For Instance/Docker Autoscaler require capacity_per_instance=1 and max_use_count=1 explicitly as integers; absent or other values are findings.", "components": ["gitlab"], "sources": ["gitlab:sde661ff4762e"], "status": "REASONED"},
     "verify-gitlab-api": {"text": "Read inbound allowlists and require release-runner ref_protected against exposed controls; gitlab-runner verify proves authentication only.", "components": ["gitlab"], "sources": ["gitlab:s699c1c198119", "gitlab:seb30e3937183"], "status": "REASONED", "verify": [5]},
