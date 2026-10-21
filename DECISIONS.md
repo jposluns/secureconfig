@@ -18,12 +18,12 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 ## Rulings
 
 - **Row 1.290 retired, 2026-10-21 (#757).** The maintainer ruled, through AskUser, choosing the recommended option
-  "Retire as unrecoverable", that row 1.290's remainder, the unrecorded bash and other tool/parser versions for
-  `firebase-supabase.md`'s historical local guard and syntax runs, closes as Retired. The chosen option's text: "Move
-  the remainder to DONE as Retired, keeping the guide's existing REASONED provenance note that the historical host
-  versions were not recorded." No reasoning beyond the option's text is recorded. For row 1.290 only, this supersedes
-  the same day's #737 ruling below that the row be pursued with vendor documentation fetched over the web; that
-  ruling stands for the other rows it names.
+  "Retire as unrecoverable (Recommended)", that row 1.290's remainder, the unrecorded bash and other tool/parser
+  versions for `firebase-supabase.md`'s historical local guard and syntax runs, closes as Retired. The chosen
+  option's text: "Move the remainder to DONE as Retired, keeping the guide's existing REASONED provenance note that
+  the historical host versions were not recorded." No reasoning beyond the option's text is recorded. For row 1.290
+  only, this supersedes the same day's #737 ruling below that the row be pursued with vendor documentation fetched
+  over the web; that ruling stands for the other rows it names.
 - **Maintainer rulings of 2026-10-21 (#737).** The maintainer answered four held questions through AskUser on
   2026-10-21 (two on the README headings), choosing the recommended option in the first three and an alternative in the
   fourth. No reasoning was given with the answers; where a reason is recorded below, it is the chosen option's text.

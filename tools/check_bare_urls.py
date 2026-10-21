@@ -32,8 +32,10 @@ LIST = re.compile(r"^( {0,3}| {4,})(?:[-+*]|[0-9]{1,9}[.)])([ \t]+)")
 DESTINATION = re.compile(r"[ \t]*(?:<[^>]+>|\S+)")
 ATX = re.compile(r"^ {0,3}#{1,6}(?:[ \t]+|$)")
 SETEXT = re.compile(r"^ {0,3}(?:=+|-+)[ \t]*$")
-# An escaped closing parenthesis or a character reference that decodes to one.
-CLOSER = re.compile(r"(?<!\\)(?:\\\\)*(?:\\\)|&(?:#0*41|#[xX]0*29|rpar);)")
+# An escaped closing parenthesis or a character reference that decodes to one;
+# markdown-it-py's unescapeAll, which decodes link destinations, accepts at most
+# 8 decimal or 8 hexadecimal digits in a numeric reference.
+CLOSER = re.compile(r"(?<!\\)(?:\\\\)*(?:\\\)|&(?:#0{0,6}41|#[xX]0{0,6}29|rpar);)")
 
 
 def visible_lines(lines, prose, starts):
