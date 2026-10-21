@@ -878,7 +878,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against OpenSSL documentation (rolling) (no recorded version), Requests TLS documentation v2.32.3, Git ignore documentation v2.43.0, curl command documentation curl-8_12_1, Node.js extra CA certificates v22.19.0, and Service identity RFC 9525, plus 5 more recorded bases; 6 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 25 claims: 1 demonstrated by a check that ran and 24 reasoned from cited sources.
+Written against OpenSSL documentation (rolling) (no recorded version), Requests TLS documentation v2.32.3, Git ignore documentation v2.43.0, curl command documentation curl-8_12_1, Node.js extra CA certificates v22.19.0, and Service identity RFC 9525, plus 5 more recorded bases; 9 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-21; documentation checked September 2026. The guide records 25 claims: 1 demonstrated by a check that ran and 24 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -941,17 +941,17 @@ This is for development machines only. The generated CA can sign for any name, s
 
 Distribute the certificate (or your internal CA certificate) to clients instead of turning verification off:
 
-Debian trixie and Ubuntu noble remain cited; the Debian bookworm and bullseye and Ubuntu jammy and focal manpages also document `update-ca-certificates` including `.crt` certificates under `/usr/local/share/ca-certificates` as implicitly trusted (see Sources). Use on other Debian and Ubuntu releases remains this guide's assessment, with release-specific citations absent.
+Debian trixie and Ubuntu noble remain cited; the Debian bookworm and bullseye and Ubuntu jammy and focal manpages also document `update-ca-certificates` including `.crt` certificates under `/usr/local/share/ca-certificates` as implicitly trusted (see Sources). The Ubuntu resolute manpage words this slightly differently, saying that such certificates "are also included and implicitly trusted", and tells the reader to copy PEM certificates with the `.crt` extension to `/usr/local/share/ca-certificates` and then run `update-ca-certificates` (see Sources). Use on other Debian and Ubuntu releases remains this guide's assessment, with release-specific citations absent.
 
-RHEL 9 remains cited; the CentOS Stream 8 and 10 package manuals and the Fedora rawhide, 41, 42 and 43 dist-git manuals instruct adding a simple PEM or DER certificate to `/etc/pki/ca-trust/source/anchors/` and running `update-ca-trust extract` (see Sources). The Fedora 41, 42 and 43 branch manuals, at the pinned commits, give this instruction on the same lines 97 to 99 as the cited rawhide manual, with no difference from the rawhide citation there. CentOS Stream is not RHEL, and rawhide is Fedora's development branch, not a released Fedora; use on other RHEL releases (including 8 and 10), other Fedora releases and other CentOS Stream releases remains this guide's assessment, with release-specific citations absent.
+RHEL 9 remains cited, and the RHEL 8 shared system certificates page also says to copy a certificate in the simple PEM or DER file formats to `/usr/share/pki/ca-trust-source/anchors/` or `/etc/pki/ca-trust/source/anchors/` and run `update-ca-trust extract` (see Sources). The CentOS Stream 8, 9 and 10 package manuals and the Fedora rawhide, 41, 42, 43, 44 and 45 branch dist-git manuals instruct adding a simple PEM or DER certificate to `/etc/pki/ca-trust/source/anchors/` and running `update-ca-trust extract` (see Sources). The Fedora 41, 42 and 43 branch manuals, at the pinned commits, give this instruction on the same lines 97 to 99 as the cited rawhide manual, with no difference from the rawhide citation there. The CentOS Stream 9 and Fedora 44 and 45 branch manuals, at the pinned commits, also give it on lines 97 to 99. CentOS Stream is not RHEL, rawhide is Fedora's development branch, not a released Fedora, and this guide does not establish whether Fedora 45 has been released; use on other RHEL releases (including 10), other Fedora releases and other CentOS Stream releases remains this guide's assessment, with release-specific citations absent.
 
 ```bash
-# Debian trixie/bookworm/bullseye and Ubuntu noble/jammy/focal system trust store; other releases: this guide's assessment
+# Debian trixie/bookworm/bullseye and Ubuntu resolute/noble/jammy/focal system trust store; other releases: this guide's assessment
 sudo cp server.crt /usr/local/share/ca-certificates/app-internal.crt
 sudo update-ca-certificates
 
-# RHEL 9 system trust store; CentOS Stream 8/10 (not RHEL); Fedora 41/42/43; Fedora rawhide (development, not a release)
-# Other RHEL (including 8/10), other Fedora and other CentOS Stream: this guide's assessment
+# RHEL 8/9 system trust store; CentOS Stream 8/9/10 (not RHEL); Fedora 41/42/43/44; Fedora 45 branch (release status not established); Fedora rawhide (development, not a release)
+# Other RHEL (including 10), other Fedora and other CentOS Stream: this guide's assessment
 sudo cp server.crt /etc/pki/ca-trust/source/anchors/app-internal.crt
 sudo update-ca-trust extract
 
@@ -1011,6 +1011,11 @@ Self-signed certificates have no revocation and no third-party accountability, a
 - Fedora 41 branch ca-certificates commit ea529bea8d6f00da8edfa62c87d115bc023b4b67, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://src.fedoraproject.org/rpms/ca-certificates/blob/ea529bea8d6f00da8edfa62c87d115bc023b4b67/f/update-ca-trust.8.txt#_97 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract, as the cited rawhide lines do.
 - Fedora 42 branch ca-certificates commit f00d2386f44d6dbcabc18becf7843c789584cfbc, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://src.fedoraproject.org/rpms/ca-certificates/blob/f00d2386f44d6dbcabc18becf7843c789584cfbc/f/update-ca-trust.8.txt#_97 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract, as the cited rawhide lines do.
 - Fedora 43 branch ca-certificates commit e73db0bb0458f65d530ae5901de2be73f7d7fb80, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://src.fedoraproject.org/rpms/ca-certificates/blob/e73db0bb0458f65d530ae5901de2be73f7d7fb80/f/update-ca-trust.8.txt#_97 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract, as the cited rawhide lines do.
+- Ubuntu resolute update-ca-certificates (checked October 2026): https://manpages.ubuntu.com/manpages/resolute/man8/update-ca-certificates.8.html ; "Furthermore, all certificates with a .crt extension found below /usr/local/share/ca-certificates are also included and implicitly trusted." and "Then run update-ca-certificates to merge the new certificates into the existing machine store at /etc/ssl/certs."
+- RHEL 8 shared system certificates, section 3.2 "Adding new certificates to the system-wide truststore" (checked October 2026): https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html/securing_networks/using-shared-system-certificates_securing-networks#adding-new-certificates_using-shared-system-certificates ; "copy the certificate file to the /usr/share/pki/ca-trust-source/anchors/ or /etc/pki/ca-trust/source/anchors/ directory" and then "use the update-ca-trust command", shown as update-ca-trust extract.
+- CentOS Stream 9, not RHEL, ca-certificates commit 848a7831862d78a087c8f5d2284ce603f20ed42f, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://gitlab.com/redhat/centos-stream/rpms/ca-certificates/-/blob/848a7831862d78a087c8f5d2284ce603f20ed42f/update-ca-trust.8.txt#L97-L99 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract.
+- Fedora 44 branch ca-certificates commit 1ccf8e36dcf991db7ae4a4220c1612d1f43d96ec, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://src.fedoraproject.org/rpms/ca-certificates/blob/1ccf8e36dcf991db7ae4a4220c1612d1f43d96ec/f/update-ca-trust.8.txt#_97 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract.
+- Fedora 45 branch, release status not established by this guide, ca-certificates commit 3e42eeb6c71e1dd7c126a90a4811ccbe5f79fed7, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://src.fedoraproject.org/rpms/ca-certificates/blob/3e42eeb6c71e1dd7c126a90a4811ccbe5f79fed7/f/update-ca-trust.8.txt#_97 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract.
 - GNU coreutils v9.7 `chmod` syntax (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11937-L11942
 - GNU coreutils v9.7 mode argument (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11967-L11968
 - GNU coreutils v9.7 `chown` owner and group (checked October 2026): https://github.com/coreutils/coreutils/blob/v9.7/doc/coreutils.texi#L11614-L11622
@@ -1055,6 +1060,11 @@ Components (recorded basis):
 - fedora-41: Fedora 41 ca-certificates (ea529bea8d6f00da8edfa62c87d115bc023b4b67)
 - fedora-42: Fedora 42 ca-certificates (f00d2386f44d6dbcabc18becf7843c789584cfbc)
 - fedora-43: Fedora 43 ca-certificates (e73db0bb0458f65d530ae5901de2be73f7d7fb80)
+- ubuntu-resolute: Ubuntu ca-certificates (resolute)
+- rhel-8: RHEL shared system certificates (RHEL 8)
+- centos-stream-9: CentOS Stream 9 ca-certificates (848a7831862d78a087c8f5d2284ce603f20ed42f)
+- fedora-44: Fedora 44 ca-certificates (1ccf8e36dcf991db7ae4a4220c1612d1f43d96ec)
+- fedora-45: Fedora 45 ca-certificates (branch) (3e42eeb6c71e1dd7c126a90a4811ccbe5f79fed7)
 
 Claims (full source mapping in the JSON block below):
 
@@ -1071,8 +1081,8 @@ Claims (full source mapping in the JSON block below):
 - key-compromise (REASONED; openssl, git): Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat.
 - mkcert (REASONED; mkcert): mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs.
 - mkcert-custody (REASONED; mkcert): Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.
-- debian-trust (REASONED; mkcert, debian-ca, ubuntu-ca, debian-bookworm, ubuntu-jammy, debian-bullseye, ubuntu-focal): Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie/bookworm/bullseye and Ubuntu noble/jammy/focal; other Debian/Ubuntu releases remain this guide's assessment without release-specific citations.
-- rhel-trust (REASONED; mkcert, rhel-ca, centos-stream-8, centos-stream-10, fedora-rawhide, fedora-41, fedora-42, fedora-43): Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract: RHEL 9 is cited, and the CentOS Stream 8/10 (not RHEL), Fedora 41/42/43 and Fedora rawhide (development, not a release) manuals give this for simple PEM/DER certificates. Other RHEL (including 8/10), other Fedora and other CentOS Stream releases remain this guide's assessment without release-specific citations.
+- debian-trust (REASONED; mkcert, debian-ca, ubuntu-ca, debian-bookworm, ubuntu-jammy, debian-bullseye, ubuntu-focal, ubuntu-resolute): Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie/bookworm/bullseye and Ubuntu resolute/noble/jammy/focal; other Debian/Ubuntu releases remain this guide's assessment without release-specific citations.
+- rhel-trust (REASONED; mkcert, rhel-ca, centos-stream-8, centos-stream-10, fedora-rawhide, fedora-41, fedora-42, fedora-43, rhel-8, centos-stream-9, fedora-44, fedora-45): Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract: RHEL 8/9 are cited; the CentOS Stream 8/9/10 (not RHEL), Fedora 41/42/43/44, Fedora 45 branch (release unestablished) and rawhide (development, not a release) manuals give this for simple PEM/DER certificates. Other RHEL (including 10), Fedora and CentOS Stream releases remain this guide's assessment.
 - curl-trust (REASONED; openssl, curl-source): curl --cacert server.crt supplies explicit trust for app.internal.
 - requests-trust (REASONED; openssl, requests): REQUESTS_CA_BUNDLE supplies the certificate path to Python requests.
 - node-trust (REASONED; mkcert, node): NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js.
@@ -1089,7 +1099,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "86dcdf96e780254de40c4bbe467e1b55c47bcf4536091ef1d9b9b3b96de51b04",
+  "body_sha256": "2e92eb93dfc9cb63f01d8856e822d57481e5a3ab9e8362d0b43a7bc9897e4720",
   "components": {
     "openssl": {
       "name": "OpenSSL documentation (rolling)",
@@ -1257,6 +1267,41 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "sf4a64ff0a939": "https://src.fedoraproject.org/rpms/ca-certificates/blob/e73db0bb0458f65d530ae5901de2be73f7d7fb80/f/update-ca-trust.8.txt#_97"
       }
+    },
+    "ubuntu-resolute": {
+      "name": "Ubuntu ca-certificates",
+      "basis": "resolute",
+      "sources": {
+        "sec84181fd9fa": "https://manpages.ubuntu.com/manpages/resolute/man8/update-ca-certificates.8.html"
+      }
+    },
+    "rhel-8": {
+      "name": "RHEL shared system certificates",
+      "basis": "RHEL 8",
+      "sources": {
+        "s9f44bb7b2935": "https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/8/html/securing_networks/using-shared-system-certificates_securing-networks#adding-new-certificates_using-shared-system-certificates"
+      }
+    },
+    "centos-stream-9": {
+      "name": "CentOS Stream 9 ca-certificates",
+      "basis": "848a7831862d78a087c8f5d2284ce603f20ed42f",
+      "sources": {
+        "s6289706376f0": "https://gitlab.com/redhat/centos-stream/rpms/ca-certificates/-/blob/848a7831862d78a087c8f5d2284ce603f20ed42f/update-ca-trust.8.txt#L97-L99"
+      }
+    },
+    "fedora-44": {
+      "name": "Fedora 44 ca-certificates",
+      "basis": "1ccf8e36dcf991db7ae4a4220c1612d1f43d96ec",
+      "sources": {
+        "sd111db8cd76e": "https://src.fedoraproject.org/rpms/ca-certificates/blob/1ccf8e36dcf991db7ae4a4220c1612d1f43d96ec/f/update-ca-trust.8.txt#_97"
+      }
+    },
+    "fedora-45": {
+      "name": "Fedora 45 ca-certificates (branch)",
+      "basis": "3e42eeb6c71e1dd7c126a90a4811ccbe5f79fed7",
+      "sources": {
+        "s28e014a1e5b3": "https://src.fedoraproject.org/rpms/ca-certificates/blob/3e42eeb6c71e1dd7c126a90a4811ccbe5f79fed7/f/update-ca-trust.8.txt#_97"
+      }
     }
   },
   "claims": {
@@ -1273,8 +1318,8 @@ Claims (full source mapping in the JSON block below):
     "key-compromise": {"text": "Never commit private keys; ignore *.key and *.pem before generation in a repository and regenerate keys committed or pasted into chat.", "components": ["openssl", "git"], "sources": ["openssl:s211b1e6e4aa4", "git:sf961a2e5b8e1"], "status": "REASONED"},
     "mkcert": {"text": "mkcert -install creates and trusts a local CA; mkcert issues certificates for the listed development DNS names and IPs.", "components": ["mkcert"], "sources": ["mkcert:s41ae17dba4ce"], "status": "REASONED"},
     "mkcert-custody": {"text": "Use mkcert only for development; its CA key can sign for any name, must not leave the developer's machine and must not serve real users.", "components": ["mkcert"], "sources": ["mkcert:s41ae17dba4ce"], "status": "REASONED"},
-    "debian-trust": {"text": "Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie/bookworm/bullseye and Ubuntu noble/jammy/focal; other Debian/Ubuntu releases remain this guide's assessment without release-specific citations.", "components": ["mkcert", "debian-ca", "ubuntu-ca", "debian-bookworm", "ubuntu-jammy", "debian-bullseye", "ubuntu-focal"], "sources": ["mkcert:s41ae17dba4ce", "debian-ca:s99e100121493", "ubuntu-ca:s4c3728cc6c12", "debian-bookworm:sa5e706846110", "ubuntu-jammy:s73a246e6ccfa", "debian-bullseye:s2eedd95a8996", "ubuntu-focal:s4ddde36c49dc"], "status": "REASONED"},
-    "rhel-trust": {"text": "Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract: RHEL 9 is cited, and the CentOS Stream 8/10 (not RHEL), Fedora 41/42/43 and Fedora rawhide (development, not a release) manuals give this for simple PEM/DER certificates. Other RHEL (including 8/10), other Fedora and other CentOS Stream releases remain this guide's assessment without release-specific citations.", "components": ["mkcert", "rhel-ca", "centos-stream-8", "centos-stream-10", "fedora-rawhide", "fedora-41", "fedora-42", "fedora-43"], "sources": ["mkcert:s41ae17dba4ce", "rhel-ca:s876e668e7116", "centos-stream-8:s448b09073b79", "centos-stream-10:s2862e6522c85", "fedora-rawhide:s70fd69620a8b", "fedora-41:s15529d5b4f48", "fedora-42:sedab1dd6dee7", "fedora-43:sf4a64ff0a939"], "status": "REASONED"},
+    "debian-trust": {"text": "Install app-internal.crt under /usr/local/share/ca-certificates and run update-ca-certificates on Debian trixie/bookworm/bullseye and Ubuntu resolute/noble/jammy/focal; other Debian/Ubuntu releases remain this guide's assessment without release-specific citations.", "components": ["mkcert", "debian-ca", "ubuntu-ca", "debian-bookworm", "ubuntu-jammy", "debian-bullseye", "ubuntu-focal", "ubuntu-resolute"], "sources": ["mkcert:s41ae17dba4ce", "debian-ca:s99e100121493", "ubuntu-ca:s4c3728cc6c12", "debian-bookworm:sa5e706846110", "ubuntu-jammy:s73a246e6ccfa", "debian-bullseye:s2eedd95a8996", "ubuntu-focal:s4ddde36c49dc", "ubuntu-resolute:sec84181fd9fa"], "status": "REASONED"},
+    "rhel-trust": {"text": "Install app-internal.crt under /etc/pki/ca-trust/source/anchors and run update-ca-trust extract: RHEL 8/9 are cited; the CentOS Stream 8/9/10 (not RHEL), Fedora 41/42/43/44, Fedora 45 branch (release unestablished) and rawhide (development, not a release) manuals give this for simple PEM/DER certificates. Other RHEL (including 10), Fedora and CentOS Stream releases remain this guide's assessment.", "components": ["mkcert", "rhel-ca", "centos-stream-8", "centos-stream-10", "fedora-rawhide", "fedora-41", "fedora-42", "fedora-43", "rhel-8", "centos-stream-9", "fedora-44", "fedora-45"], "sources": ["mkcert:s41ae17dba4ce", "rhel-ca:s876e668e7116", "centos-stream-8:s448b09073b79", "centos-stream-10:s2862e6522c85", "fedora-rawhide:s70fd69620a8b", "fedora-41:s15529d5b4f48", "fedora-42:sedab1dd6dee7", "fedora-43:sf4a64ff0a939", "rhel-8:s9f44bb7b2935", "centos-stream-9:s6289706376f0", "fedora-44:sd111db8cd76e", "fedora-45:s28e014a1e5b3"], "status": "REASONED"},
     "curl-trust": {"text": "curl --cacert server.crt supplies explicit trust for app.internal.", "components": ["openssl", "curl-source"], "sources": ["openssl:se5d70578564e", "curl-source:s19ed21fc98f8"], "status": "REASONED"},
     "requests-trust": {"text": "REQUESTS_CA_BUNDLE supplies the certificate path to Python requests.", "components": ["openssl", "requests"], "sources": ["openssl:se5d70578564e", "requests:s21c6be6f6df4"], "status": "REASONED"},
     "node-trust": {"text": "NODE_EXTRA_CA_CERTS supplies additional client trust to Node.js.", "components": ["mkcert", "node"], "sources": ["mkcert:s41ae17dba4ce", "node:s402034f5dcea"], "status": "REASONED"},
@@ -3658,7 +3703,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Git ignore patterns 2.42.0, gitleaks command minimum 8.19+, OpenSSL random bytes 3.0, Python secrets 3.13, Vite environment variables 6, and GNU Bash reference manual bash-5.3; 1 further source is pinned to a commit and 18 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
+Written against Git ignore patterns 2.42.0, gitleaks git/dir path argument 8.19.1 to 8.30.1, gitleaks 8.19.0 git/dir source flag v8.19.0, gitleaks detect before 8.19.0 v8.18.4, OpenSSL random bytes 3.0, Python secrets 3.13, Vite environment variables 6, and GNU Bash reference manual bash-5.3; 1 further source is pinned to a commit and 18 carry no recorded version. Metadata reviewed 2026-10-05; documentation checked September 2026. The guide records 24 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -3671,7 +3716,7 @@ Leaked API keys and credentials in public repositories are the most common secur
 3. **Generate secrets randomly** (`openssl rand -base64 32`; `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`), 1 per service and environment, never shared between staging and production.
 4. **Scan before every push.** [gitleaks](https://github.com/gitleaks/gitleaks) or [trufflehog](https://github.com/trufflesecurity/trufflehog) as a pre-commit hook and in CI:
    ```bash
-   gitleaks git .          # scans the repository history (git/dir need gitleaks 8.19+; older builds use "gitleaks detect" for history and "gitleaks detect --no-git" for the working tree)
+   gitleaks git .          # scans the repository history (git/dir take the path as an argument from gitleaks 8.19.1, by source reading through 8.30.1 without a run; 8.19.0 is not established; before 8.19.0 the README documents "gitleaks detect" for history and "gitleaks detect --no-git" for the working tree)
    gitleaks dir .          # scans the working tree
    ```
 5. **Secrets never enter a command line.** A process's arguments are readable through `/proc/<pid>/cmdline`, which is what `ps` prints; on a default Linux that means every other user on the host, for as long as the process runs, and the command is then written to your shell history. A `hidepid` proc mount or a separate PID namespace narrows who can see it, neither is the default, and neither covers the history. Prefer a flag that reads from stdin (`htpasswd -i`, `docker login --password-stdin`, `gh auth login --with-token`), a file the tool reads itself (`~/.pgpass`, `curl --netrc`; create it with `umask 077` and keep it mode `0600`, since it stores the secret in plaintext and PostgreSQL ignores a `~/.pgpass` that group or others can read), or an environment variable where the tool offers nothing better. As this guide's advice, where a value has to be typed, use `read -rs` to keep terminal input hidden (`-s`) and preserve backslashes (`-r`); as this guide's assessment, because `read` consumes input rather than a command, this keeps the typed value out of shell history. Bash documents that `set -x` prints commands and arguments after expansion; therefore, as this guide's advice, a script that expands a secret into a pipeline (including the `printf`-into-`--password-stdin` pattern below) must turn tracing off around it, because reading from stdin protects the argument list but not the trace.
@@ -3723,7 +3768,7 @@ gitleaks git . && echo clean
 grep -rlIE "sk-|AKIA|ASIA|ghp_|-----BEGIN" --exclude-dir=node_modules --exclude-dir=.git .   # -r recurses, -l prints only the filename (never the matching secret), -I assumes unprocessed input does not match after null binary data is discovered, --exclude-dir skips a whole tree rather than filtering matched lines; -E uses extended regular expressions; as this guide's assessment, this scan is crude but fast
 ```
 
-On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then prints `clean`). As this guide's assessment, the grep is a supplementary pattern search, not proof that no secret is present: as this guide's advice, treat any filename it prints as a finding to inspect privately, empty output as no match for these patterns only, and a non-zero exit caused by a read error as a failed check. gitleaks, which scans by rule rather than by a few prefixes, is the primary gate.
+On every push, gitleaks (8.19.1 or later; see rule 4 for older releases) must exit 0 with no findings (the `&& echo clean` then prints `clean`). As this guide's assessment, the grep is a supplementary pattern search, not proof that no secret is present: as this guide's advice, treat any filename it prints as a finding to inspect privately, empty output as no match for these patterns only, and a non-zero exit caused by a read error as a failed check. gitleaks, which scans by rule rather than by a few prefixes, is the primary gate.
 
 ## Sources (checked September 2026)
 
@@ -3734,7 +3779,9 @@ On every push, gitleaks must exit 0 with no findings (the `&& echo clean` then p
 - AWS Secrets Manager overview (rolling, checked October 2026): https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
 - Google Cloud Secret Manager overview (rolling, checked October 2026): https://docs.cloud.google.com/secret-manager/docs/overview
 - Azure Key Vault overview (rolling, checked October 2026): https://learn.microsoft.com/en-us/azure/key-vault/general/overview
-- gitleaks (git/dir need 8.19+; v8.19.0 README): https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md
+- gitleaks `git` and `dir` scan path from the positional argument (default `.`), by source reading without a run at every tag 8.19.1 to 8.30.1, and default exit codes (checked October 2026): v8.19.1 https://github.com/gitleaks/gitleaks/blob/v8.19.1/cmd/git.go#L33-L42 ; https://github.com/gitleaks/gitleaks/blob/v8.19.1/cmd/directory.go#L26-L34 ; v8.30.1 https://github.com/gitleaks/gitleaks/blob/v8.30.1/cmd/git.go#L33-L43 ; https://github.com/gitleaks/gitleaks/blob/v8.30.1/cmd/directory.go#L25-L34 ; exit codes https://github.com/gitleaks/gitleaks/blob/v8.30.1/README.md#L645-L653
+- gitleaks v8.19.0 `git` and `dir` reading a `source` flag that `root.go`, `git.go` and `directory.go` do not register, by source reading without a run; other command files not read (checked October 2026): https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/git.go#L40-L44 ; https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/directory.go#L38-L42 ; root flags https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/root.go#L42-L63 ; `initConfig` https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/root.go#L97-L112
+- gitleaks before v8.19.0: `detect`, `--no-git` and `--source` (default `.`), v8.18.4 README (checked October 2026): https://github.com/gitleaks/gitleaks/blob/v8.18.4/README.md#L162 ; https://github.com/gitleaks/gitleaks/blob/v8.18.4/README.md#L172-L183
 - trufflehog: https://github.com/trufflesecurity/trufflehog
 - sops: https://github.com/getsops/sops and age: https://github.com/FiloSottile/age
 - git-filter-repo: https://github.com/newren/git-filter-repo
@@ -3773,7 +3820,9 @@ DEMONSTRATED refers to historical evidence in this guide; REASONED records sourc
 Components (recorded basis):
 
 - git-ignore: Git ignore patterns (2.42.0)
-- gitleaks: gitleaks command minimum (8.19+)
+- gitleaks: gitleaks git/dir path argument (8.19.1 to 8.30.1)
+- gitleaks-8190: gitleaks 8.19.0 git/dir source flag (v8.19.0)
+- gitleaks-detect: gitleaks detect before 8.19.0 (v8.18.4)
 - trufflehog: TruffleHog (unknown)
 - sops: SOPS (unknown)
 - age: age (unknown)
@@ -3803,7 +3852,9 @@ Claims (full source mapping in the JSON block below):
 - gitignore (REASONED; owasp, next, git-ignore): Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.
 - runtime-storage (REASONED; owasp, docker-build, aws-store, google-store, azure-store): Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value.
 - random (REASONED; owasp, openssl-rand, python-secrets): Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.
-- scanners (REASONED; gitleaks, trufflehog): Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.
+- scanners (REASONED; gitleaks, trufflehog): Scan before every push and in CI with gitleaks or TruffleHog. By source reading at every gitleaks tag from v8.19.1 to v8.30.1, cited at both ends, without a run, git and dir take the scan path from a positional argument that defaults to the current directory, as the shown gitleaks git . and gitleaks dir . commands need.
+- scanners-8190 (REASONED; gitleaks-8190): Gitleaks v8.19.0 git and dir are not established: by source reading without a run, both commands, and root initConfig when no config path is set, read a source flag that root.go, git.go and directory.go never register, calling log.Fatal on a lookup error. Other v8.19.0 command files were not read, so a registration elsewhere is not excluded.
+- scanners-detect (REASONED; gitleaks-detect): The v8.18.4 gitleaks README, the last tag before v8.19.0, documents detect for git repositories, its --no-git option for files and directories, and a --source flag defaulting to the current directory; releases before v8.18.0 and detect's own source were not read.
 - argv (REASONED; proc, apache): Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.
 - stdin (REASONED; apache, docker, gh): Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.
 - credential-files (REASONED; postgres, curl): Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass.
@@ -3820,7 +3871,7 @@ Claims (full source mapping in the JSON block below):
 - history-cleanup (REASONED; git-filter-repo, owasp): History rewriting with git-filter-repo is hygiene after rotation, not containment or unpublishing.
 - leak-audit (REASONED; owasp): Review provider logs for use of the leaked credential during its exposure window.
 - encrypted-git (REASONED; sops, age): SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository.
-- verify-scan (REASONED; gitleaks): gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate.
+- verify-scan (REASONED; gitleaks): With gitleaks 8.19.1 or later, gitleaks must exit 0 with no findings before clean is printed; the v8.30.1 README lists exit 0 for no leaks and 1 for leaks or an error. This rule-based scan is the primary gate.
 - verify-patterns (REASONED; grep, owasp): Supplementary grep prints filenames only, when null binary data is discovered assumes unprocessed input does not match, skips excluded trees; as this guide's advice, a non-zero exit caused by a read error is a failed check; as this guide's assessment, empty output is not proof of no secret. GNU grep documents -E as extended regular expression syntax.
 
 ````json
@@ -3828,7 +3879,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "90be4416b34765079bc032a7081acd4be643b6451cf063eb5d0e3018652b2506",
+  "body_sha256": "c4e61f255341cb94447fbc90a86f58f85ca8ecdf85901cf9376fd6d4651db837",
   "components": {
     "git-ignore": {
       "name": "Git ignore patterns",
@@ -3838,10 +3889,32 @@ Claims (full source mapping in the JSON block below):
       }
     },
     "gitleaks": {
-      "name": "gitleaks command minimum",
-      "basis": "8.19+",
+      "name": "gitleaks git/dir path argument",
+      "basis": "8.19.1 to 8.30.1",
       "sources": {
-        "s18cdf0069eb9": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/README.md"
+        "sb16acfe1832b": "https://github.com/gitleaks/gitleaks/blob/v8.19.1/cmd/git.go#L33-L42",
+        "s0af97c8cbbb0": "https://github.com/gitleaks/gitleaks/blob/v8.19.1/cmd/directory.go#L26-L34",
+        "s2a515c553a16": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/cmd/git.go#L33-L43",
+        "s3cedc5927daf": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/cmd/directory.go#L25-L34",
+        "s8b08240c42e9": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/README.md#L645-L653"
+      }
+    },
+    "gitleaks-8190": {
+      "name": "gitleaks 8.19.0 git/dir source flag",
+      "basis": "v8.19.0",
+      "sources": {
+        "s4ee488cd50ff": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/git.go#L40-L44",
+        "s17e3c5309e52": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/directory.go#L38-L42",
+        "s9b18bf477a6e": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/root.go#L42-L63",
+        "s5c847ad43500": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/root.go#L97-L112"
+      }
+    },
+    "gitleaks-detect": {
+      "name": "gitleaks detect before 8.19.0",
+      "basis": "v8.18.4",
+      "sources": {
+        "s37819da2aec2": "https://github.com/gitleaks/gitleaks/blob/v8.18.4/README.md#L162",
+        "s12cd43a29383": "https://github.com/gitleaks/gitleaks/blob/v8.18.4/README.md#L172-L183"
       }
     },
     "trufflehog": {
@@ -4025,7 +4098,9 @@ Claims (full source mapping in the JSON block below):
     "gitignore": {"text": "Ignore .env, .env.*, *.key and *.pem before committing; allow only a secret-free template. Already tracked files remain tracked.", "components": ["owasp", "next", "git-ignore"], "sources": ["owasp:s26a987a1053b", "next:s964651d4eed4", "git-ignore:s90ce7c8605d9"], "status": "REASONED"},
     "runtime-storage": {"text": "Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets. The reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, it does not show every secret value.", "components": ["owasp", "docker-build", "aws-store", "google-store", "azure-store"], "sources": ["owasp:s26a987a1053b", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "docker-build:s6283b172a5c6", "aws-store:s81b41c17ad57", "google-store:scd27be211781", "azure-store:seb86b29f4951"], "status": "REASONED"},
     "random": {"text": "Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.", "components": ["owasp", "openssl-rand", "python-secrets"], "sources": ["owasp:s26a987a1053b", "openssl-rand:s11d11381b080", "python-secrets:sd2e8196eaa96"], "status": "REASONED"},
-    "scanners": {"text": "Scan before every push and in CI; gitleaks git/dir require 8.19+, with detect and detect --no-git on older builds; TruffleHog is another scanner.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:s18cdf0069eb9", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
+    "scanners": {"text": "Scan before every push and in CI with gitleaks or TruffleHog. By source reading at every gitleaks tag from v8.19.1 to v8.30.1, cited at both ends, without a run, git and dir take the scan path from a positional argument that defaults to the current directory, as the shown gitleaks git . and gitleaks dir . commands need.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:sb16acfe1832b", "gitleaks:s0af97c8cbbb0", "gitleaks:s2a515c553a16", "gitleaks:s3cedc5927daf", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
+    "scanners-8190": {"text": "Gitleaks v8.19.0 git and dir are not established: by source reading without a run, both commands, and root initConfig when no config path is set, read a source flag that root.go, git.go and directory.go never register, calling log.Fatal on a lookup error. Other v8.19.0 command files were not read, so a registration elsewhere is not excluded.", "components": ["gitleaks-8190"], "sources": ["gitleaks-8190:s4ee488cd50ff", "gitleaks-8190:s17e3c5309e52", "gitleaks-8190:s9b18bf477a6e", "gitleaks-8190:s5c847ad43500"], "status": "REASONED"},
+    "scanners-detect": {"text": "The v8.18.4 gitleaks README, the last tag before v8.19.0, documents detect for git repositories, its --no-git option for files and directories, and a --source flag defaulting to the current directory; releases before v8.18.0 and detect's own source were not read.", "components": ["gitleaks-detect"], "sources": ["gitleaks-detect:s37819da2aec2", "gitleaks-detect:s12cd43a29383"], "status": "REASONED"},
     "argv": {"text": "Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.", "components": ["proc", "apache"], "sources": ["proc:s801d5f1ee88d", "apache:scde9004bb967"], "status": "REASONED"},
     "stdin": {"text": "Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.", "components": ["apache", "docker", "gh"], "sources": ["apache:scde9004bb967", "docker:sf8243a183d67", "gh:sf0b01ee9b3e1"], "status": "REASONED"},
     "credential-files": {"text": "Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass.", "components": ["postgres", "curl"], "sources": ["postgres:s198d4780d9a4", "curl:s3a0a54039912"], "status": "REASONED"},
@@ -4042,7 +4117,7 @@ Claims (full source mapping in the JSON block below):
     "history-cleanup": {"text": "History rewriting with git-filter-repo is hygiene after rotation, not containment or unpublishing.", "components": ["git-filter-repo", "owasp"], "sources": ["git-filter-repo:s95bf8a949d5e", "owasp:s26a987a1053b"], "status": "REASONED"},
     "leak-audit": {"text": "Review provider logs for use of the leaked credential during its exposure window.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
     "encrypted-git": {"text": "SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository.", "components": ["sops", "age"], "sources": ["sops:s78c5bb528dc4", "age:sca8b0d211739"], "status": "REASONED"},
-    "verify-scan": {"text": "gitleaks must exit 0 with no findings before clean is printed; this rule-based scan is the primary gate.", "components": ["gitleaks"], "sources": ["gitleaks:s18cdf0069eb9"], "status": "REASONED", "verify": [1]},
+    "verify-scan": {"text": "With gitleaks 8.19.1 or later, gitleaks must exit 0 with no findings before clean is printed; the v8.30.1 README lists exit 0 for no leaks and 1 for leaks or an error. This rule-based scan is the primary gate.", "components": ["gitleaks"], "sources": ["gitleaks:sb16acfe1832b", "gitleaks:s2a515c553a16", "gitleaks:s8b08240c42e9"], "status": "REASONED", "verify": [1]},
     "verify-patterns": {"text": "Supplementary grep prints filenames only, when null binary data is discovered assumes unprocessed input does not match, skips excluded trees; as this guide's advice, a non-zero exit caused by a read error is a failed check; as this guide's assessment, empty output is not proof of no secret. GNU grep documents -E as extended regular expression syntax.", "components": ["grep", "owasp"], "sources": ["grep:s33689bc366bf", "grep:s2c1251092e66", "grep:sea43e82b0753", "grep:sbd30b628a5b8", "owasp:s26a987a1053b"], "status": "REASONED", "verify": [1]}
   }
 }
