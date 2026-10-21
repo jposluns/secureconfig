@@ -14397,7 +14397,7 @@ sudo ss -tlnp
 
 ## Sources (checked September 2026)
 
-Version boundary: GitHub.com documentation checked 18 September 2026, with REST examples pinned to API version `2026-03-10`; GitLab documentation is rolling, checked that date. The legacy GitLab registration token was disabled by default in GitLab 17.0 and is currently scheduled for removal in GitLab 20.0, and the Instance and Docker Autoscaler executors became generally available in Runner 17.1; run a currently supported patched release. No live product-version compatibility matrix was exercised.
+Version boundary: GitHub.com documentation checked 18 September 2026, with REST examples pinned to API version `2026-03-10`; GitLab documentation is rolling, checked that date. GitLab Runner source for the `pid_mode` key is pinned to tag v19.5.0, checked October 2026. The legacy GitLab registration token was disabled by default in GitLab 17.0 and is currently scheduled for removal in GitLab 20.0, and the Instance and Docker Autoscaler executors became generally available in Runner 17.1; run a currently supported patched release. No live product-version compatibility matrix was exercised.
 
 - GitHub Actions security hardening and secure use: https://docs.github.com/en/actions/reference/security/secure-use
 - GitHub self-hosted runner groups and access (private-only default): https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/manage-access
@@ -14410,7 +14410,7 @@ Version boundary: GitHub.com documentation checked 18 September 2026, with REST 
 - GitLab runner authentication tokens and the creation workflow: https://docs.gitlab.com/ci/runners/new_creation_workflow/
 - GitLab Runner monitoring (metrics port 9252, no built-in authorization): https://docs.gitlab.com/runner/monitoring/
 - GitLab Runner advanced configuration (session_server, Docker controls and autoscaler limits): https://docs.gitlab.com/runner/configuration/advanced-configuration/ A partial automated page read dated 2026-10-12, not a recheck of this September 2026 list, corroborated the inspected Docker and autoscaler keys except `pid_mode`, which was reported only from rolling GitLab Runner `common/config.go` on `main`; the next item cites `pid_mode` from GitLab Runner source pinned at tag v19.5.0.
-- GitLab Runner `common/config.go` DockerConfig `PidMode` field (toml `pid_mode`, "Run the container in a specific PID space"), tag v19.5.0 at 70f5c12dad80bfd8ab426843f38cae72fddc4e75 (checked October 2026): https://gitlab.com/gitlab-org/gitlab-runner/-/blob/70f5c12dad80bfd8ab426843f38cae72fddc4e75/common/config.go#L330 The same field is at L310 at tag v19.1.0 (5eb085abb18b9c9614ba6e12951ece859d092272), the first tag with the key; v19.0.x does not have it, including v19.0.3 (e951e4926504fcfce3399542ff56029f77798c5a).
+- GitLab Runner `common/config.go` DockerConfig `PidMode` field (toml `pid_mode`, "Run the container in a specific PID space"), tag v19.5.0 at 70f5c12dad80bfd8ab426843f38cae72fddc4e75 (checked October 2026): https://gitlab.com/gitlab-org/gitlab-runner/-/blob/70f5c12dad80bfd8ab426843f38cae72fddc4e75/common/config.go#L330 The same field is at L310 at tag v19.1.0 (5eb085abb18b9c9614ba6e12951ece859d092272). It is absent at tags v18.11.4 (5b1ba4d9a0dec0a0a67ba4b88fa88e7f21b1060f), v19.0.0 (d4bac16c639ce0e7a778f1e88ca05b6d18dde57a), v19.0.1 (c2831b75a3ff0782dca8f64498cbc6f71c76819e), v19.0.2 (02fcb2d71c5d50f2f0ab92f9fd685706d3729b94) and v19.0.3 (e951e4926504fcfce3399542ff56029f77798c5a). No other tag before v19.1.0 was checked, so the tag that introduced the key is not established.
 - GitHub self-hosted runner groups REST API (group visibility, allows_public_repositories, group repositories) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/self-hosted-runner-groups
 - GitHub Actions OIDC (id-token permission, issuer/audience/subject claims): https://docs.github.com/en/actions/reference/security/oidc
 - GitHub workflow-jobs REST API (runner assignment: runner_id, runner_group_id) (GitHub REST API 2026-03-10): https://docs.github.com/en/rest/actions/workflow-jobs
@@ -14490,7 +14490,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "07c0ea8ff1533f0959eb847c1caa546bcaa5ca020c88560deaef73f25b81558d",
+  "body_sha256": "0ff09ae9c87de8dd7c482cfe570d868a2143cc21f6d714a70324262fb5034217",
   "components": {
     "github": {
       "name": "GitHub Actions documentation",
