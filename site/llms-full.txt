@@ -53449,7 +53449,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 73 claims: 14 demonstrated by a check that ran and 59 reasoned from cited sources.
+Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 74 claims: 14 demonstrated by a check that ran and 60 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -53800,15 +53800,18 @@ There are two fixes, and you can use both:
   `query_ingesters_within` (0 sends every selection) unless the ingester's
   `query_store_max_look_back_period` is nonzero when the querier module initializes and
   replaces it. Without the `all` target, a configured 0 stays 0 and `query_ingesters_within`
-  applies. When `all` is the only target and the active or next schema period uses a
-  boltdb-shipper or TSDB index, the store module, which the querier module depends on and the
-  module manager initializes first, turns a configured 0 into a computed minimum that then
-  replaces `query_ingesters_within`. That minimum is the ingester's maximum chunk age plus
+  applies. When the target list includes `all` but none of `querier`, `ruler`, `read`,
+  `index-gateway` or `backend`, and the active or next schema period uses a boltdb-shipper or
+  TSDB index, the store module, which the querier module depends on and the module manager
+  initializes first, turns a configured 0 into a computed minimum that then replaces
+  `query_ingesters_within`. That minimum is the ingester's maximum chunk age plus
   21 minutes, the index cache validity and three resync intervals of that index's shipper.
   The setting's flag help limits it to boltdb-shipper or TSDB indexes with the `filesystem`
   object store, and the same `all`-target store setup rejects a nonzero value with any other
   object store. The flag help documents `-1` as infinite, which sends every selection to
-  ingesters and none to the store.
+  ingesters and none directly to the store. Under those `all`-target conditions, the ingester
+  itself also queries the store for the log and sample selections it serves, and `-1` leaves
+  the start of that store range unchanged.
   `Run` initializes the target modules through the module manager and starts the resulting
   services together. The internal server module exists only when `internal-server.enable` is
   true (default false); it is then inserted before `Server` in each module dependency list that
@@ -54087,6 +54090,7 @@ from your own account's view of the process.
 - Loki v3.7.8 ingester store lookback copied to the querier: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L540-L542
 - Loki v3.7.8 ingester store lookback flag (`-1` for infinite): https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L163
 - Loki v3.7.8 querier store query skipped without a store interval: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L200-L212
+- Loki v3.7.8 querier sample store query skipped without a store interval: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L263-L272
 - Loki v3.7.8 `-1` store lookback returning no store interval: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/intervals.go#L23-L25
 - Loki v3.7.8 store module shipper setup for an object-storage index: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L910-L918
 - Loki v3.7.8 all-target shipper store setup applying the store lookback: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1060-L1112
@@ -54097,6 +54101,10 @@ from your own account's view of the process.
 - Loki v3.7.8 active schema period and object-storage index check: https://github.com/grafana/loki/blob/v3.7.8/pkg/storage/config/schema_config.go#L345-L378
 - Loki v3.7.8 store and querier module registration: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L770-L771
 - Loki v3.7.8 module dependency registration: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L943-L947
+- Loki v3.7.8 target-list membership check (`isTarget`): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L387-L389
+- Loki v3.7.8 ingester log query merging a store query: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1102-L1119
+- Loki v3.7.8 ingester sample query merging a store query: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1175-L1191
+- Loki v3.7.8 ingester store query range (`QueryStore` gate; `-1` leaves the start unchanged): https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1640-L1660
 - Loki v3.7.8 internal-server memberlist route: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1814-L1816
 - Loki v3.7.8 compactor handler prefix on both servers: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1928-L1933
 - [curl curl-8_14_1 custom headers (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
@@ -54191,10 +54199,11 @@ Claims (full source mapping in the JSON block below):
 - loki-client-pools (REASONED; loki, dskit): dskit pools cache one client per address, created on first use. With health checks on (frontend pool; ingester pools by default), one failed check removes a client, as Loki sets no grace period. Ingester pools also drop addresses missing from healthy ring entries; the frontend pool has no discovery and checks every 5s. Pooling does not establish effective addresses or successful calls.
 - loki-worker-watchers (REASONED; loki, dskit): Ring watchers take the scheduler ring's key-0 Write set each lookup period and reconcile only non-empty results; DNS watchers poll at that period with no SRV name, report an IP target once and re-resolve host names, with dskit's default port 443 if none is given. Added addresses get processor managers sharing max concurrency, at least one each; removal notifies the peer and closes the connection.
 - loki-request-callers (REASONED; loki): Push HTTP handlers call PushWithResolver; outside all, write and ingester targets the distributor also registers gRPC Pusher. Kafka writes default off, ingester writes on; Kafka writes need a partition ring and produce to an active partition.
-- loki-ingester-query-window (REASONED; loki): Without query_store_only, Loki queriers query ingesters for selections ending within the ingester store lookback if it is nonzero when the querier module initializes, else query_ingesters_within (0: all); a -1 lookback, documented as infinite, sends every selection to ingesters and none to the store.
-- loki-ingester-lookback-all (REASONED; loki, dskit): When all is Loki's only target and the active or next schema period uses a boltdb-shipper or TSDB index, the store module, initialized before the querier module that depends on it, turns a configured 0 ingester store lookback into a computed minimum that replaces query_ingesters_within; without all, 0 stays 0.
-- loki-ingester-lookback-minimum (REASONED; loki): Loki's computed minimum ingester store lookback is the ingester's maximum chunk age plus 21 minutes (a 15-minute boltdb shard period, 1-minute index upload interval and 5-minute buffer), the index cache validity and three resync intervals of the active shipper index.
+- loki-ingester-query-window (REASONED; loki): Without query_store_only, Loki queriers query ingesters for selections ending within the ingester store lookback if it is nonzero when the querier module initializes, else query_ingesters_within (0: all); a -1 lookback, documented as infinite, sends every selection to ingesters and none directly to the store.
+- loki-ingester-lookback-all (REASONED; loki, dskit): When Loki's target list includes all but none of querier, ruler, read, index-gateway or backend, and the active or next schema period uses a boltdb-shipper or TSDB index, the store module, initialized before the querier module that depends on it, turns a configured 0 ingester store lookback into a computed minimum that replaces query_ingesters_within; without all, 0 stays 0.
+- loki-ingester-lookback-minimum (REASONED; loki): Loki's computed minimum ingester store lookback is the ingester's maximum chunk age plus 21 minutes (a 15-minute boltdb shard period, 1-minute index upload interval and 5-minute buffer), the index cache validity and three resync intervals of the active or next period's shipper index.
 - loki-ingester-lookback-store (REASONED; loki): Loki's query_store_max_look_back_period flag help limits it to boltdb-shipper/TSDB indexes with the filesystem object store; the all target's boltdb-shipper/TSDB store setup rejects a nonzero value with any other object store.
+- loki-ingester-store-all (REASONED; loki): When Loki's target list includes all but none of querier, ruler, read, index-gateway or backend, and the active or next schema period uses a boltdb-shipper or TSDB index, the ingester itself also queries the store for the log and sample selections it serves; a -1 store lookback leaves the start of that store range unchanged.
 - loki-internal-server (REASONED; loki, dskit, go): Run initializes target modules and starts them together. internal_server is off by default; when enabled it precedes Server and its HTTP listener defaults to localhost:3101. Its flags register no gRPC address or port, so by inference, unless YAML sets them, dskit opens an any-address gRPC listener on an OS-chosen port carrying the HTTP bridge; not observed.
 - loki-internal-routes (REASONED; loki): When enabled, the internal server's HTTP router serves routes including /ready and buildinfo and, when their modules run, /ring, /memberlist and the compactor handler prefix; these are source registrations, not observed responses.
 - loki-grpc-tls (REASONED; dskit, loki): gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers.
@@ -54211,7 +54220,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "effec2cbabfc8c487edcf81d7c1f6eccf7f38b313524d0e37b433d49bd46b05e",
+  "body_sha256": "818261bbf99ec2dc400fd21ab14b85d87d7290540a475e7a82a19eab424f250d",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -54343,6 +54352,7 @@ Claims (full source mapping in the JSON block below):
         "sf2a4759294c3": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L540-L542",
         "s23d3deffe096": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L163",
         "s86fc597288e2": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L200-L212",
+        "se3f01b0b8f64": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L263-L272",
         "s23599866ad90": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/intervals.go#L23-L25",
         "se82f6c344ae2": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L910-L918",
         "sa4685cf34525": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1060-L1112",
@@ -54353,6 +54363,10 @@ Claims (full source mapping in the JSON block below):
         "s086d15529b4c": "https://github.com/grafana/loki/blob/v3.7.8/pkg/storage/config/schema_config.go#L345-L378",
         "sc311d25f20e8": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L770-L771",
         "s3e8d9a35ec33": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L943-L947",
+        "s9a971cf72e10": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L387-L389",
+        "s21c205d034b9": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1102-L1119",
+        "sd6184d6a8a46": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1175-L1191",
+        "s51ab6a62a6bd": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1640-L1660",
         "sb6c261fe940d": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1814-L1816",
         "s81d8d94c3cea": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1928-L1933"
       }
@@ -54521,10 +54535,11 @@ Claims (full source mapping in the JSON block below):
     "loki-client-pools": {"text": "dskit pools cache one client per address, created on first use. With health checks on (frontend pool; ingester pools by default), one failed check removes a client, as Loki sets no grace period. Ingester pools also drop addresses missing from healthy ring entries; the frontend pool has no discovery and checks every 5s. Pooling does not establish effective addresses or successful calls.", "components": ["loki", "dskit"], "sources": ["dskit:s0b92cab27eeb", "dskit:sa35a10f1fa8b", "dskit:s6224eeb93eb9", "dskit:s79f868b8ee48", "loki:s5ab3c47cb0fc", "loki:sfc4788e520b8", "loki:s88661a4514b3", "loki:sde741c787b71", "loki:s21675bf85b75"], "status": "REASONED"},
     "loki-worker-watchers": {"text": "Ring watchers take the scheduler ring's key-0 Write set each lookup period and reconcile only non-empty results; DNS watchers poll at that period with no SRV name, report an IP target once and re-resolve host names, with dskit's default port 443 if none is given. Added addresses get processor managers sharing max concurrency, at least one each; removal notifies the peer and closes the connection.", "components": ["loki", "dskit"], "sources": ["loki:scc6c338ac167", "loki:s02c83c5d9dda", "loki:sc26dc660fa21", "dskit:s7077c6b93703", "dskit:s77d6a067cd74", "dskit:sfbd1b87a9a0c", "loki:s634e6599df5e", "loki:sb8f98248ef1a", "loki:s6a02e080cabb"], "status": "REASONED"},
     "loki-request-callers": {"text": "Push HTTP handlers call PushWithResolver; outside all, write and ingester targets the distributor also registers gRPC Pusher. Kafka writes default off, ingester writes on; Kafka writes need a partition ring and produce to an active partition.", "components": ["loki"], "sources": ["loki:s9f316e1a5fef", "loki:s543d4de072bb", "loki:s3d6bf0891af0", "loki:sd28855900a87", "loki:sa59140ca5c4c", "loki:s9a87cce410e5", "loki:s846c370c416f", "loki:s51bcdc31e69d"], "status": "REASONED"},
-    "loki-ingester-query-window": {"text": "Without query_store_only, Loki queriers query ingesters for selections ending within the ingester store lookback if it is nonzero when the querier module initializes, else query_ingesters_within (0: all); a -1 lookback, documented as infinite, sends every selection to ingesters and none to the store.", "components": ["loki"], "sources": ["loki:s8f53a03e764f", "loki:sdc0d0e6ad95d", "loki:s529cd9a944d9", "loki:sf2a4759294c3", "loki:s23d3deffe096", "loki:s23599866ad90", "loki:s86fc597288e2"], "status": "REASONED"},
-    "loki-ingester-lookback-all": {"text": "When all is Loki's only target and the active or next schema period uses a boltdb-shipper or TSDB index, the store module, initialized before the querier module that depends on it, turns a configured 0 ingester store lookback into a computed minimum that replaces query_ingesters_within; without all, 0 stays 0.", "components": ["loki", "dskit"], "sources": ["loki:s086d15529b4c", "loki:se82f6c344ae2", "loki:sa4685cf34525", "loki:s937747b2754f", "loki:sf2a4759294c3", "loki:sf4c3469d7ee1", "loki:sc311d25f20e8", "loki:s3e8d9a35ec33", "loki:sb7c90a61ae40", "dskit:s96305c045ce4"], "status": "REASONED"},
-    "loki-ingester-lookback-minimum": {"text": "Loki's computed minimum ingester store lookback is the ingester's maximum chunk age plus 21 minutes (a 15-minute boltdb shard period, 1-minute index upload interval and 5-minute buffer), the index cache validity and three resync intervals of the active shipper index.", "components": ["loki"], "sources": ["loki:sa4685cf34525", "loki:s362660480c60", "loki:s7e25cfebaa93", "loki:s425030dbbf09"], "status": "REASONED"},
+    "loki-ingester-query-window": {"text": "Without query_store_only, Loki queriers query ingesters for selections ending within the ingester store lookback if it is nonzero when the querier module initializes, else query_ingesters_within (0: all); a -1 lookback, documented as infinite, sends every selection to ingesters and none directly to the store.", "components": ["loki"], "sources": ["loki:s8f53a03e764f", "loki:sdc0d0e6ad95d", "loki:s529cd9a944d9", "loki:sf2a4759294c3", "loki:s23d3deffe096", "loki:s23599866ad90", "loki:s86fc597288e2", "loki:se3f01b0b8f64"], "status": "REASONED"},
+    "loki-ingester-lookback-all": {"text": "When Loki's target list includes all but none of querier, ruler, read, index-gateway or backend, and the active or next schema period uses a boltdb-shipper or TSDB index, the store module, initialized before the querier module that depends on it, turns a configured 0 ingester store lookback into a computed minimum that replaces query_ingesters_within; without all, 0 stays 0.", "components": ["loki", "dskit"], "sources": ["loki:s086d15529b4c", "loki:se82f6c344ae2", "loki:sa4685cf34525", "loki:s9a971cf72e10", "loki:s937747b2754f", "loki:sf2a4759294c3", "loki:sf4c3469d7ee1", "loki:sc311d25f20e8", "loki:s3e8d9a35ec33", "loki:sb7c90a61ae40", "dskit:s96305c045ce4"], "status": "REASONED"},
+    "loki-ingester-lookback-minimum": {"text": "Loki's computed minimum ingester store lookback is the ingester's maximum chunk age plus 21 minutes (a 15-minute boltdb shard period, 1-minute index upload interval and 5-minute buffer), the index cache validity and three resync intervals of the active or next period's shipper index.", "components": ["loki"], "sources": ["loki:sa4685cf34525", "loki:s362660480c60", "loki:s7e25cfebaa93", "loki:s425030dbbf09"], "status": "REASONED"},
     "loki-ingester-lookback-store": {"text": "Loki's query_store_max_look_back_period flag help limits it to boltdb-shipper/TSDB indexes with the filesystem object store; the all target's boltdb-shipper/TSDB store setup rejects a nonzero value with any other object store.", "components": ["loki"], "sources": ["loki:s23d3deffe096", "loki:se82f6c344ae2", "loki:sa4685cf34525", "loki:s937747b2754f"], "status": "REASONED"},
+    "loki-ingester-store-all": {"text": "When Loki's target list includes all but none of querier, ruler, read, index-gateway or backend, and the active or next schema period uses a boltdb-shipper or TSDB index, the ingester itself also queries the store for the log and sample selections it serves; a -1 store lookback leaves the start of that store range unchanged.", "components": ["loki"], "sources": ["loki:se82f6c344ae2", "loki:sa4685cf34525", "loki:s9a971cf72e10", "loki:s086d15529b4c", "loki:s937747b2754f", "loki:s21c205d034b9", "loki:sd6184d6a8a46", "loki:s51ab6a62a6bd"], "status": "REASONED"},
     "loki-internal-server": {"text": "Run initializes target modules and starts them together. internal_server is off by default; when enabled it precedes Server and its HTTP listener defaults to localhost:3101. Its flags register no gRPC address or port, so by inference, unless YAML sets them, dskit opens an any-address gRPC listener on an OS-chosen port carrying the HTTP bridge; not observed.", "components": ["loki", "dskit", "go"], "sources": ["loki:sb7c90a61ae40", "loki:scf7d98f51caa", "loki:sf4c3469d7ee1", "loki:sd4f78f9689f6", "loki:sd46d55125044", "loki:s9fd7d8bd80e3", "loki:sf19909de84b7", "loki:s309318e5a59c", "loki:s319f6b7b5340", "dskit:s7848c6311aee", "dskit:s5fd7b12bfcf1", "go:s37204ff1b27c"], "status": "REASONED"},
     "loki-internal-routes": {"text": "When enabled, the internal server's HTTP router serves routes including /ready and buildinfo and, when their modules run, /ring, /memberlist and the compactor handler prefix; these are source registrations, not observed responses.", "components": ["loki"], "sources": ["loki:sb7c90a61ae40", "loki:s319f6b7b5340", "loki:sb6c261fe940d", "loki:s81d8d94c3cea"], "status": "REASONED"},
     "loki-grpc-tls": {"text": "gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers.", "components": ["dskit", "loki"], "sources": ["dskit:sd35a28be4391", "loki:s70975c2655fa"], "status": "REASONED"},
