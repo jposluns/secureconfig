@@ -32,6 +32,8 @@ LIST = re.compile(r"^( {0,3}| {4,})(?:[-+*]|[0-9]{1,9}[.)])([ \t]+)")
 DESTINATION = re.compile(r"[ \t]*(?:<[^>]+>|\S+)")
 ATX = re.compile(r"^ {0,3}#{1,6}(?:[ \t]+|$)")
 SETEXT = re.compile(r"^ {0,3}(?:=+|-+)[ \t]*$")
+# An escaped closing parenthesis or a character reference that decodes to one.
+CLOSER = re.compile(r"(?<!\\)(?:\\\\)*(?:\\\)|&(?:#0*41|#[xX]0*29|rpar);)")
 
 
 def visible_lines(lines, prose, starts):
@@ -160,9 +162,8 @@ def parsed_findings(path, parser):
     from markdown_it.common.utils import unescapeAll
 
     def decoded_url(raw):
-        # Preserve escaped closing parentheses while trimming link syntax.
-        escaped_closers = len(re.findall(r"(?<!\\)(?:\\\\)*\\\)", raw))
-        return url_token(unescapeAll(raw), escaped_closers)
+        # Preserve escaped or referenced closing parentheses while trimming link syntax.
+        return url_token(unescapeAll(raw), len(CLOSER.findall(raw)))
 
     def parsed_position(content, start, end, autolink, decoded, original):
         """Check that this source span belongs to a parsed destination."""
@@ -205,6 +206,7 @@ def parsed_findings(path, parser):
     def raw_destinations(content, children):
         """Count whole raw URLs at parsed inline link and image destinations."""
         destinations = Counter()
+        closers = set()
         spans = [(first, last) for first, last, _ in code_spans(content)]
         starts = {(match.end(), bool(match.group(1)), False)
                   for match in INLINE_DESTINATION.finditer(content)}
@@ -218,20 +220,24 @@ def parsed_findings(path, parser):
                 if content[match.end():match.end() + 1] != ">":
                     continue
                 ends = (match.end(),)
-                protected = max(0, match.group().count(")") - match.group().count("("))
             else:
-                protected = len(re.findall(r"(?<!\\)(?:\\\\)*\\\)", match.group()))
-                shortest = start + len(url_token(match, protected))
-                ends = range(match.end(), shortest - 1, -1)
+                shortest = start + len(url_token(match, len(CLOSER.findall(match.group()))))
+                # The link's own closing parenthesis can sit inside a longer raw URL.
+                inner = {index for index in range(start + 1, match.end()) if content[index] == ")"}
+                ends = sorted(set(range(shortest, match.end() + 1)) | inner, reverse=True)
             for end in ends:
                 raw = content[start:end]
-                decoded = raw if angle else unescapeAll(raw)
+                decoded = unescapeAll(raw)
+                protected = (max(0, decoded.count(")") - decoded.count("(")) if angle
+                             else len(CLOSER.findall(raw)))
                 if (URL.fullmatch(decoded)
                         and parsed_position(content, start, end,
                                             autolink, decoded, children)):
                     destinations[parser.normalizeLink(url_token(decoded, protected))] += 1
+                    if not angle and content[end:end + 1] == ")":
+                        closers.add(end)
                     break
-        return destinations
+        return destinations, closers
 
     text = path.read_text(encoding="utf-8")
     _, body = split_front_matter(text)
@@ -249,12 +255,18 @@ def parsed_findings(path, parser):
         line = token.map[0] + 1
         candidates = []
         children = token.children or ()
-        for match in URL.finditer(token.content):
-            angle = (match.start() > 0 and token.content[match.start() - 1] == "<"
-                     and token.content[match.end():match.end() + 1] == ">")
-            closers = max(0, match.group().count(")") - match.group().count("(")) if angle else 0
+        whole_destinations, link_closers = raw_destinations(token.content, children)
+        # A confirmed destination's closing parenthesis ends its URL, so text after
+        # the link is scanned on its own.
+        scan = "".join(" " if index in link_closers else char
+                       for index, char in enumerate(token.content))
+        for match in URL.finditer(scan):
+            angle = (match.start() > 0 and scan[match.start() - 1] == "<"
+                     and scan[match.end():match.end() + 1] == ">")
+            unescaped = unescapeAll(match.group())
+            closers = max(0, unescaped.count(")") - unescaped.count("(")) if angle else 0
             candidate = url_token(match, closers)
-            decoded = (url_token(unescapeAll(match.group()), closers) if angle
+            decoded = (url_token(unescaped, closers) if angle
                        else decoded_url(match.group()))
             if "__" in decoded:
                 if (angle and parser.normalizeLink(decoded) not in reference_hrefs
@@ -263,7 +275,6 @@ def parsed_findings(path, parser):
                     continue
                 candidates.append((candidate, parser.normalizeLink(decoded)))
         accounted = Counter()
-        whole_destinations = raw_destinations(token.content, children)
         for child in children:
             if child.type == "link_open":
                 href = child.attrGet("href")
