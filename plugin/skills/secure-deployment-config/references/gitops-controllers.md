@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Argo CD v3.5.3 source (pinned to a commit), Flux OIDC introduction v2.9, Dex source v2.45.1, Redis source 8.2.3, and curl curl-8_14_1; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 50 claims, all reasoned from cited sources.
+Written against Argo CD v3.5.3 source (pinned to a commit), Flux OIDC introduction v2.9, Dex source v2.45.1, Redis source 8.2.3, and curl curl-8_14_1; 1 further source is pinned to a commit and 3 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 54 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -83,7 +83,7 @@ ClusterIP is not a pod-network access control. The v3.5.3 component inventory al
 | Component | Listener and bind evidence | Base manifest exposure |
 | --- | --- | --- |
 | Repo-server | gRPC `0.0.0.0:8081`; HTTP metrics and health `0.0.0.0:8084` | Both container ports and Service ports |
-| Application controller | Metrics and health on port `8082`; the fetched command passes port `8082` to the controller, but its listener implementation and bind address remain unverified | Container port and `argocd-metrics` Service |
+| Application controller | Plain-HTTP metrics, health and file-gated pprof on `0.0.0.0:8082`; the host is hardcoded and only `--metrics-port` (default `8082`) sets the port | Container port and `argocd-metrics` Service |
 | ApplicationSet controller | Webhook `:7000`, metrics `:8080`, health probes `:8081`; empty hosts are wildcard binds | Container and Service ports `7000` and `8080`; probe port `8081` has neither declaration |
 | Notifications controller | HTTP metrics `0.0.0.0:9001` | Metrics Service and TCP liveness probe; no `containerPort` declaration |
 | Dex | Generated `web.https` (or `web.http` with TLS disabled) `0.0.0.0:5556`, `grpc.addr` `0.0.0.0:5557` and telemetry `http` `0.0.0.0:5558` | All three container and Service ports; the wrapper starts Dex only with a nonempty generated configuration |
@@ -94,7 +94,7 @@ and use HTTP, so a reachable pod-network peer can request them without an Argo C
 gRPC defaults to TLS (`--disable-tls=false`), but the command documents skipping mTLS when
 `/app/config/reposerver/mtls/client-ca.crt` is absent. The base Deployment optionally mounts
 `argocd-repo-server-mtls` for that client CA, separately from `argocd-repo-server-tls` for the serving
-certificate. A serving certificate alone does not require a client identity. The server requires and verifies client certificates when a client CA is loaded; without that CA it uses TLS without client-certificate authentication. If either serving certificate file is missing or cannot be stat'ed, the helper generates a session self-signed certificate; a present but invalid pair fails loading. The gRPC interceptor chain shows logging, metrics, recovery and unary error sanitization, with no authorization interceptor. Method-level authorization inside the registered service remains unverified. Isolate repository operations and cached manifests
+certificate. A serving certificate alone does not require a client identity. The server requires and verifies client certificates when a client CA is loaded; without that CA it uses TLS without client-certificate authentication. If either serving certificate file is missing or cannot be stat'ed, the helper generates a session self-signed certificate; a present but invalid pair fails loading. The gRPC interceptor chain shows logging, metrics, recovery and unary error sanitization, with no authorization interceptor. The registered repository service's handlers read no caller identity, so, from this source reading, any client that completes the transport handshake can call every method; its one `PermissionDenied` reports Helm repositories that the request's own project source list does not permit. The server also registers gRPC reflection, health and version services. Isolate repository operations and cached manifests
 from unrelated pods.
 
 Redis is not passwordless in these base manifests: the `secret-init` init container runs
@@ -104,18 +104,18 @@ Secret does not keep it off the command line: as an argument, it is in the Redis
 its start until the process overwrites its arguments, if it does, readable through `ps` and
 `/proc/<pid>/cmdline` by other local accounts on the node as well as by the same account and root, and command-line auditing on the node
 can record it beyond that. Where a process overwrites its own arguments, they stay readable until
-the overwrite runs; whether Redis overwrites the password argument remains unverified by these fetched files. Treat
-every account that can read the node's processes as able to read the Redis password. If the
-Deployment passes the value through a container environment variable, it is also readable through
-`/proc/<pid>/environ` by the same account and root while Redis runs. No Redis TLS
+the overwrite runs. Redis 8.2.3 has no password-specific argument redaction. On Linux it copies its arguments to the heap at start-up and, with `set-proc-title` at its default `yes`, its first title update zeroes the original argument area and writes the process title there; that runs before Redis opens its listeners. From this source reading, the password stays in `/proc/<pid>/cmdline` until then and in the process's heap copies afterwards. This is not a live observation. Treat
+every account that can read the node's processes as able to read the Redis password. The base
+Deployment does pass the value through the `REDIS_PASSWORD` container environment variable, which the `--requirepass $(REDIS_PASSWORD)` argument references, so it is also readable through
+`/proc/<pid>/environ` by the same account and root; Redis's title code notes that its overwrite range can cover some or all environment strings, so whether that copy stays readable while Redis runs is NOT ESTABLISHED. No Redis TLS
 is configured by these manifests, and Argo CD's Redis client defaults to `--redis-use-tls=false`;
-protect that traffic and Secret as well as the cached data. The initializer generates a 16-character random password, creates the Secret if absent, then checks that its password key exists. The `redis:8.2.3-alpine` tag, taken as built from docker-library-redis bcbc6921 (tag v8.2.3), starts Redis without a config file; Redis 8.2.3 defines `CONFIG_DEFAULT_BINDADDR` as `*` and `-::*` and initializes its bind list from it. The `-` makes an unavailable IPv6 address optional, and the image build patches protected mode off. This is a source-derived default, not a live socket observation.
+protect that traffic and Secret as well as the cached data. The initializer generates a 16-character random password, creates the Secret if absent, then checks that its password key exists. The base Redis kustomization renames the `redis` image to `public.ecr.aws/docker/library/redis`, keeping the tag, and the rendered `install.yaml` names `public.ecr.aws/docker/library/redis:8.2.3-alpine`; the pinned sources do not establish which build recipe that registry tag comes from (NOT ESTABLISHED). The `redis:8.2.3-alpine` tag, taken as built from docker-library-redis bcbc6921 (tag v8.2.3), starts Redis without a config file; Redis 8.2.3 defines `CONFIG_DEFAULT_BINDADDR` as `*` and `-::*` and initializes its bind list from it. The `-` makes an unavailable IPv6 address optional, and the image build patches protected mode off. This is a source-derived default, not a live socket observation.
 
 Dex's wrapper defaults to TLS for its HTTP endpoint. The generator replaces the `web`, `grpc` and
 `telemetry` mappings: `web.https` uses `/tmp/tls.crt` and `/tmp/tls.key`, or `web.http` is used with
 `--disable-tls`; `grpc` contains only `addr: 0.0.0.0:5557`, with no TLS or client-authentication
 settings, and telemetry uses HTTP on `0.0.0.0:5558`. HTTP TLS does not secure the gRPC listener.
-The `ghcr.io/dexidp/dex:v2.45.1` tag, taken as built from Dex v2.45.1, has a `GRPC` struct that maps `TLSCert` to the `tlsCert` configuration key; its server creates gRPC transport credentials only when that field is set. Argo CD's generated `grpc` mapping contains only `addr`. Its gRPC options therefore show no TLS or authentication interceptor for this configuration. Authorization inside the registered Dex API methods remains unverified because their handlers were not fetched.
+The `ghcr.io/dexidp/dex:v2.45.1` tag, taken as built from Dex v2.45.1, has a `GRPC` struct that maps `TLSCert` to the `tlsCert` configuration key; its server creates gRPC transport credentials only when that field is set. Argo CD's generated `grpc` mapping contains only `addr`. Its gRPC options therefore show no TLS or authentication interceptor for this configuration. The wrapper runs `dex serve /tmp/dex.yaml` inside that container. Dex v2.45.1's release workflow runs on pushed tags matching `v[0-9]+.[0-9]+.[0-9]+` and builds the checked-out tree, tagging the alpine variant of `ghcr.io/` plus the repository name through a `type=semver,pattern={{raw}}` rule; whether the published `v2.45.1` image came from that run is NOT ESTABLISHED. The registered Dex API handlers read no caller identity; `GetClient` returns a client's secret and `CreateClient` stores a new client. Argo CD's generator adds its static client with the Dex OAuth2 client secret, and Dex serves static clients from the storage that API reads, so, from this source reading, any caller that reaches `5557` can read that secret and create clients. The Dex NetworkPolicy, which admits only the server to `5557`, is the remaining barrier where a CNI enforces it.
 
 Server metrics on `8083` use a plain HTTP server whose `/metrics` handler is registered through
 `promhttp` with no authentication wrapper. The socket binds to `server.ListenHost`, following
@@ -144,7 +144,7 @@ its absence does not close a pod socket.
 
 For v3.5.3, the base command-parameters ConfigMap omits both server switches; their CLI defaults
 are false. The base RBAC ConfigMap omits `policy.default` rather than declaring a role.
-The fetched RBAC loader passes the ConfigMap `policy.default` value to the enforcer; an omitted key yields an empty string, so this enforcer skips its additive default-role check. Server-side wiring and effective runtime overrides were not traced or tested.
+The fetched RBAC loader passes the ConfigMap `policy.default` value to the enforcer; an omitted key yields an empty string, so this enforcer skips its additive default-role check. In `argocd-server`, the enforcer is built for `argocd-rbac-cm` with the built-in policy and a claims enforcer, and its `EnableEnforce` switch receives the inverse of the server's disable-auth option. The server starts the ConfigMap policy loader; its gRPC interceptor chains authenticate each call unless authentication is disabled, storing the caller's claims (an empty subject for an anonymous caller when anonymous access is enabled); and the API services receive the enforcer: for example, application `List` keeps only applications that pass a `get` check, and `Create` checks `create`. Per-handler coverage and effective runtime overrides were not traced or tested.
 Two settings decide who reaches the API without an account. Anonymous access is disabled by default
 (`users.anonymous.enabled`); keep it off, because an anonymous caller is granted whatever role
 `policy.default` names. Leave `policy.default` empty, as in the base
@@ -404,13 +404,24 @@ they were not rechecked online. Remaining source limits are identified above.
 
 - Application-controller metrics port handoff: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-application-controller/commands/argocd_application_controller.go#L192-L209
 - Application-controller metrics flag: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-application-controller/commands/argocd_application_controller.go#L272-L273
+- Application-controller hardcoded metrics bind host: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/controller/appcontroller.go#L321-L323
+- Application-controller metrics server start: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/controller/appcontroller.go#L996
+- Application-controller metrics, file-gated pprof and health mux and HTTP server: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/controller/metrics/metrics.go#L187-L220
 - Repo-server TLS and client CA setup: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/server.go#L49-L85
 - Repo-server gRPC interceptor chain and registration: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/server.go#L94-L150
+- Repo-server request-derived Helm repository PermissionDenied: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/repository/repository.go#L1385-L1401
 - Repo-server certificate fallback: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/tls/tls.go#L428-L506
 - Dex image tag: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/dex/argocd-dex-server-deployment.yaml#L38-L42
 - Dex gRPC configuration field and JSON tag: https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/config.go#L255-L265
 - Dex gRPC TLS options: https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L151-L199
 - Dex gRPC listener and registration: https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L553-L572
+- Dex API GetClient secret response and CreateClient: https://github.com/dexidp/dex/blob/v2.45.1/server/api.go#L53-L104
+- Dex static client loading and storage wrapper: https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L209-L235
+- Dex server storage handoff: https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L363
+- Dex static client lookup: https://github.com/dexidp/dex/blob/v2.45.1/storage/static.go#L25-L39
+- Dex release workflow tag trigger: https://github.com/dexidp/dex/blob/v2.45.1/.github/workflows/release.yaml#L3-L15
+- Dex image checkout, name and tag rules: https://github.com/dexidp/dex/blob/v2.45.1/.github/workflows/artifacts.yaml#L52-L91
+- Dex image build from the checked-out tree: https://github.com/dexidp/dex/blob/v2.45.1/.github/workflows/artifacts.yaml#L126-L142
 - Redis initial password implementation: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd/commands/admin/redis_initial_password.go#L22-L89
 - Redis image protected-mode patch: https://github.com/redis/docker-library-redis/blob/bcbc692165ce2241e194035041c5b5e01d2e1a5f/alpine/Dockerfile#L81-L87
 - Redis image entrypoint and command: https://github.com/redis/docker-library-redis/blob/bcbc692165ce2241e194035041c5b5e01d2e1a5f/alpine/Dockerfile#L151-L154
@@ -419,11 +430,25 @@ they were not rechecked online. Remaining source limits are identified above.
 - Redis default bind initialization: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2199-L2221
 - Redis TCP listener bind handoff: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2983-L2996
 - Redis optional bind prefix handling: https://github.com/redis/redis/blob/8.2.3/src/server.c#L2638-L2673
+- Redis argument copy and title initialization at start-up: https://github.com/redis/redis/blob/8.2.3/src/server.c#L7369-L7408
+- Redis title update before listener initialization: https://github.com/redis/redis/blob/8.2.3/src/server.c#L7593-L7607
+- Redis process title setter: https://github.com/redis/redis/blob/8.2.3/src/server.c#L7172-L7184
+- Redis argument copy and argument-area overwrite: https://github.com/redis/redis/blob/8.2.3/src/setproctitle.c#L164-L316
+- Redis Linux title replacement build switch: https://github.com/redis/redis/blob/8.2.3/src/config.h#L199-L204
+- Redis set-proc-title default: https://github.com/redis/redis/blob/8.2.3/src/config.c#L3088
 - RBAC default role storage and enforcement handoff: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L314-L346
 - RBAC policy ConfigMap key names (`policy.default`): https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L35-L42
 - RBAC ConfigMap loader: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L454-L467
 - RBAC default-role value: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L539-L547
 - RBAC default-role enforcement: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L399-L425
+- RBAC enforcer construction in argocd-server: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L350-L359
+- RBAC policy loader start in argocd-server: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L674-L675
+- RBAC policy loader callback in argocd-server: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L892-L907
+- argocd-server gRPC authentication interceptors: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L961-L985
+- argocd-server API services receiving the enforcer: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L1029-L1091
+- argocd-server call authentication and claims context: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L1537-L1576
+- Application List RBAC filter: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/application/application.go#L288-L322
+- Application Create RBAC check: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/application/application.go#L348-L356
 - Argo CD Listener constants: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/common/common.go#L75-L92
 - Argo CD Server CLI bind, TLS and authentication defaults: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/cmd/argocd-server/commands/argocd_server.go#L307-L323
 - Argo CD Server main and metrics socket binding: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L512-L535
@@ -450,6 +475,8 @@ they were not rechecked online. Remaining source limits are identified above.
 - Argo CD Dex configuration generation, including wildcard binds and gRPC without TLS/client-auth settings: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/dex/config.go#L16-L152
 - Argo CD Dex declared Service ports: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/dex/argocd-dex-server-service.yaml#L9-L25
 - Argo CD Redis password initialization and required Secret: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/redis/argocd-redis-deployment.yaml#L18-L58
+- Argo CD Redis image rename in the base kustomization: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/redis/kustomization.yaml#L12-L14
+- Argo CD Redis image in the rendered install manifest: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/install.yaml#L32485
 - Argo CD Redis client TLS is opt-in: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/cache/cache.go#L233-L238
 - Argo CD Server allow-all ingress policy: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/server/argocd-server-network-policy.yaml#L9-L16
 - Argo CD Repo-server component selectors and metrics allowance: https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/repo-server/argocd-repo-server-network-policy.yaml#L9-L35
@@ -522,22 +549,26 @@ Claims (full source mapping in the JSON block below):
 - argo-profiler-file (REASONED; argo): ARGOCD_ENABLE_PROFILER_FILE_PATH defaults to /home/argocd/params/profiler.enabled; the server mounts ConfigMap key server.profile.enabled there.
 - repo-grpc (REASONED; argo): Repo-server gRPC binds 0.0.0.0:8081 with TLS by default; mTLS is skipped without the client CA, separate from the serving certificate.
 - repo-http (REASONED; argo): Repo-server HTTP metrics and health bind 0.0.0.0:8084 without an authentication wrapper.
-- repo-limits (REASONED; argo): Repo-server requires verified client certificates with a loaded client CA; missing or unstatable serving files trigger a session self-signed certificate, while an invalid present pair errors. No authorization interceptor appears; service method authorization is unverified.
-- controller-metrics (REASONED; argo): Application-controller metrics and health use 8082; the command passes that port to the controller, but the fetched files do not establish the bind address.
+- repo-limits (REASONED; argo): Repo-server requires verified client certificates with a loaded client CA; missing or unstatable serving files trigger a session self-signed certificate, while an invalid present pair errors. No authorization interceptor appears, and the registered service handlers read no caller identity, so any client completing the transport handshake can call its methods.
+- controller-metrics (REASONED; argo): Application-controller metrics, health and file-gated pprof share one plain-HTTP mux on a hardcoded 0.0.0.0 host; --metrics-port (default 8082) sets only the port, and the command defines no bind-address flag.
 - applicationset-webhook (REASONED; argo): ApplicationSet webhook binds :7000; its container and Service declare 7000.
 - applicationset-metrics (REASONED; argo): ApplicationSet metrics bind :8080; its container and Service declare 8080.
 - applicationset-health (REASONED; argo): ApplicationSet health probes bind :8081 without a container or Service port declaration; missing declarations do not close sockets.
 - notifications (REASONED; argo): Notifications HTTP metrics bind 0.0.0.0:9001 without authentication; a metrics Service and TCP liveness probe exist without containerPort.
 - dex-http (REASONED; argo): Dex starts only with nonempty generated configuration; HTTP defaults to TLS on 0.0.0.0:5556 using /tmp/tls.crt and /tmp/tls.key.
-- dex-grpc (REASONED; argo, dex): Generated Dex gRPC uses 0.0.0.0:5557 without TLS or client-auth settings; Dex v2.45.1 source sets no transport credentials or authentication interceptor for this configuration, while API method authorization is unverified; this assumes the deployed ghcr.io/dexidp/dex:v2.45.1 tag was built from Dex v2.45.1.
+- dex-grpc (REASONED; argo, dex): Generated Dex gRPC uses 0.0.0.0:5557 without TLS or client-auth settings; Dex v2.45.1 source sets no transport credentials or authentication interceptor for this configuration, its API handlers read no caller identity, and GetClient returns client secrets, including Argo CD's static client; this assumes the deployed ghcr.io/dexidp/dex:v2.45.1 tag was built from Dex v2.45.1.
+- dex-image (REASONED; argo, dex): Dex v2.45.1's release workflow builds pushed vX.Y.Z tags from the checked-out tree and tags the alpine variant through its semver rule; Argo CD's base names ghcr.io/dexidp/dex:v2.45.1, and whether that published image came from this workflow is not established.
 - dex-telemetry (REASONED; argo): Dex telemetry uses HTTP on 0.0.0.0:5558; all three Dex ports have Services.
 - redis-password (REASONED; argo, redis-image, redis-source): Redis receives --requirepass from argocd-redis/auth; secret-init generates and checks that Secret. The redis:8.2.3-alpine tag, taken as built from docker-library-redis v8.2.3, uses Redis wildcard bind defaults and patches protected mode off.
+- redis-image-name (REASONED; argo): The base Redis kustomization renames redis to public.ecr.aws/docker/library/redis, keeping 8.2.3-alpine, as the rendered install.yaml shows; the pinned sources do not establish which recipe that registry tag was built from.
+- redis-argv (REASONED; argo, redis-source): Redis 8.2.3 has no password-specific argument redaction; on Linux, with set-proc-title at its default yes, its first title update zeroes the original argument area before listeners open, leaving heap copies; whether it also clears the REDIS_PASSWORD environment copy is not established.
 - redis-tls (REASONED; argo): Base manifests configure no Redis TLS and the Argo Redis client defaults --redis-use-tls=false; protect traffic, Secret and cache.
 - component-policies (REASONED; argo): Base policies restrict repo gRPC, Redis and Dex callers by component; enforcement needs a supporting CNI.
 - broad-policies (REASONED; argo): Server policy allows all ingress; other metrics and ApplicationSet webhook allowances admit every namespace. Narrow existing additive allowances and egress separately.
 - argo-anonymous (REASONED; argo, argo-docs): users.anonymous.enabled defaults off; anonymous callers otherwise inherit policy.default.
 - argo-disable-auth (REASONED; argo): server.disable.auth defaults false; inspect effective args and environment because anonymous-off does not compensate for disabled authentication.
-- argo-default-role (REASONED; argo, argo-docs): Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings. Server-side wiring remains unverified.
+- argo-default-role (REASONED; argo, argo-docs): Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings.
+- argo-rbac-wiring (REASONED; argo): argocd-server builds its enforcer for argocd-rbac-cm with the built-in policy and a claims enforcer, starts the ConfigMap loader, authenticates gRPC calls and stores claims, and passes the enforcer to API services, such as application List and Create checks; per-handler coverage and runtime overrides remain unverified.
 - argo-webhook (REASONED; argo-docs): /api/webhook accepts unauthenticated refresh events without a shared secret; configure one to limit spoofed reconciliation and resource exhaustion.
 - argo-projects (REASONED; argo-docs): Restrict AppProjects including the built-in default project; project constraints do not reduce a compromised controller's Kubernetes credentials.
 - argo-cluster-rbac (REASONED; argo-docs): Reduce controller and registered-cluster argocd-manager write permissions to needed namespaces/resources while retaining required read access.
@@ -564,7 +595,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-19",
   "documentation_checked": "2026-09",
-  "body_sha256": "290b24b86bba2e9137a85bd45010968f38ebe895865712fb799a2f15553b9f5a",
+  "body_sha256": "944757d5089b6fd042304ce7ea63e5243523d04fcd5da9b21a0d432bd8d4a43c",
   "components": {
     "argo": {
       "name": "Argo CD v3.5.3 source",
@@ -617,7 +648,21 @@ Claims (full source mapping in the JSON block below):
         "se987196f20c7": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L539-L547",
         "s3cb98aa5348d": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L399-L425",
         "s9bfcf07a6bcc": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L314-L346",
-        "s32323471d785": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L35-L42"
+        "s32323471d785": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/util/rbac/rbac.go#L35-L42",
+        "sb5104fa6ab35": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/controller/appcontroller.go#L321-L323",
+        "sbe428a31febd": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/controller/appcontroller.go#L996",
+        "s326dd2512e89": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/controller/metrics/metrics.go#L187-L220",
+        "s5e687a6ecca2": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/reposerver/repository/repository.go#L1385-L1401",
+        "s5a0cd7608f62": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/base/redis/kustomization.yaml#L12-L14",
+        "s9a8d62f416f8": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/manifests/install.yaml#L32485",
+        "s0cfce81f2017": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L350-L359",
+        "s19cc383608d3": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L674-L675",
+        "s44b42ce894fe": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L892-L907",
+        "s751b24797922": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L961-L985",
+        "s0a3fee6c3102": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L1029-L1091",
+        "s2bf01b29602c": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/server.go#L1537-L1576",
+        "s8df1c7f2378a": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/application/application.go#L288-L322",
+        "sab95c8799d63": "https://github.com/argoproj/argo-cd/blob/c9c369efcc5b2a0bd720803f8d14a1c3eaddf579/server/application/application.go#L348-L356"
       }
     },
     "flux-oidc": {
@@ -662,7 +707,14 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s3b9512b79dea": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L151-L199",
         "s46eb2feaa84f": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L553-L572",
-        "s55b453f266f3": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/config.go#L255-L265"
+        "s55b453f266f3": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/config.go#L255-L265",
+        "s7cc71fede65a": "https://github.com/dexidp/dex/blob/v2.45.1/server/api.go#L53-L104",
+        "s4da116cf17b5": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L209-L235",
+        "s68762857b08b": "https://github.com/dexidp/dex/blob/v2.45.1/cmd/dex/serve.go#L363",
+        "s397fba865163": "https://github.com/dexidp/dex/blob/v2.45.1/storage/static.go#L25-L39",
+        "sb068439020cf": "https://github.com/dexidp/dex/blob/v2.45.1/.github/workflows/release.yaml#L3-L15",
+        "s94b27f414052": "https://github.com/dexidp/dex/blob/v2.45.1/.github/workflows/artifacts.yaml#L52-L91",
+        "sf5d6527e4e92": "https://github.com/dexidp/dex/blob/v2.45.1/.github/workflows/artifacts.yaml#L126-L142"
       }
     },
     "redis-image": {
@@ -681,7 +733,13 @@ Claims (full source mapping in the JSON block below):
         "s667fc16bf18f": "https://github.com/redis/redis/blob/8.2.3/src/server.h#L142-L143",
         "saa497d27f72f": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2199-L2221",
         "s0f96763525b7": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2638-L2673",
-        "s9b50a7c52721": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2983-L2996"
+        "s9b50a7c52721": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L2983-L2996",
+        "sfc4931194892": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L7369-L7408",
+        "sad31935cbfd5": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L7593-L7607",
+        "s798e4cb2e0da": "https://github.com/redis/redis/blob/8.2.3/src/server.c#L7172-L7184",
+        "s514f74f25aeb": "https://github.com/redis/redis/blob/8.2.3/src/setproctitle.c#L164-L316",
+        "sc2c8077e667c": "https://github.com/redis/redis/blob/8.2.3/src/config.h#L199-L204",
+        "s41802d8e64f5": "https://github.com/redis/redis/blob/8.2.3/src/config.c#L3088"
       }
     },
     "curl": {
@@ -717,22 +775,26 @@ Claims (full source mapping in the JSON block below):
     "argo-profiler-file": {"text": "ARGOCD_ENABLE_PROFILER_FILE_PATH defaults to /home/argocd/params/profiler.enabled; the server mounts ConfigMap key server.profile.enabled there.", "components": ["argo"], "sources": ["argo:sc52bbd14bff4", "argo:sb0648e746fb9", "argo:s2f5af86c62d1"], "status": "REASONED"},
     "repo-grpc": {"text": "Repo-server gRPC binds 0.0.0.0:8081 with TLS by default; mTLS is skipped without the client CA, separate from the serving certificate.", "components": ["argo"], "sources": ["argo:s9bca471ac6d9", "argo:s4bbc848d9923", "argo:sf4dd846c82c4", "argo:s85445da68ce7", "argo:s357d253fc789"], "status": "REASONED"},
     "repo-http": {"text": "Repo-server HTTP metrics and health bind 0.0.0.0:8084 without an authentication wrapper.", "components": ["argo"], "sources": ["argo:s98b27313f615", "argo:s9bca471ac6d9", "argo:sf4dd846c82c4", "argo:s85445da68ce7", "argo:s357d253fc789"], "status": "REASONED"},
-    "repo-limits": {"text": "Repo-server requires verified client certificates with a loaded client CA; missing or unstatable serving files trigger a session self-signed certificate, while an invalid present pair errors. No authorization interceptor appears; service method authorization is unverified.", "components": ["argo"], "sources": ["argo:sfcaf2e03154d", "argo:s25a5da2c5e7c", "argo:s73653423b85d"], "status": "REASONED"},
-    "controller-metrics": {"text": "Application-controller metrics and health use 8082; the command passes that port to the controller, but the fetched files do not establish the bind address.", "components": ["argo"], "sources": ["argo:sf98b6bc4f5dc", "argo:s9df1243dde48", "argo:s0abbc26d61e4", "argo:sf4dd846c82c4"], "status": "REASONED"},
+    "repo-limits": {"text": "Repo-server requires verified client certificates with a loaded client CA; missing or unstatable serving files trigger a session self-signed certificate, while an invalid present pair errors. No authorization interceptor appears, and the registered service handlers read no caller identity, so any client completing the transport handshake can call its methods.", "components": ["argo"], "sources": ["argo:sfcaf2e03154d", "argo:s25a5da2c5e7c", "argo:s73653423b85d", "argo:s5e687a6ecca2"], "status": "REASONED"},
+    "controller-metrics": {"text": "Application-controller metrics, health and file-gated pprof share one plain-HTTP mux on a hardcoded 0.0.0.0 host; --metrics-port (default 8082) sets only the port, and the command defines no bind-address flag.", "components": ["argo"], "sources": ["argo:sf98b6bc4f5dc", "argo:s9df1243dde48", "argo:s0abbc26d61e4", "argo:sf4dd846c82c4", "argo:sb5104fa6ab35", "argo:sbe428a31febd", "argo:s326dd2512e89", "argo:sc52bbd14bff4"], "status": "REASONED"},
     "applicationset-webhook": {"text": "ApplicationSet webhook binds :7000; its container and Service declare 7000.", "components": ["argo"], "sources": ["argo:s49a7c83d9371", "argo:s97a588d8a83f"], "status": "REASONED"},
     "applicationset-metrics": {"text": "ApplicationSet metrics bind :8080; its container and Service declare 8080.", "components": ["argo"], "sources": ["argo:s49a7c83d9371", "argo:s97a588d8a83f"], "status": "REASONED"},
     "applicationset-health": {"text": "ApplicationSet health probes bind :8081 without a container or Service port declaration; missing declarations do not close sockets.", "components": ["argo"], "sources": ["argo:s49a7c83d9371"], "status": "REASONED"},
     "notifications": {"text": "Notifications HTTP metrics bind 0.0.0.0:9001 without authentication; a metrics Service and TCP liveness probe exist without containerPort.", "components": ["argo"], "sources": ["argo:s0a85b38dfca8", "argo:s5e141e32ed9c"], "status": "REASONED"},
     "dex-http": {"text": "Dex starts only with nonempty generated configuration; HTTP defaults to TLS on 0.0.0.0:5556 using /tmp/tls.crt and /tmp/tls.key.", "components": ["argo"], "sources": ["argo:s8efcc66f9cb4", "argo:s30c391d9dc23", "argo:se477de2fdfa0"], "status": "REASONED"},
-    "dex-grpc": {"text": "Generated Dex gRPC uses 0.0.0.0:5557 without TLS or client-auth settings; Dex v2.45.1 source sets no transport credentials or authentication interceptor for this configuration, while API method authorization is unverified; this assumes the deployed ghcr.io/dexidp/dex:v2.45.1 tag was built from Dex v2.45.1.", "components": ["argo", "dex"], "sources": ["argo:se477de2fdfa0", "argo:s56c41c02ba8b", "argo:s7c7bf274e3ef", "dex:s3b9512b79dea", "dex:s46eb2feaa84f", "dex:s55b453f266f3"], "status": "REASONED"},
+    "dex-grpc": {"text": "Generated Dex gRPC uses 0.0.0.0:5557 without TLS or client-auth settings; Dex v2.45.1 source sets no transport credentials or authentication interceptor for this configuration, its API handlers read no caller identity, and GetClient returns client secrets, including Argo CD's static client; this assumes the deployed ghcr.io/dexidp/dex:v2.45.1 tag was built from Dex v2.45.1.", "components": ["argo", "dex"], "sources": ["argo:se477de2fdfa0", "argo:s56c41c02ba8b", "argo:s7c7bf274e3ef", "dex:s3b9512b79dea", "dex:s46eb2feaa84f", "dex:s55b453f266f3", "dex:s7cc71fede65a", "dex:s4da116cf17b5", "dex:s68762857b08b", "dex:s397fba865163"], "status": "REASONED"},
+    "dex-image": {"text": "Dex v2.45.1's release workflow builds pushed vX.Y.Z tags from the checked-out tree and tags the alpine variant through its semver rule; Argo CD's base names ghcr.io/dexidp/dex:v2.45.1, and whether that published image came from this workflow is not established.", "components": ["argo", "dex"], "sources": ["argo:s7c7bf274e3ef", "dex:sb068439020cf", "dex:s94b27f414052", "dex:sf5d6527e4e92"], "status": "REASONED"},
     "dex-telemetry": {"text": "Dex telemetry uses HTTP on 0.0.0.0:5558; all three Dex ports have Services.", "components": ["argo"], "sources": ["argo:se477de2fdfa0", "argo:s56c41c02ba8b"], "status": "REASONED"},
     "redis-password": {"text": "Redis receives --requirepass from argocd-redis/auth; secret-init generates and checks that Secret. The redis:8.2.3-alpine tag, taken as built from docker-library-redis v8.2.3, uses Redis wildcard bind defaults and patches protected mode off.", "components": ["argo", "redis-image", "redis-source"], "sources": ["argo:s996c72c5db28", "argo:s08939ffb906f", "redis-image:s67a2f7553c9a", "redis-image:s30643c91686d", "redis-image:sd04db8453288", "redis-source:s667fc16bf18f", "redis-source:saa497d27f72f", "redis-source:s0f96763525b7", "redis-source:s9b50a7c52721"], "status": "REASONED"},
+    "redis-image-name": {"text": "The base Redis kustomization renames redis to public.ecr.aws/docker/library/redis, keeping 8.2.3-alpine, as the rendered install.yaml shows; the pinned sources do not establish which recipe that registry tag was built from.", "components": ["argo"], "sources": ["argo:s996c72c5db28", "argo:s5a0cd7608f62", "argo:s9a8d62f416f8"], "status": "REASONED"},
+    "redis-argv": {"text": "Redis 8.2.3 has no password-specific argument redaction; on Linux, with set-proc-title at its default yes, its first title update zeroes the original argument area before listeners open, leaving heap copies; whether it also clears the REDIS_PASSWORD environment copy is not established.", "components": ["argo", "redis-source"], "sources": ["argo:s996c72c5db28", "redis-source:sfc4931194892", "redis-source:sad31935cbfd5", "redis-source:s798e4cb2e0da", "redis-source:s514f74f25aeb", "redis-source:sc2c8077e667c", "redis-source:s41802d8e64f5"], "status": "REASONED"},
     "redis-tls": {"text": "Base manifests configure no Redis TLS and the Argo Redis client defaults --redis-use-tls=false; protect traffic, Secret and cache.", "components": ["argo"], "sources": ["argo:s996c72c5db28", "argo:s34909d7a1932"], "status": "REASONED"},
     "component-policies": {"text": "Base policies restrict repo gRPC, Redis and Dex callers by component; enforcement needs a supporting CNI.", "components": ["argo"], "sources": ["argo:s1a13cc06db6d", "argo:s4bbf38e83770", "argo:sadccbbcffcd8"], "status": "REASONED"},
     "broad-policies": {"text": "Server policy allows all ingress; other metrics and ApplicationSet webhook allowances admit every namespace. Narrow existing additive allowances and egress separately.", "components": ["argo"], "sources": ["argo:s743c8187cbd7", "argo:s49f63c21c3cd", "argo:sa258c4109d24", "argo:sa49c30e332ed"], "status": "REASONED"},
     "argo-anonymous": {"text": "users.anonymous.enabled defaults off; anonymous callers otherwise inherit policy.default.", "components": ["argo", "argo-docs"], "sources": ["argo:s68b67007da6b", "argo-docs:sf5f1c41f89bd"], "status": "REASONED"},
     "argo-disable-auth": {"text": "server.disable.auth defaults false; inspect effective args and environment because anonymous-off does not compensate for disabled authentication.", "components": ["argo"], "sources": ["argo:s6e8c96d23e05", "argo:s01a52daf078f", "argo:s210b24f04535"], "status": "REASONED"},
-    "argo-default-role": {"text": "Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings. Server-side wiring remains unverified.", "components": ["argo", "argo-docs"], "sources": ["argo:s0f7f1b3404d9", "argo:s3fcdf1601776", "argo:se987196f20c7", "argo:s3cb98aa5348d", "argo:s9bfcf07a6bcc", "argo:s32323471d785", "argo-docs:sf5f1c41f89bd"], "status": "REASONED"},
+    "argo-default-role": {"text": "Base RBAC ConfigMap omits policy.default; the inspected loader supplies an empty role to the enforcer, which skips its additive default-role check. Default-role grants are additive and cannot be revoked by a later subject rule; define scoped policy.csv roles and group mappings.", "components": ["argo", "argo-docs"], "sources": ["argo:s0f7f1b3404d9", "argo:s3fcdf1601776", "argo:se987196f20c7", "argo:s3cb98aa5348d", "argo:s9bfcf07a6bcc", "argo:s32323471d785", "argo-docs:sf5f1c41f89bd"], "status": "REASONED"},
+    "argo-rbac-wiring": {"text": "argocd-server builds its enforcer for argocd-rbac-cm with the built-in policy and a claims enforcer, starts the ConfigMap loader, authenticates gRPC calls and stores claims, and passes the enforcer to API services, such as application List and Create checks; per-handler coverage and runtime overrides remain unverified.", "components": ["argo"], "sources": ["argo:s0cfce81f2017", "argo:s19cc383608d3", "argo:s44b42ce894fe", "argo:s751b24797922", "argo:s0a3fee6c3102", "argo:s2bf01b29602c", "argo:s8df1c7f2378a", "argo:sab95c8799d63", "argo:s3fcdf1601776", "argo:se987196f20c7"], "status": "REASONED"},
     "argo-webhook": {"text": "/api/webhook accepts unauthenticated refresh events without a shared secret; configure one to limit spoofed reconciliation and resource exhaustion.", "components": ["argo-docs"], "sources": ["argo-docs:sdac90731b97d"], "status": "REASONED"},
     "argo-projects": {"text": "Restrict AppProjects including the built-in default project; project constraints do not reduce a compromised controller's Kubernetes credentials.", "components": ["argo-docs"], "sources": ["argo-docs:s9357e3b59e84", "argo-docs:s51e21b74ece6"], "status": "REASONED"},
     "argo-cluster-rbac": {"text": "Reduce controller and registered-cluster argocd-manager write permissions to needed namespaces/resources while retaining required read access.", "components": ["argo-docs"], "sources": ["argo-docs:s51e21b74ece6"], "status": "REASONED"},
