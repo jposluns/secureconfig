@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against Node.js API documentation v24.22.0, express-rate-limit minimum v8, otplib v12.0.1, qrcode v1.5.4, node.bcrypt.js v6.0.0, node-argon2 v0.45.1, Linux man-pages ip(7) 6.19, and Linux man-pages capabilities(7) 6.19, plus 1 more recorded basis; 3 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-19; documentation checked September 2026. The guide records 22 claims, all reasoned from cited sources.
+Written against Node.js API documentation v24.22.0, express-rate-limit minimum v8, otplib v12.0.1, qrcode v1.5.4, node.bcrypt.js v6.0.0, node-argon2 v0.45.1, Linux man-pages ip(7) 6.19, and Linux man-pages capabilities(7) 6.19, plus 1 more recorded basis; 3 further sources are pinned to a commit and 6 carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 23 claims, all reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -60,7 +60,7 @@ On Linux, binding ports below 1024 requires a process, root or not, that has `CA
 This guide's advice for managed platforms: do not add the `listen(443)`/`listen(80)` listeners above; bind only the listener required by your deployment. The documented HTTP ingress mappings are:
 
 - Render web services must bind `0.0.0.0`. Render recommends the `PORT` environment variable (at the time of writing, default port 10000, configurable), can usually detect another bound port, and requires the public HTTP server to use `PORT` when multiple ports are bound ([web services](https://render.com/docs/web-services)).
-- Heroku assigns each web process its port through `PORT` ([runtime principles](https://devcenter.heroku.com/articles/runtime-principles)). Fir Private Spaces networking uses IPv6 by default; Heroku warns that IPv4-only assumptions do not bind properly and recommends an IPv6 or dual-stack listener, typically `::` ([generations](https://devcenter.heroku.com/articles/generations)). These pages do not establish Cedar's listener address.
+- Heroku assigns each web process its port through `PORT` ([runtime principles](https://devcenter.heroku.com/articles/runtime-principles)), and a web process must bind to that port or the dyno does not start ([deploying Node.js](https://devcenter.heroku.com/articles/deploying-nodejs)). Fir Private Spaces networking uses IPv6 by default; Heroku warns that IPv4-only assumptions do not bind properly and recommends an IPv6 or dual-stack listener, typically `::` ([generations](https://devcenter.heroku.com/articles/generations)). None of the four Heroku pages cited here (runtime principles, deploying Node.js, HTTP routing, generations) states a listener address for Cedar: that absence is this guide's assessment of those pages, not proof that Heroku accepts any address.
 - Fly Proxy HTTP services must be reachable over IPv4: use `0.0.0.0` and match the configured `internal_port` to the app listener ([service binding](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L33-L42)). IPv4-mapped IPv6 wildcard behaviour depends on the VM and runtime ([wildcard qualification](https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/app-services.mdx#L92-L92)).
 - Railway domains route to a detected or selected internal target port ([target ports](https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/domains/working-with-domains.md#L126-L146)). Railway says web servers should bind `0.0.0.0` and listen on the automatically injected `PORT` ([listener and port](https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/troubleshooting/application-failed-to-respond.md#L46-L51)). Its edge proxy (tcp-proxy) terminates TLS; traffic is then forwarded over Railway's internal network to the deployment ([request flow](https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/edge-networking.md#L40-L43)).
 
@@ -189,6 +189,7 @@ curl -q -g -sS --noproxy '*' -H 'X-Forwarded-For: 203.0.113.9' https://example.c
 - Render web-service listener and TLS termination (checked October 2026): https://render.com/docs/web-services
 - Heroku HTTP routing (checked October 2026): https://devcenter.heroku.com/articles/http-routing
 - Heroku web-process port assignment (checked October 2026): https://devcenter.heroku.com/articles/runtime-principles
+- Heroku web-process port binding requirement, on the Node.js deployment page: the web process command must bind to the port in `PORT` or the dyno does not start (checked October 2026): https://devcenter.heroku.com/articles/deploying-nodejs
 - Heroku Fir Private Spaces networking and listener recommendation (checked October 2026): https://devcenter.heroku.com/articles/generations. The article states: "Fir utilizes IPv6 as the default and recommended connection protocol for networking within Heroku Private Spaces." It warns: "If you designed your application, its dependencies, or connected services within a space assuming only IPv4 connectivity, they don’t bind properly on Fir." It recommends: "Ensure IPv6 compatibility by correctly binding to an IPv6 listener or the dual-stack address listener in your app’s language (typically ::) to leverage Fir’s networking configuration." This guide's assessment: these sentences concern networking within Heroku Private Spaces; they do not establish Cedar's listener address or a deployed application's listener configuration.
 - Fly TCP passthrough (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L93-L97
 - Fly TLS termination (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L174-L176
@@ -248,6 +249,7 @@ Claims (full source mapping in the JSON block below):
 - tls (REASONED; node): Direct HTTPS uses a certificate plus chain and private key on all-interface 443.
 - redirect (REASONED; node): All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.
 - bind (REASONED; node, express, render, heroku, fly-pinned, railway): This guide advises 127.0.0.1 for a same-host proxy, no extra managed listeners and app auth; plain HTTP needs protected TLS ingress, absent on Fly without handlers. Railway advises 0.0.0.0 on injected PORT; its edge proxy terminates TLS. Listener rules vary by deployment (Heroku recommends IPv6/dual-stack for Fir Private Spaces); cited pages do not establish Cedar's listener address.
+- heroku-cedar (REASONED; heroku): Heroku requires each web process to bind to the port assigned in PORT; the dyno does not start otherwise. None of the four Heroku pages cited here (runtime principles, deploying Node.js, HTTP routing, generations) states a listener address for Cedar: that absence is this guide's assessment of those pages, not proof that Heroku accepts any address.
 - privilege (REASONED; node, linux-ip, linux-capabilities): On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout.
 - proxy (REASONED; express): Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.
 - headers (REASONED; helmet): Install helmet() for security headers including HSTS.
@@ -271,9 +273,9 @@ Claims (full source mapping in the JSON block below):
 ````json
 {
   "schema": 1,
-  "checked": "2026-10-19",
+  "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "2d57e6f25e6dccc894a47bd876b04e78173f2b1f1b91cb39989dea7dd9448b61",
+  "body_sha256": "2c8b22934a0d828e506da989083793ac9c437919f92235024cc1dbdb2134d42d",
   "components": {
     "node-v24": {
       "name": "Node.js API documentation",
@@ -351,6 +353,7 @@ Claims (full source mapping in the JSON block below):
       "basis": "unknown",
       "sources": {
         "s370d4beec29a": "https://devcenter.heroku.com/articles/runtime-principles",
+        "s110a083f7129": "https://devcenter.heroku.com/articles/deploying-nodejs",
         "s211f5fe76042": "https://devcenter.heroku.com/articles/generations",
         "s0c5bf300cef4": "https://devcenter.heroku.com/articles/http-routing"
       }
@@ -429,6 +432,7 @@ Claims (full source mapping in the JSON block below):
     "tls": {"text": "Direct HTTPS uses a certificate plus chain and private key on all-interface 443.", "components": ["node"], "sources": ["node:s87db42190978"], "status": "REASONED"},
     "redirect": {"text": "All-interface 80 redirects with 301 to required PUBLIC_HOST; only origin-form request paths are appended.", "components": ["node"], "sources": ["node:sdb035b84e308"], "status": "REASONED"},
     "bind": {"text": "This guide advises 127.0.0.1 for a same-host proxy, no extra managed listeners and app auth; plain HTTP needs protected TLS ingress, absent on Fly without handlers. Railway advises 0.0.0.0 on injected PORT; its edge proxy terminates TLS. Listener rules vary by deployment (Heroku recommends IPv6/dual-stack for Fir Private Spaces); cited pages do not establish Cedar's listener address.", "components": ["node", "express", "render", "heroku", "fly-pinned", "railway"], "sources": ["node:s87db42190978", "express:s2acbdbd05858", "render:s1820ac471b6c", "heroku:s370d4beec29a", "heroku:s211f5fe76042", "heroku:s0c5bf300cef4", "fly-pinned:s62fec91543a1", "fly-pinned:s61c1e50d2c11", "fly-pinned:s254c8c8a5edd", "fly-pinned:s32999aa4c58c", "railway:sac1383056b65", "railway:s0462eef65b1b", "railway:sa9d326046a7f"], "status": "REASONED"},
+    "heroku-cedar": {"text": "Heroku requires each web process to bind to the port assigned in PORT; the dyno does not start otherwise. None of the four Heroku pages cited here (runtime principles, deploying Node.js, HTTP routing, generations) states a listener address for Cedar: that absence is this guide's assessment of those pages, not proof that Heroku accepts any address.", "components": ["heroku"], "sources": ["heroku:s370d4beec29a", "heroku:s110a083f7129", "heroku:s0c5bf300cef4", "heroku:s211f5fe76042"], "status": "REASONED"},
     "privilege": {"text": "On Linux, binding ports below 1024 requires a process, root or not, that has CAP_NET_BIND_SERVICE in the user namespace governing its network namespace (stated by ip(7) for IPv4; IPv6 is not covered by the listed Sources); this guide advises against running the app as root and prefers the proxy layout.", "components": ["node", "linux-ip", "linux-capabilities"], "sources": ["node:s87db42190978", "linux-ip:s612fed1df1ed", "linux-capabilities:s3c3a13034c04"], "status": "REASONED"},
     "proxy": {"text": "Trust loopback or an exact remote proxy address/subnet; true and variable-length hop paths permit forged client IP, host and scheme unless headers are overwritten.", "components": ["express"], "sources": ["express:s2acbdbd05858"], "status": "REASONED"},
     "headers": {"text": "Install helmet() for security headers including HSTS.", "components": ["helmet"], "sources": ["helmet:sc1865315478e"], "status": "REASONED"},
