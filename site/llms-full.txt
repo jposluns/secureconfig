@@ -53485,7 +53485,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 78 claims: 14 demonstrated by a check that ran and 64 reasoned from cited sources.
+Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 80 claims: 14 demonstrated by a check that ran and 66 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -53852,8 +53852,14 @@ There are two fixes, and you can use both:
   limits the querier's own store query to the part of a selection before now minus that value,
   and a selection starting after that point goes to ingesters only. For any other negative
   value, now minus that value lies in the future, and the querier sets the end of any store
-  request it makes to that point without clamping it to the selection's end, unlike the ingester,
-  which treats every negative value like `-1`. Under those `all`-target conditions, the ingester
+  request it makes to that point without clamping it to the selection's end, whereas the ingester
+  leaves the start of its own store request unchanged for `-1` and every other negative value.
+  From this source reading, without a Loki run, when that future point is after the selection's
+  end, the querier's interval code also starts the ingester interval there and ends it at the
+  selection's end without checking their order, and, unless `query_store_only` is set, the
+  querier sends that inverted interval to the ingester querier for log and sample selections;
+  what the ingester querier and ingesters return for it is not established. Under those
+  `all`-target conditions, the ingester
   itself also queries the store for the log and sample selections it serves: the ingester module
   depends on the store module, so the module manager initializes the store first and the
   ingester receives the adjusted configuration. The ingester moves the start of each store
@@ -54123,6 +54129,8 @@ from your own account's view of the process.
 - Loki v3.7.8 distributor Kafka record production: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L1296-L1326
 - Loki v3.7.8 querier store and ingester flags: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L77-L81
 - Loki v3.7.8 querier ingester interval: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L176-L198
+- Loki v3.7.8 querier sample ingester interval: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L242-L261
+- Loki v3.7.8 querier intervals built from its configuration: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L302-L304
 - Loki v3.7.8 ingester querier ring and partition sets: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L168-L186
 - Loki v3.7.8 ingester client pool with ring discovery: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/clientpool/ingester_client_pool.go#L30-L46
 - Loki v3.7.8 processor manager: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/processor_manager.go#L35-L89
@@ -54255,6 +54263,8 @@ Claims (full source mapping in the JSON block below):
 - loki-ingester-lookback-bounds (REASONED; loki): When Loki's target list includes all but none of querier, ruler, read, index-gateway or backend, its boltdb-shipper or TSDB store setup with the filesystem object store rejects a positive query_store_max_look_back_period below the computed minimum and passes -1 and any other negative value through calculateMaxLookBack unchanged.
 - loki-querier-store-window (REASONED; loki): When the ingester store lookback that the Loki querier module copies at initialization is positive, the querier limits its own store query to the part of a selection before now minus that lookback, querying only ingesters when the selection starts after that point; exactly -1 instead skips the store and sends the whole selection to ingesters.
 - loki-querier-store-negative (REASONED; loki): When the ingester store lookback that the Loki querier module copies at initialization is negative but not -1, now minus that lookback lies in the future, and the querier sets the end of any store request to that point without clamping it to the selection end, unlike the Loki ingester, which leaves its store request start unchanged for every negative lookback.
+- loki-querier-ingester-inverted (REASONED; loki): When the ingester store lookback that the Loki querier module copies at initialization is negative but not -1 and now minus it is after a selection end, the querier's interval code starts the ingester interval at that point and ends it at the selection end without checking their order, and the querier sends that inverted interval to its ingester querier unless query_store_only is set.
+- loki-querier-ingester-inverted-result (REASONED; loki): A source reading of the Loki querier's interval and query code, without a Loki run, does not establish what the ingester querier and ingesters return for the inverted ingester interval that a negative store lookback other than -1 produces when now minus that lookback is after the selection end.
 - loki-internal-server (REASONED; loki, dskit, go): Run initializes target modules and starts them together. internal_server is off by default; when enabled it precedes Server and its HTTP listener defaults to localhost:3101. Its flags register no gRPC address or port, so by inference, unless YAML sets them, dskit opens an any-address gRPC listener on an OS-chosen port carrying the HTTP bridge; not observed.
 - loki-internal-routes (REASONED; loki): When enabled, the internal server's HTTP router serves routes including /ready and buildinfo and, when their modules run, /ring, /memberlist and the compactor handler prefix; these are source registrations, not observed responses.
 - loki-grpc-tls (REASONED; dskit, loki): gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers.
@@ -54271,7 +54281,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "b27b60c32ef603346dcfc5c3cd3bd827e219880c80e1e9df2a1c6980503515cb",
+  "body_sha256": "9577cb11c7f741adf853040af6881e699f5c8a5e0594ff73903f98bda9eba0db",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -54391,6 +54401,8 @@ Claims (full source mapping in the JSON block below):
         "s51bcdc31e69d": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L1296-L1326",
         "s8f53a03e764f": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L77-L81",
         "sdc0d0e6ad95d": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L176-L198",
+        "s10870cc18ddc": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L242-L261",
+        "scba306dcdc0c": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L302-L304",
         "s2e89e4162342": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L168-L186",
         "s5ab3c47cb0fc": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/clientpool/ingester_client_pool.go#L30-L46",
         "sb8f98248ef1a": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/processor_manager.go#L35-L89",
@@ -54595,6 +54607,8 @@ Claims (full source mapping in the JSON block below):
     "loki-ingester-lookback-bounds": {"text": "When Loki's target list includes all but none of querier, ruler, read, index-gateway or backend, its boltdb-shipper or TSDB store setup with the filesystem object store rejects a positive query_store_max_look_back_period below the computed minimum and passes -1 and any other negative value through calculateMaxLookBack unchanged.", "components": ["loki"], "sources": ["loki:se82f6c344ae2", "loki:sa4685cf34525", "loki:s937747b2754f"], "status": "REASONED"},
     "loki-querier-store-window": {"text": "When the ingester store lookback that the Loki querier module copies at initialization is positive, the querier limits its own store query to the part of a selection before now minus that lookback, querying only ingesters when the selection starts after that point; exactly -1 instead skips the store and sends the whole selection to ingesters.", "components": ["loki"], "sources": ["loki:sf2a4759294c3", "loki:s529cd9a944d9", "loki:sdc0d0e6ad95d", "loki:s86fc597288e2", "loki:se3f01b0b8f64"], "status": "REASONED"},
     "loki-querier-store-negative": {"text": "When the ingester store lookback that the Loki querier module copies at initialization is negative but not -1, now minus that lookback lies in the future, and the querier sets the end of any store request to that point without clamping it to the selection end, unlike the Loki ingester, which leaves its store request start unchanged for every negative lookback.", "components": ["loki"], "sources": ["loki:sf2a4759294c3", "loki:s529cd9a944d9", "loki:sdc0d0e6ad95d", "loki:s86fc597288e2", "loki:se3f01b0b8f64", "loki:s51ab6a62a6bd"], "status": "REASONED"},
+    "loki-querier-ingester-inverted": {"text": "When the ingester store lookback that the Loki querier module copies at initialization is negative but not -1 and now minus it is after a selection end, the querier's interval code starts the ingester interval at that point and ends it at the selection end without checking their order, and the querier sends that inverted interval to its ingester querier unless query_store_only is set.", "components": ["loki"], "sources": ["loki:sf2a4759294c3", "loki:s529cd9a944d9", "loki:scba306dcdc0c", "loki:sdc0d0e6ad95d", "loki:s10870cc18ddc", "loki:s8f53a03e764f"], "status": "REASONED"},
+    "loki-querier-ingester-inverted-result": {"text": "A source reading of the Loki querier's interval and query code, without a Loki run, does not establish what the ingester querier and ingesters return for the inverted ingester interval that a negative store lookback other than -1 produces when now minus that lookback is after the selection end.", "components": ["loki"], "sources": ["loki:s529cd9a944d9", "loki:sdc0d0e6ad95d", "loki:s10870cc18ddc"], "status": "REASONED"},
     "loki-internal-server": {"text": "Run initializes target modules and starts them together. internal_server is off by default; when enabled it precedes Server and its HTTP listener defaults to localhost:3101. Its flags register no gRPC address or port, so by inference, unless YAML sets them, dskit opens an any-address gRPC listener on an OS-chosen port carrying the HTTP bridge; not observed.", "components": ["loki", "dskit", "go"], "sources": ["loki:sb7c90a61ae40", "loki:scf7d98f51caa", "loki:sf4c3469d7ee1", "loki:sd4f78f9689f6", "loki:sd46d55125044", "loki:s9fd7d8bd80e3", "loki:sf19909de84b7", "loki:s309318e5a59c", "loki:s319f6b7b5340", "dskit:s7848c6311aee", "dskit:s5fd7b12bfcf1", "go:s37204ff1b27c"], "status": "REASONED"},
     "loki-internal-routes": {"text": "When enabled, the internal server's HTTP router serves routes including /ready and buildinfo and, when their modules run, /ring, /memberlist and the compactor handler prefix; these are source registrations, not observed responses.", "components": ["loki"], "sources": ["loki:sb7c90a61ae40", "loki:s319f6b7b5340", "loki:sb6c261fe940d", "loki:s81d8d94c3cea"], "status": "REASONED"},
     "loki-grpc-tls": {"text": "gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers.", "components": ["dskit", "loki"], "sources": ["dskit:sd35a28be4391", "loki:s70975c2655fa"], "status": "REASONED"},
