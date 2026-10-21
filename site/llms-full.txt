@@ -53222,7 +53222,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 62 claims: 14 demonstrated by a check that ran and 48 reasoned from cited sources.
+Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 68 claims: 14 demonstrated by a check that ran and 54 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -53506,9 +53506,14 @@ There are two fixes, and you can use both:
 
   `common.instance_addr` supplies common ring and frontend addresses; explicit component settings
   can override it. `modules.go` sets the ingester lifecycler's listen port to the server gRPC listen
-  port; the lifecycler takes its advertised port from `GetInstancePort(cfg.Port, cfg.ListenPort)`,
-  whose precedence is not traced here, registers its address in the ring, and distributor and
-  querier construction receive the ring and ingester client settings.
+  port, which Loki replaces with the bound port when it is configured as 0 (the ingester
+  module depends on `Server`). The lifecycler takes its advertised port from
+  `GetInstancePort(cfg.Port, cfg.ListenPort)`, which returns a positive configured `Port`
+  (default 0; a configured common ring copies its `instance_port` into it) and otherwise that
+  listen port. The advertised address is the configured `Addr`, or else one that
+  `netutil.GetFirstAddressOf` selects from the configured interfaces, joined with that port.
+  The lifecycler registers this address in the ring, and distributor and querier construction
+  receive the ring and ingester client settings.
   Distributors select ingester ring entries for writes; queriers select ring entries for reads.
   Both obtain clients by each entry's advertised address, and the ingester client calls `grpc.Dial`
   with dskit gRPC client options. `modules.go` builds the server gRPC listen address and port,
@@ -53524,26 +53529,57 @@ There are two fixes, and you can use both:
   explicit worker configuration.
   The querier worker selects the scheduler ring first, then an explicit scheduler address,
   then a frontend address, which may be explicit or automatically set above.
-  It constructs ring/DNS watchers; `AddressAdded` passes a target to `connect`, whose
+  It constructs ring/DNS watchers. Each DNS lookup period, the ring watcher takes the scheduler
+  ring's replication set for key 0 and reports added and removed addresses. The DNS watcher
+  resolves the address with no SRV service name: an IP address is reported once, and a host name
+  is re-resolved by host lookup each period, with port 443 when the address names no port.
+  `AddressAdded` passes a target to `connect`, whose
   `grpc.DialContext` uses `QuerySchedulerGRPCClientConfig` for scheduler connections or
   `NewQueryFrontendGRPCClientConfig` for frontend connections.
-  `AddressAdded` then passes that connection to the processor manager, which this guide does not trace.
+  `AddressAdded` then passes that connection to a processor manager, which runs processor
+  goroutines on it (`processQueriesOnSingleStream`); the worker divides its maximum concurrency
+  among managers, at least one each. `AddressRemoved` stops a manager, which notifies the remote
+  end of shutdown and closes the connection.
   A direct frontend processor opens `Process` on the supplied connection; a scheduler
   processor opens `QuerierLoop` on it. Scheduler requests carry `FrontendAddress` into
   the result path, which asks the frontend pool for that address and calls `QueryResult`;
   the pool's client factory calls `grpc.Dial` with `NewQueryFrontendGRPCClientConfig`.
   These are source call sites; this guide does not infer successful connections from them.
+  The scheduler processor's frontend pool has no service discovery and health-checks its clients
+  every 5 seconds with a 1-second timeout. dskit client pools cache one client per address, create
+  it through the pool factory on first use, and remove a client whose health check keeps failing
+  past the grace period; the distributor and querier ingester pools also remove clients whose
+  addresses are no longer among the healthy ring entries.
+  Lifecyclers write their instance entry, including the advertised address, into the ring key by
+  KV compare-and-swap at ring initialization and on each heartbeat. The KV backend is `consul`,
+  `etcd`, a process-wide `inmemory` store, `memberlist` or `multi`. Ring clients read and then
+  watch the same key and build replication sets from its entries: distributors take a
+  `WriteNoExtend` set per stream, and queriers take the healthy `Read` set and call
+  `ring.DoUntilQuorum`, which runs the per-ingester call in parallel until its quorum condition
+  is met or too many calls fail; each call takes a pooled client by the entry's address.
+  Push HTTP handlers call `PushWithResolver`; outside the `all`, `write` and `ingester` targets
+  the distributor also registers the gRPC `Pusher` service. Kafka writes are off by default
+  and ingester writes are on. With Kafka writes on, the distributor requires a partition ring,
+  creates a Kafka writer client and produces each stream's records to an active partition.
+  Queriers send the ingester interval of a log selection to the ingester querier unless
+  `query_store_only` is set.
+  `Run` initializes the target modules through the module manager and starts the resulting
+  services together. The internal server module exists only when `internal-server.enable` is
+  true (default false); it is then inserted before `Server` in each module dependency list that
+  names `Server`, and its HTTP listener defaults to `localhost:3101` and can serve `/ready` and
+  `/ring`. Its flags register no gRPC listen address or port. This guide infers from dskit's
+  listener code that, unless YAML sets them, its gRPC listener uses an empty address and port 0,
+  an any-address listener on an OS-chosen port that carries the HTTP-over-gRPC bridge to the
+  internal router; this has not been observed.
   `common.instance_addr` also
   sets `MemberlistKV.AdvertiseAddr` when set; memberlist gossip is separate from these gRPC
   calls. A single-binary compactor client uses the server gRPC listen address and port when deletion
   filtering is enabled. Loopback remains this guide's recommendation for this configuration, not a guarantee for
   every single-binary deployment: verify effective
   advertised and dial addresses, worker/frontend/scheduler settings, successful pushes and queries,
-  and any compactor calls. This guide's assessment is that these cited paths do not establish DNS/ring watcher internals, the dskit ring read path (`ring/ring.go`), complete service start-up wiring, the KV-store write path,
-  `ring.DoUntilQuorum`, the Kafka-only and partition-ingester paths, the querier and
-  distributor request-path callers (`pkg/querier/querier.go`, push handlers),
-  ingester and frontend client pool internals, the processor manager
-  (`pkg/querier/worker/processor_manager.go`), every RPC hop, or live reachability. Remote components need a private address
+  and any compactor calls. This guide's assessment is that these cited paths do not establish
+  complete per-module start-up behaviour, the Kafka consumer, Kafka-only and partition-ingester
+  paths, every other RPC hop, or live reachability. Remote components need a private address
   reachable from their hosts.
 
   Keep gRPC restricted to trusted callers: plaintext loopback is still reachable by local users.
@@ -53755,6 +53791,48 @@ from your own account's view of the process.
 - Loki v3.7.8 worker service configuration and standalone predicate: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker_service.go#L18-L42
 - Loki v3.7.8 worker service address fallback and constructor calls: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker_service.go#L56-L112
 - Loki v3.7.8 scheduler processor frontend client configuration and factory: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L37-L59
+- Loki v3.7.8 bound gRPC port replacing a configured 0: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L224-L230
+- dskit pinned instance address and GetInstancePort precedence: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/util.go#L16-L39
+- dskit pinned lifecycler address and port flags: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L97-L100
+- dskit pinned lifecycler heartbeat: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L602-L606
+- dskit pinned lifecycler ring initialization write: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L697-L725
+- dskit pinned lifecycler heartbeat write: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L950-L973
+- dskit pinned KV backend selection: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/client.go#L137-L176
+- dskit pinned ring KV client construction: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/ring.go#L319-L334
+- dskit pinned ring initial read and watch: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/ring.go#L379-L411
+- dskit pinned ring replication set for a key: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/ring.go#L497-L544
+- dskit pinned healthy replication set for an operation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/ring.go#L711-L792
+- dskit pinned DoUntilQuorum: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/replication_set.go#L157-L316
+- dskit pinned pool address factory: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/client/pool.go#L43-L49
+- dskit pinned client pool construction and client creation: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/client/pool.go#L95-L165
+- dskit pinned stale and unhealthy client removal: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/client/pool.go#L238-L318
+- dskit pinned ring service discovery for client pools: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/client/ring_service_discovery.go#L9-L25
+- dskit pinned DNS target parsing and resolution: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/grpcutil/dns_resolver.go#L76-L171
+- dskit pinned DNS SRV skip, host lookup and polling: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/grpcutil/dns_resolver.go#L191-L268
+- Loki v3.7.8 module start-up in Run: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L562-L664
+- Loki v3.7.8 server and conditional internal-server module registration: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L750-L761
+- Loki v3.7.8 module dependencies: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L816-L867
+- Loki v3.7.8 internal-server dependency insertion: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L923-L941
+- Loki v3.7.8 internal-server flags: https://github.com/grafana/loki/blob/v3.7.8/pkg/server/internal_server.go#L10-L33
+- Loki v3.7.8 internal-server construction: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L245-L268
+- Loki v3.7.8 server service running the server: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2646-L2664
+- Loki v3.7.8 ring routes on both servers: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L276-L279
+- Loki v3.7.8 push HTTP handlers: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/http.go#L28-L38
+- Loki v3.7.8 push handler dispatch: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/http.go#L151
+- Loki v3.7.8 distributor gRPC Push: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L552-L558
+- Loki v3.7.8 distributor Kafka and ingester write flags: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L127-L136
+- Loki v3.7.8 distributor Kafka writer construction: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L293-L308
+- Loki v3.7.8 distributor Kafka dispatch: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L860-L867
+- Loki v3.7.8 distributor Kafka record production: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L1296-L1326
+- Loki v3.7.8 querier store and ingester flags: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L77-L81
+- Loki v3.7.8 querier ingester interval: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L176-L198
+- Loki v3.7.8 ingester querier ring and partition sets: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L168-L186
+- Loki v3.7.8 ingester client pool with ring discovery: https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/clientpool/ingester_client_pool.go#L30-L46
+- Loki v3.7.8 processor manager: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/processor_manager.go#L35-L89
+- Loki v3.7.8 worker watchers: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L157-L196
+- Loki v3.7.8 worker address removal and concurrency: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L247-L295
+- Loki v3.7.8 ring watcher: https://github.com/grafana/loki/blob/v3.7.8/pkg/util/ring_watcher.go#L14-L117
+- Loki v3.7.8 DNS watcher: https://github.com/grafana/loki/blob/v3.7.8/pkg/util/dns_watcher.go#L30-L83
 - [curl curl-8_14_1 custom headers (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 - [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
 
@@ -53841,7 +53919,13 @@ Claims (full source mapping in the JSON block below):
 - loki-ring (REASONED; loki): Single-binary overlay uses inmemory ring, loopback instance address and replication_factor 1 instead of default 3; check no gossip listener remains.
 - loki-internal (REASONED; loki, dskit): Querier worker init gets server gRPC listen address/port, target flags, scheduler ring and worker config; ingester lifecycler listen port is the gRPC listen port. Worker and distributor/querier ingester dial sites are traced; loopback gRPC is this guide's configuration-specific advice; verify advertised/dial addresses, internal worker/ingester success, any compactor calls and live reachability.
 - loki-worker-init (REASONED; loki): With frontend, scheduler, read and all targets off, InitWorkerService returns no worker if the scheduler ring and both addresses are unset. Otherwise it passes worker config and ring to NewQuerierWorker; outside that standalone case, unset ring/addresses trigger a frontend address using the gRPC port and a nonempty listen address, else 127.0.0.1.
-- loki-worker-dials (REASONED; loki): Workers prefer scheduler ring, scheduler address, then frontend address; AddressAdded calls grpc.DialContext with that client's options, handing it to the untraced processor manager. Frontend Process and scheduler QuerierLoop open on a supplied connection; scheduler results go to the message's FrontendAddress via grpc.Dial with frontend options; success unverified, watcher/pool internals untraced.
+- loki-worker-dials (REASONED; loki): Workers prefer scheduler ring, scheduler address, then frontend address; AddressAdded calls grpc.DialContext with that client's options, handing it to a processor manager. Frontend Process and scheduler QuerierLoop open on a supplied connection; scheduler results go to the message's FrontendAddress via grpc.Dial with frontend options; success unverified.
+- loki-instance-port (REASONED; loki, dskit): GetInstancePort returns a positive configured lifecycler port, else the listen port, which Loki sets to the server gRPC listen port or the bound port when that is 0; a configured common ring copies its instance_port into the lifecycler port. The advertised address is the configured address, else one chosen from the configured interfaces.
+- loki-ring-kv (REASONED; loki, dskit): Lifecyclers CAS their entry, with the advertised address, into the ring key at initialization and on heartbeat; KV backends are consul, etcd, process-wide inmemory, memberlist or multi. Ring clients read then watch that key and build replication sets from its entries; distributors take per-stream write sets, queriers the healthy read set via ring.DoUntilQuorum.
+- loki-client-pools (REASONED; loki, dskit): dskit pools cache one client per address, create it through the factory on first use and remove clients failing health checks past the grace period; ingester pools also drop addresses missing from healthy ring entries, while the frontend pool has no discovery and checks every 5s. Pooling does not establish effective addresses or successful calls.
+- loki-worker-watchers (REASONED; loki, dskit): Ring watchers take the scheduler ring's key-0 set each lookup period; DNS watchers use no SRV name, report an IP target once and re-resolve host names each period, with port 443 if none is given. Added addresses get processor managers running processors that share max concurrency, at least one each; removal notifies the peer and closes the connection.
+- loki-request-callers (REASONED; loki): Push HTTP handlers call PushWithResolver; outside all, write and ingester targets the distributor also registers gRPC Pusher. Kafka writes default off and ingester writes on; Kafka writes need a partition ring and produce records to an active partition. Queriers send the ingester interval to the ingester querier unless query_store_only is set.
+- loki-internal-server (REASONED; loki, dskit, go): Run initializes target modules and starts them together. internal_server is off by default; when enabled it precedes Server and its HTTP listener defaults to localhost:3101. Its flags register no gRPC address or port, so by inference, unless YAML sets them, dskit opens an any-address gRPC listener on an OS-chosen port carrying the HTTP bridge; not observed.
 - loki-grpc-tls (REASONED; dskit, loki): gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers.
 - loki-proxy (REASONED; loki): An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki.
 - verify-inventory (REASONED; node, alert, push, jaeger, dskit): Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed.
@@ -53856,7 +53940,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "09b2586b1308390a5316ddc53dddeb7177cb4b90fbc89ac8315d95aa78e04dc5",
+  "body_sha256": "d4b03d6efa6d30921952081d3ecc28afeb75bd819a370c4facc97103fe29aa4f",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -53957,7 +54041,32 @@ Claims (full source mapping in the JSON block below):
         "sc37c5a5a63b4": "https://github.com/grafana/loki/blob/v3.7.8/pkg/compactor/deletionmode/mode.go#L38-L56",
         "s99ac9c7561c2": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker_service.go#L18-L42",
         "s61ecb8af773e": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker_service.go#L56-L112",
-        "sde741c787b71": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L37-L59"
+        "sde741c787b71": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/scheduler_processor.go#L37-L59",
+        "seea78f4f5adb": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L224-L230",
+        "sb7c90a61ae40": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L562-L664",
+        "scf7d98f51caa": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L750-L761",
+        "sf4c3469d7ee1": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L816-L867",
+        "sd4f78f9689f6": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L923-L941",
+        "sd46d55125044": "https://github.com/grafana/loki/blob/v3.7.8/pkg/server/internal_server.go#L10-L33",
+        "sf19909de84b7": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L245-L268",
+        "s309318e5a59c": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L2646-L2664",
+        "s319f6b7b5340": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L276-L279",
+        "s543d4de072bb": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/http.go#L28-L38",
+        "s3d6bf0891af0": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/http.go#L151",
+        "sd28855900a87": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L552-L558",
+        "sa59140ca5c4c": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L127-L136",
+        "s9a87cce410e5": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L293-L308",
+        "s846c370c416f": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L860-L867",
+        "s51bcdc31e69d": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/distributor.go#L1296-L1326",
+        "s8f53a03e764f": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L77-L81",
+        "sdc0d0e6ad95d": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L176-L198",
+        "s2e89e4162342": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/ingester_querier.go#L168-L186",
+        "s5ab3c47cb0fc": "https://github.com/grafana/loki/blob/v3.7.8/pkg/distributor/clientpool/ingester_client_pool.go#L30-L46",
+        "sb8f98248ef1a": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/processor_manager.go#L35-L89",
+        "scc6c338ac167": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L157-L196",
+        "s6a02e080cabb": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/worker/worker.go#L247-L295",
+        "s02c83c5d9dda": "https://github.com/grafana/loki/blob/v3.7.8/pkg/util/ring_watcher.go#L14-L117",
+        "sc26dc660fa21": "https://github.com/grafana/loki/blob/v3.7.8/pkg/util/dns_watcher.go#L30-L83"
       }
     },
     "jaeger-docs": {
@@ -54024,7 +54133,24 @@ Claims (full source mapping in the JSON block below):
         "s433134153d1d": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L778-L781",
         "s1786ff0496f6": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L541-L544",
         "sc8780cfc9e85": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L681",
-        "s1b539b8100a3": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1577-L1672"
+        "s1b539b8100a3": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/memberlist/memberlist_client.go#L1577-L1672",
+        "sd7b8bf6bbca6": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/util.go#L16-L39",
+        "sa7d343f48dc5": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L97-L100",
+        "s04a225bbac7b": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L602-L606",
+        "s59c2aa3eb502": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L697-L725",
+        "sbd4dba4be513": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/lifecycler.go#L950-L973",
+        "s8145c89a12ee": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/kv/client.go#L137-L176",
+        "sf68c98707951": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/ring.go#L319-L334",
+        "s05d533c42177": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/ring.go#L379-L411",
+        "s16cda83ea984": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/ring.go#L497-L544",
+        "s48b2d449a388": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/ring.go#L711-L792",
+        "s2a947b05938f": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/replication_set.go#L157-L316",
+        "s0b92cab27eeb": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/client/pool.go#L43-L49",
+        "sa35a10f1fa8b": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/client/pool.go#L95-L165",
+        "s6224eeb93eb9": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/client/pool.go#L238-L318",
+        "s79f868b8ee48": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/ring/client/ring_service_discovery.go#L9-L25",
+        "s7077c6b93703": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/grpcutil/dns_resolver.go#L76-L171",
+        "s77d6a067cd74": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/grpcutil/dns_resolver.go#L191-L268"
       }
     },
     "go": {
@@ -54099,7 +54225,13 @@ Claims (full source mapping in the JSON block below):
     "loki-ring": {"text": "Single-binary overlay uses inmemory ring, loopback instance address and replication_factor 1 instead of default 3; check no gossip listener remains.", "components": ["loki"], "sources": ["loki:s8f06ddfa5291", "loki:s8cf14a90ec61", "loki:sfb3d52071e7c"], "status": "REASONED"},
     "loki-internal": {"text": "Querier worker init gets server gRPC listen address/port, target flags, scheduler ring and worker config; ingester lifecycler listen port is the gRPC listen port. Worker and distributor/querier ingester dial sites are traced; loopback gRPC is this guide's configuration-specific advice; verify advertised/dial addresses, internal worker/ingester success, any compactor calls and live reachability.", "components": ["loki", "dskit"], "sources": ["loki:s00520a857797", "dskit:s433134153d1d", "loki:s7b1d1f183610", "loki:sc5574f33c47c", "loki:s4554d31a5d15", "dskit:s1786ff0496f6", "dskit:sc8780cfc9e85", "loki:s18cd3a035b38", "loki:s5b3705652693", "loki:sfc4788e520b8", "loki:sc2b013001317", "loki:s765907d2b4ee", "loki:sf3955ae90da4", "loki:sfb3d52071e7c", "loki:s8cf14a90ec61", "loki:scf12ae06cdc4", "loki:s0ce56d38618e", "loki:s970473c2dcdb", "loki:s6b2f01173a97", "loki:s44e7547da37d", "loki:s79ea72562a9f", "loki:s634e6599df5e", "loki:s10b95cd4cab8", "loki:s82a976e6b93c", "loki:s47c05209cd31", "loki:s1d59e1184191", "loki:s9d106cc379de", "loki:s8b3d57f01355", "loki:s88661a4514b3", "loki:sb0ae3e30f690", "loki:s074f98761044", "loki:s51e0f640a169", "loki:sa19fa92e5d02", "dskit:sb0955f4c2ebd", "dskit:s74daabf65e98", "dskit:s172528a7c1bf", "dskit:scf57b6b1f148"], "status": "REASONED"},
     "loki-worker-init": {"text": "With frontend, scheduler, read and all targets off, InitWorkerService returns no worker if the scheduler ring and both addresses are unset. Otherwise it passes worker config and ring to NewQuerierWorker; outside that standalone case, unset ring/addresses trigger a frontend address using the gRPC port and a nonempty listen address, else 127.0.0.1.", "components": ["loki"], "sources": ["loki:s765907d2b4ee", "loki:sf3955ae90da4", "loki:s99ac9c7561c2", "loki:s61ecb8af773e"], "status": "REASONED"},
-    "loki-worker-dials": {"text": "Workers prefer scheduler ring, scheduler address, then frontend address; AddressAdded calls grpc.DialContext with that client's options, handing it to the untraced processor manager. Frontend Process and scheduler QuerierLoop open on a supplied connection; scheduler results go to the message's FrontendAddress via grpc.Dial with frontend options; success unverified, watcher/pool internals untraced.", "components": ["loki"], "sources": ["loki:s79ea72562a9f", "loki:s634e6599df5e", "loki:s10b95cd4cab8", "loki:s82a976e6b93c", "loki:s47c05209cd31", "loki:s18cd3a035b38", "loki:s1d59e1184191", "loki:s5b3705652693", "loki:sde741c787b71"], "status": "REASONED"},
+    "loki-worker-dials": {"text": "Workers prefer scheduler ring, scheduler address, then frontend address; AddressAdded calls grpc.DialContext with that client's options, handing it to a processor manager. Frontend Process and scheduler QuerierLoop open on a supplied connection; scheduler results go to the message's FrontendAddress via grpc.Dial with frontend options; success unverified.", "components": ["loki"], "sources": ["loki:s79ea72562a9f", "loki:s634e6599df5e", "loki:s10b95cd4cab8", "loki:s82a976e6b93c", "loki:s47c05209cd31", "loki:s18cd3a035b38", "loki:s1d59e1184191", "loki:s5b3705652693", "loki:sde741c787b71", "loki:sb8f98248ef1a"], "status": "REASONED"},
+    "loki-instance-port": {"text": "GetInstancePort returns a positive configured lifecycler port, else the listen port, which Loki sets to the server gRPC listen port or the bound port when that is 0; a configured common ring copies its instance_port into the lifecycler port. The advertised address is the configured address, else one chosen from the configured interfaces.", "components": ["loki", "dskit"], "sources": ["dskit:sd7b8bf6bbca6", "dskit:sa7d343f48dc5", "dskit:s74daabf65e98", "loki:seea78f4f5adb", "loki:sc2b013001317", "loki:sfb3d52071e7c", "loki:sf4c3469d7ee1"], "status": "REASONED"},
+    "loki-ring-kv": {"text": "Lifecyclers CAS their entry, with the advertised address, into the ring key at initialization and on heartbeat; KV backends are consul, etcd, process-wide inmemory, memberlist or multi. Ring clients read then watch that key and build replication sets from its entries; distributors take per-stream write sets, queriers the healthy read set via ring.DoUntilQuorum.", "components": ["loki", "dskit"], "sources": ["dskit:s04a225bbac7b", "dskit:s59c2aa3eb502", "dskit:sbd4dba4be513", "dskit:s1786ff0496f6", "dskit:s8145c89a12ee", "dskit:sf68c98707951", "dskit:s05d533c42177", "dskit:s16cda83ea984", "dskit:s48b2d449a388", "dskit:s2a947b05938f", "loki:s51e0f640a169", "loki:sb0ae3e30f690", "loki:s2e89e4162342"], "status": "REASONED"},
+    "loki-client-pools": {"text": "dskit pools cache one client per address, create it through the factory on first use and remove clients failing health checks past the grace period; ingester pools also drop addresses missing from healthy ring entries, while the frontend pool has no discovery and checks every 5s. Pooling does not establish effective addresses or successful calls.", "components": ["loki", "dskit"], "sources": ["dskit:s0b92cab27eeb", "dskit:sa35a10f1fa8b", "dskit:s6224eeb93eb9", "dskit:s79f868b8ee48", "loki:s5ab3c47cb0fc", "loki:sfc4788e520b8", "loki:s88661a4514b3", "loki:sde741c787b71"], "status": "REASONED"},
+    "loki-worker-watchers": {"text": "Ring watchers take the scheduler ring's key-0 set each lookup period; DNS watchers use no SRV name, report an IP target once and re-resolve host names each period, with port 443 if none is given. Added addresses get processor managers running processors that share max concurrency, at least one each; removal notifies the peer and closes the connection.", "components": ["loki", "dskit"], "sources": ["loki:scc6c338ac167", "loki:s02c83c5d9dda", "loki:sc26dc660fa21", "dskit:s7077c6b93703", "dskit:s77d6a067cd74", "loki:s634e6599df5e", "loki:sb8f98248ef1a", "loki:s6a02e080cabb"], "status": "REASONED"},
+    "loki-request-callers": {"text": "Push HTTP handlers call PushWithResolver; outside all, write and ingester targets the distributor also registers gRPC Pusher. Kafka writes default off and ingester writes on; Kafka writes need a partition ring and produce records to an active partition. Queriers send the ingester interval to the ingester querier unless query_store_only is set.", "components": ["loki"], "sources": ["loki:s9f316e1a5fef", "loki:s543d4de072bb", "loki:s3d6bf0891af0", "loki:sd28855900a87", "loki:sa59140ca5c4c", "loki:s9a87cce410e5", "loki:s846c370c416f", "loki:s51bcdc31e69d", "loki:s8f53a03e764f", "loki:sdc0d0e6ad95d"], "status": "REASONED"},
+    "loki-internal-server": {"text": "Run initializes target modules and starts them together. internal_server is off by default; when enabled it precedes Server and its HTTP listener defaults to localhost:3101. Its flags register no gRPC address or port, so by inference, unless YAML sets them, dskit opens an any-address gRPC listener on an OS-chosen port carrying the HTTP bridge; not observed.", "components": ["loki", "dskit", "go"], "sources": ["loki:sb7c90a61ae40", "loki:scf7d98f51caa", "loki:sf4c3469d7ee1", "loki:sd4f78f9689f6", "loki:sd46d55125044", "loki:s9fd7d8bd80e3", "loki:sf19909de84b7", "loki:s309318e5a59c", "loki:s319f6b7b5340", "dskit:s7848c6311aee", "dskit:s5fd7b12bfcf1", "go:s37204ff1b27c"], "status": "REASONED"},
     "loki-grpc-tls": {"text": "gRPC TLS requires compatible TLS on every internal client; local users can reach plaintext loopback and mTLS does not supply tenant headers.", "components": ["dskit", "loki"], "sources": ["dskit:sd35a28be4391", "loki:s70975c2655fa"], "status": "REASONED"},
     "loki-proxy": {"text": "An authenticating proxy must overwrite X-Scope-OrgID with its identity and be the only caller that can reach Loki.", "components": ["loki"], "sources": ["loki:s70975c2655fa"], "status": "REASONED"},
     "verify-inventory": {"text": "Inventory every TCP/UDP listener; wildcard defaults, all Loki listeners and off-host isolation were not observed.", "components": ["node", "alert", "push", "jaeger", "dskit"], "sources": ["node:s896899f5a500", "alert:s0fd66cba968e", "push:s5c9f9745f42d", "jaeger:s5619bba2be59", "dskit:sb19d54a19636", "dskit:s23d81aeedf07"], "status": "REASONED", "verify": [1]},
@@ -62685,6 +62817,7 @@ Open the guide before relying on either, because defaults change between release
 | 3001 | AnythingLLM, or Uptime Kuma; also Litestream's MCP listener | varies by service; see the guides | [chat-uis.md](chat-uis.md), [devops-uis.md](devops-uis.md), [sqlite.md](sqlite.md) |
 | 3080 | LibreChat | First registered account becomes admin | [agent-builders.md](agent-builders.md) |
 | 3100 | Grafana Loki's HTTP API, on every interface by default; `auth_enabled` is tenancy, not authentication | No built-in authentication; any `X-Scope-OrgID` value is accepted | [observability-components.md](observability-components.md) |
+| 3101 | Grafana Loki's internal server HTTP listener, which exists only when `internal-server.enable` is true (default false) and defaults to `localhost:3101` | not stated | [observability-components.md](observability-components.md) |
 | 3128 | Proxmox VE's `spiceproxy` (SPICE console proxy), on every address by default | not stated | [server-admin-panels.md](server-admin-panels.md) |
 | 3210 | LobeChat | Registration allowlist `AUTH_ALLOWED_EMAILS` empty by default: any email registers | [chat-uis.md](chat-uis.md) |
 | 3306 | MySQL and MariaDB (the official images, MySQL 8.4, 9.7 and innovation and MariaDB 10.6 through 13.1 checked, listen on every address unless an argument or option file sets a bind address or `skip_networking`) | Varies by install method; MariaDB 10.4+ local root via Unix socket; on a new data directory the official images create a root account for the root host (`root@'%'` when no value is supplied; none beyond local root when it is `localhost` or a `_FILE` names an empty file), with an empty password when the empty-password variable is set to any non-empty value and no root password, hash or random password is requested | [mysql.md](mysql.md), [cloud-firewalls.md](cloud-firewalls.md) |
