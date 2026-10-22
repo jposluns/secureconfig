@@ -3761,7 +3761,7 @@ Order matters:
 
 When a team needs configuration secrets in git (for example GitOps deployments), encrypt them: [sops](https://github.com/getsops/sops) with [age](https://github.com/FiloSottile/age) keys encrypts the values inside YAML/JSON/ENV files while leaving the structure diffable. The decryption key itself stays out of the repository.
 
-## Verify (REASONED: scanner outcomes follow the cited gitleaks source and README, by source reading, and secret-handling guidance; no exposed/fixed scan run is recorded)
+## Verify (REASONED: scanner outcomes follow the cited gitleaks source, by source reading, and README, and secret-handling guidance; no exposed/fixed scan run is recorded)
 
 ```bash
 gitleaks git . && echo clean
@@ -3854,7 +3854,7 @@ Claims (full source mapping in the JSON block below):
 - image-history (REASONED; docker-build): The Docker image history reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, Docker image history does not show every secret value.
 - random (REASONED; owasp, openssl-rand, python-secrets): Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.
 - scanners (REASONED; gitleaks, trufflehog): Scan before every push and in CI with gitleaks or TruffleHog. By source reading at every gitleaks tag from v8.19.1 to v8.30.1, cited at both ends, without a run, git and dir take the scan path from a positional argument that defaults to the current directory, as the shown gitleaks git . and gitleaks dir . commands need.
-- scanners-8190 (REASONED; gitleaks-8190): Gitleaks v8.19.0 git and dir are not established: by source reading without a run, both commands, and root initConfig when neither --config nor GITLEAKS_CONFIG is set, read a source flag that root.go, git.go and directory.go never register, calling log.Fatal on a lookup error. Other v8.19.0 command files were not read, so a registration elsewhere is not excluded.
+- scanners-8190 (REASONED; gitleaks-8190): Gitleaks v8.19.0 git and dir are not established: by source reading without a run, both commands, and root initConfig when both --config and GITLEAKS_CONFIG are empty or unset, read a source flag that root.go, git.go and directory.go never register, calling log.Fatal on a lookup error. Other v8.19.0 command files were not read, so a registration elsewhere is not excluded.
 - scanners-detect (REASONED; gitleaks-detect): The v8.18.4 gitleaks README, the last tag before v8.19.0, documents detect for git repositories, its --no-git option for files and directories, and a --source flag defaulting to the current directory; releases before v8.18.0 and detect's own source were not read.
 - argv (REASONED; proc, apache): Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.
 - stdin (REASONED; apache, docker, gh): Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.
@@ -3880,7 +3880,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "feafd4bf4ca159f749ea48e625c50322588ed1ed2912bfbefc6503fa82d21e49",
+  "body_sha256": "c283c5a0a64c84083f3e03850eab501b5b9cc1bbbdf943ccd3b36cf88bea1201",
   "components": {
     "git-ignore": {
       "name": "Git ignore patterns",
@@ -4101,7 +4101,7 @@ Claims (full source mapping in the JSON block below):
     "image-history": {"text": "The Docker image history reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, Docker image history does not show every secret value.", "components": ["docker-build"], "sources": ["docker-build:s6283b172a5c6"], "status": "REASONED"},
     "random": {"text": "Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.", "components": ["owasp", "openssl-rand", "python-secrets"], "sources": ["owasp:s26a987a1053b", "openssl-rand:s11d11381b080", "python-secrets:sd2e8196eaa96"], "status": "REASONED"},
     "scanners": {"text": "Scan before every push and in CI with gitleaks or TruffleHog. By source reading at every gitleaks tag from v8.19.1 to v8.30.1, cited at both ends, without a run, git and dir take the scan path from a positional argument that defaults to the current directory, as the shown gitleaks git . and gitleaks dir . commands need.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:sb16acfe1832b", "gitleaks:s0af97c8cbbb0", "gitleaks:s2a515c553a16", "gitleaks:s3cedc5927daf", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
-    "scanners-8190": {"text": "Gitleaks v8.19.0 git and dir are not established: by source reading without a run, both commands, and root initConfig when neither --config nor GITLEAKS_CONFIG is set, read a source flag that root.go, git.go and directory.go never register, calling log.Fatal on a lookup error. Other v8.19.0 command files were not read, so a registration elsewhere is not excluded.", "components": ["gitleaks-8190"], "sources": ["gitleaks-8190:s4ee488cd50ff", "gitleaks-8190:s17e3c5309e52", "gitleaks-8190:s9b18bf477a6e", "gitleaks-8190:s5c847ad43500"], "status": "REASONED"},
+    "scanners-8190": {"text": "Gitleaks v8.19.0 git and dir are not established: by source reading without a run, both commands, and root initConfig when both --config and GITLEAKS_CONFIG are empty or unset, read a source flag that root.go, git.go and directory.go never register, calling log.Fatal on a lookup error. Other v8.19.0 command files were not read, so a registration elsewhere is not excluded.", "components": ["gitleaks-8190"], "sources": ["gitleaks-8190:s4ee488cd50ff", "gitleaks-8190:s17e3c5309e52", "gitleaks-8190:s9b18bf477a6e", "gitleaks-8190:s5c847ad43500"], "status": "REASONED"},
     "scanners-detect": {"text": "The v8.18.4 gitleaks README, the last tag before v8.19.0, documents detect for git repositories, its --no-git option for files and directories, and a --source flag defaulting to the current directory; releases before v8.18.0 and detect's own source were not read.", "components": ["gitleaks-detect"], "sources": ["gitleaks-detect:s37819da2aec2", "gitleaks-detect:s12cd43a29383"], "status": "REASONED"},
     "argv": {"text": "Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.", "components": ["proc", "apache"], "sources": ["proc:s801d5f1ee88d", "apache:scde9004bb967"], "status": "REASONED"},
     "stdin": {"text": "Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.", "components": ["apache", "docker", "gh"], "sources": ["apache:scde9004bb967", "docker:sf8243a183d67", "gh:sf0b01ee9b3e1"], "status": "REASONED"},
