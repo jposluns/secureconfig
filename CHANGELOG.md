@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-22
 
-- `observability-components.md` (TODO 1.301, partial; notes from #778): the ingester store and in-memory claims now open "From source reading," and are scoped to the ingester without a configured wrapper; the querier claim restores its initialization qualifier, the prose names the querier's request validation, and the open item says what the ingester querier and ingesters return, with the index lookup's results and the chunk iterators' behaviour unestablished (#782)
+- `observability-components.md` (TODO 1.301, partial; notes from #778): the ingester store and in-memory claims now open "From source reading," and are scoped to the ingester without a configured wrapper; the querier claim restores its initialization qualifier, the prose names the querier's request validation, and the open item names what the ingester querier and ingesters return as not established, along with the index lookup's results, the chunk iterators' behaviour and whether a wrapper set in code passes the calls to the ingester, as a source reading at Loki v3.7.8 without a run (#782)
 
 ## 2026-10-21
 

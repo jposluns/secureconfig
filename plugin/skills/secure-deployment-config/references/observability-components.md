@@ -399,13 +399,14 @@ There are two fixes, and you can use both:
   other negative values, and skips the store query when that adjusted start is after the
   selection's end. From the same source reading, the ingester querier passes the inverted
   interval to the gRPC `Query` or `QuerySample` call of each ingester it queries, which the
-  ingester module registers the ingester, or a wrapper its configuration may supply, to serve.
-  Without a configured wrapper, the ingester itself serves those calls: since it never moves a
-  store request's start earlier, it makes no store query for that interval whatever its own
-  lookback, and its in-memory query looks up streams in its index at the interval's start and
-  skips each chunk unless the chunk's bounds start no later than the selection's end and end no
-  earlier than that future point. What that lookup and the chunk iterators return, and so what
-  the ingester querier and ingesters return for the interval, is not established.
+  ingester module registers the ingester, or a wrapper that Go code embedding Loki may set (the
+  field has no YAML key), to serve. Without a configured wrapper, the ingester itself serves
+  those calls: since it never moves a store request's start earlier, it makes no store query for
+  that interval whatever its own lookback, and its in-memory query looks up streams in its index
+  at the interval's start and skips each chunk unless the chunk's bounds start no later than the
+  selection's end and end no earlier than that future point. What that lookup and the chunk
+  iterators return, and so what the ingester querier and ingesters return for the interval, is
+  not established.
   `Run` initializes the target modules through the module manager and starts the resulting
   services together. The internal server module exists only when `internal-server.enable` is
   true (default false); it is then inserted before `Server` in each module dependency list that
@@ -837,7 +838,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "0e35f3c8a0b4800e1f9b0c60a2e58a83f7f5c30dcad735eef531376998c1c499",
+  "body_sha256": "7bcfba5f45eb83623aeee4a2ad2b39a533ee33b43d6ce2b00a11b1940ed30b22",
   "components": {
     "node": {
       "name": "node_exporter",
