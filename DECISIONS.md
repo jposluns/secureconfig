@@ -17,6 +17,24 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-10-22 (#785).** The maintainer answered three questions through AskUser on
+  2026-10-22, the first in their own words and the second and third by choosing the recommended option, and after the
+  third gave a standing direction in chat. No reasoning was given beyond the maintainer's words quoted below.
+  - TODO row 1.307 (`identity-providers.md`'s TOTP compatibility) is rescoped (applied by #784). The question was
+    whether to rescope the row so it closes once each provider's own documented parameters are cited or recorded as
+    unspecified, with arbitrary-app compatibility kept as an explicitly labelled guide assessment. The maintainer's
+    words: "option 1, and note in the document that there are so many providers that listing them would be more
+    effort that we want to put in. if there's a particular provider anyone wants listed they can submit the request
+    for it."
+  - TODO row 1.306 (`self-signed.md`'s trust-store commands per OS release) covers currently supported releases only.
+    The chosen option, "Supported releases only": 1.306 is reworded to close once currently supported releases are
+    cited; newer releases become routine refresh work, and the guide's "other releases remain this guide's
+    assessment" qualifier stays.
+  - TODO row 1.321 is added for a source-reading labelling pass, after QA found 31 of 39 `loki-*` claims without a
+    source-reading label. The chosen option: "Add the TODO row".
+  - Standing direction: where it is uncertain, as it was on the 1.321 question, whether to add a TODO row, add it.
+    The maintainer's words, in chat after the 1.321 ruling: "whenever there is uncertainty like this last question,
+    always add the todo row. there's nothing wrong with validating."
 - **Row 1.290 retired, 2026-10-21 (#757).** The maintainer ruled, through AskUser, choosing the recommended option
   "Retire as unrecoverable (Recommended)", that row 1.290's remainder, the unrecorded bash and other tool/parser
   versions for `firebase-supabase.md`'s historical local guard and syntax runs, closes as Retired. The chosen
