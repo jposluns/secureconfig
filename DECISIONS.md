@@ -27,9 +27,9 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     effort that we want to put in. if there's a particular provider anyone wants listed they can submit the request
     for it."
   - TODO row 1.306 (`self-signed.md`'s trust-store commands per OS release) covers currently supported releases only.
-    The chosen option, "Supported releases only": 1.306 is reworded to close once currently supported releases are
-    cited; newer releases become routine refresh work, and the guide's "other releases remain this guide's
-    assessment" qualifier stays.
+    The chosen option was "Supported releases only". Its recorded effect: 1.306 is reworded to close once currently
+    supported releases are cited, newer releases become routine refresh work, and the guide's qualifier that other
+    releases remain this guide's assessment stays.
   - TODO row 1.321 is added for a source-reading labelling pass, after QA found 31 of 39 `loki-*` claims without a
     source-reading label. The chosen option: "Add the TODO row".
   - Standing direction: where it is uncertain, as it was on the 1.321 question, whether to add a TODO row, add it.
