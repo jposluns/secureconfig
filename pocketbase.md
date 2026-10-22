@@ -914,7 +914,7 @@ service result or deployed-bundle scan is claimed.
 - [PocketBase v0.40.4 dev SQL logging (checked October 2026)](https://github.com/pocketbase/pocketbase/blob/v0.40.4/core/base.go#L1277-L1286).
 - [PocketBase v0.40.4 dev logger level (checked October 2026)](https://github.com/pocketbase/pocketbase/blob/v0.40.4/core/base.go#L1489-L1499).
 - [Appwrite 2.2.0 document read handler and requester checks (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L80-L95).
-- [Appwrite 2.2.0 document fetch through the database layer (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L103-L120).
+- [Appwrite 2.2.0 document fetch, through the database layer without a transaction ID and through transaction state with one (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L103-L120).
 - [Appwrite 2.2.0 privileged and key role classification (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Utopia/Database/Documents/User.php#L75-L109).
 - [Appwrite 2.2.0 API-key role, scopes, and authorization status (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L144-L161).
 - [Appwrite 2.2.0 admin-mode roles and authorization status (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L312-L339).
@@ -1049,7 +1049,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "9c05b056f44c2b631f26abf6d77b633db69a37b4f62d420859e16ef803bb8072",
+  "body_sha256": "0aed318be71c63cdc1d3131f5a4a80bbb42b9195d87b33fe961463b1e19a371e",
   "components": {
     "pb": {
       "name": "PocketBase",
