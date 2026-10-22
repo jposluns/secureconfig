@@ -57,6 +57,15 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
     1.290 and 1.294), which need vendor statements not published in a repository or a live test, or which state guide
     requirements, are pursued with vendor documentation pages fetched over the web, accepting unpinned citations where
     nothing better exists. This was not the recommended option (parking the rows); no rationale was stated for it.
+- **Claim length, 2026-10-18: "Brief rule now, gate later" (#796).** The maintainer's ruling was recorded in the
+  orchestrator's private register on 2026-10-18 and is entered here by #796. The ruling, verbatim: "claim length =
+  "Brief rule now, gate later": draft briefs require each claim to be a one- or two-sentence summary that keeps its
+  qualifiers (the body carries the detail); a length gate is reconsidered after the new layout is live and the
+  longest claims are measured." No reasoning beyond those words is recorded here. The ruling names no number; "about
+  400 characters" is the working figure briefs have used since, and CONTRIBUTING.md and the gates set no
+  claim-length limit. The longest claims are now measured: at 349a642b, 104 claims in 32 of the 100 guides in
+  `tools/version_basis_guides.txt` exceed 400 characters. The length gate is held for the maintainer and is not
+  decided here (TODO row 3.44).
 - **TODO row 1.179 split into individual rows, 2026-10-17 (#621).** The maintainer directed on
   2026-10-17 that row 1.179, a single very long row covering residual unsourced facts across many
   guides, be split into individual tasks with their own TODO numbers. Each piece of work should be
