@@ -95,7 +95,6 @@ marked, and those are the ones worth taking first.
 | --- | --- | --- |
 | 3.44 | Claim length: the brief rule that each claim is a one- or two-sentence summary that keeps its qualifiers comes from the 2026-10-18 maintainer ruling recorded in DECISIONS.md, "Brief rule now, gate later", which reconsiders a length gate after the new layout is live and the longest claims are measured. The ruling names no number; "about 400 characters" is the working figure used in briefs, and CONTRIBUTING.md and the gates set no claim limit (CONTRIBUTING.md's only 400-character limit is the generated header's versions sentence). At 349a642b, 104 claims in 32 of the 100 guides in `tools/version_basis_guides.txt` exceed 400 characters, including the nine `gpu-clouds.md` claims in row 1.326, and DONE rows 1.317 and 1.321 treat 400 characters as a claim threshold. Whether to add a length gate, and with what limit, is held for the maintainer; this row does not decide it. (L, M) | `[gap]` |
 
-
 ## Decisions
 
 Maintainer rulings moved to `DECISIONS.md` on 2026-09-13, in preparation for the OPF operational-files migration (row 3.8). A row may cite a decision there; this file no longer carries them.
