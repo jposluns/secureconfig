@@ -12,6 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-22
 
+- `secrets.md` (TODO 1.320, partial; notes from #776): `scanners-8190` now says root `initConfig` reads the `source` flag when both `--config` and `GITLEAKS_CONFIG` are empty or unset, the Verify heading's basis reads "gitleaks source, by source reading, and README", and the 445-character `runtime-storage` claim is split into `runtime-storage` and `image-history` with every qualifier and source kept (#781)
 - `machine-auth.md` (TODO 1.299, partial; notes from #773 and #776): on a source reading of the Gitleaks v8.19.0 loader without a run, a `--config` or `GITLEAKS_CONFIG` file loads only its own rules unless `[extend]` sets `useDefault` or `path` (new `verify-key-extend` claim); the synthetic-key path advice adds `locale`, `node_modules` and lock files; and the history-scan item, `verify-artifacts` and the v8.19.0 README Sources entry now say, as `secrets.md` does, that `git` and `dir` are not established at v8.19.0, keeping the `detect` route (#780)
 - `elasticsearch.md` (TODO 1.297, partial; notes from #775): the two long sentences in the index-level `CryptoMetadata` passage are split into four with every qualifier kept, and TODO 1.297's 3.8.0 clause gets its own parenthesis (#779)
 
