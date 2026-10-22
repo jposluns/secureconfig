@@ -18,7 +18,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against PocketBase v0.40.4, Appwrite 2.2.0, utopia-php/database 7.3.9, and curl curl-8_14_1; 2 further sources carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 79 claims: 2 demonstrated by a check that ran and 77 reasoned from cited sources.
+Written against PocketBase v0.40.4, Appwrite 2.2.0, utopia-php/database 7.3.9, and curl curl-8_14_1; 2 further sources carry no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 85 claims: 2 demonstrated by a check that ran and 83 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -412,8 +412,91 @@ SQL `getDocument` has no adapter authorization check for disabled status to bypa
 Database-level read permission checks are bypassed as described above.
 These are source-based conclusions, not a live authorization demonstration.
 
-Mongo, Redis, Memory and Pool were not traced; which adapter a deployment uses is not established.
-Those remaining adapter and deployment gaps stay open in SELFHOSTED-BACKEND-SOURCE-1;
+At the same pin, Mongo, Memory, Redis and Pool also extend `Adapter`; see the
+[Mongo](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Mongo.php#L32),
+[Memory](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L18-L31), and
+[Redis](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L26-L61) class declarations and the
+[Pool class and delegation](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Pool.php#L12-L95).
+Mongo `getDocument` filters on `_uid`, adds tenant filters for shared tables and returns the
+first match; its method contains no shared-authorization status check or permission filter.
+Mongo `find` builds query filters and shared-table tenant filters and, only while the shared
+authorization status is enabled, adds an `$in` filter on `_permissions` listing strings that wrap
+each requester role in the requested action, such as `read("any")` for the `any` role. See the
+[Mongo document fetch](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Mongo.php#L1242-L1283),
+[Mongo find filters](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Mongo.php#L2495-L2513), and
+[Mongo permission strings](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Mongo.php#L2466-L2474).
+
+Memory's class comment calls it an "In-process drop-in for the SQL adapters" and says it is
+"Intended for tests, fixtures, and ephemeral workloads"; Redis's calls it an adapter "mirroring
+the Memory adapter's surface". Neither `getDocument` method contains a shared-authorization status
+check or permission filter; Redis `getDocument` also returns an empty document when a
+shared-tables row belongs to another tenant. In `find`, only while the shared authorization status
+is enabled, Memory keeps documents whose indexed permissions for the requested action name a
+requester role, and Redis keeps IDs found in its per-action sets for the requester's roles,
+keeping none for an empty role list. See the
+[Memory document fetch](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L1083-L1106),
+[Memory find](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L1636-L1665),
+[Memory find filter](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L2554-L2606),
+[Memory permission allow set](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L3215-L3257),
+[Redis document fetch](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2005-L2066),
+[Redis find](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2824-L2861),
+[Redis find permission step](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2976-L2998), and
+[Redis permission filter](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L380-L423).
+
+Pool `getDocument` and `find` delegate to a pooled adapter. Outside a transaction, `delegate`
+first sets that adapter's database, namespace, shared-tables mode, tenant and authorization from
+Pool's own state; Pool's `setAuthorization` stores the instance it receives, and `withTransaction`
+sets the same state on the adapter it pins for the transaction's calls. See the
+[Pool read delegation](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Pool.php#L400-L443),
+[Pool authorization setter](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Pool.php#L860-L864), and
+[Pool transaction pinning](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Pool.php#L256-L281).
+This guide's reasoning from these lines and the cited authorization handoff is that a Pool-wrapped
+adapter runs its own `getDocument` and `find` code above with the authorization instance the
+database set. It also reasons, from the cited Database dispatch and status controls, that Mongo,
+Memory and Redis `getDocument` add no document-permission filter to the Database-level read checks,
+and that a collection grant or disabled status omits their `find` permission filters as it omits
+the SQL predicate. These are source-based conclusions, not a live authorization demonstration.
+
+In Appwrite 2.2.0, `_APP_DB_ADAPTER` selects the main database: the pinned variables give it
+introduction version 1.9.0, default `postgresql`, the description "Must be one of: PostgreSQL,
+MariaDB, or MongoDB" and the question choices `postgresql|mariadb|mongodb`. The pool registration
+falls back to `postgresql` when the variable is unset, accepts the `mariadb`, `mongodb`, `mysql`
+and `postgresql` schemes for its `console` and `database` connections, and maps them to the
+MariaDB, Mongo, MySQL and Postgres adapters; DocumentsDB connections accept only `mongodb`, and
+the mapping names no Memory, Redis or SQLite adapter. See the
+[pinned variables](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/config/variables.php),
+[pool DSN fallbacks and connections](https://github.com/appwrite/appwrite/blob/2.2.0/app/init/registers.php#L40-L94), and
+[adapter mapping](https://github.com/appwrite/appwrite/blob/2.2.0/app/init/registers.php#L235-L248).
+The 2.2.0 database factory wraps the connection pool named by a DSN host in utopia-php's `Pool`
+adapter, and its `tenant` method sets the shared authorization instance on the database it builds.
+The document GET handler cited above fetches through `getDatabasesDB`, which builds its database
+with that `tenant` method from the database document's DSN, or the project's when that is empty.
+See the
+[factory Pool wrapping](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Database/Factory.php#L139-L147),
+[tenant database construction](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Database/Factory.php#L74-L92), and
+[getDatabasesDB resource](https://github.com/appwrite/appwrite/blob/2.2.0/app/init/resources/request.php#L1165-L1190).
+
+The repository's development `.env` sets `_APP_DB_ADAPTER=postgresql`, and its development
+Compose file passes `_APP_DB_ADAPTER` to the `appwrite` service and defines `mariadb`, `mongodb`
+and `postgresql` services; these are development defaults, not production defaults. The 2.2.0
+upgrade task keeps an installation's existing engine and, when neither its Compose services nor
+its `.env` set `_APP_DB_ADAPTER`, assumes MariaDB, commenting "Pre-1.9.0 installations only
+supported MariaDB". See the
+[pinned development environment](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/.env),
+[pinned Compose file](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/docker-compose.yml), and
+[upgrade engine detection](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Upgrade.php#L67-L92).
+
+There is a documentation/source conflict: at the time of writing, the current environment
+documentation says "Appwrite supports MariaDB and MongoDB as database backends" and gives
+`_APP_DB_ADAPTER` the default `mongodb` with possible values `mongodb` and `mariadb`, while
+2.2.0 defaults to `postgresql`, which that page does not list. See the
+[environment reference](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
+
+This guide's reasoning from these Appwrite and utopia-php lines is that the cited 2.2.0 document
+GET reads through Pool over whichever MariaDB, MySQL, Postgres or Mongo adapter its connection's
+DSN scheme selects. Which adapter a given deployment uses depends on its own environment, DSNs
+and installation history and is not established here, and the 2.2.0 installer's selection flow
+is not traced. Those deployment gaps stay open in SELFHOSTED-BACKEND-SOURCE-1;
 this guide does not claim complete pinned-source verification or a live authorization demonstration.
 
 Properly scoped server API keys **bypass resource permissions**. A successful server-key test
@@ -722,7 +805,7 @@ service result or deployed-bundle scan is claimed.
 | Check scope or source-work ID | Procedure and prerequisites | Status |
 | --- | --- | --- |
 | Service comparisons | Demonstrate every REASONED comparison above on PocketBase v0.40.4 and Appwrite 2.2.0, recording binary/image identity, commands, response bodies, denied and allowed identities, disposable-data cleanup, and effective settings. Requires writable service fixtures, a container runtime, controlled accounts and mailboxes, S3 and backup fixtures, ClamAV, function execution, a second-host ingress fixture, and the actual client build. Include all five PocketBase actions, manageRule, file-token issuance versus protected downloads (unrelated-user and unsigned-guest denial, permitted-user bytes), realtime, bootstrap-token handling, MFA, verification, retained-token behavior, additive Appwrite permissions, server-key scopes, registration, console MFA (fresh password-only denial and successful TOTP completion), TLS, proxy trust, limits, encrypted recovery, uploads, and executor privacy. | REASONED: full service-comparison inventory; a live PocketBase or Appwrite stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available. This comparison still requires the writable service, container, account, mailbox, S3, backup, scanner, function, second-host ingress, and actual-build prerequisites named in this row. All three Verify shell blocks passed bash -n and ShellCheck 0.11.0 with exit 0 and no output. With curl and grep stubbed, written and embedded placeholders, example.com, angle brackets, empty values, and omitted or shortened set -- lines printed their refusal messages without invoking either stub. The signup JSON parsed as four expected string fields; valid curl stubs printed arguments and protected input separately. The grep stub exercised match, no-match, and error branches; real grep on a disposable marker printed only client.js with exit 0 and, after removal, no output with exit 1. None establishes the listed live outcomes. Exposed public authorization should admit unintended access and fixed authorization should deny or filter it while retaining permitted controls; the other expected outcomes remain those in the individual comparisons, per the guide’s cited PocketBase API rules and filters (rolling documentation, checked September 2026); Appwrite legacy collection/document permissions (rolling documentation, checked October 2026); Appwrite 2.2.0 console registration handler; PocketBase v0.40.4 auth defaults, manageRule validation, and MFA; PocketBase v0.40.4 file-token and download authorization; PocketBase v0.40.4 realtime authorization; PocketBase v0.40.4 authentication and superuser IP middleware; PocketBase v0.40.4 settings, encryption, proxy trust, SMTP, backups, and rate defaults; PocketBase v0.40.4 backup download authorization; PocketBase v0.40.4 rate limiter and exemptions; PocketBase v0.40.4 listener and origin flags; Appwrite 2.2.0 API-key authorization, scopes, MFA enforcement, and abuse exemptions; Appwrite 2.2.0 hostname routing and HTTPS enforcement; Appwrite email delivery (rolling documentation, checked September 2026); Appwrite self-hosted backups and encryption-key preservation (rolling documentation, checked September 2026); Appwrite 2.2.0 bucket defaults and upload controls; Appwrite 2.2.0 function execute roles, execution-key scopes, and enablement; Appwrite 2.2.0 Compose console path, persistent volumes, and Docker socket mounts; PocketBase authentication (rolling documentation, checked September 2026); Appwrite project API keys (rolling documentation, checked September 2026); PocketBase v0.40.4 installer and bootstrap-token lifetime; PocketBase v0.40.4 record CRUD handlers; PocketBase v0.40.4 record authorization and token validation; PocketBase v0.40.4 native TLS and ACME listener; Appwrite console MFA enrollment and recovery codes (rolling documentation, checked September 2026); Appwrite rate limits (rolling documentation, checked September 2026); and Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026). REASONED from the cited vendor documentation and available pinned sources; live behavior is not demonstrated. |
-| SELFHOSTED-BACKEND-SOURCE-1 | Complete pin-specific tracing for the Appwrite document read-authorization internals. The PocketBase CLI wrapper, the `--dev` flag default, the Appwrite requester privileged/API-key classification, and the Appwrite-repository document-read call sites are now cited above, alongside the earlier collection default, document-create permission branch, and backup archive pins. The pinned dependency now cites permission-role extraction and matching, collection/document read checks in `getDocument`, collection checks and adapter dispatch in `find`, and authorization status/skip behavior. The SQL base used by MariaDB, MySQL, Postgres and SQLite is now traced: `getDocument` adds no permission filter, while `find` adds its document-permission predicate only with authorization enabled; the collection-grant skip, non-skip document-security branch, disabled-status bypass and Postgres predicate override are described above. Still untraced: Mongo, Redis, Memory and Pool; which adapter a deployment uses is not established. | REASONED: pinned-source reading of PocketBase v0.40.4, Appwrite 2.2.0 and the utopia-php/database 7.3.9 excerpts above; the other-adapter and deployment gaps stay open, complete pinned-source verification is not claimed, and live authorization is not demonstrated. |
+| SELFHOSTED-BACKEND-SOURCE-1 | Complete pin-specific tracing for the Appwrite document read-authorization internals. The PocketBase CLI wrapper, the `--dev` flag default, the Appwrite requester privileged/API-key classification, and the Appwrite-repository document-read call sites are now cited above, alongside the earlier collection default, document-create permission branch, and backup archive pins. The pinned dependency now cites permission-role extraction and matching, collection/document read checks in `getDocument`, collection checks and adapter dispatch in `find`, and authorization status/skip behavior. The SQL base used by MariaDB, MySQL, Postgres and SQLite is now traced: `getDocument` adds no permission filter, while `find` adds its document-permission predicate only with authorization enabled; the collection-grant skip, non-skip document-security branch, disabled-status bypass and Postgres predicate override are described above. Mongo, Memory, Redis and Pool `getDocument`/`find` are now traced as described above, as are Appwrite 2.2.0's `_APP_DB_ADAPTER` default, pool scheme mapping, factory Pool wrapping and upgrade engine detection. Still open: which adapter a given deployment uses, and the 2.2.0 installer's selection flow. | REASONED: pinned-source reading of PocketBase v0.40.4, Appwrite 2.2.0 and the utopia-php/database 7.3.9 excerpts above; the deployment-adapter and installer gaps stay open, complete pinned-source verification is not claimed, and live authorization is not demonstrated. |
 
 ## Sources (checked September 2026)
 
@@ -771,9 +854,27 @@ service result or deployed-bundle scan is claimed.
 - [utopia-php/database 7.3.9 MySQL MariaDB inheritance](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/MySQL.php).
 - [utopia-php/database 7.3.9 Postgres SQL inheritance](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Postgres.php).
 - [utopia-php/database 7.3.9 SQLite MariaDB inheritance](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQLite.php).
+- [utopia-php/database 7.3.9 Mongo adapter declaration](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Mongo.php#L32).
+- [utopia-php/database 7.3.9 Mongo document fetch](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Mongo.php#L1242-L1283).
+- [utopia-php/database 7.3.9 Mongo permission strings](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Mongo.php#L2466-L2474).
+- [utopia-php/database 7.3.9 Mongo find tenant and permission filters](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Mongo.php#L2495-L2513).
+- [utopia-php/database 7.3.9 Pool adapter declaration and delegation](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Pool.php#L12-L95).
+- [utopia-php/database 7.3.9 Pool transaction pinning](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Pool.php#L256-L281).
+- [utopia-php/database 7.3.9 Pool document read delegation](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Pool.php#L400-L443).
+- [utopia-php/database 7.3.9 Pool authorization setter](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Pool.php#L860-L864).
+- [utopia-php/database 7.3.9 Memory adapter purpose and declaration](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L18-L31).
+- [utopia-php/database 7.3.9 Memory document fetch](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L1083-L1106).
+- [utopia-php/database 7.3.9 Memory find](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L1636-L1665).
+- [utopia-php/database 7.3.9 Memory find tenant and permission filter](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L2554-L2606).
+- [utopia-php/database 7.3.9 Memory permission allow set](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L3215-L3257).
+- [utopia-php/database 7.3.9 Redis adapter purpose and declaration](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L26-L61).
+- [utopia-php/database 7.3.9 Redis permission filter](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L380-L423).
+- [utopia-php/database 7.3.9 Redis document fetch and tenant check](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2005-L2066).
+- [utopia-php/database 7.3.9 Redis find](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2824-L2861).
+- [utopia-php/database 7.3.9 Redis find permission step](https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2976-L2998).
 - [Appwrite permissions, creation defaults, and server integrations (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/permissions).
 - [Appwrite legacy collection/document permissions (rolling documentation, checked October 2026)](https://appwrite.io/docs/products/databases/tablesdb/legacy/permissions).
-- [Appwrite environment reference and HTTPS deprecation wording (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
+- [Appwrite environment reference, HTTPS deprecation wording (rolling documentation, checked September 2026) and database selector wording (rolling documentation, checked October 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/environment-variables).
 - [Appwrite rate limits (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/security/rate-limits).
 - [Appwrite email delivery (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/configuration/email).
 - [Appwrite self-hosted backups and encryption-key preservation (rolling documentation, checked September 2026)](https://appwrite.io/docs/advanced/self-hosting/production/backups).
@@ -802,6 +903,12 @@ service result or deployed-bundle scan is claimed.
 - [Appwrite 2.2.0 request role assignment (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L357-L361).
 - [Appwrite 2.2.0 route scope validation (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L503-L507).
 - [Appwrite 2.2.0 collection permission and documentSecurity handoff (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L221-L227).
+- [Appwrite 2.2.0 database pool DSN fallbacks and connections (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/init/registers.php#L40-L94).
+- [Appwrite 2.2.0 database adapter mapping (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/init/registers.php#L235-L248).
+- [Appwrite 2.2.0 tenant database construction and authorization (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Database/Factory.php#L74-L92).
+- [Appwrite 2.2.0 database factory Pool wrapping (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Database/Factory.php#L139-L147).
+- [Appwrite 2.2.0 getDatabasesDB request resource (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/init/resources/request.php#L1165-L1190).
+- [Appwrite 2.2.0 upgrade database engine detection (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Upgrade.php#L67-L92).
 - [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
 - [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 - [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
@@ -903,18 +1010,24 @@ Claims (full source mapping in the JSON block below):
 - verify-bundle (REASONED; pb-docs, appwrite-docs): Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning.
 - local-guards (DEMONSTRATED; pb-docs, appwrite-docs): Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning.
 - local-syntax (DEMONSTRATED; appwrite, pb-docs, appwrite-docs): All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body.
-- source-limits (REASONED; appwrite-docs, pb-docs, appwrite, utopia-php-database): PocketBase CLI/--dev, Appwrite requester/call-site and utopia-php/database role matching, Database reads/dispatch and status/skip pins remain cited. SQL adapter reads are traced; Mongo, Redis, Memory and Pool remain untraced, the deployed adapter is unknown, complete pinned-source verification is not claimed, and live authorization is not demonstrated.
+- source-limits (REASONED; appwrite-docs, pb-docs, appwrite, utopia-php-database): PocketBase CLI/--dev, Appwrite requester/call-site and utopia-php/database role matching, Database reads/dispatch and status/skip pins remain cited. SQL, Mongo, Memory, Redis and Pool adapter reads are traced; which adapter a given deployment uses is unknown, complete pinned-source verification is not claimed, and live authorization is not demonstrated.
 - source-limits-sql-get (REASONED; utopia-php-database): Pinned MariaDB, MySQL, Postgres and SQLite use SQL getDocument: ID lookup, tenant-query call and permission decoding, with no adapter authorization check. This guide reasons it adds no permission filter with or without collection grants; for non-metadata collections, Database read checks accept collection roles plus document roles only with documentSecurity enabled.
 - source-limits-sql-find (REASONED; utopia-php-database): Pinned SQL find defaults to read, takes shared authorization roles and adds a document-permission predicate only with status enabled. This guide reasons that a collection grant skips that filter; without a grant, enabled authorization with documentSecurity takes the non-skip branch and applies it.
 - source-limits-sql-predicate (REASONED; utopia-php-database): The pinned SQL predicate matches requester roles and action in the collection _perms table and includes getTenantQuery. Postgres overrides it with OR-ed JSONB containment tests for action-wrapped roles in _permissions, returning FALSE for no roles.
 - source-limits-sql-disabled (REASONED; utopia-php-database): This guide reasons from the pinned SQL code that disabled authorization omits find permission filtering while query and shared-table tenant conditions, ordering and pagination remain. SQL getDocument has no adapter authorization check to bypass; this guide also reasons that Database read permission checks are bypassed, with no live authorization demonstration.
+- source-limits-mongo (REASONED; utopia-php-database): Pinned Mongo getDocument filters by _uid, plus tenant under shared tables, with no adapter authorization check; Mongo find adds an $in filter on _permissions of requester roles wrapped in the action only with authorization status enabled. This guide reasons that a collection grant or disabled status omits that filter and getDocument adds none, with no live authorization demonstration.
+- source-limits-memory-redis (REASONED; utopia-php-database): Pinned Memory, intended for tests, fixtures and ephemeral workloads, and Redis, mirroring its surface, check no authorization in getDocument; their find paths keep only IDs matching requester roles for the action while authorization is enabled. This guide reasons that a collection grant or disabled status omits that filtering, with no live authorization demonstration.
+- source-limits-pool (REASONED; utopia-php-database): Pinned Pool delegates getDocument and find to a pooled adapter, outside a transaction first setting its database, namespace, shared tables, tenant and authorization from Pool's own; withTransaction does this for the adapter it pins. This guide reasons that a Pool-wrapped adapter reads with the authorization instance the database set, with no live authorization demonstration.
+- source-limits-appwrite-adapter (REASONED; appwrite): Appwrite 2.2.0's _APP_DB_ADAPTER (since 1.9.0) defaults to postgresql; pool registration maps the mariadb, mongodb, mysql and postgresql schemes to those adapters, DocumentsDB accepts only mongodb, and the factory wraps pools in Pool, with tenant databases getting the shared authorization. Which adapter a given deployment uses is not established.
+- source-limits-appwrite-dev (REASONED; appwrite): Appwrite 2.2.0's development .env sets _APP_DB_ADAPTER=postgresql and its development Compose file passes it to the appwrite service; these are development defaults, not production defaults. The 2.2.0 upgrade task keeps an installation's engine, assuming MariaDB when neither Compose nor .env sets _APP_DB_ADAPTER.
+- source-limits-adapter-docs (REASONED; appwrite-docs, appwrite): At the time of writing, Appwrite's environment documentation lists MariaDB and MongoDB and gives _APP_DB_ADAPTER a mongodb default, conflicting with Appwrite 2.2.0, which defaults to postgresql, a value that page does not list.
 
 ````json
 {
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "6a349272345811856c3e23ad44e6a626924037ec52d421c26546e878eb127b01",
+  "body_sha256": "c8441ce579a9ed03c06fd16811bad0bdf4552652af68264d47eb957374998133",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -968,7 +1081,13 @@ Claims (full source mapping in the JSON block below):
         "sed1bf9453ecb": "https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L312-L339",
         "s8784d02c82c9": "https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L357-L361",
         "sf60a2b283b80": "https://github.com/appwrite/appwrite/blob/2.2.0/app/controllers/shared/api.php#L503-L507",
-        "s1fe0e6185518": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L221-L227"
+        "s1fe0e6185518": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Create.php#L221-L227",
+        "s1a70a48a9dca": "https://github.com/appwrite/appwrite/blob/2.2.0/app/init/registers.php#L40-L94",
+        "s665ebdc0c600": "https://github.com/appwrite/appwrite/blob/2.2.0/app/init/registers.php#L235-L248",
+        "sa6bf00f7f610": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Database/Factory.php#L74-L92",
+        "s2ac9cf2424b0": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Database/Factory.php#L139-L147",
+        "s5b95ad04c9e2": "https://github.com/appwrite/appwrite/blob/2.2.0/app/init/resources/request.php#L1165-L1190",
+        "scbf0003fdebc": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Upgrade.php#L67-L92"
       }
     },
     "pb-docs": {
@@ -1019,7 +1138,25 @@ Claims (full source mapping in the JSON block below):
         "s35cc05f86ccd": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/MariaDB.php",
         "s958fb4526355": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/MySQL.php",
         "s590f2ad87ab9": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Postgres.php",
-        "sabffefbbe8f7": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQLite.php"
+        "sabffefbbe8f7": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/SQLite.php",
+        "sbc944db029cb": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Mongo.php#L32",
+        "s6a9132fbc928": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Mongo.php#L1242-L1283",
+        "s6324818fa770": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Mongo.php#L2466-L2474",
+        "sdc4aebfb869d": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Mongo.php#L2495-L2513",
+        "s4cc1d5739816": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Pool.php#L12-L95",
+        "sf6aa64548538": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Pool.php#L256-L281",
+        "s6d59676de4ac": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Pool.php#L400-L443",
+        "s22782b0cef21": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Pool.php#L860-L864",
+        "s637a07eb6f05": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L18-L31",
+        "s68f0dd3f99e1": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L1083-L1106",
+        "s9be04229c19a": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L1636-L1665",
+        "sa8ac8f3419dd": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L2554-L2606",
+        "s942a26817d62": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Memory.php#L3215-L3257",
+        "s1da4feb30d76": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L26-L61",
+        "s3c305a201d46": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L380-L423",
+        "s553c31c38ee3": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2005-L2066",
+        "s768127e55c8e": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2824-L2861",
+        "s39898214cd29": "https://github.com/utopia-php/database/blob/54364c687d6ddb3d976d7130b9001c0b29276933/src/Database/Adapter/Redis.php#L2976-L2998"
       }
     },
     "curl": {
@@ -1107,11 +1244,17 @@ Claims (full source mapping in the JSON block below):
     "verify-bundle": {"text": "Search filenames using protected exact-secret patterns with a disposable marker control; client bundles must contain neither superuser tokens nor Appwrite API keys, and encoded/split forms can evade scanning.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:s773e441dd51c", "appwrite-docs:saa37bb5d4d7e"], "status": "REASONED", "verify": [3]},
     "local-guards": {"text": "Recorded guard tests rejected placeholders and omitted/shortened arguments; this demonstrates shell behavior only, not service access or deployed-bundle scanning.", "components": ["pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite-docs:sa0bd132f7968", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "Local guard tests refused embedded `REPLACE_WITH_` placeholders, `example.com`, angle brackets, empty arguments, and omitted or shortened `set --` lines."},
     "local-syntax": {"text": "All three bash fences have recorded local lint/syntax success, not live service evidence; ShellCheck version is recorded only in the body.", "components": ["appwrite", "pb-docs", "appwrite-docs"], "sources": ["pb-docs:saedbdfbdfc48", "appwrite:s2bb21218c5ee", "appwrite-docs:saa37bb5d4d7e"], "status": "DEMONSTRATED", "evidence": "All three bash blocks passed ShellCheck 0.11.0 and `bash -n` during authoring."},
-    "source-limits": {"text": "PocketBase CLI/--dev, Appwrite requester/call-site and utopia-php/database role matching, Database reads/dispatch and status/skip pins remain cited. SQL adapter reads are traced; Mongo, Redis, Memory and Pool remain untraced, the deployed adapter is unknown, complete pinned-source verification is not claimed, and live authorization is not demonstrated.", "components": ["appwrite-docs", "pb-docs", "appwrite", "utopia-php-database"], "sources": ["appwrite-docs:s58ad28816c5d", "pb-docs:s9029ab974cf1", "appwrite:s7ba6f9c71972", "utopia-php-database:s44e735a78b9d", "utopia-php-database:sfda128d99ef9", "utopia-php-database:s610f3fb8fa73", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d", "utopia-php-database:scf82badc07e5", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s3389fa5854d5", "utopia-php-database:s01a8ce8001e0", "utopia-php-database:s3864f749beea", "utopia-php-database:s3965be77f402", "utopia-php-database:s386e19ac0f42", "utopia-php-database:s5439a153bbd6", "utopia-php-database:s8b0dbf5677da", "utopia-php-database:s35cc05f86ccd", "utopia-php-database:s958fb4526355", "utopia-php-database:s590f2ad87ab9", "utopia-php-database:sabffefbbe8f7"], "status": "REASONED"},
+    "source-limits": {"text": "PocketBase CLI/--dev, Appwrite requester/call-site and utopia-php/database role matching, Database reads/dispatch and status/skip pins remain cited. SQL, Mongo, Memory, Redis and Pool adapter reads are traced; which adapter a given deployment uses is unknown, complete pinned-source verification is not claimed, and live authorization is not demonstrated.", "components": ["appwrite-docs", "pb-docs", "appwrite", "utopia-php-database"], "sources": ["appwrite-docs:s58ad28816c5d", "pb-docs:s9029ab974cf1", "appwrite:s7ba6f9c71972", "utopia-php-database:s44e735a78b9d", "utopia-php-database:sfda128d99ef9", "utopia-php-database:s610f3fb8fa73", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d", "utopia-php-database:scf82badc07e5", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s3389fa5854d5", "utopia-php-database:s01a8ce8001e0", "utopia-php-database:s3864f749beea", "utopia-php-database:s3965be77f402", "utopia-php-database:s386e19ac0f42", "utopia-php-database:s5439a153bbd6", "utopia-php-database:s8b0dbf5677da", "utopia-php-database:s35cc05f86ccd", "utopia-php-database:s958fb4526355", "utopia-php-database:s590f2ad87ab9", "utopia-php-database:sabffefbbe8f7", "utopia-php-database:sbc944db029cb", "utopia-php-database:s6a9132fbc928", "utopia-php-database:s6324818fa770", "utopia-php-database:sdc4aebfb869d", "utopia-php-database:s4cc1d5739816", "utopia-php-database:sf6aa64548538", "utopia-php-database:s6d59676de4ac", "utopia-php-database:s22782b0cef21", "utopia-php-database:s637a07eb6f05", "utopia-php-database:s68f0dd3f99e1", "utopia-php-database:s9be04229c19a", "utopia-php-database:sa8ac8f3419dd", "utopia-php-database:s942a26817d62", "utopia-php-database:s1da4feb30d76", "utopia-php-database:s3c305a201d46", "utopia-php-database:s553c31c38ee3", "utopia-php-database:s768127e55c8e", "utopia-php-database:s39898214cd29"], "status": "REASONED"},
     "source-limits-sql-get": {"text": "Pinned MariaDB, MySQL, Postgres and SQLite use SQL getDocument: ID lookup, tenant-query call and permission decoding, with no adapter authorization check. This guide reasons it adds no permission filter with or without collection grants; for non-metadata collections, Database read checks accept collection roles plus document roles only with documentSecurity enabled.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s3864f749beea", "utopia-php-database:s35cc05f86ccd", "utopia-php-database:s958fb4526355", "utopia-php-database:s590f2ad87ab9", "utopia-php-database:sabffefbbe8f7", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d"], "status": "REASONED"},
     "source-limits-sql-find": {"text": "Pinned SQL find defaults to read, takes shared authorization roles and adds a document-permission predicate only with status enabled. This guide reasons that a collection grant skips that filter; without a grant, enabled authorization with documentSecurity takes the non-skip branch and applies it.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s3965be77f402", "utopia-php-database:s386e19ac0f42", "utopia-php-database:scf82badc07e5", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s3389fa5854d5", "utopia-php-database:s01a8ce8001e0"], "status": "REASONED"},
     "source-limits-sql-predicate": {"text": "The pinned SQL predicate matches requester roles and action in the collection _perms table and includes getTenantQuery. Postgres overrides it with OR-ed JSONB containment tests for action-wrapped roles in _permissions, returning FALSE for no roles.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s5439a153bbd6", "utopia-php-database:s8b0dbf5677da"], "status": "REASONED"},
-    "source-limits-sql-disabled": {"text": "This guide reasons from the pinned SQL code that disabled authorization omits find permission filtering while query and shared-table tenant conditions, ordering and pagination remain. SQL getDocument has no adapter authorization check to bypass; this guide also reasons that Database read permission checks are bypassed, with no live authorization demonstration.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s3864f749beea", "utopia-php-database:s386e19ac0f42", "utopia-php-database:s610f3fb8fa73", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d", "utopia-php-database:s01a8ce8001e0"], "status": "REASONED"}
+    "source-limits-sql-disabled": {"text": "This guide reasons from the pinned SQL code that disabled authorization omits find permission filtering while query and shared-table tenant conditions, ordering and pagination remain. SQL getDocument has no adapter authorization check to bypass; this guide also reasons that Database read permission checks are bypassed, with no live authorization demonstration.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s3864f749beea", "utopia-php-database:s386e19ac0f42", "utopia-php-database:s610f3fb8fa73", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d", "utopia-php-database:s01a8ce8001e0"], "status": "REASONED"},
+    "source-limits-mongo": {"text": "Pinned Mongo getDocument filters by _uid, plus tenant under shared tables, with no adapter authorization check; Mongo find adds an $in filter on _permissions of requester roles wrapped in the action only with authorization status enabled. This guide reasons that a collection grant or disabled status omits that filter and getDocument adds none, with no live authorization demonstration.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:sbc944db029cb", "utopia-php-database:s6a9132fbc928", "utopia-php-database:sdc4aebfb869d", "utopia-php-database:s6324818fa770", "utopia-php-database:scf82badc07e5", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s01a8ce8001e0", "utopia-php-database:s4f7f3ed32a53", "utopia-php-database:sa3038716384d"], "status": "REASONED"},
+    "source-limits-memory-redis": {"text": "Pinned Memory, intended for tests, fixtures and ephemeral workloads, and Redis, mirroring its surface, check no authorization in getDocument; their find paths keep only IDs matching requester roles for the action while authorization is enabled. This guide reasons that a collection grant or disabled status omits that filtering, with no live authorization demonstration.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s637a07eb6f05", "utopia-php-database:s68f0dd3f99e1", "utopia-php-database:s9be04229c19a", "utopia-php-database:sa8ac8f3419dd", "utopia-php-database:s942a26817d62", "utopia-php-database:s1da4feb30d76", "utopia-php-database:s553c31c38ee3", "utopia-php-database:s768127e55c8e", "utopia-php-database:s39898214cd29", "utopia-php-database:s3c305a201d46", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s01a8ce8001e0"], "status": "REASONED"},
+    "source-limits-pool": {"text": "Pinned Pool delegates getDocument and find to a pooled adapter, outside a transaction first setting its database, namespace, shared tables, tenant and authorization from Pool's own; withTransaction does this for the adapter it pins. This guide reasons that a Pool-wrapped adapter reads with the authorization instance the database set, with no live authorization demonstration.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s4cc1d5739816", "utopia-php-database:s6d59676de4ac", "utopia-php-database:s22782b0cef21", "utopia-php-database:sf6aa64548538", "utopia-php-database:s3389fa5854d5"], "status": "REASONED"},
+    "source-limits-appwrite-adapter": {"text": "Appwrite 2.2.0's _APP_DB_ADAPTER (since 1.9.0) defaults to postgresql; pool registration maps the mariadb, mongodb, mysql and postgresql schemes to those adapters, DocumentsDB accepts only mongodb, and the factory wraps pools in Pool, with tenant databases getting the shared authorization. Which adapter a given deployment uses is not established.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca", "appwrite:s665ebdc0c600", "appwrite:s2ac9cf2424b0", "appwrite:sa6bf00f7f610", "appwrite:s5b95ad04c9e2"], "status": "REASONED"},
+    "source-limits-appwrite-dev": {"text": "Appwrite 2.2.0's development .env sets _APP_DB_ADAPTER=postgresql and its development Compose file passes it to the appwrite service; these are development defaults, not production defaults. The 2.2.0 upgrade task keeps an installation's engine, assuming MariaDB when neither Compose nor .env sets _APP_DB_ADAPTER.", "components": ["appwrite"], "sources": ["appwrite:sadb8c6e7b00a", "appwrite:s8e5272615f2e", "appwrite:scbf0003fdebc"], "status": "REASONED"},
+    "source-limits-adapter-docs": {"text": "At the time of writing, Appwrite's environment documentation lists MariaDB and MongoDB and gives _APP_DB_ADAPTER a mongodb default, conflicting with Appwrite 2.2.0, which defaults to postgresql, a value that page does not list.", "components": ["appwrite-docs", "appwrite"], "sources": ["appwrite-docs:s2bf9a4746d28", "appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca"], "status": "REASONED"}
   }
 }
 ````
