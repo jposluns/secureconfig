@@ -29,8 +29,8 @@ characters is the working figure briefs use, and CONTRIBUTING.md and the gates s
 them in `gpu-clouds.md` (row 1.326). The longest claims are now measured; whether the new layout is live, the
 ruling's other precondition, has not been established.
 
-- **A. No gate.** Keep the brief rule and rely on review. Costs nothing; an over-length claim is caught only if
-  a reviewer measures it.
+- **A. No gate.** Keep the brief rule and rely on review. Requires no new gate; an over-length claim is caught
+  only if a reviewer measures it.
 - **B. Gate new or changed claims only.** Refuse a claim over the limit when a change adds or edits it, compared
   with the base branch. Existing claims stay until touched, but any edit to one of the 104 forces it to be
   shortened in that change, and the check needs the base revision, not just the tree.
@@ -45,7 +45,8 @@ ruling's other precondition, has not been established.
 It stops new over-length claims without forcing unrelated rewrites, and it runs offline on the tree alone. B makes
 any edit to a long claim a forced rewrite, and D checks the ruling's sentence count but not length.
 
-Tracked as backlog row 3.44. Row 1.326 does not depend on it.
+Tracked as backlog row 3.44. Row 1.326 proceeds at the working figure meanwhile; a different limit would
+change its target.
 
 ## Struck
 
