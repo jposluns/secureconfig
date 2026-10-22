@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-22
+
+- `observability-components.md` (TODO 1.301, partial; notes from #778): the ingester store and in-memory claims now open "From source reading," and are scoped to the ingester without a configured wrapper; the querier claim restores its initialization qualifier, the prose names the querier's request validation, and the open item says what the ingester querier and ingesters return, with the index lookup's results and the chunk iterators' behaviour unestablished (#782)
+
 ## 2026-10-21
 
 - `observability-components.md` (TODO 1.301, partial; notes from #774): as a source reading at Loki v3.7.8 without a run, the querier's inverted ingester interval is qualified to selections that pass request validation, and the trace continues through the ingester querier's gRPC `Query`/`QuerySample` call to the ingester, which makes no store query for an interval whose start is after its end and keeps only in-memory chunks whose bounds cover that span; what ingesters return stays open (#778)
