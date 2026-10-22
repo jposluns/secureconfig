@@ -61780,8 +61780,9 @@ data. See [document create parameter](https://github.com/appwrite/appwrite/blob/
 For a 2.2.0 document GET, the pinned handler reads the requester class from the request's
 authorization roles: the `keys` role marks an API-key request, and the `owner`, `developer`, or
 `admin` role marks a privileged one. A disabled database or collection is reported as not found,
-except to API-key or privileged requesters, and the document itself is then fetched through the
-database layer. With an API key, the request's role and scopes come from the key; a standard or
+except to API-key or privileged requesters, and, for a request without a transaction ID, the
+document itself is then fetched through the database layer. With an API key, the request's role
+and scopes come from the key; a standard or
 ephemeral project key for the same project disables the database layer's default authorization
 status, as do admin-mode console sessions outside the console project routes, while route scope
 validation still applies to every requester. Collection `permissions` and `documentSecurity` are
@@ -62459,7 +62460,7 @@ Claims (full source mapping in the JSON block below):
 - appwrite-recreate (REASONED; appwrite-docs): Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior.
 - appwrite-permissions (REASONED; appwrite, appwrite-docs): Collection and document grants are additive according to legacy documentation; documentSecurity defaults false in Appwrite 2.2.0 and must be enabled for document grants. The pinned parameter description states the need for one permission level.
 - appwrite-creation (REASONED; appwrite, appwrite-docs, utopia-php-database): For null or omitted document permissions, the pinned aggregate helper preserves null before the handler assigns read/update/delete user grants to a nonprivileged requester with a user ID, or an empty list otherwise. API-key classification skips role validation but does not itself determine the default list. Use specific users/teams for private data.
-- appwrite-read-path (REASONED; appwrite): Document GET classifies the requester from authorization roles (keys; owner/developer/admin privileged), reports disabled databases/collections as not found except to those requesters, and fetches the document through the database layer; collection permissions and documentSecurity are passed to the database layer at collection creation.
+- appwrite-read-path (REASONED; appwrite): Document GET classifies the requester from authorization roles (keys; owner/developer/admin privileged), reports disabled databases/collections as not found except to those requesters, and, without a transaction ID, fetches the document through the database layer; collection permissions and documentSecurity are passed to the database layer at collection creation.
 - appwrite-requester (REASONED; appwrite): With an API key the request role and scopes come from the key; a standard or ephemeral project key for the same project disables the default authorization status, as do admin-mode console sessions outside console project routes, while route scope validation applies to every requester.
 - appwrite-keys (REASONED; appwrite, appwrite-docs): Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients.
 - appwrite-encryption (REASONED; appwrite, appwrite-docs): Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets.
@@ -62510,7 +62511,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "0839919e37640b78b16855c02268011382d0638f8a35ba3c2c0690a2c7e2c95c",
+  "body_sha256": "9c05b056f44c2b631f26abf6d77b633db69a37b4f62d420859e16ef803bb8072",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -62699,7 +62700,7 @@ Claims (full source mapping in the JSON block below):
     "appwrite-recreate": {"text": "Apply env/Compose changes with docker compose up -d from the install directory, then check effective behavior.", "components": ["appwrite-docs"], "sources": ["appwrite-docs:s4a965bdeeb98"], "status": "REASONED"},
     "appwrite-permissions": {"text": "Collection and document grants are additive according to legacy documentation; documentSecurity defaults false in Appwrite 2.2.0 and must be enabled for document grants. The pinned parameter description states the need for one permission level.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:sf916851a0b10", "appwrite-docs:s58ad28816c5d"], "status": "REASONED"},
     "appwrite-creation": {"text": "For null or omitted document permissions, the pinned aggregate helper preserves null before the handler assigns read/update/delete user grants to a nonprivileged requester with a user ID, or an empty list otherwise. API-key classification skips role validation but does not itself determine the default list. Use specific users/teams for private data.", "components": ["appwrite", "appwrite-docs", "utopia-php-database"], "sources": ["appwrite:s5b4b3eb2271f", "appwrite:s93647e16b966", "appwrite:sda698c40fc34", "appwrite-docs:sa0bd132f7968", "appwrite:s7ba6f9c71972", "utopia-php-database:s847e0ded0300"], "status": "REASONED"},
-    "appwrite-read-path": {"text": "Document GET classifies the requester from authorization roles (keys; owner/developer/admin privileged), reports disabled databases/collections as not found except to those requesters, and fetches the document through the database layer; collection permissions and documentSecurity are passed to the database layer at collection creation.", "components": ["appwrite"], "sources": ["appwrite:s5396e119c026", "appwrite:s82988de645fa", "appwrite:s224cc9d8a387", "appwrite:s1fe0e6185518"], "status": "REASONED"},
+    "appwrite-read-path": {"text": "Document GET classifies the requester from authorization roles (keys; owner/developer/admin privileged), reports disabled databases/collections as not found except to those requesters, and, without a transaction ID, fetches the document through the database layer; collection permissions and documentSecurity are passed to the database layer at collection creation.", "components": ["appwrite"], "sources": ["appwrite:s5396e119c026", "appwrite:s82988de645fa", "appwrite:sb4cc9cac2ef5", "appwrite:s224cc9d8a387", "appwrite:s1fe0e6185518"], "status": "REASONED"},
     "appwrite-requester": {"text": "With an API key the request role and scopes come from the key; a standard or ephemeral project key for the same project disables the default authorization status, as do admin-mode console sessions outside console project routes, while route scope validation applies to every requester.", "components": ["appwrite"], "sources": ["appwrite:sc55465cf878d", "appwrite:sed1bf9453ecb", "appwrite:s8784d02c82c9", "appwrite:sf60a2b283b80"], "status": "REASONED"},
     "appwrite-keys": {"text": "Properly scoped server API keys bypass resource permissions but still obey operation scopes; keys.write is admin-equivalent and keys never belong in clients.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s193bfa5c6e22", "appwrite-docs:saa37bb5d4d7e"], "status": "REASONED"},
     "appwrite-encryption": {"text": "Replace _APP_OPENSSL_KEY_V1=your-secret-key before production data; preserve the exact key separately, since replacement/loss strands encrypted secrets.", "components": ["appwrite", "appwrite-docs"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite-docs:s256ef73f7b85"], "status": "REASONED"},
