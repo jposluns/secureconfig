@@ -44,6 +44,23 @@ echo "== version basis =="
 python3 tools/test_version_basis.py || bad "version-basis self-test"
 python3 tools/version_basis.py --check || bad "version-basis metadata or summary"
 
+echo "== claim text stays within the 400-character baseline =="
+# Maintainer ruling 2026-10-23 (DECISIONS.md): a claim's text over 400 characters
+# fails unless tools/claim_length_baseline.txt lists it at its exact current
+# length, and the baseline only shrinks. The self-test runs first, so what runs
+# against the corpus is the shipped gate.
+for claim_check in test_claim_lengths.py check_claim_lengths.py; do
+  if claim_lengths=$(python3 -I -B "tools/$claim_check" 2>&1); then
+    printf '%s\n' "$claim_lengths"
+    if grep -q '^  FAIL  ' <<< "$claim_lengths" || ! grep -q '^  ok    ' <<< "$claim_lengths"; then
+      bad "$claim_check exited 0 without a clean ok result"
+    fi
+  else
+    printf '%s\n' "$claim_lengths"
+    bad "$claim_check failed"
+  fi
+done
+
 echo "== llms-full.txt is current =="
 orig=$(mktemp)
 cp site/llms-full.txt "$orig"
