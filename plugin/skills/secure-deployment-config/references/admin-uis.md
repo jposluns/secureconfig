@@ -79,7 +79,7 @@ RedisInsight 3.8.0's default server configuration uses `RI_APP_HOST` with a fall
 
 ## Verify
 
-REASONED: following block; panel sources below support the listener and anonymous front-page/data-route checks; Docker's pinned documentation supports explicit publish addresses and Linux firewall rules for publication. Docker documents IPv6-to-IPv4 mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default). The fetched Moby port-mapping source starts the userland proxy conditionally and listens on bound TCP sockets even without a proxy; these fetched sources do not establish NAT publication without a host listener. As this guide's assessment, a socket listing alone does not prove reachability. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes.
+REASONED: following block; panel sources below support the listener check, the anonymous front-page/data-route checks and the authenticated data-route positive control; Docker's pinned documentation supports explicit publish addresses and Linux firewall rules for publication. Docker documents IPv6-to-IPv4 mapping when no host IP is given, the bridge is IPv4-only and `--userland-proxy=true` (the default). The fetched Moby port-mapping source starts the userland proxy conditionally and listens on bound TCP sockets even without a proxy; these fetched sources do not establish NAT publication without a host listener. As this guide's assessment, a socket listing alone does not prove reachability. No panel deployment or external test network is available here; no live run is recorded. The comments give expected denial, exposure and inconclusive outcomes.
 
 ```bash
 # On the host: each panel listener should be loopback (127.0.0.1) or a deliberately chosen private address.
@@ -103,7 +103,7 @@ curl -q -g -sS --noproxy '*' -i 'https://panel.example.com/REPLACE_WITH_PROTECTE
 #   unsubstituted placeholder is inconclusive, not a pass.
 ```
 
-REASONED: preceding block; listener inventory, anonymous front-page/data-route checks and an authenticated data-route positive control follow the cited panel sources; published-backend inspection follows the pinned Docker sources and this guide's assessment that a protected frontend or absent socket does not prove backend isolation. No panel deployment or second test network is available. Run these from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
+REASONED: preceding block; listener inventory, anonymous front-page/data-route checks and an authenticated data-route positive control follow the cited panel sources; published-backend inspection follows the pinned Docker sources and this guide's assessment that a protected frontend or absent socket does not prove backend isolation. No panel deployment or second test network is available. Run the `ss` listener inventory and the published address and port inspection (`docker ps` and the port mappings) on the panel's host. Run the two `curl` checks, their authenticated positive control and any probe of a published backend port from a second network against each panel's real hostname; a 200 that renders a dashboard, or any content past the login, without credentials is a finding, while a proxy, DNS, or TLS error is inconclusive, not a pass.
 
 ## Sources (checked September 2026)
 
@@ -191,7 +191,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "2d7869f38c56dd9667239e86ef62c13f570091e9da6b2fbdbc6356e813410b5f",
+  "body_sha256": "37cfbf704e87d99c2426d3cddf9bc82048b3a1190f04260fc2cb696d1e103dcc",
   "components": {
     "phpmyadmin": {
       "name": "phpMyAdmin",
