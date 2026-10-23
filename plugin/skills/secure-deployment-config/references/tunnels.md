@@ -84,7 +84,7 @@ To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forwar
 
 ## Verify
 
-REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, Ubuntu Noble ufw source, nftables and OpenSSH documentation defines the checks below. This read-only review cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run.
+REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, Ubuntu Noble ufw source, nftables and OpenSSH documentation defines the checks below. The authoring environment cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run.
 
 ```bash
 # frp positive control: with the correct auth.token, frpc logs 'login to server success' (proving
@@ -252,7 +252,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "d446ba839790ef46ef9d220b78f4b5111f6d126abfc25a29a848a397d82785e9",
+  "body_sha256": "a75b72736554ec8bcb8e4f939d4674c727b4ad9f196e61c6582ac2ce23675f07",
   "components": {
     "frps": {
       "name": "frps source",

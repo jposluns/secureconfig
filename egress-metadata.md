@@ -109,7 +109,7 @@ from being attempted, they make the attempt fail.
 
 ## Verify
 
-REASONED: metadata headers, token flow, network blocks, egress controls and applied options; no exposed/fixed run is recorded in this guide. Expectations follow the cited cloud, NetworkPolicy and curl sources; this read-only review has no authorized cloud VM or workload enforcement point.
+REASONED: metadata headers, token flow, network blocks, egress controls and applied options; no exposed/fixed run is recorded in this guide. Expectations follow the cited cloud, NetworkPolicy and curl sources; the authoring environment has no authorized cloud VM or workload enforcement point.
 
 ```bash
 # --noproxy so an ambient http(s)_proxy/ALL_PROXY cannot answer in place of the metadata service (Azure
@@ -309,7 +309,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "cb39b8a8a79aa6a92532e34f0c3135eeea5c55f60871e0f835da693bb9c59b2c",
+  "body_sha256": "dd35bc80d16265a5421b88e5d57cd5aa5049f42100389f0bce972fa962728615",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",

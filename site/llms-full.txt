@@ -1512,7 +1512,7 @@ REASONED: the usage and secret-handling notes for the service-token block below,
 - REASONED: binding and effective policy for each topology; local marking review (October 2026, Bash 5.3.9) ran ss -tlnp with an ss stub, which printed 'stub ss args=-tlnp' (exit 0), not host socket state. A live origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; no deployed origin with a firewall and container-publication inventory, remote cloudflared host, AOP client certificate or external probe host was available to this marking review. Exposed same-host binding is expected to show a wildcard (0.0.0.0, [::] or *) or non-loopback address and answer directly, while fixed binding is expected to show 127.0.0.1 and answer only locally. Exposed remote-origin policy is expected to admit callers besides the cloudflared host; fixed policy is expected to admit that host and deny or filter others. Exposed no-tunnel 443 is expected to admit non-Cloudflare callers or lack enforced client certificates; fixed policy is expected to admit Cloudflare IP ranges with AOP and deny or filter others, per the guide's cited Create a remotely-managed tunnel, Authenticated Origin Pulls (the origin must validate the client certificate; shared vs zone-level cert), and Cloudflare IP ranges (origin firewall allowlist). `ss -tlnp` shows the app on `127.0.0.1` only for a same-host tunnel. Do not settle for "no inbound rule added": confirm the port's effective inbound policy, since a default-accept policy, a pre-existing broad allow, or a container publishing through its own NAT can leave it open. The policy differs by topology: a same-host tunnel app is on loopback, a remote tunnel origin accepts only the `cloudflared` host, and a no-tunnel HTTPS origin accepts only Cloudflare's IP ranges (plus AOP).
 - REASONED: external direct-origin probe on port 3000; local marking review (October 2026, Bash 5.3.9) passed the following block through bash -n and ShellCheck 0.11.0 without output. With a curl stub, placeholder and empty values each printed "substitute your origin's public IP on the set -- line above; not probing" (exit 2); zero and two values each printed "the set -- line needs exactly 1 value; not probing" (exit 2); a wrong marker printed "paste the whole block, including its set -- line; not probing" (exit 2); a valid fixture printed 'stub curl args=-q -g -s -o /dev/null --noproxy * --connect-timeout 5 --max-time 20 -w http=%{http_code} exit=%{exitcode} err=%{errormsg}\n http://203.0.113.10:3000/' (exit 0). A live origin stand-up opens a listener; the authoring host forbids that without an isolated network namespace, and none was available; no external probe host, deployed origin or allowed-vantage tunnel host control was available to this marking review. On 2026-10-17 the HTTP block passed `bash -n` and ShellCheck 0.11.0 with `-s bash`; a curl stub simulated transfer exits 0, 7 and 28, while its placeholder guard exited 2. The three remote HTTPS allowed-vantage controls ran with a curl stub; with distinct certificate and HTTP Host names, the differing-name form sent `-H` and `--connect-to` separately. As this guide's assessment, an exposed origin is expected to give an HTTP reply directly; the fixed outcome requires an explicit refusal from the independently confirmed origin address, a successful allowed-vantage control and the effective inbound-policy check; no reply is inconclusive, per the guide's cited Create a remotely-managed tunnel. From another host, confirm the origin is not reachable directly on the app's own port (3000 over HTTP in this same-host example; substitute yours). For a remote origin with `service: https://...`, use the HTTPS block below on that service URL's port. As this guide's assessment, a refusal supports isolation only after independently confirming that the public address being probed belongs to this origin; neither allowed-vantage control establishes that address mapping. On the tunnel host, the allowed-vantage control `curl -q -g -s -o /dev/null --noproxy '*' -w '%{http_code}\n' http://127.0.0.1:3000/` must return the app's status (not 000); for a remote origin, run the matching HTTPS control from the `cloudflared` host and require the app's status (not 000): `curl -q -g -s -o /dev/null --noproxy '*' -H 'Host: REPLACE_WITH_EFFECTIVE_HTTP_HOST' -w '%{http_code}\n' 'REPLACE_WITH_SERVICE_URL'` with system trust, or `curl -q -g -s -o /dev/null --noproxy '*' -H 'Host: REPLACE_WITH_EFFECTIVE_HTTP_HOST' --cacert 'REPLACE_WITH_COMBINED_CA_BUNDLE' -w '%{http_code}\n' 'REPLACE_WITH_SERVICE_URL'` when `caPool` is set. The combined bundle must contain the default trusted roots used by `cloudflared` and the configured `caPool` certificates. When the effective certificate name differs from the service URL host, use `curl -q -g -s -o /dev/null --noproxy '*' -H 'Host: REPLACE_WITH_EFFECTIVE_HTTP_HOST' --cacert 'REPLACE_WITH_COMBINED_CA_BUNDLE' --connect-to 'REPLACE_WITH_CERT_HOSTNAME:REPLACE_WITH_HTTPS_PORT:REPLACE_WITH_SERVICE_HOST:REPLACE_WITH_HTTPS_PORT' -w '%{http_code}\n' 'https://REPLACE_WITH_CERT_HOSTNAME:REPLACE_WITH_HTTPS_PORT/'`; omit `--cacert` in this form only when system trust reproduces tunnel trust. Choose the effective HTTP Host separately: use the configured HTTP Host Header when set, otherwise the request Host sent to the origin. Substitute it in the `-H` argument, including when it differs from the certificate name. Apply the `matchSNItoHost` override described below when choosing the certificate name. The pinned HTTP Host Header setting and curl `--header` option support this request header. As this guide's assessment, this control shows origin availability, not that the public address in the external probe belongs to it.
 
-REASONED: following block; direct-origin isolation follows the cited Create a remotely-managed tunnel. This read-only review cannot provision a Cloudflare origin and external probe host; no live outcome is recorded. Expected refusal, exposure and inconclusive outcomes are stated below.
+REASONED: following block; direct-origin isolation follows the cited Create a remotely-managed tunnel. The authoring environment cannot provision a Cloudflare origin and external probe host; no live outcome is recorded. Expected refusal, exposure and inconclusive outcomes are stated below.
 
 ```bash
 (                                             # a subshell, so your own script arguments are untouched
@@ -1675,7 +1675,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "7debf77bc70bf95a3f939986c2a234caef2bffa7215a63a7575dad4a0d536d4a",
+  "body_sha256": "368cb0e411c072cae9338eaeec4b1c7d934f477be6e3e7ad9ac7c2a52e6f7b12",
   "components": {
     "token-file": {
       "name": "cloudflared token-file minimum",
@@ -1844,7 +1844,7 @@ Serve for anything private (most things). Funnel or [cloudflare.md](cloudflare.m
 
 ## 4. Verify
 
-REASONED: following block; the cited ss filter reference and Serve backend-isolation guidance define the loopback check. This read-only review cannot configure a Serve host; the guide records no listener observation.
+REASONED: following block; the cited ss filter reference and Serve backend-isolation guidance define the loopback check. The authoring environment cannot configure a Serve host; the guide records no listener observation.
 
 ```bash
 ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep: the address column
@@ -1853,7 +1853,7 @@ ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep:
 
 REASONED: preceding block; loopback listener inventory and direct LAN/VPC isolation, per the guide's cited ss(8) and Tailscale serve identity headers. No Serve host or separate LAN/VPC probe machine is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while a substituted address reached one curl stub. No deployed bind or HTTP response was observed: exposed wildcard binding permits direct bypass; fixed binding is loopback and the direct address does not answer, with failed requests alone inconclusive. From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
 
-REASONED: following block; direct-backend isolation follows the cited Serve identity-header guidance. This read-only review cannot provision a Serve host and separate LAN/VPC probe machine; HTTP replies expose bypass and failed requests remain inconclusive as described below.
+REASONED: following block; direct-backend isolation follows the cited Serve identity-header guidance. The authoring environment cannot provision a Serve host and separate LAN/VPC probe machine; HTTP replies expose bypass and failed requests remain inconclusive as described below.
 
 ```bash
 (                                       # a subshell, so your own shell keeps its positional parameters and the guard's exit does not close it
@@ -1872,7 +1872,7 @@ REASONED: following block; direct-backend isolation follows the cited Serve iden
 
 REASONED: preceding block; direct-backend isolation and the allowed tailnet path, per the guide's cited Tailscale serve identity headers and Tailscale serve. No Serve host or allowed/excluded tailnet devices are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; rejected guards reached no curl stub and a substituted direct address reached one. No live access was observed: exposed direct access bypasses the tailnet; fixed direct access is isolated while the allowed tailnet request works. Allowed access alone does not distinguish allow-all from scoped policy. Then confirm the tailnet path works and that the section-1 restriction actually holds:
 
-REASONED: following block; Serve status and allowed-device access follow the cited Serve CLI and policy-test documentation. This read-only review cannot configure a tailnet with allowed and excluded devices; success alone does not prove policy restriction.
+REASONED: following block; Serve status and allowed-device access follow the cited Serve CLI and policy-test documentation. The authoring environment cannot configure a tailnet with allowed and excluded devices; success alone does not prove policy restriction.
 
 ```bash
 tailscale serve status
@@ -1942,7 +1942,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "65637a1d35ca3f980c580b010401f2a584d3fb4f31681760c0ea07dfb006b99b",
+  "body_sha256": "b79d6639f1bde7526cc70547d6d3b713b0142adcaccb1b473a8c1e6fad823617",
   "components": {
     "cli": {
       "name": "Tailscale CLI change",
@@ -2097,7 +2097,7 @@ To publish such an app, do not widen `GatewayPorts`. Leave it `no` so the forwar
 
 ## Verify
 
-REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, Ubuntu Noble ufw source, nftables and OpenSSH documentation defines the checks below. This read-only review cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run.
+REASONED: following block; the cited frp authentication, WireGuard quickstart/Cryptokey Routing, Ubuntu Noble ufw source, nftables and OpenSSH documentation defines the checks below. The authoring environment cannot provision paired tunnel hosts or privileged network/firewall control; the guide records no live run.
 
 ```bash
 # frp positive control: with the correct auth.token, frpc logs 'login to server success' (proving
@@ -2265,7 +2265,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "d446ba839790ef46ef9d220b78f4b5111f6d126abfc25a29a848a397d82785e9",
+  "body_sha256": "a75b72736554ec8bcb8e4f939d4674c727b4ad9f196e61c6582ac2ce23675f07",
   "components": {
     "frps": {
       "name": "frps source",
@@ -8663,7 +8663,7 @@ oauth2-proxy's MFA is whatever its OIDC/OAuth provider enforces; Pomerium's is w
 
 ## Verify
 
-REASONED: following block; the cited oauth2-proxy/Authelia integrations, pinned listener defaults and curl manual define isolation, direct-header refusal and anonymous challenges. This read-only review cannot provision the proxy, backend, IdP and external probe host; no live outcome is recorded. Expected responses and inconclusive failures are stated below.
+REASONED: following block; the cited oauth2-proxy/Authelia integrations, pinned listener defaults and curl manual define isolation, direct-header refusal and anonymous challenges. The authoring environment cannot provision the proxy, backend, IdP and external probe host; no live outcome is recorded. Expected responses and inconclusive failures are stated below.
 
 ```bash
 ss -tlnp   # read every listener; app 3000, oauth2-proxy 4180, Authelia 9091 reachable only by the proxy (loopback, or a private container network), never a public interface
@@ -8790,7 +8790,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2045817373d5f3102b2d7a932c77f0f1bd0c6b01c25a92eec5093cb50fddc40e",
+  "body_sha256": "90c90501b7e732a3d7d211def54670e1cbf927b2ae6e0af2fa3fe81d74eaae5f",
   "components": {
     "oauth": {
       "name": "oauth2-proxy",
@@ -15691,7 +15691,7 @@ still need their own TLS and auth on top ([postgresql.md](postgresql.md), [mysql
 
 ## Verify
 
-REASONED: identity, filesystem, runtime security context and segmentation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker, Kubernetes and Linux man-pages sources; this read-only review has no authorized Docker workload or Kubernetes cluster. This guide's assessment: the Compose `app` service's image must supply id, sh and touch, and the Pod's container image must supply id, sh and grep -E for these commands; the exact touch error depends on the Compose `app` service's image and probe path.
+REASONED: identity, filesystem, runtime security context and segmentation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker, Kubernetes and Linux man-pages sources; the authoring environment has no authorized Docker workload or Kubernetes cluster. This guide's assessment: the Compose `app` service's image must supply id, sh and touch, and the Pod's container image must supply id, sh and grep -E for these commands; the exact touch error depends on the Compose `app` service's image and probe path.
 
 ```bash
 docker compose exec app id                          # uid is not 0 (run from the Compose project; this guide advises using the actual container name with bare `docker exec` rather than the `app` service name)
@@ -15857,7 +15857,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "512fb47bdbeac879f7105373c9cde62ec39293cd4eed44057389a175492df5b3",
+  "body_sha256": "dbb5b9a4920670dbe9f26ff78553457f9dfd63451edec66a3857642b3238c8f3",
   "components": {
     "docker": {
       "name": "Docker documentation",
@@ -19977,7 +19977,7 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules, Google firewall policy, evaluation-order and gcloud references, Azure network security group rule properties, the fetched Session Manager, IAP, Bastion and Tailscale pages, and the Azure security-admin rule and applied-rules pages; no authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker source (an IAP `35.235.240.0/20` rule, its IPv6 range for IPv6 VMs, or an Azure Bastion inbound SSH rule on the target VM subnet where an NSG is applied, is expected; Microsoft recommends scoping the Bastion source to `AzureBastionSubnet`), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
 
-REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation, Google firewall policy and evaluation-order references, and the Azure security-admin rule and applied-rules pages; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
+REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation, Google firewall policy and evaluation-order references, and the Azure security-admin rule and applied-rules pages; the authoring environment has no authorized cloud accounts or allowed/disallowed probe hosts.
 
 ```bash
 # AWS, once per region. Every rule, not a selection: no filter catches the exposure class, because
@@ -20040,7 +20040,7 @@ az network nsg rule list \
 
 - REASONED: disallowed-source port probes and their failure interpretation, per the guide's cited AWS security group rules and Azure network security group rule properties. No authorized cloud endpoints or allowed/disallowed probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching nc, while a substituted address reached five nc stubs. Live exposed connections and fixed refusals/timeouts remain unobserved; local errors are inconclusive. From an address outside the range you administer from:
 
-  REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation and Google firewall policy and evaluation-order references; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
+  REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation and Google firewall policy and evaluation-order references; the authoring environment has no authorized cloud accounts or allowed/disallowed probe hosts.
 
   ```bash
   (                                       # a subshell, so your own script arguments are untouched
@@ -20128,7 +20128,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "32b2eda5f262fe17f4975e871ec07307d189c8edacc7b5c171cdeeedef4ba8fb",
+  "body_sha256": "3ba40638fdb6c4cbbaf2dc316ac301fc71c683681f5060585db21bd67a18aedb",
   "components": {
     "aws": {
       "name": "AWS security groups and CLI",
@@ -20718,7 +20718,7 @@ from being attempted, they make the attempt fail.
 
 ## Verify
 
-REASONED: metadata headers, token flow, network blocks, egress controls and applied options; no exposed/fixed run is recorded in this guide. Expectations follow the cited cloud, NetworkPolicy and curl sources; this read-only review has no authorized cloud VM or workload enforcement point.
+REASONED: metadata headers, token flow, network blocks, egress controls and applied options; no exposed/fixed run is recorded in this guide. Expectations follow the cited cloud, NetworkPolicy and curl sources; the authoring environment has no authorized cloud VM or workload enforcement point.
 
 ```bash
 # --noproxy so an ambient http(s)_proxy/ALL_PROXY cannot answer in place of the metadata service (Azure
@@ -20918,7 +20918,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "cb39b8a8a79aa6a92532e34f0c3135eeea5c55f60871e0f835da693bb9c59b2c",
+  "body_sha256": "dd35bc80d16265a5421b88e5d57cd5aa5049f42100389f0bce972fa962728615",
   "components": {
     "aws": {
       "name": "AWS metadata and networking",
@@ -45166,7 +45166,7 @@ REASONED: n8n 2.40.6's registry returns the first non-null strategy result, or `
 REASONED: source limits and guide advice for the API probes below; no live n8n deployment is available and no API outcome was observed. The cited `workflows.handler.ts` lines implement only `getWorkflowVersion`: success returns version JSON without `autosaved` and no explicit status. Public controllers precede the validator, so a controller-owned route can respond before the validator's security check ([ownership, lines 154-155](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/index.ts#L154-L155), [controller activation, lines 232-236](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/index.ts#L232-L236), [mount order, lines 374-380](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/index.ts#L374-L380)). The registry mounts each public controller's router at its base path ([registry activation, lines 55-67](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/public-api-controller.registry.ts#L55-L67)); `v1/controllers/index.ts` imports the workflows controller so its decorator metadata is registered ([lines 1-16](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/controllers/index.ts#L1-L16)), and that controller is `@PublicApiController('/workflows')` with `getWorkflows` on `@Get('/')` and `@ApiKeyScope('workflow:list')` ([lines 205-206](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/controllers/workflows.public.controller.ts#L205-L206), [lines 229-235](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/controllers/workflows.public.controller.ts#L229-L235)). The `@PublicApiController` decorator records the controller's base path, marks it as a public API controller not registered on the root path and registers it as a service ([lines 23-34](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/decorators/src/controller/public-api-controller.ts#L23-L34)); `@Get` records the route's HTTP method and path ([lines 30-53](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/decorators/src/controller/route.ts#L30-L53)) in the shared controller metadata ([lines 9-36](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/decorators/src/controller/controller-registry-metadata.ts#L9-L36)). `public-api/index.ts` imports the v1 controllers ([line 24](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/index.ts#L24-L24)) and builds one router per `v*` folder ([lines 398-415](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/index.ts#L398-L415)), and the server mounts those routers with the endpoint from its `publicApi.path` setting ([line 186](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/server.ts#L186-L186), [lines 230-231](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/server.ts#L230-L231)). The cited files do not establish that setting's default (NOT ESTABLISHED); the `/api/v1` base path rests on the n8n API authentication page in Sources. The registry applies authentication middleware to every controller route and returns 401 `Unauthorized` when the auth registry does not authenticate ([controller authentication, lines 120-168](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/public-api-controller.registry.ts#L120-L168)); on a route with an API key scope, the next middleware returns 403 `Forbidden` when the request has no token grant or its key scopes do not satisfy that scope ([scope check, lines 188-199](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/public-api-controller.registry.ts#L188-L199)). This guide's inference concerns ordering relative to the validator, not skipping authentication. On success, `getWorkflows` returns an object with a `data` array of workflows and a `nextCursor` ([lines 277-302](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/controllers/workflows.public.controller.ts#L277-L302)); the registry writes nothing more if headers were already sent; when the status that `resolveSuccessStatus` returns is 204, or the route has no response DTO and the result is undefined, it sends that status with no body; otherwise it sends that status with JSON of the result parsed by the route's response DTO when it has one, else of the raw result ([lines 77-81](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/public-api-controller.registry.ts#L77-L81), [lines 106-117](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/public-api-controller.registry.ts#L106-L117)). `resolveSuccessStatus` returns the route's declared success status and throws when none is declared ([lines 148-162](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/public-api-route-resolver.ts#L148-L162)), and `@ApiResponse` records a route's success status and response DTO ([lines 10-34](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/decorators/src/controller/api-response.ts#L10-L34)). `getWorkflows` declares `@ApiResponse(200, WorkflowListPublicDto)` ([lines 229-235](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/controllers/workflows.public.controller.ts#L229-L235)), a DTO with a `data` array and a nullable string `nextCursor` ([lines 172-175](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/@n8n/api-types/src/dto/workflows/workflow-public.dto.ts#L172-L175)), so when the handler returns and the DTO parse succeeds, the registry sends status 200 with the parsed JSON; no response was observed. The source `openapi.yml` lists no `/workflows` list path, only `/workflows/{id}/...` sub-paths ([lines 79-159](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/openapi.yml#L79-L159)); the generated `getWorkflows` spec records scope `workflow:list` and declares 200 with required `data` and `nextCursor`, 400, 401 and 403 ([lines 1-6](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/handlers/workflows/spec/paths/getWorkflows.generated.yml#L1-L6), [lines 43-47](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/handlers/workflows/spec/paths/getWorkflows.generated.yml#L43-L47), [lines 562-573](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/public-api/v1/handlers/workflows/spec/paths/getWorkflows.generated.yml#L562-L573)). This guide's assessment: a request without credentials gets 401 `Unauthorized` from the route's authentication middleware if no auth strategy authenticates it. The server registers `ApiKeyAuthStrategy` and then `SessionCookieAuthStrategy` ([lines 188-198](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/server.ts#L188-L198)), and the token-exchange module's `init` appends `ScopedJwtStrategy` only after its `N8N_ENV_FEAT_TOKEN_EXCHANGE` feature check passes ([lines 22-38](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/token-exchange.module.ts#L22-L38)). Each abstains without its credential: the API key strategy when API-key auth is disabled or the `x-n8n-api-key` header is absent or empty ([lines 86-93](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/api-key-auth.strategy.ts#L86-L93), [header name, line 14](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/api-key-auth.strategy.ts#L14-L14)), the session strategy without the `n8n-auth` cookie ([lines 31-33](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/session-cookie-auth.strategy.ts#L31-L33), [line 74](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/constants.ts#L74-L74)), and the scoped JWT strategy without a `Bearer` authorization token or an `x-n8n-api-key` header ([lines 74-77](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/services/scoped-jwt.strategy.ts#L74-L77), [lines 104-117](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/services/scoped-jwt.strategy.ts#L104-L117), [prefix and header names, lines 12-13](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/modules/token-exchange/services/scoped-jwt.strategy.ts#L12-L13)); the registry returns `false` when all abstain ([lines 49-58](https://github.com/n8n-io/n8n/blob/024ee46bdc6d57e5c47ef2c26bcac2b3a9efd827/packages/cli/src/services/auth-strategy.registry.ts#L49-L58)). Strategy registrations outside the cited files are NOT ESTABLISHED, so the 401 stays this guide's assessment. Compare no `X-N8N-API-KEY` with a valid key at that same URL, keeping proxy credentials constant and feeding the key on stdin; rejection (for example 401) and 200 workflow JSON remain expectations to observe, and a fronting proxy can alter the status.
 
 ```bash
-# REASONED: listener, TLS, API and webhook comparisons have no recorded n8n run; no live n8n deployment is available in this read-only review. Expected API status outcomes require a live check; the assessment above traces conditional public-API refusal and the workflows list route's middleware, response body and declared 200 success status; pinned source still establishes the Webhook refusal codes.
+# REASONED: listener, TLS, API and webhook comparisons have no recorded n8n run; no live n8n deployment is available in the authoring environment. Expected API status outcomes require a live check; the assessment above traces conditional public-API refusal and the workflows list route's middleware, response body and declared 200 success status; pinned source still establishes the Webhook refusal codes.
 # On 2026-10-13 (UTC), against a stub curl, the placeholder was refused with the substitute message and a line feed, carriage return, tab or DEL with the control-character message, before any curl call; a valid dummy key let both curl calls run and reached only the with-key call, on its stdin.
 # Owner setup must be COMPLETE before the instance is public: the pinned owner setup handler
 # skips authentication and issues an owner session cookie. Confirm the owner exists; do NOT POST
@@ -45429,7 +45429,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-10",
-  "body_sha256": "9133d14501faa01b0ccdea0eefcd6c4786e276af4dda1b030f58b7fee07d26f9",
+  "body_sha256": "2bab123bb8bfcd579a9037d5c96282a122bbe351728b04643f2e6e924edf36f1",
   "components": {
     "server": {
       "name": "n8n listener source",
