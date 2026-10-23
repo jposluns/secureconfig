@@ -41,15 +41,6 @@ frontend-frameworks.md	svelte-routes	523
 frontend-frameworks.md	verify-host	1707
 frontend-frameworks.md	verify-proxy	889
 frontend-frameworks.md	verify-secret	569
-gpu-clouds.md	listener-auth	491
-gpu-clouds.md	modal-sso	403
-gpu-clouds.md	remote-desktop	1095
-gpu-clouds.md	vast-auth-controls	406
-gpu-clouds.md	vast-auth-defaults	401
-gpu-clouds.md	vast-auth-exemptions	405
-gpu-clouds.md	vast-portal-routing	409
-gpu-clouds.md	verify-inventory	412
-gpu-clouds.md	verify-jupyter	657
 host.md	brokered-ssh	837
 host.md	include-order	624
 host.md	updates	810
