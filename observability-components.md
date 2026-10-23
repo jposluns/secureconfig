@@ -610,7 +610,7 @@ from your own account's view of the process.
 - Loki v3.7.8 common config (`common.replication-factor` default 3): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/common/common.go
 - Loki v3.7.8 config wrapper (`common.instance_addr` copied into component addresses): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go#L162-L174
 - Loki v3.7.8 sample local configuration: https://github.com/grafana/loki/blob/v3.7.8/cmd/loki/loki-local-config.yaml#L1-L16
-- dskit pinned listener and TLS flag defaults, and the `server.register-instrumentation` default (true): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L189-L212
+- dskit pinned listener and TLS flag defaults, and the `server.register-instrumentation` default (true; that default was read in the module tree extracted from the downloaded dskit v0.0.0-20260209132809-8d1c6d34bb5a zip, whose proxy-reported origin is the commit this link pins, and the zip was not compared with that commit's git tree): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L189-L212
 - Loki v3.7.8 HTTP port override: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L241-L269
 - Loki v3.7.8 production Docker listener overrides: https://github.com/grafana/loki/blob/v3.7.8/production/docker/config/loki.yaml#L1-L8
 - Loki v3.7.8 auth setup and gRPC exemptions: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L495-L509
@@ -657,7 +657,7 @@ from your own account's view of the process.
 - dskit pinned TLS YAML fields: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L69-L78
 - dskit pinned wildcard listener construction: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L309-L332
 - dskit pinned server TLS and client-auth construction: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L357-L395
-- dskit pinned instrumentation registration gate (`if cfg.RegisterInstrumentation`): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L411-L412
+- dskit pinned instrumentation registration gate (`if cfg.RegisterInstrumentation`), read in the module tree extracted from the downloaded dskit v0.0.0-20260209132809-8d1c6d34bb5a zip, whose proxy-reported origin is the commit this link pins; the zip was not compared with that commit's git tree: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L411-L412
 - dskit pinned default gRPC interceptor chain: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L433-L468
 - dskit pinned metrics and pprof routes: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L577-L583
 - dskit pinned HTTP-over-gRPC bridge: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L673-L681
@@ -968,7 +968,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "8e82f9ab2846faf28bdf885903ac682133e43b36cc059fc6c25b9ff5fb7277c8",
+  "body_sha256": "21eee118d39e6a462edbfc64a89d6fa26018127a2cb88564b8d54385ef62a54a",
   "components": {
     "node": {
       "name": "node_exporter",
