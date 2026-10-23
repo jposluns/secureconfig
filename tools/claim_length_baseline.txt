@@ -1,4 +1,5 @@
-# Over-length claims at their exact current lengths; the baseline only shrinks.
+# Over-length claims at their exact current lengths; entries are shrunk or
+# removed as claims shorten, by reviewed edit in the same change.
 # guide<TAB>claim<TAB>length; no automatic refresh (maintainer ruling 2026-10-23).
 admin-uis.md	private	404
 admin-uis.md	verify-listeners	445

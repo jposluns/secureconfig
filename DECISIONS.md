@@ -22,8 +22,10 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   terms: P6 option C as P6 defined it; refuse any claim whose `text` exceeds 400 characters unless it is listed
   in a checked-in baseline of the existing over-length claims; refuse a listed claim that grows beyond its
   baselined length; the baseline only shrinks; the maintainer judges the new layout live, so the gate is built
-  now; and the gate is deterministic, offline and reads the tree only, like every other gate. No reasoning was
-  recorded beyond those terms. This resolves the reconsideration that the 2026-10-18 "Brief rule now, gate
+  now; and the gate is deterministic, offline and reads the tree only. No reasoning was recorded beyond those
+  terms. Of those terms, "the baseline only shrinks" is upheld by review, not by the gate: a tree-only gate
+  cannot see that the same change added a baseline entry or raised one. This resolves the reconsideration
+  that the 2026-10-18 "Brief rule now, gate
   later" ruling below deferred; that ruling's brief rule (each claim a one- or two-sentence summary that keeps
   its qualifiers) stands. Carried as `tools/check_claim_lengths.py` with its baseline
   `tools/claim_length_baseline.txt`, closing TODO row 3.44; rows such as 1.326 shrink the baseline as they

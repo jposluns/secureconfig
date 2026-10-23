@@ -4,7 +4,7 @@
 Maintainer ruling 2026-10-23 (P6 option C, recorded in DECISIONS.md): every
 claim's `text`, as stored in each enrolled guide's version-basis data, is
 limited to 400 characters unless tools/claim_length_baseline.txt lists that
-claim, and the baseline only shrinks.
+claim at exactly its current length.
 
 Length is counted in Unicode code points: len() of the string that
 version_basis.split() decodes from the guide's strict JSON metadata. That is
@@ -16,18 +16,28 @@ table or third-party module, so one claim has one length on every host.
 The baseline has one TAB-separated entry per over-length claim: guide file,
 claim id, and that claim's exact current length. Entries are sorted by guide
 then claim id, without duplicates; '#' comment lines and blank lines are
-skipped. The baseline fails closed when an entry is malformed or out of
-order, names an unenrolled guide or a claim the guide no longer has, or
-records a length at or under 400. A claim over 400 with no entry fails, and
-so does any entry whose recorded length differs from the claim's current
-length: longer means the claim grew past its allowance; shorter means the
-entry is stale and must be shrunk to the new length, or removed once the
+skipped. Baseline lines are split on LF alone, and a line carrying any other
+control or line-separator character (CR, form feed, U+0085, U+2028, U+2029
+and the rest of Unicode categories Cc, Zl and Zp, tab excepted) is refused,
+so no entry can hide behind a character that an editor or str.splitlines()
+treats as a line break. The baseline fails closed when an entry is malformed
+or out of order, names an unenrolled guide or a claim the guide no longer
+has, or records a length at or under 400. A claim over 400 with no entry
+fails, and so does any entry whose recorded length differs from the claim's
+current length: longer means the claim grew past its allowance; shorter means
+the entry is stale and must be shrunk to the new length, or removed once the
 claim is at or under 400. Recording the exact length, rather than a ceiling,
-is what makes the ratchet one-way: a claim shortened from 450 to 420 cannot
-quietly regrow toward 450 inside an old allowance, the same shrink-or-remove
-contract as the Verify-marking and Sources baselines. There is no automatic
-refresh; shrinking the baseline is a reviewed edit in the same change that
-shortens the claim.
+is what makes the ratchet one-way against an unchanged baseline: a claim
+shortened from 450 to 420 cannot quietly regrow toward 450 inside an old
+allowance, the same shrink-or-remove contract as the Verify-marking and
+Sources baselines. There is no automatic refresh; shrinking the baseline is a
+reviewed edit in the same change that shortens the claim.
+
+The gate reads the current tree only, so it cannot refuse a change that also
+edits the baseline: adding an entry for a new over-length claim, or raising
+an entry alongside its grown claim, passes and only review can refuse it.
+The ruling's term "the baseline only shrinks" is upheld by that review, not
+by this gate; the self-test records this limit so it is not quietly claimed.
 
 Deterministic and offline: it reads only tools/version_basis_guides.txt, the
 enrolled guides and the baseline, parsing metadata with version_basis.split(),
@@ -37,6 +47,7 @@ input or unparseable guide is an error, not a pass.
 """
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -66,10 +77,19 @@ def claim_lengths(root, names):
 
 
 def baseline_entries(path, findings):
-    """Parse the baseline; any malformed or unsorted line is a finding."""
+    """Parse the baseline; any malformed, control-bearing or unsorted line is a finding."""
     entries = {}
     previous = None
-    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    # Split on LF alone: read_text()'s universal newlines and str.splitlines()
+    # both treat more characters as line breaks, which could turn the tail of a
+    # '#' comment line into a live entry.
+    for number, line in enumerate(path.read_bytes().decode("utf-8").split("\n"), 1):
+        controls = sorted({ch for ch in line if ch != "\t"
+                           and unicodedata.category(ch) in ("Cc", "Zl", "Zp")})
+        if controls:
+            findings.append(f"claim-length baseline line {number}: control or "
+                            f"line-separator character {controls[0]!r} is not allowed")
+            continue
         if not line or line.startswith("#"):
             continue
         fields = line.split("\t")
@@ -137,7 +157,8 @@ def main(argv):
         return 1
     print(f"  ok    claim lengths: {len(lengths)} claims across {len(names)} enrolled "
           f"guides; {len(over)} baselined over {LIMIT} characters in "
-          f"{len({guide for guide, _ in over})} guides, and the baseline only shrinks")
+          f"{len({guide for guide, _ in over})} guides; all over-length claims match "
+          f"their baseline entries")
     return 0
 
 

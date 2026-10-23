@@ -353,9 +353,12 @@ Schema 1 requires exactly these top-level fields:
   Optional `verify` lists unique, one-based bash-fence ordinals within Verify sections; every such
   fence needs a mapping. Names, bases, claim text, URLs and evidence are nonempty single-line strings.
   Evidence presence and fence coverage do not prove truth or completeness.
-  Claim text is limited to 400 characters, counted in Unicode code points: the existing over-length
-  claims are listed, at their exact current lengths, in `tools/claim_length_baseline.txt`, which
-  `tools/check_claim_lengths.py` enforces and which only shrinks (maintainer ruling 2026-10-23).
+  Claim text is limited to 400 characters, counted in Unicode code points (maintainer ruling
+  2026-10-23): the existing over-length claims are listed, at their exact current lengths, in
+  `tools/claim_length_baseline.txt`. `tools/check_claim_lengths.py` refuses an over-length claim
+  with no entry, a claim whose length differs from its entry, and stale entries. Adding an entry
+  or raising a length is a baseline edit that only review can refuse, because the gate reads the
+  tree only.
 
 After a body edit, review the entire claim inventory against the changed body and cited sources,
 including version qualifications, status, evidence and Verify mappings. Correct the metadata first.
