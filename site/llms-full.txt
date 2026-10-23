@@ -20334,7 +20334,8 @@ REASONED: HTTPS redirect, application-authentication and deployed-secret checks;
 # 1. This guide checks HTTP->HTTPS redirection. Spot-check on / only: it does not prove HTTPS on every route/method, nor that
 #    the app's proxy-awareness (section 3) is set for secure cookies. --noproxy so a client proxy cannot answer.
 #    Documented: Vercel 308; Fly HTTP handlers with force_https enabled 301. Render's HTTPS code is unstated; its static-rule 301 differs.
-#    Railway documents GET 301 and a 301 for HTTP POST that clients typically follow as GET, not this HEAD response. This guide's assessment:
+#    Railway's specifications page documents GET 301 and its 405 troubleshooting page a 301 for HTTP POST that
+#    clients typically follow as GET; neither page documents this HEAD response. This guide's assessment:
 #    Heroku's ACM challenge-path handling establishes no general HTTPS redirect policy, setting, application-only responsibility or status.
 #    This guide's check: require 301/302/307/308 with an https:// Location; HTTP content without that redirect fails.
 curl -q -g -sI --noproxy '*' -w 'http=%{http_code}\n' http://app.example.com/          # this guide's redirect check above
@@ -20479,7 +20480,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "323ae7d8f662a1b3080fbf445900ec2cb2ea5687a470710a78e03a929b3d57a1",
+  "body_sha256": "db8888f068ea660414356716018a243bc5cdbeff5f89977f52fe77674e231589",
   "components": {
     "render": {
       "name": "Render documentation",
