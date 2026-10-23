@@ -17,6 +17,14 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **TODO 1.347 and 1.348 REASONED allowances fail rule 5, 2026-10-23 (#839).** The maintainer ruled live on
+  2026-10-23, as the orchestrator's decision register records and as #839 enters here, that the REASONED allowances
+  in TODO 1.347 (`n8n.md` Verify fence 1) and TODO 1.348 (`container-hardening.md` line 120) fail under
+  CONTRIBUTING.md rule 5: their checks must be demonstrated. The rows stay open until the checks are demonstrated
+  in an authorized environment or the declarations are corrected. An authorized container environment was
+  requested, and on 2026-10-23 the maintainer confirmed that secureconfig will get its own isolated VM with Docker
+  for these tests; it is not yet provisioned, and none exists on the authoring host. The register data supplied for
+  this entry carries no reasoning beyond those terms.
 - **Claim-length gate, 2026-10-23: P6 option C, a failing baseline gate at 400 characters (#801).** The
   maintainer's ruling was recorded in the orchestrator's store on 2026-10-23 and is entered here by #801. Its
   terms: P6 option C as P6 defined it; refuse any claim whose `text` exceeds 400 characters unless it is listed
