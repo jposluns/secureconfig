@@ -145,7 +145,7 @@ oauth2-proxy's MFA is whatever its OIDC/OAuth provider enforces; Pomerium's is w
 
 ## Verify
 
-REASONED: following block; the cited oauth2-proxy/Authelia integrations, pinned listener defaults and curl manual define isolation, direct-header refusal and anonymous challenges. This read-only review cannot provision the proxy, backend, IdP and external probe host; no live outcome is recorded. Expected responses and inconclusive failures are stated below.
+REASONED: following block; the cited oauth2-proxy/Authelia integrations, pinned listener defaults and curl manual define isolation, direct-header refusal and anonymous challenges. The authoring environment cannot provision the proxy, backend, IdP and external probe host; no live outcome is recorded. Expected responses and inconclusive failures are stated below.
 
 ```bash
 ss -tlnp   # read every listener; app 3000, oauth2-proxy 4180, Authelia 9091 reachable only by the proxy (loopback, or a private container network), never a public interface
@@ -272,7 +272,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "2045817373d5f3102b2d7a932c77f0f1bd0c6b01c25a92eec5093cb50fddc40e",
+  "body_sha256": "90c90501b7e732a3d7d211def54670e1cbf927b2ae6e0af2fa3fe81d74eaae5f",
   "components": {
     "oauth": {
       "name": "oauth2-proxy",
