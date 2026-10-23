@@ -392,7 +392,8 @@ outside.
 Record the change in `CHANGELOG.md` in the same pull request, not in a later bookkeeping one. A
 required gate checks that every merged pull request is referenced, exempting only the newest, so a
 second unrecorded merge turns the build red. Eight pull requests had gone unrecorded before that
-gate existed.
+gate existed. A second gate, `tools/check_changelog_format.py`, requires an empty line after each
+`## YYYY-MM-DD` heading, strictly descending dated headings and no date with two headings.
 
 Before merging, replace draft PR, backlog-id and version placeholders with their assigned
 values. The offline gate `tools/check_no_placeholders.py` checks tracked Markdown and
