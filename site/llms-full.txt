@@ -62526,7 +62526,8 @@ services nor its `.env` set `_APP_DB_ADAPTER`, assumes MariaDB, commenting "Pre-
 installations only supported MariaDB". See the
 [pinned development environment](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/.env),
 [pinned root Compose file](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/docker-compose.yml),
-[install task Compose template](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L555-L560), and
+[install task Compose template](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L555-L560),
+[install task Compose rendering](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L640-L646), and
 [upgrade engine detection](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Upgrade.php#L67-L92).
 
 There is a documentation/source conflict: at the time of writing, the current environment
@@ -62960,6 +62961,7 @@ service result or deployed-bundle scan is claimed.
 - [Appwrite 2.2.0 transaction-state staged creation return (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Databases/TransactionState.php#L71-L73).
 - [Appwrite 2.2.0 upgrade database engine detection (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Upgrade.php#L67-L92).
 - [Appwrite 2.2.0 install task Compose template read (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L555-L560).
+- [Appwrite 2.2.0 install task Compose template rendering (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L640-L646).
 - [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
 - [curl curl-8_14_1 headers from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
 - [curl curl-8_14_1 configuration from stdin (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/config.md).
@@ -63078,7 +63080,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "0aed318be71c63cdc1d3131f5a4a80bbb42b9195d87b33fe961463b1e19a371e",
+  "body_sha256": "7118a41ae43df5c8ecbd2e38257cb0c4f5c2c27350e65924aab15a38e42c1176",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -63140,6 +63142,7 @@ Claims (full source mapping in the JSON block below):
         "s5b95ad04c9e2": "https://github.com/appwrite/appwrite/blob/2.2.0/app/init/resources/request.php#L1165-L1190",
         "scbf0003fdebc": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Upgrade.php#L67-L92",
         "s8830e89f7a80": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L555-L560",
+        "sd886b53afa75": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L640-L646",
         "sb4cc9cac2ef5": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L108-L111",
         "sb4f18ce40162": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Databases/TransactionState.php#L71-L73",
         "s72725b186c05": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Database/Factory.php#L9"
@@ -63310,7 +63313,7 @@ Claims (full source mapping in the JSON block below):
     "source-limits-memory-redis": {"text": "Pinned Memory, intended for tests, fixtures and ephemeral workloads, and Redis, mirroring its surface, check no authorization in getDocument; their find paths keep only IDs matching requester roles for the action while authorization is enabled. This guide reasons that a collection grant or disabled status omits that filtering, with no live authorization demonstration.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s637a07eb6f05", "utopia-php-database:s68f0dd3f99e1", "utopia-php-database:s9be04229c19a", "utopia-php-database:sa8ac8f3419dd", "utopia-php-database:s942a26817d62", "utopia-php-database:s1da4feb30d76", "utopia-php-database:s553c31c38ee3", "utopia-php-database:s768127e55c8e", "utopia-php-database:s39898214cd29", "utopia-php-database:s3c305a201d46", "utopia-php-database:s7cf5a05cf798", "utopia-php-database:s01a8ce8001e0"], "status": "REASONED"},
     "source-limits-pool": {"text": "Pinned Pool delegates getDocument and find to a pooled adapter, outside a transaction first setting its database, namespace, shared tables, tenant and authorization from Pool's own; withTransaction does this for the adapter it pins. This guide reasons that a Pool-wrapped adapter reads with the authorization instance the database set, with no live authorization demonstration.", "components": ["utopia-php-database"], "sources": ["utopia-php-database:s4cc1d5739816", "utopia-php-database:s6d59676de4ac", "utopia-php-database:s22782b0cef21", "utopia-php-database:sf6aa64548538", "utopia-php-database:s3389fa5854d5"], "status": "REASONED"},
     "source-limits-appwrite-adapter": {"text": "Appwrite 2.2.0's _APP_DB_ADAPTER (since 1.9.0) defaults to postgresql; pool registration maps the mariadb, mongodb, mysql and postgresql schemes to the MariaDB, Mongo, MySQL and Postgres adapters, DocumentsDB accepts only mongodb, and the factory wraps pools in Pool, with tenant databases getting the shared authorization. Which adapter a given deployment uses is not established.", "components": ["appwrite"], "sources": ["appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca", "appwrite:s665ebdc0c600", "appwrite:s2ac9cf2424b0", "appwrite:s72725b186c05", "appwrite:sa6bf00f7f610", "appwrite:s5b95ad04c9e2"], "status": "REASONED"},
-    "source-limits-appwrite-dev": {"text": "Appwrite 2.2.0's development .env sets _APP_DB_ADAPTER=postgresql, a development default, not a production default; the root Compose file, which the install task reads as its Compose template, passes the variable to the appwrite service without a value. The 2.2.0 upgrade task keeps an installation's engine, assuming MariaDB when neither Compose nor .env sets _APP_DB_ADAPTER.", "components": ["appwrite"], "sources": ["appwrite:sadb8c6e7b00a", "appwrite:s8e5272615f2e", "appwrite:s8830e89f7a80", "appwrite:scbf0003fdebc"], "status": "REASONED"},
+    "source-limits-appwrite-dev": {"text": "Appwrite 2.2.0's development .env sets _APP_DB_ADAPTER=postgresql, a development default, not a production default; the root Compose file, which the install task reads as its Compose template, passes the variable to the appwrite service without a value. The 2.2.0 upgrade task keeps an installation's engine, assuming MariaDB when neither Compose nor .env sets _APP_DB_ADAPTER.", "components": ["appwrite"], "sources": ["appwrite:sadb8c6e7b00a", "appwrite:s8e5272615f2e", "appwrite:s8830e89f7a80", "appwrite:sd886b53afa75", "appwrite:scbf0003fdebc"], "status": "REASONED"},
     "source-limits-adapter-docs": {"text": "At the time of writing, Appwrite's environment documentation lists MariaDB and MongoDB and gives _APP_DB_ADAPTER a mongodb default, conflicting with Appwrite 2.2.0, which defaults to postgresql, a value that page does not list.", "components": ["appwrite-docs", "appwrite"], "sources": ["appwrite-docs:s2bf9a4746d28", "appwrite:s9f5bd3b70f14", "appwrite:s1a70a48a9dca"], "status": "REASONED"}
   }
 }
