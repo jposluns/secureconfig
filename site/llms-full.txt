@@ -41526,7 +41526,7 @@ These commands validate configuration acceptance; they do not prove authenticati
 - Desktop app Claude gateway start installed check (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/app_darwin.go#L592-L598
 - Desktop app Claude gateway `setClaudeGatewayInstalled` start and conditional stop (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/app_darwin.go#L1202-L1229
 - Desktop app Claude gateway `prepareClaudeDesktopConnection` start and conditional stop (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/app_darwin.go#L1472-L1487
-- Desktop app Claude gateway model-mapping start and stop on a failed profile change (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/app_darwin.go#L1639-L1661
+- Desktop app Claude gateway model-mapping start and stop on a failed profile change other than restart confirmation (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/app_darwin.go#L1639-L1661
 - Desktop app Claude gateway construction and start call (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/app_darwin.go#L614-L631
 - Desktop app Claude gateway start retry loop (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/app/cmd/app/app_darwin.go#L944-L951
 - Claude Desktop gateway default listen address (checked October 2026): https://github.com/ollama/ollama/blob/v0.34.2/internal/proxy/claude_desktop.go#L23-L26
@@ -41689,7 +41689,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "9ca8d928dbceef2fe9127d2c717048a20b28a874d43fc2094aad135027a19b1b",
+  "body_sha256": "f3680750bea12e8c8a672de023a01b69af0c5ffbe17442468b7ac5324adddf56",
   "components": {
     "ollama": {
       "name": "Ollama",
