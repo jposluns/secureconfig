@@ -100,7 +100,6 @@ marked, and those are the ones worth taking first.
 
 | ID | Item | Tags |
 | --- | --- | --- |
-| 3.45 | A CHANGELOG format gate, proposed after a CHANGELOG heading without a blank line after it slipped through on 2026-10-23: check a blank line after each `## YYYY-MM-DD` heading, strictly descending headings, and one heading per date. Six existing `## YYYY-MM-DD` headings lack the blank line after them (CHANGELOG.md lines 692, 709, 742, 788, 802 and 838 at 09e91b5d, the headings for 2026-09-19 to 2026-09-14) and must be normalized or grandfathered before the gate lands. Closes when the gate and its tests are added to `tools/run_all_checks.sh`, or when the maintainer declines it. (L, S) | `[gap]` |
 
 ## Decisions
 

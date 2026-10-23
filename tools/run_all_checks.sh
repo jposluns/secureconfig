@@ -457,6 +457,23 @@ else
   printf '%s\n' "$changelog_tests" | sed 's/^/          /'
 fi
 
+echo "== CHANGELOG dated headings: a blank line after each, newest first, one per date =="
+# Row 3.45: a dated heading without the blank line after it slipped through on 2026-10-23,
+# and six older ones lacked it. The gate reads CHANGELOG.md only, not the git history, so a
+# history error in the coverage gate above cannot hide a format finding. The self-test runs
+# first, so what runs against the changelog is the shipped gate.
+for changelog_check in test_changelog_format.py check_changelog_format.py; do
+  if changelog_format=$(python3 -I -B "tools/$changelog_check" 2>&1); then
+    printf '%s\n' "$changelog_format"
+    if grep -q '^  FAIL  ' <<< "$changelog_format" || ! grep -q '^  ok    ' <<< "$changelog_format"; then
+      bad "$changelog_check exited 0 without a clean ok result"
+    fi
+  else
+    printf '%s\n' "$changelog_format"
+    bad "$changelog_check failed"
+  fi
+done
+
 echo "== prose conventions: Oxford -ize and house placeholders =="
 # A corpus-wide -ize conversion missed a word because its word list was incomplete, and the same word
 # was written into a new guide hours later. A placeholder outside the house set reached the corpus and
