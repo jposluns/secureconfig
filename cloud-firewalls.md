@@ -36,7 +36,7 @@ On AWS (security groups), Google Cloud (VPC firewall rules), and Azure (network 
 
 REASONED: rule-enumeration scope and the one allowed public pattern, per the cited AWS security group rules, Google Cloud VPC firewall rules, Google firewall policy, evaluation-order and gcloud references, Azure network security group rule properties, the fetched Session Manager, IAP, Bastion and Tailscale pages, and the Azure security-admin rule and applied-rules pages; no authorized AWS, Google Cloud or Azure account is available in the authoring environment, so no rule inventory was read here, while the fenced commands below passed bash -n and ShellCheck 0.11.0 at marking time with no diagnostics. Enumerate every inbound rule, then, for each one whose source reaches the internet, confirm that the destination port is 80 or 443 on the front layer, nothing else. Rule 3's administrative SSH access is the one other source that may reach 22, and it is a named address or a documented broker source (an IAP `35.235.240.0/20` rule, its IPv6 range for IPv6 VMs, or an Azure Bastion inbound SSH rule on the target VM subnet where an NSG is applied, is expected; Microsoft recommends scoping the Bastion source to `AzureBastionSubnet`), never `0.0.0.0/0`. These commands list rather than select, because no filter catches the exposure class.
 
-REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation, Google firewall policy and evaluation-order references, and the Azure security-admin rule and applied-rules pages; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
+REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation, Google firewall policy and evaluation-order references, and the Azure security-admin rule and applied-rules pages; the authoring environment has no authorized cloud accounts or allowed/disallowed probe hosts.
 
 ```bash
 # AWS, once per region. Every rule, not a selection: no filter catches the exposure class, because
@@ -99,7 +99,7 @@ az network nsg rule list \
 
 - REASONED: disallowed-source port probes and their failure interpretation, per the guide's cited AWS security group rules and Azure network security group rule properties. No authorized cloud endpoints or allowed/disallowed probe hosts are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching nc, while a substituted address reached five nc stubs. Live exposed connections and fixed refusals/timeouts remain unobserved; local errors are inconclusive. From an address outside the range you administer from:
 
-  REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation and Google firewall policy and evaluation-order references; this read-only review has no authorized cloud accounts or allowed/disallowed probe hosts.
+  REASONED: cloud-rule inventory and external reachability checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited provider rule documentation and Google firewall policy and evaluation-order references; the authoring environment has no authorized cloud accounts or allowed/disallowed probe hosts.
 
   ```bash
   (                                       # a subshell, so your own script arguments are untouched
@@ -187,7 +187,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "32b2eda5f262fe17f4975e871ec07307d189c8edacc7b5c171cdeeedef4ba8fb",
+  "body_sha256": "3ba40638fdb6c4cbbaf2dc316ac301fc71c683681f5060585db21bd67a18aedb",
   "components": {
     "aws": {
       "name": "AWS security groups and CLI",
