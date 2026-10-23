@@ -54266,7 +54266,7 @@ Verify steps where you can. List separately every item you could not
 verify instead of reporting it as passed.
 ```
 
-Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 88 claims: 14 demonstrated by a check that ran and 74 reasoned from cited sources.
+Written against node_exporter v1.12.1, Alertmanager v0.34.1, Pushgateway v1.11.3, Jaeger v2.21.0, Loki v3.7.8, Exporter toolkit v0.17.1, OpenTelemetry configtls v1.66.0, and OpenTelemetry basicauth extension v0.160.0, plus 1 more recorded basis; 3 further sources are pinned to a commit and 1 carries no recorded version. Metadata reviewed 2026-10-20; documentation checked September 2026. The guide records 95 claims: 14 demonstrated by a check that ran and 81 reasoned from cited sources.
 
 A newer release of any of this software can make version-specific details here outdated. To prioritize an update, open a GitHub issue, send a pull request, add a request under [requests/](requests/README.md), or reach the maintainer as [CONTRIBUTING.md](CONTRIBUTING.md) describes. The machine-readable version basis and claim list are in [the section for AI assistants](#about-the-ai-assistant-section-below) at the end of this guide.
 
@@ -54652,9 +54652,37 @@ There are two fixes, and you can use both:
   those calls: since it never moves a store request's start earlier, it makes no store query for
   that interval whatever its own lookback, and its in-memory query looks up streams in its index
   at the interval's start and skips each chunk unless the chunk's bounds start no later than the
-  selection's end and end no earlier than that future point. What that lookup and the chunk
-  iterators return, and so what the ingester querier and ingesters return for the interval, is
-  not established.
+  selection's end and end no earlier than that future point. From the same source reading, in that
+  case the ingester adds every stream to each index it builds (a bit-prefix index for TSDB schema
+  periods, an inverted index for others), and the lookup uses the interval's start only to pick the
+  index of the schema period containing it, for a future start the latest period starting at or
+  before it; it matches label matchers and shard without reading time, so the inverted interval
+  causes no lookup error. In the same reading, no stream, chunk or head-block iterator swaps or
+  clamps the interval: a chunk, block or head block is read only if it starts no later than the
+  selection's end and ends no earlier than that future point, and the ordered head block's log
+  iterator drops every entry before the start or at or after the end. By that reading, the chunk's
+  time-range filters, used for block entries in both directions, the head block in forward log
+  queries and all sample queries, skip entries before the start but accept an entry timestamped
+  exactly at the start before testing the end, so, in this guide's assessment, they pass only
+  entries dated exactly at that future point; whether an ingester can hold such an entry is not
+  traced. By that reading too, backward log queries do not time-filter the head block, and the
+  unordered head block queries its vendored go-datastructures v1.1.7 range tree from the interval's
+  start to one nanosecond before its end, both inclusive; for the inverted interval that query
+  returns no entry, so the head block yields nothing. From the same source reading, when the
+  ingester's `Query` or `QuerySample` code gets an iterator that yields nothing without an error
+  and the request context is not yet done, it sends one batch with no streams or series, carrying
+  its query statistics and warnings, and returns no error unless that send returns an error other
+  than the exact value `context.Canceled`. If the context is already done before the send, that
+  code skips it with no error; it never aborts a send in progress, and what the send returns if the
+  context ends during it is not traced. The ingester querier's per-ingester iterator records those
+  statistics and warnings, yields nothing and ends without an error at the end of the stream, while
+  any other receive error propagates, and the querier merges the per-ingester iterators with any
+  store query it makes for the selection. A source-reading word search for `Wrapper` in Loki's
+  `pkg`, `cmd`, `integration`, `tools` and `clients` trees at v3.7.8 finds only that field's
+  declaration, its one-method `Wrap` interface and the ingester module's nil check and `Wrap` call,
+  besides a code comment and two Bootstrap stylesheet source maps; nothing in those trees sets it.
+  So what the ingester querier and ingesters return for the interval is still not established and
+  has not been observed, and what a wrapper set outside those trees does is not traced.
   `Run` initializes the target modules through the module manager and starts the resulting
   services together. The internal server module exists only when `internal-server.enable` is
   true (default false); it is then inserted before `Server` in each module dependency list that
@@ -54962,6 +54990,43 @@ from your own account's view of the process.
 - Loki v3.7.8 ingester index lookup at the request start: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L962-L975
 - Loki v3.7.8 ingester stream chunk skip for log queries: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/stream.go#L588-L594
 - Loki v3.7.8 ingester stream chunk skip for sample queries: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/stream.go#L635-L641
+- Loki v3.7.8 ingester instance index construction (`NewMultiInvertedIndex`): https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L152-L163
+- Loki v3.7.8 ingester stream creation adding the stream to the index: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L312-L314
+- Loki v3.7.8 ingester stream creation by fingerprint adding the stream to the index: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L404-L405
+- Loki v3.7.8 ingester per-period index construction and add to every built index: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/index/multi.go#L26-L73
+- Loki v3.7.8 ingester per-period index lookup and period selection: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/index/multi.go#L84-L117
+- Loki v3.7.8 inverted index lookup by matchers and shard: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/index/index.go#L159-L183
+- Loki v3.7.8 bit-prefix index lookup by matchers and shard: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/index/bitprefix.go#L131-L169
+- Loki v3.7.8 ingester stream log chunk iterator call: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/stream.go#L601-L607
+- Loki v3.7.8 ingester stream sample chunk iterator call: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/stream.go#L648-L650
+- Loki v3.7.8 chunk log iterator (block skip, head block, time-range filters): https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/memchunk.go#L1005-L1087
+- Loki v3.7.8 chunk sample iterator (block skip, head block, time-range filter): https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/memchunk.go#L1090-L1147
+- Loki v3.7.8 ordered head block log iterator bounds and entry filter: https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/memchunk.go#L1310-L1328
+- Loki v3.7.8 ordered head block sample iterator bounds: https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/memchunk.go#L1380-L1397
+- Loki v3.7.8 unordered head block range-tree interval and query: https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/unordered.go#L185-L210
+- Loki v3.7.8 unordered head block construction with a one-dimension range tree: https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/unordered.go#L69-L75
+- Loki v3.7.8 unordered head block log iterator over the range-tree query: https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/unordered.go#L260-L310
+- Loki v3.7.8 go-datastructures v1.1.7 requirement: https://github.com/grafana/loki/blob/v3.7.8/go.mod#L19
+- Loki v3.7.8 vendored go-datastructures range-tree inclusive-interval contract: https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/Workiva/go-datastructures/rangetree/interface.go#L38-L47
+- Loki v3.7.8 vendored go-datastructures range-tree constructor: https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/Workiva/go-datastructures/rangetree/orderedtree.go#L259-L263
+- Loki v3.7.8 vendored go-datastructures range-tree apply and Query: https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/Workiva/go-datastructures/rangetree/orderedtree.go#L180-L225
+- Loki v3.7.8 vendored go-datastructures range-tree node search: https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/Workiva/go-datastructures/rangetree/ordered.go#L25-L30
+- Loki v3.7.8 vendored go-datastructures range-tree bounded scan: https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/Workiva/go-datastructures/rangetree/ordered.go#L81-L98
+- Loki v3.7.8 vendored go-datastructures range-tree entries pool and `NewEntries`: https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/Workiva/go-datastructures/rangetree/entries.go#L21-L45
+- Loki v3.7.8 entry time-range filter: https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/entry_iterator.go#L478-L509
+- Loki v3.7.8 sample time-range filter: https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/sample_iterator.go#L681-L716
+- Loki v3.7.8 ingester log batch send: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L1104-L1143
+- Loki v3.7.8 ingester sample batch send: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L1145-L1179
+- Loki v3.7.8 ingester log query batch limit and send call: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1121-L1129
+- Loki v3.7.8 ingester sample query send call: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1193-L1195
+- Loki v3.7.8 log batch read: https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/entry_iterator.go#L681-L716
+- Loki v3.7.8 sample batch read: https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/sample_iterator.go#L718-L753
+- Loki v3.7.8 ingester querier log stream iterator: https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/entry_iterator.go#L362-L388
+- Loki v3.7.8 ingester querier sample stream iterator: https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/sample_iterator.go#L480-L505
+- Loki v3.7.8 querier log iterator merge: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L213-L216
+- Loki v3.7.8 querier sample iterator merge: https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L274
+- Loki v3.7.8 ingester `Wrapper` field (`yaml:"-"`): https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L126-L127
+- Loki v3.7.8 ingester `Wrapper` interface: https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L210-L212
 - Loki v3.7.8 internal-server memberlist route: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1814-L1816
 - Loki v3.7.8 compactor handler prefix on both servers: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1928-L1933
 - [curl curl-8_14_1 custom headers (checked October 2026)](https://raw.githubusercontent.com/curl/curl/curl-8_14_1/docs/cmdline-opts/header.md).
@@ -55073,7 +55138,14 @@ Claims (full source mapping in the JSON block below):
 - loki-ingester-inverted-call (REASONED; loki): From source reading, Loki's ingester querier passes the log or sample request it receives, including an inverted interval from the querier, to the gRPC Query or QuerySample call of each ingester it queries, and the ingester module registers the ingester, or a wrapper that Go code embedding Loki may set, as the Querier service whose generated handlers decode the request and call those methods.
 - loki-ingester-inverted-store (REASONED; loki): From source reading, without a configured wrapper, a Loki ingester serving a log or sample request whose start is after its end makes no store query for it, whatever its store lookback: its store-request code moves a start only later, to now minus a positive lookback, and returns no store request when that adjusted start is after the end.
 - loki-ingester-inverted-memory (REASONED; loki): From source reading, without a configured wrapper, a Loki ingester's in-memory log or sample query looks up streams in its index at the request start and, for each matching stream, skips every chunk unless the chunk's bounds start no later than the request end and end no earlier than the request start, so for an inverted interval it keeps only chunks covering the span from that end to that start.
-- loki-querier-ingester-inverted-result (REASONED; loki): A source reading of Loki's querier, ingester querier and ingester query code, without a Loki run, does not establish what the ingester querier and ingesters return for the inverted ingester interval that a negative store lookback other than -1 produces when now minus it is after the selection end: the ingesters' index lookup results at its start and chunk iterators' behaviour remain unestablished.
+- loki-ingester-inverted-lookup (REASONED; loki): From source reading, a Loki v3.7.8 ingester adds every stream to each index it builds, and its index lookup uses an inverted interval's start only to pick the index of the schema period containing it, for a future start the latest period starting at or before it; the lookup matches label matchers and shard without reading time, so the interval's order causes no lookup error.
+- loki-ingester-inverted-iterators (REASONED; loki): From source reading, Loki v3.7.8's ingester stream, chunk and head-block iterators neither swap nor clamp an inverted interval: they read a chunk, block or head block only if it starts no later than the interval's end and ends no earlier than its start, and the ordered head block's log iterator drops each entry before the start or at or after the end.
+- loki-ingester-inverted-time-filter (REASONED; loki): From source reading, Loki v3.7.8's chunk time-range filters, used for block entries in both directions, the head block in forward log queries and all sample queries, skip entries before the start but accept one timestamped exactly at it before testing the end; in this guide's assessment, they pass only such entries for an inverted interval, and whether ingesters hold any is not traced.
+- loki-ingester-inverted-unordered (REASONED; loki): From source reading, Loki v3.7.8's backward log queries do not time-filter a chunk's head block, and the unordered head block queries its vendored go-datastructures v1.1.7 range tree from an interval's start to one nanosecond before its end, both inclusive. For an inverted interval that query returns no entry, so the head block yields nothing.
+- loki-ingester-empty-send (REASONED; loki): From source reading, when Loki v3.7.8's ingester Query or QuerySample code gets an error-free iterator yielding nothing, it sends one empty batch with query statistics and warnings unless the request context is already done, failing only on a Send error other than context.Canceled. The ingester querier's per-ingester iterator records those, yields nothing and ends cleanly at the stream's end.
+- loki-querier-inverted-merge (REASONED; loki): From source reading, a Loki v3.7.8 querier merges the ingester querier's per-ingester iterators for a log or sample selection with the iterator of any store query it makes for that selection, which it skips when query_ingester_only is set or it builds no store interval; a log selection with only one iterator gets that iterator unmerged.
+- loki-ingester-wrapper-search (REASONED; loki): From source reading, a word search for Wrapper in Loki v3.7.8's pkg, cmd, integration, tools and clients trees finds only Ingester.Wrapper's declaration (no YAML key), its one-method Wrap interface and initIngester's nil check and Wrap call, besides a code comment and stylesheet source maps; nothing there sets it, and initIngester registers Wrap's result only when it is set.
+- loki-querier-ingester-inverted-result (REASONED; loki): A source reading of Loki's querier, ingester querier and ingester query code, without a Loki run, does not establish what the ingester querier and ingesters return for the inverted ingester interval that a negative store lookback other than -1 produces when now minus it is after the selection end: whether ingesters hold entries dated exactly at its start remains untraced.
 - loki-internal-server (REASONED; loki, dskit): From source reading, Run initializes target modules and starts them together. internal_server is off by default; when enabled it precedes Server and its HTTP listener defaults to localhost:3101.
 - loki-internal-server-grpc (REASONED; loki, dskit, go): From source reading and Go's net.Listen documentation, the internal server's flags register no gRPC address or port, so by inference, when enabled, unless YAML sets them, dskit opens an any-address gRPC listener on an OS-chosen port carrying the HTTP bridge; not observed.
 - loki-internal-routes (REASONED; loki): When enabled, the internal server's HTTP router serves routes including /ready and buildinfo and, when their modules run, /ring, /memberlist and the compactor handler prefix; these are source registrations, not observed responses.
@@ -55091,7 +55163,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "7bcfba5f45eb83623aeee4a2ad2b39a533ee33b43d6ce2b00a11b1940ed30b22",
+  "body_sha256": "e61dca21cdb0994f29485af76a879e046acbcbe2daa6907dc7f59557a172e412",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -55253,7 +55325,44 @@ Claims (full source mapping in the JSON block below):
         "s0b40d7d25a3f": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/stream.go#L588-L594",
         "se34169c8b133": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/stream.go#L635-L641",
         "sb6c261fe940d": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1814-L1816",
-        "s81d8d94c3cea": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1928-L1933"
+        "s81d8d94c3cea": "https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/modules.go#L1928-L1933",
+        "sd5967b880c33": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L152-L163",
+        "sc87fdc20cb58": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L312-L314",
+        "s11cbfc4fcf89": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L404-L405",
+        "sf674ae88a12c": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/index/multi.go#L26-L73",
+        "s6bc46c6500c2": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/index/multi.go#L84-L117",
+        "s140b0adc6723": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/index/index.go#L159-L183",
+        "s19918b3b217b": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/index/bitprefix.go#L131-L169",
+        "se3affc4818e6": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/stream.go#L601-L607",
+        "s693d6421c2f0": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/stream.go#L648-L650",
+        "sd5181aa115e4": "https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/memchunk.go#L1005-L1087",
+        "scc80bfb6f547": "https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/memchunk.go#L1090-L1147",
+        "s05d6c5fc01a2": "https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/memchunk.go#L1310-L1328",
+        "s291928ddc0b1": "https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/memchunk.go#L1380-L1397",
+        "s33683997e787": "https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/unordered.go#L185-L210",
+        "s69faadc4a015": "https://github.com/grafana/loki/blob/v3.7.8/go.mod#L19",
+        "s18bc063957e1": "https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/unordered.go#L69-L75",
+        "sf185bec82940": "https://github.com/grafana/loki/blob/v3.7.8/pkg/chunkenc/unordered.go#L260-L310",
+        "s015710936d80": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/Workiva/go-datastructures/rangetree/interface.go#L38-L47",
+        "saf4f45f2d5c7": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/Workiva/go-datastructures/rangetree/orderedtree.go#L259-L263",
+        "sd8ad9fae3598": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/Workiva/go-datastructures/rangetree/orderedtree.go#L180-L225",
+        "sd82568caaafc": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/Workiva/go-datastructures/rangetree/ordered.go#L25-L30",
+        "s996300b7bdcf": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/Workiva/go-datastructures/rangetree/ordered.go#L81-L98",
+        "s9a133bb92cd3": "https://github.com/grafana/loki/blob/v3.7.8/vendor/github.com/Workiva/go-datastructures/rangetree/entries.go#L21-L45",
+        "s0dbdc425ddbb": "https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/entry_iterator.go#L478-L509",
+        "s05d6bac1c352": "https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/sample_iterator.go#L681-L716",
+        "s76e4e638e936": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L1104-L1143",
+        "s5732ba30414b": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/instance.go#L1145-L1179",
+        "sa1a1efa48033": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1121-L1129",
+        "s00b4ce2d9a6a": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L1193-L1195",
+        "s9f438349ea61": "https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/entry_iterator.go#L681-L716",
+        "sf89b7c829a53": "https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/sample_iterator.go#L718-L753",
+        "s6c74d0f4adb3": "https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/entry_iterator.go#L362-L388",
+        "sdf678b8f143f": "https://github.com/grafana/loki/blob/v3.7.8/pkg/iter/sample_iterator.go#L480-L505",
+        "s2d763a8942ef": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L213-L216",
+        "s6f04b102b391": "https://github.com/grafana/loki/blob/v3.7.8/pkg/querier/querier.go#L274",
+        "s24cd2d4a2bce": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L126-L127",
+        "sd7efa15100d2": "https://github.com/grafana/loki/blob/v3.7.8/pkg/ingester/ingester.go#L210-L212"
       }
     },
     "jaeger-docs": {
@@ -55437,7 +55546,14 @@ Claims (full source mapping in the JSON block below):
     "loki-ingester-inverted-call": {"text": "From source reading, Loki's ingester querier passes the log or sample request it receives, including an inverted interval from the querier, to the gRPC Query or QuerySample call of each ingester it queries, and the ingester module registers the ingester, or a wrapper that Go code embedding Loki may set, as the Querier service whose generated handlers decode the request and call those methods.", "components": ["loki"], "sources": ["loki:sdc0d0e6ad95d", "loki:s10870cc18ddc", "loki:s61e16a1ac1f0", "loki:sf253d44e375f", "loki:sfb58949fa28c"], "status": "REASONED"},
     "loki-ingester-inverted-store": {"text": "From source reading, without a configured wrapper, a Loki ingester serving a log or sample request whose start is after its end makes no store query for it, whatever its store lookback: its store-request code moves a start only later, to now minus a positive lookback, and returns no store request when that adjusted start is after the end.", "components": ["loki"], "sources": ["loki:s51ab6a62a6bd", "loki:s21c205d034b9", "loki:sd6184d6a8a46"], "status": "REASONED"},
     "loki-ingester-inverted-memory": {"text": "From source reading, without a configured wrapper, a Loki ingester's in-memory log or sample query looks up streams in its index at the request start and, for each matching stream, skips every chunk unless the chunk's bounds start no later than the request end and end no earlier than the request start, so for an inverted interval it keeps only chunks covering the span from that end to that start.", "components": ["loki"], "sources": ["loki:se2f420694eb9", "loki:se913abf5bf85", "loki:se1f0d83f115c", "loki:s2a80da1a36e8", "loki:sadb084375296", "loki:s0b40d7d25a3f", "loki:se34169c8b133"], "status": "REASONED"},
-    "loki-querier-ingester-inverted-result": {"text": "A source reading of Loki's querier, ingester querier and ingester query code, without a Loki run, does not establish what the ingester querier and ingesters return for the inverted ingester interval that a negative store lookback other than -1 produces when now minus it is after the selection end: the ingesters' index lookup results at its start and chunk iterators' behaviour remain unestablished.", "components": ["loki"], "sources": ["loki:s529cd9a944d9", "loki:sdc0d0e6ad95d", "loki:s10870cc18ddc", "loki:s61e16a1ac1f0", "loki:sadb084375296", "loki:s0b40d7d25a3f", "loki:se34169c8b133"], "status": "REASONED"},
+    "loki-ingester-inverted-lookup": {"text": "From source reading, a Loki v3.7.8 ingester adds every stream to each index it builds, and its index lookup uses an inverted interval's start only to pick the index of the schema period containing it, for a future start the latest period starting at or before it; the lookup matches label matchers and shard without reading time, so the interval's order causes no lookup error.", "components": ["loki"], "sources": ["loki:sd5967b880c33", "loki:sc87fdc20cb58", "loki:s11cbfc4fcf89", "loki:sf674ae88a12c", "loki:s6bc46c6500c2", "loki:s140b0adc6723", "loki:s19918b3b217b", "loki:sadb084375296"], "status": "REASONED"},
+    "loki-ingester-inverted-iterators": {"text": "From source reading, Loki v3.7.8's ingester stream, chunk and head-block iterators neither swap nor clamp an inverted interval: they read a chunk, block or head block only if it starts no later than the interval's end and ends no earlier than its start, and the ordered head block's log iterator drops each entry before the start or at or after the end.", "components": ["loki"], "sources": ["loki:se3affc4818e6", "loki:s693d6421c2f0", "loki:sd5181aa115e4", "loki:scc80bfb6f547", "loki:s05d6c5fc01a2", "loki:s291928ddc0b1", "loki:s33683997e787", "loki:s0b40d7d25a3f", "loki:se34169c8b133"], "status": "REASONED"},
+    "loki-ingester-inverted-time-filter": {"text": "From source reading, Loki v3.7.8's chunk time-range filters, used for block entries in both directions, the head block in forward log queries and all sample queries, skip entries before the start but accept one timestamped exactly at it before testing the end; in this guide's assessment, they pass only such entries for an inverted interval, and whether ingesters hold any is not traced.", "components": ["loki"], "sources": ["loki:sd5181aa115e4", "loki:scc80bfb6f547", "loki:s0dbdc425ddbb", "loki:s05d6bac1c352"], "status": "REASONED"},
+    "loki-ingester-inverted-unordered": {"text": "From source reading, Loki v3.7.8's backward log queries do not time-filter a chunk's head block, and the unordered head block queries its vendored go-datastructures v1.1.7 range tree from an interval's start to one nanosecond before its end, both inclusive. For an inverted interval that query returns no entry, so the head block yields nothing.", "components": ["loki"], "sources": ["loki:sd5181aa115e4", "loki:s33683997e787", "loki:s69faadc4a015", "loki:s18bc063957e1", "loki:sf185bec82940", "loki:s015710936d80", "loki:saf4f45f2d5c7", "loki:sd8ad9fae3598", "loki:sd82568caaafc", "loki:s996300b7bdcf", "loki:s9a133bb92cd3"], "status": "REASONED"},
+    "loki-ingester-empty-send": {"text": "From source reading, when Loki v3.7.8's ingester Query or QuerySample code gets an error-free iterator yielding nothing, it sends one empty batch with query statistics and warnings unless the request context is already done, failing only on a Send error other than context.Canceled. The ingester querier's per-ingester iterator records those, yields nothing and ends cleanly at the stream's end.", "components": ["loki"], "sources": ["loki:s76e4e638e936", "loki:s5732ba30414b", "loki:sa1a1efa48033", "loki:s00b4ce2d9a6a", "loki:s9f438349ea61", "loki:sf89b7c829a53", "loki:s6c74d0f4adb3", "loki:sdf678b8f143f", "loki:s61e16a1ac1f0"], "status": "REASONED"},
+    "loki-querier-inverted-merge": {"text": "From source reading, a Loki v3.7.8 querier merges the ingester querier's per-ingester iterators for a log or sample selection with the iterator of any store query it makes for that selection, which it skips when query_ingester_only is set or it builds no store interval; a log selection with only one iterator gets that iterator unmerged.", "components": ["loki"], "sources": ["loki:s8f53a03e764f", "loki:sdc0d0e6ad95d", "loki:s86fc597288e2", "loki:s2d763a8942ef", "loki:s10870cc18ddc", "loki:se3f01b0b8f64", "loki:s6f04b102b391", "loki:s61e16a1ac1f0", "loki:s529cd9a944d9"], "status": "REASONED"},
+    "loki-ingester-wrapper-search": {"text": "From source reading, a word search for Wrapper in Loki v3.7.8's pkg, cmd, integration, tools and clients trees finds only Ingester.Wrapper's declaration (no YAML key), its one-method Wrap interface and initIngester's nil check and Wrap call, besides a code comment and stylesheet source maps; nothing there sets it, and initIngester registers Wrap's result only when it is set.", "components": ["loki"], "sources": ["loki:s24cd2d4a2bce", "loki:sd7efa15100d2", "loki:sf253d44e375f"], "status": "REASONED"},
+    "loki-querier-ingester-inverted-result": {"text": "A source reading of Loki's querier, ingester querier and ingester query code, without a Loki run, does not establish what the ingester querier and ingesters return for the inverted ingester interval that a negative store lookback other than -1 produces when now minus it is after the selection end: whether ingesters hold entries dated exactly at its start remains untraced.", "components": ["loki"], "sources": ["loki:s529cd9a944d9", "loki:sdc0d0e6ad95d", "loki:s10870cc18ddc", "loki:s61e16a1ac1f0", "loki:sadb084375296", "loki:s0b40d7d25a3f", "loki:se34169c8b133", "loki:sd5181aa115e4", "loki:s33683997e787", "loki:s69faadc4a015"], "status": "REASONED"},
     "loki-internal-server": {"text": "From source reading, Run initializes target modules and starts them together. internal_server is off by default; when enabled it precedes Server and its HTTP listener defaults to localhost:3101.", "components": ["loki", "dskit"], "sources": ["loki:sb7c90a61ae40", "loki:scf7d98f51caa", "loki:sf4c3469d7ee1", "loki:sd4f78f9689f6", "loki:sd46d55125044", "loki:s9fd7d8bd80e3", "loki:sf19909de84b7", "loki:s319f6b7b5340", "dskit:s7848c6311aee"], "status": "REASONED"},
     "loki-internal-server-grpc": {"text": "From source reading and Go's net.Listen documentation, the internal server's flags register no gRPC address or port, so by inference, when enabled, unless YAML sets them, dskit opens an any-address gRPC listener on an OS-chosen port carrying the HTTP bridge; not observed.", "components": ["loki", "dskit", "go"], "sources": ["loki:scf7d98f51caa", "loki:sd46d55125044", "loki:s9fd7d8bd80e3", "loki:sf19909de84b7", "loki:s309318e5a59c", "dskit:s7848c6311aee", "dskit:s5fd7b12bfcf1", "go:s37204ff1b27c"], "status": "REASONED"},
     "loki-internal-routes": {"text": "When enabled, the internal server's HTTP router serves routes including /ready and buildinfo and, when their modules run, /ring, /memberlist and the compactor handler prefix; these are source registrations, not observed responses.", "components": ["loki"], "sources": ["loki:sb7c90a61ae40", "loki:s319f6b7b5340", "loki:sb6c261fe940d", "loki:s81d8d94c3cea"], "status": "REASONED"},
