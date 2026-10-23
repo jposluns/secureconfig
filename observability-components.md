@@ -610,7 +610,7 @@ from your own account's view of the process.
 - Loki v3.7.8 common config (`common.replication-factor` default 3): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/common/common.go
 - Loki v3.7.8 config wrapper (`common.instance_addr` copied into component addresses): https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/config_wrapper.go#L162-L174
 - Loki v3.7.8 sample local configuration: https://github.com/grafana/loki/blob/v3.7.8/cmd/loki/loki-local-config.yaml#L1-L16
-- dskit pinned listener and TLS flag defaults: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L189-L212
+- dskit pinned listener and TLS flag defaults, and the `server.register-instrumentation` default (true): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L189-L212
 - Loki v3.7.8 HTTP port override: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L241-L269
 - Loki v3.7.8 production Docker listener overrides: https://github.com/grafana/loki/blob/v3.7.8/production/docker/config/loki.yaml#L1-L8
 - Loki v3.7.8 auth setup and gRPC exemptions: https://github.com/grafana/loki/blob/v3.7.8/pkg/loki/loki.go#L495-L509
@@ -657,6 +657,7 @@ from your own account's view of the process.
 - dskit pinned TLS YAML fields: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L69-L78
 - dskit pinned wildcard listener construction: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L309-L332
 - dskit pinned server TLS and client-auth construction: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L357-L395
+- dskit pinned instrumentation registration gate (`if cfg.RegisterInstrumentation`): https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L411-L412
 - dskit pinned default gRPC interceptor chain: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L433-L468
 - dskit pinned metrics and pprof routes: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L577-L583
 - dskit pinned HTTP-over-gRPC bridge: https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L673-L681
@@ -966,7 +967,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "ac62628609e694b1a20539ee4e2fa2d37fc18bb0f095cc102870509448440b8a",
+  "body_sha256": "c29cc6669fdbdab2e6aa70f979dfd23300055fa24c345aa2b2e626668e8e3617",
   "components": {
     "node": {
       "name": "node_exporter",
@@ -1235,6 +1236,7 @@ Claims (full source mapping in the JSON block below):
         "s0dc9a01e591a": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L69-L78",
         "s7848c6311aee": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L309-L332",
         "sd35a28be4391": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L357-L395",
+        "se0830c9ea1b5": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L411-L412",
         "s38beab6892ea": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L433-L468",
         "s761b46738198": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L577-L583",
         "s5fd7b12bfcf1": "https://github.com/grafana/dskit/blob/8d1c6d34bb5a42b04caa982d68403c5a643bb742/server/server.go#L673-L681",
@@ -1340,7 +1342,7 @@ Claims (full source mapping in the JSON block below):
     "loki-grpc-auth": {"text": "From source reading, default dskit interceptors lack credentials; Loki has tenant exemptions; complete interceptor behaviour was not re-traced.", "components": ["dskit", "loki"], "sources": ["dskit:s38beab6892ea", "dskit:saf57a4cbc682", "loki:s057e686b00bb", "loki:s7786b9105acc"], "status": "REASONED"},
     "loki-push-query": {"text": "From source reading, reachable clients can push/query without credentials subject to tenant headers and ingest/query policies.", "components": ["loki"], "sources": ["loki:s9f316e1a5fef", "loki:s39c270ed878c"], "status": "REASONED"},
     "loki-config": {"text": "From source reading, GET /config exposes configuration without a tenant-auth wrapper.", "components": ["loki"], "sources": ["loki:sbe0aa939a44d"], "status": "REASONED"},
-    "loki-diagnostics": {"text": "From source reading, metrics and pprof routes are registered by default without a tenant-auth wrapper.", "components": ["dskit"], "sources": ["dskit:sb19d54a19636", "dskit:s761b46738198"], "status": "REASONED"},
+    "loki-diagnostics": {"text": "From source reading, metrics and pprof routes are registered by default without a tenant-auth wrapper.", "components": ["dskit"], "sources": ["dskit:sb19d54a19636", "dskit:se0830c9ea1b5", "dskit:s761b46738198"], "status": "REASONED"},
     "loki-maintenance": {"text": "From source reading, ingester flush/shutdown accept GET/POST; prepare_shutdown accepts POST/GET/DELETE, without tenant-auth wrappers.", "components": ["loki"], "sources": ["loki:sc2b013001317"], "status": "REASONED"},
     "loki-delete": {"text": "Non-worker compactor deletion routes require a supported shipper index, retention and a delete-request store; tenant and deletion-policy middleware gate create/list/cancel. After tenant validation, filter-only and filter-and-delete pass, disabled gets 403 and an unrecognized mode gets 400, by source reasoning, not observed responses; admission does not establish eventual deletion.", "components": ["loki"], "sources": ["loki:s4f3a19f7f08c", "loki:s3d51e1213e70", "loki:s38c1e77fe01e", "loki:s1f38431776f2", "loki:s3ff15746c2c9", "loki:s14f65483dd4d", "loki:s0bde2f8abe97", "loki:saf8f37e04b71", "loki:s6feced2aa907", "loki:se1440b6eb37a", "loki:sae57ccde5dc6", "loki:s86b57bdedee7", "loki:sc37c5a5a63b4"], "status": "REASONED"},
     "loki-delete-mode": {"text": "In v3.7.8, validDeletionLimit parses the tenant's DeletionMode; only the exact strings disabled, filter-only and filter-and-delete parse, and DeleteEnabled is true for the latter two. TenantMiddleware returns 400 for tenant or parsing errors, 403 for disabled, otherwise invokes the handler; this is source reasoning, not observed responses.", "components": ["loki"], "sources": ["loki:s3ff15746c2c9", "loki:sae57ccde5dc6", "loki:s86b57bdedee7", "loki:sc37c5a5a63b4"], "status": "REASONED"},
