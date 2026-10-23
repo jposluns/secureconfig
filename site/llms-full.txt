@@ -54052,7 +54052,7 @@ REASONED: following block; panel sources below support the listener check, the a
 # On the host: each panel listener should be loopback (127.0.0.1) or a deliberately chosen private address.
 # Docker documents explicit publish addresses and firewall rules for publication. As this guide's assessment,
 # a socket listing alone does not prove reachability, so also inspect the actual published addresses and
-# ports (docker ps and the port mappings) and probe any public backend mapping too:
+# ports (docker ps and the port mappings), and from outside your network probe any public backend mapping too:
 # a protected frontend does not prove a separately published backend port is closed.
 ss -tlnp                                      # panel listeners: loopback or a private address only
 
@@ -54158,7 +54158,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "37cfbf704e87d99c2426d3cddf9bc82048b3a1190f04260fc2cb696d1e103dcc",
+  "body_sha256": "802fbbd21495c5cd5718947f74027acfbbfa92e20d724afecd5a812d6eab56d0",
   "components": {
     "phpmyadmin": {
       "name": "phpMyAdmin",
