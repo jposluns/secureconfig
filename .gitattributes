@@ -4,3 +4,7 @@
 # two files drifting between platforms for no reason.
 site/index.html text eol=lf
 site/_headers text eol=lf
+
+# The claim-length gate splits its baseline on LF alone and refuses a CR in any line, so a CRLF
+# checkout would fail it on every entry. Keep the baseline LF in the index and in every checkout.
+tools/claim_length_baseline.txt text eol=lf

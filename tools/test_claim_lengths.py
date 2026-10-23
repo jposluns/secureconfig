@@ -174,11 +174,22 @@ def main():
         count += case({"a.md": legacy({"c": {"text": 7}})}, expected=2,
                       needle="a.md: claim c has no text string")
         # Non-UTF-8 inputs fail closed: a baseline or a guide the gate cannot
-        # decode is an error, not a pass.
+        # decode is an error, not a pass. The guide's bad byte sits inside
+        # otherwise valid JSON, so only the strict decode can refuse it.
         count += case({"a.md": legacy({"c": {"text": "y"}})}, b"\xff\xfe\n",
                       expected=2, needle="  FAIL  cannot check claim lengths:")
-        count += case({"a.md": b"---\nversion_basis: \xff\n---\n# T\n"}, expected=2,
-                      needle="  FAIL  cannot check claim lengths:")
+        count += case({"a.md": b'---\nversion_basis: {"claims": {"c": {"text": "\xff"}}}\n'
+                               b"---\n# T\n\nBody.\n"}, expected=2,
+                      needle="  FAIL  cannot check claim lengths: 'utf-8' codec can't decode")
+        # A baseline saved with CRLF endings is refused line by line, not
+        # silently read; .gitattributes pins the baseline to LF in checkouts.
+        count += case({"a.md": legacy({"c": {"text": long_450}})},
+                      b"# seeded\r\na.md\tc\t450\r\n", expected=1,
+                      needle="claim-length baseline line 1: control or line-separator "
+                             "character '\\r' is not allowed",
+                      also=("claim-length baseline line 2: control or line-separator "
+                            "character '\\r' is not allowed",),
+                      absent=("no baseline entry",))
         # Findings list every violating claim, one line each.
         count += case({"a.md": legacy({"c": {"text": long_401},
                                        "d": {"text": "x" * 500}})},

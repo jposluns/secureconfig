@@ -24,12 +24,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   baselined length; the baseline only shrinks; the maintainer judges the new layout live, so the gate is built
   now; and the gate is deterministic, offline and reads the tree only. No reasoning was recorded beyond those
   terms. Of those terms, "the baseline only shrinks" is upheld by review, not by the gate: a tree-only gate
-  cannot see that the same change added a baseline entry or raised one. This resolves the reconsideration
-  that the 2026-10-18 "Brief rule now, gate
-  later" ruling below deferred; that ruling's brief rule (each claim a one- or two-sentence summary that keeps
-  its qualifiers) stands. Carried as `tools/check_claim_lengths.py` with its baseline
-  `tools/claim_length_baseline.txt`, closing TODO row 3.44; rows such as 1.326 shrink the baseline as they
-  shorten claims.
+  cannot see that the same change added a baseline entry or raised one. This resolves the reconsideration that
+  the 2026-10-18 "Brief rule now, gate later" ruling below deferred; that ruling's brief rule (each claim a
+  one- or two-sentence summary that keeps its qualifiers) stands. Carried as `tools/check_claim_lengths.py`
+  with its baseline `tools/claim_length_baseline.txt`, closing TODO row 3.44; rows such as 1.326 shrink the
+  baseline as they shorten claims.
 - **Maintainer rulings of 2026-10-22 (#785).** The maintainer answered three questions through AskUser on
   2026-10-22, the first in their own words and the second and third by choosing the recommended option, and after the
   third gave a standing direction in chat. No reasoning was given beyond the maintainer's words quoted below.
