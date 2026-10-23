@@ -117,7 +117,7 @@ still need their own TLS and auth on top ([postgresql.md](postgresql.md), [mysql
 
 ## Verify
 
-REASONED: identity, filesystem, runtime security context and segmentation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker, Kubernetes and Linux man-pages sources; this read-only review has no authorized Docker workload or Kubernetes cluster. This guide's assessment: the Compose `app` service's image must supply id, sh and touch, and the Pod's container image must supply id, sh and grep -E for these commands; the exact touch error depends on the Compose `app` service's image and probe path.
+REASONED: identity, filesystem, runtime security context and segmentation checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited Docker, Kubernetes and Linux man-pages sources; the authoring environment has no authorized Docker workload or Kubernetes cluster. This guide's assessment: the Compose `app` service's image must supply id, sh and touch, and the Pod's container image must supply id, sh and grep -E for these commands; the exact touch error depends on the Compose `app` service's image and probe path.
 
 ```bash
 docker compose exec app id                          # uid is not 0 (run from the Compose project; this guide advises using the actual container name with bare `docker exec` rather than the `app` service name)
@@ -283,7 +283,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "512fb47bdbeac879f7105373c9cde62ec39293cd4eed44057389a175492df5b3",
+  "body_sha256": "dbb5b9a4920670dbe9f26ff78553457f9dfd63451edec66a3857642b3238c8f3",
   "components": {
     "docker": {
       "name": "Docker documentation",

@@ -55,7 +55,7 @@ Serve for anything private (most things). Funnel or [cloudflare.md](cloudflare.m
 
 ## 4. Verify
 
-REASONED: following block; the cited ss filter reference and Serve backend-isolation guidance define the loopback check. This read-only review cannot configure a Serve host; the guide records no listener observation.
+REASONED: following block; the cited ss filter reference and Serve backend-isolation guidance define the loopback check. The authoring environment cannot configure a Serve host; the guide records no listener observation.
 
 ```bash
 ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep: the address column
@@ -64,7 +64,7 @@ ss -tlnp 'sport = :3000'                          # ss's own filter, not a grep:
 
 REASONED: preceding block; loopback listener inventory and direct LAN/VPC isolation, per the guide's cited ss(8) and Tailscale serve identity headers. No Serve host or separate LAN/VPC probe machine is available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; original, missing-assignment, short, empty and embedded-placeholder cases printed refusal messages without reaching curl, while a substituted address reached one curl stub. No deployed bind or HTTP response was observed: exposed wildcard binding permits direct bypass; fixed binding is loopback and the direct address does not answer, with failed requests alone inconclusive. From another machine on the same LAN or VPC (run this from OUTSIDE the host), confirm the app does not answer its direct address:
 
-REASONED: following block; direct-backend isolation follows the cited Serve identity-header guidance. This read-only review cannot provision a Serve host and separate LAN/VPC probe machine; HTTP replies expose bypass and failed requests remain inconclusive as described below.
+REASONED: following block; direct-backend isolation follows the cited Serve identity-header guidance. The authoring environment cannot provision a Serve host and separate LAN/VPC probe machine; HTTP replies expose bypass and failed requests remain inconclusive as described below.
 
 ```bash
 (                                       # a subshell, so your own shell keeps its positional parameters and the guard's exit does not close it
@@ -83,7 +83,7 @@ REASONED: following block; direct-backend isolation follows the cited Serve iden
 
 REASONED: preceding block; direct-backend isolation and the allowed tailnet path, per the guide's cited Tailscale serve identity headers and Tailscale serve. No Serve host or allowed/excluded tailnet devices are available. bash -n and ShellCheck 0.11.0 exited 0 without diagnostics; rejected guards reached no curl stub and a substituted direct address reached one. No live access was observed: exposed direct access bypasses the tailnet; fixed direct access is isolated while the allowed tailnet request works. Allowed access alone does not distinguish allow-all from scoped policy. Then confirm the tailnet path works and that the section-1 restriction actually holds:
 
-REASONED: following block; Serve status and allowed-device access follow the cited Serve CLI and policy-test documentation. This read-only review cannot configure a tailnet with allowed and excluded devices; success alone does not prove policy restriction.
+REASONED: following block; Serve status and allowed-device access follow the cited Serve CLI and policy-test documentation. The authoring environment cannot configure a tailnet with allowed and excluded devices; success alone does not prove policy restriction.
 
 ```bash
 tailscale serve status
@@ -153,7 +153,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "65637a1d35ca3f980c580b010401f2a584d3fb4f31681760c0ea07dfb006b99b",
+  "body_sha256": "b79d6639f1bde7526cc70547d6d3b713b0142adcaccb1b473a8c1e6fad823617",
   "components": {
     "cli": {
       "name": "Tailscale CLI change",
