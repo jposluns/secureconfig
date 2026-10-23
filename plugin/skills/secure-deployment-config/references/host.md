@@ -98,7 +98,7 @@ sudo firewall-cmd --zone=REPLACE_WITH_PUBLIC_ZONE --list-all   # confirm nothing
 
 ## 4. Verify
 
-REASONED: listener, firewall, SSH key-only and PAM MFA checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited SSH, firewall, MFA, iproute2, netcat and BusyBox sources; this read-only review has no authorized target host or external probe machine.
+REASONED: listener, firewall, SSH key-only and PAM MFA checks; no exposed/fixed run is recorded in this guide. Expectations follow the cited SSH, firewall, MFA, iproute2, netcat and BusyBox sources; the authoring environment has no authorized target host or external probe machine.
 
 ```bash
 sudo ss -4 -tulnp                 # IPv4 TCP and UDP listeners: only intended ones, on intended addresses
@@ -266,7 +266,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-18",
   "documentation_checked": "2026-09",
-  "body_sha256": "140e5bbbf557bda32e09d1ae1270b599f1b7eb98bc38f954e6201a34b5d6b5a9",
+  "body_sha256": "ce06a5b97d707b06dd8ddcbfdee22c09bc74d59bd3d111dc084525acd27ebfa6",
   "components": {
     "ssh": {
       "name": "OpenSSH documentation",
