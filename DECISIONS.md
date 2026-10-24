@@ -17,6 +17,20 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-10-24 on the documentation date and `paas.md` TODO 1.266 and 1.268 (#871).** The
+  maintainer ruled live on three questions at 2026-10-24T17:10:05Z, the first through AskUserQuestion. No reasoning
+  was recorded beyond the maintainer's words quoted below.
+  - The documentation date, the p172a question on TODO 1.329 and 1.370. The maintainer's words: "guide-wide
+    documentation date only. Keep September 2026 until a guide-wide recheck supports advancing; later checks stay
+    recorded on their own Sources items, with the scope explained." Its effect (applied by #871): both rows stay open
+    for a guide-wide recheck of `vector-databases.md` and `pocketbase.md`, whose `documentation_checked` stays 2026-09.
+  - The observation-only `paas.md` items, p169a proposal 4. The maintainer's words: "move the observation-only paas.md
+    items (Railway HEAD redirect, Render redirect status, Heroku Cedar listener address, header sanitization by
+    observation) into one live-checks TODO row; 1.266 and 1.268 keep only documentation items." Applied by #871 as
+    TODO row 1.374.
+  - Vercel 1.266-d, p169a proposal 5. The maintainer's words: "split Vercel 1.266-d; retire the handler (Functions)
+    mode on the docs' no-server statement; keep the Express port-listener question open." Applied by #871, which
+    records the retirement in DONE.md under 1.266.
 - **TODO 1.306: Ubuntu coverage only through Ubuntu Pro is not current support, 2026-10-24 (#864).** The maintainer
   ruled live to the orchestrator at 2026-10-24T12:48:39Z that Ubuntu coverage given only through Ubuntu Pro
   (Expanded Security Maintenance, and the legacy add-on) does not count as "currently supported" for
