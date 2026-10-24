@@ -31,9 +31,13 @@ Leaked API keys and credentials in public repositories are the most common secur
 3. **Generate secrets randomly** (`openssl rand -base64 32`; `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`), 1 per service and environment, never shared between staging and production.
 4. **Scan before every push.** [gitleaks](https://github.com/gitleaks/gitleaks) or [trufflehog](https://github.com/trufflesecurity/trufflehog) as a pre-commit hook and in CI:
    ```bash
-   gitleaks git .          # scans the repository history (git/dir take the path as an argument from gitleaks 8.19.1, by source reading through 8.30.1 without a run; 8.19.0 is not established; before 8.19.0 the README documents "gitleaks detect" for history and "gitleaks detect --no-git" for the working tree)
+   gitleaks git .          # scans the repository history; use 8.19.1 or later
    gitleaks dir .          # scans the working tree
    ```
+
+   By source reading without a run, `git` and `dir` use a positional path at v8.19.1, defaulting to `.` if omitted or empty; the earlier review records this handling through v8.30.1. At v8.19.0, both commands instead read a `source` flag and do not use `args`. Across all seven top-level `cmd/` files, only `detect` and `protect` register `source`, each locally with default `.`; none registers it on the root, `git` or `dir`. Root `initConfig` also reads `source` when both `--config` and `GITLEAKS_CONFIG` are empty or unset; all three lookups call `log.Fatal` on error. Neither command has an observed result here.
+
+   At v8.17.0, v8.18.0 and v8.18.4, `detect` reads `source` and selects files with `--no-git`, stdin otherwise with `--pipe`, and Git history otherwise. At all three tags the root registers persistent `--source` with default `.`.
 5. **Secrets never enter a command line.** A process's arguments are readable through `/proc/<pid>/cmdline`, which is what `ps` prints; on a default Linux that means every other user on the host, for as long as the process runs, and the command is then written to your shell history. A `hidepid` proc mount or a separate PID namespace narrows who can see it, neither is the default, and neither covers the history. Prefer a flag that reads from stdin (`htpasswd -i`, `docker login --password-stdin`, `gh auth login --with-token`), a file the tool reads itself (`~/.pgpass`, `curl --netrc`; create it with `umask 077` and keep it mode `0600`, since it stores the secret in plaintext and PostgreSQL ignores a `~/.pgpass` that group or others can read), or an environment variable where the tool offers nothing better. As this guide's advice, where a value has to be typed, use `read -rs` to keep terminal input hidden (`-s`) and preserve backslashes (`-r`); as this guide's assessment, because `read` consumes input rather than a command, this keeps the typed value out of shell history. Bash documents that `set -x` prints commands and arguments after expansion; therefore, as this guide's advice, a script that expands a secret into a pipeline (including the `printf`-into-`--password-stdin` pattern below) must turn tracing off around it, because reading from stdin protects the argument list but not the trace.
 
    This block assumes a clean Bash shell and prompts for the registry token instead of using an ambient `TOKEN`. As this guide's advice, paste the token alone at the hidden prompt: a multi-line paste leaves every line after the first for your shell to run. The block resets `DEBUG`, `RETURN` and `ERR` traps with `trap - DEBUG RETURN ERR`, turns tracing, allexport and errexit off with `set +x +a +e`, then enables pipefail with `set -o pipefail`. It clears inherited `TOKEN` attributes via `unset -n` and `unset -v`, unsets `IFS` with `unset -n IFS` (which also removes an `IFS` nameref) and refuses a readonly `IFS`, then unsets the unexported variable with an `EXIT` trap. It exits without continuing if `TOKEN` cannot be cleared, `IFS` is readonly or `read` fails, and refuses an empty value, a placeholder or a control character. As this guide's assessment under these clean-shell assumptions, the entered token stays out of history, argv and the environment; process memory is still readable by the same account and root, and this does not erase an earlier export. Docker stores the login in its configured credential store or configuration file, as described in rule 9.
@@ -94,9 +98,28 @@ On every push, gitleaks (8.19.1 or later; see rule 4 for older releases) must ex
 - AWS Secrets Manager overview (rolling, checked October 2026): https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html
 - Google Cloud Secret Manager overview (rolling, checked October 2026): https://docs.cloud.google.com/secret-manager/docs/overview
 - Azure Key Vault overview (rolling, checked October 2026): https://learn.microsoft.com/en-us/azure/key-vault/general/overview
-- gitleaks `git` and `dir` scan path from the positional argument (default `.`), by source reading without a run at every tag 8.19.1 to 8.30.1, and default exit codes (checked October 2026): v8.19.1 https://github.com/gitleaks/gitleaks/blob/v8.19.1/cmd/git.go#L33-L42 ; https://github.com/gitleaks/gitleaks/blob/v8.19.1/cmd/directory.go#L26-L34 ; v8.30.1 https://github.com/gitleaks/gitleaks/blob/v8.30.1/cmd/git.go#L33-L43 ; https://github.com/gitleaks/gitleaks/blob/v8.30.1/cmd/directory.go#L25-L34 ; exit codes https://github.com/gitleaks/gitleaks/blob/v8.30.1/README.md#L645-L653
-- gitleaks v8.19.0 `git` and `dir` reading a `source` flag that `root.go`, `git.go` and `directory.go` do not register, by source reading without a run; other command files not read (checked October 2026): https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/git.go#L40-L44 ; https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/directory.go#L38-L42 ; root flags https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/root.go#L42-L63 ; `initConfig` https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/root.go#L97-L112
-- gitleaks before v8.19.0: `detect`, `--no-git` and `--source` (default `.`), v8.18.4 README (checked October 2026): https://github.com/gitleaks/gitleaks/blob/v8.18.4/README.md#L162 ; https://github.com/gitleaks/gitleaks/blob/v8.18.4/README.md#L172-L183
+- gitleaks 8.19.1 to 8.30.1 path handling, v8.19.1 `git` source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/9463ffaa5e9efc94ee235972d1519eac2844fad3/cmd/git.go#L33-L42
+- gitleaks 8.19.1 to 8.30.1 path handling, v8.19.1 `dir` source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/9463ffaa5e9efc94ee235972d1519eac2844fad3/cmd/directory.go#L26-L34
+- gitleaks 8.19.1 to 8.30.1, earlier review: v8.30.1 `git` path handling (checked October 2026): https://github.com/gitleaks/gitleaks/blob/v8.30.1/cmd/git.go#L33-L43
+- gitleaks 8.19.1 to 8.30.1, earlier review: v8.30.1 `dir` path handling (checked October 2026): https://github.com/gitleaks/gitleaks/blob/v8.30.1/cmd/directory.go#L25-L34
+- gitleaks 8.19.1 to 8.30.1, earlier review: v8.30.1 default exit codes (checked October 2026): https://github.com/gitleaks/gitleaks/blob/v8.30.1/README.md#L645-L653
+- gitleaks v8.19.0 root flags and conditional `source` lookup, source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/root.go
+- gitleaks v8.19.0 `git` flags and unused positional path, source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/git.go
+- gitleaks v8.19.0 `dir` flags and unused positional path, source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/directory.go
+- gitleaks v8.19.0 local `detect` flags and scan selection, source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/detect.go
+- gitleaks v8.19.0 local `protect` flags, source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/protect.go
+- gitleaks v8.19.0 `stdin` registration, source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/stdin.go
+- gitleaks v8.19.0 `version` registration, source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/version.go
+- gitleaks v8.19.0 top-level command inventory, source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/tree/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd
+- gitleaks v8.19.0 `generate` directory listing only, source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/tree/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/generate
+- gitleaks v8.18.4 README `--source` default (checked October 2026): https://github.com/gitleaks/gitleaks/blob/02808f45d038526bfcceebcbf6421c1047997ff9/README.md#L162
+- gitleaks v8.18.4 README `detect` and `--no-git` (checked October 2026): https://github.com/gitleaks/gitleaks/blob/02808f45d038526bfcceebcbf6421c1047997ff9/README.md#L172-L183
+- gitleaks v8.18.4 root persistent `--source`, source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/02808f45d038526bfcceebcbf6421c1047997ff9/cmd/root.go#L41-L65
+- gitleaks root persistent `--source` comparison with v8.18.4: v8.17.0 source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/7804d652c0460f0b61ea9bb2c1f202bfcdbbf144/cmd/root.go#L38-L56
+- gitleaks root persistent `--source` comparison with v8.18.4: v8.18.0 source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/45266551ba14dcc339106a08acf6cd0a5e81c76f/cmd/root.go#L38-L56
+- gitleaks v8.18.4 `detect` scan selection, source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/02808f45d038526bfcceebcbf6421c1047997ff9/cmd/detect.go
+- gitleaks `detect` comparison with v8.18.4: v8.17.0 source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/7804d652c0460f0b61ea9bb2c1f202bfcdbbf144/cmd/detect.go
+- gitleaks `detect` comparison with v8.18.4: v8.18.0 source reading without a run (checked October 2026): https://github.com/gitleaks/gitleaks/blob/45266551ba14dcc339106a08acf6cd0a5e81c76f/cmd/detect.go
 - trufflehog: https://github.com/trufflesecurity/trufflehog
 - sops: https://github.com/getsops/sops and age: https://github.com/FiloSottile/age
 - git-filter-repo: https://github.com/newren/git-filter-repo
@@ -169,8 +192,8 @@ Claims (full source mapping in the JSON block below):
 - image-history (REASONED; docker-build): The Docker image history reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, Docker image history does not show every secret value.
 - random (REASONED; owasp, openssl-rand, python-secrets): Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.
 - scanners (REASONED; gitleaks, trufflehog): Scan before every push and in CI with gitleaks or TruffleHog. By source reading at every gitleaks tag from v8.19.1 to v8.30.1, cited at both ends, without a run, git and dir take the scan path from a positional argument that defaults to the current directory, as the shown gitleaks git . and gitleaks dir . commands need.
-- scanners-8190 (REASONED; gitleaks-8190): Gitleaks v8.19.0 git and dir are not established: by source reading without a run, both commands, and root initConfig when both --config and GITLEAKS_CONFIG are empty or unset, read a source flag that root.go, git.go and directory.go never register, calling log.Fatal on a lookup error. Other v8.19.0 command files were not read, so a registration elsewhere is not excluded.
-- scanners-detect (REASONED; gitleaks-detect): The v8.18.4 gitleaks README, the last tag before v8.19.0, documents detect for git repositories, its --no-git option for files and directories, and a --source flag defaulting to the current directory; releases before v8.18.0 and detect's own source were not read.
+- scanners-8190 (REASONED; gitleaks-8190): By source reading without a run at v8.19.0, only detect and protect register source across all seven top-level cmd files, each locally; neither git nor dir uses args. Both commands, and root initConfig when both --config and GITLEAKS_CONFIG are empty or unset, read source and call log.Fatal on lookup error; no run outcome is established.
+- scanners-detect (REASONED; gitleaks-detect): By source reading without a run at v8.17.0, v8.18.0 and v8.18.4, detect reads source and selects files with --no-git, otherwise stdin with --pipe, otherwise Git history. At all three tags the root registers persistent --source with default '.'.
 - argv (REASONED; proc, apache): Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.
 - stdin (REASONED; apache, docker, gh): Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.
 - credential-files (REASONED; postgres, curl): Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass.
@@ -195,7 +218,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-05",
   "documentation_checked": "2026-09",
-  "body_sha256": "c283c5a0a64c84083f3e03850eab501b5b9cc1bbbdf943ccd3b36cf88bea1201",
+  "body_sha256": "78cb9a974aecadb0b951192b146f9c657d0dc9f98471b619905490a4b90e67ba",
   "components": {
     "git-ignore": {
       "name": "Git ignore patterns",
@@ -208,8 +231,8 @@ Claims (full source mapping in the JSON block below):
       "name": "gitleaks git/dir path argument",
       "basis": "8.19.1 to 8.30.1",
       "sources": {
-        "sb16acfe1832b": "https://github.com/gitleaks/gitleaks/blob/v8.19.1/cmd/git.go#L33-L42",
-        "s0af97c8cbbb0": "https://github.com/gitleaks/gitleaks/blob/v8.19.1/cmd/directory.go#L26-L34",
+        "s4e82b98bf700": "https://github.com/gitleaks/gitleaks/blob/9463ffaa5e9efc94ee235972d1519eac2844fad3/cmd/git.go#L33-L42",
+        "sc7929445f947": "https://github.com/gitleaks/gitleaks/blob/9463ffaa5e9efc94ee235972d1519eac2844fad3/cmd/directory.go#L26-L34",
         "s2a515c553a16": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/cmd/git.go#L33-L43",
         "s3cedc5927daf": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/cmd/directory.go#L25-L34",
         "s8b08240c42e9": "https://github.com/gitleaks/gitleaks/blob/v8.30.1/README.md#L645-L653"
@@ -219,18 +242,29 @@ Claims (full source mapping in the JSON block below):
       "name": "gitleaks 8.19.0 git/dir source flag",
       "basis": "v8.19.0",
       "sources": {
-        "s4ee488cd50ff": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/git.go#L40-L44",
-        "s17e3c5309e52": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/directory.go#L38-L42",
-        "s9b18bf477a6e": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/root.go#L42-L63",
-        "s5c847ad43500": "https://github.com/gitleaks/gitleaks/blob/v8.19.0/cmd/root.go#L97-L112"
+        "s38ee01a95c8c": "https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/root.go",
+        "s5abcb8b428db": "https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/git.go",
+        "s8db158cb815b": "https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/directory.go",
+        "s68724a6b5a24": "https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/detect.go",
+        "s913053b5ad1e": "https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/protect.go",
+        "s189c08d2f974": "https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/stdin.go",
+        "s4b5d9b2ab7a1": "https://github.com/gitleaks/gitleaks/blob/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/version.go",
+        "s8a2e9dc86ccd": "https://github.com/gitleaks/gitleaks/tree/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd",
+        "s43b67b6788dd": "https://github.com/gitleaks/gitleaks/tree/44ad62e0b103f7907c4b3dd494aca64e4fefd94f/cmd/generate"
       }
     },
     "gitleaks-detect": {
       "name": "gitleaks detect before 8.19.0",
       "basis": "v8.18.4",
       "sources": {
-        "s37819da2aec2": "https://github.com/gitleaks/gitleaks/blob/v8.18.4/README.md#L162",
-        "s12cd43a29383": "https://github.com/gitleaks/gitleaks/blob/v8.18.4/README.md#L172-L183"
+        "s6686fd9533da": "https://github.com/gitleaks/gitleaks/blob/02808f45d038526bfcceebcbf6421c1047997ff9/README.md#L162",
+        "s71b141fe4768": "https://github.com/gitleaks/gitleaks/blob/02808f45d038526bfcceebcbf6421c1047997ff9/README.md#L172-L183",
+        "s342bdd9096ec": "https://github.com/gitleaks/gitleaks/blob/02808f45d038526bfcceebcbf6421c1047997ff9/cmd/root.go#L41-L65",
+        "sc8ca694b4c7a": "https://github.com/gitleaks/gitleaks/blob/02808f45d038526bfcceebcbf6421c1047997ff9/cmd/detect.go",
+        "sdf22d8b973ff": "https://github.com/gitleaks/gitleaks/blob/7804d652c0460f0b61ea9bb2c1f202bfcdbbf144/cmd/detect.go",
+        "sc459999393a5": "https://github.com/gitleaks/gitleaks/blob/45266551ba14dcc339106a08acf6cd0a5e81c76f/cmd/detect.go",
+        "s0c9e8f865e54": "https://github.com/gitleaks/gitleaks/blob/7804d652c0460f0b61ea9bb2c1f202bfcdbbf144/cmd/root.go#L38-L56",
+        "seb8727e916d2": "https://github.com/gitleaks/gitleaks/blob/45266551ba14dcc339106a08acf6cd0a5e81c76f/cmd/root.go#L38-L56"
       }
     },
     "trufflehog": {
@@ -415,9 +449,9 @@ Claims (full source mapping in the JSON block below):
     "runtime-storage": {"text": "Load secrets from environment or a secret manager, including AWS Secrets Manager, Google Secret Manager, Azure Key Vault or the platform store; never put secrets in Dockerfile ENV/ARG, images or build logs; use temporary secret mounts for build-time secrets.", "components": ["owasp", "docker-build", "aws-store", "google-store", "azure-store"], "sources": ["owasp:s26a987a1053b", "docker-build:sd8afa286c173", "docker-build:s07e00829f121", "aws-store:s81b41c17ad57", "google-store:scd27be211781", "azure-store:seb86b29f4951"], "status": "REASONED"},
     "image-history": {"text": "The Docker image history reference's example history output shows an ENV instruction with its value; Docker image history shows image history; as this guide's assessment, Docker image history does not show every secret value.", "components": ["docker-build"], "sources": ["docker-build:s6283b172a5c6"], "status": "REASONED"},
     "random": {"text": "Generate a random secret per service and environment with the shown OpenSSL or Python command; never share staging and production credentials.", "components": ["owasp", "openssl-rand", "python-secrets"], "sources": ["owasp:s26a987a1053b", "openssl-rand:s11d11381b080", "python-secrets:sd2e8196eaa96"], "status": "REASONED"},
-    "scanners": {"text": "Scan before every push and in CI with gitleaks or TruffleHog. By source reading at every gitleaks tag from v8.19.1 to v8.30.1, cited at both ends, without a run, git and dir take the scan path from a positional argument that defaults to the current directory, as the shown gitleaks git . and gitleaks dir . commands need.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:sb16acfe1832b", "gitleaks:s0af97c8cbbb0", "gitleaks:s2a515c553a16", "gitleaks:s3cedc5927daf", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
-    "scanners-8190": {"text": "Gitleaks v8.19.0 git and dir are not established: by source reading without a run, both commands, and root initConfig when both --config and GITLEAKS_CONFIG are empty or unset, read a source flag that root.go, git.go and directory.go never register, calling log.Fatal on a lookup error. Other v8.19.0 command files were not read, so a registration elsewhere is not excluded.", "components": ["gitleaks-8190"], "sources": ["gitleaks-8190:s4ee488cd50ff", "gitleaks-8190:s17e3c5309e52", "gitleaks-8190:s9b18bf477a6e", "gitleaks-8190:s5c847ad43500"], "status": "REASONED"},
-    "scanners-detect": {"text": "The v8.18.4 gitleaks README, the last tag before v8.19.0, documents detect for git repositories, its --no-git option for files and directories, and a --source flag defaulting to the current directory; releases before v8.18.0 and detect's own source were not read.", "components": ["gitleaks-detect"], "sources": ["gitleaks-detect:s37819da2aec2", "gitleaks-detect:s12cd43a29383"], "status": "REASONED"},
+    "scanners": {"text": "Scan before every push and in CI with gitleaks or TruffleHog. By source reading at every gitleaks tag from v8.19.1 to v8.30.1, cited at both ends, without a run, git and dir take the scan path from a positional argument that defaults to the current directory, as the shown gitleaks git . and gitleaks dir . commands need.", "components": ["gitleaks", "trufflehog"], "sources": ["gitleaks:s4e82b98bf700", "gitleaks:sc7929445f947", "gitleaks:s2a515c553a16", "gitleaks:s3cedc5927daf", "trufflehog:s5450689a9bb8"], "status": "REASONED"},
+    "scanners-8190": {"text": "By source reading without a run at v8.19.0, only detect and protect register source across all seven top-level cmd files, each locally; neither git nor dir uses args. Both commands, and root initConfig when both --config and GITLEAKS_CONFIG are empty or unset, read source and call log.Fatal on lookup error; no run outcome is established.", "components": ["gitleaks-8190"], "sources": ["gitleaks-8190:s38ee01a95c8c", "gitleaks-8190:s5abcb8b428db", "gitleaks-8190:s8db158cb815b", "gitleaks-8190:s68724a6b5a24", "gitleaks-8190:s913053b5ad1e", "gitleaks-8190:s189c08d2f974", "gitleaks-8190:s4b5d9b2ab7a1", "gitleaks-8190:s8a2e9dc86ccd", "gitleaks-8190:s43b67b6788dd"], "status": "REASONED"},
+    "scanners-detect": {"text": "By source reading without a run at v8.17.0, v8.18.0 and v8.18.4, detect reads source and selects files with --no-git, otherwise stdin with --pipe, otherwise Git history. At all three tags the root registers persistent --source with default '.'.", "components": ["gitleaks-detect"], "sources": ["gitleaks-detect:s6686fd9533da", "gitleaks-detect:s71b141fe4768", "gitleaks-detect:s342bdd9096ec", "gitleaks-detect:sc8ca694b4c7a", "gitleaks-detect:sdf22d8b973ff", "gitleaks-detect:sc459999393a5", "gitleaks-detect:s0c9e8f865e54", "gitleaks-detect:seb8727e916d2"], "status": "REASONED"},
     "argv": {"text": "Arguments expose secrets through procfs, ps and shell history; hidepid or PID namespaces narrow process visibility without covering history.", "components": ["proc", "apache"], "sources": ["proc:s801d5f1ee88d", "apache:scde9004bb967"], "status": "REASONED"},
     "stdin": {"text": "Use htpasswd -i, docker login --password-stdin or gh auth login --with-token to avoid secret arguments.", "components": ["apache", "docker", "gh"], "sources": ["apache:scde9004bb967", "docker:sf8243a183d67", "gh:sf0b01ee9b3e1"], "status": "REASONED"},
     "credential-files": {"text": "Protect plaintext credential files with umask 077 and mode 0600; PostgreSQL ignores group/world-readable .pgpass.", "components": ["postgres", "curl"], "sources": ["postgres:s198d4780d9a4", "curl:s3a0a54039912"], "status": "REASONED"},
@@ -434,7 +468,7 @@ Claims (full source mapping in the JSON block below):
     "history-cleanup": {"text": "History rewriting with git-filter-repo is hygiene after rotation, not containment or unpublishing.", "components": ["git-filter-repo", "owasp"], "sources": ["git-filter-repo:s95bf8a949d5e", "owasp:s26a987a1053b"], "status": "REASONED"},
     "leak-audit": {"text": "Review provider logs for use of the leaked credential during its exposure window.", "components": ["owasp"], "sources": ["owasp:s26a987a1053b"], "status": "REASONED"},
     "encrypted-git": {"text": "SOPS with age encrypts YAML/JSON/ENV values while preserving structure for secrets that must be versioned; keep decryption keys outside the repository.", "components": ["sops", "age"], "sources": ["sops:s78c5bb528dc4", "age:sca8b0d211739"], "status": "REASONED"},
-    "verify-scan": {"text": "With gitleaks 8.19.1 or later, gitleaks must exit 0 with no findings before clean is printed; the v8.30.1 README lists exit 0 for no leaks and 1 for leaks or an error. This rule-based scan is the primary gate.", "components": ["gitleaks"], "sources": ["gitleaks:sb16acfe1832b", "gitleaks:s2a515c553a16", "gitleaks:s8b08240c42e9"], "status": "REASONED", "verify": [1]},
+    "verify-scan": {"text": "With gitleaks 8.19.1 or later, gitleaks must exit 0 with no findings before clean is printed; the v8.30.1 README lists exit 0 for no leaks and 1 for leaks or an error. This rule-based scan is the primary gate.", "components": ["gitleaks"], "sources": ["gitleaks:s4e82b98bf700", "gitleaks:s2a515c553a16", "gitleaks:s8b08240c42e9"], "status": "REASONED", "verify": [1]},
     "verify-patterns": {"text": "Supplementary grep prints filenames only, when null binary data is discovered assumes unprocessed input does not match, skips excluded trees; as this guide's advice, a non-zero exit caused by a read error is a failed check; as this guide's assessment, empty output is not proof of no secret. GNU grep documents -E as extended regular expression syntax.", "components": ["grep", "owasp"], "sources": ["grep:s33689bc366bf", "grep:s2c1251092e66", "grep:sea43e82b0753", "grep:sbd30b628a5b8", "owasp:s26a987a1053b"], "status": "REASONED", "verify": [1]}
   }
 }
