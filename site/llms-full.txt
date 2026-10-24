@@ -46795,6 +46795,8 @@ REASONED: tenant isolation and bypass positive control. A live PostgreSQL with p
 
 ## Sources (checked September 2026)
 
+The September 2026 date records the guide-wide documentation check; Sources items marked "checked October 2026" or "captured October 15, 2026" were checked or rechecked individually; other items, or parts of items, pinned to a release or commit carry no check date, and some were first cited in October 2026.
+
 - Milvus Compose configuration and credentials (v2.6.24, pinned commit): image paths, file precedence, environment formatter, authentication/TLS keys and storage defaults: https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/deployments/docker/standalone/docker-compose.yml#L21-L32, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/build/docker/milvus/ubuntu22.04/Dockerfile#L37, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/base_table.go#L69-L72, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/base_table.go#L145-L153, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/base_table.go#L248-L264, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/component_param.go#L974-L979, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/grpc_param.go#L112-L139, https://github.com/milvus-io/milvus/blob/08c637c14373ec904dcac08e4df67279de421917/pkg/util/paramtable/service_param.go#L1452-L1477
 - Milvus Compose configuration and credentials (v3.0.2, pinned commit): image paths, the image's runtime user (`USER ${MILVUS_RUNTIME_USER}`, default `milvus:milvus`), file precedence, environment formatter, authentication/TLS keys and storage defaults: https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/deployments/docker/standalone/docker-compose.yml#L21-L32, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/build/docker/milvus/ubuntu22.04/Dockerfile#L39, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/build/docker/milvus/ubuntu22.04/Dockerfile#L58-L59, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/build/docker/milvus/ubuntu22.04/Dockerfile#L16, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/base_table.go#L69-L72, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/base_table.go#L145-L153, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/base_table.go#L249-L265, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/component_param.go#L1046-L1051, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/grpc_param.go#L111-L138, https://github.com/milvus-io/milvus/blob/3c4448a2aee506ccd14851e742aba85f1c83188a/pkg/util/paramtable/service_param.go#L1633-L1658
 - Docker Compose env-files and environment precedence, read-only mounts, and secrets as files requiring image support: https://docs.docker.com/reference/compose-file/services/#env_file, https://docs.docker.com/reference/compose-file/services/#volumes and https://docs.docker.com/compose/how-tos/use-secrets/
@@ -46978,7 +46980,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "a4e0c1f38d4bd72538480d62ed3956f15f2f24ca9afb6095e41149c9e045cd99",
+  "body_sha256": "13aeec50487187040b18a433ae8678a85243c42d21fbd050fb6fe979b4e2061a",
   "components": {
     "q": {
       "name": "Qdrant source",
@@ -63150,6 +63152,8 @@ service result or deployed-bundle scan is claimed.
 
 ## Sources (checked September 2026)
 
+The September 2026 date in this heading is the guide-wide documentation check; items, or parts of items, marked "checked October 2026" were checked or rechecked individually in October 2026; other items pinned to a release or commit carry no check date, and some were first cited in October 2026.
+
 - PocketBase going to production (rolling documentation, checked September 2026): https://pocketbase.io/docs/going-to-production/
 - PocketBase API rules and filters (rolling documentation, checked September 2026): https://pocketbase.io/docs/api-rules-and-filters/
 - Appwrite self-hosting production security (rolling documentation, checked September 2026): https://appwrite.io/docs/advanced/self-hosting/production/security
@@ -63386,7 +63390,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "a933a45fbcf3ca4a615f5fde233f66db004b67256ab2baea0cd043936ae1e087",
+  "body_sha256": "a0d9600f4c66b6f3198076e7d9eab08ee5a8e880dac1c0c3ecc1614e8d118990",
   "components": {
     "pb": {
       "name": "PocketBase",
