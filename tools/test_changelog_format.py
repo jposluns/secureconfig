@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Exercise recorded CHANGELOG format cases through the shipped gate on throwaway trees.
 
-Each rule has a failing fixture and a passing twin that differs only in the defect, so a
-case fails when its check is removed rather than passing for another reason. The last case
-records what the gate does NOT model, so this file cannot quietly start claiming it.
+Apart from the cases that check how findings are reported, the fail-closed cases and the
+last cases, each failing fixture has a passing twin that differs only in the defect, so a
+case fails when its check is removed rather than passing for another reason. The last
+cases record what the gate does NOT model, so this file cannot quietly start claiming it.
 """
 import subprocess
 import sys
@@ -64,18 +65,23 @@ def main():
                              "blank line (line 10 is '- A change (#1)')",
                       absent=("strictly descending", "repeats"))
         count += case(log(day("2026-10-23"), "## 2026-09-19\n\n- A change (#1)\n"))
-        # A line holding only spaces or tabs is not an empty line.
+        # A line holding only spaces or tabs is not an empty line, and the twin with an empty
+        # line passes.
         count += case(log("## 2026-09-19\n \n- A change (#1)\n"), expected=1,
                       needle="CHANGELOG.md:5: `## 2026-09-19` is not followed by a blank line "
                              "(line 6 is ' ')")
         count += case(log("## 2026-09-19\n\t\n- A change (#1)\n"), expected=1,
                       needle="(line 6 is '\\t')")
-        # A dated heading on the last line, with or without a final LF, has no blank line after it.
+        count += case(log("## 2026-09-19\n\n- A change (#1)\n"))
+        # A dated heading on the last line, with or without a final LF, has no blank line after
+        # it, and the twin that ends with the blank line passes.
         count += case(log(day("2026-10-23"), "## 2026-09-19\n"), expected=1,
                       needle="CHANGELOG.md:9: `## 2026-09-19` is the last line; a blank line "
                              "must follow it")
         count += case(log(day("2026-10-23"), "## 2026-09-19"), expected=1,
                       needle="CHANGELOG.md:9: `## 2026-09-19` is the last line")
+        count += case(log(day("2026-10-23"), "## 2026-09-19\n\n"),
+                      needle=OK + "2 dated headings from 2026-10-23 to 2026-09-19")
         # Every violation is listed, one line each, as the six row 3.45 headings would be.
         count += case(log("## 2026-09-15\n- A (#1)\n", "## 2026-09-14\n- B (#2)\n"), expected=1,
                       needle="CHANGELOG.md:5: `## 2026-09-15` is not followed by a blank line",
@@ -96,11 +102,13 @@ def main():
                              "at line 9",
                       absent=("CHANGELOG.md:17:",))
         # Dates compare as dates across a year boundary, and trailing spaces or tabs keep a
-        # line a dated heading, as `latest_change()` reads it, so it is still ordered.
+        # line a dated heading, as `latest_change()` reads it, so it is still ordered, and its
+        # twin in order passes.
         count += case(log(day("2027-01-01"), day("2026-12-31")))
         count += case(log("## 2026-09-14 \t\n\n- A (#1)\n\n", day("2026-09-15")), expected=1,
                       needle="CHANGELOG.md:9: `## 2026-09-15` is newer than `## 2026-09-14` "
                              "at line 5")
+        count += case(log("## 2026-09-15 \t\n\n- A (#1)\n\n", day("2026-09-14")))
 
         # Rule 3, one heading per date: an adjacent repeat is reported once, as a repeat,
         # and its twin with distinct dates passes.
@@ -115,30 +123,46 @@ def main():
                       also=("CHANGELOG.md:13: `## 2026-10-23` is newer than `## 2026-10-22` "
                             "at line 9",))
 
-        # A dated heading must name a calendar date.
+        # A dated heading must name a calendar date, and each twin, one digit away, passes.
         count += case(log(day("2026-02-30")), expected=1,
                       needle="CHANGELOG.md:5: `## 2026-02-30` is not a calendar date")
+        count += case(log(day("2026-02-20")))
         count += case(log(day("2026-13-01")), expected=1,
                       needle="`## 2026-13-01` is not a calendar date")
+        count += case(log(day("2026-12-01")))
 
         # A line that opens like a dated heading but is not exactly one fails, so a
-        # malformed heading cannot drop out of the three rules.
+        # malformed heading cannot drop out of the three rules, and the exact heading passes.
         for line in ("### 2026-09-14", "# 2026-09-14", "##2026-09-14", "## 2026-9-14",
                      "## 2026-09-14 (late)", "## 2026-09-14\r", "   ## 2026-09-14",
                      "##\t2026-09-14"):
             count += case(log(day("2026-10-23"), line + "\n\n- A (#1)\n"), expected=1,
                           needle=f"CHANGELOG.md:9: {line!r} opens like a dated heading but "
                                  "is not exactly `## YYYY-MM-DD`")
+        count += case(log(day("2026-10-23"), "## 2026-09-14\n\n- A (#1)\n"),
+                      needle=OK + "2 dated headings from 2026-10-23 to 2026-09-14")
         # Headings that do not open with a date are not dated headings and are not checked.
         count += case(log("## Unreleased\n- pending\n", day("2026-09-14"),
                           "### Added\n- A (#1)\n"),
                       needle=OK + "1 dated heading from 2026-09-14 to 2026-09-14")
         # A changelog saved with CRLF endings fails on every dated heading rather than
-        # passing with its headings unread.
+        # passing with its headings unread, and the same changelog with LF endings passes.
         count += case(log(day("2026-10-23"), day("2026-10-22")).replace("\n", "\r\n"),
                       expected=1,
                       needle="CHANGELOG.md:5: '## 2026-10-23\\r' opens like a dated heading",
-                      also=("CHANGELOG.md:9: '## 2026-10-22\\r' opens like a dated heading",))
+                      also=("CHANGELOG.md:9: '## 2026-10-22\\r' opens like a dated heading",
+                            "CHANGELOG.md:1: this line holds a carriage return, the first of 12 "
+                            "in the file"))
+        count += case(log(day("2026-10-23"), day("2026-10-22")))
+        # A lone CR ends a line for `latest_change()` but not for the gate, so a heading after
+        # one is read there and never checked here; it fails, and the twin with a space passes.
+        count += case(log(day("2026-10-23", "- A change (#1)\r## 2027-01-01\n")), expected=1,
+                      needle="  FAIL  CHANGELOG.md:7: this line holds a carriage return, the "
+                             "first of 1 in the file; `latest_change()` ends a line at CR, and "
+                             "this gate splits on LF alone",
+                      absent=("opens like",))
+        count += case(log(day("2026-10-23", "- A change (#1) ## 2027-01-01\n")),
+                      needle=OK + "1 dated heading from 2026-10-23 to 2026-10-23")
 
         # Fail closed: no dated heading, an empty file, a missing file, or one not UTF-8.
         count += case("# Changelog\n\n- nothing dated\n", expected=1,
@@ -157,6 +181,11 @@ def main():
                       needle="CHANGELOG.md:10: `## 2026-10-24` is not followed by a blank line",
                       also=("CHANGELOG.md:10: `## 2026-10-24` is newer than `## 2026-10-23` "
                             "at line 5",))
+        # Known limit: a heading dated in another shape does not open like a dated heading,
+        # so it passes unchecked; `latest_change()` does not read it either.
+        for line in ("## 20260914", "## 2026/09/14"):
+            count += case(log(day("2026-10-23"), line + "\n- A (#1)\n"),
+                          needle=OK + "1 dated heading from 2026-10-23 to 2026-10-23")
     except (AssertionError, OSError, subprocess.SubprocessError) as exc:
         print(f"  FAIL  changelog-format gate self-test: {exc}")
         return 1
