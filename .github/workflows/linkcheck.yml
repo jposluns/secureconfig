@@ -11,7 +11,7 @@ permissions:
 jobs:
   lychee:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       # Pinned to full commit SHAs for the reason given in checks.yml; the comment names the release.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
@@ -79,6 +79,12 @@ jobs:
           format: json
           output: lychee/out.json
           # Verbose retains success_map and redirect_map, including accepted bot blocks.
+          # One retry, not the v0.24.2 default of three (TODO 3.40): requests to one URL wait in
+          # one queue whatever their fragment, and a timeout is not shared along that queue, so
+          # each retry lengthens the queue for an unreachable host. Only timeouts and some network
+          # errors are retried here, never a 404 or 410. The 75-minute job limit covers an
+          # estimated 57 minutes: two attempts of 20 s, plus 0.8 s inferred from the log, at each
+          # of 80 occurrences of one URL, plus 1.6 minutes before the first savannah result.
           # This exact URL is a backend configuration value in open-webui.md,
           # not a citation or GET resource. Keep its child paths and docs checked.
           args: >-
@@ -86,6 +92,7 @@ jobs:
             --verbose
             --root-dir ${{ github.workspace }}/site
             --accept 200,201,204,301,302,403,429,999
+            --max-retries 1
             --exclude '[<>]'
             --exclude '^https://api\.openai\.com/v1$'
             --exclude '\$'
