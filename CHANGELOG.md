@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-24
+
+- `elasticsearch.md`: the OpenSearch GCS/Azure section now warns readers not to rely on an index's `index.store.crypto.key_provider` setting to encrypt GCS or Azure snapshots, because by source reading at 3.5.0 and 3.9.0, without an OpenSearch run, the Azure container rejects the resulting index-level `CryptoMetadata` on shard-file writes and the GCS container drops it (TODO 1.331). The GCS reading now also covers 3.5.0, eleven pinned source URLs and the claim `os-gcs-azure-index-advice` are added, and TODO 1.297 now carries the GCS question at 3.6.0 to 3.8.0 and whether an index can carry that setting at all (#842)
+
 ## 2026-10-23
 
 - `ollama.md` (TODO 1.363, closed): the section 9 prose now says `checkEnv` "selects" the Windows build architecture, where it said "detects", since by source reading at v0.34.2 without a run `build_windows.ps1` lines 211 to 212 take an explicit `ARCH` value, and line 427's "only" now follows "in its output file name". By the same reading, `app_darwin.go` lines 1694 to 1698 return a failed profile change without stopping a Claude Desktop gateway that already existed, so line 427, the model-mapping Sources label and `profiling-app-gateway-start` now scope that path's stop to when it finds no gateway. Two Sources items and `ollama` keys (`sd1743f37dd2c`, `s8b982a956f29`) are added, `profiling-app-release` drops `sfbdb6f7a76af`, and `body_sha256` is rebound (#838)
