@@ -17,21 +17,18 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
-- **TODO 1.306: Ubuntu coverage only through Ubuntu Pro is not current support, 2026-10-24 (#864).**
-  The maintainer ruled live to the
-  orchestrator at 2026-10-24T12:48:39Z that Ubuntu coverage given only through Ubuntu Pro (Expanded Security
-  Maintenance, and the legacy add-on) does not count as "currently supported" for `self-signed.md`'s trust-store
-  citations; standard support only. So Ubuntu trusty, xenial and bionic need no citation under TODO row 1.306, and
-  the cited focal, whose standard security maintenance ended in May 2025, is a cited release past standard support.
-  This answers the question that DONE 1.306 (#861) recorded as open under the 2026-10-22 "Supported releases only"
-  ruling below, which otherwise stands. The option the maintainer chose gave its reason as "Pro is a paid
-  extension".
-  The maintainer refined this ruling at 2026-10-24T13:29:48Z: #864 adds dated documentation readings to
-  `self-signed.md` noting the cited focal as past standard security maintenance and the cited bullseye as past
-  Debian LTS, keeping both citations (#864's reason: they still document those releases' commands).
-  This supersedes #861's
-  records-only assessment for bullseye; the guide also records that Debian's Status cell still says LTS support
-  despite its End of LTS date of 2026-08-31.
+- **TODO 1.306: Ubuntu coverage only through Ubuntu Pro is not current support, 2026-10-24 (#864).** The maintainer
+  ruled live to the orchestrator at 2026-10-24T12:48:39Z that Ubuntu coverage given only through Ubuntu Pro
+  (Expanded Security Maintenance, and the legacy add-on) does not count as "currently supported" for
+  `self-signed.md`'s trust-store citations; standard support only. So Ubuntu trusty, xenial and bionic need no
+  citation under TODO row 1.306, and the cited focal, whose standard security maintenance ended in May 2025, is a
+  cited release past standard support. This answers the question that DONE 1.306 (#861) recorded as open under the
+  2026-10-22 "Supported releases only" ruling below, which otherwise stands. The option the maintainer chose gave
+  its reason as "Pro is a paid extension". The maintainer refined this ruling at 2026-10-24T13:29:48Z: #864 adds
+  dated documentation readings to `self-signed.md` noting the cited focal as past standard security maintenance and
+  the cited bullseye as past Debian LTS, keeping both citations (#864's reason: they still document those releases'
+  commands). This supersedes #861's records-only assessment for bullseye; the guide also records that Debian's
+  Status cell still says LTS support despite its End of LTS date of 2026-08-31.
 - **TODO 1.347 and 1.348: end state Done, revisit tracked outside the public backlog, 2026-10-24 (#839).** The
   maintainer ruled live on 2026-10-24 on three points raised while drafting #839's rework for the 2026-10-23 "Hold
   until VM" ruling below, choosing the recommended option on each. First, the closed rows 1.347 (`n8n.md`) and
