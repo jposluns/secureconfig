@@ -22,12 +22,13 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   was recorded beyond the maintainer's words quoted below.
   - The documentation date, the p172a question on TODO 1.329 and 1.370. The maintainer's words: "guide-wide
     documentation date only. Keep September 2026 until a guide-wide recheck supports advancing; later checks stay
-    recorded on their own Sources items, with the scope explained." Its effect (applied by #871): both rows stay open
-    for a guide-wide recheck of `vector-databases.md` and `pocketbase.md`, whose `documentation_checked` stays 2026-09.
-  - The observation-only `paas.md` items, p169a proposal 4. The maintainer's words: "move the observation-only paas.md
-    items (Railway HEAD redirect, Render redirect status, Heroku Cedar listener address, header sanitization by
-    observation) into one live-checks TODO row; 1.266 and 1.268 keep only documentation items." Applied by #871 as
-    TODO row 1.374.
+    recorded on their own Sources items, with the scope explained." Its effect (applied by #871): both rows stay
+    open for a guide-wide recheck of `vector-databases.md` and `pocketbase.md`, whose `documentation_checked` stays
+    2026-09.
+  - The observation-only `paas.md` items, p169a proposal 4. The maintainer's words: "move the observation-only
+    paas.md items (Railway HEAD redirect, Render redirect status, Heroku Cedar listener address, header
+    sanitization by observation) into one live-checks TODO row; 1.266 and 1.268 keep only documentation items."
+    Applied by #871 as TODO row 1.374.
   - Vercel 1.266-d, p169a proposal 5. The maintainer's words: "split Vercel 1.266-d; retire the handler (Functions)
     mode on the docs' no-server statement; keep the Express port-listener question open." Applied by #871, which
     records the retirement in DONE.md under 1.266.
