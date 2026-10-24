@@ -12,7 +12,7 @@ WHAT IT CHECKS, reading CHANGELOG.md as LF-separated lines:
 
 - a dated heading is a line that is exactly `## YYYY-MM-DD`, with trailing spaces or tabs
   allowed, the shape `latest_change()` reads, so the two gates agree on which lines are
-  dated headings;
+  dated headings in a changelog with no CR, which the carriage-return check below requires;
 - the line after each dated heading is empty; a line holding only spaces or tabs is not,
   and neither is the end of the file;
 - each dated heading names a calendar date older than the dated heading above it, so the
@@ -23,6 +23,10 @@ WHAT IT CHECKS, reading CHANGELOG.md as LF-separated lines:
   spaces, one or more `#`, optional spaces or tabs, then four digits and a hyphen, which
   covers `### 2026-09-14`, `##2026-09-14`, `## 2026-9-14`, `## 2026-09-14 (late)` and a
   heading ending in CR, so a CRLF-saved changelog fails on every dated heading;
+- no line holds a carriage return: `latest_change()` reads with `read_text`, which ends a
+  line at CR as well as at LF, so a lone CR before `## 2027-01-01` would start a dated
+  heading that it reads and this gate never checks. One finding, at the first line holding
+  a CR, gives the file's count;
 - a changelog with no dated heading fails rather than passing vacuously.
 
 An out-of-order heading is reported against the dated heading directly above it, so one
@@ -40,6 +44,8 @@ no fenced block when this gate was added. It does not check the bullets under a 
 their order, the older `###` subheadings, whether a date is the UTC date its changes landed
 (the changelog's preamble says headings before 2026-09-27 were not held to one timezone),
 or whether a date is in the future, which would need a clock this gate does not read.
+A heading dated in another shape, such as `## 20260914` or `## 2026/09/14`, does not open
+like a dated heading, so it passes unchecked; `latest_change()` does not read it either.
 
 Deterministic and offline: it reads CHANGELOG.md only. A missing or non-UTF-8 file is an
 error, not a pass.
@@ -65,7 +71,15 @@ def check(lines):
     headings = []
     first_line = {}
     previous = None
+    # `latest_change()` also ends a line at CR, so a CR could hide a heading it reads from
+    # the checks below. One finding, at the first line holding a CR, covers the file.
+    first_cr = next((number for number, line in enumerate(lines, 1) if "\r" in line), None)
     for number, line in enumerate(lines, 1):
+        if number == first_cr:
+            count = sum(text.count("\r") for text in lines)
+            findings.append((number, f"this line holds a carriage return, the first of {count} "
+                                     "in the file; `latest_change()` ends a line at CR, and "
+                                     "this gate splits on LF alone"))
         match = HEADING.fullmatch(line)
         if not match:
             if LOOKS_DATED.match(line):
