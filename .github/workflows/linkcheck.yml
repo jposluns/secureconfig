@@ -83,7 +83,8 @@ jobs:
           # one queue whatever their fragment, and a timeout is not shared along that queue, so
           # each retry lengthens the queue for an unreachable host. Only timeouts and some network
           # errors are retried here, never a 404 or 410. The 75-minute job limit covers an
-          # estimated 57 minutes for two 20 s attempts at each of 80 occurrences of one URL.
+          # estimated 57 minutes: two attempts of 20 s plus the 0.8 s seen in the log at each of
+          # 80 occurrences of one URL, plus 1.6 minutes before the first result.
           # This exact URL is a backend configuration value in open-webui.md,
           # not a citation or GET resource. Keep its child paths and docs checked.
           args: >-
