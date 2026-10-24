@@ -12,7 +12,7 @@ service can change a gate's answer, and a pull request number is only knowable f
 
 ## 2026-10-24
 
-- `pocketbase.md` (TODO 1.332, partial): the Appwrite source limits now say that, by source reading of 2.2.0 without a run, the console variables endpoint reports `_APP_DB_ADAPTER` with a `mariadb` fallback while the pools fall back to `postgresql`, so a deployment that leaves the variable unset reports `mariadb` over Postgres pools, and both read a set value. The guide now tells readers not to rely on the console value to identify their 2.2.0 adapter and to check the `appwrite` service's environment, cites the command-line install task's default and `.env` write, and adds two REASONED claims. The observed run stays open under 1.332. (#840)
+- `pocketbase.md` (TODO 1.332, partial): the Appwrite source limits now say that, by source reading of 2.2.0 without a run, the console variables endpoint reports `_APP_DB_ADAPTER` through its response model with a `mariadb` fallback while the pools fall back to `postgresql`, so a deployment that leaves the variable unset reports `mariadb` over Postgres pools, and both read a set value. The guide now tells readers not to rely on the console value to identify their 2.2.0 adapter and to check the `appwrite` service's environment, cites the response model's adapter rule and the command-line install task's default and `.env` write, and adds two REASONED claims. The observed run stays open under 1.332. (#840)
 
 ## 2026-10-23
 
