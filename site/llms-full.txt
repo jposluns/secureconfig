@@ -20418,7 +20418,7 @@ curl -q -g -s --noproxy '*' -o /dev/null -w 'http=%{http_code}\n' https://app.ex
 - Fly HTTP handler forwarded-protocol header (checked October 2026; commit 2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9): https://github.com/superfly/docs/blob/2f68a40e09bb6ef4c4ac6f90c15c1cf5a176d7e9/networking/services.mdx#L117-L123
 - Railway public-networking headers and request handling (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/public-networking/specs-and-limits.md#L16-L17
 - Railway GET redirect status and POST conversion (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/public-networking/specs-and-limits.md#L37-L38. The two complete entries state: "Plain HTTP GET requests will be redirected to HTTPS with a `301` response." and "Plain HTTP POST requests will be converted to GET requests." This guide's assessment: these entries state none of the following: HEAD behaviour, a POST status code or a configurable redirect toggle.
-- Railway HTTP POST redirect status and client method change (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/troubleshooting/405-method-not-allowed.md#L8-L18. The page states: "This occurs because your request was made using HTTP. Railway will attempt to redirect your insecure request with a 301 Moved Permanently status code." It continues: "When an HTTP client encounters a 301 Moved Permanently redirect, the client will follow the redirect." It then says that, according to the HTTP/1.1 specifications, "the client will typically change the request method from POST to GET when it follows the redirect to the new URL". Line 8 places this in "a POST request to your application" that "is redirected to a GET request". This guide's assessment: these lines state no HEAD behaviour or configurable redirect toggle.
+- Railway HTTP POST redirect status and client method change (checked October 2026; commit 72354493198302677fb6be6c692dd75c64cae2c6): https://github.com/railwayapp/docs/blob/72354493198302677fb6be6c692dd75c64cae2c6/content/docs/networking/troubleshooting/405-method-not-allowed.md#L8-L18. The page states: "This occurs because your request was made using HTTP. Railway will attempt to redirect your insecure request with a 301 Moved Permanently status code." It continues: "When an HTTP client encounters a 301 Moved Permanently redirect, the client will follow the redirect." It then says that, according to the HTTP/1.1 specifications, "the client will typically change the request method from POST to GET when it follows the redirect to the new URL". The page's line 8 places this in "a POST request to your application" that "is redirected to a GET request". This guide's assessment: these lines state no HEAD behaviour or configurable redirect toggle.
 
 
 <!-- version-basis:start -->
@@ -20480,7 +20480,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-22",
   "documentation_checked": "2026-09",
-  "body_sha256": "ad13fa0478e68725daf827a1985e9d9884de6aa8e5ae93a0a7707aeb50b77fc4",
+  "body_sha256": "1aeda77427b0be83102c7651553bd4aaf50b158fbfe3074659c758067b4dde25",
   "components": {
     "render": {
       "name": "Render documentation",
