@@ -17,6 +17,19 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
+- **Maintainer rulings of 2026-10-24 on the Sources-preface scope sentences, TODO 1.329 and 1.370 (#873).** The
+  maintainer ruled live twice through AskUserQuestion. No reasoning was recorded beyond the maintainer's words
+  quoted below.
+  - The scope sentence, at 2026-10-24T18:03:46Z, refining the 17:10:05Z documentation-date ruling below. The
+    maintainer's words: "add a scope sentence to each affected guide's Sources preface (vector-databases.md,
+    pocketbase.md): the September date is the guide-wide check, and items marked October were rechecked
+    individually; tracked in TODO 1.329 and 1.370." Its effect (applied by #873): each preface says "checked or
+    rechecked", because some October-marked items were first cited in October.
+  - The refinement, at 2026-10-24T20:04:36Z on re-ask, resolving the question #873 was held on. The maintainer's
+    words: "add a clause to each Sources-preface scope sentence: items pinned to a release or commit carry no check
+    date, and some were first cited in October 2026." Its effect (applied by #873): each clause opens "other
+    items", because pinned items marked "checked October 2026" do carry a check date, and `vector-databases.md`'s
+    adds "or parts of items" for its Milvus `/healthz` item. Both rows stay open for the guide-wide recheck.
 - **Maintainer rulings of 2026-10-24 on the documentation date and `paas.md` TODO 1.266 and 1.268 (#871).** The
   maintainer ruled live on three questions at 2026-10-24T17:10:05Z, the first through AskUserQuestion. No reasoning
   was recorded beyond the maintainer's words quoted below.

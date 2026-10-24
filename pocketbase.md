@@ -853,7 +853,7 @@ service result or deployed-bundle scan is claimed.
 
 ## Sources (checked September 2026)
 
-The September 2026 date in this heading is the guide-wide documentation check; items, or parts of items, marked "checked October 2026" were checked or rechecked individually in October 2026.
+The September 2026 date in this heading is the guide-wide documentation check; items, or parts of items, marked "checked October 2026" were checked or rechecked individually in October 2026; other items pinned to a release or commit carry no check date, and some were first cited in October 2026.
 
 - PocketBase going to production (rolling documentation, checked September 2026): https://pocketbase.io/docs/going-to-production/
 - PocketBase API rules and filters (rolling documentation, checked September 2026): https://pocketbase.io/docs/api-rules-and-filters/
@@ -1091,7 +1091,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "7e91e9b3e4e972907a876a3c96412dc893b5754a6b963d4eec44ebc9951784d2",
+  "body_sha256": "a0d9600f4c66b6f3198076e7d9eab08ee5a8e880dac1c0c3ecc1614e8d118990",
   "components": {
     "pb": {
       "name": "PocketBase",
