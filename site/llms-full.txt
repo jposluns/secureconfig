@@ -943,10 +943,15 @@ Distribute the certificate (or your internal CA certificate) to clients instead 
 
 Debian trixie and Ubuntu noble remain cited; the Debian bookworm and bullseye and Ubuntu jammy and focal manpages also document `update-ca-certificates` including `.crt` certificates under `/usr/local/share/ca-certificates` as implicitly trusted (see Sources). The Ubuntu resolute manpage words this slightly differently, saying that such certificates "are also included and implicitly trusted", and tells the reader to copy PEM certificates with the `.crt` extension to `/usr/local/share/ca-certificates` and then run `update-ca-certificates` (see Sources). Use on other Debian and Ubuntu releases remains this guide's assessment, with release-specific citations absent.
 
+Documentation reading on 2026-10-24: Debian's releases page gives bullseye's End of LTS as 2026-08-31, now past, although its Status cell still says LTS support (see Sources). Documentation reading on 2026-10-24: Ubuntu's release-cycle page gives focal's standard security maintenance as ending May 2025, now past, with coverage after that only through Ubuntu Pro (see Sources). Both the bullseye and focal manpage citations remain because they still document those releases' commands.
+
 RHEL 9 remains cited, and the RHEL 8 shared system certificates page also says to copy a certificate in the simple PEM or DER file formats to `/usr/share/pki/ca-trust-source/anchors/` or `/etc/pki/ca-trust/source/anchors/` and run `update-ca-trust extract` (see Sources). The CentOS Stream 8, 9 and 10 package manuals and the Fedora rawhide, 41, 42, 43, 44 and 45 branch dist-git manuals instruct adding a simple PEM or DER certificate to `/etc/pki/ca-trust/source/anchors/` and running `update-ca-trust extract` (see Sources). The Fedora 41, 42 and 43 branch manuals, at the pinned commits, give this instruction on the same lines 97 to 99 as the cited rawhide manual, with no difference from the rawhide citation there. The CentOS Stream 9 and Fedora 44 and 45 branch manuals, at the pinned commits, also give it on lines 97 to 99. CentOS Stream is not RHEL, rawhide is Fedora's development branch, not a released Fedora, and this guide does not establish whether Fedora 45 has been released; use on other RHEL releases (including 10), other Fedora releases and other CentOS Stream releases remains this guide's assessment, with release-specific citations absent.
 
 ```bash
 # Debian trixie/bookworm/bullseye and Ubuntu resolute/noble/jammy/focal system trust store; other releases: this guide's assessment
+# Documentation reading, 2026-10-24 (see Sources): bullseye past Debian LTS (End of LTS 2026-08-31; Status still says LTS support).
+# Focal past standard security maintenance (ended May 2025); coverage after that only through Ubuntu Pro.
+# Both manpage citations still document those releases' commands.
 sudo cp server.crt /usr/local/share/ca-certificates/app-internal.crt
 sudo update-ca-certificates
 
@@ -1008,6 +1013,8 @@ Self-signed certificates have no revocation and no third-party accountability, a
 - Fedora rawhide development branch, not a released Fedora, ca-certificates commit 725690846ee1ae1cd46e62c3a336c84820390d27, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://src.fedoraproject.org/rpms/ca-certificates/blob/725690846ee1ae1cd46e62c3a336c84820390d27/f/update-ca-trust.8.txt#_97 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract.
 - Debian bullseye update-ca-certificates (checked October 2026): https://manpages.debian.org/bullseye/ca-certificates/update-ca-certificates.8.en.html ; "Furthermore all certificates with a .crt extension found below /usr/local/share/ca-certificates are also included as implicitly trusted."
 - Ubuntu focal update-ca-certificates (checked October 2026): https://manpages.ubuntu.com/manpages/focal/man8/update-ca-certificates.8.html ; "Furthermore all certificates with a .crt extension found below /usr/local/share/ca-certificates are also included as implicitly trusted."
+- Debian releases, Index of releases, bullseye row (checked October 2026): https://www.debian.org/releases/ ; read 2026-10-24, End of LTS and Status columns.
+- Ubuntu release cycle, Selected product coverage details, Ubuntu 20.04 LTS row (checked October 2026): https://ubuntu.com/about/release-cycle ; read 2026-10-24, Standard security maintenance and Ubuntu Pro columns.
 - Fedora 41 branch ca-certificates commit ea529bea8d6f00da8edfa62c87d115bc023b4b67, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://src.fedoraproject.org/rpms/ca-certificates/blob/ea529bea8d6f00da8edfa62c87d115bc023b4b67/f/update-ca-trust.8.txt#_97 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract, as the cited rawhide lines do.
 - Fedora 42 branch ca-certificates commit f00d2386f44d6dbcabc18becf7843c789584cfbc, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://src.fedoraproject.org/rpms/ca-certificates/blob/f00d2386f44d6dbcabc18becf7843c789584cfbc/f/update-ca-trust.8.txt#_97 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract, as the cited rawhide lines do.
 - Fedora 43 branch ca-certificates commit e73db0bb0458f65d530ae5901de2be73f7d7fb80, update-ca-trust.8.txt lines 97 to 99 (checked October 2026): https://src.fedoraproject.org/rpms/ca-certificates/blob/e73db0bb0458f65d530ae5901de2be73f7d7fb80/f/update-ca-trust.8.txt#_97 ; QUICK HELP 1 specifies a simple PEM or DER certificate, /etc/pki/ca-trust/source/anchors/ and update-ca-trust extract, as the cited rawhide lines do.
@@ -1099,7 +1106,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "2e92eb93dfc9cb63f01d8856e822d57481e5a3ab9e8362d0b43a7bc9897e4720",
+  "body_sha256": "101fa481026d71d13f0fcebbfd457d2978252b690e8344173cf40375c2a88869",
   "components": {
     "openssl": {
       "name": "OpenSSL documentation (rolling)",
