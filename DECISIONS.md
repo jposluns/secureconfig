@@ -25,6 +25,11 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   This answers the question that DONE 1.306 (#861) recorded as open under the 2026-10-22 "Supported releases only"
   ruling below, which otherwise stands. The option the maintainer chose gave its reason as "Pro is a paid
   extension".
+  The maintainer refined this ruling at 2026-10-24T13:29:48Z: #864 adds dated documentation readings to
+  `self-signed.md` noting the cited focal as past standard security maintenance and the cited bullseye as past
+  Debian LTS, keeping both citations because they still document those releases' commands. This supersedes #861's
+  records-only assessment for bullseye; the guide also records that Debian's Status cell still says LTS support
+  despite its End of LTS date of 2026-08-31.
 - **TODO 1.347 and 1.348: end state Done, revisit tracked outside the public backlog, 2026-10-24 (#839).** The
   maintainer ruled live on 2026-10-24 on three points raised while drafting #839's rework for the 2026-10-23 "Hold
   until VM" ruling below, choosing the recommended option on each. First, the closed rows 1.347 (`n8n.md`) and
