@@ -17,7 +17,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
-- **TODO 1.306: Ubuntu Pro coverage is not current support, 2026-10-24 (#864).** The maintainer ruled live to the
+- **TODO 1.306: Ubuntu coverage only through Ubuntu Pro is not current support, 2026-10-24 (#864).**
+  The maintainer ruled live to the
   orchestrator at 2026-10-24T12:48:39Z that Ubuntu coverage given only through Ubuntu Pro (Expanded Security
   Maintenance, and the legacy add-on) does not count as "currently supported" for `self-signed.md`'s trust-store
   citations; standard support only. So Ubuntu trusty, xenial and bionic need no citation under TODO row 1.306, and
@@ -27,7 +28,8 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
   extension".
   The maintainer refined this ruling at 2026-10-24T13:29:48Z: #864 adds dated documentation readings to
   `self-signed.md` noting the cited focal as past standard security maintenance and the cited bullseye as past
-  Debian LTS, keeping both citations because they still document those releases' commands. This supersedes #861's
+  Debian LTS, keeping both citations (#864's reason: they still document those releases' commands).
+  This supersedes #861's
   records-only assessment for bullseye; the guide also records that Debian's Status cell still says LTS support
   despite its End of LTS date of 2026-08-31.
 - **TODO 1.347 and 1.348: end state Done, revisit tracked outside the public backlog, 2026-10-24 (#839).** The
