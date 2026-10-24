@@ -15787,8 +15787,10 @@ DBIP=$(kubectl get svc db -o jsonpath='{.spec.clusterIP}')
 # (armv6 musl, the others glibc); in each, bin/nc links to a BusyBox v1.36.1 binary that carries the nc getopt32
 # option string `^np:s:ubvw:+lki:o:z` and not the small nc's `lp:w:i:f:e:`.
 # Source reading of 1.36.1, matched against that binary reading: the string is nc_bloaty.c's, built with
-# NC_110_COMPAT, NC_SERVER and NC_EXTRA. This guide's inference, since a matched string literal does not show
-# which function references it: each image's nc option parser accepts -z and a nonnegative integer -w.
+# NC_110_COMPAT, NC_SERVER and NC_EXTRA. This guide's inference: each image's nc option parser accepts -z and a
+# nonnegative integer -w. That is an inference because a matched string literal does not show which function
+# references it, no disassembly was done, and the source clone that was read checks out only the networking,
+# include, libbb and scripts directories, so whether the string occurs elsewhere in BusyBox was not checked.
 # The usage text each binary carries also lists -z and -w SEC, but BusyBox generates usage text from the build
 # configuration, so it corroborates those options without showing the parser.
 # This guide's assessment: the index's amd64 entry names docker-library/busybox revision c1375496 and version
@@ -15920,7 +15922,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "a2f458a5f36b9cfae94f08fba9513037ceef43da6adc45d801e8edb9f0474569",
+  "body_sha256": "29e83bf457d9e8d8d3e44f2c3d66ac3c162301aac6d95ea9ea28ada47e7bb59c",
   "components": {
     "docker": {
       "name": "Docker documentation",
