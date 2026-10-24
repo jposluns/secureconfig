@@ -157,10 +157,20 @@ DBIP=$(kubectl get svc db -o jsonpath='{.spec.clusterIP}')
 # filesystem has bin/nc as a link to the BusyBox binary. That commit's Dockerfile.builder applies one patch before
 # `make defconfig` (no-cbq.patch, which changes only networking/tc.c and no nc file or NC option), and its config
 # step changes no NC option. This guide's inference: that build produced the image's root filesystem. Tags move, so
-# this tag-to-commit mapping holds as of that official-images commit, and only amd64 was examined. This guide's
-# inference: with the 1.36.1 Kconfig defaults (NC_EXTRA and NC_110_COMPAT default y), the amd64 image's nc applet
-# should accept -w and -z; that is not read from the built .config.
-# This guide's advice: confirm that image accepts `nc -z -w 3` and makes a TCP connect before relying on the probe.
+# this tag-to-commit mapping holds as of that official-images commit, and only amd64's mapping was examined.
+# Binary reading, not run: on 2026-10-24 Docker Hub served busybox:1.36 as the index
+# busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662, which lists nine linux images
+# (armv6 musl, the others glibc); in each, bin/nc links to a BusyBox v1.36.1 binary that carries the nc getopt32
+# option string `^np:s:ubvw:+lki:o:z` and not the small nc's `lp:w:i:f:e:`.
+# Source reading of 1.36.1, matched against that binary reading: the string is nc_bloaty.c's, built with
+# NC_110_COMPAT, NC_SERVER and NC_EXTRA. This guide's inference, since a matched string literal does not show
+# which function references it: each image's nc option parser accepts -z and a nonnegative integer -w.
+# The usage text each binary carries also lists -z and -w SEC, but BusyBox generates usage text from the build
+# configuration, so it corroborates those options without showing the parser.
+# This guide's assessment: the index's amd64 entry names docker-library/busybox revision c1375496 and version
+# 1.36.1-glibc, which agrees with the mapping above but does not prove that build made the image.
+# This guide's advice: neither reading shows run-time behaviour, and tags move, so confirm that the image you pull
+# accepts `nc -z -w 3` and makes a TCP connect before relying on the probe.
 # Build the override per pod:
 probe_override() {
   printf '%s' '{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":10001,"runAsGroup":10001,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"'"$1"'","image":"busybox:1.36","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}},"command":["nc","-z","-w","3","'"$DBIP"'","5432"]}]}}'
@@ -211,6 +221,9 @@ kubectl run probe-forbidden --rm -it --restart=Never --image=busybox:1.36 --labe
 - BusyBox 1.36.1 source, nc configuration and compatibility path (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59
 - BusyBox 1.36.1 source, compatible nc options (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93
 - BusyBox 1.36.1 source, compatible nc connect and exit behaviour (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L888-L922
+- BusyBox 1.36.1 source, nc getopt32 option string that the BusyBox binary in each of the nine linux images of busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662 (busybox:1.36 as Docker Hub served it on 2026-10-24) carries, read without running it (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L793-L801
+- BusyBox 1.36.1 source, small nc option string, which none of those nine binaries carries (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L133-L138
+- BusyBox 1.36.1 source, getopt32 `o:+` option parameter, a nonnegative integer processed with `xatoi_positive()`, as in nc's `w:+` (checked October 2026): https://github.com/mirror/busybox/blob/1_36_1/libbb/getopt32.c#L67-L69
 - Docker Official Images busybox library at d6d62c71a83290283aa58c5041a156415cfd37d9, image repository and amd64 commit (checked October 2026): https://github.com/docker-library/official-images/blob/d6d62c71a83290283aa58c5041a156415cfd37d9/library/busybox#L5-L11
 - Docker Official Images busybox library at d6d62c71a83290283aa58c5041a156415cfd37d9, 1.36 tags and amd64 glibc directory (checked October 2026): https://github.com/docker-library/official-images/blob/d6d62c71a83290283aa58c5041a156415cfd37d9/library/busybox#L111-L113
 - docker-library/busybox at c1375496373e76f680b1ef5f713500e98921a45c, glibc build patch step before `make defconfig` (checked October 2026): https://github.com/docker-library/busybox/blob/c1375496373e76f680b1ef5f713500e98921a45c/latest-1/glibc/Dockerfile.builder#L51-L59
@@ -275,7 +288,7 @@ Claims (full source mapping in the JSON block below):
 - verify-rootfs (REASONED; docker, compose-2324): With read_only false, touch on an existing owned path must print WRITABLE; after docker compose up -d --force-recreate with read_only true, it must print blocked. ENOENT or EACCES can also print blocked on a writable filesystem, so blocked alone is not proof of a read-only root. This guide's assessment: the errno, including typical EROFS, depends on the image and path; the probe's exit 0 does not discriminate.
 - verify-context (REASONED; kubernetes, kubectl-134, procfs-619, kubernetes-website): kubectl get reads the declared context; kubectl exec inspects the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities. Clearing CapBnd under drop:[ALL] is this guide's expected runtime state; with shareProcessNamespace, PID 1 belongs to the pod sandbox, so select the application PID.
 - verify-probe (REASONED; kubernetes, kubectl-134, rfc7396, busybox-1361): Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; no probe run is recorded, so this guide advises confirming that the image accepts nc -z -w 3 and makes a TCP connect before relying on it.
-- probe-image (REASONED; busybox-1361, busybox-library, busybox-image): As of official-images d6d62c71 (tags move), amd64 busybox:1.36 is the glibc variant imported from docker-library/busybox c1375496 artefacts, bin/nc linked to BusyBox. That commit's build patches only networking/tc.c and keeps defconfig's NC options; this guide infers it made the image and, from 1.36.1 Kconfig defaults, not the built .config, that its nc accepts -w and -z; only amd64 was examined.
+- probe-image (REASONED; busybox-1361, busybox-library, busybox-image): As of official-images d6d62c71 (tags move), amd64 busybox:1.36 is the glibc variant imported from docker-library/busybox c1375496 artefacts; this guide infers that commit's build made it. Binary reading, not run: each of the nine linux images in the index served on 2026-10-24 has a BusyBox whose nc option string is nc_bloaty.c's with NC_EXTRA; this guide infers that its parser accepts -z and -w.
 - verify-segmentation (REASONED; kubernetes): The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently.
 
 ````json
@@ -283,7 +296,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-21",
   "documentation_checked": "2026-09",
-  "body_sha256": "dbb5b9a4920670dbe9f26ff78553457f9dfd63451edec66a3857642b3238c8f3",
+  "body_sha256": "a2f458a5f36b9cfae94f08fba9513037ceef43da6adc45d801e8edb9f0474569",
   "components": {
     "docker": {
       "name": "Docker documentation",
@@ -371,7 +384,10 @@ Claims (full source mapping in the JSON block below):
       "sources": {
         "s14b89daa008d": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L30-L59",
         "s34bdee292f79": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L61-L93",
-        "s8a53fb647996": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L888-L922"
+        "s8a53fb647996": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L888-L922",
+        "s77dbf800f462": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc_bloaty.c#L793-L801",
+        "s7333a3b4590b": "https://github.com/mirror/busybox/blob/1_36_1/networking/nc.c#L133-L138",
+        "s43d921981bf2": "https://github.com/mirror/busybox/blob/1_36_1/libbb/getopt32.c#L67-L69"
       }
     },
     "busybox-library": {
@@ -415,7 +431,7 @@ Claims (full source mapping in the JSON block below):
     "verify-rootfs": {"text": "With read_only false, touch on an existing owned path must print WRITABLE; after docker compose up -d --force-recreate with read_only true, it must print blocked. ENOENT or EACCES can also print blocked on a writable filesystem, so blocked alone is not proof of a read-only root. This guide's assessment: the errno, including typical EROFS, depends on the image and path; the probe's exit 0 does not discriminate.", "components": ["docker", "compose-2324"], "sources": ["docker:s8b7485a246e4", "compose-2324:s1bf114813e47"], "status": "REASONED", "verify": [1]},
     "verify-context": {"text": "kubectl get reads the declared context; kubectl exec inspects the application process for nonzero UID, NoNewPrivs:1, Seccomp:2 and zero effective/bounding capabilities. Clearing CapBnd under drop:[ALL] is this guide's expected runtime state; with shareProcessNamespace, PID 1 belongs to the pod sandbox, so select the application PID.", "components": ["kubernetes", "kubectl-134", "procfs-619", "kubernetes-website"], "sources": ["kubernetes:sb78ea91d0308", "kubectl-134:sf5417ce59241", "procfs-619:sa94440d59945", "procfs-619:s74035196d5f7", "kubernetes-website:s3df8336a2aa8"], "status": "REASONED", "verify": [1]},
     "verify-probe": {"text": "Resolve the db ClusterIP once; keep matching container names and restricted-compliant overrides for busybox:1.36 probes. Pinned kubectl and BusyBox sources explain merge and nc flags; no probe run is recorded, so this guide advises confirming that the image accepts nc -z -w 3 and makes a TCP connect before relying on it.", "components": ["kubernetes", "kubectl-134", "rfc7396", "busybox-1361"], "sources": ["kubernetes:sb78ea91d0308", "kubernetes:s1a2d717974c7", "kubernetes:s953450b4076f", "kubectl-134:s0906dc78482b", "kubectl-134:s1adb8cde69c0", "kubectl-134:sc98b92ba3ebf", "kubectl-134:s2ffc04de1d63", "rfc7396:sda39f95d0890", "busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s8a53fb647996"], "status": "REASONED", "verify": [1]},
-    "probe-image": {"text": "As of official-images d6d62c71 (tags move), amd64 busybox:1.36 is the glibc variant imported from docker-library/busybox c1375496 artefacts, bin/nc linked to BusyBox. That commit's build patches only networking/tc.c and keeps defconfig's NC options; this guide infers it made the image and, from 1.36.1 Kconfig defaults, not the built .config, that its nc accepts -w and -z; only amd64 was examined.", "components": ["busybox-1361", "busybox-library", "busybox-image"], "sources": ["busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-library:s080d20eae28c", "busybox-library:s72f8958126e8", "busybox-image:s0844cb594c98", "busybox-image:s58988a470c6b", "busybox-image:s26842ca97d63", "busybox-image:s6fd2add44b43"], "status": "REASONED", "verify": [1]},
+    "probe-image": {"text": "As of official-images d6d62c71 (tags move), amd64 busybox:1.36 is the glibc variant imported from docker-library/busybox c1375496 artefacts; this guide infers that commit's build made it. Binary reading, not run: each of the nine linux images in the index served on 2026-10-24 has a BusyBox whose nc option string is nc_bloaty.c's with NC_EXTRA; this guide infers that its parser accepts -z and -w.", "components": ["busybox-1361", "busybox-library", "busybox-image"], "sources": ["busybox-1361:s14b89daa008d", "busybox-1361:s34bdee292f79", "busybox-1361:s77dbf800f462", "busybox-1361:s7333a3b4590b", "busybox-1361:s43d921981bf2", "busybox-library:s080d20eae28c", "busybox-library:s72f8958126e8", "busybox-image:s0844cb594c98", "busybox-image:s58988a470c6b", "busybox-image:s26842ca97d63", "busybox-image:s6fd2add44b43"], "status": "REASONED", "verify": [1]},
     "verify-segmentation": {"text": "The role: app TCP probe must succeed first; role: other to the same IP must fail at TCP, not DNS. This tests combined segmentation, not either policy layer independently.", "components": ["kubernetes"], "sources": ["kubernetes:s953450b4076f"], "status": "REASONED", "verify": [1]}
   }
 }
