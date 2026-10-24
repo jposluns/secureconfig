@@ -62762,9 +62762,10 @@ creation is returned from the staged state itself. For a staged update or upsert
 document is fetched through the database layer and the staged attributes overlay it; if that fetch
 is empty, an upsert returns the staged document, while an update falls through to a second
 committed fetch, as does a document with no staged state. This guide's reasoning from these lines
-and the cited `getDocument` read checks is that a staged created document, and a staged upsert
-whose committed fetch comes back empty, reach the handler without the database layer's
-read-permission checks. In the cited lines neither the handler nor the transaction state compares
+and the cited `getDocument` read checks is that staged creates bypass database-layer retrieval,
+and that when a committed fetch returns empty, the upsert branch returns the staged document
+without applying another database-layer read check to it. In the cited lines neither the handler
+nor the transaction state compares
 the transaction's creator with the requester; the handler's later `processDocument` call and any
 other layer are not traced. See the
 [factory Pool import](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Database/Factory.php#L9),
@@ -62772,6 +62773,7 @@ other layer are not traced. See the
 [tenant database construction](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Database/Factory.php#L74-L92),
 [getDatabasesDB resource](https://github.com/appwrite/appwrite/blob/2.2.0/app/init/resources/request.php#L1165-L1190),
 [document GET transaction branch](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L108-L111),
+[document GET not-found response](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L122-L124),
 [transaction-state staged creation](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Databases/TransactionState.php#L71-L73),
 [transaction-state document branches](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Databases/TransactionState.php#L50-L92),
 [transaction and log reads](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Databases/TransactionState.php#L339-L350),
@@ -62828,9 +62830,11 @@ whether the variable is set in the `appwrite` service's environment, and to what
 [install task interactive database answer](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L303-L311),
 [install task adapter assignment](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L322-L323),
 [install task existing-configuration check](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L542-L547),
-[install task Compose and environment writes](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L683-L696),
-[install environment template](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/views/install/env.phtml),
+[install task Compose and environment writes](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L683-L696), and
+[install environment template](https://raw.githubusercontent.com/appwrite/appwrite/2.2.0/app/views/install/env.phtml).
+For the web-installer branch, existing-database detection and container start, see the
 [install task web-installer branch](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L225-L235),
+[install task explicit-parameter check](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1609-L1618),
 [install task existing-database detection order](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L186-L205),
 [install task database service and host detection](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1624-L1643),
 [install task container start condition](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L739-L745), and
@@ -63267,6 +63271,7 @@ The September 2026 date in this heading is the guide-wide documentation check; i
 - [Appwrite 2.2.0 database factory Pool import (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Database/Factory.php#L9).
 - [Appwrite 2.2.0 getDatabasesDB request resource (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/app/init/resources/request.php#L1165-L1190).
 - [Appwrite 2.2.0 document GET transaction branch (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L108-L111).
+- [Appwrite 2.2.0 document GET not-found response for an empty document (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L122-L124).
 - [Appwrite 2.2.0 transaction-state staged creation return (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Databases/TransactionState.php#L71-L73).
 - [Appwrite 2.2.0 upgrade database engine detection (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Upgrade.php#L67-L92).
 - [Appwrite 2.2.0 install task Compose template read (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L555-L560).
@@ -63288,6 +63293,7 @@ The September 2026 date in this heading is the guide-wide documentation check; i
 - [Appwrite 2.2.0 install task existing database detection order (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L186-L205).
 - [Appwrite 2.2.0 install task database service and host detection (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1624-L1643).
 - [Appwrite 2.2.0 install task web-installer branch (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L225-L235).
+- [Appwrite 2.2.0 install task explicit command-line parameter check (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1609-L1618).
 - [Appwrite 2.2.0 install task container start condition (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L739-L745).
 - [Appwrite 2.2.0 install task Compose start (checked October 2026)](https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1239-L1295).
 - [curl curl-8_14_1 write-out fields and version requirements (checked October 2026)](https://github.com/curl/curl/blob/curl-8_14_1/docs/cmdline-opts/write-out.md#L75-L79).
@@ -63410,7 +63416,7 @@ Claims (full source mapping in the JSON block below):
   "schema": 1,
   "checked": "2026-10-20",
   "documentation_checked": "2026-09",
-  "body_sha256": "44486cf6168817a83726d65f651ffc1f67eb81e8f1666d99b61fd6660e0e2be7",
+  "body_sha256": "2e2f2e21a4f3e1fffcbb072c405895dc4291cbe6a2db92b2c75a999e41277792",
   "components": {
     "pb": {
       "name": "PocketBase",
@@ -63494,7 +63500,9 @@ Claims (full source mapping in the JSON block below):
         "sde11935a99de": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1624-L1643",
         "s48bedca5fd4a": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L225-L235",
         "sb04bd8725358": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L739-L745",
-        "s72ba13c41e7e": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1239-L1295"
+        "s72ba13c41e7e": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1239-L1295",
+        "s3afe73884566": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Tasks/Install.php#L1609-L1618",
+        "s5625c02a35f4": "https://github.com/appwrite/appwrite/blob/2.2.0/src/Appwrite/Platform/Modules/Databases/Http/Databases/Collections/Documents/Get.php#L122-L124"
       }
     },
     "pb-docs": {
