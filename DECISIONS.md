@@ -17,14 +17,24 @@ inference and is fallible; it never substitutes for a ruling on anything irrever
 
 ## Rulings
 
-- **TODO 1.347 and 1.348 REASONED allowances fail rule 5, 2026-10-23 (#839).** The maintainer ruled live on
-  2026-10-23 that the REASONED allowances in TODO 1.347 (`n8n.md` Verify fence 1) and TODO 1.348
-  (`container-hardening.md` line 120) fail under CONTRIBUTING.md rule 5: their checks must be demonstrated. The
-  ruling was recorded in the orchestrator's private register on 2026-10-23 and is entered here by #839. The rows
-  stay open until the checks are demonstrated in an authorized environment or the declarations are corrected. An
-  authorized container environment was requested, and the same day the maintainer confirmed that secureconfig will
-  get its own isolated VM with Docker for these tests; it is not yet provisioned, and no authorized container
-  environment exists on the authoring host. No reasoning was recorded beyond those terms.
+- **TODO 1.347 and 1.348: "Hold until VM", the REASONED allowances qualify while no authorized environment exists,
+  2026-10-23 (#839).** The maintainer's operative ruling, made live at about 22:40Z on 2026-10-23, is "Hold until
+  VM" for the REASONED allowances in TODO 1.347 (`n8n.md` Verify fence 1) and TODO 1.348 (`container-hardening.md`
+  line 120). The option's text: "The allowances qualify under rule 5 while no authorized environment exists; close
+  both rows as REASONED now and revisit when the VM is ready." #839 closes both rows as REASONED in DONE.md, each
+  naming the checks revisited when the VM is ready. This supersedes the maintainer's live ruling of about 20:30Z
+  the same day, "Allowances fail; demonstrate", which #839 first entered here as operative. That question cited
+  only CONTRIBUTING.md rule 5's container sentence and mentioned neither the 2026-09-26 retirement ruling below nor
+  rule 5's allowance where no available, authorized environment can reproduce the exposed state; #839 r1 QA raised
+  the omission, and the question was re-asked with that context. Both rulings were recorded in the orchestrator's
+  decision register on 2026-10-23 and are entered here by #839. An authorized container environment was requested,
+  and the same day the maintainer confirmed that secureconfig will get its own isolated VM with Docker for these
+  tests; it is not yet provisioned, and no authorized container environment exists on the authoring host. On
+  whether that VM will also run a Kubernetes cluster for the line 120 Pod checks, the maintainer's words were: "You
+  will be able to direct the new local_infra orchestrator on that host to install what you need." Those words do
+  not say that a Kubernetes cluster will run there. The 2026-09-26 "Isolation capability" ruling below, under which
+  REASONED is the end state, stays in force; this ruling names only these two rows, and adds that they are
+  revisited when the VM is ready. No reasoning was recorded beyond those terms.
 - **Claim-length gate, 2026-10-23: P6 option C, a failing baseline gate at 400 characters (#801).** The
   maintainer's ruling was recorded in the orchestrator's store on 2026-10-23 and is entered here by #801. Its
   terms: P6 option C as P6 defined it; refuse any claim whose `text` exceeds 400 characters unless it is listed
