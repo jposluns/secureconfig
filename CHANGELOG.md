@@ -10,6 +10,10 @@ suite can check `VERSION` against GitHub: no gate reaches the network, by design
 service can change a gate's answer, and a pull request number is only knowable from outside. Keeping
 `VERSION` in step with the merged pull request is therefore an authoring obligation, not an enforced one.
 
+## 2026-10-25
+
+- `observability-components.md`: Loki's target module graph, init order and gRPC service registrations at v3.7.8 are now cited by source reading of the 2026-10-24 p187a pack, and the internal server's default any-address gRPC listener on an OS-chosen port is now a source reading rather than an inference, still unobserved. TODO 1.301 keeps the bounded source items still open, its observation-only items move to the new live-checks row 1.375, and DECISIONS.md records the maintainer's two rulings (#879)
+
 ## 2026-10-24
 
 - `elasticsearch.md` and the backlog: by source reading of the 2026-10-24 p184a pack without a run, OpenSearch's GCS container drops index-level `CryptoMetadata` at 3.6.0 to 3.8.0, which with the earlier 3.5.0 and 3.9.0 readings covers every tag from 3.5.0 to 3.9.0, so the guide's index-level snapshot warning now also holds in source at 3.6.0 and 3.8.0. The guide now records the 3.7.0 and 3.8.0 `IndexService` native-store calls and the native-store provider registrations under `sandbox/plugins`, and the GCS and Azure encryption pages, rechecked on 2026-10-24, confirm its server-side encryption statements. Apart from its 2.9.0 commit files and tag list, the pack covers only 3.5.0 to 3.9.0, so the guide's 31-tag range from 2.10.0 rests on the earlier readings of #772 and #797, and TODO 1.297 keeps the deployment, provider, native-store, index-setting, 3.7.0 snapshot-path and release-range items open (#877)
